@@ -61,18 +61,6 @@ class HomeScreen extends StatelessWidget {
                 onPressed: () => provider.goToScreen(AppConstants.screenRules),
               ),
               const Spacer(),
-              GestureDetector(
-                onTap: () => _showClearDataConfirmation(context, provider),
-                child: const Text(
-                  'Effacer les données',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 14,
-                    color: AppColors.gray500,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              ),
               const SizedBox(height: 16),
             ],
           ),
@@ -122,43 +110,4 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  void _showClearDataConfirmation(BuildContext context, GameProvider provider) {
-    AppModal.show(
-      context,
-      title: 'Effacer les données',
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            'Cette action supprimera toutes les données sauvegardées.',
-            style: TextStyle(fontFamily: 'Poppins', color: Colors.white),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: AppButton(
-                  text: 'Annuler',
-                  variant: AppButtonVariant.ghost,
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: AppButton(
-                  text: 'Effacer',
-                  variant: AppButtonVariant.danger,
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    provider.clearLocalStorage();
-                  },
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 }

@@ -29,7 +29,7 @@ class TeamsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Glissez les joueurs pour former les équipes',
+                  'Glissez les joueurs pour changer les équipes',
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 14,
@@ -83,7 +83,7 @@ class TeamsScreen extends StatelessWidget {
             ),
           ),
           AppBackButton(
-            onPressed: () => provider.goToScreen(AppConstants.screenWords),
+            onPressed: () => provider.goToScreen(AppConstants.screenPlayers),
           ),
         ],
       ),
@@ -206,7 +206,7 @@ class _TeamCard extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: isHovering
-                ? teamColor.withOpacity(0.2)
+                ? teamColor.withValues(alpha: 0.2)
                 : AppColors.backgroundCard,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
@@ -259,15 +259,14 @@ class _TeamCard extends StatelessWidget {
   }
 
   Widget _buildDraggablePlayer(Player player, Color teamColor) {
-    return LongPressDraggable<Player>(
+    return Draggable<Player>(
       data: player,
-      delay: const Duration(milliseconds: 150),
       feedback: Material(
         color: Colors.transparent,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: teamColor.withOpacity(0.9),
+            color: teamColor.withValues(alpha: 0.9),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: AppColors.secondaryCyan, width: 2),
           ),
@@ -303,7 +302,7 @@ class _PlayerTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         border: Border(left: BorderSide(color: teamColor, width: 4)),
-        color: AppColors.backgroundMain.withOpacity(0.5),
+        color: AppColors.backgroundMain.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

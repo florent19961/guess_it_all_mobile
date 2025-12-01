@@ -295,6 +295,7 @@ class GameProvider extends ChangeNotifier {
       turnEndTimestamp: now + durationMs,
       clearPausedTimeRemaining: true,
       timeRemaining: durationSeconds,
+      clearTurnBonusTime: true,
     );
 
     notifyListeners();
@@ -395,6 +396,11 @@ class GameProvider extends ChangeNotifier {
 
   void updateTimeRemaining(int time) {
     _game = _game.copyWith(timeRemaining: time);
+    notifyListeners();
+  }
+
+  void updateTurnEndTimestamp(int timestamp) {
+    _game = _game.copyWith(turnEndTimestamp: timestamp);
     notifyListeners();
   }
 
@@ -576,6 +582,13 @@ class GameProvider extends ChangeNotifier {
   }
 
   // ========== ACTIONS - RESET ==========
+
+  void clearPlayersData() {
+    _players = [];
+    _teams = [];
+    notifyListeners();
+    _saveToStorage();
+  }
 
   Future<void> clearLocalStorage() async {
     await _storage.clearGameState();

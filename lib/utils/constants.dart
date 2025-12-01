@@ -30,7 +30,6 @@ class AppConstants {
   static const String screenSettings = 'settings';
   static const String screenRules = 'rules';
   static const String screenPlayers = 'players';
-  static const String screenWords = 'words';
   static const String screenTeams = 'teams';
   static const String screenGame = 'game';
   static const String screenCountdown = 'countdown';
@@ -38,6 +37,7 @@ class AppConstants {
   static const String screenVerification = 'verification';
   static const String screenTransition = 'transition';
   static const String screenResults = 'results';
+  static const String screenStats = 'stats';
 
   // Word choice modes
   static const String wordChoiceCustom = 'personnalisé';

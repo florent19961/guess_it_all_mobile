@@ -39,29 +39,21 @@ class ResultsScreen extends StatelessWidget {
 
               // Action buttons
               AppButton(
-                text: 'Rejouer',
-                variant: AppButtonVariant.primary,
-                size: AppButtonSize.large,
-                fullWidth: true,
-                icon: const Icon(Icons.replay, color: Colors.white),
-                onPressed: () => provider.restartWithSamePlayers(),
-              ),
-              const SizedBox(height: 16),
-              AppButton(
-                text: 'Nouvelle partie',
+                text: 'Voir les statistiques',
                 variant: AppButtonVariant.secondary,
                 fullWidth: true,
-                onPressed: () {
-                  provider.resetGame();
-                  provider.goToScreen(AppConstants.screenSettings);
-                },
+                icon: const Icon(Icons.bar_chart, color: Colors.white),
+                onPressed: () => provider.goToScreen(AppConstants.screenStats),
               ),
               const SizedBox(height: 16),
               AppButton(
                 text: 'Accueil',
-                variant: AppButtonVariant.ghost,
+                variant: AppButtonVariant.primary,
+                size: AppButtonSize.large,
+                fullWidth: true,
+                icon: const Icon(Icons.home, color: Colors.white),
                 onPressed: () {
-                  provider.resetGame();
+                  provider.clearLocalStorage();
                   provider.goToScreen(AppConstants.screenHome);
                 },
               ),
@@ -73,20 +65,67 @@ class ResultsScreen extends StatelessWidget {
     );
   }
 
+  // Calcule le rang réel en tenant compte des ex æquo
+  int _getRank(List<dynamic> sortedTeams, int index) {
+    if (index == 0) return 0;
+    int rank = 0;
+    for (int i = 0; i < index; i++) {
+      if (sortedTeams[i].score > sortedTeams[index].score) {
+        rank++;
+      }
+    }
+    return rank;
+  }
+
+  // Retourne la hauteur du podium selon le rang
+  double _getPodiumHeight(int rank) {
+    switch (rank) {
+      case 0:
+        return 140;
+      case 1:
+        return 100;
+      case 2:
+        return 70;
+      default:
+        return 50;
+    }
+  }
+
+  // Retourne la médaille selon le rang
+  String _getMedal(int rank) {
+    switch (rank) {
+      case 0:
+        return '🥇';
+      case 1:
+        return '🥈';
+      case 2:
+        return '🥉';
+      case 3:
+        return '🍫';
+      default:
+        return '';
+    }
+  }
+
   Widget _buildPodium(GameProvider provider, List<dynamic> sortedTeams) {
     if (sortedTeams.isEmpty) return const SizedBox();
+
+    // Calculer les rangs pour les 3 premières équipes
+    final rank0 = _getRank(sortedTeams, 0);
+    final rank1 = sortedTeams.length > 1 ? _getRank(sortedTeams, 1) : -1;
+    final rank2 = sortedTeams.length > 2 ? _getRank(sortedTeams, 2) : -1;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        // 2nd place
+        // 2nd place (ou ex æquo)
         if (sortedTeams.length > 1)
           _buildPodiumPosition(
             team: sortedTeams[1],
             originalIndex: provider.teams.indexOf(sortedTeams[1]),
-            position: 2,
-            height: 100,
+            rank: rank1,
+            height: _getPodiumHeight(rank1),
           )
         else
           const SizedBox(width: 100),
@@ -97,19 +136,19 @@ class ResultsScreen extends StatelessWidget {
         _buildPodiumPosition(
           team: sortedTeams[0],
           originalIndex: provider.teams.indexOf(sortedTeams[0]),
-          position: 1,
-          height: 140,
+          rank: rank0,
+          height: _getPodiumHeight(rank0),
         ),
 
         const SizedBox(width: 8),
 
-        // 3rd place
+        // 3rd place (ou ex æquo)
         if (sortedTeams.length > 2)
           _buildPodiumPosition(
             team: sortedTeams[2],
             originalIndex: provider.teams.indexOf(sortedTeams[2]),
-            position: 3,
-            height: 70,
+            rank: rank2,
+            height: _getPodiumHeight(rank2),
           )
         else
           const SizedBox(width: 100),
@@ -120,15 +159,12 @@ class ResultsScreen extends StatelessWidget {
   Widget _buildPodiumPosition({
     required dynamic team,
     required int originalIndex,
-    required int position,
+    required int rank,
     required double height,
   }) {
     final teamColor = AppColors.getTeamColor(originalIndex);
-    final medal = position == 1
-        ? '🥇'
-        : position == 2
-            ? '🥈'
-            : '🥉';
+    final medal = _getMedal(rank);
+    final displayPosition = rank + 1;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -162,13 +198,13 @@ class ResultsScreen extends StatelessWidget {
           width: 100,
           height: height,
           decoration: BoxDecoration(
-            color: teamColor.withOpacity(0.3),
+            color: teamColor.withValues(alpha: 0.3),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             border: Border.all(color: teamColor, width: 2),
           ),
           child: Center(
             child: Text(
-              '$position',
+              '$displayPosition',
               style: TextStyle(
                 fontFamily: 'Bangers',
                 fontSize: 48,

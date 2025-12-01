@@ -25,26 +25,26 @@ class TransitionScreen extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  const Spacer(),
+                  const SizedBox(height: 40),
 
                   // Round completed badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
                     decoration: BoxDecoration(
-                      color: AppColors.success.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
+                      color: AppColors.success.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(18),
                       border: Border.all(color: AppColors.success, width: 2),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.check_circle, color: AppColors.success),
+                        const Icon(Icons.check_circle, color: AppColors.success, size: 22),
                         const SizedBox(width: 8),
                         Text(
                           'Manche $currentRound terminée !',
                           style: const TextStyle(
                             fontFamily: 'Poppins',
-                            fontSize: 18,
+                            fontSize: 17,
                             fontWeight: FontWeight.w600,
                             color: AppColors.success,
                           ),
@@ -53,125 +53,103 @@ class TransitionScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
 
                   // Scores
                   Text(
                     'Scores',
-                    style: AppTextStyles.subtitle(fontSize: 32),
+                    style: AppTextStyles.subtitle(fontSize: 30),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
-                  ...sortedTeams.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final team = entry.value;
-                    final originalIndex = provider.teams.indexOf(team);
-                    final teamColor = AppColors.getTeamColor(originalIndex);
-                    final medal = index == 0
-                        ? '🥇'
-                        : index == 1
-                            ? '🥈'
-                            : index == 2
-                                ? '🥉'
-                                : '';
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: teamColor.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: teamColor, width: 2),
-                      ),
-                      child: Row(
-                        children: [
-                          if (medal.isNotEmpty)
-                            Text(
-                              medal,
-                              style: const TextStyle(fontSize: 24),
-                            ),
-                          if (medal.isNotEmpty) const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              team.name,
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: teamColor,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            '${team.score}',
-                            style: TextStyle(
-                              fontFamily: 'Bangers',
-                              fontSize: 32,
-                              color: teamColor,
-                            ),
-                          ),
-                          const Text(
-                            ' pts',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 14,
-                              color: AppColors.gray400,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-
-                  const Spacer(),
-
-                  // Next round info
-                  if (!isLastRound) ...[
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: AppColors.backgroundCard,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.secondaryCyan, width: 2),
-                      ),
+                  Flexible(
+                    child: SingleChildScrollView(
                       child: Column(
-                        children: [
-                          const Text(
-                            'Prochaine manche',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 14,
-                              color: AppColors.gray400,
+                        children: sortedTeams.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final team = entry.value;
+                          final originalIndex = provider.teams.indexOf(team);
+                          final teamColor = AppColors.getTeamColor(originalIndex);
+
+                          // Calculer le rang réel en tenant compte des ex æquo
+                          int rank = 0;
+                          for (int i = 0; i < index; i++) {
+                            if (sortedTeams[i].score > team.score) {
+                              rank++;
+                            }
+                          }
+
+                          final medal = rank == 0
+                              ? '🥇'
+                              : rank == 1
+                                  ? '🥈'
+                                  : rank == 2
+                                      ? '🥉'
+                                      : rank == 3
+                                          ? '🍫'
+                                          : '';
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: teamColor.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: teamColor, width: 2),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            AppConstants.roundModes[currentRound + 1] ?? '',
-                            style: AppTextStyles.subtitle(fontSize: 24),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            AppConstants.roundDescriptions[currentRound + 1] ?? '',
-                            style: const TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 12,
-                              color: AppColors.gray400,
+                            child: Row(
+                              children: [
+                                if (medal.isNotEmpty)
+                                  Text(
+                                    medal,
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                if (medal.isNotEmpty) const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    team.name,
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: teamColor,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  '${team.score}',
+                                  style: TextStyle(
+                                    fontFamily: 'Bangers',
+                                    fontSize: 28,
+                                    color: teamColor,
+                                  ),
+                                ),
+                                const Text(
+                                  ' pts',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 12,
+                                    color: AppColors.gray400,
+                                  ),
+                                ),
+                              ],
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                          );
+                        }).toList(),
                       ),
                     ),
-                    const SizedBox(height: 24),
-                  ],
+                  ),
 
-                  // Time bonus indicator
+                  const SizedBox(height: 16),
+
+                  // Time bonus indicator (only show if not last round)
                   if (provider.game.turnBonusTime != null &&
-                      provider.game.turnBonusTime! > 0) ...[
+                      provider.game.turnBonusTime! > 0 &&
+                      currentRound < 3) ...[
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppColors.warning.withOpacity(0.2),
+                        color: AppColors.warning.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(

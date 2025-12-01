@@ -31,7 +31,7 @@ class GameScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     decoration: BoxDecoration(
-                      color: AppColors.secondaryCyan.withOpacity(0.2),
+                      color: AppColors.secondaryCyan.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: AppColors.secondaryCyan, width: 2),
                     ),
@@ -53,16 +53,6 @@ class GameScreen extends StatelessWidget {
                     style: AppTextStyles.subtitle(fontSize: 28),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    AppConstants.roundDescriptions[provider.game.currentRound] ?? '',
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 14,
-                      color: AppColors.gray400,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
 
                   const SizedBox(height: 32),
 
@@ -70,7 +60,7 @@ class GameScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: teamColor.withOpacity(0.2),
+                      color: teamColor.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: teamColor, width: 2),
                     ),
@@ -129,7 +119,7 @@ class GameScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppColors.warning.withOpacity(0.2),
+                        color: AppColors.warning.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -181,7 +171,7 @@ class GameScreen extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: isCurrentTeam ? teamColor.withOpacity(0.3) : Colors.transparent,
+            color: isCurrentTeam ? teamColor.withValues(alpha: 0.3) : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isCurrentTeam ? teamColor : Colors.transparent,

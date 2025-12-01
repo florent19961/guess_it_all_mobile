@@ -42,17 +42,24 @@ class SettingsScreen extends StatelessWidget {
                       value: settings.numberOfTeams,
                       min: AppConstants.minTeams,
                       max: AppConstants.maxTeams,
-                      onChange: (value) => provider.updateSettings(numberOfTeams: value),
+                      onChange: (value) {
+                        provider.updateSettings(numberOfTeams: value);
+                        // Ajuster le nombre de joueurs si nécessaire (min 2 par équipe)
+                        final minPlayers = value * 2;
+                        if (settings.numberOfPlayers < minPlayers) {
+                          provider.updateSettings(numberOfPlayers: minPlayers);
+                        }
+                      },
                     ),
                   ),
                   const SizedBox(height: 24),
 
-                  // Nombre de joueurs
+                  // Nombre de joueurs (minimum = 2 x nombre d'équipes)
                   _buildSection(
                     title: 'Joueurs',
                     child: AppCounter(
                       value: settings.numberOfPlayers,
-                      min: AppConstants.minPlayers,
+                      min: settings.numberOfTeams * 2, // Minimum dynamique
                       max: AppConstants.maxPlayers,
                       onChange: (value) => provider.updateSettings(numberOfPlayers: value),
                     ),
@@ -70,12 +77,20 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // Bouton paramètres avancés
-                  AppButton(
-                    text: 'Paramètres avancés',
-                    variant: AppButtonVariant.ghost,
-                    icon: const Icon(Icons.settings, color: Colors.white, size: 20),
-                    onPressed: () => _showAdvancedSettings(context, provider),
+                  const SizedBox(height: 8),
+
+                  // Bouton réinitialiser
+                  GestureDetector(
+                    onTap: () => _showResetConfirmation(context, provider),
+                    child: const Text(
+                      'Réinitialiser les paramètres',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 14,
+                        color: AppColors.gray500,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 32),
 
@@ -94,6 +109,28 @@ class SettingsScreen extends StatelessWidget {
           ),
           AppBackButton(
             onPressed: () => provider.goToScreen(AppConstants.screenHome),
+          ),
+          // Icône paramètres avancés en haut à droite (aligné avec le bouton retour)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 16,
+            right: 16,
+            child: GestureDetector(
+              onTap: () => _showAdvancedSettings(context, provider),
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.backgroundCard,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.gray600, width: 2),
+                ),
+                child: const Icon(
+                  Icons.tune,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -118,14 +155,55 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  void _showAdvancedSettings(BuildContext context, GameProvider provider) {
-    final settings = provider.settings;
+  void _showResetConfirmation(BuildContext context, GameProvider provider) {
+    AppModal.show(
+      context,
+      title: 'Réinitialiser',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Êtes-vous sûr de vouloir réinitialiser les paramètres ?',
+            style: TextStyle(fontFamily: 'Poppins', color: Colors.white),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  text: 'Annuler',
+                  variant: AppButtonVariant.ghost,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: AppButton(
+                  text: 'Réinitialiser',
+                  variant: AppButtonVariant.danger,
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    provider.clearLocalStorage();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
+  void _showAdvancedSettings(BuildContext context, GameProvider provider) {
     AppModal.show(
       context,
       title: 'Avancé',
       child: StatefulBuilder(
         builder: (context, setState) {
+          // Récupérer settings à chaque rebuild pour avoir les valeurs à jour
+          final settings = provider.settings;
+
           return SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -171,9 +249,8 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
 
-                // Catégories (si mode aléatoire)
-                if (settings.wordChoice == AppConstants.wordChoiceRandom) ...[
-                  const Text(
+                // Catégories (toujours visibles pour le bouton aléatoire)
+                const Text(
                     'Catégories',
                     style: TextStyle(
                       fontFamily: 'Poppins',
@@ -229,7 +306,6 @@ class SettingsScreen extends StatelessWidget {
                       );
                     }).toList(),
                   ),
-                ],
                 const SizedBox(height: 24),
 
                 AppButton(

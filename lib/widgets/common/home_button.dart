@@ -43,7 +43,7 @@ class HomeButton extends StatelessWidget {
     if (gameScreens.contains(currentScreen)) {
       showDialog(
         context: context,
-        barrierColor: Colors.black.withOpacity(0.7),
+        barrierColor: Colors.black.withValues(alpha: 0.7),
         builder: (dialogContext) => AlertDialog(
           backgroundColor: AppColors.backgroundMain,
           shape: RoundedRectangleBorder(

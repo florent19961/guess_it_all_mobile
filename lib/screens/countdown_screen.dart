@@ -135,7 +135,7 @@ class _CountdownScreenState extends State<CountdownScreen>
                         shadows: [
                           Shadow(
                             offset: const Offset(4, 4),
-                            color: teamColor.withOpacity(0.5),
+                            color: teamColor.withValues(alpha: 0.5),
                             blurRadius: 0,
                           ),
                         ],

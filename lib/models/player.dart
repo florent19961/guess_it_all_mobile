@@ -1,4 +1,6 @@
 class Player {
+  static int _counter = 0;
+
   final String id;
   String name;
   List<String> words;
@@ -10,8 +12,9 @@ class Player {
   }) : words = words ?? [];
 
   factory Player.create(String name) {
+    _counter++;
     return Player(
-      id: 'player-${DateTime.now().millisecondsSinceEpoch}-${(1000 * (1 + (DateTime.now().microsecond / 1000000))).toInt()}',
+      id: 'player-${DateTime.now().millisecondsSinceEpoch}-$_counter',
       name: name,
       words: [],
     );

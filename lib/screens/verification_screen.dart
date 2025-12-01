@@ -67,7 +67,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   decoration: BoxDecoration(
-                    color: teamColor.withOpacity(0.2),
+                    color: teamColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: teamColor, width: 2),
                   ),
@@ -135,7 +135,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.warning.withOpacity(0.2),
+                                  color: AppColors.warning.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: const Text(
@@ -191,8 +191,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isValidated
-              ? AppColors.success.withOpacity(0.2)
-              : AppColors.error.withOpacity(0.2),
+              ? AppColors.success.withValues(alpha: 0.2)
+              : AppColors.error.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isValidated ? AppColors.success : AppColors.error,
@@ -218,11 +218,19 @@ class _VerificationScreenState extends State<VerificationScreen> {
                 ),
               ),
             ),
+            Text(
+              isValidated ? 'Cliquer pour invalider' : 'Cliquer pour valider',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 10,
+                color: isValidated ? AppColors.error.withValues(alpha: 0.7) : AppColors.success.withValues(alpha: 0.7),
+              ),
+            ),
             if (!isGuessed)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.warning.withOpacity(0.3),
+                  color: AppColors.warning.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
