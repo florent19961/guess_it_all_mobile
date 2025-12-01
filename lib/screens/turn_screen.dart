@@ -35,16 +35,20 @@ class _TurnScreenState extends State<TurnScreen> {
       if (endTimestamp == null) return;
 
       final now = DateTime.now().millisecondsSinceEpoch;
-      final remaining = ((endTimestamp - now) / 1000).ceil();
+      final remainingMs = endTimestamp - now;
+      final remaining = (remainingMs / 1000).ceil();
 
-      if (remaining <= 0) {
+      if (remainingMs <= 0) {
         timer.cancel();
+        setState(() {
+          _timeRemaining = 0;
+        });
         WidgetsBinding.instance.addPostFrameCallback((_) {
           provider.endTurn();
         });
       } else {
         setState(() {
-          _timeRemaining = remaining;
+          _timeRemaining = remaining > 0 ? remaining : 0;
         });
         provider.updateTimeRemaining(remaining);
       }

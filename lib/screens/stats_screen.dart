@@ -79,7 +79,7 @@ class StatsScreen extends StatelessWidget {
     // Calculer le nombre de mots fait deviner par joueur
     final Map<String, int> playerWordCounts = {};
     for (final entry in provider.game.history) {
-      final count = entry.wordsGuessed.length - entry.wordsInvalidated.length;
+      final count = entry.wordsGuessed.length;
       playerWordCounts[entry.playerId] =
           (playerWordCounts[entry.playerId] ?? 0) + count;
     }
@@ -171,7 +171,7 @@ class StatsScreen extends StatelessWidget {
                           ),
                         ),
                         FractionallySizedBox(
-                          widthFactor: maxWords > 0 ? wordCount / maxWords : 0,
+                          widthFactor: maxWords > 0 && wordCount > 0 ? wordCount / maxWords : 0,
                           child: Container(
                             height: 20,
                             decoration: BoxDecoration(
@@ -220,7 +220,7 @@ class StatsScreen extends StatelessWidget {
     scoresByTurn.add(Map.from(cumulativeScores));
 
     for (final entry in provider.game.history) {
-      final points = entry.wordsGuessed.length - entry.wordsInvalidated.length;
+      final points = entry.wordsGuessed.length;
       cumulativeScores[entry.teamId] =
           (cumulativeScores[entry.teamId] ?? 0) + points;
       scoresByTurn.add(Map.from(cumulativeScores));

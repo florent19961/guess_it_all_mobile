@@ -302,7 +302,7 @@ class SettingsScreen extends StatelessWidget {
                               border: Border.all(color: AppColors.gray600, width: 1),
                             ),
                             child: const Text(
-                              'Aucun',
+                              'Une seule',
                               style: TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 12,

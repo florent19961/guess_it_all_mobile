@@ -13,6 +13,7 @@ class AppInput extends StatefulWidget {
   final VoidCallback? onSubmitted;
   final bool autofocus;
   final TextEditingController? controller;
+  final TextCapitalization textCapitalization;
 
   const AppInput({
     this.value,
@@ -26,6 +27,7 @@ class AppInput extends StatefulWidget {
     this.onSubmitted,
     this.autofocus = false,
     this.controller,
+    this.textCapitalization = TextCapitalization.words,
     super.key,
   });
 
@@ -82,6 +84,7 @@ class _AppInputState extends State<AppInput> {
           autofocus: widget.autofocus,
           autocorrect: false,
           enableSuggestions: false,
+          textCapitalization: widget.textCapitalization,
           spellCheckConfiguration: const SpellCheckConfiguration.disabled(),
           textInputAction: widget.textInputAction,
           onSubmitted: widget.onSubmitted != null ? (_) => widget.onSubmitted!() : null,
