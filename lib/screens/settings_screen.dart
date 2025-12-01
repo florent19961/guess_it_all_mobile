@@ -250,15 +250,71 @@ class SettingsScreen extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 // Catégories (toujours visibles pour le bouton aléatoire)
-                const Text(
-                    'Catégories',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Catégories',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            final allCategories = getCategoryList().map((c) => c.id).toList();
+                            provider.updateSettings(selectedCategories: allCategories);
+                            setState(() {});
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.secondaryCyan.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.secondaryCyan, width: 1),
+                            ),
+                            child: const Text(
+                              'Tout',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                                color: AppColors.secondaryCyan,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () {
+                            final firstCategory = getCategoryList().first.id;
+                            provider.updateSettings(selectedCategories: [firstCategory]);
+                            setState(() {});
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.gray600.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.gray600, width: 1),
+                            ),
+                            child: const Text(
+                              'Aucun',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                                color: AppColors.gray400,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
                   const SizedBox(height: 16),
                   Wrap(
                     spacing: 8,
