@@ -398,8 +398,8 @@ const Map<String, WordCategory> wordCategories = {
       'Germignon', 'Macronium', 'Méganium', 'Héricendre', 'Feurisson',
       'Typhlosion', 'Kaiminus', 'Crocodil', 'Aligatueur', 'Pichu',
       'Togepi', 'Togetic', 'Marill', 'Azumarill', 'Capumain',
-      'Tournegrin', 'Héliatronc', 'Queulorior', 'Scarhino', 
-      , 'Cerfrousse', 'Élekid', 'Magby',
+      'Tournegrin', 'Héliatronc', 'Queulorior', 'Scarhino', 'Teddiursa',
+      'Ursaring', 'Porygon2', 'Cerfrousse', 'Élekid', 'Magby',
       'Lugia', 'Ho-Oh', 'Celebi', 'Suicune', 'Entei', 'Raikou',
       // Gen 3
       'Arcko', 'Massko', 'Jungko', 'Poussifeu', 'Galifeu',
