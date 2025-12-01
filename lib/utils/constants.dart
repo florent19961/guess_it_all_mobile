@@ -40,8 +40,8 @@ class AppConstants {
   static const String screenStats = 'stats';
 
   // Word choice modes
-  static const String wordChoiceCustom = 'personnalisé';
-  static const String wordChoiceRandom = 'aléatoire';
+  static const String wordChoiceCustom = 'Personnalisé';
+  static const String wordChoiceRandom = 'Aléatoire';
 
   // Default categories
   static const List<String> defaultCategories = ['films', 'pays', 'animaux'];
