@@ -160,15 +160,51 @@ class _PlayersScreenState extends State<PlayersScreen> {
     return null;
   }
 
-  void _showNoMoreWordsWarning(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Plus de mots disponibles. Écrivez-le manuellement ou ajoutez des catégories.',
-          style: TextStyle(fontFamily: 'Poppins'),
-        ),
-        backgroundColor: AppColors.warning,
-        duration: Duration(seconds: 3),
+  void _showNoWordsAvailableWarning(BuildContext context) {
+    AppModal.show(
+      context,
+      title: 'Oups !',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Aucun mot n\'est plus disponible, tu dois en créer un toi-même !',
+            style: TextStyle(fontFamily: 'Poppins', color: Colors.white),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          AppButton(
+            text: 'Compris',
+            variant: AppButtonVariant.primary,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPartialFillWarning(BuildContext context, int filled, int needed) {
+    final remaining = needed - filled;
+    AppModal.show(
+      context,
+      title: 'Attention',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Il ne reste que $filled mot${filled > 1 ? 's' : ''} disponible${filled > 1 ? 's' : ''} '
+            'et tu dois en remplir $needed.\n\n'
+            'Il te faudra compléter les $remaining restant${remaining > 1 ? 's' : ''} toi-même !',
+            style: const TextStyle(fontFamily: 'Poppins', color: Colors.white),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          AppButton(
+            text: 'Compris',
+            variant: AppButtonVariant.primary,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
       ),
     );
   }
@@ -264,7 +300,14 @@ class _PlayersScreenState extends State<PlayersScreen> {
                   variant: AppButtonVariant.secondary,
                   fullWidth: true,
                   onPressed: () {
-                    bool hadMissingWords = false;
+                    // Compter les champs vides avant remplissage
+                    final emptyFieldsCount = wordControllers
+                        .where((c) => c.text.trim().isEmpty)
+                        .length;
+
+                    if (emptyFieldsCount == 0) return; // Rien à remplir
+
+                    int filledCount = 0;
                     setModalState(() {
                       // Collecter les mots déjà remplis dans le modal
                       final filledWords = wordControllers
@@ -283,14 +326,19 @@ class _PlayersScreenState extends State<PlayersScreen> {
                           if (newWord != null) {
                             wordControllers[i].text = newWord;
                             filledWords.add(newWord);
-                          } else {
-                            hadMissingWords = true;
+                            filledCount++;
                           }
                         }
                       }
                     });
-                    if (hadMissingWords) {
-                      _showNoMoreWordsWarning(context);
+
+                    // Afficher le message approprié
+                    if (filledCount == 0) {
+                      // Aucun mot n'a pu être généré
+                      _showNoWordsAvailableWarning(context);
+                    } else if (filledCount < emptyFieldsCount) {
+                      // Seulement une partie a été remplie
+                      _showPartialFillWarning(context, filledCount, emptyFieldsCount);
                     }
                   },
                 ),
@@ -332,7 +380,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                               wordControllers[index].text = newWord;
                             });
                           } else {
-                            _showNoMoreWordsWarning(context);
+                            _showNoWordsAvailableWarning(context);
                           }
                         },
                         child: Container(
