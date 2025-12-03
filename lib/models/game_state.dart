@@ -65,6 +65,7 @@ class GameState {
 
   List<String> wordsGuessedThisTurn;
   List<String> passedWordsThisTurn;
+  String? expiredWord;
   int timeRemaining;
   int? turnBonusTime;
 
@@ -91,6 +92,7 @@ class GameState {
     this.currentWord,
     List<String>? wordsGuessedThisTurn,
     List<String>? passedWordsThisTurn,
+    this.expiredWord,
     this.timeRemaining = AppConstants.defaultTurnDuration,
     this.turnBonusTime,
     this.turnStartTimestamp,
@@ -126,6 +128,8 @@ class GameState {
     bool clearCurrentWord = false,
     List<String>? wordsGuessedThisTurn,
     List<String>? passedWordsThisTurn,
+    String? expiredWord,
+    bool clearExpiredWord = false,
     int? timeRemaining,
     int? turnBonusTime,
     bool clearTurnBonusTime = false,
@@ -156,6 +160,7 @@ class GameState {
       currentWord: clearCurrentWord ? null : (currentWord ?? this.currentWord),
       wordsGuessedThisTurn: wordsGuessedThisTurn ?? List.from(this.wordsGuessedThisTurn),
       passedWordsThisTurn: passedWordsThisTurn ?? List.from(this.passedWordsThisTurn),
+      expiredWord: clearExpiredWord ? null : (expiredWord ?? this.expiredWord),
       timeRemaining: timeRemaining ?? this.timeRemaining,
       turnBonusTime: clearTurnBonusTime ? null : (turnBonusTime ?? this.turnBonusTime),
       turnStartTimestamp: clearTurnStartTimestamp ? null : (turnStartTimestamp ?? this.turnStartTimestamp),
@@ -182,6 +187,7 @@ class GameState {
       'currentWord': currentWord,
       'wordsGuessedThisTurn': wordsGuessedThisTurn,
       'passedWordsThisTurn': passedWordsThisTurn,
+      'expiredWord': expiredWord,
       'timeRemaining': timeRemaining,
       'turnBonusTime': turnBonusTime,
       'turnStartTimestamp': turnStartTimestamp,
@@ -211,6 +217,7 @@ class GameState {
       currentWord: json['currentWord'] as String?,
       wordsGuessedThisTurn: (json['wordsGuessedThisTurn'] as List<dynamic>?)?.cast<String>() ?? [],
       passedWordsThisTurn: (json['passedWordsThisTurn'] as List<dynamic>?)?.cast<String>() ?? [],
+      expiredWord: json['expiredWord'] as String?,
       timeRemaining: json['timeRemaining'] as int? ?? AppConstants.defaultTurnDuration,
       turnBonusTime: json['turnBonusTime'] as int?,
       turnStartTimestamp: json['turnStartTimestamp'] as int?,

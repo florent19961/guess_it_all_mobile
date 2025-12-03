@@ -382,10 +382,16 @@ class GameProvider extends ChangeNotifier {
         ? ((_game.turnEndTimestamp! - now) / 1000).ceil().clamp(0, 999)
         : 0;
 
+    // Si la manche n'est pas finie et qu'il y avait un mot en cours, le sauvegarder comme "expiré"
+    final isRoundFinished = _game.remainingWords.isEmpty;
+    final expiredWord = isRoundFinished ? null : _game.currentWord;
+
     _game = _game.copyWith(
       timeRemaining: timeRemaining,
       currentScreen: AppConstants.screenVerification,
-      turnBonusTime: _game.remainingWords.isEmpty ? timeRemaining : null,
+      turnBonusTime: isRoundFinished ? timeRemaining : null,
+      expiredWord: expiredWord,
+      clearExpiredWord: isRoundFinished,
       clearTurnStartTimestamp: true,
       clearTurnEndTimestamp: true,
     );
@@ -408,20 +414,33 @@ class GameProvider extends ChangeNotifier {
     final currentTeam = _teams[_game.currentTeamIndex];
     final wordsGuessedThisTurn = _game.wordsGuessedThisTurn;
     final passedWordsThisTurn = _game.passedWordsThisTurn;
+    final expiredWord = _game.expiredWord;
 
     // Mots invalidés
     final invalidatedGuessedWords =
         wordsGuessedThisTurn.where((w) => !validatedWords.contains(w)).toList();
     final invalidatedPassedWords =
         passedWordsThisTurn.where((w) => !validatedWords.contains(w)).toList();
+
+    // Gérer le mot expiré
+    final isExpiredWordValidated = expiredWord != null && validatedWords.contains(expiredWord);
+    final isExpiredWordInvalidated = expiredWord != null && !validatedWords.contains(expiredWord);
+
     final allInvalidatedWords = [
       ...invalidatedGuessedWords,
-      ...invalidatedPassedWords
+      ...invalidatedPassedWords,
+      if (isExpiredWordInvalidated) expiredWord,
     ];
 
-    // Remettre les mots invalidés dans le pool
+    // Remettre les mots invalidés dans le pool (sauf le mot expiré qui y est déjà)
     final newRemainingWords = List<String>.from(_game.remainingWords)
-      ..addAll(allInvalidatedWords);
+      ..addAll(invalidatedGuessedWords)
+      ..addAll(invalidatedPassedWords);
+
+    // Si le mot expiré est validé, le retirer du pool
+    if (isExpiredWordValidated) {
+      newRemainingWords.remove(expiredWord);
+    }
 
     // Calculer les points
     final pointsScored = validatedWords.length;
@@ -458,6 +477,7 @@ class GameProvider extends ChangeNotifier {
         remainingWords: newRemainingWords,
         currentScreen: AppConstants.screenTransition,
         turnBonusTime: _game.timeRemaining,
+        clearExpiredWord: true,
       );
     } else {
       // Mélanger les mots restants
@@ -481,6 +501,7 @@ class GameProvider extends ChangeNotifier {
         currentScreen: AppConstants.screenGame,
         turnBonusTime: nextTurnBonusTime,
         clearTurnBonusTime: nextTurnBonusTime == null,
+        clearExpiredWord: true,
       );
     }
 

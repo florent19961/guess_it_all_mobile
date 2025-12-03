@@ -4,6 +4,7 @@ import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/home_button.dart';
+import '../services/audio_service.dart';
 
 class VerificationScreen extends StatefulWidget {
   const VerificationScreen({super.key});
@@ -21,6 +22,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
     final provider = context.read<GameProvider>();
     // Par défaut : mots devinés = validés, mots passés = invalidés
     _validatedWords = Set.from(provider.game.wordsGuessedThisTurn);
+    // Jouer le son de fin de tour
+    AudioService.playDing();
   }
 
   void _toggleWord(String word) {
@@ -38,6 +41,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
     final provider = context.watch<GameProvider>();
     final guessedWords = provider.game.wordsGuessedThisTurn;
     final passedWords = provider.game.passedWordsThisTurn;
+    final expiredWord = provider.game.expiredWord;
     final teamColor = AppColors.getTeamColor(provider.game.currentTeamIndex);
 
     return Material(
@@ -115,6 +119,49 @@ class _VerificationScreenState extends State<VerificationScreen> {
                           const SizedBox(height: 24),
                         ],
 
+                        // Expired word section
+                        if (expiredWord != null) ...[
+                          Row(
+                            children: [
+                              const Text(
+                                'Mot en cours',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.error,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.error.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Text(
+                                  'Temps écoulé',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 10,
+                                    color: AppColors.error,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          _buildWordCard(
+                            expiredWord,
+                            isGuessed: false,
+                            isExpired: true,
+                          ),
+                          const SizedBox(height: 24),
+                        ],
+
                         // Passed words section
                         if (passedWords.isNotEmpty) ...[
                           Row(
@@ -181,7 +228,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
     );
   }
 
-  Widget _buildWordCard(String word, {required bool isGuessed}) {
+  Widget _buildWordCard(String word, {required bool isGuessed, bool isExpired = false}) {
     final isValidated = _validatedWords.contains(word);
 
     return GestureDetector(
@@ -218,30 +265,6 @@ class _VerificationScreenState extends State<VerificationScreen> {
                 ),
               ),
             ),
-            Text(
-              isValidated ? 'Cliquer pour invalider' : 'Cliquer pour valider',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 10,
-                color: isValidated ? AppColors.error.withValues(alpha: 0.7) : AppColors.success.withValues(alpha: 0.7),
-              ),
-            ),
-            if (!isGuessed)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'Passé',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 10,
-                    color: AppColors.warning,
-                  ),
-                ),
-              ),
           ],
         ),
       ),

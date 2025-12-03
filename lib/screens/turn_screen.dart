@@ -293,7 +293,8 @@ class _TurnScreenState extends State<TurnScreen> {
     final currentPlayer = provider.getCurrentPlayer();
     final isLowTime = _timeRemaining <= 10;
     final passPenalty = provider.settings.passPenalty;
-    final canPass = _timeRemaining >= passPenalty;
+    final hasWordsToPassTo = provider.game.remainingWords.length > 1;
+    final canPass = _timeRemaining >= passPenalty && hasWordsToPassTo;
 
     return Material(
       color: AppColors.backgroundMain,
@@ -404,22 +405,16 @@ class _TurnScreenState extends State<TurnScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 20),
                             decoration: BoxDecoration(
                               color: canPass && !_isPaused
-                                  ? AppColors.error.withValues(alpha: 0.2)
+                                  ? AppColors.error
                                   : AppColors.gray700,
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: canPass && !_isPaused
-                                    ? AppColors.error
-                                    : AppColors.gray600,
-                                width: 2,
-                              ),
                             ),
                             child: Column(
                               children: [
                                 Icon(
                                   Icons.skip_next,
                                   color: canPass && !_isPaused
-                                      ? AppColors.error
+                                      ? Colors.white
                                       : AppColors.gray500,
                                   size: 32,
                                 ),
@@ -431,7 +426,7 @@ class _TurnScreenState extends State<TurnScreen> {
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                     color: canPass && !_isPaused
-                                        ? AppColors.error
+                                        ? Colors.white
                                         : AppColors.gray500,
                                   ),
                                 ),
@@ -442,7 +437,7 @@ class _TurnScreenState extends State<TurnScreen> {
                                       fontFamily: 'Poppins',
                                       fontSize: 12,
                                       color: canPass && !_isPaused
-                                          ? AppColors.error.withValues(alpha: 0.7)
+                                          ? Colors.white.withValues(alpha: 0.7)
                                           : AppColors.gray600,
                                     ),
                                   ),
@@ -464,14 +459,8 @@ class _TurnScreenState extends State<TurnScreen> {
                             decoration: BoxDecoration(
                               color: _isPaused
                                   ? AppColors.gray700
-                                  : AppColors.success.withValues(alpha: 0.2),
+                                  : AppColors.secondaryCyan,
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: _isPaused
-                                    ? AppColors.gray600
-                                    : AppColors.success,
-                                width: 2,
-                              ),
                             ),
                             child: Column(
                               children: [
@@ -479,7 +468,7 @@ class _TurnScreenState extends State<TurnScreen> {
                                   Icons.check,
                                   color: _isPaused
                                       ? AppColors.gray500
-                                      : AppColors.success,
+                                      : Colors.white,
                                   size: 40,
                                 ),
                                 const SizedBox(height: 4),
@@ -491,7 +480,7 @@ class _TurnScreenState extends State<TurnScreen> {
                                     fontWeight: FontWeight.w600,
                                     color: _isPaused
                                         ? AppColors.gray500
-                                        : AppColors.success,
+                                        : Colors.white,
                                   ),
                                 ),
                               ],

@@ -100,7 +100,19 @@ class SettingsScreen extends StatelessWidget {
                     variant: AppButtonVariant.primary,
                     size: AppButtonSize.large,
                     fullWidth: true,
-                    onPressed: () => provider.goToScreen(AppConstants.screenPlayers),
+                    onPressed: () {
+                      // Si mode aléatoire, vérifier le nombre de mots disponibles
+                      if (settings.wordChoice == AppConstants.wordChoiceRandom) {
+                        final totalWordsNeeded = settings.numberOfPlayers * settings.wordsPerPlayer;
+                        final availableWords = getTotalWordsCount(settings.selectedCategories);
+
+                        if (availableWords < totalWordsNeeded) {
+                          _showNotEnoughWordsWarning(context, provider, availableWords, totalWordsNeeded);
+                          return;
+                        }
+                      }
+                      provider.goToScreen(AppConstants.screenPlayers);
+                    },
                   ),
                   const SizedBox(height: 24),
                 ],
@@ -195,7 +207,75 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  void _showAdvancedSettings(BuildContext context, GameProvider provider) {
+  void _showNotEnoughWordsWarning(
+    BuildContext context,
+    GameProvider provider,
+    int available,
+    int needed,
+  ) {
+    AppModal.show(
+      context,
+      title: 'Attention',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Pas assez de mots disponibles pour les catégories choisies.\n\n'
+            'Disponibles : $available\n'
+            'Nécessaires : $needed\n\n'
+            'Si vous continuez, il faudra écrire ${needed - available} mot(s) à la main.',
+            style: const TextStyle(fontFamily: 'Poppins', color: Colors.white),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  text: 'Catégories',
+                  variant: AppButtonVariant.secondary,
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _showAdvancedSettings(context, provider, scrollToCategories: true);
+                  },
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: AppButton(
+                  text: 'Continuer',
+                  variant: AppButtonVariant.primary,
+                  onPressed: () {
+                    Navigator.pop(context);
+                    provider.goToScreen(AppConstants.screenPlayers);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAdvancedSettings(BuildContext context, GameProvider provider, {bool scrollToCategories = false}) {
+    final scrollController = ScrollController();
+    final categoriesKey = GlobalKey();
+
+    // Scroll vers les catégories après le build si demandé
+    if (scrollToCategories) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final categoriesContext = categoriesKey.currentContext;
+        if (categoriesContext != null) {
+          Scrollable.ensureVisible(
+            categoriesContext,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        }
+      });
+    }
+
     AppModal.show(
       context,
       title: 'Avancé',
@@ -205,6 +285,7 @@ class SettingsScreen extends StatelessWidget {
           final settings = provider.settings;
 
           return SingleChildScrollView(
+            controller: scrollController,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -251,6 +332,7 @@ class SettingsScreen extends StatelessWidget {
 
                 // Catégories (toujours visibles pour le bouton aléatoire)
                 Row(
+                  key: categoriesKey,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(

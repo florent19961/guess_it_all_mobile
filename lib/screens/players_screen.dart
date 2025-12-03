@@ -160,6 +160,19 @@ class _PlayersScreenState extends State<PlayersScreen> {
     return null;
   }
 
+  void _showNoMoreWordsWarning(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Plus de mots disponibles. Écrivez-le manuellement ou ajoutez des catégories.',
+          style: TextStyle(fontFamily: 'Poppins'),
+        ),
+        backgroundColor: AppColors.warning,
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
+
   // Auto-remplit les mots d'un joueur en mode aléatoire
   void _autoFillWordsForPlayer(String playerId, GameProvider provider) {
     // Ne rien faire si mode personnalisé
@@ -251,6 +264,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                   variant: AppButtonVariant.secondary,
                   fullWidth: true,
                   onPressed: () {
+                    bool hadMissingWords = false;
                     setModalState(() {
                       // Collecter les mots déjà remplis dans le modal
                       final filledWords = wordControllers
@@ -269,10 +283,15 @@ class _PlayersScreenState extends State<PlayersScreen> {
                           if (newWord != null) {
                             wordControllers[i].text = newWord;
                             filledWords.add(newWord);
+                          } else {
+                            hadMissingWords = true;
                           }
                         }
                       }
                     });
+                    if (hadMissingWords) {
+                      _showNoMoreWordsWarning(context);
+                    }
                   },
                 ),
               ),
@@ -312,6 +331,8 @@ class _PlayersScreenState extends State<PlayersScreen> {
                             setModalState(() {
                               wordControllers[index].text = newWord;
                             });
+                          } else {
+                            _showNoMoreWordsWarning(context);
                           }
                         },
                         child: Container(
