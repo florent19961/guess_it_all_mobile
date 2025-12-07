@@ -104,7 +104,10 @@ class SettingsScreen extends StatelessWidget {
                       // Si mode aléatoire, vérifier le nombre de mots disponibles
                       if (settings.wordChoice == AppConstants.wordChoiceRandom) {
                         final totalWordsNeeded = settings.numberOfPlayers * settings.wordsPerPlayer;
-                        final availableWords = getTotalWordsCount(settings.selectedCategories);
+                        final availableWords = getTotalWordsCount(
+                          settings.selectedCategories,
+                          difficultyLevels: settings.selectedDifficultyLevels,
+                        );
 
                         if (availableWords < totalWordsNeeded) {
                           _showNotEnoughWordsWarning(context, provider, availableWords, totalWordsNeeded);
@@ -220,7 +223,7 @@ class SettingsScreen extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Pas assez de mots disponibles pour les catégories choisies.\n\n'
+            'Pas assez de mots disponibles pour les catégories et niveaux de difficulté choisis.\n\n'
             'Disponibles : $available\n'
             'Nécessaires : $needed\n\n'
             'Si vous continuez, il faudra écrire ${needed - available} mot(s) à la main.',
@@ -232,7 +235,7 @@ class SettingsScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: AppButton(
-                  text: 'Catégories',
+                  text: 'Paramètres',
                   variant: AppButtonVariant.secondary,
                   onPressed: () {
                     Navigator.pop(context);
@@ -327,6 +330,62 @@ class SettingsScreen extends StatelessWidget {
                     provider.updateSettings(passPenalty: value.toInt());
                     setState(() {});
                   },
+                ),
+                const SizedBox(height: 24),
+
+                // Niveaux de difficulté
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Difficulté',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [1, 2, 3].map((level) {
+                    final isSelected = settings.selectedDifficultyLevels.contains(level);
+                    return GestureDetector(
+                      onTap: () {
+                        final newLevels = List<int>.from(settings.selectedDifficultyLevels);
+                        if (isSelected) {
+                          if (newLevels.length > 1) {
+                            newLevels.remove(level);
+                          }
+                        } else {
+                          newLevels.add(level);
+                        }
+                        newLevels.sort();
+                        provider.updateSettings(selectedDifficultyLevels: newLevels);
+                        setState(() {});
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColors.secondaryCyan : AppColors.backgroundCard,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isSelected ? AppColors.secondaryCyan : AppColors.gray600,
+                            width: 2,
+                          ),
+                        ),
+                        child: Text(
+                          AppConstants.difficultyLabels[level]!,
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            color: isSelected ? Colors.white : AppColors.gray400,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
                 const SizedBox(height: 24),
 

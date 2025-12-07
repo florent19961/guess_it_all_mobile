@@ -15,12 +15,20 @@ class GameProvider extends ChangeNotifier {
   List<Player> _players = [];
   List<Team> _teams = [];
   GameState _game = GameState.initial();
+  String? _currentEditingPlayerId;
 
   // Getters
   GameSettings get settings => _settings;
   List<Player> get players => _players;
   List<Team> get teams => _teams;
   GameState get game => _game;
+  String? get currentEditingPlayerId => _currentEditingPlayerId;
+
+  // Setter pour le joueur en cours d'édition
+  void setCurrentEditingPlayer(String? playerId) {
+    _currentEditingPlayerId = playerId;
+    notifyListeners();
+  }
 
   // Constructor
   GameProvider() {
@@ -103,6 +111,7 @@ class GameProvider extends ChangeNotifier {
     int? turnDuration,
     int? passPenalty,
     List<String>? selectedCategories,
+    List<int>? selectedDifficultyLevels,
   }) {
     _settings = _settings.copyWith(
       numberOfTeams: numberOfTeams,
@@ -112,6 +121,7 @@ class GameProvider extends ChangeNotifier {
       turnDuration: turnDuration,
       passPenalty: passPenalty,
       selectedCategories: selectedCategories,
+      selectedDifficultyLevels: selectedDifficultyLevels,
     );
     notifyListeners();
     _saveSettings();

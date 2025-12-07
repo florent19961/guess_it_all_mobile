@@ -210,6 +210,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
       final words = generateWordsFromCategories(
         provider.settings.selectedCategories,
         1,
+        difficultyLevels: provider.settings.selectedDifficultyLevels,
       );
       if (words.isNotEmpty) {
         final word = words[0];
@@ -531,8 +532,10 @@ class _PlayersScreenState extends State<PlayersScreen> {
                                   const SizedBox(width: 12),
                                   GestureDetector(
                                     onTap: hasName
-                                        ? () => _showWordsModal(
-                                            context, player, provider)
+                                        ? () {
+                                            provider.setCurrentEditingPlayer(player.id);
+                                            provider.goToScreen(AppConstants.screenWords);
+                                          }
                                         : null,
                                     child: Opacity(
                                       opacity: hasName ? 1.0 : 0.4,

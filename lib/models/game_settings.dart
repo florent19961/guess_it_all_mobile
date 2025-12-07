@@ -8,6 +8,7 @@ class GameSettings {
   int turnDuration;
   int passPenalty;
   List<String> selectedCategories;
+  List<int> selectedDifficultyLevels;
 
   GameSettings({
     this.numberOfTeams = AppConstants.defaultNumberOfTeams,
@@ -17,7 +18,9 @@ class GameSettings {
     this.turnDuration = AppConstants.defaultTurnDuration,
     this.passPenalty = AppConstants.defaultPassPenalty,
     List<String>? selectedCategories,
-  }) : selectedCategories = selectedCategories ?? List.from(AppConstants.defaultCategories);
+    List<int>? selectedDifficultyLevels,
+  }) : selectedCategories = selectedCategories ?? List.from(AppConstants.defaultCategories),
+       selectedDifficultyLevels = selectedDifficultyLevels ?? List.from(AppConstants.defaultDifficultyLevels);
 
   factory GameSettings.initial() {
     return GameSettings();
@@ -31,6 +34,7 @@ class GameSettings {
     int? turnDuration,
     int? passPenalty,
     List<String>? selectedCategories,
+    List<int>? selectedDifficultyLevels,
   }) {
     return GameSettings(
       numberOfTeams: numberOfTeams ?? this.numberOfTeams,
@@ -40,6 +44,7 @@ class GameSettings {
       turnDuration: turnDuration ?? this.turnDuration,
       passPenalty: passPenalty ?? this.passPenalty,
       selectedCategories: selectedCategories ?? List.from(this.selectedCategories),
+      selectedDifficultyLevels: selectedDifficultyLevels ?? List.from(this.selectedDifficultyLevels),
     );
   }
 
@@ -52,6 +57,7 @@ class GameSettings {
       'turnDuration': turnDuration,
       'passPenalty': passPenalty,
       'selectedCategories': selectedCategories,
+      'selectedDifficultyLevels': selectedDifficultyLevels,
     };
   }
 
@@ -65,6 +71,8 @@ class GameSettings {
       passPenalty: json['passPenalty'] as int? ?? AppConstants.defaultPassPenalty,
       selectedCategories: (json['selectedCategories'] as List<dynamic>?)?.cast<String>() ??
           List.from(AppConstants.defaultCategories),
+      selectedDifficultyLevels: (json['selectedDifficultyLevels'] as List<dynamic>?)?.cast<int>() ??
+          List.from(AppConstants.defaultDifficultyLevels),
     );
   }
 }

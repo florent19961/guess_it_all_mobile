@@ -1,10 +1,22 @@
 import 'dart:math';
 
+class WordWithDifficulty {
+  final String word;
+  final int difficulty; // 1=facile, 2=moyen, 3=difficile
+
+  const WordWithDifficulty(this.word, {this.difficulty = 2});
+}
+
+// Helper pour créer une liste de mots avec difficulté par défaut (niveau 2)
+List<WordWithDifficulty> _w(List<String> words) {
+  return words.map((w) => WordWithDifficulty(w)).toList();
+}
+
 class WordCategory {
   final String id;
   final String name;
   final String icon;
-  final List<String> words;
+  final List<WordWithDifficulty> words;
 
   const WordCategory({
     required this.id,
@@ -14,12 +26,12 @@ class WordCategory {
   });
 }
 
-const Map<String, WordCategory> wordCategories = {
+final Map<String, WordCategory> wordCategories = {
   'films': WordCategory(
     id: 'films',
     name: 'Films & Séries',
     icon: '🎬',
-    words: [
+    words: _w([
       // Classiques
       'Titanic', 'Avatar', 'Le Parrain', 'Star Wars', 'Jurassic Park',
       'Matrix', 'Forrest Gump', 'Pulp Fiction', 'Inception', 'Gladiator',
@@ -32,17 +44,17 @@ const Map<String, WordCategory> wordCategories = {
       'Batman', 'Superman', 'Spider-Man', 'Iron Man', 'Avengers',
       'Black Panther', 'Joker',
       'Thor', 'Doctor Strange', 'Captain America', 'Hulk',
-      // Animation 
+      // Animation
       'Ratatouille', 'Nemo', 'Vice-Versa', 'Coco', 'Monstres et Cie',
       'Wall-E', 'Les Indestructibles', 'Rebelle', 'Vaiana', 'Encanto',
       'La Reine des Neiges', 'Zootopie', 'Dragons', 'Kung Fu Panda', 'Madagascar',
       'Moi Moche et Méchant', 'Les Minions', 'Lego Movie', 'Soul', 'Là-haut',
       'Mulan',"Le Roi Lion","Vaiana","Raiponce",
-      "Le Roi Lion", "La Reine des Neiges", "Vaiana", "Raiponce", 
-      "Aladdin", "Le Monde de Nemo", "Cendrillon", "Toy Story", "Mulan", "Vice-Versa", 
-      "Zootopie", "Là-haut", "La Princesse et la Grenouille", "Rebelle", "Encanto", 
-      "Hercule", "Pinocchio", "Tarzan", "Atlantide", "Monstres & Cie", "Cars", "Ratatouille", 
-      "WALL-E", "Coco"
+      "Le Roi Lion", "La Reine des Neiges", "Vaiana", "Raiponce",
+      "Aladdin", "Le Monde de Nemo", "Cendrillon", "Toy Story", "Mulan", "Vice-Versa",
+      "Zootopie", "Là-haut", "La Princesse et la Grenouille", "Rebelle", "Encanto",
+      "Hercule", "Pinocchio", "Tarzan", "Atlantide", "Monstres & Cie", "Cars", "Ratatouille",
+      "WALL-E", "Coco",
        // Séries
       'Breaking Bad', 'Game of Thrones', 'Friends', 'The Office',
       'Stranger Things', 'La Casa de Papel', 'Narcos', 'Peaky Blinders',
@@ -50,24 +62,24 @@ const Map<String, WordCategory> wordCategories = {
       'Grey\'s Anatomy', 'How I Met Your Mother', 'The Big Bang Theory',
       'Black Mirror', 'Sherlock', 'Vikings', 'Adolescence', 'Squid Game',
       'Wednesday', 'The Witcher', 'Lupin', 'Emily in Paris', 'Ozark',
-      'Better Call Saul'
+      'Better Call Saul',
       // Autres films
-      'Fight Club', 'Seven', 'Gone Girl', 'Shutter Island', 
+      'Fight Club', 'Seven', 'Gone Girl', 'Shutter Island',
       'Casino', 'Heat', 'Le parrain',
-      'La liste de Schindler', 'Il faut sauver le soldat Ryan', 
+      'La liste de Schindler', 'Il faut sauver le soldat Ryan',
       'Batman : The Dark Knight', 'Kill Bill', 'Django',
       // Films supplémentaires
       'Amélie Poulain', 'Intouchables', 'La Haine', 'Les Choristes', 'Le Dîner de Cons',
       'Bienvenue chez les Ch\'tis', 'Les Visiteurs', 'Le Grand Bleu', 'Léon', 'Nikita',
       'The Truman Show', 'Eternal Sunshine', 'Her', 'Whiplash', 'La La Land',
       'The Shining', 'Le loup de Wall Street'
-    ],
+    ]),
   ),
   'pays': WordCategory(
     id: 'pays',
     name: 'Pays & Villes',
     icon: '🌍',
-    words: [
+    words: _w([
       // Europe
       'France', 'Allemagne', 'Italie', 'Espagne', 'Portugal',
       'Royaume-Uni', 'Irlande', 'Belgique', 'Pays-Bas', 'Suisse',
@@ -102,13 +114,13 @@ const Map<String, WordCategory> wordCategories = {
       // Grandes villes
       'Paris', 'Londres', 'New York', 'Tokyo', 'Pékin',
       'Moscou', 'Berlin', 'Rome', 'Madrid', 'Amsterdam',
-    ],
+    ]),
   ),
   'animaux': WordCategory(
     id: 'animaux',
     name: 'Animaux',
     icon: '🦁',
-    words: [
+    words: _w([
       // Félins
       'Lion', 'Tigre', 'Léopard', 'Panthère', 'Jaguar',
       'Guépard', 'Lynx', 'Puma', 'Ocelot', 'Chat sauvage',
@@ -147,13 +159,13 @@ const Map<String, WordCategory> wordCategories = {
       // Insectes
       'Papillon', 'Abeille', 'Fourmi', 'Coccinelle', 'Libellule',
       'Scarabée', 'Mante religieuse', 'Sauterelle', 'Criquet', 'Cigale',
-    ],
+    ]),
   ),
   'objets': WordCategory(
     id: 'objets',
     name: 'Objets du quotidien',
     icon: '🔧',
-    words: [
+    words: _w([
       // Électronique
       'Téléphone', 'Ordinateur', 'Tablette', 'Télévision', 'Radio',
       'Clavier', 'Souris', 'Écran', 'Casque', 'Enceinte',
@@ -187,13 +199,13 @@ const Map<String, WordCategory> wordCategories = {
       // Autres
       'Parapluie', 'Sac', 'Valise', 'Portefeuille', 'Clés',
       'Lampe', 'Horloge', 'Réveil', 'Bougie', 'Vase',
-    ],
+    ]),
   ),
   'metiers': WordCategory(
     id: 'metiers',
     name: 'Métiers',
     icon: '💼',
-    words: [
+    words: _w([
       // Santé
       'Médecin', 'Infirmier', 'Chirurgien', 'Dentiste', 'Pharmacien',
       'Vétérinaire', 'Kinésithérapeute', 'Ostéopathe', 'Psychologue', 'Psychiatre',
@@ -230,13 +242,13 @@ const Map<String, WordCategory> wordCategories = {
       // Transport
       'Pilote', 'Hôtesse de l\'air', 'Steward', 'Chauffeur', 'Conducteur',
       'Capitaine', 'Marin', 'Mécanicien', 'Garagiste', 'Taxi',
-    ],
+    ]),
   ),
   'sports': WordCategory(
     id: 'sports',
     name: 'Sports',
     icon: '⚽',
-    words: [
+    words: _w([
       // Sports collectifs
       'Football', 'Basketball', 'Volleyball', 'Handball', 'Rugby',
       'Football américain', 'Hockey sur glace', 'Hockey sur gazon', 'Water-polo', 'Polo',
@@ -279,13 +291,13 @@ const Map<String, WordCategory> wordCategories = {
       'Pétanque', 'Boules', 'Bowling', 'Billard', 'Fléchettes',
       'Échecs', 'Go', 'Bridge', 'Coinche',
       'Course d\'orientation',  'Beach volley',
-    ],
+    ]),
   ),
   'celebrites': WordCategory(
     id: 'celebrites',
     name: 'Célébrités',
     icon: '⭐',
-    words: [
+    words: _w([
       // Scientifiques
       'Einstein', 'Newton', 'Darwin', 'Marie Curie', 'Galilée',
       'Pasteur', 'Tesla', 'Hawking', 'Archimède',
@@ -326,13 +338,13 @@ const Map<String, WordCategory> wordCategories = {
       'Cate Blanchett', 'Kate Winslet', 'Charlize Theron', 'Margot Robbie', 'Gal Gadot',
       'Antoine Griezmann', 'Paul Pogba', 'N\'Golo Kanté', 'Hugo Lloris', 'Karim Benzema',
       'Lewis Hamilton', 'Max Verstappen', 'Sebastian Vettel', 'Michael Schumacher', 'Ayrton Senna',
-    ],
+    ]),
   ),
   'musiques': WordCategory(
     id: 'musiques',
     name: 'Titres de musiques',
     icon: '🎵',
-    words: [
+    words: _w([
       // Rock classique
       'Bohemian Rhapsody', 'Stairway to Heaven', 'Hotel California', 'Smoke on the Water', 'Back in Black',
       'Sweet Child O Mine', 'November Rain', 'Comfortably Numb', 'Free Bird', 'Dream On',
@@ -374,13 +386,13 @@ const Map<String, WordCategory> wordCategories = {
       'Viva la Vida',
       'We Will Rock You', 'We Are the Champions', 
       'Wrecking Ball', 'Flowers', 'Party in the USA', 'We Can\'t Stop', 'Malibu',
-    ],
+    ]),
   ),
   'pokemon': WordCategory(
     id: 'pokemon',
     name: 'Pokémon',
     icon: '⚡',
-    words: [
+    words: _w([
       // Starters et évolutions Gen 1
       'Bulbizarre', 'Herbizarre', 'Florizarre', 'Salamèche', 'Reptincel',
       'Dracaufeu', 'Carapuce', 'Carabaffe', 'Tortank', 'Pikachu',
@@ -410,13 +422,13 @@ const Map<String, WordCategory> wordCategories = {
       'Tortipouss', 'Boskara', 'Torterra', 'Ouisticram', 'Chimpenfeu',
       'Simiabraz', 'Tiplouf', 'Prinplouf', 'Pingoléon', 'Lucario',
       'Carchacrok', 'Dialga', 'Palkia', 'Giratina', 'Arceus', 'Darkrai',
-    ],
+    ]),
   ),
   'clashRoyale': WordCategory(
     id: 'clashRoyale',
     name: 'Clash Royale',
     icon: '👑',
-    words: [
+    words: _w([
       // Troupes communes
       'Chevalier', 'Archers', 'Gobelins', 'Géant', 'Mousquetaire',
       'Mini P.E.K.K.A', 'Valkyrie', 'Squelettes', 'Armée de squelettes', 'Barbares',
@@ -447,13 +459,13 @@ const Map<String, WordCategory> wordCategories = {
       'Canon', 'Tesla', 'Tour de l\'enfer', 'Tour de bombes', 'Mortier',
       'Cabane de gobelins', 'Tombeau à squelettes', 'Cabane de barbares', 'Fournaise', 
       'Extracteur d\'élixir', 'Cage de gobelins',
-    ],
+    ]),
   ),
   'nourriture': WordCategory(
     id: 'nourriture',
     name: 'Nourriture',
     icon: '🍕',
-    words: [
+    words: _w([
       // Fruits
       'Pomme', 'Banane', 'Orange', 'Fraise', 'Cerise',
       'Raisin', 'Pêche', 'Abricot', 'Poire', 'Kiwi',
@@ -487,13 +499,13 @@ const Map<String, WordCategory> wordCategories = {
       // Boissons
       'Café', 'Thé', 'Chocolat chaud', 'Jus d\'orange', 'Smoothie',
       'Limonade', 'Coca-Cola', 'Bière', 'Vin', 'Champagne',
-    ],
+    ]),
   ),
   'marques': WordCategory(
     id: 'marques',
     name: 'Marques',
     icon: '🏷️',
-    words: [
+    words: _w([
       // Tech
       'Apple', 'Samsung', 'Google', 'Microsoft', 'Amazon',
       'Sony', 'Nintendo', 'PlayStation', 'Xbox', 'Tesla',
@@ -530,13 +542,13 @@ const Map<String, WordCategory> wordCategories = {
       'Bose', 'JBL', 
       'Dyson', 'Philips', 'Bosch', 'Siemens', 'Whirlpool',
       'Carrefour', 'Leclerc', 'Auchan', 'Lidl', 'Aldi',
-    ],
+    ]),
   ),
   'jeux_video': WordCategory(
     id: 'jeux_video',
     name: 'Jeux vidéo',
     icon: '🎮',
-    words: [
+    words: _w([
       // Franchises Nintendo
       'Mario', 'Zelda', 'Pokémon', 
       'Donkey Kong', 'Animal Crossing', 'Super Smash Bros',
@@ -553,13 +565,13 @@ const Map<String, WordCategory> wordCategories = {
       'World of Warcraft (wow)', 
       // Classiques
       'Tetris', 'Pac-Man', 'Sonic', 'Spyro','Dofus'
-    ],
+    ]),
   ),
   'expressions': WordCategory(
     id: 'expressions',
     name: 'Expressions françaises',
     icon: '🇫🇷',
-    words: [
+    words: _w([
       // Expressions avec animaux
       'Avoir le cafard', 'Poser un lapin', 'Avoir la chair de poule', 'Être une poule mouillée', 'Donner sa langue au chat',
       'Avoir d\'autres chats à fouetter', 'Quand les poules auront des dents', 'Être le dindon de la farce', 'Avoir une faim de loup',
@@ -612,13 +624,13 @@ const Map<String, WordCategory> wordCategories = {
       'Faire la tête', 'Avoir la langue bien pendue', 'Dormir sur ses deux oreilles', 'Mettre de l\'huile sur le feu', 'Avoir la moutarde qui monte au nez',
       'Se jeter dans la gueule du loup', 'Être comme un poisson dans l\'eau', 'Avoir un coup de pompe', 'Rester les bras croisés', 'Avoir le beurre et l\'argent du beurre',
       'Ne pas y aller avec le dos de la cuillère', 'Prendre le taureau par les cornes', 'Être au bout du tunnel', 'Avoir le dernier mot', 'Mettre cartes sur table',
-    ],
+    ]),
   ),
   'dessins_animes': WordCategory(
     id: 'dessins_animes',
     name: 'Dessins animés',
     icon: '📺',
-    words: [
+    words: _w([
       // Anime japonais
       'Naruto', 'Dragon Ball', 'One Piece', 'L\'Attaque des Titans', 'Death Note',
       'Demon Slayer', 'Hunter x Hunter', 'Jujutsu Kaisen', 'Yu-Gi-Oh', 
@@ -636,13 +648,13 @@ const Map<String, WordCategory> wordCategories = {
       // Cartoon Network / Nickelodeon
       'Les Super Nanas', 'Le laboratoire de Dexter', 'Oggy et les cafards', 'Les Dalton',
       'Scooby-Doo', 'Tom et Jerry', 'Bugs Bunny', 'Titi et Grosminet', 'Bip Bip et Coyote',
-    ],
+    ]),
   ),
   'personnages_fictifs': WordCategory(
     id: 'personnages_fictifs',
     name: 'Personnages fictifs',
     icon: '🦸',
-    words: [
+    words: _w([
       // Super-héros
       'Batman', 'Superman', 'Spider-Man', 'Wonder Woman', 'Iron Man',
       'Captain America', 'Thor', 'Hulk', 'Black Widow', 'Wolverine',
@@ -668,13 +680,13 @@ const Map<String, WordCategory> wordCategories = {
       'Dark Vador', 'Luke Skywalker', 'Han Solo', 'Princesse Leia', 'Yoda',
       'Spock', 'Neo', 'Morpheus', 'Terminator', 'Robocop',
       'E.T.', 'Predator', 'Alien', 'Wall-E', 'R2-D2',
-    ],
+    ]),
   ),
   'lieux_celebres': WordCategory(
     id: 'lieux_celebres',
     name: 'Lieux célèbres',
     icon: '🗼',
-    words: [
+    words: _w([
       // France
       'Tour Eiffel', 'Arc de Triomphe', 'Notre-Dame de Paris', 'Château de Versailles', 'Mont Saint-Michel',
       'Louvre', 'Sacré-Cœur', 'Pont du Gard', 'Cité de Carcassonne', 'Château de Chambord',
@@ -694,13 +706,13 @@ const Map<String, WordCategory> wordCategories = {
       // Merveilles naturelles
       'Amazonie', 'Sahara', 'Himalaya', 'Antarctique', 'Galápagos',
       'Yellowstone', 'Everest', 'Kilimanjaro', 'Aurores boréales', 
-    ],
+    ]),
   ),
   'inventions': WordCategory(
     id: 'inventions',
     name: 'Inventions',
     icon: '💡',
-    words: [
+    words: _w([
       // Communication
       'Téléphone', 'Télégraphe', 'Radio', 'Télévision', 'Internet',
       'Smartphone', 'Email', 'SMS', 'Fax', 'Imprimerie',
@@ -726,14 +738,14 @@ const Map<String, WordCategory> wordCategories = {
       // Divers
       'Dynamite', 'Béton armé', 'Plastique', 'Verre', 'Papier',
       'Poudre à canon', 'Boîte de conserve', 'Code-barres', 'Carte de crédit', 'Distributeur automatique',
-    ],
+    ]),
   ),
   
   'emotions': WordCategory(
     id: 'emotions',
     name: 'Émotions',
     icon: '😊',
-    words: [
+    words: _w([
       // Émotions positives
       'Joie', 'Bonheur', 'Euphorie', 'Excitation', 'Enthousiasme',
       'Amour', 'Tendresse', 'Affection', 'Passion', 'Désir',
@@ -755,13 +767,13 @@ const Map<String, WordCategory> wordCategories = {
       'Curiosité', 'Intérêt', 'Fascination', 'Concentration', 'Détermination',
       'Courage', 'Audace', 'Timidité', 'Pudeur', 'Vulnérabilité',
       'Soulagement', 'Apaisement', 'Réconfort', 'Sécurité', 'Liberté',
-    ],
+    ]),
   ),
   'actions': WordCategory(
     id: 'actions',
     name: 'Actions',
     icon: '🏃',
-    words: [
+    words: _w([
       // Mouvements de base
       'Marcher', 'Courir', 'Sauter', 'Ramper', 'Grimper',
       'Nager', 'Voler', 'Tomber', 'Glisser', 'Rouler',
@@ -787,13 +799,13 @@ const Map<String, WordCategory> wordCategories = {
       'Parler', 'Écouter', 'Regarder', 'Montrer', 'Expliquer',
       'Demander', 'Répondre', 'Discuter', 'Négocier', 'Convaincre',
       'Aider', 'Partager', 'Donner', 'Recevoir', 'Remercier',
-    ],
+    ]),
   ),
   'instruments': WordCategory(
     id: 'instruments',
     name: 'Instruments de musique',
     icon: '🎸',
-    words: [
+    words: _w([
       // Cordes frottées
       'Violon', 'Alto', 'Violoncelle', 'Contrebasse', 
       // Cordes pincées
@@ -814,13 +826,13 @@ const Map<String, WordCategory> wordCategories = {
       'Timbales', 
       // Autres
       'Harmonica', 
-    ],
+    ]),
   ),
   'contes': WordCategory(
     id: 'contes',
     name: 'Contes et légendes',
     icon: '📖',
-    words: [
+    words: _w([
       // Personnages de contes
       'Cendrillon', 'Blanche-Neige', 'La Belle au bois dormant', 'Le Petit Chaperon rouge', 'Hansel et Gretel',
       'Le Petit Poucet', 'Le Chat botté', 'Pinocchio', 'Peter Pan', 'Fée Clochette',
@@ -840,7 +852,7 @@ const Map<String, WordCategory> wordCategories = {
       // Légendes
       'Roi Arthur', 'Excalibur', 'Merlin', 'Lancelot', 'Table ronde',
       'Robin des Bois', 'Guillaume Tell',
-    ],
+    ]),
   ),
 };
 
@@ -848,16 +860,26 @@ List<WordCategory> getCategoryList() {
   return wordCategories.values.toList();
 }
 
-List<String> generateWordsFromCategories(List<String> selectedCategories, int count) {
+List<String> generateWordsFromCategories(
+  List<String> selectedCategories,
+  int count, {
+  List<int>? difficultyLevels,
+}) {
   final categoriesToUse = selectedCategories.isNotEmpty
       ? selectedCategories
       : wordCategories.keys.toList();
+
+  final allowedLevels = difficultyLevels ?? [1, 2, 3];
 
   final List<String> combinedWords = [];
   for (final categoryId in categoriesToUse) {
     final category = wordCategories[categoryId];
     if (category != null) {
-      combinedWords.addAll(category.words);
+      combinedWords.addAll(
+        category.words
+            .where((w) => allowedLevels.contains(w.difficulty))
+            .map((w) => w.word),
+      );
     }
   }
 
@@ -869,16 +891,22 @@ List<String> generateWordsFromCategories(List<String> selectedCategories, int co
   return uniqueWords.take(count).toList();
 }
 
-int getTotalWordsCount(List<String> selectedCategories) {
+int getTotalWordsCount(List<String> selectedCategories, {List<int>? difficultyLevels}) {
   final categoriesToUse = selectedCategories.isNotEmpty
       ? selectedCategories
       : wordCategories.keys.toList();
+
+  final allowedLevels = difficultyLevels ?? [1, 2, 3];
 
   final Set<String> combinedWords = {};
   for (final categoryId in categoriesToUse) {
     final category = wordCategories[categoryId];
     if (category != null) {
-      combinedWords.addAll(category.words);
+      combinedWords.addAll(
+        category.words
+            .where((w) => allowedLevels.contains(w.difficulty))
+            .map((w) => w.word),
+      );
     }
   }
 

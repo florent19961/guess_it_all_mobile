@@ -32,6 +32,7 @@ class AppConstants {
   static const String screenSettings = 'settings';
   static const String screenRules = 'rules';
   static const String screenPlayers = 'players';
+  static const String screenWords = 'words';
   static const String screenTeams = 'teams';
   static const String screenGame = 'game';
   static const String screenCountdown = 'countdown';
@@ -47,6 +48,19 @@ class AppConstants {
 
   // Default categories
   static const List<String> defaultCategories = ['films', 'pays', 'animaux'];
+
+  // Difficulty levels
+  static const int difficultyEasy = 1;
+  static const int difficultyMedium = 2;
+  static const int difficultyHard = 3;
+
+  static const Map<int, String> difficultyLabels = {
+    1: 'Facile',
+    2: 'Moyen',
+    3: 'Difficile',
+  };
+
+  static const List<int> defaultDifficultyLevels = [1, 2]; // Facile + Moyen
 
   // Round modes
   static const Map<int, String> roundModes = {
