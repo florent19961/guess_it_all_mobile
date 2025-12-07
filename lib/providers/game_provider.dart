@@ -764,7 +764,20 @@ class GameProvider extends ChangeNotifier {
 
   List<Team> getTeamsSortedByScore() {
     final sortedTeams = List<Team>.from(_teams);
-    sortedTeams.sort((a, b) => b.score.compareTo(a.score));
+    sortedTeams.sort((a, b) {
+      // D'abord par score décroissant
+      final scoreCompare = b.score.compareTo(a.score);
+      if (scoreCompare != 0) return scoreCompare;
+
+      // En cas d'égalité, celui qui a commencé plus tard gagne
+      final indexA = _teams.indexWhere((t) => t.id == a.id);
+      final indexB = _teams.indexWhere((t) => t.id == b.id);
+      final orderA = _game.teamPlayOrder.indexOf(indexA);
+      final orderB = _game.teamPlayOrder.indexOf(indexB);
+
+      // Plus grand = a commencé plus tard = meilleur classement
+      return orderB.compareTo(orderA);
+    });
     return sortedTeams;
   }
 

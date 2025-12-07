@@ -76,23 +76,38 @@ class StatsScreen extends StatelessWidget {
   }
 
   Widget _buildPlayerRanking(GameProvider provider) {
-    // Calculer le nombre de mots fait deviner par joueur
-    final Map<String, int> playerWordCounts = {};
+    // Calculer le temps total et mots total par joueur
+    final Map<String, int> playerTotalTime = {};
+    final Map<String, int> playerTotalWords = {};
+
     for (final entry in provider.game.history) {
-      final count = entry.wordsGuessed.length;
-      playerWordCounts[entry.playerId] =
-          (playerWordCounts[entry.playerId] ?? 0) + count;
+      final words = entry.wordsGuessed.length;
+      if (words > 0) {
+        playerTotalTime[entry.playerId] =
+            (playerTotalTime[entry.playerId] ?? 0) + entry.timeSpent;
+        playerTotalWords[entry.playerId] =
+            (playerTotalWords[entry.playerId] ?? 0) + words;
+      }
     }
 
-    // Trier par nombre décroissant
-    final sortedPlayers = playerWordCounts.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
+    // Calculer le temps moyen par mot (plus bas = meilleur)
+    final Map<String, double> playerAvgTime = {};
+    for (final playerId in playerTotalWords.keys) {
+      final totalTime = playerTotalTime[playerId] ?? 0;
+      final totalWords = playerTotalWords[playerId] ?? 1;
+      playerAvgTime[playerId] = totalTime / totalWords;
+    }
+
+    // Trier par temps moyen croissant (le plus rapide en premier)
+    final sortedPlayers = playerAvgTime.entries.toList()
+      ..sort((a, b) => a.value.compareTo(b.value));
 
     if (sortedPlayers.isEmpty) {
       return const SizedBox();
     }
 
-    final maxWords = sortedPlayers.first.value.toDouble();
+    // Le temps le plus long pour l'échelle de la barre (inversée)
+    final maxTime = sortedPlayers.last.value;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -105,7 +120,7 @@ class StatsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Meilleurs faiseurs de devinettes',
+            'Les plus rapides',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 16,
@@ -117,7 +132,7 @@ class StatsScreen extends StatelessWidget {
           ...sortedPlayers.asMap().entries.map((entry) {
             final index = entry.key;
             final playerId = entry.value.key;
-            final wordCount = entry.value.value;
+            final avgTime = entry.value.value;
             final player = provider.getPlayerById(playerId);
             final playerName = player?.name ?? 'Joueur inconnu';
 
@@ -171,7 +186,8 @@ class StatsScreen extends StatelessWidget {
                           ),
                         ),
                         FractionallySizedBox(
-                          widthFactor: maxWords > 0 && wordCount > 0 ? wordCount / maxWords : 0,
+                          // Barre inversée : plus le temps est court, plus la barre est longue
+                          widthFactor: maxTime > 0 && avgTime > 0 ? (1 - (avgTime / maxTime)) * 0.8 + 0.2 : 0,
                           child: Container(
                             height: 20,
                             decoration: BoxDecoration(
@@ -185,12 +201,12 @@ class StatsScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   SizedBox(
-                    width: 30,
+                    width: 45,
                     child: Text(
-                      '$wordCount',
+                      '${avgTime.toStringAsFixed(1)}s',
                       style: const TextStyle(
                         fontFamily: 'Bangers',
-                        fontSize: 18,
+                        fontSize: 16,
                         color: Colors.white,
                       ),
                       textAlign: TextAlign.right,
@@ -210,28 +226,34 @@ class StatsScreen extends StatelessWidget {
       return const SizedBox();
     }
 
-    // Calculer l'évolution des scores par tour
-    final Map<String, int> cumulativeScores = {
-      for (var t in provider.teams) t.id: 0
-    };
-    final List<Map<String, int>> scoresByTurn = [];
+    // Calculer l'évolution des scores par tour d'équipe
+    final Map<String, List<int>> scoresByTeamTurn = {};
+    final Map<String, int> cumulativeScores = {};
 
-    // Ajouter le point de départ (0, 0)
-    scoresByTurn.add(Map.from(cumulativeScores));
+    for (var team in provider.teams) {
+      scoresByTeamTurn[team.id] = [0]; // Démarre à 0
+      cumulativeScores[team.id] = 0;
+    }
 
     for (final entry in provider.game.history) {
+      final teamId = entry.teamId;
       final points = entry.wordsGuessed.length;
-      cumulativeScores[entry.teamId] =
-          (cumulativeScores[entry.teamId] ?? 0) + points;
-      scoresByTurn.add(Map.from(cumulativeScores));
+      cumulativeScores[teamId] = (cumulativeScores[teamId] ?? 0) + points;
+      scoresByTeamTurn[teamId]!.add(cumulativeScores[teamId]!);
     }
 
     // Trouver le score max pour l'échelle
     int maxScore = 1;
-    for (final scores in scoresByTurn) {
-      for (final score in scores.values) {
+    for (final scores in scoresByTeamTurn.values) {
+      for (final score in scores) {
         if (score > maxScore) maxScore = score;
       }
+    }
+
+    // Trouver le nombre max de tours pour une équipe
+    int maxTurns = 0;
+    for (final turns in scoresByTeamTurn.values) {
+      if (turns.length > maxTurns) maxTurns = turns.length;
     }
 
     // Créer les lignes pour chaque équipe
@@ -239,11 +261,11 @@ class StatsScreen extends StatelessWidget {
     for (int teamIndex = 0; teamIndex < provider.teams.length; teamIndex++) {
       final team = provider.teams[teamIndex];
       final teamColor = AppColors.getTeamColor(teamIndex);
+      final teamScores = scoresByTeamTurn[team.id]!;
 
       final spots = <FlSpot>[];
-      for (int i = 0; i < scoresByTurn.length; i++) {
-        final score = scoresByTurn[i][team.id] ?? 0;
-        spots.add(FlSpot(i.toDouble(), score.toDouble()));
+      for (int i = 0; i < teamScores.length; i++) {
+        spots.add(FlSpot(i.toDouble(), teamScores[i].toDouble()));
       }
 
       lines.add(
@@ -363,7 +385,7 @@ class StatsScreen extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 24,
-                      interval: (scoresByTurn.length / 5).ceilToDouble().clamp(1, 100),
+                      interval: (maxTurns / 5).ceilToDouble().clamp(1, 100),
                       getTitlesWidget: (value, meta) {
                         if (value == 0) return const Text('');
                         return Text(
@@ -386,7 +408,7 @@ class StatsScreen extends StatelessWidget {
                 ),
                 borderData: FlBorderData(show: false),
                 minX: 0,
-                maxX: (scoresByTurn.length - 1).toDouble(),
+                maxX: (maxTurns - 1).toDouble().clamp(0, double.infinity),
                 minY: 0,
                 maxY: maxScore.toDouble() * 1.1,
               ),
