@@ -47,7 +47,21 @@ class AppConstants {
   static const String wordChoiceRandom = 'Aléatoire';
 
   // Default categories
-  static const List<String> defaultCategories = ['films', 'pays', 'animaux'];
+  static const List<String> defaultCategories = [
+    '7eme_art',
+    'geographie',
+    'nature',
+    'metiers_sports',
+    'celebrites',
+    'noms_communs',
+    'univers_arcade',
+    'expressions',
+    'dictionnaire',
+    'musique',
+    'metro_parisien',
+    'marques',
+    'medecine',
+  ];
 
   // Difficulty levels
   static const int difficultyEasy = 1;
