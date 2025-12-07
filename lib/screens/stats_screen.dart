@@ -50,8 +50,8 @@ class StatsScreen extends StatelessWidget {
             top: MediaQuery.of(context).padding.top + 16,
             right: 16,
             child: GestureDetector(
-              onTap: () {
-                provider.clearLocalStorage();
+              onTap: () async {
+                await provider.endGameAndGoHome();
                 provider.goToScreen(AppConstants.screenHome);
               },
               child: Container(

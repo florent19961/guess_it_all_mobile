@@ -27,32 +27,95 @@ class _PlayersScreenState extends State<PlayersScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializePlayers();
+      _syncPlayersWithSettings();
     });
   }
 
-  void _initializePlayers() {
+  void _syncPlayersWithSettings() {
     final provider = context.read<GameProvider>();
     final settings = provider.settings;
 
-    // Créer les joueurs si nécessaire
+    // 1. Ajuster le nombre de joueurs si nécessaire
     while (provider.players.length < settings.numberOfPlayers) {
       provider.addPlayer('', allowEmpty: true);
     }
-
-    // Supprimer les joueurs en trop
     while (provider.players.length > settings.numberOfPlayers) {
       provider.removePlayer(provider.players.last.id);
     }
 
-    // Créer les contrôleurs
-    for (final player in provider.players) {
-      _controllers[player.id] = TextEditingController(text: player.name);
+    // 2. Synchroniser les contrôleurs avec les joueurs existants
+    final currentPlayerIds = provider.players.map((p) => p.id).toSet();
+
+    // Supprimer les contrôleurs pour les joueurs qui n'existent plus
+    final idsToRemove = _controllers.keys
+        .where((id) => !currentPlayerIds.contains(id))
+        .toList();
+    for (final id in idsToRemove) {
+      _controllers[id]?.dispose();
+      _controllers.remove(id);
     }
 
-    setState(() {
-      _isInitialized = true;
-    });
+    // Créer des contrôleurs pour les nouveaux joueurs
+    for (final player in provider.players) {
+      if (!_controllers.containsKey(player.id)) {
+        _controllers[player.id] = TextEditingController(text: player.name);
+      }
+    }
+
+    // 3. En mode aléatoire : générer/compléter les mots pour TOUS les joueurs
+    if (settings.wordChoice == AppConstants.wordChoiceRandom) {
+      for (final player in provider.players) {
+        _ensureWordsForPlayer(player.id, provider, settings.wordsPerPlayer);
+      }
+    } else {
+      // 4. En mode personnalisé : tronquer si trop de mots
+      for (final player in provider.players) {
+        if (player.words.length > settings.wordsPerPlayer) {
+          provider.updatePlayerWords(
+            player.id,
+            player.words.take(settings.wordsPerPlayer).toList(),
+          );
+        }
+      }
+    }
+
+    if (!_isInitialized) {
+      setState(() {
+        _isInitialized = true;
+      });
+    }
+  }
+
+  // Génère/complète les mots pour atteindre le nombre requis
+  void _ensureWordsForPlayer(
+      String playerId, GameProvider provider, int wordsNeeded) {
+    final player = provider.players.firstWhere((p) => p.id == playerId);
+
+    if (player.words.length >= wordsNeeded) {
+      // Tronquer si trop de mots
+      if (player.words.length > wordsNeeded) {
+        provider.updatePlayerWords(
+            playerId, player.words.take(wordsNeeded).toList());
+      }
+      return;
+    }
+
+    // Compléter les mots manquants
+    final otherPlayersWords = _getOtherPlayersWords(provider, playerId);
+    final newWords = <String>[...player.words];
+
+    while (newWords.length < wordsNeeded) {
+      final word = _generateUniqueWord(provider, otherPlayersWords, newWords);
+      if (word != null) {
+        newWords.add(word);
+      } else {
+        break; // Plus de mots disponibles
+      }
+    }
+
+    if (newWords.length != player.words.length) {
+      provider.updatePlayerWords(playerId, newWords);
+    }
   }
 
   @override
@@ -69,7 +132,8 @@ class _PlayersScreenState extends State<PlayersScreen> {
     if (controller == null) return null;
 
     final name = controller.text.trim();
-    if (name.isEmpty) return null; // Pas d'erreur affichée si vide (juste le bouton grisé)
+    if (name.isEmpty)
+      return null; // Pas d'erreur affichée si vide (juste le bouton grisé)
 
     // Vérifier les doublons
     int count = 0;
@@ -124,7 +188,8 @@ class _PlayersScreenState extends State<PlayersScreen> {
   }
 
   // Récupère tous les mots déjà utilisés par les autres joueurs
-  Set<String> _getOtherPlayersWords(GameProvider provider, String currentPlayerId) {
+  Set<String> _getOtherPlayersWords(
+      GameProvider provider, String currentPlayerId) {
     final otherWords = <String>{};
     for (final p in provider.players) {
       if (p.id != currentPlayerId) {
@@ -151,7 +216,9 @@ class _PlayersScreenState extends State<PlayersScreen> {
         final wordLower = word.toLowerCase();
         // Vérifier que le mot n'est pas utilisé par d'autres joueurs ni dans le modal actuel
         if (!otherPlayersWords.contains(wordLower) &&
-            !currentModalWords.map((w) => w.toLowerCase()).contains(wordLower)) {
+            !currentModalWords
+                .map((w) => w.toLowerCase())
+                .contains(wordLower)) {
           return word;
         }
       }
@@ -209,34 +276,8 @@ class _PlayersScreenState extends State<PlayersScreen> {
     );
   }
 
-  // Auto-remplit les mots d'un joueur en mode aléatoire
-  void _autoFillWordsForPlayer(String playerId, GameProvider provider) {
-    // Ne rien faire si mode personnalisé
-    if (provider.settings.wordChoice != AppConstants.wordChoiceRandom) return;
-
-    // Ne rien faire si les mots sont déjà remplis
-    final player = provider.players.firstWhere((p) => p.id == playerId);
-    if (player.words.length >= provider.settings.wordsPerPlayer) return;
-
-    // Récupérer les mots des autres joueurs
-    final otherPlayersWords = _getOtherPlayersWords(provider, playerId);
-
-    // Générer les mots manquants
-    final newWords = <String>[...player.words];
-    while (newWords.length < provider.settings.wordsPerPlayer) {
-      final word = _generateUniqueWord(provider, otherPlayersWords, newWords);
-      if (word != null) {
-        newWords.add(word);
-      } else {
-        break; // Plus de mots disponibles
-      }
-    }
-
-    // Sauvegarder
-    provider.updatePlayerWords(playerId, newWords);
-  }
-
-  void _showWordsModal(BuildContext context, Player player, GameProvider provider) {
+  void _showWordsModal(
+      BuildContext context, Player player, GameProvider provider) {
     final wordsPerPlayer = provider.settings.wordsPerPlayer;
     final wordControllers = <TextEditingController>[];
 
@@ -338,7 +379,8 @@ class _PlayersScreenState extends State<PlayersScreen> {
                       _showNoWordsAvailableWarning(context);
                     } else if (filledCount < emptyFieldsCount) {
                       // Seulement une partie a été remplie
-                      _showPartialFillWarning(context, filledCount, emptyFieldsCount);
+                      _showPartialFillWarning(
+                          context, filledCount, emptyFieldsCount);
                     }
                   },
                 ),
@@ -457,11 +499,14 @@ class _PlayersScreenState extends State<PlayersScreen> {
                           itemCount: provider.players.length,
                           itemBuilder: (context, index) {
                             final player = provider.players[index];
-                            final error = _getErrorForPlayer(player.id, provider);
+                            final error =
+                                _getErrorForPlayer(player.id, provider);
                             final wordsCount = player.words.length;
-                            final wordsPerPlayer = provider.settings.wordsPerPlayer;
+                            final wordsPerPlayer =
+                                provider.settings.wordsPerPlayer;
                             final isWordsFilled = wordsCount >= wordsPerPlayer;
-                            final playerName = _controllers[player.id]?.text.trim() ?? '';
+                            final playerName =
+                                _controllers[player.id]?.text.trim() ?? '';
                             final hasName = playerName.isNotEmpty;
 
                             return Padding(
@@ -475,29 +520,33 @@ class _PlayersScreenState extends State<PlayersScreen> {
                                       placeholder: 'Joueur ${index + 1}',
                                       error: error,
                                       onChanged: (value) {
-                                        setState(() {}); // Rafraîchir pour vérifier les doublons
-
-                                        // En mode aléatoire, auto-remplir les mots quand le nom est saisi
-                                        if (value.trim().isNotEmpty) {
-                                          _autoFillWordsForPlayer(player.id, provider);
-                                        }
+                                        setState(
+                                            () {}); // Rafraîchir pour vérifier les doublons
+                                        // Sauvegarder le nom immédiatement
+                                        provider.updatePlayer(player.id,
+                                            name: value.trim());
                                       },
                                     ),
                                   ),
                                   const SizedBox(width: 12),
                                   GestureDetector(
                                     onTap: hasName
-                                        ? () => _showWordsModal(context, player, provider)
+                                        ? () => _showWordsModal(
+                                            context, player, provider)
                                         : null,
                                     child: Opacity(
                                       opacity: hasName ? 1.0 : 0.4,
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 10),
                                         decoration: BoxDecoration(
                                           color: isWordsFilled
-                                              ? AppColors.success.withValues(alpha: 0.2)
-                                              : AppColors.error.withValues(alpha: 0.2),
-                                          borderRadius: BorderRadius.circular(12),
+                                              ? AppColors.success
+                                                  .withValues(alpha: 0.2)
+                                              : AppColors.error
+                                                  .withValues(alpha: 0.2),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                           border: Border.all(
                                             color: isWordsFilled
                                                 ? AppColors.success
@@ -525,7 +574,8 @@ class _PlayersScreenState extends State<PlayersScreen> {
                           },
                         )
                       : const Center(
-                          child: CircularProgressIndicator(color: AppColors.secondaryCyan),
+                          child: CircularProgressIndicator(
+                              color: AppColors.secondaryCyan),
                         ),
                 ),
                 Padding(
@@ -536,7 +586,8 @@ class _PlayersScreenState extends State<PlayersScreen> {
                     size: AppButtonSize.large,
                     fullWidth: true,
                     disabled: !canProceed,
-                    onPressed: canProceed ? () => _saveAndContinue(provider) : null,
+                    onPressed:
+                        canProceed ? () => _saveAndContinue(provider) : null,
                   ),
                 ),
               ],
@@ -544,7 +595,13 @@ class _PlayersScreenState extends State<PlayersScreen> {
           ),
           AppBackButton(
             onPressed: () {
-              provider.clearPlayersData();
+              // Sauvegarder les noms actuels avant de partir
+              for (final player in provider.players) {
+                final name = _controllers[player.id]?.text.trim() ?? '';
+                if (name != player.name) {
+                  provider.updatePlayer(player.id, name: name);
+                }
+              }
               provider.goToScreen(AppConstants.screenSettings);
             },
           ),

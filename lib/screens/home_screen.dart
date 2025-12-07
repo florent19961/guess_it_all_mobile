@@ -14,6 +14,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<GameProvider>();
     final hasSuspendedGame = provider.game.isGameSuspended;
+    final hasGameSession = provider.hasGameSession;
 
     return ShootingStars(
       child: SafeArea(
@@ -29,30 +30,61 @@ class HomeScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),
+
+              // Cas 1: Partie suspendue
               if (hasSuspendedGame) ...[
                 AppButton(
                   text: 'Reprendre',
-                  variant: AppButtonVariant.secondary,
+                  variant: AppButtonVariant.primary,
                   size: AppButtonSize.large,
                   fullWidth: true,
                   onPressed: () => provider.resumeGame(),
                 ),
                 const SizedBox(height: 16),
-              ],
-              AppButton(
-                text: hasSuspendedGame ? 'Nouvelle partie' : 'Jouer',
-                variant: AppButtonVariant.primary,
-                size: AppButtonSize.large,
-                fullWidth: true,
-                onPressed: () {
-                  if (hasSuspendedGame) {
-                    _showNewGameConfirmation(context, provider);
-                  } else {
-                    provider.resetGame();
+                AppButton(
+                  text: 'Nouvelle partie',
+                  variant: AppButtonVariant.secondary,
+                  size: AppButtonSize.large,
+                  fullWidth: true,
+                  onPressed: () => _showNewGameConfirmation(context, provider),
+                ),
+              ]
+              // Cas 2: Session existante (joueurs d'une partie précédente)
+              else if (hasGameSession) ...[
+                AppButton(
+                  text: 'Rejouer',
+                  variant: AppButtonVariant.primary,
+                  size: AppButtonSize.large,
+                  fullWidth: true,
+                  onPressed: () async {
+                    await provider.restartWithSamePlayers();
+                  },
+                ),
+                const SizedBox(height: 16),
+                AppButton(
+                  text: 'Nouvelle partie',
+                  variant: AppButtonVariant.secondary,
+                  size: AppButtonSize.large,
+                  fullWidth: true,
+                  onPressed: () async {
+                    await provider.startNewGame();
                     provider.goToScreen(AppConstants.screenSettings);
-                  }
-                },
-              ),
+                  },
+                ),
+              ]
+              // Cas 3: Pas de partie en cours
+              else ...[
+                AppButton(
+                  text: 'Jouer',
+                  variant: AppButtonVariant.primary,
+                  size: AppButtonSize.large,
+                  fullWidth: true,
+                  onPressed: () {
+                    provider.goToScreen(AppConstants.screenSettings);
+                  },
+                ),
+              ],
+
               const SizedBox(height: 16),
               AppButton(
                 text: 'Règles',
@@ -96,9 +128,9 @@ class HomeScreen extends StatelessWidget {
                 child: AppButton(
                   text: 'Confirmer',
                   variant: AppButtonVariant.primary,
-                  onPressed: () {
+                  onPressed: () async {
                     Navigator.of(context).pop();
-                    provider.resetGame();
+                    await provider.startNewGame();
                     provider.goToScreen(AppConstants.screenSettings);
                   },
                 ),
@@ -109,5 +141,4 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-
 }

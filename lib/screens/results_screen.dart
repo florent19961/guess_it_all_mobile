@@ -39,6 +39,17 @@ class ResultsScreen extends StatelessWidget {
 
               // Action buttons
               AppButton(
+                text: 'Rejouer',
+                variant: AppButtonVariant.primary,
+                size: AppButtonSize.large,
+                fullWidth: true,
+                icon: const Icon(Icons.refresh, color: Colors.white),
+                onPressed: () async {
+                  await provider.restartWithSamePlayers();
+                },
+              ),
+              const SizedBox(height: 16),
+              AppButton(
                 text: 'Voir les statistiques',
                 variant: AppButtonVariant.secondary,
                 fullWidth: true,
@@ -48,12 +59,12 @@ class ResultsScreen extends StatelessWidget {
               const SizedBox(height: 16),
               AppButton(
                 text: 'Accueil',
-                variant: AppButtonVariant.primary,
-                size: AppButtonSize.large,
+                variant: AppButtonVariant.ghost,
+                size: AppButtonSize.medium,
                 fullWidth: true,
                 icon: const Icon(Icons.home, color: Colors.white),
-                onPressed: () {
-                  provider.clearLocalStorage();
+                onPressed: () async {
+                  await provider.endGameAndGoHome();
                   provider.goToScreen(AppConstants.screenHome);
                 },
               ),

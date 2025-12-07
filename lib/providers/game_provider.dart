@@ -28,31 +28,65 @@ class GameProvider extends ChangeNotifier {
   }
 
   Future<void> _loadFromStorage() async {
-    final savedState = await _storage.loadGameState();
-    if (savedState != null) {
-      try {
-        _settings = GameSettings.fromJson(savedState['settings'] ?? {});
-        _players = (savedState['players'] as List<dynamic>?)
+    try {
+      // 1. Toujours charger les paramètres (permanents)
+      final savedSettings = await _storage.loadSettings();
+      if (savedSettings != null) {
+        _settings = GameSettings.fromJson(savedSettings);
+      }
+
+      // 2. Charger la session (joueurs/équipes sans mots)
+      final savedSession = await _storage.loadGameSession();
+      if (savedSession != null) {
+        _players = (savedSession['players'] as List<dynamic>?)
                 ?.map((p) => Player.fromJson(p as Map<String, dynamic>))
                 .toList() ??
             [];
-        _teams = (savedState['teams'] as List<dynamic>?)
+        _teams = (savedSession['teams'] as List<dynamic>?)
                 ?.map((t) => Team.fromJson(t as Map<String, dynamic>))
                 .toList() ??
             [];
-        _game = GameState.fromJson(savedState['game'] ?? {});
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          notifyListeners();
-        });
-      } catch (e) {
-        debugPrint('Erreur lors du chargement de l\'état sauvegardé: $e');
       }
+
+      // 3. Charger l'état de jeu si existant (partie en cours avec mots)
+      final savedState = await _storage.loadGameState();
+      if (savedState != null) {
+        // Si on a un état de jeu, charger les joueurs AVEC leurs mots
+        _players = (savedState['players'] as List<dynamic>?)
+                ?.map((p) => Player.fromJson(p as Map<String, dynamic>))
+                .toList() ??
+            _players;
+        _teams = (savedState['teams'] as List<dynamic>?)
+                ?.map((t) => Team.fromJson(t as Map<String, dynamic>))
+                .toList() ??
+            _teams;
+        _game = GameState.fromJson(savedState['game'] ?? {});
+      }
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+    } catch (e) {
+      debugPrint('Erreur lors du chargement: $e');
     }
   }
 
-  Future<void> _saveToStorage() async {
+  // Sauvegarde des paramètres (permanent)
+  Future<void> _saveSettings() async {
+    await _storage.saveSettings(_settings.toJson());
+  }
+
+  // Sauvegarde de la session (joueurs/équipes avec mots)
+  Future<void> _saveGameSession() async {
+    await _storage.saveGameSession({
+      'players': _players.map((p) => p.toJson()).toList(),
+      'teams': _teams.map((t) => t.toJson()).toList(),
+    });
+  }
+
+  // Sauvegarde de l'état de jeu complet (partie en cours avec mots)
+  Future<void> _saveGameState() async {
     await _storage.saveGameState({
-      'settings': _settings.toJson(),
       'players': _players.map((p) => p.toJson()).toList(),
       'teams': _teams.map((t) => t.toJson()).toList(),
       'game': _game.toJson(),
@@ -80,7 +114,7 @@ class GameProvider extends ChangeNotifier {
       selectedCategories: selectedCategories,
     );
     notifyListeners();
-    _saveToStorage();
+    _saveSettings();
   }
 
   // ========== ACTIONS - PLAYERS ==========
@@ -99,7 +133,7 @@ class GameProvider extends ChangeNotifier {
     final newPlayer = Player.create(trimmedName);
     _players.add(newPlayer);
     notifyListeners();
-    _saveToStorage();
+    _saveGameSession();
 
     return {'success': true, 'player': newPlayer};
   }
@@ -109,7 +143,7 @@ class GameProvider extends ChangeNotifier {
     if (index != -1) {
       _players[index] = _players[index].copyWith(name: name);
       notifyListeners();
-      _saveToStorage();
+      _saveGameSession();
     }
   }
 
@@ -118,20 +152,20 @@ class GameProvider extends ChangeNotifier {
     if (index != -1) {
       _players[index] = _players[index].copyWith(words: words);
       notifyListeners();
-      _saveToStorage();
+      _saveGameSession();
     }
   }
 
   void removePlayer(String playerId) {
     _players.removeWhere((p) => p.id == playerId);
     notifyListeners();
-    _saveToStorage();
+    _saveGameSession();
   }
 
   void cleanupEmptyPlayers() {
     _players.removeWhere((p) => p.name.trim().isEmpty);
     notifyListeners();
-    _saveToStorage();
+    _saveGameSession();
   }
 
   // ========== ACTIONS - TEAMS ==========
@@ -142,7 +176,7 @@ class GameProvider extends ChangeNotifier {
       (i) => Team.create(i),
     );
     notifyListeners();
-    _saveToStorage();
+    _saveGameSession();
   }
 
   void updateTeamName(String teamId, String newName) {
@@ -150,7 +184,7 @@ class GameProvider extends ChangeNotifier {
     if (index != -1) {
       _teams[index] = _teams[index].copyWith(name: newName);
       notifyListeners();
-      _saveToStorage();
+      _saveGameSession();
     }
   }
 
@@ -173,12 +207,14 @@ class GameProvider extends ChangeNotifier {
     }
 
     notifyListeners();
-    _saveToStorage();
+    _saveGameSession();
   }
 
   void randomizeTeams() {
-    final playersWithNames = _players.where((p) => p.name.trim().isNotEmpty).toList();
-    final shuffledPlayers = List<Player>.from(playersWithNames)..shuffle(Random());
+    final playersWithNames =
+        _players.where((p) => p.name.trim().isNotEmpty).toList();
+    final shuffledPlayers = List<Player>.from(playersWithNames)
+      ..shuffle(Random());
 
     // Réinitialiser toutes les équipes
     for (int i = 0; i < _teams.length; i++) {
@@ -194,7 +230,7 @@ class GameProvider extends ChangeNotifier {
     }
 
     notifyListeners();
-    _saveToStorage();
+    _saveGameSession();
   }
 
   // ========== ACTIONS - GAME ==========
@@ -237,7 +273,7 @@ class GameProvider extends ChangeNotifier {
     );
 
     notifyListeners();
-    _saveToStorage();
+    _saveGameState();
   }
 
   Map<String, dynamic> _generatePlayOrder() {
@@ -281,7 +317,7 @@ class GameProvider extends ChangeNotifier {
     );
 
     notifyListeners();
-    _saveToStorage();
+    _saveGameState();
   }
 
   void startTurnTimer() {
@@ -299,7 +335,7 @@ class GameProvider extends ChangeNotifier {
     );
 
     notifyListeners();
-    _saveToStorage();
+    _saveGameState();
   }
 
   void markWordAsGuessed() {
@@ -334,7 +370,7 @@ class GameProvider extends ChangeNotifier {
     }
 
     notifyListeners();
-    _saveToStorage();
+    _saveGameState();
   }
 
   void passWord() {
@@ -346,7 +382,8 @@ class GameProvider extends ChangeNotifier {
 
     // Calculer le temps réel restant
     final now = DateTime.now().millisecondsSinceEpoch;
-    final currentRemaining = ((turnEndTimestamp - now) / 1000).ceil().clamp(0, 999);
+    final currentRemaining =
+        ((turnEndTimestamp - now) / 1000).ceil().clamp(0, 999);
 
     // Vérifier qu'il y a assez de temps
     if (currentRemaining < passPenalty) return;
@@ -373,7 +410,7 @@ class GameProvider extends ChangeNotifier {
     );
 
     notifyListeners();
-    _saveToStorage();
+    _saveGameState();
   }
 
   void endTurn() {
@@ -397,7 +434,7 @@ class GameProvider extends ChangeNotifier {
     );
 
     notifyListeners();
-    _saveToStorage();
+    _saveGameState();
   }
 
   void updateTimeRemaining(int time) {
@@ -423,8 +460,10 @@ class GameProvider extends ChangeNotifier {
         passedWordsThisTurn.where((w) => !validatedWords.contains(w)).toList();
 
     // Gérer le mot expiré
-    final isExpiredWordValidated = expiredWord != null && validatedWords.contains(expiredWord);
-    final isExpiredWordInvalidated = expiredWord != null && !validatedWords.contains(expiredWord);
+    final isExpiredWordValidated =
+        expiredWord != null && validatedWords.contains(expiredWord);
+    final isExpiredWordInvalidated =
+        expiredWord != null && !validatedWords.contains(expiredWord);
 
     final allInvalidatedWords = [
       ...invalidatedGuessedWords,
@@ -452,7 +491,8 @@ class GameProvider extends ChangeNotifier {
       final newScore = team.score + pointsScored;
       final scoreByRound = List<int>.from(team.scoreByRound);
       scoreByRound[_game.currentRound - 1] += pointsScored;
-      _teams[teamIndex] = team.copyWith(score: newScore, scoreByRound: scoreByRound);
+      _teams[teamIndex] =
+          team.copyWith(score: newScore, scoreByRound: scoreByRound);
     }
 
     // Ajouter à l'historique
@@ -506,7 +546,7 @@ class GameProvider extends ChangeNotifier {
     }
 
     notifyListeners();
-    _saveToStorage();
+    _saveGameState();
   }
 
   Map<String, int> _getNextPlayerWithRotation() {
@@ -543,7 +583,8 @@ class GameProvider extends ChangeNotifier {
       );
     } else {
       // Réinitialiser le pool de mots
-      final shuffledWords = List<String>.from(_game.allWords)..shuffle(Random());
+      final shuffledWords = List<String>.from(_game.allWords)
+        ..shuffle(Random());
       final nextCurrentWord = shuffledWords[0];
 
       _game = _game.copyWith(
@@ -557,7 +598,7 @@ class GameProvider extends ChangeNotifier {
     }
 
     notifyListeners();
-    _saveToStorage();
+    _saveGameState();
   }
 
   // ========== ACTIONS - NAVIGATION ==========
@@ -565,7 +606,10 @@ class GameProvider extends ChangeNotifier {
   void goToScreen(String screenName) {
     _game = _game.copyWith(currentScreen: screenName);
     notifyListeners();
-    _saveToStorage();
+    // Sauvegarder seulement si une partie est en cours
+    if (_game.isGameSuspended || _game.allWords.isNotEmpty) {
+      _saveGameState();
+    }
   }
 
   void suspendGame() {
@@ -583,7 +627,7 @@ class GameProvider extends ChangeNotifier {
     );
 
     notifyListeners();
-    _saveToStorage();
+    _saveGameState();
   }
 
   void resumeGame() {
@@ -599,38 +643,46 @@ class GameProvider extends ChangeNotifier {
     );
 
     notifyListeners();
-    _saveToStorage();
+    _saveGameState();
   }
 
   // ========== ACTIONS - RESET ==========
 
+  // Efface les joueurs et équipes (utilisé quand on revient aux paramètres)
   void clearPlayersData() {
     _players = [];
     _teams = [];
     notifyListeners();
-    _saveToStorage();
+    _saveGameSession();
   }
 
-  Future<void> clearLocalStorage() async {
+  // Fin de partie normale → efface gameState, garde session pour "Rejouer"
+  Future<void> endGameAndGoHome() async {
     await _storage.clearGameState();
-    _settings = GameSettings.initial();
+    _game = GameState.initial();
+    notifyListeners();
+  }
+
+  // Nouvelle partie complète → efface session ET state, garde settings
+  Future<void> startNewGame() async {
+    await _storage.clearGameSession();
+    await _storage.clearGameState();
     _players = [];
     _teams = [];
     _game = GameState.initial();
     notifyListeners();
   }
 
-  void resetGame() {
-    _settings = GameSettings.initial();
-    _players = [];
-    _teams = [];
-    _game = GameState.initial();
-    notifyListeners();
-    _saveToStorage();
-  }
+  // Rejouer avec mêmes joueurs → efface mots, reset scores, va aux paramètres
+  Future<void> restartWithSamePlayers() async {
+    await _storage.clearGameState();
 
-  void restartWithSamePlayers() {
-    // Reset scores
+    // Effacer les mots de tous les joueurs
+    for (int i = 0; i < _players.length; i++) {
+      _players[i] = _players[i].copyWith(words: []);
+    }
+
+    // Reset scores des équipes
     for (int i = 0; i < _teams.length; i++) {
       _teams[i] = _teams[i].copyWith(
         score: 0,
@@ -638,9 +690,32 @@ class GameProvider extends ChangeNotifier {
       );
     }
 
+    _game = GameState.initial()
+        .copyWith(currentScreen: AppConstants.screenSettings);
+    await _saveGameSession();
+    notifyListeners();
+  }
+
+  // Réinitialise TOUT : paramètres, joueurs, mots, équipes, état de jeu
+  Future<void> clearLocalStorage() async {
+    await _storage.clearGameState();
+    await _storage.clearGameSession();
+    _settings = GameSettings.initial();
+    await _saveSettings();
+    _players = [];
+    _teams = [];
     _game = GameState.initial();
     notifyListeners();
-    _saveToStorage();
+  }
+
+  // DEPRECATED: Utiliser startNewGame() à la place
+  void resetGame() {
+    _players = [];
+    _teams = [];
+    _game = GameState.initial();
+    notifyListeners();
+    _storage.clearGameSession();
+    _storage.clearGameState();
   }
 
   // ========== HELPERS ==========
@@ -683,8 +758,7 @@ class GameProvider extends ChangeNotifier {
     return sortedTeams;
   }
 
-  bool get hasPlayersWithNames =>
-      _players.any((p) => p.name.trim().isNotEmpty);
+  bool get hasPlayersWithNames => _players.any((p) => p.name.trim().isNotEmpty);
 
   bool get allTeamsHaveMinPlayers =>
       _teams.every((t) => t.playerIds.length >= 2);
@@ -694,4 +768,9 @@ class GameProvider extends ChangeNotifier {
 
   int get expectedTotalWords =>
       _settings.numberOfPlayers * _settings.wordsPerPlayer;
+
+  // Vérifie si une session existe (joueurs d'une partie précédente)
+  // Utilisé pour proposer "Rejouer" sur l'écran d'accueil
+  bool get hasGameSession =>
+      _players.isNotEmpty && _teams.isNotEmpty && !_game.isGameSuspended;
 }

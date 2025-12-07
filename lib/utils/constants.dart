@@ -23,6 +23,8 @@ class AppConstants {
   static const int timerRefreshMs = 100;
 
   // Storage keys
+  static const String settingsKey = 'guessItAll_settings';
+  static const String gameSessionKey = 'guessItAll_gameSession';
   static const String gameStateKey = 'guessItAll_gameState';
 
   // Screen names
