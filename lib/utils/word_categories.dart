@@ -41,27 +41,27 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Jurassic Park', difficulty: 1),
       WordWithDifficulty('Le Roi Lion', difficulty: 1),
       WordWithDifficulty('Harry Potter', difficulty: 1),
-      WordWithDifficulty('Forrest Gump', difficulty: 1),
-      WordWithDifficulty('Retour vers le futur', difficulty: 1),
+      WordWithDifficulty('Forrest Gump', difficulty: 2),
+      WordWithDifficulty('Retour vers le futur', difficulty: 2),
       WordWithDifficulty('Indiana Jones', difficulty: 1),
       WordWithDifficulty('Pirates des Caraïbes', difficulty: 1),
-      WordWithDifficulty('Transformers', difficulty: 1),
+      WordWithDifficulty('Transformers', difficulty: 2),
       WordWithDifficulty('Fast and Furious', difficulty: 1),
       WordWithDifficulty('Mission Impossible', difficulty: 1),
       WordWithDifficulty('James Bond', difficulty: 1),
-      WordWithDifficulty('La La Land', difficulty: 1),
-      WordWithDifficulty('E.T.', difficulty: 1),
+      WordWithDifficulty('La La Land', difficulty: 2),
+      WordWithDifficulty('E.T.', difficulty: 2),
       WordWithDifficulty('Les Dents de la Mer', difficulty: 1),
-      WordWithDifficulty('Ghostbusters', difficulty: 1),
-      WordWithDifficulty('King Kong', difficulty: 1),
-      WordWithDifficulty('Godzilla', difficulty: 1),
+      WordWithDifficulty('Ghostbusters', difficulty: 2),
+      WordWithDifficulty('King Kong', difficulty: 2),
+      WordWithDifficulty('Godzilla', difficulty: 2),
 
       // FILMS CLASSIQUES - Moyen
       WordWithDifficulty('Le Parrain', difficulty: 2),
       WordWithDifficulty('Matrix', difficulty: 2),
       WordWithDifficulty('Inception', difficulty: 2),
       WordWithDifficulty('Gladiator', difficulty: 2),
-      WordWithDifficulty('Le Seigneur des Anneaux', difficulty: 2),
+      WordWithDifficulty('Le Seigneur des Anneaux', difficulty: 1),
       WordWithDifficulty('Pulp Fiction', difficulty: 2),
       WordWithDifficulty('Terminator', difficulty: 2),
       WordWithDifficulty('Alien', difficulty: 2),
@@ -72,8 +72,7 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Le Loup de Wall Street', difficulty: 2),
       WordWithDifficulty('Gravity', difficulty: 2),
       WordWithDifficulty('Dune', difficulty: 2),
-      WordWithDifficulty('Blade Runner', difficulty: 2),
-      WordWithDifficulty('Le Cinquième Élément', difficulty: 2),
+      WordWithDifficulty('Blade Runner', difficulty: 3),
       WordWithDifficulty('Mad Max', difficulty: 2),
       WordWithDifficulty('Apocalypse Now', difficulty: 2),
       WordWithDifficulty('Scarface', difficulty: 2),
@@ -81,7 +80,7 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Reservoir Dogs', difficulty: 2),
       WordWithDifficulty('Kill Bill', difficulty: 2),
       WordWithDifficulty('Django Unchained', difficulty: 2),
-      WordWithDifficulty('The Prestige', difficulty: 2),
+      WordWithDifficulty('Le Prestige', difficulty: 2),
 
       // FILMS CLASSIQUES - Difficile
       WordWithDifficulty('Le Silence des Agneaux', difficulty: 3),
@@ -109,13 +108,13 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Batman', difficulty: 1),
       WordWithDifficulty('Superman', difficulty: 1),
       WordWithDifficulty('Spider-Man', difficulty: 1),
-      WordWithDifficulty('Iron Man', difficulty: 1),
-      WordWithDifficulty('Avengers', difficulty: 1),
-      WordWithDifficulty('Thor', difficulty: 1),
+      WordWithDifficulty('Iron Man', difficulty: 2),
+      WordWithDifficulty('Avengers', difficulty: 2),
+      WordWithDifficulty('Thor', difficulty: 2),
       WordWithDifficulty('Hulk', difficulty: 1),
-      WordWithDifficulty('X-Men', difficulty: 1),
-      WordWithDifficulty('Les Gardiens de la Galaxie', difficulty: 1),
-      WordWithDifficulty('Ant-Man', difficulty: 1),
+      WordWithDifficulty('X-Men', difficulty: 2),
+      WordWithDifficulty('Les Gardiens de la Galaxie', difficulty: 2),
+      WordWithDifficulty('Ant-Man', difficulty: 3),
 
       // SUPER-HÉROS - Moyen
       WordWithDifficulty('Black Panther', difficulty: 2),
@@ -123,7 +122,7 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Captain America', difficulty: 2),
       WordWithDifficulty('Wonder Woman', difficulty: 2),
       WordWithDifficulty('Doctor Strange', difficulty: 2),
-      WordWithDifficulty('Deadpool', difficulty: 2),
+      WordWithDifficulty('Deadpool', difficulty: 3),
       WordWithDifficulty('Black Widow', difficulty: 2),
       WordWithDifficulty('Aquaman', difficulty: 2),
       WordWithDifficulty('Shazam', difficulty: 2),
@@ -131,7 +130,7 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Eternals', difficulty: 2),
 
       // SUPER-HÉROS - Difficile
-      WordWithDifficulty('The Dark Knight', difficulty: 3),
+      WordWithDifficulty('Batman : The Dark Knight', difficulty: 2),
       WordWithDifficulty('Logan', difficulty: 3),
       WordWithDifficulty('Watchmen', difficulty: 3),
       WordWithDifficulty('V pour Vendetta', difficulty: 3),
@@ -141,11 +140,11 @@ final Map<String, WordCategory> wordCategories = {
       // DISNEY / PIXAR - Facile
       WordWithDifficulty('La Reine des Neiges', difficulty: 1),
       WordWithDifficulty('Toy Story', difficulty: 1),
-      WordWithDifficulty('Nemo', difficulty: 1),
+      WordWithDifficulty('Nemo', difficulty: 2),
       WordWithDifficulty('Cendrillon', difficulty: 1),
       WordWithDifficulty('Aladdin', difficulty: 1),
-      WordWithDifficulty('Vaiana', difficulty: 1),
-      WordWithDifficulty('Raiponce', difficulty: 1),
+      WordWithDifficulty('Vaiana', difficulty: 2),
+      WordWithDifficulty('Raiponce', difficulty: 2),
       WordWithDifficulty('Mulan', difficulty: 1),
       WordWithDifficulty('La Belle et la Bête', difficulty: 1),
       WordWithDifficulty('Pocahontas', difficulty: 1),
@@ -163,23 +162,22 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Monstres et Cie', difficulty: 2),
       WordWithDifficulty('Les Indestructibles', difficulty: 2),
       WordWithDifficulty('Rebelle', difficulty: 2),
-      WordWithDifficulty('Encanto', difficulty: 2),
+      WordWithDifficulty('Encanto', difficulty: 3),
       WordWithDifficulty('Zootopie', difficulty: 2),
       WordWithDifficulty('Là-haut', difficulty: 2),
-      WordWithDifficulty('Dory', difficulty: 2),
-      WordWithDifficulty('Les Nouveaux Héros', difficulty: 2),
+      WordWithDifficulty('Dory', difficulty: 3),
       WordWithDifficulty('Luca', difficulty: 2),
-      WordWithDifficulty('Alerte Rouge', difficulty: 2),
-      WordWithDifficulty('Strange World', difficulty: 2),
+      WordWithDifficulty('Alerte Rouge', difficulty: 3),
+      WordWithDifficulty('Strange World', difficulty: 3),
 
       // DISNEY / PIXAR - Difficile
       WordWithDifficulty('La Princesse et la Grenouille', difficulty: 3),
       WordWithDifficulty('Atlantide', difficulty: 3),
-      WordWithDifficulty('Hercule', difficulty: 3),
-      WordWithDifficulty('Tarzan', difficulty: 3),
+      WordWithDifficulty('Hercule', difficulty: 2),
+      WordWithDifficulty('Tarzan', difficulty: 2),
       WordWithDifficulty('Soul', difficulty: 3),
       WordWithDifficulty('Rox et Rouky', difficulty: 3),
-      WordWithDifficulty('Dinosaure', difficulty: 3),
+      WordWithDifficulty('Dinosaure', difficulty: 2),
       WordWithDifficulty('Kuzco', difficulty: 3),
       WordWithDifficulty('La Planète au Trésor', difficulty: 3),
       WordWithDifficulty('Frère des Ours', difficulty: 3),
@@ -187,27 +185,25 @@ final Map<String, WordCategory> wordCategories = {
       // ANIMATION NON-DISNEY - Facile
       WordWithDifficulty('Kung Fu Panda', difficulty: 1),
       WordWithDifficulty('Madagascar', difficulty: 1),
-      WordWithDifficulty('Les Minions', difficulty: 1),
+      WordWithDifficulty('Les Minions', difficulty: 2),
       WordWithDifficulty('Moi Moche et Méchant', difficulty: 1),
       WordWithDifficulty('L\'Âge de Glace', difficulty: 1),
       WordWithDifficulty('Shrek', difficulty: 1),
-      WordWithDifficulty('Le Chat Potté', difficulty: 1),
-      WordWithDifficulty('Les Trolls', difficulty: 1),
-      WordWithDifficulty('Rio', difficulty: 1),
-      WordWithDifficulty('Le Lorax', difficulty: 1),
+      WordWithDifficulty('Le Chat Potté', difficulty: 2),
+      WordWithDifficulty('Les Trolls', difficulty: 2),
+      WordWithDifficulty('Rio', difficulty: 2),
 
       // ANIMATION NON-DISNEY - Moyen
       WordWithDifficulty('Dragons', difficulty: 2),
-      WordWithDifficulty('Lego Movie', difficulty: 2),
-      WordWithDifficulty('Spider-Man Into the Spider-Verse', difficulty: 2),
-      WordWithDifficulty('Les Croods', difficulty: 2),
-      WordWithDifficulty('Boss Baby', difficulty: 2),
+      WordWithDifficulty('Lego Movie', difficulty: 3),
+      WordWithDifficulty('Les Croods', difficulty: 3),
+      WordWithDifficulty('Boss Baby', difficulty: 3),
       WordWithDifficulty('Wallace et Gromit', difficulty: 2),
-      WordWithDifficulty('Chicken Run', difficulty: 2),
-      WordWithDifficulty('Tempête de boulettes géantes', difficulty: 2),
+      WordWithDifficulty('Chicken Run', difficulty: 3),
+      WordWithDifficulty('Tempête de boulettes géantes', difficulty: 3),
 
       // ANIMATION NON-DISNEY - Difficile
-      WordWithDifficulty('Le Voyage de Chihiro', difficulty: 3),
+      WordWithDifficulty('Le Voyage de Chihiro', difficulty: 2),
       WordWithDifficulty('Mon Voisin Totoro', difficulty: 3),
       WordWithDifficulty('Princesse Mononoké', difficulty: 3),
       WordWithDifficulty('Le Château Ambulant', difficulty: 3),
@@ -217,14 +213,14 @@ final Map<String, WordCategory> wordCategories = {
       // SÉRIES - Facile
       WordWithDifficulty('Friends', difficulty: 1),
       WordWithDifficulty('Game of Thrones', difficulty: 1),
-      WordWithDifficulty('Stranger Things', difficulty: 1),
-      WordWithDifficulty('La Casa de Papel', difficulty: 1),
-      WordWithDifficulty('The Walking Dead', difficulty: 1),
+      WordWithDifficulty('Stranger Things', difficulty: 2),
+      WordWithDifficulty('La Casa de Papel', difficulty: 2),
+      WordWithDifficulty('The Walking Dead', difficulty: 2),
       WordWithDifficulty('Grey\'s Anatomy', difficulty: 1),
-      WordWithDifficulty('How I Met Your Mother', difficulty: 1),
-      WordWithDifficulty('The Big Bang Theory', difficulty: 1),
-      WordWithDifficulty('Vikings', difficulty: 1),
-      WordWithDifficulty('Lupin', difficulty: 1),
+      WordWithDifficulty('How I Met Your Mother', difficulty: 2),
+      WordWithDifficulty('The Big Bang Theory', difficulty: 2),
+      WordWithDifficulty('Vikings', difficulty: 2),
+      WordWithDifficulty('Lupin', difficulty: 2),
 
       // SÉRIES - Moyen
       WordWithDifficulty('Breaking Bad', difficulty: 2),
@@ -238,8 +234,8 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('The Crown', difficulty: 2),
       WordWithDifficulty('Bridgerton', difficulty: 2),
       WordWithDifficulty('Emily in Paris', difficulty: 2),
-      WordWithDifficulty('Succession', difficulty: 2),
-      WordWithDifficulty('The Mandalorian', difficulty: 2),
+      WordWithDifficulty('Succession', difficulty: 3),
+      WordWithDifficulty('The Mandalorian', difficulty: 3),
       WordWithDifficulty('The Last of Us', difficulty: 2),
       WordWithDifficulty('Westworld', difficulty: 2),
       WordWithDifficulty('The Boys', difficulty: 2),
@@ -264,7 +260,7 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Intouchables', difficulty: 1),
       WordWithDifficulty('Taxi', difficulty: 1),
       WordWithDifficulty('Astérix et Obélix Mission Cléopâtre', difficulty: 1),
-      WordWithDifficulty('Les Trois Frères', difficulty: 1),
+      WordWithDifficulty('Les Trois Frères', difficulty: 3),
 
       // FILMS FRANÇAIS - Moyen
       WordWithDifficulty('Amélie Poulain', difficulty: 2),
@@ -280,66 +276,58 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('La Haine', difficulty: 3),
       WordWithDifficulty('Le Dîner de Cons', difficulty: 3),
       WordWithDifficulty('Bienvenue chez les Ch\'tis', difficulty: 3),
-      WordWithDifficulty('Les Visiteurs', difficulty: 3),
-      WordWithDifficulty('Le Grand Bleu', difficulty: 3),
-      WordWithDifficulty('Léon', difficulty: 3),
+      WordWithDifficulty('Les Visiteurs', difficulty: 2),
+      WordWithDifficulty('Le Grand Bleu', difficulty: 2),
+      WordWithDifficulty('Léon', difficulty: 2),
       WordWithDifficulty('Nikita', difficulty: 3),
-      WordWithDifficulty('La Boum', difficulty: 3),
-      WordWithDifficulty('Les Bronzés', difficulty: 3),
+      WordWithDifficulty('La Boum', difficulty: 2),
+      WordWithDifficulty('Les Bronzés', difficulty: 2),
       WordWithDifficulty('Le Père Noël est une ordure', difficulty: 3),
-      WordWithDifficulty('La Chèvre', difficulty: 3),
-      WordWithDifficulty('Les Compères', difficulty: 3),
 
       // MANGA/ANIME - Facile
       WordWithDifficulty('Naruto', difficulty: 1),
       WordWithDifficulty('Dragon Ball', difficulty: 1),
       WordWithDifficulty('One Piece', difficulty: 1),
       WordWithDifficulty('Pokémon', difficulty: 1),
-      WordWithDifficulty('Sailor Moon', difficulty: 1),
+      WordWithDifficulty('Sailor Moon', difficulty: 3),
       WordWithDifficulty('Olive et Tom', difficulty: 1),
-      WordWithDifficulty('Les Chevaliers du Zodiaque', difficulty: 1),
+      WordWithDifficulty('Les Chevaliers du Zodiaque', difficulty: 3),
 
       // MANGA/ANIME - Moyen
       WordWithDifficulty('L\'Attaque des Titans', difficulty: 2),
       WordWithDifficulty('Death Note', difficulty: 2),
       WordWithDifficulty('Demon Slayer', difficulty: 2),
-      WordWithDifficulty('My Hero Academia', difficulty: 2),
-      WordWithDifficulty('One Punch Man', difficulty: 2),
-      WordWithDifficulty('Fairy Tail', difficulty: 2),
-      WordWithDifficulty('Black Clover', difficulty: 2),
-      WordWithDifficulty('Bleach', difficulty: 2),
-      WordWithDifficulty('Fullmetal Alchemist', difficulty: 2),
-      WordWithDifficulty('Sword Art Online', difficulty: 2),
+      WordWithDifficulty('My Hero Academia', difficulty: 3),
+      WordWithDifficulty('One Punch Man', difficulty: 3),
+      WordWithDifficulty('Fairy Tail', difficulty: 3),
+      WordWithDifficulty('Black Clover', difficulty: 3),
+      WordWithDifficulty('Bleach', difficulty: 3),
+      WordWithDifficulty('Fullmetal Alchemist', difficulty: 3),
+      WordWithDifficulty('Sword Art Online', difficulty: 3),
 
       // MANGA/ANIME - Difficile
-      WordWithDifficulty('Hunter x Hunter', difficulty: 3),
+      WordWithDifficulty('Hunter x Hunter', difficulty: 2),
       WordWithDifficulty('Jujutsu Kaisen', difficulty: 3),
       WordWithDifficulty('Tokyo Ghoul', difficulty: 3),
-      WordWithDifficulty('Steins Gate', difficulty: 3),
-      WordWithDifficulty('Code Geass', difficulty: 3),
-      WordWithDifficulty('Neon Genesis Evangelion', difficulty: 3),
-      WordWithDifficulty('Cowboy Bebop', difficulty: 3),
-      WordWithDifficulty('Samurai Champloo', difficulty: 3),
       WordWithDifficulty('Vinland Saga', difficulty: 3),
 
       // PERSONNAGES DE FILMS/SÉRIES - Facile
       WordWithDifficulty('Mickey Mouse', difficulty: 1),
       WordWithDifficulty('Donald Duck', difficulty: 1),
-      WordWithDifficulty('Elsa', difficulty: 1),
+      WordWithDifficulty('Elsa', difficulty: 3),
       WordWithDifficulty('Simba', difficulty: 1),
-      WordWithDifficulty('Woody', difficulty: 1),
+      WordWithDifficulty('Woody', difficulty: 2),
       WordWithDifficulty('Buzz l\'Éclair', difficulty: 1),
       WordWithDifficulty('Shrek', difficulty: 1),
-      WordWithDifficulty('Dory', difficulty: 1),
-      WordWithDifficulty('Olaf', difficulty: 1),
-      WordWithDifficulty('Maui', difficulty: 1),
-      WordWithDifficulty('Anna', difficulty: 1),
-      WordWithDifficulty('Nemo', difficulty: 1),
+      WordWithDifficulty('Dory', difficulty: 2),
+      WordWithDifficulty('Olaf', difficulty: 2),
+      WordWithDifficulty('Maui', difficulty: 3),
+      WordWithDifficulty('Anna', difficulty: 3),
 
       // PERSONNAGES DE FILMS/SÉRIES - Moyen
-      WordWithDifficulty('Dark Vador', difficulty: 2),
-      WordWithDifficulty('Voldemort', difficulty: 2),
-      WordWithDifficulty('Thanos', difficulty: 2),
+      WordWithDifficulty('Dark Vador', difficulty: 1),
+      WordWithDifficulty('Voldemort', difficulty: 1),
+      WordWithDifficulty('Thanos', difficulty: 3),
       WordWithDifficulty('Sauron', difficulty: 2),
       WordWithDifficulty('Gandalf', difficulty: 2),
       WordWithDifficulty('Frodon', difficulty: 2),
@@ -348,17 +336,13 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Dumbledore', difficulty: 2),
       WordWithDifficulty('Severus Rogue', difficulty: 2),
       WordWithDifficulty('Jack Sparrow', difficulty: 2),
-      WordWithDifficulty('Tony Stark', difficulty: 2),
-      WordWithDifficulty('Peter Parker', difficulty: 2),
+      WordWithDifficulty('Tony Stark', difficulty: 3),
+      WordWithDifficulty('Peter Parker', difficulty: 3),
       WordWithDifficulty('Bruce Wayne', difficulty: 2),
 
       // PERSONNAGES DE FILMS/SÉRIES - Difficile
       WordWithDifficulty('Hannibal Lecter', difficulty: 3),
-      WordWithDifficulty('Tyler Durden', difficulty: 3),
       WordWithDifficulty('Don Corleone', difficulty: 3),
-      WordWithDifficulty('Forrest Gump', difficulty: 3),
-      WordWithDifficulty('Ellen Ripley', difficulty: 3),
-      WordWithDifficulty('Sarah Connor', difficulty: 3),
 
       // DESSINS ANIMÉS TV - Facile
       WordWithDifficulty('Bob l\'éponge', difficulty: 1),
@@ -366,8 +350,8 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Scooby-Doo', difficulty: 1),
       WordWithDifficulty('Tom et Jerry', difficulty: 1),
       WordWithDifficulty('Dora l\'Exploratrice', difficulty: 1),
-      WordWithDifficulty('Peppa Pig', difficulty: 1),
-      WordWithDifficulty('Pat Patrouille', difficulty: 1),
+      WordWithDifficulty('Peppa Pig', difficulty: 2),
+      WordWithDifficulty('Pat Patrouille', difficulty: 3),
       WordWithDifficulty('Les Télétubbies', difficulty: 1),
 
       // DESSINS ANIMÉS TV - Moyen
@@ -375,12 +359,7 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('South Park', difficulty: 2),
       WordWithDifficulty('Totally Spies', difficulty: 2),
       WordWithDifficulty('Code Lyoko', difficulty: 2),
-      WordWithDifficulty('Avatar le dernier maître de l\'air', difficulty: 2),
-      WordWithDifficulty('Adventure Time', difficulty: 2),
-      WordWithDifficulty('Gravity Falls', difficulty: 2),
-      WordWithDifficulty('Steven Universe', difficulty: 2),
-      WordWithDifficulty('Les Griffin', difficulty: 2),
-      WordWithDifficulty('Futurama', difficulty: 2),
+      WordWithDifficulty('Avatar le dernier maître de l\'air', difficulty: 3),
 
       // DESSINS ANIMÉS TV - Difficile
       WordWithDifficulty('Ben 10', difficulty: 3),
@@ -389,8 +368,8 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Il était une fois l\'homme', difficulty: 3),
       WordWithDifficulty('Les Mystérieuses Cités d\'Or', difficulty: 3),
       WordWithDifficulty('Wakfu', difficulty: 3),
-      WordWithDifficulty('Samurai Jack', difficulty: 3),
       WordWithDifficulty('Oggy et les Cafards', difficulty: 3),
+      WordWithDifficulty('Les zinzins de l\'espace', difficulty: 3),
     ],
   ),
 
@@ -506,8 +485,8 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Algérie', difficulty: 2),
       WordWithDifficulty('Tunisie', difficulty: 2),
       WordWithDifficulty('Kenya', difficulty: 2),
-      WordWithDifficulty('Nigeria', difficulty: 2),
-      WordWithDifficulty('Éthiopie', difficulty: 2),
+      WordWithDifficulty('Nigeria', difficulty: 3),
+      WordWithDifficulty('Éthiopie', difficulty: 3),
       WordWithDifficulty('Sénégal', difficulty: 2),
       WordWithDifficulty('Cameroun', difficulty: 2),
 
@@ -516,12 +495,8 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Ghana', difficulty: 3),
       WordWithDifficulty('Côte d\'Ivoire', difficulty: 3),
       WordWithDifficulty('Congo', difficulty: 3),
-      WordWithDifficulty('Angola', difficulty: 3),
-      WordWithDifficulty('Mozambique', difficulty: 3),
-      WordWithDifficulty('Madagascar', difficulty: 3),
-      WordWithDifficulty('Zimbabwe', difficulty: 3),
+      WordWithDifficulty('Madagascar', difficulty: 2),
       WordWithDifficulty('Tanzanie', difficulty: 3),
-      WordWithDifficulty('Ouganda', difficulty: 3),
 
       // PAYS OCÉANIE - Facile
       WordWithDifficulty('Australie', difficulty: 1),
@@ -531,7 +506,6 @@ final Map<String, WordCategory> wordCategories = {
 
       // PAYS OCÉANIE - Difficile
       WordWithDifficulty('Fidji', difficulty: 3),
-      WordWithDifficulty('Papouasie-Nouvelle-Guinée', difficulty: 3),
       WordWithDifficulty('Samoa', difficulty: 3),
 
       // VILLES FRANÇAISES - Facile
@@ -582,7 +556,7 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Le Caire', difficulty: 2),
       WordWithDifficulty('Istanbul', difficulty: 2),
       WordWithDifficulty('Dubaï', difficulty: 2),
-      WordWithDifficulty('Mumbai', difficulty: 2),
+      WordWithDifficulty('Mumbai', difficulty: 3),
       WordWithDifficulty('Shanghai', difficulty: 2),
       WordWithDifficulty('Hong Kong', difficulty: 2),
       WordWithDifficulty('Séoul', difficulty: 2),
@@ -618,10 +592,8 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Pyramides de Gizeh', difficulty: 2),
       WordWithDifficulty('Christ Rédempteur', difficulty: 2),
       WordWithDifficulty('Opéra de Sydney', difficulty: 2),
-      WordWithDifficulty('Burj Khalifa', difficulty: 2),
       WordWithDifficulty('Empire State Building', difficulty: 2),
       WordWithDifficulty('Golden Gate', difficulty: 2),
-      WordWithDifficulty('Tour de Londres', difficulty: 2),
       WordWithDifficulty('Buckingham Palace', difficulty: 2),
 
       // MONUMENTS - Difficile
@@ -629,15 +601,13 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Mont Saint-Michel', difficulty: 3),
       WordWithDifficulty('Acropole', difficulty: 3),
       WordWithDifficulty('Parthénon', difficulty: 3),
-      WordWithDifficulty('Alhambra', difficulty: 3),
       WordWithDifficulty('Stonehenge', difficulty: 3),
       WordWithDifficulty('Machu Picchu', difficulty: 3),
       WordWithDifficulty('Angkor Vat', difficulty: 3),
       WordWithDifficulty('Petra', difficulty: 3),
-      WordWithDifficulty('Chichen Itza', difficulty: 3),
       WordWithDifficulty('Kremlin', difficulty: 3),
       WordWithDifficulty('Basilique Saint-Pierre', difficulty: 3),
-      WordWithDifficulty('Forbidden City', difficulty: 3),
+      WordWithDifficulty('La cité interdite', difficulty: 3),
 
       // FLEUVES - Facile
       WordWithDifficulty('Seine', difficulty: 1),
@@ -655,13 +625,7 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Loire', difficulty: 3),
       WordWithDifficulty('Rhône', difficulty: 3),
       WordWithDifficulty('Garonne', difficulty: 3),
-      WordWithDifficulty('Yangtsé', difficulty: 3),
-      WordWithDifficulty('Mékong', difficulty: 3),
-      WordWithDifficulty('Congo', difficulty: 3),
-      WordWithDifficulty('Tigre', difficulty: 3),
-      WordWithDifficulty('Euphrate', difficulty: 3),
       WordWithDifficulty('Volga', difficulty: 3),
-      WordWithDifficulty('Murray', difficulty: 3),
 
       // RÉGIONS FRANÇAISES - Facile
       WordWithDifficulty('Bretagne', difficulty: 1),
@@ -673,8 +637,6 @@ final Map<String, WordCategory> wordCategories = {
       // RÉGIONS FRANÇAISES - Moyen
       WordWithDifficulty('Occitanie', difficulty: 2),
       WordWithDifficulty('Nouvelle-Aquitaine', difficulty: 2),
-      WordWithDifficulty('Pays de la Loire', difficulty: 2),
-      WordWithDifficulty('Hauts-de-France', difficulty: 2),
       WordWithDifficulty('Grand Est', difficulty: 2),
 
       // RÉGIONS FRANÇAISES - Difficile
@@ -693,7 +655,7 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Mer Méditerranée', difficulty: 1),
 
       // OCÉANS ET MERS - Moyen
-      WordWithDifficulty('Océan Indien', difficulty: 2),
+      WordWithDifficulty('Océan Indien', difficulty: 1),
       WordWithDifficulty('Mer des Caraïbes', difficulty: 2),
       WordWithDifficulty('Mer Rouge', difficulty: 2),
       WordWithDifficulty('Mer Noire', difficulty: 2),
@@ -703,7 +665,6 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Océan Arctique', difficulty: 3),
       WordWithDifficulty('Mer Caspienne', difficulty: 3),
       WordWithDifficulty('Mer du Nord', difficulty: 3),
-      WordWithDifficulty('Mer d\'Arabie', difficulty: 3),
 
       // ÉLÉMENTS NATURELS - Facile
       WordWithDifficulty('Sahara', difficulty: 1),
@@ -711,11 +672,10 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Everest', difficulty: 1),
 
       // ÉLÉMENTS NATURELS - Moyen
-      WordWithDifficulty('Himalaya', difficulty: 2),
-      WordWithDifficulty('Amazonie', difficulty: 2),
-      WordWithDifficulty('Pyrénées', difficulty: 2),
-      WordWithDifficulty('Andes', difficulty: 2),
-      WordWithDifficulty('Rocheuses', difficulty: 2),
+      WordWithDifficulty('Himalaya', difficulty: 1),
+      WordWithDifficulty('Amazonie', difficulty: 1),
+      WordWithDifficulty('Pyrénées', difficulty: 1),
+      WordWithDifficulty('Cordillère des Andes', difficulty: 2),
       WordWithDifficulty('Kilimandjaro', difficulty: 2),
 
       // ÉLÉMENTS NATURELS - Difficile
@@ -725,12 +685,10 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Mont Blanc', difficulty: 3),
       WordWithDifficulty('Vésuve', difficulty: 3),
       WordWithDifficulty('Etna', difficulty: 3),
-      WordWithDifficulty('Krakatoa', difficulty: 3),
       WordWithDifficulty('Yellowstone', difficulty: 3),
-      WordWithDifficulty('Vallée de la Mort', difficulty: 3),
       WordWithDifficulty('Désert de Gobi', difficulty: 3),
       WordWithDifficulty('Patagonie', difficulty: 3),
-      WordWithDifficulty('Antarctique', difficulty: 3),
+      WordWithDifficulty('Antarctique', difficulty: 2),
     ],
   ),
 
@@ -769,8 +727,8 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Poule', difficulty: 1),
       WordWithDifficulty('Coq', difficulty: 1),
       WordWithDifficulty('Canard', difficulty: 1),
-      WordWithDifficulty('Oie', difficulty: 1),
-      WordWithDifficulty('Hamster', difficulty: 1),
+      WordWithDifficulty('Oie', difficulty: 2),
+      WordWithDifficulty('Hamster', difficulty: 2),
 
       // ANIMAUX MARINS - Facile
       WordWithDifficulty('Dauphin', difficulty: 1),
@@ -840,12 +798,9 @@ final Map<String, WordCategory> wordCategories = {
 
       // FÉLINS - Difficile
       WordWithDifficulty('Jaguar', difficulty: 3),
-      WordWithDifficulty('Ocelot', difficulty: 3),
-      WordWithDifficulty('Serval', difficulty: 3),
 
       // CANIDÉS - Difficile
       WordWithDifficulty('Fennec', difficulty: 3),
-      WordWithDifficulty('Lycaon', difficulty: 3),
       WordWithDifficulty('Chacal', difficulty: 3),
       WordWithDifficulty('Coyote', difficulty: 3),
       WordWithDifficulty('Dingo', difficulty: 3),
@@ -856,16 +811,14 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Yak', difficulty: 3),
       WordWithDifficulty('Antilope', difficulty: 3),
       WordWithDifficulty('Gazelle', difficulty: 3),
-      WordWithDifficulty('Cerf', difficulty: 3),
-      WordWithDifficulty('Renne', difficulty: 3),
+      WordWithDifficulty('Cerf', difficulty: 2),
+      WordWithDifficulty('Renne', difficulty: 2),
       WordWithDifficulty('Élan', difficulty: 3),
 
       // PRIMATES - Difficile
       WordWithDifficulty('Babouin', difficulty: 3),
-      WordWithDifficulty('Mandrill', difficulty: 3),
       WordWithDifficulty('Ouistiti', difficulty: 3),
       WordWithDifficulty('Lémurien', difficulty: 3),
-      WordWithDifficulty('Gibbon', difficulty: 3),
       WordWithDifficulty('Macaque', difficulty: 3),
 
       // ANIMAUX MARINS - Difficile
@@ -883,40 +836,31 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Anaconda', difficulty: 3),
       WordWithDifficulty('Varan', difficulty: 3),
       WordWithDifficulty('Gecko', difficulty: 3),
-      WordWithDifficulty('Axolotl', difficulty: 3),
       WordWithDifficulty('Salamandre', difficulty: 3),
-      WordWithDifficulty('Triton', difficulty: 3),
 
       // OISEAUX EXOTIQUES - Difficile
       WordWithDifficulty('Toucan', difficulty: 3),
       WordWithDifficulty('Pélican', difficulty: 3),
-      WordWithDifficulty('Émeu', difficulty: 3),
       WordWithDifficulty('Paon', difficulty: 3),
       WordWithDifficulty('Colibri', difficulty: 3),
       WordWithDifficulty('Condor', difficulty: 3),
       WordWithDifficulty('Albatros', difficulty: 3),
-      WordWithDifficulty('Ara', difficulty: 3),
       WordWithDifficulty('Cacatoès', difficulty: 3),
-      WordWithDifficulty('Marabout', difficulty: 3),
 
       // PETITS MAMMIFÈRES - Difficile
       WordWithDifficulty('Loutre', difficulty: 3),
       WordWithDifficulty('Raton laveur', difficulty: 3),
-      WordWithDifficulty('Blaireau', difficulty: 3),
+      WordWithDifficulty('Blaireau', difficulty: 2),
       WordWithDifficulty('Belette', difficulty: 3),
       WordWithDifficulty('Hermine', difficulty: 3),
       WordWithDifficulty('Furet', difficulty: 3),
-      WordWithDifficulty('Martre', difficulty: 3),
-      WordWithDifficulty('Vison', difficulty: 3),
 
       // ANIMAUX D'AUSTRALIE - Difficile
       WordWithDifficulty('Wallaby', difficulty: 3),
       WordWithDifficulty('Wombat', difficulty: 3),
       WordWithDifficulty('Ornithorynque', difficulty: 3),
-      WordWithDifficulty('Quokka', difficulty: 3),
       WordWithDifficulty('Koala', difficulty: 3),
       WordWithDifficulty('Diable de Tasmanie', difficulty: 3),
-      WordWithDifficulty('Échidné', difficulty: 3),
 
       // INSECTES - Facile
       WordWithDifficulty('Papillon', difficulty: 1),
@@ -942,11 +886,9 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Scarabée', difficulty: 3),
       WordWithDifficulty('Mante religieuse', difficulty: 3),
       WordWithDifficulty('Phasme', difficulty: 3),
-      WordWithDifficulty('Lucane', difficulty: 3),
       WordWithDifficulty('Hanneton', difficulty: 3),
-      WordWithDifficulty('Charançon', difficulty: 3),
       WordWithDifficulty('Puceron', difficulty: 3),
-      WordWithDifficulty('Termite', difficulty: 3),
+      WordWithDifficulty('Termite', difficulty: 2),
 
       // PLANTES/FLEURS - Facile
       WordWithDifficulty('Rose', difficulty: 1),
@@ -954,19 +896,19 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Marguerite', difficulty: 1),
       WordWithDifficulty('Tournesol', difficulty: 1),
       WordWithDifficulty('Muguet', difficulty: 1),
-      WordWithDifficulty('Pensée', difficulty: 1),
+      WordWithDifficulty('Pensée', difficulty: 3),
 
       // PLANTES/FLEURS - Moyen
       WordWithDifficulty('Orchidée', difficulty: 2),
       WordWithDifficulty('Lavande', difficulty: 2),
-      WordWithDifficulty('Jasmin', difficulty: 2),
-      WordWithDifficulty('Pivoine', difficulty: 2),
+      WordWithDifficulty('Jasmin', difficulty: 3),
+      WordWithDifficulty('Pivoine', difficulty: 3),
       WordWithDifficulty('Coquelicot', difficulty: 2),
       WordWithDifficulty('Lilas', difficulty: 2),
-      WordWithDifficulty('Hortensia', difficulty: 2),
-      WordWithDifficulty('Géranium', difficulty: 2),
-      WordWithDifficulty('Bégonia', difficulty: 2),
-      WordWithDifficulty('Iris', difficulty: 2),
+      WordWithDifficulty('Hortensia', difficulty: 3),
+      WordWithDifficulty('Géranium', difficulty: 3),
+      WordWithDifficulty('Bégonia', difficulty: 3),
+      WordWithDifficulty('Iris', difficulty: 3),
 
       // PLANTES/FLEURS - Difficile
       WordWithDifficulty('Narcisse', difficulty: 3),
@@ -974,10 +916,8 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Dahlia', difficulty: 3),
       WordWithDifficulty('Glycine', difficulty: 3),
       WordWithDifficulty('Rhododendron', difficulty: 3),
-      WordWithDifficulty('Azalée', difficulty: 3),
       WordWithDifficulty('Camélia', difficulty: 3),
       WordWithDifficulty('Magnolia', difficulty: 3),
-      WordWithDifficulty('Gardénia', difficulty: 3),
       WordWithDifficulty('Hibiscus', difficulty: 3),
 
       // ARBRES - Facile
@@ -986,7 +926,7 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Pin', difficulty: 1),
       WordWithDifficulty('Palmier', difficulty: 1),
       WordWithDifficulty('Pommier', difficulty: 1),
-      WordWithDifficulty('Cerisier', difficulty: 1),
+      WordWithDifficulty('Cerisier', difficulty: 2),
 
       // ARBRES - Moyen
       WordWithDifficulty('Érable', difficulty: 2),
@@ -1045,8 +985,6 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Papaye', difficulty: 3),
       WordWithDifficulty('Fruit de la passion', difficulty: 3),
       WordWithDifficulty('Goyave', difficulty: 3),
-      WordWithDifficulty('Dragon fruit', difficulty: 3),
-      WordWithDifficulty('Carambole', difficulty: 3),
       WordWithDifficulty('Kumquat', difficulty: 3),
       WordWithDifficulty('Coing', difficulty: 3),
       WordWithDifficulty('Cassis', difficulty: 3),
@@ -1086,7 +1024,6 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Panais', difficulty: 3),
       WordWithDifficulty('Rutabaga', difficulty: 3),
       WordWithDifficulty('Topinambour', difficulty: 3),
-      WordWithDifficulty('Crosne', difficulty: 3),
       WordWithDifficulty('Endive', difficulty: 3),
       WordWithDifficulty('Fenouil', difficulty: 3),
       WordWithDifficulty('Salsifis', difficulty: 3),
@@ -1193,16 +1130,16 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Radiologue', difficulty: 2),
 
       // MÉTIERS SANTÉ - Difficile
-      WordWithDifficulty('Kinésithérapeute', difficulty: 3),
-      WordWithDifficulty('Ostéopathe', difficulty: 3),
-      WordWithDifficulty('Psychologue', difficulty: 3),
-      WordWithDifficulty('Cardiologue', difficulty: 3),
-      WordWithDifficulty('Dermatologue', difficulty: 3),
-      WordWithDifficulty('Ophtalmologue', difficulty: 3),
-      WordWithDifficulty('Pédiatre', difficulty: 3),
+      WordWithDifficulty('Kinésithérapeute', difficulty: 2),
+      WordWithDifficulty('Ostéopathe', difficulty: 2),
+      WordWithDifficulty('Psychologue', difficulty: 2),
+      WordWithDifficulty('Cardiologue', difficulty: 2),
+      WordWithDifficulty('Dermatologue', difficulty: 2),
+      WordWithDifficulty('Ophtalmologue', difficulty: 2),
+      WordWithDifficulty('Pédiatre', difficulty: 2),
       WordWithDifficulty('Anesthésiste', difficulty: 3),
       WordWithDifficulty('Orthophoniste', difficulty: 3),
-      WordWithDifficulty('Podologue', difficulty: 3),
+      WordWithDifficulty('Podologue', difficulty: 2),
 
       // MÉTIERS ÉDUCATION - Facile
       WordWithDifficulty('Professeur', difficulty: 1),
@@ -1221,8 +1158,8 @@ final Map<String, WordCategory> wordCategories = {
 
       // MÉTIERS SÉCURITÉ - Moyen
       WordWithDifficulty('Militaire', difficulty: 2),
-      WordWithDifficulty('Agent de sécurité', difficulty: 2),
-      WordWithDifficulty('Maître-chien', difficulty: 2),
+      WordWithDifficulty('Agent de sécurité', difficulty: 3),
+      WordWithDifficulty('Maître-chien', difficulty: 3),
 
       // MÉTIERS SÉCURITÉ - Difficile
       WordWithDifficulty('Démineur', difficulty: 3),
@@ -1235,17 +1172,17 @@ final Map<String, WordCategory> wordCategories = {
 
       // MÉTIERS ALIMENTATION - Moyen
       WordWithDifficulty('Pâtissier', difficulty: 2),
-      WordWithDifficulty('Boucher', difficulty: 2),
-      WordWithDifficulty('Poissonnier', difficulty: 2),
+      WordWithDifficulty('Boucher', difficulty: 1),
+      WordWithDifficulty('Poissonnier', difficulty: 1),
       WordWithDifficulty('Sommelier', difficulty: 2),
       WordWithDifficulty('Barman', difficulty: 2),
       WordWithDifficulty('Chef cuisinier', difficulty: 2),
 
       // MÉTIERS ALIMENTATION - Difficile
-      WordWithDifficulty('Fromager', difficulty: 3),
-      WordWithDifficulty('Chocolatier', difficulty: 3),
-      WordWithDifficulty('Glacier', difficulty: 3),
-      WordWithDifficulty('Traiteur', difficulty: 3),
+      WordWithDifficulty('Fromager', difficulty: 2),
+      WordWithDifficulty('Chocolatier', difficulty: 2),
+      WordWithDifficulty('Glacier', difficulty: 2),
+      WordWithDifficulty('Traiteur', difficulty: 2),
 
       // MÉTIERS ARTISANAT - Facile
       WordWithDifficulty('Coiffeur', difficulty: 1),
@@ -1253,17 +1190,17 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Menuisier', difficulty: 1),
 
       // MÉTIERS ARTISANAT - Moyen
-      WordWithDifficulty('Électricien', difficulty: 2),
-      WordWithDifficulty('Plombier', difficulty: 2),
+      WordWithDifficulty('Électricien', difficulty: 1),
+      WordWithDifficulty('Plombier', difficulty: 1),
       WordWithDifficulty('Maçon', difficulty: 2),
-      WordWithDifficulty('Peintre', difficulty: 2),
-      WordWithDifficulty('Jardinier', difficulty: 2),
-      WordWithDifficulty('Carreleur', difficulty: 2),
+      WordWithDifficulty('Peintre', difficulty: 1),
+      WordWithDifficulty('Jardinier', difficulty: 1),
+      WordWithDifficulty('Carreleur', difficulty: 3),
 
       // MÉTIERS ARTISANAT - Difficile
       WordWithDifficulty('Ébéniste', difficulty: 3),
       WordWithDifficulty('Charpentier', difficulty: 3),
-      WordWithDifficulty('Serrurier', difficulty: 3),
+      WordWithDifficulty('Serrurier', difficulty: 2),
       WordWithDifficulty('Couvreur', difficulty: 3),
       WordWithDifficulty('Tapissier', difficulty: 3),
       WordWithDifficulty('Vitrier', difficulty: 3),
@@ -1281,11 +1218,10 @@ final Map<String, WordCategory> wordCategories = {
 
       // MÉTIERS TRANSPORT - Difficile
       WordWithDifficulty('Contrôleur aérien', difficulty: 3),
-      WordWithDifficulty('Mécanicien avion', difficulty: 3),
 
       // MÉTIERS JURIDIQUE - Moyen
-      WordWithDifficulty('Avocat', difficulty: 2),
-      WordWithDifficulty('Juge', difficulty: 2),
+      WordWithDifficulty('Avocat', difficulty: 1),
+      WordWithDifficulty('Juge', difficulty: 1),
       WordWithDifficulty('Commissaire de police', difficulty: 2),
 
       // MÉTIERS JURIDIQUE - Difficile
@@ -1299,26 +1235,25 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Architecte', difficulty: 2),
       WordWithDifficulty('Journaliste', difficulty: 2),
       WordWithDifficulty('Photographe', difficulty: 2),
-      WordWithDifficulty('Designer', difficulty: 2),
-      WordWithDifficulty('Graphiste', difficulty: 2),
-      WordWithDifficulty('Musicien', difficulty: 2),
-      WordWithDifficulty('Acteur', difficulty: 2),
+      WordWithDifficulty('Designer', difficulty: 3),
+      WordWithDifficulty('Graphiste', difficulty: 3),
+      WordWithDifficulty('Musicien', difficulty: 1),
+      WordWithDifficulty('Acteur', difficulty: 1),
 
       // MÉTIERS CRÉATIFS - Difficile
       WordWithDifficulty('Scénariste', difficulty: 3),
       WordWithDifficulty('Monteur', difficulty: 3),
       WordWithDifficulty('Ingénieur du son', difficulty: 3),
-      WordWithDifficulty('Réalisateur', difficulty: 3),
+      WordWithDifficulty('Réalisateur', difficulty: 2),
       WordWithDifficulty('Illustrateur', difficulty: 3),
 
       // MÉTIERS TECH - Moyen
-      WordWithDifficulty('Développeur', difficulty: 2),
+      WordWithDifficulty('Développeur', difficulty: 3),
       WordWithDifficulty('Informaticien', difficulty: 2),
-      WordWithDifficulty('Webdesigner', difficulty: 2),
+      WordWithDifficulty('Webdesigner', difficulty: 3),
 
       // MÉTIERS TECH - Difficile
       WordWithDifficulty('Data scientist', difficulty: 3),
-      WordWithDifficulty('Ingénieur réseau', difficulty: 3),
       WordWithDifficulty('Administrateur système', difficulty: 3),
 
       // MÉTIERS COMMERCE - Facile
@@ -1329,7 +1264,7 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Comptable', difficulty: 2),
       WordWithDifficulty('Commercial', difficulty: 2),
       WordWithDifficulty('Agent immobilier', difficulty: 2),
-      WordWithDifficulty('Banquier', difficulty: 2),
+      WordWithDifficulty('Banquier', difficulty: 1),
 
       // MÉTIERS COMMERCE - Difficile
       WordWithDifficulty('Expert-comptable', difficulty: 3),
@@ -1337,7 +1272,7 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Trader', difficulty: 3),
 
       // MÉTIERS AGRICULTURE - Moyen
-      WordWithDifficulty('Agriculteur', difficulty: 2),
+      WordWithDifficulty('Agriculteur', difficulty: 1),
       WordWithDifficulty('Éleveur', difficulty: 2),
       WordWithDifficulty('Apiculteur', difficulty: 2),
 
@@ -1362,7 +1297,7 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Football américain', difficulty: 3),
       WordWithDifficulty('Hockey sur glace', difficulty: 3),
       WordWithDifficulty('Cricket', difficulty: 3),
-      WordWithDifficulty('Ultimate frisbee', difficulty: 3),
+      WordWithDifficulty('Ultimate (frisbee)', difficulty: 3),
 
       // SPORTS RAQUETTE - Facile
       WordWithDifficulty('Tennis', difficulty: 1),
@@ -1381,7 +1316,7 @@ final Map<String, WordCategory> wordCategories = {
       // SPORTS COMBAT - Moyen
       WordWithDifficulty('Taekwondo', difficulty: 2),
       WordWithDifficulty('Kung Fu', difficulty: 2),
-      WordWithDifficulty('Krav Maga', difficulty: 2),
+      WordWithDifficulty('Krav Maga', difficulty: 3),
       WordWithDifficulty('MMA', difficulty: 2),
 
       // SPORTS COMBAT - Difficile
@@ -1391,10 +1326,10 @@ final Map<String, WordCategory> wordCategories = {
 
       // SPORTS AQUATIQUES - Facile
       WordWithDifficulty('Natation', difficulty: 1),
-      WordWithDifficulty('Plongée', difficulty: 1),
+      WordWithDifficulty('Plongée', difficulty: 2),
 
       // SPORTS AQUATIQUES - Moyen
-      WordWithDifficulty('Surf', difficulty: 2),
+      WordWithDifficulty('Surf', difficulty: 1),
       WordWithDifficulty('Voile', difficulty: 2),
       WordWithDifficulty('Canoë-kayak', difficulty: 2),
       WordWithDifficulty('Aviron', difficulty: 2),
@@ -1421,28 +1356,28 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Roller', difficulty: 2),
 
       // SPORTS INDIVIDUELS - Difficile
-      WordWithDifficulty('Triathlon', difficulty: 3),
-      WordWithDifficulty('Pentathlon', difficulty: 3),
-      WordWithDifficulty('Haltérophilie', difficulty: 3),
-      WordWithDifficulty('Escrime', difficulty: 3),
-      WordWithDifficulty('Tir à l\'arc', difficulty: 3),
+      WordWithDifficulty('Triathlon', difficulty: 2),
+      WordWithDifficulty('Pentathlon', difficulty: 2),
+      WordWithDifficulty('Haltérophilie', difficulty: 2),
+      WordWithDifficulty('Escrime', difficulty: 2),
+      WordWithDifficulty('Tir à l\'arc', difficulty: 2),
       WordWithDifficulty('BMX', difficulty: 3),
 
       // SPORTS D'HIVER - Moyen
       WordWithDifficulty('Snowboard', difficulty: 2),
-      WordWithDifficulty('Ski de fond', difficulty: 2),
+      WordWithDifficulty('Ski de fond', difficulty: 3),
       WordWithDifficulty('Luge', difficulty: 2),
 
       // SPORTS D'HIVER - Difficile
-      WordWithDifficulty('Biathlon', difficulty: 3),
-      WordWithDifficulty('Patinage artistique', difficulty: 3),
-      WordWithDifficulty('Curling', difficulty: 3),
+      WordWithDifficulty('Biathlon', difficulty: 2),
+      WordWithDifficulty('Patinage artistique', difficulty: 2),
+      WordWithDifficulty('Curling', difficulty: 2),
       WordWithDifficulty('Bobsleigh', difficulty: 3),
       WordWithDifficulty('Skeleton', difficulty: 3),
       WordWithDifficulty('Ski acrobatique', difficulty: 3),
 
       // SPORTS EXTRÊMES - Difficile
-      WordWithDifficulty('Parachutisme', difficulty: 3),
+      WordWithDifficulty('Parachutisme', difficulty: 2),
       WordWithDifficulty('Saut à l\'élastique', difficulty: 3),
       WordWithDifficulty('Deltaplane', difficulty: 3),
       WordWithDifficulty('Parapente', difficulty: 3),
@@ -1466,18 +1401,18 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Griezmann', difficulty: 1),
 
       // SPORTIFS FOOTBALL - Moyen
-      WordWithDifficulty('Zinedine Zidane', difficulty: 2),
-      WordWithDifficulty('Pelé', difficulty: 2),
+      WordWithDifficulty('Zinedine Zidane', difficulty: 1),
+      WordWithDifficulty('Pelé', difficulty: 3),
       WordWithDifficulty('Maradona', difficulty: 2),
       WordWithDifficulty('Thierry Henry', difficulty: 2),
-      WordWithDifficulty('Benzema', difficulty: 2),
+      WordWithDifficulty('Benzema', difficulty: 1),
       WordWithDifficulty('Giroud', difficulty: 2),
       WordWithDifficulty('Pogba', difficulty: 2),
       WordWithDifficulty('Kanté', difficulty: 2),
 
       // SPORTIFS FOOTBALL - Difficile
       WordWithDifficulty('Platini', difficulty: 3),
-      WordWithDifficulty('Beckham', difficulty: 3),
+      WordWithDifficulty('Beckham', difficulty: 1),
       WordWithDifficulty('Iniesta', difficulty: 3),
       WordWithDifficulty('Xavi', difficulty: 3),
 
@@ -1488,9 +1423,9 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Usain Bolt', difficulty: 1),
 
       // SPORTIFS AUTRES - Moyen
-      WordWithDifficulty('Djokovic', difficulty: 2),
-      WordWithDifficulty('Serena Williams', difficulty: 2),
-      WordWithDifficulty('Tiger Woods', difficulty: 2),
+      WordWithDifficulty('Djokovic', difficulty: 1),
+      WordWithDifficulty('Serena Williams', difficulty: 1),
+      WordWithDifficulty('Tiger Woods', difficulty: 1),
       WordWithDifficulty('LeBron James', difficulty: 2),
       WordWithDifficulty('Muhammad Ali', difficulty: 2),
       WordWithDifficulty('Michael Phelps', difficulty: 2),
@@ -1498,17 +1433,17 @@ final Map<String, WordCategory> wordCategories = {
 
       // SPORTIFS AUTRES - Difficile
       WordWithDifficulty('Kobe Bryant', difficulty: 3),
-      WordWithDifficulty('Mike Tyson', difficulty: 3),
-      WordWithDifficulty('Simone Biles', difficulty: 3),
+      WordWithDifficulty('Mike Tyson', difficulty: 2),
+      WordWithDifficulty('Simone Biles', difficulty: 2),
       WordWithDifficulty('Lewis Hamilton', difficulty: 3),
-      WordWithDifficulty('Michael Schumacher', difficulty: 3),
+      WordWithDifficulty('Michael Schumacher', difficulty: 2),
       WordWithDifficulty('Ayrton Senna', difficulty: 3),
 
       // CHANTEURS INTERNATIONAUX - Facile
       WordWithDifficulty('Beyoncé', difficulty: 1),
       WordWithDifficulty('Rihanna', difficulty: 1),
       WordWithDifficulty('Taylor Swift', difficulty: 1),
-      WordWithDifficulty('Ed Sheeran', difficulty: 1),
+      WordWithDifficulty('Ed Sheeran', difficulty: 2),
       WordWithDifficulty('Adele', difficulty: 1),
       WordWithDifficulty('Justin Bieber', difficulty: 1),
       WordWithDifficulty('Shakira', difficulty: 1),
@@ -1517,13 +1452,13 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Elvis Presley', difficulty: 2),
       WordWithDifficulty('Michael Jackson', difficulty: 2),
       WordWithDifficulty('Madonna', difficulty: 2),
-      WordWithDifficulty('Prince', difficulty: 2),
-      WordWithDifficulty('David Bowie', difficulty: 2),
+      WordWithDifficulty('Prince', difficulty: 3),
+      WordWithDifficulty('David Bowie', difficulty: 3),
       WordWithDifficulty('Freddie Mercury', difficulty: 2),
       WordWithDifficulty('Bob Marley', difficulty: 2),
       WordWithDifficulty('Lady Gaga', difficulty: 2),
       WordWithDifficulty('Ariana Grande', difficulty: 2),
-      WordWithDifficulty('Eminem', difficulty: 2),
+      WordWithDifficulty('Eminem', difficulty: 4),
       WordWithDifficulty('Drake', difficulty: 2),
       WordWithDifficulty('The Weeknd', difficulty: 2),
       WordWithDifficulty('Bruno Mars', difficulty: 2),
@@ -1532,27 +1467,27 @@ final Map<String, WordCategory> wordCategories = {
       // CHANTEURS INTERNATIONAUX - Difficile
       WordWithDifficulty('John Lennon', difficulty: 3),
       WordWithDifficulty('Kanye West', difficulty: 3),
-      WordWithDifficulty('Amy Winehouse', difficulty: 3),
+      WordWithDifficulty('Amy Winehouse', difficulty: 2),
       WordWithDifficulty('Whitney Houston', difficulty: 3),
       WordWithDifficulty('Frank Sinatra', difficulty: 3),
 
       // CHANTEURS FRANÇAIS - Facile
       WordWithDifficulty('Céline Dion', difficulty: 1),
       WordWithDifficulty('Johnny Hallyday', difficulty: 1),
-      WordWithDifficulty('Stromae', difficulty: 1),
+      WordWithDifficulty('Stromae', difficulty: 2),
 
       // CHANTEURS FRANÇAIS - Moyen
       WordWithDifficulty('Renaud', difficulty: 2),
-      WordWithDifficulty('Jacques Brel', difficulty: 2),
-      WordWithDifficulty('Serge Gainsbourg', difficulty: 2),
+      WordWithDifficulty('Jacques Brel', difficulty: 3),
+      WordWithDifficulty('Serge Gainsbourg', difficulty: 3),
       WordWithDifficulty('Charles Aznavour', difficulty: 2),
       WordWithDifficulty('Claude François', difficulty: 2),
       WordWithDifficulty('Michel Sardou', difficulty: 2),
       WordWithDifficulty('Jean-Jacques Goldman', difficulty: 2),
 
       // CHANTEURS FRANÇAIS - Difficile
-      WordWithDifficulty('Édith Piaf', difficulty: 3),
-      WordWithDifficulty('Daft Punk', difficulty: 3),
+      WordWithDifficulty('Édith Piaf', difficulty: 2),
+      WordWithDifficulty('Daft Punk', difficulty: 2),
       WordWithDifficulty('Georges Brassens', difficulty: 3),
       WordWithDifficulty('Léo Ferré', difficulty: 3),
       WordWithDifficulty('Barbara', difficulty: 3),
@@ -1563,14 +1498,14 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Tom Cruise', difficulty: 1),
       WordWithDifficulty('Will Smith', difficulty: 1),
       WordWithDifficulty('Johnny Depp', difficulty: 1),
-      WordWithDifficulty('Dwayne Johnson', difficulty: 1),
+      WordWithDifficulty('Dwayne Johnson', difficulty: 3),
 
       // ACTEURS HOLLYWOOD - Moyen
       WordWithDifficulty('Marilyn Monroe', difficulty: 2),
       WordWithDifficulty('Charlie Chaplin', difficulty: 2),
       WordWithDifficulty('Tom Hanks', difficulty: 2),
       WordWithDifficulty('Robert De Niro', difficulty: 2),
-      WordWithDifficulty('Al Pacino', difficulty: 2),
+      WordWithDifficulty('Al Pacino', difficulty: 3),
       WordWithDifficulty('Morgan Freeman', difficulty: 2),
       WordWithDifficulty('Denzel Washington', difficulty: 2),
       WordWithDifficulty('Meryl Streep', difficulty: 2),
@@ -1594,9 +1529,8 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Jean Dujardin', difficulty: 2),
       WordWithDifficulty('Omar Sy', difficulty: 2),
       WordWithDifficulty('Marion Cotillard', difficulty: 2),
-      WordWithDifficulty('Gérard Depardieu', difficulty: 2),
       WordWithDifficulty('Louis de Funès', difficulty: 2),
-      WordWithDifficulty('Fernandel', difficulty: 2),
+      WordWithDifficulty('Fernandel', difficulty: 3),
       WordWithDifficulty('Sophie Marceau', difficulty: 2),
 
       // ACTEURS FRANÇAIS - Difficile
@@ -1608,7 +1542,7 @@ final Map<String, WordCategory> wordCategories = {
 
       // TÉLÉ-RÉALITÉ / INFLUENCEURS - Facile
       WordWithDifficulty('Kim Kardashian', difficulty: 1),
-      WordWithDifficulty('Kylie Jenner', difficulty: 1),
+      WordWithDifficulty('Kylie Jenner', difficulty: 2),
 
       // TÉLÉ-RÉALITÉ / INFLUENCEURS - Moyen
       WordWithDifficulty('Nabilla', difficulty: 2),
@@ -1634,23 +1568,23 @@ final Map<String, WordCategory> wordCategories = {
 
       // HUMORISTES - Difficile
       WordWithDifficulty('Coluche', difficulty: 3),
-      WordWithDifficulty('Pierre Desproges', difficulty: 3),
+      WordWithDifficulty('Roman Frayssinet', difficulty: 3),
       WordWithDifficulty('Raymond Devos', difficulty: 3),
 
       // ÉCRIVAINS - Facile
       WordWithDifficulty('Victor Hugo', difficulty: 1),
-      WordWithDifficulty('Jules Verne', difficulty: 1),
-      WordWithDifficulty('J.K. Rowling', difficulty: 1),
+      WordWithDifficulty('Jules Verne', difficulty: 2),
+      WordWithDifficulty('J.K. Rowling', difficulty: 2),
 
       // ÉCRIVAINS - Moyen
       WordWithDifficulty('Molière', difficulty: 2),
       WordWithDifficulty('Alexandre Dumas', difficulty: 2),
       WordWithDifficulty('Émile Zola', difficulty: 2),
-      WordWithDifficulty('Gustave Flaubert', difficulty: 2),
-      WordWithDifficulty('Guy de Maupassant', difficulty: 2),
-      WordWithDifficulty('Albert Camus', difficulty: 2),
+      WordWithDifficulty('Gustave Flaubert', difficulty: 3),
+      WordWithDifficulty('Guy de Maupassant', difficulty: 3),
+      WordWithDifficulty('Albert Camus', difficulty: 3),
       WordWithDifficulty('Shakespeare', difficulty: 2),
-      WordWithDifficulty('Tolkien', difficulty: 2),
+      WordWithDifficulty('Tolkien', difficulty: 3),
 
       // ÉCRIVAINS - Difficile
       WordWithDifficulty('Honoré de Balzac', difficulty: 3),
@@ -1662,7 +1596,6 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Voltaire', difficulty: 3),
       WordWithDifficulty('Rousseau', difficulty: 3),
       WordWithDifficulty('Montesquieu', difficulty: 3),
-      WordWithDifficulty('Dostoïevski', difficulty: 3),
       WordWithDifficulty('Hemingway', difficulty: 3),
 
       // PHILOSOPHES - Difficile
@@ -1670,10 +1603,7 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Aristote', difficulty: 3),
       WordWithDifficulty('Socrate', difficulty: 3),
       WordWithDifficulty('Descartes', difficulty: 3),
-      WordWithDifficulty('Kant', difficulty: 3),
       WordWithDifficulty('Nietzsche', difficulty: 3),
-      WordWithDifficulty('Spinoza', difficulty: 3),
-      WordWithDifficulty('Hegel', difficulty: 3),
 
       // PERSONNAGES HISTORIQUES - Facile
       WordWithDifficulty('Napoléon', difficulty: 1),
@@ -1690,11 +1620,9 @@ final Map<String, WordCategory> wordCategories = {
       // PERSONNAGES HISTORIQUES - Difficile
       WordWithDifficulty('Jules César', difficulty: 3),
       WordWithDifficulty('Cléopâtre', difficulty: 3),
-      WordWithDifficulty('Alexandre le Grand', difficulty: 3),
       WordWithDifficulty('Attila', difficulty: 3),
       WordWithDifficulty('François 1er', difficulty: 3),
       WordWithDifficulty('Henri IV', difficulty: 3),
-      WordWithDifficulty('Richelieu', difficulty: 3),
       WordWithDifficulty('Robespierre', difficulty: 3),
       WordWithDifficulty('De Gaulle', difficulty: 3),
       WordWithDifficulty('Churchill', difficulty: 3),
@@ -1711,9 +1639,8 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Dalai Lama', difficulty: 3),
 
       // POLITIQUES FRANÇAIS - Moyen
-      WordWithDifficulty('Emmanuel Macron', difficulty: 2),
-      WordWithDifficulty('François Hollande', difficulty: 2),
-      WordWithDifficulty('Nicolas Sarkozy', difficulty: 2),
+      WordWithDifficulty('Emmanuel Macron', difficulty: 1),
+      WordWithDifficulty('François Hollande', difficulty: 1),
 
       // POLITIQUES FRANÇAIS - Difficile
       WordWithDifficulty('Jacques Chirac', difficulty: 3),
@@ -1727,16 +1654,14 @@ final Map<String, WordCategory> wordCategories = {
 
       // SCIENTIFIQUES - Moyen
       WordWithDifficulty('Pasteur', difficulty: 2),
-      WordWithDifficulty('Darwin', difficulty: 2),
+      WordWithDifficulty('Darwin', difficulty: 3),
       WordWithDifficulty('Newton', difficulty: 2),
 
       // SCIENTIFIQUES - Difficile
       WordWithDifficulty('Galilée', difficulty: 3),
       WordWithDifficulty('Tesla', difficulty: 3),
-      WordWithDifficulty('Hawking', difficulty: 3),
       WordWithDifficulty('Pythagore', difficulty: 3),
       WordWithDifficulty('Archimède', difficulty: 3),
-      WordWithDifficulty('Copernic', difficulty: 3),
       WordWithDifficulty('Léonard de Vinci', difficulty: 3),
 
       // TECH/BUSINESS - Facile
@@ -1745,13 +1670,9 @@ final Map<String, WordCategory> wordCategories = {
 
       // TECH/BUSINESS - Moyen
       WordWithDifficulty('Mark Zuckerberg', difficulty: 2),
-      WordWithDifficulty('Elon Musk', difficulty: 2),
 
       // TECH/BUSINESS - Difficile
       WordWithDifficulty('Jeff Bezos', difficulty: 3),
-      WordWithDifficulty('Larry Page', difficulty: 3),
-      WordWithDifficulty('Sergey Brin', difficulty: 3),
-      WordWithDifficulty('Jack Ma', difficulty: 3),
     ],
   ),
 
@@ -1840,17 +1761,17 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Rideau', difficulty: 2),
       WordWithDifficulty('Miroir', difficulty: 2),
       WordWithDifficulty('Lampadaire', difficulty: 2),
-      WordWithDifficulty('Table de chevet', difficulty: 2),
+      WordWithDifficulty('Table de chevet', difficulty: 3),
 
       // MOBILIER - Difficile
-      WordWithDifficulty('Banc', difficulty: 3),
+      WordWithDifficulty('Banc', difficulty: 2),
       WordWithDifficulty('Pouf', difficulty: 3),
       WordWithDifficulty('Matelas', difficulty: 3),
       WordWithDifficulty('Oreiller', difficulty: 3),
-      WordWithDifficulty('Couverture', difficulty: 3),
+      WordWithDifficulty('Couverture', difficulty: 2),
       WordWithDifficulty('Lustre', difficulty: 3),
-      WordWithDifficulty('Buffet', difficulty: 3),
-      WordWithDifficulty('Console', difficulty: 3),
+      WordWithDifficulty('Buffet', difficulty: 2),
+      WordWithDifficulty('Console', difficulty: 2),
 
       // USTENSILES CUISINE - Facile
       WordWithDifficulty('Couteau', difficulty: 1),
@@ -1917,12 +1838,11 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Fusée', difficulty: 3),
       WordWithDifficulty('Sous-marin', difficulty: 3),
       WordWithDifficulty('Montgolfière', difficulty: 3),
-      WordWithDifficulty('Parachute', difficulty: 3),
-      WordWithDifficulty('Ascenseur', difficulty: 3),
-      WordWithDifficulty('Escalator', difficulty: 3),
-      WordWithDifficulty('Trottinette', difficulty: 3),
-      WordWithDifficulty('Skateboard', difficulty: 3),
-      WordWithDifficulty('Gyropode', difficulty: 3),
+      WordWithDifficulty('Parachute', difficulty: 2),
+      WordWithDifficulty('Ascenseur', difficulty: 2),
+      WordWithDifficulty('Escalator', difficulty: 2),
+      WordWithDifficulty('Trottinette', difficulty: 2),
+      WordWithDifficulty('Skateboard', difficulty: 2),
       WordWithDifficulty('Téléphérique', difficulty: 3),
 
       // VÊTEMENTS - Facile
@@ -1991,17 +1911,14 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Xylophone', difficulty: 1),
 
       // INSTRUMENTS À PERCUSSION - Moyen
-      WordWithDifficulty('Cymbales', difficulty: 2),
+      WordWithDifficulty('Cymbales', difficulty: 3),
       WordWithDifficulty('Maracas', difficulty: 2),
-      WordWithDifficulty('Bongos', difficulty: 2),
       WordWithDifficulty('Djembé', difficulty: 2),
-      WordWithDifficulty('Gong', difficulty: 2),
+      WordWithDifficulty('Gong', difficulty: 3),
 
       // INSTRUMENTS À PERCUSSION - Difficile
       WordWithDifficulty('Timbales', difficulty: 3),
-      WordWithDifficulty('Vibraphone', difficulty: 3),
-      WordWithDifficulty('Cajon', difficulty: 3),
-      WordWithDifficulty('Triangle', difficulty: 3),
+      WordWithDifficulty('Triangle', difficulty: 2),
 
       // INVENTIONS - Facile
       WordWithDifficulty('Roue', difficulty: 1),
@@ -2014,12 +1931,12 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Télégraphe', difficulty: 2),
       WordWithDifficulty('Microscope', difficulty: 2),
       WordWithDifficulty('Vaccin', difficulty: 2),
-      WordWithDifficulty('Moteur à explosion', difficulty: 2),
+      WordWithDifficulty('Moteur à explosion', difficulty: 3),
       WordWithDifficulty('Locomotive', difficulty: 2),
 
       // INVENTIONS - Difficile
       WordWithDifficulty('Pénicilline', difficulty: 3),
-      WordWithDifficulty('Anesthésie', difficulty: 3),
+      WordWithDifficulty('Anesthésie', difficulty: 2),
       WordWithDifficulty('Radiographie', difficulty: 3),
       WordWithDifficulty('Microprocesseur', difficulty: 3),
       WordWithDifficulty('GPS', difficulty: 3),
@@ -2047,57 +1964,42 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Bulbizarre', difficulty: 1),
       WordWithDifficulty('Salamèche', difficulty: 1),
       WordWithDifficulty('Carapuce', difficulty: 1),
-      WordWithDifficulty('Ronflex', difficulty: 1),
-      WordWithDifficulty('Évoli', difficulty: 1),
-      WordWithDifficulty('Mewtwo', difficulty: 1),
-      WordWithDifficulty('Mew', difficulty: 1),
-      WordWithDifficulty('Rattata', difficulty: 1),
-      WordWithDifficulty('Roucool', difficulty: 1),
-      WordWithDifficulty('Chenipan', difficulty: 1),
+      WordWithDifficulty('Ronflex', difficulty: 3),
+      WordWithDifficulty('Évoli', difficulty: 3),
+      WordWithDifficulty('Mewtwo', difficulty: 3),
+      WordWithDifficulty('Mew', difficulty: 3),
+      WordWithDifficulty('Rattata', difficulty: 3),
+      WordWithDifficulty('Roucool', difficulty: 3),
+      WordWithDifficulty('Chenipan', difficulty: 3),
 
       // POKÉMON GÉNÉRATION 1 - Moyen
-      WordWithDifficulty('Florizarre', difficulty: 2),
-      WordWithDifficulty('Tortank', difficulty: 2),
-      WordWithDifficulty('Raichu', difficulty: 2),
-      WordWithDifficulty('Aquali', difficulty: 2),
-      WordWithDifficulty('Voltali', difficulty: 2),
-      WordWithDifficulty('Pyroli', difficulty: 2),
+      WordWithDifficulty('Florizarre', difficulty: 3),
+      WordWithDifficulty('Tortank', difficulty: 3),
+      WordWithDifficulty('Raichu', difficulty: 3),
+      WordWithDifficulty('Aquali', difficulty: 3),
+      WordWithDifficulty('Voltali', difficulty: 3),
+      WordWithDifficulty('Pyroli', difficulty: 3),
       WordWithDifficulty('Rondoudou', difficulty: 2),
-      WordWithDifficulty('Mélofée', difficulty: 2),
-      WordWithDifficulty('Psykokwak', difficulty: 2),
-      WordWithDifficulty('Magicarpe', difficulty: 2),
-      WordWithDifficulty('Léviator', difficulty: 2),
-      WordWithDifficulty('Dracolosse', difficulty: 2),
-      WordWithDifficulty('Piafabec', difficulty: 2),
-      WordWithDifficulty('Sabelette', difficulty: 2),
-      WordWithDifficulty('Goupix', difficulty: 2),
-      WordWithDifficulty('Ramoloss', difficulty: 2),
-      WordWithDifficulty('Fantominus', difficulty: 2),
-      WordWithDifficulty('Soporifik', difficulty: 2),
-
-      // POKÉMON GÉNÉRATION 1 - Difficile
-      WordWithDifficulty('Électrode', difficulty: 3),
-      WordWithDifficulty('Nidoqueen', difficulty: 3),
-      WordWithDifficulty('Nidoking', difficulty: 3),
-      WordWithDifficulty('Papilusion', difficulty: 3),
-      WordWithDifficulty('Dardargnan', difficulty: 3),
-      WordWithDifficulty('Grolem', difficulty: 3),
-      WordWithDifficulty('Spectrum', difficulty: 3),
-      WordWithDifficulty('Hypnomade', difficulty: 3),
-      WordWithDifficulty('Crustabri', difficulty: 3),
-      WordWithDifficulty('Smogogo', difficulty: 3),
+      WordWithDifficulty('Mélofée', difficulty: 3),
+      WordWithDifficulty('Psykokwak', difficulty: 3),
+      WordWithDifficulty('Magicarpe', difficulty: 3),
+      WordWithDifficulty('Léviator', difficulty: 3),
+      WordWithDifficulty('Dracolosse', difficulty: 3),
+      WordWithDifficulty('Piafabec', difficulty: 3),
+      WordWithDifficulty('Sabelette', difficulty: 3),
+      WordWithDifficulty('Goupix', difficulty: 3),
+      WordWithDifficulty('Ramoloss', difficulty: 3),
+      WordWithDifficulty('Soporifik', difficulty: 3),
 
       // POKÉMON LÉGENDAIRES ET GÉNÉRATIONS SUIVANTES - Moyen
-      WordWithDifficulty('Lugia', difficulty: 2),
-      WordWithDifficulty('Ho-Oh', difficulty: 2),
-      WordWithDifficulty('Rayquaza', difficulty: 2),
-      WordWithDifficulty('Kyogre', difficulty: 2),
-      WordWithDifficulty('Groudon', difficulty: 2),
-      WordWithDifficulty('Dialga', difficulty: 2),
-      WordWithDifficulty('Palkia', difficulty: 2),
-      WordWithDifficulty('Giratina', difficulty: 2),
-      WordWithDifficulty('Reshiram', difficulty: 2),
-      WordWithDifficulty('Zekrom', difficulty: 2),
+      WordWithDifficulty('Lugia', difficulty: 3),
+      WordWithDifficulty('Ho-Oh', difficulty: 3),
+      WordWithDifficulty('Rayquaza', difficulty: 3),
+      WordWithDifficulty('Kyogre', difficulty: 3),
+      WordWithDifficulty('Groudon', difficulty: 3),
+      WordWithDifficulty('Dialga', difficulty: 3),
+      WordWithDifficulty('Palkia', difficulty: 3),
+      WordWithDifficulty('Giratina', difficulty: 3),
 
       // POKÉMON LÉGENDAIRES - Difficile
       WordWithDifficulty('Artikodin', difficulty: 3),
@@ -2106,45 +2008,32 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Celebi', difficulty: 3),
       WordWithDifficulty('Suicune', difficulty: 3),
       WordWithDifficulty('Entei', difficulty: 3),
-      WordWithDifficulty('Raikou', difficulty: 3),
-      WordWithDifficulty('Mentali', difficulty: 3),
-      WordWithDifficulty('Noctali', difficulty: 3),
-      WordWithDifficulty('Phyllali', difficulty: 3),
-      WordWithDifficulty('Givrali', difficulty: 3),
-      WordWithDifficulty('Nymphali', difficulty: 3),
-      WordWithDifficulty('Arceus', difficulty: 3),
-      WordWithDifficulty('Kyurem', difficulty: 3),
-      WordWithDifficulty('Xerneas', difficulty: 3),
-      WordWithDifficulty('Yveltal', difficulty: 3),
-      WordWithDifficulty('Zygarde', difficulty: 3),
 
       // CLASH ROYALE TROUPES - Facile
-      WordWithDifficulty('Chevalier', difficulty: 1),
-      WordWithDifficulty('Archers', difficulty: 1),
-      WordWithDifficulty('Géant', difficulty: 1),
-      WordWithDifficulty('P.E.K.K.A', difficulty: 1),
-      WordWithDifficulty('Dragon', difficulty: 1),
-      WordWithDifficulty('Sorcier', difficulty: 1),
-      WordWithDifficulty('Squelettes', difficulty: 1),
-      WordWithDifficulty('Gobelins', difficulty: 1),
+      WordWithDifficulty('Chevalier', difficulty: 2),
+      WordWithDifficulty('Archers', difficulty: 3),
+      WordWithDifficulty('Géant', difficulty: 2),
+      WordWithDifficulty('P.E.K.K.A', difficulty: 3),
+      WordWithDifficulty('Dragon', difficulty: 2),
+      WordWithDifficulty('Sorcier', difficulty: 2),
+      WordWithDifficulty('Squelettes', difficulty: 2),
+      WordWithDifficulty('Gobelins', difficulty: 3),
 
       // CLASH ROYALE TROUPES - Moyen
       WordWithDifficulty('Prince', difficulty: 2),
       WordWithDifficulty('Princesse', difficulty: 2),
-      WordWithDifficulty('Valkyrie', difficulty: 2),
-      WordWithDifficulty('Golem', difficulty: 2),
+      WordWithDifficulty('Valkyrie', difficulty: 3),
+      WordWithDifficulty('Golem', difficulty: 3),
       WordWithDifficulty('Ballon', difficulty: 2),
-      WordWithDifficulty('Méga chevalier', difficulty: 2),
+      WordWithDifficulty('Méga chevalier', difficulty: 3),
       WordWithDifficulty('Bûcheron', difficulty: 2),
       WordWithDifficulty('Sorcière', difficulty: 2),
       WordWithDifficulty('Barbare', difficulty: 2),
-      WordWithDifficulty('Mini P.E.K.K.A', difficulty: 2),
+      WordWithDifficulty('Mini P.E.K.K.A', difficulty: 3),
       WordWithDifficulty('Mousquetaire', difficulty: 2),
-      WordWithDifficulty('Hogrideur', difficulty: 2),
 
       // CLASH ROYALE TROUPES - Difficile
       WordWithDifficulty('Électro-géant', difficulty: 3),
-      WordWithDifficulty('Sparky', difficulty: 3),
       WordWithDifficulty('Archer magique', difficulty: 3),
       WordWithDifficulty('Mineur', difficulty: 3),
       WordWithDifficulty('Bandit', difficulty: 3),
@@ -2155,68 +2044,51 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Garde royale', difficulty: 3),
 
       // CLASH ROYALE SORTS - Moyen
-      WordWithDifficulty('Boule de feu', difficulty: 2),
+      WordWithDifficulty('Boule de feu', difficulty: 3),
       WordWithDifficulty('Flèches', difficulty: 2),
-      WordWithDifficulty('Zap', difficulty: 2),
+      WordWithDifficulty('Zap', difficulty: 3),
       WordWithDifficulty('Foudre', difficulty: 2),
       WordWithDifficulty('Rage', difficulty: 2),
       WordWithDifficulty('Gel', difficulty: 2),
 
       // CLASH ROYALE SORTS - Difficile
-      WordWithDifficulty('Tornade', difficulty: 3),
+      WordWithDifficulty('Tornade', difficulty: 2),
       WordWithDifficulty('Clone', difficulty: 3),
-      WordWithDifficulty('Guérison', difficulty: 3),
-      WordWithDifficulty('Poison', difficulty: 3),
+      WordWithDifficulty('Guérison', difficulty: 2),
+      WordWithDifficulty('Poison', difficulty: 2),
       WordWithDifficulty('Boule de neige', difficulty: 3),
 
       // JEUX VIDÉO CLASSIQUES - Facile
       WordWithDifficulty('Mario', difficulty: 1),
       WordWithDifficulty('Zelda', difficulty: 1),
       WordWithDifficulty('Minecraft', difficulty: 1),
-      WordWithDifficulty('Fortnite', difficulty: 1),
-      WordWithDifficulty('Sonic', difficulty: 1),
-      WordWithDifficulty('Pac-Man', difficulty: 1),
+      WordWithDifficulty('Fortnite', difficulty: 2),
+      WordWithDifficulty('Sonic', difficulty: 2),
+      WordWithDifficulty('Pac-Man', difficulty: 2),
       WordWithDifficulty('Tetris', difficulty: 1),
-      WordWithDifficulty('Roblox', difficulty: 1),
-      WordWithDifficulty('Among Us', difficulty: 1),
+      WordWithDifficulty('Among Us', difficulty: 3),
       WordWithDifficulty('Pokémon', difficulty: 1),
 
       // JEUX VIDÉO POPULAIRES - Moyen
-      WordWithDifficulty('GTA', difficulty: 2),
+      WordWithDifficulty('GTA', difficulty: 3),
       WordWithDifficulty('Call of Duty', difficulty: 2),
-      WordWithDifficulty('FIFA', difficulty: 2),
-      WordWithDifficulty('Assassin\'s Creed', difficulty: 2),
-      WordWithDifficulty('The Witcher', difficulty: 2),
-      WordWithDifficulty('League of Legends', difficulty: 2),
+      WordWithDifficulty('FIFA', difficulty: 1),
+      WordWithDifficulty('Assassin\'s Creed', difficulty: 3),
+      WordWithDifficulty('The Witcher', difficulty: 3),
+      WordWithDifficulty('League of Legends', difficulty: 3),
       WordWithDifficulty('Animal Crossing', difficulty: 2),
-      WordWithDifficulty('Super Smash Bros', difficulty: 2),
-      WordWithDifficulty('Rocket League', difficulty: 2),
-      WordWithDifficulty('Valorant', difficulty: 2),
-      WordWithDifficulty('Apex Legends', difficulty: 2),
-      WordWithDifficulty('Overwatch', difficulty: 2),
-      WordWithDifficulty('Rainbow Six', difficulty: 2),
-      WordWithDifficulty('Counter-Strike', difficulty: 2),
+      WordWithDifficulty('Super Smash Bros', difficulty: 3),
+      WordWithDifficulty('Rocket League', difficulty: 3),
+      WordWithDifficulty('Apex Legends', difficulty: 3),
       WordWithDifficulty('Sims', difficulty: 2),
-      WordWithDifficulty('Fall Guys', difficulty: 2),
-      WordWithDifficulty('Subway Surfers', difficulty: 2),
+      WordWithDifficulty('Subway Surfers', difficulty: 3),
 
       // JEUX VIDÉO CULTE - Difficile
       WordWithDifficulty('Donkey Kong', difficulty: 3),
-      WordWithDifficulty('Metroid', difficulty: 3),
       WordWithDifficulty('Final Fantasy', difficulty: 3),
       WordWithDifficulty('World of Warcraft', difficulty: 3),
-      WordWithDifficulty('Dofus', difficulty: 3),
+      WordWithDifficulty('Dofus', difficulty: 1),
       WordWithDifficulty('Spyro', difficulty: 3),
-      WordWithDifficulty('Crash Bandicoot', difficulty: 3),
-      WordWithDifficulty('Banjo-Kazooie', difficulty: 3),
-      WordWithDifficulty('Chrono Trigger', difficulty: 3),
-      WordWithDifficulty('Half-Life', difficulty: 3),
-      WordWithDifficulty('Portal', difficulty: 3),
-      WordWithDifficulty('BioShock', difficulty: 3),
-      WordWithDifficulty('Dark Souls', difficulty: 3),
-      WordWithDifficulty('Hollow Knight', difficulty: 3),
-      WordWithDifficulty('Cuphead', difficulty: 3),
-      WordWithDifficulty('Celeste', difficulty: 3),
 
       // JEUX DE SOCIÉTÉ CLASSIQUES - Facile
       WordWithDifficulty('Monopoly', difficulty: 1),
@@ -2225,7 +2097,7 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Échecs', difficulty: 1),
       WordWithDifficulty('Dames', difficulty: 1),
       WordWithDifficulty('Petits chevaux', difficulty: 1),
-      WordWithDifficulty('Bonne paye', difficulty: 1),
+      WordWithDifficulty('Bonne paye', difficulty: 3),
 
       // JEUX DE SOCIÉTÉ MODERNES - Moyen
       WordWithDifficulty('Cluedo', difficulty: 2),
@@ -2237,23 +2109,16 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Dobble', difficulty: 2),
       WordWithDifficulty('Pictionary', difficulty: 2),
       WordWithDifficulty('Taboo', difficulty: 2),
-      WordWithDifficulty('Unanimo', difficulty: 2),
-      WordWithDifficulty('Loups-garous', difficulty: 2),
-      WordWithDifficulty('Mille bornes', difficulty: 2),
+      WordWithDifficulty('Loups-garous', difficulty: 1),
+      WordWithDifficulty('Mille bornes', difficulty: 3),
 
       // JEUX DE SOCIÉTÉ EXPERT - Difficile
       WordWithDifficulty('Catan', difficulty: 3),
-      WordWithDifficulty('Pandemic', difficulty: 3),
-      WordWithDifficulty('Dixit', difficulty: 3),
       WordWithDifficulty('7 Wonders', difficulty: 3),
       WordWithDifficulty('Blanc-manger coco', difficulty: 3),
       WordWithDifficulty('Codenames', difficulty: 3),
       WordWithDifficulty('Splendor', difficulty: 3),
-      WordWithDifficulty('Azul', difficulty: 3),
-      WordWithDifficulty('Carcassonne', difficulty: 3),
-      WordWithDifficulty('Ticket to Ride', difficulty: 3),
-      WordWithDifficulty('Mysterium', difficulty: 3),
-      WordWithDifficulty('Dominion', difficulty: 3),
+      WordWithDifficulty('Les aventuriers du rail', difficulty: 3),
     ],
   ),
 
@@ -2291,7 +2156,7 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Avoir des papillons dans le ventre', difficulty: 2),
       WordWithDifficulty('Rire comme une baleine', difficulty: 2),
       WordWithDifficulty('Être fort comme un bœuf', difficulty: 2),
-      WordWithDifficulty('Souffler comme un bœuf', difficulty: 2),
+      WordWithDifficulty('Souffler comme un bœuf', difficulty: 3),
 
       // EXPRESSIONS AVEC ANIMAUX - Difficile
       WordWithDifficulty('Avoir d\'autres chats à fouetter', difficulty: 3),
@@ -2301,10 +2166,7 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Être une tête de mule', difficulty: 3),
       WordWithDifficulty('Ménager la chèvre et le chou', difficulty: 3),
       WordWithDifficulty('Être le bouc émissaire', difficulty: 3),
-      WordWithDifficulty('Envoyer quelqu\'un aux pelotes', difficulty: 3),
       WordWithDifficulty('Être serrés comme des sardines', difficulty: 3),
-      WordWithDifficulty('Avoir une araignée au plafond', difficulty: 3),
-      WordWithDifficulty('Courir deux lièvres à la fois', difficulty: 3),
 
       // EXPRESSIONS AVEC LE CORPS - Facile
       WordWithDifficulty('Avoir le cœur sur la main', difficulty: 1),
@@ -2314,7 +2176,6 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Avoir les yeux plus gros que le ventre', difficulty: 1),
       WordWithDifficulty('Tourner sept fois sa langue', difficulty: 1),
       WordWithDifficulty('Avoir le cœur brisé', difficulty: 1),
-      WordWithDifficulty('Avoir les mains pleines de pouces', difficulty: 1),
 
       // EXPRESSIONS AVEC LE CORPS - Moyen
       WordWithDifficulty('Avoir la tête dans les nuages', difficulty: 2),
