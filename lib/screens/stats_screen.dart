@@ -226,65 +226,63 @@ class StatsScreen extends StatelessWidget {
       return const SizedBox();
     }
 
-    // Calculer l'évolution des scores par tour d'équipe
-    final Map<String, List<int>> scoresByTeamTurn = {};
-    final Map<String, int> cumulativeScores = {};
+    // Pour chaque équipe : liste de points (tour par équipe, score cumulatif)
+    final Map<String, List<FlSpot>> teamSpots = {};
+    final Map<String, int> teamCumulativeScore = {};
+    final Map<String, int> teamTurnCount = {};
 
+    // Initialiser chaque équipe à (0, 0)
     for (var team in provider.teams) {
-      scoresByTeamTurn[team.id] = [0]; // Démarre à 0
-      cumulativeScores[team.id] = 0;
+      teamSpots[team.id] = [const FlSpot(0, 0)];
+      teamCumulativeScore[team.id] = 0;
+      teamTurnCount[team.id] = 0;
     }
 
+    // Parcourir l'historique
     for (final entry in provider.game.history) {
       final teamId = entry.teamId;
-      final points = entry.wordsGuessed.length;
-      cumulativeScores[teamId] = (cumulativeScores[teamId] ?? 0) + points;
-      scoresByTeamTurn[teamId]!.add(cumulativeScores[teamId]!);
+      final wordsCount = entry.wordsGuessed.length;
+
+      // Incrémenter le compteur de tours pour cette équipe
+      teamTurnCount[teamId] = (teamTurnCount[teamId] ?? 0) + 1;
+
+      // Mettre à jour le score cumulatif
+      teamCumulativeScore[teamId] =
+          (teamCumulativeScore[teamId] ?? 0) + wordsCount;
+
+      // Ajouter un point : (tour de l'équipe, score cumulatif)
+      teamSpots[teamId]!.add(FlSpot(
+        teamTurnCount[teamId]!.toDouble(),
+        teamCumulativeScore[teamId]!.toDouble(),
+      ));
     }
 
-    // Trouver le score max pour l'échelle
+    // Trouver les max pour les axes
+    int maxTurn = 1;
     int maxScore = 1;
-    for (final scores in scoresByTeamTurn.values) {
-      for (final score in scores) {
-        if (score > maxScore) maxScore = score;
+    for (final spots in teamSpots.values) {
+      for (final spot in spots) {
+        if (spot.x > maxTurn) maxTurn = spot.x.toInt();
+        if (spot.y > maxScore) maxScore = spot.y.toInt();
       }
     }
 
-    // Trouver le nombre max de tours pour une équipe
-    int maxTurns = 0;
-    for (final turns in scoresByTeamTurn.values) {
-      if (turns.length > maxTurns) maxTurns = turns.length;
-    }
-
-    // Créer les lignes pour chaque équipe
+    // Créer les lignes (courbes lisses)
     final List<LineChartBarData> lines = [];
-    for (int teamIndex = 0; teamIndex < provider.teams.length; teamIndex++) {
-      final team = provider.teams[teamIndex];
-      final teamColor = AppColors.getTeamColor(teamIndex);
-      final teamScores = scoresByTeamTurn[team.id]!;
-
-      final spots = <FlSpot>[];
-      for (int i = 0; i < teamScores.length; i++) {
-        spots.add(FlSpot(i.toDouble(), teamScores[i].toDouble()));
-      }
+    for (int i = 0; i < provider.teams.length; i++) {
+      final team = provider.teams[i];
+      final teamColor = AppColors.getTeamColor(i);
+      final spots = teamSpots[team.id]!;
 
       lines.add(
         LineChartBarData(
           spots: spots,
           isCurved: true,
+          curveSmoothness: 0.2,
           color: teamColor,
           barWidth: 3,
           isStrokeCapRound: true,
-          dotData: FlDotData(
-            show: true,
-            getDotPainter: (spot, percent, barData, index) {
-              return FlDotCirclePainter(
-                radius: 4,
-                color: teamColor,
-                strokeWidth: 0,
-              );
-            },
-          ),
+          dotData: const FlDotData(show: false),
           belowBarData: BarAreaData(
             show: true,
             color: teamColor.withValues(alpha: 0.1),
@@ -385,11 +383,12 @@ class StatsScreen extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 24,
-                      interval: (maxTurns / 5).ceilToDouble().clamp(1, 100),
+                      interval: maxTurn <= 10 ? 1 : (maxTurn / 5).ceilToDouble(),
                       getTitlesWidget: (value, meta) {
                         if (value == 0) return const Text('');
+                        if (value != value.roundToDouble()) return const Text('');
                         return Text(
-                          'T${value.toInt()}',
+                          value.toInt().toString(),
                           style: const TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 10,
@@ -408,7 +407,7 @@ class StatsScreen extends StatelessWidget {
                 ),
                 borderData: FlBorderData(show: false),
                 minX: 0,
-                maxX: (maxTurns - 1).toDouble().clamp(0, double.infinity),
+                maxX: maxTurn.toDouble(),
                 minY: 0,
                 maxY: maxScore.toDouble() * 1.1,
               ),

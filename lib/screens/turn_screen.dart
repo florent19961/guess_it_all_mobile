@@ -305,7 +305,7 @@ class _TurnScreenState extends State<TurnScreen> {
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  // Player and team info (discret, en haut)
+                  // Player and team info (fixe en haut)
                   Text(
                     '${currentPlayer?.name ?? ''} (${currentTeam?.name ?? ''})',
                     style: const TextStyle(
@@ -315,84 +315,101 @@ class _TurnScreenState extends State<TurnScreen> {
                     ),
                   ),
 
-                  const Spacer(),
-
-                  // Timer
-                  TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 1.0, end: isLowTime ? 1.1 : 1.0),
-                    duration: const Duration(milliseconds: 500),
-                    builder: (context, scale, child) {
-                      return Transform.scale(
-                        scale: isLowTime ? scale : 1.0,
-                        child: Text(
-                          '${_timeRemaining}s',
-                          style: TextStyle(
-                            fontFamily: 'Bangers',
-                            fontSize: 80,
-                            color: isLowTime ? AppColors.error : teamColor,
-                          ),
+                  // Zone centrale flexible
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Timer
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 1.0, end: isLowTime ? 1.1 : 1.0),
+                          duration: const Duration(milliseconds: 500),
+                          builder: (context, scale, child) {
+                            return Transform.scale(
+                              scale: isLowTime ? scale : 1.0,
+                              child: Text(
+                                '${_timeRemaining}s',
+                                style: TextStyle(
+                                  fontFamily: 'Bangers',
+                                  fontSize: 80,
+                                  color: isLowTime ? AppColors.error : teamColor,
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
 
-                  if (_isPaused) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: AppColors.warning.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        'PAUSE',
-                        style: TextStyle(
-                          fontFamily: 'Bangers',
-                          fontSize: 24,
-                          color: AppColors.warning,
-                        ),
-                      ),
-                    ),
-                  ],
-
-                  const SizedBox(height: 32),
-
-                  // Current word
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      currentWord ?? '',
-                      style: const TextStyle(
-                        fontFamily: 'Bangers',
-                        fontSize: 72,
-                        color: Colors.white,
-                        shadows: [
-                          Shadow(
-                            offset: Offset(2, 2),
-                            color: AppColors.primaryPinkDark,
-                            blurRadius: 0,
+                        if (_isPaused) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: AppColors.warning.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text(
+                              'PAUSE',
+                              style: TextStyle(
+                                fontFamily: 'Bangers',
+                                fontSize: 24,
+                                color: AppColors.warning,
+                              ),
+                            ),
                           ),
                         ],
-                      ),
-                      textAlign: TextAlign.center,
+
+                        const SizedBox(height: 32),
+
+                        // Current word
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final text = currentWord ?? '';
+                              // Calculer la taille de police adaptée
+                              double fontSize = 64;
+                              if (text.length > 30) {
+                                fontSize = 48;
+                              } else if (text.length > 20) {
+                                fontSize = 56;
+                              }
+                              return Text(
+                                text,
+                                style: TextStyle(
+                                  fontFamily: 'Bangers',
+                                  fontSize: fontSize,
+                                  color: Colors.white,
+                                  shadows: const [
+                                    Shadow(
+                                      offset: Offset(2, 2),
+                                      color: AppColors.primaryPinkDark,
+                                      blurRadius: 0,
+                                    ),
+                                  ],
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                              );
+                            },
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Words remaining
+                        Text(
+                          '${provider.game.remainingWords.length} mots restants',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 14,
+                            color: AppColors.gray400,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 
-                  const SizedBox(height: 16),
-
-                  // Words remaining
-                  Text(
-                    '${provider.game.remainingWords.length} mots restants',
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 14,
-                      color: AppColors.gray400,
-                    ),
-                  ),
-
-                  const Spacer(),
-
-                  // Action buttons
+                  // Action buttons (fixes en bas)
                   Row(
                     children: [
                       // Pass button
@@ -491,7 +508,7 @@ class _TurnScreenState extends State<TurnScreen> {
                     ],
                   ),
 
-                  const SizedBox(height: 80),
+                  const SizedBox(height: 72),
                 ],
               ),
             ),
@@ -541,7 +558,7 @@ class _TurnScreenState extends State<TurnScreen> {
           // Bouton terminer le tour en bas à droite
           Positioned(
             bottom: MediaQuery.of(context).padding.bottom + 24,
-            right: 16,
+            right: 24,
             child: GestureDetector(
               onTap: () => _handleEndTurnPress(context, provider),
               child: Container(

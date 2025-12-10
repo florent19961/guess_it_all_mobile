@@ -77,6 +77,7 @@ class GameState {
   String? suspendedScreen;
 
   List<HistoryEntry> history;
+  int? pendingBonusTurnId; // Tour en attente de fusion après bonus time
 
   GameState({
     this.currentScreen = AppConstants.screenHome,
@@ -101,6 +102,7 @@ class GameState {
     this.isGameSuspended = false,
     this.suspendedScreen,
     List<HistoryEntry>? history,
+    this.pendingBonusTurnId,
   })  : teamPlayOrder = teamPlayOrder ?? [],
         playerOrderByTeam = playerOrderByTeam ?? {},
         allWords = allWords ?? [],
@@ -143,6 +145,8 @@ class GameState {
     String? suspendedScreen,
     bool clearSuspendedScreen = false,
     List<HistoryEntry>? history,
+    int? pendingBonusTurnId,
+    bool clearPendingBonusTurnId = false,
   }) {
     return GameState(
       currentScreen: currentScreen ?? this.currentScreen,
@@ -169,6 +173,7 @@ class GameState {
       isGameSuspended: isGameSuspended ?? this.isGameSuspended,
       suspendedScreen: clearSuspendedScreen ? null : (suspendedScreen ?? this.suspendedScreen),
       history: history ?? List.from(this.history),
+      pendingBonusTurnId: clearPendingBonusTurnId ? null : (pendingBonusTurnId ?? this.pendingBonusTurnId),
     );
   }
 
@@ -196,6 +201,7 @@ class GameState {
       'isGameSuspended': isGameSuspended,
       'suspendedScreen': suspendedScreen,
       'history': history.map((e) => e.toJson()).toList(),
+      'pendingBonusTurnId': pendingBonusTurnId,
     };
   }
 
@@ -229,6 +235,7 @@ class GameState {
               ?.map((e) => HistoryEntry.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+      pendingBonusTurnId: json['pendingBonusTurnId'] as int?,
     );
   }
 }

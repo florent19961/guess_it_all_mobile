@@ -505,29 +505,70 @@ class GameProvider extends ChangeNotifier {
           team.copyWith(score: newScore, scoreByRound: scoreByRound);
     }
 
-    // Ajouter à l'historique
-    final historyEntry = HistoryEntry(
-      round: _game.currentRound,
-      turn: _game.currentTurn,
-      teamId: currentTeam.id,
-      playerId: currentTeam.playerIds[_game.currentPlayerIndexInTeam],
-      wordsGuessed: validatedWords,
-      wordsInvalidated: allInvalidatedWords,
-      wordsPassed: passedWordsThisTurn,
-      timeSpent: _settings.turnDuration - _game.timeRemaining,
-    );
+    // Vérifier si on doit fusionner avec l'entrée précédente (bonus time)
+    // La fusion se fait toujours quand il y a un bonus pending, même avec des mots invalidés
+    final hasBonusPending = _game.pendingBonusTurnId != null;
+    final shouldMergeWithPrevious = hasBonusPending &&
+        _game.history.isNotEmpty;
+
+    // Calculer le temps passé pour ce segment
+    final currentTimeSpent = _settings.turnDuration - _game.timeRemaining;
+
+    List<HistoryEntry> newHistory;
+    int nextTurn;
+
+    if (shouldMergeWithPrevious) {
+      // Fusionner avec la dernière entrée d'historique
+      final lastEntry = _game.history.last;
+      final mergedEntry = HistoryEntry(
+        round: lastEntry.round, // Garder la manche d'origine
+        turn: lastEntry.turn, // Garder le même numéro de tour
+        teamId: lastEntry.teamId,
+        playerId: lastEntry.playerId,
+        wordsGuessed: [...lastEntry.wordsGuessed, ...validatedWords],
+        wordsInvalidated: [...lastEntry.wordsInvalidated, ...allInvalidatedWords],
+        wordsPassed: [...lastEntry.wordsPassed, ...passedWordsThisTurn],
+        timeSpent: lastEntry.timeSpent + currentTimeSpent,
+      );
+      // Remplacer la dernière entrée par l'entrée fusionnée
+      newHistory = [
+        ..._game.history.sublist(0, _game.history.length - 1),
+        mergedEntry
+      ];
+      // Ne pas incrémenter le tour car c'est une fusion
+      nextTurn = _game.currentTurn;
+    } else {
+      // Créer une nouvelle entrée normalement
+      final historyEntry = HistoryEntry(
+        round: _game.currentRound,
+        turn: _game.currentTurn,
+        teamId: currentTeam.id,
+        playerId: currentTeam.playerIds[_game.currentPlayerIndexInTeam],
+        wordsGuessed: validatedWords,
+        wordsInvalidated: allInvalidatedWords,
+        wordsPassed: passedWordsThisTurn,
+        timeSpent: currentTimeSpent,
+      );
+      newHistory = [..._game.history, historyEntry];
+      nextTurn = _game.currentTurn + 1;
+    }
 
     // Calculer le prochain joueur
     final nextPlayer = _getNextPlayerWithRotation();
 
     // Fin de la manche?
     if (newRemainingWords.isEmpty) {
+      // Préparer la fusion pour le bonus time si pas de mots invalidés
+      final shouldPrepareBonusFusion = allInvalidatedWords.isEmpty;
+
       _game = _game.copyWith(
-        history: [..._game.history, historyEntry],
+        history: newHistory,
         remainingWords: newRemainingWords,
         currentScreen: AppConstants.screenTransition,
         turnBonusTime: _game.timeRemaining,
         clearExpiredWord: true,
+        pendingBonusTurnId: shouldPrepareBonusFusion ? _game.currentTurn : null,
+        clearPendingBonusTurnId: !shouldPrepareBonusFusion,
       );
     } else {
       // Mélanger les mots restants
@@ -539,7 +580,7 @@ class GameProvider extends ChangeNotifier {
           allInvalidatedWords.isNotEmpty ? null : _game.turnBonusTime;
 
       _game = _game.copyWith(
-        currentTurn: _game.currentTurn + 1,
+        currentTurn: shouldMergeWithPrevious ? nextTurn : nextTurn,
         currentTurnIndex: nextPlayer['nextTurnIndex'],
         currentTeamIndex: nextPlayer['nextTeamIndex'],
         currentPlayerIndexInTeam: nextPlayer['nextPlayerIndexInTeam'],
@@ -547,11 +588,12 @@ class GameProvider extends ChangeNotifier {
         currentWord: nextCurrentWord,
         wordsGuessedThisTurn: [],
         passedWordsThisTurn: [],
-        history: [..._game.history, historyEntry],
+        history: newHistory,
         currentScreen: AppConstants.screenGame,
         turnBonusTime: nextTurnBonusTime,
         clearTurnBonusTime: nextTurnBonusTime == null,
         clearExpiredWord: true,
+        clearPendingBonusTurnId: true, // Réinitialiser après usage
       );
     }
 

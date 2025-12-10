@@ -398,6 +398,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                           placeholder: 'Mot ${index + 1}',
                           error: error,
                           onChanged: (_) => setModalState(() {}),
+                          maxLength: 50,
                         ),
                       ),
                       const SizedBox(width: 8),

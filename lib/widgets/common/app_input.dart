@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../theme/app_theme.dart';
 
 class AppInput extends StatefulWidget {
@@ -14,6 +15,7 @@ class AppInput extends StatefulWidget {
   final bool autofocus;
   final TextEditingController? controller;
   final TextCapitalization textCapitalization;
+  final int? maxLength;
 
   const AppInput({
     this.value,
@@ -28,6 +30,7 @@ class AppInput extends StatefulWidget {
     this.autofocus = false,
     this.controller,
     this.textCapitalization = TextCapitalization.words,
+    this.maxLength,
     super.key,
   });
 
@@ -88,6 +91,14 @@ class _AppInputState extends State<AppInput> {
           spellCheckConfiguration: const SpellCheckConfiguration.disabled(),
           textInputAction: widget.textInputAction,
           onSubmitted: widget.onSubmitted != null ? (_) => widget.onSubmitted!() : null,
+          maxLength: widget.maxLength,
+          maxLengthEnforcement: widget.maxLength != null ? MaxLengthEnforcement.enforced : MaxLengthEnforcement.none,
+          inputFormatters: widget.maxLength != null
+              ? [LengthLimitingTextInputFormatter(widget.maxLength)]
+              : null,
+          buildCounter: widget.maxLength != null
+              ? (context, {required currentLength, required isFocused, maxLength}) => null
+              : null,
           style: const TextStyle(
             fontFamily: 'Poppins',
             color: Colors.white,

@@ -58,7 +58,7 @@ class AppConstants {
     'expressions',
     'dictionnaire',
     'musique',
-    'metro_parisien',
+    //'metro_parisien',
     'marques',
     'medecine',
   ];
