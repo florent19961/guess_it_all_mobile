@@ -26,7 +26,7 @@ class HomeScreen extends StatelessWidget {
               const Spacer(),
               Text(
                 'Guess It All',
-                style: AppTextStyles.title(fontSize: 64),
+                style: AppTextStyles.title(fontSize: 72),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),

@@ -184,6 +184,71 @@ class _TeamCard extends StatelessWidget {
     required this.provider,
   });
 
+  void _showRenameDialog(BuildContext context, Color teamColor) {
+    final controller = TextEditingController(text: team.name);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.backgroundMain,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: teamColor, width: 2),
+        ),
+        title: Text(
+          'Renommer l\'équipe',
+          style: TextStyle(
+            fontFamily: 'Bangers',
+            fontSize: 24,
+            color: teamColor,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 18,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            color: Colors.white,
+          ),
+          decoration: InputDecoration(
+            hintText: 'Nom de l\'équipe',
+            hintStyle: TextStyle(color: AppColors.gray500),
+            counterStyle: TextStyle(color: AppColors.gray500),
+          ),
+          onSubmitted: (value) {
+            if (value.trim().isNotEmpty) {
+              provider.updateTeamName(team.id, value.trim());
+            }
+            Navigator.of(dialogContext).pop();
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(
+              'Annuler',
+              style: TextStyle(color: AppColors.gray400),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                provider.updateTeamName(team.id, controller.text.trim());
+              }
+              Navigator.of(dialogContext).pop();
+            },
+            child: Text(
+              'OK',
+              style: TextStyle(color: teamColor),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final teamColor = AppColors.getTeamColor(teamIndex);
@@ -216,12 +281,30 @@ class _TeamCard extends StatelessWidget {
           ),
           child: Column(
             children: [
-              Text(
-                team.name,
-                style: TextStyle(
-                  fontFamily: 'Bangers',
-                  fontSize: 20,
-                  color: teamColor,
+              GestureDetector(
+                onTap: () => _showRenameDialog(context, teamColor),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        team.name,
+                        style: TextStyle(
+                          fontFamily: 'Bangers',
+                          fontSize: 20,
+                          color: teamColor,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.edit,
+                      size: 16,
+                      color: teamColor,
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),

@@ -120,7 +120,7 @@ class StatsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Les plus rapides',
+            'Temps moyen par mot',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 16,

@@ -166,7 +166,7 @@ class _WordsScreenState extends State<WordsScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: AppButton(
-                  text: 'Supprimer',
+                  text: 'Effacer',
                   variant: AppButtonVariant.danger,
                   onPressed: () {
                     Navigator.of(context).pop();

@@ -15,16 +15,18 @@ class ResultsScreen extends StatelessWidget {
     final sortedTeams = provider.getTeamsSortedByScore();
 
     return ShootingStars(
-      child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              const SizedBox(height: 24),
-              Text(
-                'Résultats',
-                style: AppTextStyles.title(fontSize: 48),
-              ),
+      child: Stack(
+        children: [
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  const SizedBox(height: 24),
+                  Text(
+                    'Résultats',
+                    style: AppTextStyles.title(fontSize: 48),
+                  ),
               const SizedBox(height: 32),
 
               // Podium
@@ -56,36 +58,41 @@ class ResultsScreen extends StatelessWidget {
                 icon: const Icon(Icons.bar_chart, color: Colors.white),
                 onPressed: () => provider.goToScreen(AppConstants.screenStats),
               ),
-              const SizedBox(height: 16),
-              AppButton(
-                text: 'Accueil',
-                variant: AppButtonVariant.ghost,
-                size: AppButtonSize.medium,
-                fullWidth: true,
-                icon: const Icon(Icons.home, color: Colors.white),
-                onPressed: () async {
-                  await provider.endGameAndGoHome();
-                  provider.goToScreen(AppConstants.screenHome);
-                },
-              ),
               const SizedBox(height: 24),
-            ],
+                ],
+              ),
+            ),
           ),
-        ),
+          // Bouton Home en haut à gauche
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 16,
+            left: 16,
+            child: GestureDetector(
+              onTap: () async {
+                await provider.endGameAndGoHome();
+                provider.goToScreen(AppConstants.screenHome);
+              },
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: const BoxDecoration(
+                  color: AppColors.secondaryCyan,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.home, color: Colors.white, size: 24),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // Calcule le rang réel en tenant compte des ex æquo
+  // Retourne le rang basé sur l'index (la liste est déjà triée avec départage)
   int _getRank(List<dynamic> sortedTeams, int index) {
-    if (index == 0) return 0;
-    int rank = 0;
-    for (int i = 0; i < index; i++) {
-      if (sortedTeams[i].score > sortedTeams[index].score) {
-        rank++;
-      }
-    }
-    return rank;
+    // La liste est triée par getTeamsSortedByScore() qui départage les ex æquo
+    // par l'ordre de jeu (celui qui a joué en dernier gagne)
+    return index;
   }
 
   // Retourne la hauteur du podium selon le rang

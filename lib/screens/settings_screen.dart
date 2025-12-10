@@ -409,79 +409,113 @@ class SettingsScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Catégories',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Catégories',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Sélectionnez au moins 1 catégorie',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 12,
-                            color: AppColors.gray400,
+                          SizedBox(height: 4),
+                          Text(
+                            'Sélectionnez au moins 1',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                              color: AppColors.gray400,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            final allCategories = getCategoryList().map((c) => c.id).toList();
-                            provider.updateSettings(selectedCategories: allCategories);
-                            setState(() {});
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: AppColors.secondaryCyan.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.secondaryCyan, width: 1),
-                            ),
-                            child: const Text(
-                              'Tout',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 12,
-                                color: AppColors.secondaryCyan,
+                    Builder(
+                      builder: (context) {
+                        final allCategories = getCategoryList().map((c) => c.id).toList();
+                        final isAllSelected = settings.selectedCategories.length == allCategories.length;
+                        final isOneSelected = settings.selectedCategories.length == 1;
+
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                provider.updateSettings(selectedCategories: allCategories);
+                                setState(() {});
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: isAllSelected
+                                      ? AppColors.secondaryCyan.withValues(alpha: 0.3)
+                                      : AppColors.gray600.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: isAllSelected ? AppColors.secondaryCyan : AppColors.gray600,
+                                    width: isAllSelected ? 2 : 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  'Tout',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 11,
+                                    fontWeight: isAllSelected ? FontWeight.w600 : FontWeight.normal,
+                                    color: isAllSelected ? AppColors.secondaryCyan : AppColors.gray400,
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: () {
-                            final firstCategory = getCategoryList().first.id;
-                            provider.updateSettings(selectedCategories: [firstCategory]);
-                            setState(() {});
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: AppColors.gray600.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.gray600, width: 1),
-                            ),
-                            child: const Text(
-                              'Une seule',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 12,
-                                color: AppColors.gray400,
+                            const SizedBox(width: 6),
+                            GestureDetector(
+                              onTap: () {
+                                // Sélectionner une catégorie aléatoire différente de la sélection actuelle
+                                final categories = getCategoryList();
+                                final availableCategories = categories.where(
+                                  (c) => !settings.selectedCategories.contains(c.id) || settings.selectedCategories.length > 1
+                                ).toList();
+
+                                if (availableCategories.isNotEmpty) {
+                                  availableCategories.shuffle();
+                                  provider.updateSettings(selectedCategories: [availableCategories.first.id]);
+                                } else {
+                                  // Fallback: prendre une catégorie au hasard
+                                  categories.shuffle();
+                                  provider.updateSettings(selectedCategories: [categories.first.id]);
+                                }
+                                setState(() {});
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: isOneSelected
+                                      ? AppColors.primaryPink.withValues(alpha: 0.3)
+                                      : AppColors.gray600.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: isOneSelected ? AppColors.primaryPink : AppColors.gray600,
+                                    width: isOneSelected ? 2 : 1,
+                                  ),
+                                ),
+                                child: Text(
+                                  'Une',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 11,
+                                    fontWeight: isOneSelected ? FontWeight.w600 : FontWeight.normal,
+                                    color: isOneSelected ? AppColors.primaryPink : AppColors.gray400,
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ),
-                      ],
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),

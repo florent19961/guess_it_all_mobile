@@ -378,7 +378,7 @@ final Map<String, WordCategory> wordCategories = {
   // ==========================================================================
   'geographie': WordCategory(
     id: 'geographie',
-    name: 'Géographie',
+    name: 'Monde',
     icon: '🌍',
     words: const [
       // PAYS EUROPE - Facile
@@ -1113,7 +1113,7 @@ final Map<String, WordCategory> wordCategories = {
   // ==========================================================================
   'metiers_sports': WordCategory(
     id: 'metiers_sports',
-    name: 'Métiers & Sports',
+    name: 'Métiers',
     icon: '💼',
     words: const [
       // MÉTIERS SANTÉ - Facile
@@ -1955,7 +1955,7 @@ final Map<String, WordCategory> wordCategories = {
   // ==========================================================================
   'univers_arcade': WordCategory(
     id: 'univers_arcade',
-    name: 'Univers Arcade',
+    name: 'Arcade',
     icon: '🎮',
     words: const [
       // POKÉMON GÉNÉRATION 1 - Facile
@@ -2127,7 +2127,7 @@ final Map<String, WordCategory> wordCategories = {
   // ==========================================================================
   'expressions': WordCategory(
     id: 'expressions',
-    name: 'Expressions françaises',
+    name: 'Expressions',
     icon: '🇫🇷',
     words: const [
       // EXPRESSIONS AVEC ANIMAUX - Facile
