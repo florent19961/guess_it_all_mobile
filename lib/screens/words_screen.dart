@@ -336,7 +336,7 @@ class _WordsScreenState extends State<WordsScreen> {
                                       placeholder: 'Mot ${index + 1}',
                                       error: error,
                                       onChanged: (_) => setState(() {}),
-                                      maxLength: 50,
+                                      maxLength: 30,
                                     ),
                                   ),
                                   const SizedBox(width: 8),
