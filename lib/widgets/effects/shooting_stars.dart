@@ -41,7 +41,7 @@ class _ShootingStarsState extends State<ShootingStars>
     return Stack(
       children: [
         // Background
-        Container(color: const Color(0xFF1E293B)),
+        Container(color: const Color(0xFF2B3848)),
 
         // Stars layer 1
         AnimatedBuilder(
