@@ -62,8 +62,6 @@ class _WordsScreenState extends State<WordsScreen> {
 
   @override
   void dispose() {
-    // Sauvegarder avant de disposer
-    _saveWords();
     for (final controller in _wordControllers) {
       controller.dispose();
     }
