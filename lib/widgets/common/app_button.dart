@@ -59,13 +59,17 @@ class _AppButtonState extends State<AppButton> {
                 widget.icon!,
                 const SizedBox(width: 8),
               ],
-              Text(
-                widget.text,
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w600,
-                  fontSize: _getFontSize(),
-                  color: widget.disabled ? AppColors.gray400 : Colors.white,
+              Flexible(
+                child: Text(
+                  widget.text,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w600,
+                    fontSize: _getFontSize(),
+                    color: widget.disabled ? AppColors.gray400 : Colors.white,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
             ],
