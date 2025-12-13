@@ -77,7 +77,40 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  const SizedBox(height: 8),
+                  // Choix des catégories
+                  GestureDetector(
+                    onTap: () => provider.goToScreen(AppConstants.screenCategories),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondaryCyan,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.category,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                          SizedBox(width: 10),
+                          Text(
+                            'Choisir les catégories',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
 
                   // Bouton réinitialiser
                   GestureDetector(
@@ -125,7 +158,7 @@ class SettingsScreen extends StatelessWidget {
           AppBackButton(
             onPressed: () => provider.goToScreen(AppConstants.screenHome),
           ),
-          // Icône paramètres avancés en haut à droite (aligné avec le bouton retour)
+          // Bouton paramètres avancés en haut à droite
           Positioned(
             top: MediaQuery.of(context).padding.top + 16,
             right: 16,
@@ -140,7 +173,7 @@ class SettingsScreen extends StatelessWidget {
                   border: Border.all(color: AppColors.gray600, width: 2),
                 ),
                 child: const Icon(
-                  Icons.tune,
+                  Icons.settings,
                   color: Colors.white,
                   size: 24,
                 ),
@@ -235,11 +268,11 @@ class SettingsScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: AppButton(
-                  text: 'Paramètres',
+                  text: 'Catégories',
                   variant: AppButtonVariant.secondary,
                   onPressed: () {
                     Navigator.pop(context);
-                    _showAdvancedSettings(context, provider, scrollToCategories: true);
+                    provider.goToScreen(AppConstants.screenCategories);
                   },
                 ),
               ),
@@ -261,24 +294,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  void _showAdvancedSettings(BuildContext context, GameProvider provider, {bool scrollToCategories = false}) {
-    final scrollController = ScrollController();
-    final categoriesKey = GlobalKey();
-
-    // Scroll vers les catégories après le build si demandé
-    if (scrollToCategories) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final categoriesContext = categoriesKey.currentContext;
-        if (categoriesContext != null) {
-          Scrollable.ensureVisible(
-            categoriesContext,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-          );
-        }
-      });
-    }
-
+  void _showAdvancedSettings(BuildContext context, GameProvider provider) {
     AppModal.show(
       context,
       title: 'Avancé',
@@ -288,7 +304,6 @@ class SettingsScreen extends StatelessWidget {
           final settings = provider.settings;
 
           return SingleChildScrollView(
-            controller: scrollController,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -401,171 +416,6 @@ class SettingsScreen extends StatelessWidget {
                     );
                   }).toList(),
                 ),
-                const SizedBox(height: 24),
-
-                // Catégories (toujours visibles pour le bouton aléatoire)
-                Row(
-                  key: categoriesKey,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Catégories',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Sélectionnez au moins 1',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 12,
-                              color: AppColors.gray400,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Builder(
-                      builder: (context) {
-                        final allCategories = getCategoryList().map((c) => c.id).toList();
-                        final isAllSelected = settings.selectedCategories.length == allCategories.length;
-                        final isOneSelected = settings.selectedCategories.length == 1;
-
-                        return Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                provider.updateSettings(selectedCategories: allCategories);
-                                setState(() {});
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: isAllSelected
-                                      ? AppColors.secondaryCyan.withValues(alpha: 0.3)
-                                      : AppColors.gray600.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: isAllSelected ? AppColors.secondaryCyan : AppColors.gray600,
-                                    width: isAllSelected ? 2 : 1,
-                                  ),
-                                ),
-                                child: Text(
-                                  'Tout',
-                                  style: TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontSize: 11,
-                                    fontWeight: isAllSelected ? FontWeight.w600 : FontWeight.normal,
-                                    color: isAllSelected ? AppColors.secondaryCyan : AppColors.gray400,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            GestureDetector(
-                              onTap: () {
-                                // Sélectionner une catégorie aléatoire différente de la sélection actuelle
-                                final categories = getCategoryList();
-                                final availableCategories = categories.where(
-                                  (c) => !settings.selectedCategories.contains(c.id) || settings.selectedCategories.length > 1
-                                ).toList();
-
-                                if (availableCategories.isNotEmpty) {
-                                  availableCategories.shuffle();
-                                  provider.updateSettings(selectedCategories: [availableCategories.first.id]);
-                                } else {
-                                  // Fallback: prendre une catégorie au hasard
-                                  categories.shuffle();
-                                  provider.updateSettings(selectedCategories: [categories.first.id]);
-                                }
-                                setState(() {});
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: isOneSelected
-                                      ? AppColors.primaryPink.withValues(alpha: 0.3)
-                                      : AppColors.gray600.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: isOneSelected ? AppColors.primaryPink : AppColors.gray600,
-                                    width: isOneSelected ? 2 : 1,
-                                  ),
-                                ),
-                                child: Text(
-                                  'Une',
-                                  style: TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontSize: 11,
-                                    fontWeight: isOneSelected ? FontWeight.w600 : FontWeight.normal,
-                                    color: isOneSelected ? AppColors.primaryPink : AppColors.gray400,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: getCategoryList().map((category) {
-                      final isSelected = settings.selectedCategories.contains(category.id);
-                      return GestureDetector(
-                        onTap: () {
-                          final newCategories = List<String>.from(settings.selectedCategories);
-                          if (isSelected) {
-                            if (newCategories.length > 1) {
-                              newCategories.remove(category.id);
-                            }
-                          } else {
-                            newCategories.add(category.id);
-                          }
-                          provider.updateSettings(selectedCategories: newCategories);
-                          setState(() {});
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isSelected ? AppColors.secondaryCyan : AppColors.backgroundCard,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSelected ? AppColors.secondaryCyan : AppColors.gray600,
-                              width: 2,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(category.icon),
-                              const SizedBox(width: 4),
-                              Text(
-                                category.name,
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  color: isSelected ? Colors.white : AppColors.gray400,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
                 const SizedBox(height: 24),
 
                 AppButton(

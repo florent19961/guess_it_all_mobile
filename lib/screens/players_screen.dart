@@ -558,16 +558,41 @@ class _PlayersScreenState extends State<PlayersScreen> {
                                             width: 2,
                                           ),
                                         ),
-                                        child: Text(
-                                          isWordsFilled ? 'Remplis' : 'Remplir',
-                                          style: TextStyle(
-                                            fontFamily: 'Poppins',
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            color: isWordsFilled
-                                                ? AppColors.success
-                                                : AppColors.error,
-                                          ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              isWordsFilled
+                                                  ? Icons.check_circle
+                                                  : Icons.edit_note,
+                                              size: 18,
+                                              color: isWordsFilled
+                                                  ? AppColors.success
+                                                  : AppColors.error,
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              isWordsFilled
+                                                  ? 'Voir mots'
+                                                  : 'Saisir mots',
+                                              style: TextStyle(
+                                                fontFamily: 'Poppins',
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: isWordsFilled
+                                                    ? AppColors.success
+                                                    : AppColors.error,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Icon(
+                                              Icons.chevron_right,
+                                              size: 16,
+                                              color: isWordsFilled
+                                                  ? AppColors.success
+                                                  : AppColors.error,
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),

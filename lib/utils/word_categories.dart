@@ -1548,8 +1548,6 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Nabilla', difficulty: 2),
       WordWithDifficulty('Les Marseillais', difficulty: 2),
       WordWithDifficulty('Kev Adams', difficulty: 2),
-      WordWithDifficulty('Norman', difficulty: 2),
-      WordWithDifficulty('Cyprien', difficulty: 2),
 
       // TÉLÉ-RÉALITÉ / INFLUENCEURS - Difficile
       WordWithDifficulty('Squeezie', difficulty: 3),

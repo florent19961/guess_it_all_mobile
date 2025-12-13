@@ -16,6 +16,7 @@ import 'screens/verification_screen.dart';
 import 'screens/transition_screen.dart';
 import 'screens/results_screen.dart';
 import 'screens/stats_screen.dart';
+import 'screens/categories_screen.dart';
 
 class GuessItAllApp extends StatelessWidget {
   const GuessItAllApp({super.key});
@@ -62,6 +63,8 @@ class GuessItAllApp extends StatelessWidget {
         return const ResultsScreen();
       case AppConstants.screenStats:
         return const StatsScreen();
+      case AppConstants.screenCategories:
+        return const CategoriesScreen();
       default:
         return const HomeScreen();
     }

@@ -42,7 +42,6 @@ class _VerificationScreenState extends State<VerificationScreen> {
     final guessedWords = provider.game.wordsGuessedThisTurn;
     final passedWords = provider.game.passedWordsThisTurn;
     final expiredWord = provider.game.expiredWord;
-    final teamColor = AppColors.getTeamColor(provider.game.currentTeamIndex);
 
     return Material(
       color: AppColors.backgroundMain,
@@ -71,21 +70,21 @@ class _VerificationScreenState extends State<VerificationScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   decoration: BoxDecoration(
-                    color: teamColor.withValues(alpha: 0.2),
+                    color: AppColors.secondaryCyan.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: teamColor, width: 2),
+                    border: Border.all(color: AppColors.secondaryCyan, width: 2),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.star, color: teamColor, size: 24),
+                      const Icon(Icons.star, color: AppColors.secondaryCyan, size: 24),
                       const SizedBox(width: 8),
                       Text(
                         '+${_validatedWords.length} points',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontFamily: 'Bangers',
                           fontSize: 24,
-                          color: teamColor,
+                          color: AppColors.secondaryCyan,
                         ),
                       ),
                     ],
