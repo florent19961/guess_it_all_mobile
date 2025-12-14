@@ -73,7 +73,7 @@ class _StatsScreenState extends State<StatsScreen> {
                           ),
                           const SizedBox(width: 8),
                           const Text(
-                            'Statistiques pas ludiques',
+                            'Cherry on the cake',
                             style: TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 14,
@@ -81,6 +81,8 @@ class _StatsScreenState extends State<StatsScreen> {
                               color: AppColors.gray400,
                             ),
                           ),
+                          const SizedBox(width: 6),
+                          const Text('🍒', style: TextStyle(fontSize: 16)),
                         ],
                       ),
                     ),
@@ -166,7 +168,7 @@ class _StatsScreenState extends State<StatsScreen> {
               const Icon(Icons.emoji_events, color: AppColors.warning, size: 24),
               const SizedBox(width: 8),
               const Text(
-                'Top des faiseurs deviner',
+                'Top joueurs',
                 style: TextStyle(
                   fontFamily: 'Poppins',
                   fontSize: 16,

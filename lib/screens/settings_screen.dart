@@ -196,7 +196,6 @@ class _SettingsScreenState extends State<SettingsScreen>
                                     size: 14,
                                   ),
                                 ),
-                                const TextSpan(text: ' en haut à droite'),
                               ],
                             ),
                             style: const TextStyle(
@@ -379,7 +378,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   void _showAdvancedSettings(BuildContext context, GameProvider provider) {
     AppModal.show(
       context,
-      title: 'Avancé',
+      title: 'Avancés',
       child: StatefulBuilder(
         builder: (context, setState) {
           // Récupérer settings à chaque rebuild pour avoir les valeurs à jour

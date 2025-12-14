@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
 import '../services/audio_service.dart';
-import '../utils/constants.dart';
 import '../widgets/common/app_button.dart';
 
 class TurnScreen extends StatefulWidget {
@@ -77,264 +76,75 @@ class _TurnScreenState extends State<TurnScreen> {
   }
 
   void _showPauseDialog(BuildContext context, GameProvider provider) {
-    final currentPlayer = provider.getCurrentPlayer();
-    final currentTeam = provider.getCurrentTeam();
-    final teamColor = AppColors.getTeamColor(provider.game.currentTeamIndex);
-
-    // Récupérer les noms des joueurs de l'équipe (sauf le joueur actuel)
-    final otherPlayers = currentTeam?.playerIds
-        .where((id) => id != currentPlayer?.id)
-        .map((id) => provider.getPlayerById(id)?.name ?? '')
-        .where((name) => name.isNotEmpty)
-        .toList() ?? [];
-
     showDialog(
       context: context,
       barrierColor: Colors.black.withOpacity(0.85),
+      barrierDismissible: true,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 340),
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: AppColors.backgroundMain,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: teamColor, width: 3),
-            boxShadow: [
-              BoxShadow(
-                color: teamColor.withOpacity(0.3),
-                blurRadius: 20,
-                spreadRadius: 2,
-              ),
-            ],
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: AppColors.warning, width: 3),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Header avec icône pause
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                decoration: BoxDecoration(
-                  color: teamColor.withOpacity(0.15),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(25),
-                    topRight: Radius.circular(25),
+              // Header avec croix
+              Align(
+                alignment: Alignment.topRight,
+                child: GestureDetector(
+                  onTap: () => Navigator.of(dialogContext).pop(),
+                  child: const Icon(
+                    Icons.close,
+                    color: AppColors.gray400,
+                    size: 24,
                   ),
                 ),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: teamColor.withOpacity(0.2),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: teamColor, width: 2),
-                      ),
-                      child: Icon(
-                        Icons.pause_rounded,
-                        color: teamColor,
-                        size: 32,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'PAUSE',
-                      style: TextStyle(
-                        fontFamily: 'Bangers',
-                        fontSize: 36,
-                        color: teamColor,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  ],
+              ),
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.pause_rounded,
+                  color: AppColors.warning,
+                  size: 40,
                 ),
               ),
-
-              // Contenu
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    // Joueur actuel - carte mise en avant
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            teamColor.withOpacity(0.2),
-                            teamColor.withOpacity(0.1),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: teamColor.withOpacity(0.3)),
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.mic, color: teamColor, size: 20),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Fait deviner',
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: teamColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            currentPlayer?.name ?? '',
-                            style: const TextStyle(
-                              fontFamily: 'Bangers',
-                              fontSize: 28,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Équipe
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: AppColors.backgroundCard,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.groups, color: teamColor, size: 18),
-                              const SizedBox(width: 8),
-                              Text(
-                                currentTeam?.name ?? '',
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: teamColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (otherPlayers.isNotEmpty) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              otherPlayers.join(' • '),
-                              style: const TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 13,
-                                color: AppColors.gray400,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Mode de manche
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: AppColors.secondaryCyan.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: AppColors.secondaryCyan.withOpacity(0.3),
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.secondaryCyan.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  'Manche ${provider.game.currentRound}',
-                                  style: const TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.secondaryCyan,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                AppConstants.roundModes[provider.game.currentRound] ?? '',
-                                style: const TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            AppConstants.roundDescriptions[provider.game.currentRound] ?? '',
-                            style: const TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 12,
-                              color: AppColors.gray400,
-                              height: 1.4,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Bouton Reprendre
-                    SizedBox(
-                      width: double.infinity,
-                      child: AppButton(
-                        text: 'Reprendre',
-                        variant: AppButtonVariant.primary,
-                        size: AppButtonSize.large,
-                        fullWidth: true,
-                        onPressed: () {
-                          Navigator.of(dialogContext).pop();
-                          _togglePause(context, provider);
-                        },
-                      ),
-                    ),
-                  ],
+              const SizedBox(height: 16),
+              const Text(
+                'PAUSE',
+                style: TextStyle(
+                  fontFamily: 'Bangers',
+                  fontSize: 48,
+                  color: AppColors.warning,
+                  letterSpacing: 2,
                 ),
+              ),
+              const SizedBox(height: 24),
+              AppButton(
+                text: 'Reprendre la partie',
+                variant: AppButtonVariant.primary,
+                size: AppButtonSize.large,
+                fullWidth: true,
+                onPressed: () => Navigator.of(dialogContext).pop(),
               ),
             ],
           ),
         ),
       ),
-    );
+    ).then((_) {
+      // Reprendre le timer quand le dialog est fermé
+      if (_isPaused) {
+        _togglePause(context, provider);
+      }
+    });
   }
 
   void _handleHomePress(BuildContext context, GameProvider provider) {
@@ -349,7 +159,7 @@ class _TurnScreenState extends State<TurnScreen> {
     // Afficher le dialog
     showDialog(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
+      barrierColor: Colors.black.withOpacity( 0.7),
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.backgroundMain,
         shape: RoundedRectangleBorder(
@@ -407,7 +217,8 @@ class _TurnScreenState extends State<TurnScreen> {
     // Afficher le dialog de confirmation
     showDialog(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
+      barrierColor: Colors.black.withOpacity(0.7),
+      barrierDismissible: true,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.backgroundMain,
         shape: RoundedRectangleBorder(
@@ -419,9 +230,9 @@ class _TurnScreenState extends State<TurnScreen> {
           style: AppTextStyles.subtitle(fontSize: 24),
           textAlign: TextAlign.center,
         ),
-        content: Text(
-          'Les ${_pausedTimeRemaining}s restantes seront perdues.',
-          style: const TextStyle(
+        content: const Text(
+          'Les secondes restantes seront perdues.',
+          style: TextStyle(
             fontFamily: 'Poppins',
             color: Colors.white,
           ),
@@ -435,8 +246,6 @@ class _TurnScreenState extends State<TurnScreen> {
             size: AppButtonSize.small,
             onPressed: () {
               Navigator.of(dialogContext).pop();
-              // Reprendre le timer
-              _togglePause(context, provider);
             },
           ),
           AppButton(
@@ -450,7 +259,12 @@ class _TurnScreenState extends State<TurnScreen> {
           ),
         ],
       ),
-    );
+    ).then((_) {
+      // Reprendre le timer quand le dialog est fermé (sauf si le tour est terminé)
+      if (_isPaused && mounted) {
+        _togglePause(context, provider);
+      }
+    });
   }
 
   @override
@@ -462,7 +276,6 @@ class _TurnScreenState extends State<TurnScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<GameProvider>();
-    final teamColor = AppColors.getTeamColor(provider.game.currentTeamIndex);
     final currentWord = provider.game.currentWord;
     final currentTeam = provider.getCurrentTeam();
     final currentPlayer = provider.getCurrentPlayer();
@@ -482,7 +295,7 @@ class _TurnScreenState extends State<TurnScreen> {
                 children: [
                   // Player and team info (fixe en haut)
                   Text(
-                    '${currentPlayer?.name ?? ''} (${currentTeam?.name ?? ''})',
+                    '${currentPlayer?.name ?? ''} - ${currentTeam?.name ?? ''}',
                     style: const TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 14,
@@ -507,31 +320,12 @@ class _TurnScreenState extends State<TurnScreen> {
                                 style: TextStyle(
                                   fontFamily: 'Bangers',
                                   fontSize: 80,
-                                  color: isLowTime ? AppColors.error : teamColor,
+                                  color: isLowTime ? AppColors.error : AppColors.secondaryCyan,
                                 ),
                               ),
                             );
                           },
                         ),
-
-                        if (_isPaused) ...[
-                          const SizedBox(height: 16),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: AppColors.warning.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Text(
-                              'PAUSE',
-                              style: TextStyle(
-                                fontFamily: 'Bangers',
-                                fontSize: 24,
-                                color: AppColors.warning,
-                              ),
-                            ),
-                          ),
-                        ],
 
                         const SizedBox(height: 32),
 
@@ -571,14 +365,20 @@ class _TurnScreenState extends State<TurnScreen> {
 
                         const SizedBox(height: 16),
 
-                        // Words remaining
-                        Text(
-                          '${provider.game.remainingWords.length} mots restants',
-                          style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 14,
-                            color: AppColors.gray400,
-                          ),
+                        // Words remaining (sans compter le mot actuel)
+                        Builder(
+                          builder: (context) {
+                            final remaining = provider.game.remainingWords.length - 1;
+                            final count = remaining < 0 ? 0 : remaining;
+                            return Text(
+                              '$count ${count <= 1 ? 'mot restant' : 'mots restants'}',
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                color: AppColors.gray400,
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -632,7 +432,7 @@ class _TurnScreenState extends State<TurnScreen> {
                                       fontFamily: 'Poppins',
                                       fontSize: 12,
                                       color: canPass && !_isPaused
-                                          ? Colors.white.withValues(alpha: 0.7)
+                                          ? Colors.white.withOpacity( 0.7)
                                           : AppColors.gray600,
                                     ),
                                   ),
@@ -660,28 +460,12 @@ class _TurnScreenState extends State<TurnScreen> {
                                   : AppColors.secondaryCyan,
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.check,
-                                  color: _isPaused
-                                      ? AppColors.gray500
-                                      : Colors.white,
-                                  size: 40,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Deviné !',
-                                  style: TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: _isPaused
-                                        ? AppColors.gray500
-                                        : Colors.white,
-                                  ),
-                                ),
-                              ],
+                            child: Icon(
+                              Icons.check,
+                              color: _isPaused
+                                  ? AppColors.gray500
+                                  : Colors.white,
+                              size: 48,
                             ),
                           ),
                         ),

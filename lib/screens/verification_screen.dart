@@ -80,24 +80,17 @@ class _VerificationScreenState extends State<VerificationScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.secondaryCyan.withValues(alpha: 0.2),
+                    color: AppColors.secondaryCyan.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: AppColors.secondaryCyan, width: 2),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.star, color: AppColors.secondaryCyan, size: 24),
-                      const SizedBox(width: 8),
-                      Text(
-                        '+${_validatedWords.length} points',
-                        style: const TextStyle(
-                          fontFamily: 'Bangers',
-                          fontSize: 24,
-                          color: AppColors.secondaryCyan,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    'Score : ${_validatedWords.length} ${_validatedWords.length <= 1 ? 'point' : 'points'}',
+                    style: const TextStyle(
+                      fontFamily: 'Bangers',
+                      fontSize: 24,
+                      color: AppColors.secondaryCyan,
+                    ),
                   ),
                 ),
 
@@ -148,7 +141,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.error.withValues(alpha: 0.2),
+                                  color: AppColors.error.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: const Text(
@@ -191,7 +184,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.warning.withValues(alpha: 0.2),
+                                  color: AppColors.warning.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: const Text(
@@ -248,8 +241,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isValidated
-              ? AppColors.success.withValues(alpha: 0.2)
-              : AppColors.error.withValues(alpha: 0.2),
+              ? AppColors.success.withOpacity(0.2)
+              : AppColors.error.withOpacity(0.2),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isValidated ? AppColors.success : AppColors.error,

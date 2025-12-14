@@ -13,7 +13,7 @@ class GameSettings {
   GameSettings({
     this.numberOfTeams = AppConstants.defaultNumberOfTeams,
     this.numberOfPlayers = AppConstants.defaultNumberOfPlayers,
-    this.wordChoice = AppConstants.wordChoiceCustom,
+    this.wordChoice = AppConstants.wordChoiceRandom,
     this.wordsPerPlayer = AppConstants.defaultWordsPerPlayer,
     this.turnDuration = AppConstants.defaultTurnDuration,
     this.passPenalty = AppConstants.defaultPassPenalty,
@@ -65,7 +65,7 @@ class GameSettings {
     return GameSettings(
       numberOfTeams: json['numberOfTeams'] as int? ?? AppConstants.defaultNumberOfTeams,
       numberOfPlayers: json['numberOfPlayers'] as int? ?? AppConstants.defaultNumberOfPlayers,
-      wordChoice: json['wordChoice'] as String? ?? AppConstants.wordChoiceCustom,
+      wordChoice: json['wordChoice'] as String? ?? AppConstants.wordChoiceRandom,
       wordsPerPlayer: json['wordsPerPlayer'] as int? ?? AppConstants.defaultWordsPerPlayer,
       turnDuration: json['turnDuration'] as int? ?? AppConstants.defaultTurnDuration,
       passPenalty: json['passPenalty'] as int? ?? AppConstants.defaultPassPenalty,

@@ -38,10 +38,8 @@ class TransitionScreen extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.check_circle, color: AppColors.success, size: 22),
-                        const SizedBox(width: 8),
                         Text(
-                          'Manche $currentRound terminée !',
+                          'Manche $currentRound',
                           style: const TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 17,
@@ -49,6 +47,8 @@ class TransitionScreen extends StatelessWidget {
                             color: AppColors.success,
                           ),
                         ),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.check_circle, color: AppColors.success, size: 22),
                       ],
                     ),
                   ),
@@ -158,7 +158,7 @@ class TransitionScreen extends StatelessWidget {
                           const Icon(Icons.timer, color: AppColors.warning, size: 18),
                           const SizedBox(width: 8),
                           Text(
-                            'Temps bonus conservé: ${provider.game.turnBonusTime}s',
+                            'Temps bonus conservé : ${provider.game.turnBonusTime}s',
                             style: const TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 14,

@@ -4,6 +4,8 @@ import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
 import '../utils/constants.dart';
 import '../widgets/common/app_button.dart';
+import '../widgets/common/home_button.dart';
+import '../widgets/common/back_button.dart';
 import '../widgets/effects/shooting_stars.dart';
 
 class ResultsScreen extends StatelessWidget {
@@ -63,25 +65,56 @@ class ResultsScreen extends StatelessWidget {
               ),
             ),
           ),
-          // Bouton Home en haut à gauche
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            left: 16,
-            child: GestureDetector(
-              onTap: () async {
-                await provider.endGameAndGoHome();
-                provider.goToScreen(AppConstants.screenHome);
-              },
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: const BoxDecoration(
-                  color: AppColors.secondaryCyan,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.home, color: Colors.white, size: 24),
-              ),
+          const HomeButton(alignRight: true),
+          // Back button pour revenir à l'écran de vérification
+          if (provider.canGoBackToVerification)
+            GameBackButton(
+              onPressed: () => _showBackToVerificationDialog(context, provider),
             ),
+        ],
+      ),
+    );
+  }
+
+  void _showBackToVerificationDialog(BuildContext context, GameProvider provider) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.7),
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.backgroundMain,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: AppColors.gray500, width: 2),
+        ),
+        title: Text(
+          'Modifier la validation',
+          style: AppTextStyles.subtitle(fontSize: 24),
+          textAlign: TextAlign.center,
+        ),
+        content: const Text(
+          'Voulez-vous revenir à l\'écran de vérification pour corriger les mots validés ?',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            color: Colors.white,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actions: [
+          AppButton(
+            text: 'Annuler',
+            variant: AppButtonVariant.ghost,
+            size: AppButtonSize.small,
+            onPressed: () => Navigator.of(dialogContext).pop(),
+          ),
+          AppButton(
+            text: 'Retour',
+            variant: AppButtonVariant.secondary,
+            size: AppButtonSize.small,
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              provider.restorePreValidationState();
+            },
           ),
         ],
       ),
@@ -106,22 +139,6 @@ class ResultsScreen extends StatelessWidget {
         return 70;
       default:
         return 50;
-    }
-  }
-
-  // Retourne la médaille selon le rang
-  String _getMedal(int rank) {
-    switch (rank) {
-      case 0:
-        return '🥇';
-      case 1:
-        return '🥈';
-      case 2:
-        return '🥉';
-      case 3:
-        return '🍫';
-      default:
-        return '';
     }
   }
 
@@ -181,17 +198,11 @@ class ResultsScreen extends StatelessWidget {
     required double height,
   }) {
     final teamColor = AppColors.getTeamColor(originalIndex);
-    final medal = _getMedal(rank);
     final displayPosition = rank + 1;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          medal,
-          style: const TextStyle(fontSize: 40),
-        ),
-        const SizedBox(height: 8),
         Text(
           team.name,
           style: TextStyle(
@@ -216,7 +227,7 @@ class ResultsScreen extends StatelessWidget {
           width: 100,
           height: height,
           decoration: BoxDecoration(
-            color: teamColor.withValues(alpha: 0.3),
+            color: teamColor.withOpacity(0.3),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             border: Border.all(color: teamColor, width: 2),
           ),
@@ -246,7 +257,7 @@ class ResultsScreen extends StatelessWidget {
       child: Column(
         children: [
           const Text(
-            'Détail par manche',
+            'Détails par manche',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 16,

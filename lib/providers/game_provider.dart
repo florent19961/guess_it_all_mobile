@@ -600,10 +600,13 @@ class GameProvider extends ChangeNotifier {
       // Préparer la fusion pour le bonus time si pas de mots invalidés
       final shouldPrepareBonusFusion = allInvalidatedWords.isEmpty;
 
+      // Si c'est la dernière manche (manche 3), aller directement aux résultats
+      final isLastRound = _game.currentRound >= 3;
+
       _game = _game.copyWith(
         history: newHistory,
         remainingWords: newRemainingWords,
-        currentScreen: AppConstants.screenTransition,
+        currentScreen: isLastRound ? AppConstants.screenResults : AppConstants.screenTransition,
         turnBonusTime: _game.timeRemaining,
         clearExpiredWord: true,
         pendingBonusTurnId: shouldPrepareBonusFusion ? _game.currentTurn : null,
