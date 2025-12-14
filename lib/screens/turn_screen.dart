@@ -453,7 +453,7 @@ class _TurnScreenState extends State<TurnScreen> {
                             provider.markWordAsGuessed();
                           },
                           child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 20),
+                            padding: const EdgeInsets.symmetric(vertical: 33),
                             decoration: BoxDecoration(
                               color: _isPaused
                                   ? AppColors.gray700
