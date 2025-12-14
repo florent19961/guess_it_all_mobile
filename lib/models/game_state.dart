@@ -78,6 +78,8 @@ class GameState {
 
   List<HistoryEntry> history;
   int? pendingBonusTurnId; // Tour en attente de fusion après bonus time
+  Map<String, dynamic>? preValidationSnapshot; // Snapshot pour restauration après validation
+  List<String>? restoredValidatedWords; // Mots validés à restaurer lors du retour en arrière
 
   GameState({
     this.currentScreen = AppConstants.screenHome,
@@ -103,6 +105,8 @@ class GameState {
     this.suspendedScreen,
     List<HistoryEntry>? history,
     this.pendingBonusTurnId,
+    this.preValidationSnapshot,
+    this.restoredValidatedWords,
   })  : teamPlayOrder = teamPlayOrder ?? [],
         playerOrderByTeam = playerOrderByTeam ?? {},
         allWords = allWords ?? [],
@@ -147,6 +151,10 @@ class GameState {
     List<HistoryEntry>? history,
     int? pendingBonusTurnId,
     bool clearPendingBonusTurnId = false,
+    Map<String, dynamic>? preValidationSnapshot,
+    bool clearPreValidationSnapshot = false,
+    List<String>? restoredValidatedWords,
+    bool clearRestoredValidatedWords = false,
   }) {
     return GameState(
       currentScreen: currentScreen ?? this.currentScreen,
@@ -174,6 +182,8 @@ class GameState {
       suspendedScreen: clearSuspendedScreen ? null : (suspendedScreen ?? this.suspendedScreen),
       history: history ?? List.from(this.history),
       pendingBonusTurnId: clearPendingBonusTurnId ? null : (pendingBonusTurnId ?? this.pendingBonusTurnId),
+      preValidationSnapshot: clearPreValidationSnapshot ? null : (preValidationSnapshot ?? this.preValidationSnapshot),
+      restoredValidatedWords: clearRestoredValidatedWords ? null : (restoredValidatedWords ?? this.restoredValidatedWords),
     );
   }
 
@@ -202,6 +212,8 @@ class GameState {
       'suspendedScreen': suspendedScreen,
       'history': history.map((e) => e.toJson()).toList(),
       'pendingBonusTurnId': pendingBonusTurnId,
+      'preValidationSnapshot': preValidationSnapshot,
+      'restoredValidatedWords': restoredValidatedWords,
     };
   }
 
@@ -236,6 +248,8 @@ class GameState {
               .toList() ??
           [],
       pendingBonusTurnId: json['pendingBonusTurnId'] as int?,
+      preValidationSnapshot: json['preValidationSnapshot'] as Map<String, dynamic>?,
+      restoredValidatedWords: (json['restoredValidatedWords'] as List<dynamic>?)?.cast<String>(),
     );
   }
 }

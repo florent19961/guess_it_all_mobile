@@ -20,10 +20,20 @@ class _VerificationScreenState extends State<VerificationScreen> {
   void initState() {
     super.initState();
     final provider = context.read<GameProvider>();
-    // Par défaut : mots devinés = validés, mots passés = invalidés
-    _validatedWords = Set.from(provider.game.wordsGuessedThisTurn);
-    // Jouer le son de fin de tour
-    AudioService.playDing();
+
+    // Si on revient en arrière, utiliser les mots validés restaurés
+    if (provider.game.restoredValidatedWords != null) {
+      _validatedWords = Set.from(provider.game.restoredValidatedWords!);
+      // Effacer après utilisation
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        provider.clearRestoredValidatedWords();
+      });
+    } else {
+      // Par défaut : mots devinés = validés, mots passés = invalidés
+      _validatedWords = Set.from(provider.game.wordsGuessedThisTurn);
+      // Jouer le son de fin de tour seulement si ce n'est pas un retour en arrière
+      AudioService.playKlaxon();
+    }
   }
 
   void _toggleWord(String word) {
@@ -214,6 +224,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                     size: AppButtonSize.large,
                     fullWidth: true,
                     onPressed: () {
+                      provider.savePreValidationState(_validatedWords.toList());
                       provider.validateWords(_validatedWords.toList());
                     },
                   ),

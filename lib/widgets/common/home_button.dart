@@ -6,13 +6,16 @@ import '../../utils/constants.dart';
 import 'app_button.dart';
 
 class HomeButton extends StatelessWidget {
-  const HomeButton({super.key});
+  final bool alignRight;
+
+  const HomeButton({super.key, this.alignRight = false});
 
   @override
   Widget build(BuildContext context) {
     return Positioned(
       top: MediaQuery.of(context).padding.top + 16,
-      left: 16,
+      left: alignRight ? null : 16,
+      right: alignRight ? 16 : null,
       child: GestureDetector(
         onTap: () => _handleHomePress(context),
         child: Container(

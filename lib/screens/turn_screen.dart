@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
+import '../services/audio_service.dart';
+import '../utils/constants.dart';
 import '../widgets/common/app_button.dart';
 
 class TurnScreen extends StatefulWidget {
@@ -79,85 +81,258 @@ class _TurnScreenState extends State<TurnScreen> {
     final currentTeam = provider.getCurrentTeam();
     final teamColor = AppColors.getTeamColor(provider.game.currentTeamIndex);
 
-    // Récupérer les noms des joueurs de l'équipe
-    final teamPlayerNames = currentTeam?.playerIds
+    // Récupérer les noms des joueurs de l'équipe (sauf le joueur actuel)
+    final otherPlayers = currentTeam?.playerIds
+        .where((id) => id != currentPlayer?.id)
         .map((id) => provider.getPlayerById(id)?.name ?? '')
         .where((name) => name.isNotEmpty)
         .toList() ?? [];
 
     showDialog(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.backgroundMain,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: BorderSide(color: teamColor, width: 2),
-        ),
-        title: Text(
-          'PAUSE',
-          style: TextStyle(
-            fontFamily: 'Bangers',
-            fontSize: 32,
-            color: teamColor,
+      barrierColor: Colors.black.withOpacity(0.85),
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 340),
+          decoration: BoxDecoration(
+            color: AppColors.backgroundMain,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: teamColor, width: 3),
+            boxShadow: [
+              BoxShadow(
+                color: teamColor.withOpacity(0.3),
+                blurRadius: 20,
+                spreadRadius: 2,
+              ),
+            ],
           ),
-          textAlign: TextAlign.center,
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Joueur qui fait deviner :',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 14,
-                color: AppColors.gray400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header avec icône pause
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                decoration: BoxDecoration(
+                  color: teamColor.withOpacity(0.15),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(25),
+                    topRight: Radius.circular(25),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: teamColor.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: teamColor, width: 2),
+                      ),
+                      child: Icon(
+                        Icons.pause_rounded,
+                        color: teamColor,
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'PAUSE',
+                      style: TextStyle(
+                        fontFamily: 'Bangers',
+                        fontSize: 36,
+                        color: teamColor,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              currentPlayer?.name ?? '',
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
+
+              // Contenu
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // Joueur actuel - carte mise en avant
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            teamColor.withOpacity(0.2),
+                            teamColor.withOpacity(0.1),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: teamColor.withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.mic, color: teamColor, size: 20),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Fait deviner',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: teamColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            currentPlayer?.name ?? '',
+                            style: const TextStyle(
+                              fontFamily: 'Bangers',
+                              fontSize: 28,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Équipe
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.backgroundCard,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.groups, color: teamColor, size: 18),
+                              const SizedBox(width: 8),
+                              Text(
+                                currentTeam?.name ?? '',
+                                style: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: teamColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (otherPlayers.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              otherPlayers.join(' • '),
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 13,
+                                color: AppColors.gray400,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Mode de manche
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondaryCyan.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: AppColors.secondaryCyan.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.secondaryCyan.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'Manche ${provider.game.currentRound}',
+                                  style: const TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.secondaryCyan,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                AppConstants.roundModes[provider.game.currentRound] ?? '',
+                                style: const TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            AppConstants.roundDescriptions[provider.game.currentRound] ?? '',
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                              color: AppColors.gray400,
+                              height: 1.4,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Bouton Reprendre
+                    SizedBox(
+                      width: double.infinity,
+                      child: AppButton(
+                        text: 'Reprendre',
+                        variant: AppButtonVariant.primary,
+                        size: AppButtonSize.large,
+                        fullWidth: true,
+                        onPressed: () {
+                          Navigator.of(dialogContext).pop();
+                          _togglePause(context, provider);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '${currentTeam?.name ?? ''} :',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 14,
-                color: teamColor,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              teamPlayerNames.join(', '),
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 16,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          Center(
-            child: AppButton(
-              text: 'Reprendre',
-              variant: AppButtonVariant.primary,
-              size: AppButtonSize.medium,
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                _togglePause(context, provider);
-              },
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -416,7 +591,10 @@ class _TurnScreenState extends State<TurnScreen> {
                       Expanded(
                         child: GestureDetector(
                           onTap: canPass && !_isPaused
-                              ? () => provider.passWord()
+                              ? () {
+                                  AudioService.playWhoosh();
+                                  provider.passWord();
+                                }
                               : null,
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 20),
@@ -470,7 +648,10 @@ class _TurnScreenState extends State<TurnScreen> {
                       Expanded(
                         flex: 2,
                         child: GestureDetector(
-                          onTap: _isPaused ? null : () => provider.markWordAsGuessed(),
+                          onTap: _isPaused ? null : () {
+                            AudioService.playDing();
+                            provider.markWordAsGuessed();
+                          },
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 20),
                             decoration: BoxDecoration(

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
-import '../utils/constants.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/home_button.dart';
+import '../widgets/common/back_button.dart';
 
 class TransitionScreen extends StatelessWidget {
   const TransitionScreen({super.key});
@@ -184,7 +184,57 @@ class TransitionScreen extends StatelessWidget {
               ),
             ),
           ),
-          const HomeButton(),
+          const HomeButton(alignRight: true),
+          // Back button pour revenir à l'écran de vérification
+          if (provider.canGoBackToVerification)
+            GameBackButton(
+              onPressed: () => _showBackToVerificationDialog(context, provider),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showBackToVerificationDialog(BuildContext context, GameProvider provider) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.7),
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.backgroundMain,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: AppColors.gray500, width: 2),
+        ),
+        title: Text(
+          'Modifier la validation',
+          style: AppTextStyles.subtitle(fontSize: 24),
+          textAlign: TextAlign.center,
+        ),
+        content: const Text(
+          'Voulez-vous revenir à l\'écran de vérification pour corriger les mots validés ?',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            color: Colors.white,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actions: [
+          AppButton(
+            text: 'Annuler',
+            variant: AppButtonVariant.ghost,
+            size: AppButtonSize.small,
+            onPressed: () => Navigator.of(dialogContext).pop(),
+          ),
+          AppButton(
+            text: 'Retour',
+            variant: AppButtonVariant.secondary,
+            size: AppButtonSize.small,
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              provider.restorePreValidationState();
+            },
+          ),
         ],
       ),
     );

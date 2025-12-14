@@ -12,8 +12,36 @@ import '../widgets/common/app_modal.dart';
 import '../widgets/common/app_back_button.dart';
 import '../widgets/effects/shooting_stars.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,29 +109,43 @@ class SettingsScreen extends StatelessWidget {
                   GestureDetector(
                     onTap: () => provider.goToScreen(AppConstants.screenCategories),
                     child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                       decoration: BoxDecoration(
-                        color: AppColors.secondaryCyan,
-                        borderRadius: BorderRadius.circular(16),
+                        color: AppColors.backgroundCard,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.gray600, width: 1.5),
                       ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            Icons.category,
-                            color: Colors.white,
-                            size: 22,
+                          AnimatedBuilder(
+                            animation: _pulseAnimation,
+                            builder: (context, child) {
+                              return Transform.scale(
+                                scale: _pulseAnimation.value,
+                                child: const Icon(
+                                  Icons.category,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              );
+                            },
                           ),
-                          SizedBox(width: 10),
-                          Text(
+                          const SizedBox(width: 10),
+                          const Text(
                             'Choisir les catégories',
                             style: TextStyle(
                               fontFamily: 'Poppins',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
                               color: Colors.white,
                             ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(
+                            Icons.chevron_right,
+                            color: AppColors.gray400,
+                            size: 20,
                           ),
                         ],
                       ),
@@ -126,6 +168,46 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 32),
+
+                  // Avertissement si trop de mots
+                  if (settings.numberOfPlayers * settings.wordsPerPlayer > 50)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.info_outline,
+                            color: AppColors.warning,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 6),
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: '${settings.numberOfPlayers * settings.wordsPerPlayer} mots : partie longue ! Réglable via ',
+                                ),
+                                const WidgetSpan(
+                                  alignment: PlaceholderAlignment.middle,
+                                  child: Icon(
+                                    Icons.settings,
+                                    color: AppColors.warning,
+                                    size: 14,
+                                  ),
+                                ),
+                                const TextSpan(text: ' en haut à droite'),
+                              ],
+                            ),
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                              color: AppColors.warning,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
                   // Bouton suivant
                   AppButton(

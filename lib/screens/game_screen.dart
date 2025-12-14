@@ -5,6 +5,7 @@ import '../providers/game_provider.dart';
 import '../utils/constants.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/home_button.dart';
+import '../widgets/common/back_button.dart';
 import '../widgets/effects/shooting_stars.dart';
 
 class GameScreen extends StatelessWidget {
@@ -48,10 +49,32 @@ class GameScreen extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // Round mode
-                  Text(
-                    AppConstants.roundModes[provider.game.currentRound] ?? '',
-                    style: AppTextStyles.subtitle(fontSize: 28),
-                    textAlign: TextAlign.center,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        AppConstants.roundModes[provider.game.currentRound] ?? '',
+                        style: AppTextStyles.subtitle(fontSize: 28),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(width: 12),
+                      GestureDetector(
+                        onTap: () => _showRulesDialog(context, provider.game.currentRound),
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.gray600,
+                          ),
+                          child: const Icon(
+                            Icons.info_outline,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 32),
@@ -154,7 +177,106 @@ class GameScreen extends StatelessWidget {
               ),
             ),
           ),
-          const HomeButton(),
+          const HomeButton(alignRight: true),
+          // Back button conditionnel
+          if (provider.isFirstTurnOfGame)
+            GameBackButton(
+              onPressed: () => _showBackToTeamsDialog(context, provider),
+            )
+          else if (provider.canGoBackToVerification)
+            GameBackButton(
+              onPressed: () => _showBackToVerificationDialog(context, provider),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showBackToTeamsDialog(BuildContext context, GameProvider provider) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.7),
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.backgroundMain,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: AppColors.gray500, width: 2),
+        ),
+        title: Text(
+          'Retour aux équipes',
+          style: AppTextStyles.subtitle(fontSize: 24),
+          textAlign: TextAlign.center,
+        ),
+        content: const Text(
+          'Voulez-vous revenir à la composition des équipes ?',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            color: Colors.white,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actions: [
+          AppButton(
+            text: 'Annuler',
+            variant: AppButtonVariant.ghost,
+            size: AppButtonSize.small,
+            onPressed: () => Navigator.of(dialogContext).pop(),
+          ),
+          AppButton(
+            text: 'Retour',
+            variant: AppButtonVariant.secondary,
+            size: AppButtonSize.small,
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              provider.goBackToTeams();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBackToVerificationDialog(BuildContext context, GameProvider provider) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.7),
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.backgroundMain,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: AppColors.gray500, width: 2),
+        ),
+        title: Text(
+          'Modifier la validation',
+          style: AppTextStyles.subtitle(fontSize: 24),
+          textAlign: TextAlign.center,
+        ),
+        content: const Text(
+          'Voulez-vous revenir à l\'écran de vérification pour corriger les mots validés ?',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            color: Colors.white,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actions: [
+          AppButton(
+            text: 'Annuler',
+            variant: AppButtonVariant.ghost,
+            size: AppButtonSize.small,
+            onPressed: () => Navigator.of(dialogContext).pop(),
+          ),
+          AppButton(
+            text: 'Retour',
+            variant: AppButtonVariant.secondary,
+            size: AppButtonSize.small,
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              provider.restorePreValidationState();
+            },
+          ),
         ],
       ),
     );
@@ -200,6 +322,53 @@ class GameScreen extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+
+  void _showRulesDialog(BuildContext context, int round) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.backgroundMain,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: AppColors.secondaryCyan, width: 2),
+        ),
+        title: Text(
+          AppConstants.roundModes[round] ?? '',
+          style: const TextStyle(
+            fontFamily: 'Bangers',
+            fontSize: 24,
+            color: AppColors.secondaryCyan,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          AppConstants.roundDescriptions[round] ?? '',
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Compris !',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.secondaryCyan,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

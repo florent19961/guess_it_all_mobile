@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
+import '../utils/constants.dart';
 
 class CountdownScreen extends StatefulWidget {
   const CountdownScreen({super.key});
@@ -18,10 +19,16 @@ class _CountdownScreenState extends State<CountdownScreen>
   Timer? _timer;
   late AnimationController _scaleController;
   late Animation<double> _scaleAnimation;
+  late bool _isFirstTurnOfRound;
 
   @override
   void initState() {
     super.initState();
+
+    // Vérifier si c'est le premier tour de la manche
+    final provider = context.read<GameProvider>();
+    _isFirstTurnOfRound = provider.game.currentTurnIndex == 0;
+
     _scaleController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -36,7 +43,12 @@ class _CountdownScreenState extends State<CountdownScreen>
   void _startCountdown() {
     _scaleController.forward(from: 0);
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    // Durée entre chaque chiffre : 1s pour le premier tour, 500ms sinon
+    final tickDuration = _isFirstTurnOfRound
+        ? const Duration(seconds: 1)
+        : const Duration(milliseconds: 500);
+
+    _timer = Timer.periodic(tickDuration, (timer) {
       if (_countdown > 1) {
         setState(() {
           _countdown--;
@@ -49,8 +61,11 @@ class _CountdownScreenState extends State<CountdownScreen>
         });
         _scaleController.forward(from: 0);
 
-        // Attendre un peu puis démarrer le tour
-        Future.delayed(const Duration(milliseconds: 800), () {
+        // Attendre un peu puis démarrer le tour (800ms pour premier tour, 400ms sinon)
+        final goDelay = _isFirstTurnOfRound
+            ? const Duration(milliseconds: 800)
+            : const Duration(milliseconds: 400);
+        Future.delayed(goDelay, () {
           if (mounted) {
             context.read<GameProvider>().startTurnTimer();
           }
@@ -131,11 +146,11 @@ class _CountdownScreenState extends State<CountdownScreen>
                       style: TextStyle(
                         fontFamily: 'Bangers',
                         fontSize: 160,
-                        color: teamColor,
+                        color: AppColors.getTeamColor(0),
                         shadows: [
                           Shadow(
                             offset: const Offset(4, 4),
-                            color: teamColor.withValues(alpha: 0.5),
+                            color: AppColors.getTeamColor(0).withOpacity(0.5),
                             blurRadius: 0,
                           ),
                         ],
@@ -164,11 +179,7 @@ class _CountdownScreenState extends State<CountdownScreen>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    provider.game.currentRound == 1
-                        ? 'Description libre'
-                        : provider.game.currentRound == 2
-                            ? 'Un seul mot'
-                            : 'Mime',
+                    AppConstants.roundModes[provider.game.currentRound] ?? '',
                     style: const TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 18,

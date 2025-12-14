@@ -113,6 +113,12 @@ class GameProvider extends ChangeNotifier {
     List<String>? selectedCategories,
     List<int>? selectedDifficultyLevels,
   }) {
+    // Sauvegarder les anciennes valeurs pour détecter les changements
+    final oldWordChoice = _settings.wordChoice;
+    final oldCategories = _settings.selectedCategories;
+    final oldDifficulties = _settings.selectedDifficultyLevels;
+
+    // Mettre à jour les settings
     _settings = _settings.copyWith(
       numberOfTeams: numberOfTeams,
       numberOfPlayers: numberOfPlayers,
@@ -123,8 +129,41 @@ class GameProvider extends ChangeNotifier {
       selectedCategories: selectedCategories,
       selectedDifficultyLevels: selectedDifficultyLevels,
     );
+
+    // Détecter les changements
+    final modeChanged = wordChoice != null && wordChoice != oldWordChoice;
+    final categoriesChanged = selectedCategories != null &&
+        !_listEquals(selectedCategories, oldCategories);
+    final difficultiesChanged = selectedDifficultyLevels != null &&
+        !_listEquals(selectedDifficultyLevels, oldDifficulties);
+
+    // Effacer les mots si :
+    // 1. On change de mode (Aléatoire ↔ Personnalisé)
+    // 2. OU on est en Aléatoire ET catégories/difficultés changent
+    if (modeChanged ||
+        (_settings.wordChoice == 'Aléatoire' && (categoriesChanged || difficultiesChanged))) {
+      _clearAllPlayersWords();
+    }
+
     notifyListeners();
     _saveSettings();
+  }
+
+  // Compare deux listes
+  bool _listEquals<T>(List<T> a, List<T> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  // Efface les mots de tous les joueurs
+  void _clearAllPlayersWords() {
+    for (int i = 0; i < _players.length; i++) {
+      _players[i] = _players[i].copyWith(words: []);
+    }
+    _saveGameSession();
   }
 
   // ========== ACTIONS - PLAYERS ==========
@@ -838,4 +877,115 @@ class GameProvider extends ChangeNotifier {
   // Utilisé pour proposer "Rejouer" sur l'écran d'accueil
   bool get hasGameSession =>
       _players.isNotEmpty && _teams.isNotEmpty && !_game.isGameSuspended;
+
+  // ========== NAVIGATION RETOUR ==========
+
+  // Vérifie si c'est le tout premier tour de la partie
+  bool get isFirstTurnOfGame =>
+      _game.history.isEmpty && _game.currentRound == 1;
+
+  // Vérifie si on peut revenir à l'écran de vérification
+  bool get canGoBackToVerification =>
+      _game.preValidationSnapshot != null;
+
+  // Sauvegarde l'état avant validation (appelé dans verification_screen)
+  // validatedWords = les mots que l'utilisateur a choisi de valider
+  void savePreValidationState(List<String> validatedWords) {
+    _game = _game.copyWith(
+      preValidationSnapshot: {
+        'currentTeamIndex': _game.currentTeamIndex,
+        'currentPlayerIndexInTeam': _game.currentPlayerIndexInTeam,
+        'currentTurn': _game.currentTurn,
+        'currentTurnIndex': _game.currentTurnIndex,
+        'wordsGuessedThisTurn': List<String>.from(_game.wordsGuessedThisTurn),
+        'passedWordsThisTurn': List<String>.from(_game.passedWordsThisTurn),
+        'expiredWord': _game.expiredWord,
+        'remainingWords': List<String>.from(_game.remainingWords),
+        'currentWord': _game.currentWord,
+        'timeRemaining': _game.timeRemaining,
+        'turnBonusTime': _game.turnBonusTime,
+        'history': _game.history.map((e) => e.toJson()).toList(),
+        'teamScores': _teams.map((t) => {
+          'id': t.id,
+          'score': t.score,
+          'scoreByRound': List<int>.from(t.scoreByRound),
+        }).toList(),
+        'pendingBonusTurnId': _game.pendingBonusTurnId,
+        'validatedWords': List<String>.from(validatedWords),
+      },
+    );
+    notifyListeners();
+    _saveGameState();
+  }
+
+  // Restaure l'état avant validation (appelé quand on clique sur retour)
+  void restorePreValidationState() {
+    final snapshot = _game.preValidationSnapshot;
+    if (snapshot == null) return;
+
+    // Restaurer les scores des équipes
+    final teamScores = snapshot['teamScores'] as List;
+    for (final ts in teamScores) {
+      final idx = _teams.indexWhere((t) => t.id == ts['id']);
+      if (idx != -1) {
+        _teams[idx] = _teams[idx].copyWith(
+          score: ts['score'] as int,
+          scoreByRound: List<int>.from(ts['scoreByRound'] as List),
+        );
+      }
+    }
+
+    // Restaurer l'historique
+    final historyJson = snapshot['history'] as List;
+    final restoredHistory = historyJson
+        .map((e) => HistoryEntry.fromJson(e as Map<String, dynamic>))
+        .toList();
+
+    // Restaurer les mots validés par l'utilisateur
+    final validatedWords = snapshot['validatedWords'] as List?;
+
+    // Restaurer l'état du jeu
+    _game = _game.copyWith(
+      currentScreen: AppConstants.screenVerification,
+      currentTeamIndex: snapshot['currentTeamIndex'] as int,
+      currentPlayerIndexInTeam: snapshot['currentPlayerIndexInTeam'] as int,
+      currentTurn: snapshot['currentTurn'] as int,
+      currentTurnIndex: snapshot['currentTurnIndex'] as int,
+      wordsGuessedThisTurn: List<String>.from(snapshot['wordsGuessedThisTurn'] as List),
+      passedWordsThisTurn: List<String>.from(snapshot['passedWordsThisTurn'] as List),
+      expiredWord: snapshot['expiredWord'] as String?,
+      clearExpiredWord: snapshot['expiredWord'] == null,
+      remainingWords: List<String>.from(snapshot['remainingWords'] as List),
+      currentWord: snapshot['currentWord'] as String?,
+      clearCurrentWord: snapshot['currentWord'] == null,
+      timeRemaining: snapshot['timeRemaining'] as int,
+      turnBonusTime: snapshot['turnBonusTime'] as int?,
+      clearTurnBonusTime: snapshot['turnBonusTime'] == null,
+      history: restoredHistory,
+      pendingBonusTurnId: snapshot['pendingBonusTurnId'] as int?,
+      clearPendingBonusTurnId: snapshot['pendingBonusTurnId'] == null,
+      clearPreValidationSnapshot: true,
+      restoredValidatedWords: validatedWords != null ? List<String>.from(validatedWords) : null,
+    );
+
+    notifyListeners();
+    _saveGameState();
+  }
+
+  // Retour à l'écran de composition des équipes (premier tour uniquement)
+  void goBackToTeams() {
+    _game = _game.copyWith(
+      currentScreen: AppConstants.screenTeams,
+      clearPreValidationSnapshot: true,
+    );
+    notifyListeners();
+  }
+
+  // Efface les mots validés restaurés après utilisation par verification_screen
+  void clearRestoredValidatedWords() {
+    if (_game.restoredValidatedWords != null) {
+      _game = _game.copyWith(clearRestoredValidatedWords: true);
+      notifyListeners();
+    }
+  }
 }

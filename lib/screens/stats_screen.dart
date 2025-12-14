@@ -6,8 +6,15 @@ import '../providers/game_provider.dart';
 import '../utils/constants.dart';
 import '../widgets/common/app_back_button.dart';
 
-class StatsScreen extends StatelessWidget {
+class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
+
+  @override
+  State<StatsScreen> createState() => _StatsScreenState();
+}
+
+class _StatsScreenState extends State<StatsScreen> {
+  bool _showAdvancedStats = false;
 
   @override
   Widget build(BuildContext context) {
@@ -29,13 +36,61 @@ class StatsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
 
-                  // Section 1: Classement des joueurs
-                  _buildPlayerRanking(provider),
+                  // Section 1: Top des joueurs (nombre de mots)
+                  _buildTopPlayersWords(provider),
 
                   const SizedBox(height: 32),
 
                   // Section 2: Évolution des scores
                   _buildScoreEvolution(provider),
+
+                  const SizedBox(height: 32),
+
+                  // Bouton "Statistiques pas ludiques"
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _showAdvancedStats = !_showAdvancedStats;
+                      });
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: AppColors.backgroundCard,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.gray600),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _showAdvancedStats
+                                ? Icons.keyboard_arrow_up
+                                : Icons.keyboard_arrow_down,
+                            color: AppColors.gray400,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Statistiques pas ludiques',
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.gray400,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Section 3: Temps moyen par mot (déroulable)
+                  if (_showAdvancedStats) ...[
+                    const SizedBox(height: 16),
+                    _buildPlayerRanking(provider),
+                  ],
 
                   const SizedBox(height: 32),
                 ],
@@ -70,6 +125,144 @@ class StatsScreen extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopPlayersWords(GameProvider provider) {
+    // Calculer le nombre total de mots devinés par joueur
+    final Map<String, int> playerTotalWords = {};
+
+    for (final entry in provider.game.history) {
+      final words = entry.wordsGuessed.length;
+      playerTotalWords[entry.playerId] =
+          (playerTotalWords[entry.playerId] ?? 0) + words;
+    }
+
+    // Trier par nombre de mots décroissant
+    final sortedPlayers = playerTotalWords.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    if (sortedPlayers.isEmpty) {
+      return const SizedBox();
+    }
+
+    // Le max pour l'échelle des barres
+    final maxWords = sortedPlayers.first.value;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.gray600),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.emoji_events, color: AppColors.warning, size: 24),
+              const SizedBox(width: 8),
+              const Text(
+                'Top des faiseurs deviner',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...sortedPlayers.asMap().entries.map((entry) {
+            final index = entry.key;
+            final playerId = entry.value.key;
+            final wordsCount = entry.value.value;
+            final player = provider.getPlayerById(playerId);
+            final playerName = player?.name ?? 'Joueur inconnu';
+
+            // Trouver l'équipe du joueur pour la couleur
+            Color playerColor = AppColors.gray400;
+            for (int i = 0; i < provider.teams.length; i++) {
+              if (provider.teams[i].playerIds.contains(playerId)) {
+                playerColor = AppColors.getTeamColor(i);
+                break;
+              }
+            }
+
+            final medal = index == 0
+                ? '🥇'
+                : index == 1
+                    ? '🥈'
+                    : index == 2
+                        ? '🥉'
+                        : '';
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  if (medal.isNotEmpty)
+                    Text(medal, style: const TextStyle(fontSize: 18)),
+                  if (medal.isNotEmpty) const SizedBox(width: 8),
+                  if (medal.isEmpty) const SizedBox(width: 26),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      playerName,
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 14,
+                        color: playerColor,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 3,
+                    child: Stack(
+                      children: [
+                        Container(
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: AppColors.gray700,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        FractionallySizedBox(
+                          widthFactor: maxWords > 0 ? wordsCount / maxWords : 0,
+                          child: Container(
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: playerColor,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 50,
+                    child: Text(
+                      '$wordsCount',
+                      style: const TextStyle(
+                        fontFamily: 'Bangers',
+                        fontSize: 18,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );
@@ -285,7 +478,7 @@ class StatsScreen extends StatelessWidget {
           dotData: const FlDotData(show: false),
           belowBarData: BarAreaData(
             show: true,
-            color: teamColor.withValues(alpha: 0.1),
+            color: teamColor.withOpacity(0.1),
           ),
         ),
       );

@@ -85,8 +85,8 @@ class AppConstants {
   };
 
   static const Map<int, String> roundDescriptions = {
-    1: 'Décrivez le mot avec autant de mots que vous voulez',
-    2: 'Un seul mot pour faire deviner',
-    3: 'Mimez sans parler !',
+    1: 'Faites deviner le mot à votre équipe en le décrivant avec autant de mots que vous voulez. Attention : vous ne pouvez pas dire le mot lui-même ni un mot de la même famille !',
+    2: 'Vous n\'avez droit qu\'à UN SEUL mot pour faire deviner. Choisissez-le bien ! Les mots de la même famille que le mot à deviner sont interdits.',
+    3: 'Faites deviner le mot uniquement par le mime et les gestes. Interdiction de parler ou de faire des sons !',
   };
 }
