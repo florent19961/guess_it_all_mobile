@@ -63,7 +63,19 @@ class _SettingsScreenState extends State<SettingsScreen>
                   ),
                   const SizedBox(height: 32),
 
-                  // Nombre d'équipes
+                  // Nombre de joueurs
+                  _buildSection(
+                    title: 'Joueurs',
+                    child: AppCounter(
+                      value: settings.numberOfPlayers,
+                      min: settings.numberOfTeams * 2, // Minimum dynamique
+                      max: AppConstants.maxPlayers,
+                      onChange: (value) => provider.updateSettings(numberOfPlayers: value),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Nombre d'équipes (ajuste le minimum de joueurs)
                   _buildSection(
                     title: 'Équipes',
                     child: AppCounter(
@@ -78,18 +90,6 @@ class _SettingsScreenState extends State<SettingsScreen>
                           provider.updateSettings(numberOfPlayers: minPlayers);
                         }
                       },
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Nombre de joueurs (minimum = 2 x nombre d'équipes)
-                  _buildSection(
-                    title: 'Joueurs',
-                    child: AppCounter(
-                      value: settings.numberOfPlayers,
-                      min: settings.numberOfTeams * 2, // Minimum dynamique
-                      max: AppConstants.maxPlayers,
-                      onChange: (value) => provider.updateSettings(numberOfPlayers: value),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -309,7 +309,7 @@ class _SettingsScreenState extends State<SettingsScreen>
               const SizedBox(width: 16),
               Expanded(
                 child: AppButton(
-                  text: 'Réinitialiser',
+                  text: 'Réinit.',
                   variant: AppButtonVariant.danger,
                   onPressed: () {
                     Navigator.of(context).pop();

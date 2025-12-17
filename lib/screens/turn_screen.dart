@@ -357,7 +357,7 @@ class _TurnScreenState extends State<TurnScreen> {
                                   ],
                                 ),
                                 textAlign: TextAlign.center,
-                                maxLines: 2,
+                                maxLines: 3,
                               );
                             },
                           ),

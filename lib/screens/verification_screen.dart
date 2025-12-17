@@ -67,7 +67,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Touchez pour valider/invalider',
+                  'Cliquez pour valider/invalider',
                   style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 14,

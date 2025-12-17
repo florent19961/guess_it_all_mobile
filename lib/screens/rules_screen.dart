@@ -32,37 +32,65 @@ class RulesScreen extends StatelessWidget {
                   const SizedBox(height: 32),
 
                   _buildRuleSection(
-                    title: 'Objectif',
-                    content: 'Faites deviner un maximum de mots à votre équipe en 3 manches différentes.',
+                    title: 'But du jeu',
+                    content: 'Faites deviner un maximum de mots à votre équipe ! '
+                        'La partie se joue en 3 manches avec les mêmes mots, mais des règles différentes à chaque fois. '
+                        'L\'équipe qui cumule le plus de points à la fin des 3 manches remporte la partie.',
+                    icon: '🎯',
                   ),
 
                   _buildRuleSection(
-                    title: 'Manche 1 : Description libre',
-                    content: 'Décrivez le mot avec autant de mots que vous voulez, sans utiliser le mot à deviner ni ses dérivés.',
+                    title: 'Préparation',
+                    content: 'Les joueurs forment des équipes (minimum 2 joueurs par équipe). '
+                        'Ensuite, les mots à deviner sont choisis selon le mode sélectionné :\n\n'
+                        '• Mode "Personnalisé" : chaque joueur écrit ses propres mots secrets.\n\n'
+                        '• Mode "Aléatoire" : les mots sont tirés automatiquement parmi des catégories '
+                        '(Célébrités, Objets, Lieux, Films...) et des niveaux de difficulté configurables.',
+                    icon: '📝',
+                  ),
+
+                  _buildRuleSection(
+                    title: 'Déroulement',
+                    content: 'Les équipes jouent à tour de rôle. À chaque tour, un joueur de l\'équipe '
+                        'fait deviner les mots pendant que ses coéquipiers tentent de trouver. '
+                        'Le temps est limité ! Une fois le temps écoulé, c\'est au tour de l\'équipe suivante. '
+                        'La manche se termine quand tous les mots ont été devinés.',
+                    icon: '🔄',
+                  ),
+
+                  _buildRuleSection(
+                    title: 'Manche 1 : Description',
+                    content: 'Décrivez le mot avec autant de mots que vous voulez.\n\n'
+                        'Interdit : dire le mot à deviner, ses dérivés, ou épeler des lettres.',
                     icon: '1️⃣',
                   ),
 
                   _buildRuleSection(
                     title: 'Manche 2 : Un seul mot',
-                    content: 'Vous n\'avez droit qu\'à UN SEUL mot pour faire deviner. Choisissez-le bien !',
+                    content: 'Vous n\'avez droit qu\'à UN SEUL mot pour faire deviner. Choisissez-le bien !\n\n'
+                        'Interdit : faire des gestes, mimer, ou donner plusieurs mots.',
                     icon: '2️⃣',
                   ),
 
                   _buildRuleSection(
                     title: 'Manche 3 : Mime',
-                    content: 'Mimez le mot sans parler ni faire de bruit. L\'expression corporelle est votre seule arme !',
+                    content: 'Mimez le mot sans parler. L\'expression corporelle est votre seule arme !\n\n'
+                        'Interdit : parler, faire des bruits, ou pointer des objets/personnes.',
                     icon: '3️⃣',
                   ),
 
                   _buildRuleSection(
                     title: 'Points',
-                    content: 'Chaque mot deviné rapporte 1 point à votre équipe. L\'équipe avec le plus de points à la fin des 3 manches gagne !',
+                    content: 'Chaque mot correctement deviné rapporte 1 point à l\'équipe. '
+                        'Les points s\'accumulent sur les 3 manches.',
                     icon: '⭐',
                   ),
 
                   _buildRuleSection(
                     title: 'Passer un mot',
-                    content: 'Vous pouvez passer un mot, mais cela coûte du temps (pénalité configurable). Le mot passé reviendra en jeu.',
+                    content: 'Vous pouvez passer un mot difficile, mais attention : '
+                        'cela coûte du temps (pénalité configurable dans les paramètres). '
+                        'Le mot passé reviendra plus tard dans la manche.',
                     icon: '⏭️',
                   ),
 

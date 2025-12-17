@@ -126,7 +126,7 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(width: 16),
               Expanded(
                 child: AppButton(
-                  text: 'Confirmer',
+                  text: 'Valider',
                   variant: AppButtonVariant.primary,
                   onPressed: () async {
                     Navigator.of(context).pop();
