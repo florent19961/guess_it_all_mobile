@@ -56,7 +56,7 @@ class _SettingsScreenState extends State<SettingsScreen>
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 72),
                   Text(
                     'Paramètres',
                     style: AppTextStyles.subtitle(fontSize: 40),
