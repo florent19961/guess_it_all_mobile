@@ -1427,7 +1427,7 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Serena Williams', difficulty: 1),
       WordWithDifficulty('Tiger Woods', difficulty: 1),
       WordWithDifficulty('LeBron James', difficulty: 2),
-      WordWithDifficulty('Muhammad Ali', difficulty: 2),
+      WordWithDifficulty('Mohammed Ali', difficulty: 2),
       WordWithDifficulty('Michael Phelps', difficulty: 2),
       WordWithDifficulty('Tony Parker', difficulty: 2),
 
@@ -1435,7 +1435,7 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Kobe Bryant', difficulty: 3),
       WordWithDifficulty('Mike Tyson', difficulty: 2),
       WordWithDifficulty('Simone Biles', difficulty: 2),
-      WordWithDifficulty('Lewis Hamilton', difficulty: 3),
+      WordWithDifficulty('Lewis Hamilton', difficulty: 2),
       WordWithDifficulty('Michael Schumacher', difficulty: 2),
       WordWithDifficulty('Ayrton Senna', difficulty: 3),
 
@@ -2003,7 +2003,6 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Artikodin', difficulty: 3),
       WordWithDifficulty('Électhor', difficulty: 3),
       WordWithDifficulty('Sulfura', difficulty: 3),
-      WordWithDifficulty('Celebi', difficulty: 3),
       WordWithDifficulty('Suicune', difficulty: 3),
       WordWithDifficulty('Entei', difficulty: 3),
 
@@ -2176,7 +2175,6 @@ final Map<String, WordCategory> wordCategories = {
       WordWithDifficulty('Garder la tête froide', difficulty: 2),
       WordWithDifficulty('Casser les pieds', difficulty: 2),
       WordWithDifficulty('Faire la sourde oreille', difficulty: 2),
-      WordWithDifficulty('Avoir l\'œil américain', difficulty: 2),
       WordWithDifficulty('Lever le coude', difficulty: 2),
       WordWithDifficulty('Se mordre les doigts', difficulty: 2),
       WordWithDifficulty('En avoir plein le dos', difficulty: 2),
