@@ -103,9 +103,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                       onChange: (value) => provider.updateSettings(wordChoice: value),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 12),
 
-                  // Choix des catégories
+                  // Choix des catégories (sous le toggle)
                   GestureDetector(
                     onTap: () => provider.goToScreen(AppConstants.screenCategories),
                     child: Container(
@@ -133,7 +133,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                           ),
                           const SizedBox(width: 10),
                           const Text(
-                            'Choisir les catégories',
+                            'Catégories',
                             style: TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 14,
@@ -152,21 +152,6 @@ class _SettingsScreenState extends State<SettingsScreen>
                     ),
                   ),
 
-                  const SizedBox(height: 32),
-
-                  // Bouton réinitialiser
-                  GestureDetector(
-                    onTap: () => _showResetConfirmation(context, provider),
-                    child: const Text(
-                      'Réinitialiser les paramètres',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 14,
-                        color: AppColors.gray500,
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 32),
 
                   // Avertissement si trop de mots
@@ -239,26 +224,50 @@ class _SettingsScreenState extends State<SettingsScreen>
           AppBackButton(
             onPressed: () => provider.goToScreen(AppConstants.screenHome),
           ),
-          // Bouton paramètres avancés en haut à droite
+          // Boutons en haut à droite : Réinitialiser + Paramètres avancés
           Positioned(
             top: MediaQuery.of(context).padding.top + 16,
             right: 16,
-            child: GestureDetector(
-              onTap: () => _showAdvancedSettings(context, provider),
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.backgroundCard,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.gray600, width: 2),
+            child: Row(
+              children: [
+                // Bouton réinitialiser
+                GestureDetector(
+                  onTap: () => _showResetConfirmation(context, provider),
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundCard,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.gray600, width: 2),
+                    ),
+                    child: const Icon(
+                      Icons.refresh,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
                 ),
-                child: const Icon(
-                  Icons.settings,
-                  color: Colors.white,
-                  size: 24,
+                const SizedBox(width: 12),
+                // Bouton paramètres avancés
+                GestureDetector(
+                  onTap: () => _showAdvancedSettings(context, provider),
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundCard,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.gray600, width: 2),
+                    ),
+                    child: const Icon(
+                      Icons.settings,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
