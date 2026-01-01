@@ -4,7 +4,7 @@ class GameSettings {
   int numberOfTeams;
   int numberOfPlayers;
   String wordChoice;
-  int wordsPerPlayer;
+  int totalWords;
   int turnDuration;
   int passPenalty;
   List<String> selectedCategories;
@@ -14,7 +14,7 @@ class GameSettings {
     this.numberOfTeams = AppConstants.defaultNumberOfTeams,
     this.numberOfPlayers = AppConstants.defaultNumberOfPlayers,
     this.wordChoice = AppConstants.wordChoiceRandom,
-    this.wordsPerPlayer = AppConstants.defaultWordsPerPlayer,
+    this.totalWords = AppConstants.defaultTotalWords,
     this.turnDuration = AppConstants.defaultTurnDuration,
     this.passPenalty = AppConstants.defaultPassPenalty,
     List<String>? selectedCategories,
@@ -30,7 +30,7 @@ class GameSettings {
     int? numberOfTeams,
     int? numberOfPlayers,
     String? wordChoice,
-    int? wordsPerPlayer,
+    int? totalWords,
     int? turnDuration,
     int? passPenalty,
     List<String>? selectedCategories,
@@ -40,7 +40,7 @@ class GameSettings {
       numberOfTeams: numberOfTeams ?? this.numberOfTeams,
       numberOfPlayers: numberOfPlayers ?? this.numberOfPlayers,
       wordChoice: wordChoice ?? this.wordChoice,
-      wordsPerPlayer: wordsPerPlayer ?? this.wordsPerPlayer,
+      totalWords: totalWords ?? this.totalWords,
       turnDuration: turnDuration ?? this.turnDuration,
       passPenalty: passPenalty ?? this.passPenalty,
       selectedCategories: selectedCategories ?? List.from(this.selectedCategories),
@@ -53,7 +53,7 @@ class GameSettings {
       'numberOfTeams': numberOfTeams,
       'numberOfPlayers': numberOfPlayers,
       'wordChoice': wordChoice,
-      'wordsPerPlayer': wordsPerPlayer,
+      'totalWords': totalWords,
       'turnDuration': turnDuration,
       'passPenalty': passPenalty,
       'selectedCategories': selectedCategories,
@@ -66,7 +66,7 @@ class GameSettings {
       numberOfTeams: json['numberOfTeams'] as int? ?? AppConstants.defaultNumberOfTeams,
       numberOfPlayers: json['numberOfPlayers'] as int? ?? AppConstants.defaultNumberOfPlayers,
       wordChoice: json['wordChoice'] as String? ?? AppConstants.wordChoiceRandom,
-      wordsPerPlayer: json['wordsPerPlayer'] as int? ?? AppConstants.defaultWordsPerPlayer,
+      totalWords: json['totalWords'] as int? ?? AppConstants.defaultTotalWords,
       turnDuration: json['turnDuration'] as int? ?? AppConstants.defaultTurnDuration,
       passPenalty: json['passPenalty'] as int? ?? AppConstants.defaultPassPenalty,
       selectedCategories: (json['selectedCategories'] as List<dynamic>?)?.cast<String>() ??

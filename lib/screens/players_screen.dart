@@ -4,7 +4,7 @@ import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
 import '../models/player.dart';
 import '../utils/constants.dart';
-import '../utils/word_categories.dart';
+import '../utils/word_categories/word_categories.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/app_input.dart';
 import '../widgets/common/app_back_button.dart';
@@ -65,15 +65,17 @@ class _PlayersScreenState extends State<PlayersScreen> {
     // 3. En mode aléatoire : générer/compléter les mots pour TOUS les joueurs
     if (settings.wordChoice == AppConstants.wordChoiceRandom) {
       for (final player in provider.players) {
-        _ensureWordsForPlayer(player.id, provider, settings.wordsPerPlayer);
+        final wordsNeeded = provider.getWordsCountForPlayer(player.id);
+        _ensureWordsForPlayer(player.id, provider, wordsNeeded);
       }
     } else {
       // 4. En mode personnalisé : tronquer si trop de mots
       for (final player in provider.players) {
-        if (player.words.length > settings.wordsPerPlayer) {
+        final wordsNeeded = provider.getWordsCountForPlayer(player.id);
+        if (player.words.length > wordsNeeded) {
           provider.updatePlayerWords(
             player.id,
-            player.words.take(settings.wordsPerPlayer).toList(),
+            player.words.take(wordsNeeded).toList(),
           );
         }
       }
@@ -168,7 +170,8 @@ class _PlayersScreenState extends State<PlayersScreen> {
       names.add(name);
 
       // Tous les mots doivent être remplis
-      if (player.words.length < provider.settings.wordsPerPlayer) return false;
+      final wordsNeeded = provider.getWordsCountForPlayer(player.id);
+      if (player.words.length < wordsNeeded) return false;
     }
 
     return true;
@@ -182,8 +185,16 @@ class _PlayersScreenState extends State<PlayersScreen> {
     }
 
     provider.cleanupEmptyPlayers();
-    provider.createTeams();
-    provider.randomizeTeams();
+
+    // Si des équipes existent déjà, synchroniser avec les joueurs actuels
+    // Sinon, créer de nouvelles équipes
+    if (provider.teams.isNotEmpty) {
+      provider.syncTeamsWithPlayers();
+    } else {
+      provider.createTeams();
+      provider.randomizeTeams();
+    }
+
     provider.goToScreen(AppConstants.screenTeams);
   }
 
@@ -279,11 +290,11 @@ class _PlayersScreenState extends State<PlayersScreen> {
 
   void _showWordsModal(
       BuildContext context, Player player, GameProvider provider) {
-    final wordsPerPlayer = provider.settings.wordsPerPlayer;
+    final wordsForPlayer = provider.getWordsCountForPlayer(player.id);
     final wordControllers = <TextEditingController>[];
 
     // Initialiser les contrôleurs avec les mots existants
-    for (int i = 0; i < wordsPerPlayer; i++) {
+    for (int i = 0; i < wordsForPlayer; i++) {
       final existingWord = i < player.words.length ? player.words[i] : '';
       wordControllers.add(TextEditingController(text: existingWord));
     }
@@ -386,7 +397,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                   },
                 ),
               ),
-              ...List.generate(wordsPerPlayer, (index) {
+              ...List.generate(wordsForPlayer, (index) {
                 final error = getWordError(index);
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -497,16 +508,20 @@ class _PlayersScreenState extends State<PlayersScreen> {
                 Expanded(
                   child: _isInitialized
                       ? ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          padding: EdgeInsets.only(
+                            left: 24,
+                            right: 24,
+                            bottom: MediaQuery.of(context).viewInsets.bottom + 100,
+                          ),
                           itemCount: provider.players.length,
                           itemBuilder: (context, index) {
                             final player = provider.players[index];
                             final error =
                                 _getErrorForPlayer(player.id, provider);
                             final wordsCount = player.words.length;
-                            final wordsPerPlayer =
-                                provider.settings.wordsPerPlayer;
-                            final isWordsFilled = wordsCount >= wordsPerPlayer;
+                            final wordsNeeded =
+                                provider.getWordsCountForPlayer(player.id);
+                            final isWordsFilled = wordsCount >= wordsNeeded;
                             final playerName =
                                 _controllers[player.id]?.text.trim() ?? '';
                             final hasName = playerName.isNotEmpty;

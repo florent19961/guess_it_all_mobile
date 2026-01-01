@@ -88,10 +88,22 @@ class _StatsScreenState extends State<StatsScreen> {
                     ),
                   ),
 
-                  // Section 3: Temps moyen par mot (déroulable)
+                  // Section 3: Stats avancées (déroulable)
                   if (_showAdvancedStats) ...[
                     const SizedBox(height: 16),
-                    _buildPlayerRanking(provider),
+                    _buildPlayerRanking(provider),  // Temps moyen par mot (partie entière)
+                    const SizedBox(height: 16),
+                    _buildPlayerRankingByRound(provider, 1),  // Temps moyen par mot (manche 1)
+                    const SizedBox(height: 16),
+                    _buildTopPlayersWordsByRound(provider, 1), // Top joueurs (manche 1)
+                    const SizedBox(height: 16),
+                    _buildPlayerRankingByRound(provider, 2),  // Temps moyen par mot (manche 2)
+                    const SizedBox(height: 16),
+                    _buildTopPlayersWordsByRound(provider, 2), // Top joueurs (manche 2)
+                    const SizedBox(height: 16),
+                    _buildPlayerRankingByRound(provider, 3),  // Temps moyen par mot (manche 3)
+                    const SizedBox(height: 16),
+                    _buildTopPlayersWordsByRound(provider, 3), // Top joueurs (manche 3)
                   ],
 
                   const SizedBox(height: 32),
@@ -315,7 +327,7 @@ class _StatsScreenState extends State<StatsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Temps moyen par mot',
+            'Temps moyen par mot (partie entière)',
             style: TextStyle(
               fontFamily: 'Poppins',
               fontSize: 16,
@@ -416,6 +428,300 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
+  Widget _buildPlayerRankingByRound(GameProvider provider, int round) {
+    // Filtrer l'historique par round
+    final roundHistory = provider.game.history
+        .where((entry) => entry.round == round)
+        .toList();
+
+    // Calculer le temps total et mots total par joueur pour cette manche
+    final Map<String, int> playerTotalTime = {};
+    final Map<String, int> playerTotalWords = {};
+
+    for (final entry in roundHistory) {
+      final words = entry.wordsGuessed.length;
+      if (words > 0) {
+        playerTotalTime[entry.playerId] =
+            (playerTotalTime[entry.playerId] ?? 0) + entry.timeSpent;
+        playerTotalWords[entry.playerId] =
+            (playerTotalWords[entry.playerId] ?? 0) + words;
+      }
+    }
+
+    // Calculer le temps moyen par mot (plus bas = meilleur)
+    final Map<String, double> playerAvgTime = {};
+    for (final playerId in playerTotalWords.keys) {
+      final totalTime = playerTotalTime[playerId] ?? 0;
+      final totalWords = playerTotalWords[playerId] ?? 1;
+      playerAvgTime[playerId] = totalTime / totalWords;
+    }
+
+    // Trier par temps moyen croissant (le plus rapide en premier)
+    final sortedPlayers = playerAvgTime.entries.toList()
+      ..sort((a, b) => a.value.compareTo(b.value));
+
+    if (sortedPlayers.isEmpty) {
+      return const SizedBox();
+    }
+
+    // Le temps le plus long pour l'échelle de la barre (inversée)
+    final maxTime = sortedPlayers.last.value;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.gray600),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Temps moyen par mot (manche $round)',
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ...sortedPlayers.asMap().entries.map((entry) {
+            final index = entry.key;
+            final playerId = entry.value.key;
+            final avgTime = entry.value.value;
+            final player = provider.getPlayerById(playerId);
+            final playerName = player?.name ?? 'Joueur inconnu';
+
+            // Trouver l'équipe du joueur pour la couleur
+            Color playerColor = AppColors.gray400;
+            for (int i = 0; i < provider.teams.length; i++) {
+              if (provider.teams[i].playerIds.contains(playerId)) {
+                playerColor = AppColors.getTeamColor(i);
+                break;
+              }
+            }
+
+            final medal = index == 0
+                ? '🥇'
+                : index == 1
+                    ? '🥈'
+                    : index == 2
+                        ? '🥉'
+                        : '';
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  if (medal.isNotEmpty)
+                    Text(medal, style: const TextStyle(fontSize: 18)),
+                  if (medal.isNotEmpty) const SizedBox(width: 8),
+                  if (medal.isEmpty) const SizedBox(width: 26),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      playerName,
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 14,
+                        color: playerColor,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 3,
+                    child: Stack(
+                      children: [
+                        Container(
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: AppColors.gray700,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        FractionallySizedBox(
+                          // Barre inversée : plus le temps est court, plus la barre est longue
+                          widthFactor: maxTime > 0 && avgTime > 0 ? (1 - (avgTime / maxTime)) * 0.8 + 0.2 : 0,
+                          child: Container(
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: playerColor,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 45,
+                    child: Text(
+                      '${avgTime.toStringAsFixed(1)}s',
+                      style: const TextStyle(
+                        fontFamily: 'Bangers',
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopPlayersWordsByRound(GameProvider provider, int round) {
+    // Filtrer l'historique par round
+    final roundHistory = provider.game.history
+        .where((entry) => entry.round == round)
+        .toList();
+
+    // Calculer le nombre total de mots devinés par joueur pour cette manche
+    final Map<String, int> playerTotalWords = {};
+
+    for (final entry in roundHistory) {
+      final words = entry.wordsGuessed.length;
+      playerTotalWords[entry.playerId] =
+          (playerTotalWords[entry.playerId] ?? 0) + words;
+    }
+
+    // Trier par nombre de mots décroissant
+    final sortedPlayers = playerTotalWords.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    if (sortedPlayers.isEmpty) {
+      return const SizedBox();
+    }
+
+    // Le max pour l'échelle des barres
+    final maxWords = sortedPlayers.first.value;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.gray600),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.emoji_events, color: AppColors.warning, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                'Top joueurs (manche $round)',
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...sortedPlayers.asMap().entries.map((entry) {
+            final index = entry.key;
+            final playerId = entry.value.key;
+            final wordsCount = entry.value.value;
+            final player = provider.getPlayerById(playerId);
+            final playerName = player?.name ?? 'Joueur inconnu';
+
+            // Trouver l'équipe du joueur pour la couleur
+            Color playerColor = AppColors.gray400;
+            for (int i = 0; i < provider.teams.length; i++) {
+              if (provider.teams[i].playerIds.contains(playerId)) {
+                playerColor = AppColors.getTeamColor(i);
+                break;
+              }
+            }
+
+            final medal = index == 0
+                ? '🥇'
+                : index == 1
+                    ? '🥈'
+                    : index == 2
+                        ? '🥉'
+                        : '';
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  if (medal.isNotEmpty)
+                    Text(medal, style: const TextStyle(fontSize: 18)),
+                  if (medal.isNotEmpty) const SizedBox(width: 8),
+                  if (medal.isEmpty) const SizedBox(width: 26),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      playerName,
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 14,
+                        color: playerColor,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    flex: 3,
+                    child: Stack(
+                      children: [
+                        Container(
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: AppColors.gray700,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        FractionallySizedBox(
+                          widthFactor: maxWords > 0 ? wordsCount / maxWords : 0,
+                          child: Container(
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: playerColor,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 50,
+                    child: Text(
+                      '$wordsCount',
+                      style: const TextStyle(
+                        fontFamily: 'Bangers',
+                        fontSize: 18,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
   Widget _buildScoreEvolution(GameProvider provider) {
     if (provider.game.history.isEmpty) {
       return const SizedBox();
@@ -438,18 +744,29 @@ class _StatsScreenState extends State<StatsScreen> {
       final teamId = entry.teamId;
       final wordsCount = entry.wordsGuessed.length;
 
-      // Incrémenter le compteur de tours pour cette équipe
-      teamTurnCount[teamId] = (teamTurnCount[teamId] ?? 0) + 1;
-
-      // Mettre à jour le score cumulatif
+      // Mettre à jour le score cumulatif (toujours)
       teamCumulativeScore[teamId] =
           (teamCumulativeScore[teamId] ?? 0) + wordsCount;
 
-      // Ajouter un point : (tour de l'équipe, score cumulatif)
-      teamSpots[teamId]!.add(FlSpot(
-        teamTurnCount[teamId]!.toDouble(),
-        teamCumulativeScore[teamId]!.toDouble(),
-      ));
+      if (entry.isBonusContinuation) {
+        // C'est une continuation du tour précédent (bonus time)
+        // Mettre à jour le dernier point au lieu d'en ajouter un nouveau
+        final spots = teamSpots[teamId]!;
+        if (spots.isNotEmpty) {
+          spots[spots.length - 1] = FlSpot(
+            teamTurnCount[teamId]!.toDouble(),
+            teamCumulativeScore[teamId]!.toDouble(),
+          );
+        }
+      } else {
+        // Nouveau tour : incrémenter le compteur et ajouter un point
+        teamTurnCount[teamId] = (teamTurnCount[teamId] ?? 0) + 1;
+
+        teamSpots[teamId]!.add(FlSpot(
+          teamTurnCount[teamId]!.toDouble(),
+          teamCumulativeScore[teamId]!.toDouble(),
+        ));
+      }
     }
 
     // Trouver les max pour les axes

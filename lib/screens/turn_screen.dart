@@ -127,14 +127,6 @@ class _TurnScreenState extends State<TurnScreen> {
                   letterSpacing: 2,
                 ),
               ),
-              const SizedBox(height: 24),
-              AppButton(
-                text: 'Reprendre la partie',
-                variant: AppButtonVariant.primary,
-                size: AppButtonSize.large,
-                fullWidth: true,
-                onPressed: () => Navigator.of(dialogContext).pop(),
-              ),
             ],
           ),
         ),
@@ -157,9 +149,10 @@ class _TurnScreenState extends State<TurnScreen> {
     }
 
     // Afficher le dialog
-    showDialog(
+    showDialog<bool>(
       context: context,
-      barrierColor: Colors.black.withOpacity( 0.7),
+      barrierColor: Colors.black.withOpacity(0.7),
+      barrierDismissible: true,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.backgroundMain,
         shape: RoundedRectangleBorder(
@@ -186,9 +179,7 @@ class _TurnScreenState extends State<TurnScreen> {
             variant: AppButtonVariant.ghost,
             size: AppButtonSize.small,
             onPressed: () {
-              Navigator.of(dialogContext).pop();
-              // Reprendre le timer
-              _togglePause(context, provider);
+              Navigator.of(dialogContext).pop(false); // false = ne pas aller à l'accueil
             },
           ),
           AppButton(
@@ -196,13 +187,22 @@ class _TurnScreenState extends State<TurnScreen> {
             variant: AppButtonVariant.secondary,
             size: AppButtonSize.small,
             onPressed: () {
-              Navigator.of(dialogContext).pop();
-              provider.suspendGame();
+              Navigator.of(dialogContext).pop(true); // true = aller à l'accueil
             },
           ),
         ],
       ),
-    );
+    ).then((goHome) {
+      // Si on a cliqué sur "Accueil", suspendre le jeu
+      if (goHome == true) {
+        provider.suspendGame();
+      } else {
+        // Sinon (Annuler ou clic en dehors), reprendre le timer
+        if (_isPaused) {
+          _togglePause(context, provider);
+        }
+      }
+    });
   }
 
   void _handleEndTurnPress(BuildContext context, GameProvider provider) {
@@ -267,6 +267,55 @@ class _TurnScreenState extends State<TurnScreen> {
     });
   }
 
+  void _showTeamMembersDialog(BuildContext context, dynamic team, GameProvider provider, Color teamColor) {
+    if (team == null) return;
+
+    final players = team.playerIds
+        .map((id) => provider.getPlayerById(id))
+        .where((p) => p != null)
+        .toList();
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (context) => Dialog(
+        backgroundColor: AppColors.backgroundMain,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: teamColor, width: 2),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                team.name,
+                style: TextStyle(
+                  fontFamily: 'Bangers',
+                  fontSize: 24,
+                  color: teamColor,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...players.map((p) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(
+                  p!.name,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              )),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
@@ -281,7 +330,7 @@ class _TurnScreenState extends State<TurnScreen> {
     final currentPlayer = provider.getCurrentPlayer();
     final isLowTime = _timeRemaining <= 10;
     final passPenalty = provider.settings.passPenalty;
-    final hasWordsToPassTo = provider.game.remainingWords.length > 1;
+    final hasWordsToPassTo = provider.effectiveRemainingWordsCount > 0;
     final canPass = _timeRemaining >= passPenalty && hasWordsToPassTo;
 
     return Material(
@@ -293,13 +342,24 @@ class _TurnScreenState extends State<TurnScreen> {
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  // Player and team info (fixe en haut)
-                  Text(
-                    '${currentPlayer?.name ?? ''} - ${currentTeam?.name ?? ''}',
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 14,
-                      color: AppColors.gray400,
+                  // Player and team info (fixe en haut, cliquable pour voir l'équipe)
+                  GestureDetector(
+                    onTap: () => _showTeamMembersDialog(context, currentTeam, provider, AppColors.getTeamColor(provider.game.currentTeamIndex)),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '${currentPlayer?.name ?? ''} - ${currentTeam?.name ?? ''}',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 14,
+                            color: AppColors.gray400,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.info_outline, size: 14, color: AppColors.gray400),
+                      ],
                     ),
                   ),
 
@@ -319,7 +379,7 @@ class _TurnScreenState extends State<TurnScreen> {
                                 '${_timeRemaining}s',
                                 style: TextStyle(
                                   fontFamily: 'Bangers',
-                                  fontSize: 80,
+                                  fontSize: 64,
                                   color: isLowTime ? AppColors.error : AppColors.secondaryCyan,
                                 ),
                               ),
@@ -365,10 +425,10 @@ class _TurnScreenState extends State<TurnScreen> {
 
                         const SizedBox(height: 16),
 
-                        // Words remaining (sans compter le mot actuel)
+                        // Words remaining (incluant passés recyclables, sans le mot actuel)
                         Builder(
                           builder: (context) {
-                            final remaining = provider.game.remainingWords.length - 1;
+                            final remaining = provider.effectiveRemainingWordsCount;
                             final count = remaining < 0 ? 0 : remaining;
                             return Text(
                               '$count ${count <= 1 ? 'mot restant' : 'mots restants'}',

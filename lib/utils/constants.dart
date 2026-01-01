@@ -2,7 +2,7 @@ class AppConstants {
   // Game settings defaults
   static const int defaultNumberOfTeams = 2;
   static const int defaultNumberOfPlayers = 6;
-  static const int defaultWordsPerPlayer = 7;
+  static const int defaultTotalWords = 40;
   static const int defaultTurnDuration = 30;
   static const int defaultPassPenalty = 5;
 
@@ -11,8 +11,8 @@ class AppConstants {
   static const int maxTeams = 4;
   static const int minPlayers = 4;
   static const int maxPlayers = 20;
-  static const int minWordsPerPlayer = 4;
-  static const int maxWordsPerPlayer = 10;
+  static const int minTotalWords = 20;
+  static const int maxTotalWords = 100;
   static const int minTurnDuration = 20;
   static const int maxTurnDuration = 60;
   static const int minPassPenalty = 0;

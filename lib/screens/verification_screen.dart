@@ -50,7 +50,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<GameProvider>();
     final guessedWords = provider.game.wordsGuessedThisTurn;
-    final passedWords = provider.game.passedWordsThisTurn;
+    final passedWords = provider.game.passedWordsThisTurn
+        .where((w) => w != provider.game.expiredWord)
+        .toList();
     final expiredWord = provider.game.expiredWord;
 
     return Material(

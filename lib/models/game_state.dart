@@ -9,6 +9,7 @@ class HistoryEntry {
   final List<String> wordsInvalidated;
   final List<String> wordsPassed;
   final int timeSpent;
+  final bool isBonusContinuation;
 
   HistoryEntry({
     required this.round,
@@ -19,6 +20,7 @@ class HistoryEntry {
     required this.wordsInvalidated,
     required this.wordsPassed,
     required this.timeSpent,
+    this.isBonusContinuation = false,
   });
 
   Map<String, dynamic> toJson() {
@@ -31,6 +33,7 @@ class HistoryEntry {
       'wordsInvalidated': wordsInvalidated,
       'wordsPassed': wordsPassed,
       'timeSpent': timeSpent,
+      'isBonusContinuation': isBonusContinuation,
     };
   }
 
@@ -44,6 +47,7 @@ class HistoryEntry {
       wordsInvalidated: (json['wordsInvalidated'] as List<dynamic>).cast<String>(),
       wordsPassed: (json['wordsPassed'] as List<dynamic>).cast<String>(),
       timeSpent: json['timeSpent'] as int,
+      isBonusContinuation: json['isBonusContinuation'] as bool? ?? false,
     );
   }
 }

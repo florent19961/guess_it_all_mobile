@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
 import '../utils/constants.dart';
-import '../utils/word_categories.dart';
+import '../utils/word_categories/word_categories.dart';
 import '../widgets/common/app_back_button.dart';
 import '../widgets/effects/shooting_stars.dart';
 

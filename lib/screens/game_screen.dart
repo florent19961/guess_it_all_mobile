@@ -58,35 +58,49 @@ class GameScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
 
-                  // Team card
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
-                    decoration: BoxDecoration(
-                      color: teamColor.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: teamColor, width: 2),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          currentTeam?.name ?? '',
-                          style: TextStyle(
-                            fontFamily: 'Bangers',
-                            fontSize: 24,
-                            color: teamColor,
+                  // Team card (cliquable pour voir la composition)
+                  GestureDetector(
+                    onTap: () => _showTeamMembersDialog(context, currentTeam, provider, teamColor),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                      decoration: BoxDecoration(
+                        color: teamColor.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: teamColor, width: 2),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                currentTeam?.name ?? '',
+                                style: TextStyle(
+                                  fontFamily: 'Bangers',
+                                  fontSize: 24,
+                                  color: teamColor,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.people_outline,
+                                color: teamColor,
+                                size: 18,
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          currentPlayer?.name ?? '',
-                          style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                          const SizedBox(height: 8),
+                          Text(
+                            currentPlayer?.name ?? '',
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
 
@@ -409,6 +423,55 @@ class GameScreen extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showTeamMembersDialog(BuildContext context, dynamic team, GameProvider provider, Color teamColor) {
+    if (team == null) return;
+
+    final players = team.playerIds
+        .map((id) => provider.getPlayerById(id))
+        .where((p) => p != null)
+        .toList();
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (context) => Dialog(
+        backgroundColor: AppColors.backgroundMain,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: teamColor, width: 2),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                team.name,
+                style: TextStyle(
+                  fontFamily: 'Bangers',
+                  fontSize: 24,
+                  color: teamColor,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...players.map((p) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(
+                  p!.name,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              )),
             ],
           ),
         ),

@@ -173,7 +173,7 @@ class TeamsScreen extends StatelessWidget {
   }
 }
 
-class _TeamCard extends StatelessWidget {
+class _TeamCard extends StatefulWidget {
   final dynamic team;
   final int teamIndex;
   final GameProvider provider;
@@ -184,76 +184,76 @@ class _TeamCard extends StatelessWidget {
     required this.provider,
   });
 
-  void _showRenameDialog(BuildContext context, Color teamColor) {
-    final controller = TextEditingController(text: team.name);
+  @override
+  State<_TeamCard> createState() => _TeamCardState();
+}
 
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.backgroundMain,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: teamColor, width: 2),
-        ),
-        title: Text(
-          'Renommer l\'équipe',
-          style: TextStyle(
-            fontFamily: 'Bangers',
-            fontSize: 24,
-            color: teamColor,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLength: 18,
-          style: const TextStyle(
-            fontFamily: 'Poppins',
-            color: Colors.white,
-          ),
-          decoration: InputDecoration(
-            hintText: 'Nom de l\'équipe',
-            hintStyle: TextStyle(color: AppColors.gray500),
-            counterStyle: TextStyle(color: AppColors.gray500),
-          ),
-          onSubmitted: (value) {
-            if (value.trim().isNotEmpty) {
-              provider.updateTeamName(team.id, value.trim());
-            }
-            Navigator.of(dialogContext).pop();
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(
-              'Annuler',
-              style: TextStyle(color: AppColors.gray400),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                provider.updateTeamName(team.id, controller.text.trim());
-              }
-              Navigator.of(dialogContext).pop();
-            },
-            child: Text(
-              'OK',
-              style: TextStyle(color: teamColor),
-            ),
-          ),
-        ],
-      ),
-    );
+class _TeamCardState extends State<_TeamCard> {
+  late TextEditingController _nameController;
+  late FocusNode _nameFocusNode;
+  bool _isEditing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.team.name);
+    _nameFocusNode = FocusNode();
+    _nameFocusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(covariant _TeamCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Mettre à jour le controller si le nom a changé (ex: après mélange)
+    if (!_isEditing && widget.team.name != _nameController.text) {
+      _nameController.text = widget.team.name;
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameFocusNode.removeListener(_onFocusChange);
+    _nameFocusNode.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    if (!_nameFocusNode.hasFocus && _isEditing) {
+      // Sauvegarder quand on perd le focus
+      _saveName();
+    }
+    setState(() {
+      _isEditing = _nameFocusNode.hasFocus;
+    });
+  }
+
+  void _saveName() {
+    final newName = _nameController.text.trim();
+    if (newName.isNotEmpty && newName != widget.team.name) {
+      widget.provider.updateTeamName(widget.team.id, newName);
+    } else if (newName.isEmpty) {
+      // Restaurer le nom original si vide
+      _nameController.text = widget.team.name;
+    }
+  }
+
+  void _startEditing() {
+    _nameFocusNode.requestFocus();
+    // Sélectionner tout le texte après que le focus soit établi
+    Future.delayed(const Duration(milliseconds: 50), () {
+      _nameController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _nameController.text.length,
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final teamColor = AppColors.getTeamColor(teamIndex);
-    final players = team.playerIds
-        .map((id) => provider.getPlayerById(id))
+    final teamColor = AppColors.getTeamColor(widget.teamIndex);
+    final players = widget.team.playerIds
+        .map((id) => widget.provider.getPlayerById(id))
         .where((p) => p != null)
         .cast<Player>()
         .toList();
@@ -261,7 +261,7 @@ class _TeamCard extends StatelessWidget {
     return DragTarget<Player>(
       onWillAcceptWithDetails: (details) => true,
       onAcceptWithDetails: (details) {
-        provider.movePlayerToTeam(details.data.id, team.id);
+        widget.provider.movePlayerToTeam(details.data.id, widget.team.id);
       },
       builder: (context, candidateData, rejectedData) {
         final isHovering = candidateData.isNotEmpty;
@@ -281,31 +281,44 @@ class _TeamCard extends StatelessWidget {
           ),
           child: Column(
             children: [
-              GestureDetector(
-                onTap: () => _showRenameDialog(context, teamColor),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        team.name,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: IntrinsicWidth(
+                      child: TextField(
+                        controller: _nameController,
+                        focusNode: _nameFocusNode,
+                        maxLength: 18,
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           fontFamily: 'Bangers',
                           fontSize: 20,
                           color: teamColor,
                         ),
-                        overflow: TextOverflow.ellipsis,
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          counterText: '',
+                        ),
+                        onSubmitted: (_) => _saveName(),
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    Icon(
+                  ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: _startEditing,
+                    child: Icon(
                       Icons.edit,
                       size: 16,
                       color: teamColor,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               if (players.isEmpty)

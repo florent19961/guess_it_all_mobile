@@ -107,7 +107,7 @@ class GameProvider extends ChangeNotifier {
     int? numberOfTeams,
     int? numberOfPlayers,
     String? wordChoice,
-    int? wordsPerPlayer,
+    int? totalWords,
     int? turnDuration,
     int? passPenalty,
     List<String>? selectedCategories,
@@ -123,7 +123,7 @@ class GameProvider extends ChangeNotifier {
       numberOfTeams: numberOfTeams,
       numberOfPlayers: numberOfPlayers,
       wordChoice: wordChoice,
-      wordsPerPlayer: wordsPerPlayer,
+      totalWords: totalWords,
       turnDuration: turnDuration,
       passPenalty: passPenalty,
       selectedCategories: selectedCategories,
@@ -282,6 +282,53 @@ class GameProvider extends ChangeNotifier {
     _saveGameSession();
   }
 
+  /// Synchronise les équipes avec les joueurs actuels
+  /// - Supprime les joueurs invalides des équipes
+  /// - Distribue les nouveaux joueurs aléatoirement dans l'équipe la plus petite
+  void syncTeamsWithPlayers() {
+    if (_teams.isEmpty) return;
+
+    final validPlayerIds = _players.map((p) => p.id).toSet();
+    final playersInTeams = <String>{};
+
+    // 1. Supprimer les IDs de joueurs invalides de toutes les équipes
+    for (int i = 0; i < _teams.length; i++) {
+      final validIdsForTeam = _teams[i]
+          .playerIds
+          .where((id) => validPlayerIds.contains(id))
+          .toList();
+      _teams[i] = _teams[i].copyWith(playerIds: validIdsForTeam);
+      playersInTeams.addAll(validIdsForTeam);
+    }
+
+    // 2. Trouver les joueurs non assignés (avec un nom)
+    final unassignedPlayers = _players
+        .where((p) => p.name.trim().isNotEmpty && !playersInTeams.contains(p.id))
+        .toList();
+
+    // 3. Distribuer les nouveaux joueurs aléatoirement dans l'équipe la plus petite
+    if (unassignedPlayers.isNotEmpty) {
+      final shuffled = List<Player>.from(unassignedPlayers)..shuffle(Random());
+      for (final player in shuffled) {
+        // Trouver l'équipe avec le moins de joueurs
+        int minIndex = 0;
+        int minCount = _teams[0].playerIds.length;
+        for (int i = 1; i < _teams.length; i++) {
+          if (_teams[i].playerIds.length < minCount) {
+            minCount = _teams[i].playerIds.length;
+            minIndex = i;
+          }
+        }
+        final newIds = List<String>.from(_teams[minIndex].playerIds)
+          ..add(player.id);
+        _teams[minIndex] = _teams[minIndex].copyWith(playerIds: newIds);
+      }
+    }
+
+    notifyListeners();
+    _saveGameSession();
+  }
+
   // ========== ACTIONS - GAME ==========
 
   void startGame() {
@@ -391,30 +438,52 @@ class GameProvider extends ChangeNotifier {
     final currentWord = _game.currentWord;
     if (currentWord == null) return;
 
-    final newGuessedWords = List<String>.from(_game.wordsGuessedThisTurn)
-      ..add(currentWord);
+    final newGuessedWords = List<String>.from(_game.wordsGuessedThisTurn);
+    if (!newGuessedWords.contains(currentWord)) {
+      newGuessedWords.add(currentWord);
+    }
     final newRemainingWords = List<String>.from(_game.remainingWords)
+      ..remove(currentWord);
+
+    // Retirer le mot de passedWordsThisTurn s'il y était (mot recyclé puis deviné)
+    final newPassedWords = List<String>.from(_game.passedWordsThisTurn)
       ..remove(currentWord);
 
     // Mélanger les mots restants
     newRemainingWords.shuffle(Random());
 
-    final newCurrentWord =
-        newRemainingWords.isNotEmpty ? newRemainingWords[0] : null;
-
     // Fin de la manche si plus de mots
     if (newRemainingWords.isEmpty) {
-      _game = _game.copyWith(
-        wordsGuessedThisTurn: newGuessedWords,
-        remainingWords: newRemainingWords,
-        clearCurrentWord: true,
-        currentScreen: AppConstants.screenVerification,
-      );
+      // Vérifier s'il reste des mots passés à recycler
+      if (newPassedWords.isNotEmpty) {
+        // Remettre les mots passés dans la pile
+        final restoredWords = List<String>.from(newPassedWords)..shuffle(Random());
+        final nextCurrentWord = restoredWords[0];
+
+        _game = _game.copyWith(
+          wordsGuessedThisTurn: newGuessedWords,
+          passedWordsThisTurn: newPassedWords,
+          remainingWords: restoredWords,
+          currentWord: nextCurrentWord,
+        );
+      } else {
+        // Vraie fin de manche (plus aucun mot disponible ni passé)
+        _game = _game.copyWith(
+          wordsGuessedThisTurn: newGuessedWords,
+          passedWordsThisTurn: newPassedWords,
+          remainingWords: newRemainingWords,
+          clearCurrentWord: true,
+          currentScreen: AppConstants.screenVerification,
+        );
+      }
     } else {
+      final newCurrentWord = newRemainingWords[0];
+
       _game = _game.copyWith(
         currentWord: newCurrentWord,
         remainingWords: newRemainingWords,
         wordsGuessedThisTurn: newGuessedWords,
+        passedWordsThisTurn: newPassedWords,
       );
     }
 
@@ -441,10 +510,17 @@ class GameProvider extends ChangeNotifier {
     final newRemainingSeconds = currentRemaining - passPenalty;
     final newEndTimestamp = now + (newRemainingSeconds * 1000);
 
-    final newPassedWords = List<String>.from(_game.passedWordsThisTurn)
-      ..add(currentWord);
-    final newRemainingWords = List<String>.from(_game.remainingWords)
+    final newPassedWords = List<String>.from(_game.passedWordsThisTurn);
+    if (!newPassedWords.contains(currentWord)) {
+      newPassedWords.add(currentWord);
+    }
+    var newRemainingWords = List<String>.from(_game.remainingWords)
       ..remove(currentWord);
+
+    // Si plus de mots restants, recycler les mots passés
+    if (newRemainingWords.isEmpty && newPassedWords.isNotEmpty) {
+      newRemainingWords = List<String>.from(newPassedWords);
+    }
 
     newRemainingWords.shuffle(Random());
     final newCurrentWord =
@@ -520,10 +596,12 @@ class GameProvider extends ChangeNotifier {
       if (isExpiredWordInvalidated) expiredWord,
     ];
 
-    // Remettre les mots invalidés dans le pool (sauf le mot expiré qui y est déjà)
-    final newRemainingWords = List<String>.from(_game.remainingWords)
-      ..addAll(invalidatedGuessedWords)
-      ..addAll(invalidatedPassedWords);
+    // Remettre les mots invalidés dans le pool (Set garantit l'unicité)
+    final newRemainingWords = <String>{
+      ..._game.remainingWords,
+      ...invalidatedGuessedWords,
+      ...invalidatedPassedWords,
+    }.toList();
 
     // Si le mot expiré est validé, le retirer du pool
     if (isExpiredWordValidated) {
@@ -557,24 +635,23 @@ class GameProvider extends ChangeNotifier {
     int nextTurn;
 
     if (shouldMergeWithPrevious) {
-      // Fusionner avec la dernière entrée d'historique
+      // Créer une entrée séparée pour le bonus time (pas de fusion)
+      // Cela permet d'attribuer les mots à la bonne manche dans les stats
       final lastEntry = _game.history.last;
-      final mergedEntry = HistoryEntry(
-        round: lastEntry.round, // Garder la manche d'origine
-        turn: lastEntry.turn, // Garder le même numéro de tour
+      final bonusEntry = HistoryEntry(
+        round: _game.currentRound, // Manche actuelle (pas celle d'origine)
+        turn: lastEntry.turn, // Même tour pour le graphique d'évolution
         teamId: lastEntry.teamId,
         playerId: lastEntry.playerId,
-        wordsGuessed: [...lastEntry.wordsGuessed, ...validatedWords],
-        wordsInvalidated: [...lastEntry.wordsInvalidated, ...allInvalidatedWords],
-        wordsPassed: [...lastEntry.wordsPassed, ...passedWordsThisTurn],
-        timeSpent: lastEntry.timeSpent + currentTimeSpent,
+        wordsGuessed: validatedWords,
+        wordsInvalidated: allInvalidatedWords,
+        wordsPassed: passedWordsThisTurn,
+        timeSpent: currentTimeSpent,
+        isBonusContinuation: true, // Marquer comme continuation
       );
-      // Remplacer la dernière entrée par l'entrée fusionnée
-      newHistory = [
-        ..._game.history.sublist(0, _game.history.length - 1),
-        mergedEntry
-      ];
-      // Ne pas incrémenter le tour car c'est une fusion
+      // Ajouter l'entrée (pas de remplacement)
+      newHistory = [..._game.history, bonusEntry];
+      // Ne pas incrémenter le tour car c'est une continuation
       nextTurn = _game.currentTurn;
     } else {
       // Créer une nouvelle entrée normalement
@@ -873,8 +950,43 @@ class GameProvider extends ChangeNotifier {
   int get totalWordsEntered =>
       _players.fold(0, (sum, p) => sum + p.words.length);
 
-  int get expectedTotalWords =>
-      _settings.numberOfPlayers * _settings.wordsPerPlayer;
+  int get expectedTotalWords => _settings.totalWords;
+
+  /// Nombre effectif de mots restants (incluant les passés recyclables)
+  int get effectiveRemainingWordsCount {
+    final remainingSet = _game.remainingWords.toSet();
+
+    // Mots passés qui ne sont PAS déjà dans remainingWords
+    final passedNotInRemaining = _game.passedWordsThisTurn
+        .where((w) => !remainingSet.contains(w))
+        .length;
+
+    // Total = remainingWords + passés non recyclés - mot actuel
+    return _game.remainingWords.length + passedNotInRemaining - 1;
+  }
+
+  /// Retourne la distribution des mots par joueur
+  /// Les premiers joueurs ont 1 mot de plus si la répartition est inégale
+  Map<String, int> getWordsDistribution() {
+    final playerCount = _players.length;
+    if (playerCount == 0) return {};
+
+    final baseWords = _settings.totalWords ~/ playerCount;
+    final extraWords = _settings.totalWords % playerCount;
+
+    final distribution = <String, int>{};
+    for (int i = 0; i < _players.length; i++) {
+      final wordsForPlayer = baseWords + (i < extraWords ? 1 : 0);
+      distribution[_players[i].id] = wordsForPlayer;
+    }
+    return distribution;
+  }
+
+  /// Retourne le nombre de mots pour un joueur spécifique
+  int getWordsCountForPlayer(String playerId) {
+    final distribution = getWordsDistribution();
+    return distribution[playerId] ?? 0;
+  }
 
   // Vérifie si une session existe (joueurs d'une partie précédente)
   // Utilisé pour proposer "Rejouer" sur l'écran d'accueil

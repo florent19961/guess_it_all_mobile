@@ -40,6 +40,7 @@ class AppInput extends StatefulWidget {
 
 class _AppInputState extends State<AppInput> {
   late TextEditingController _controller;
+  late FocusNode _focusNode;
   bool _isInternalController = false;
 
   @override
@@ -50,6 +51,24 @@ class _AppInputState extends State<AppInput> {
     } else {
       _controller = TextEditingController(text: widget.value);
       _isInternalController = true;
+    }
+
+    _focusNode = FocusNode();
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  void _onFocusChange() {
+    if (_focusNode.hasFocus) {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          Scrollable.ensureVisible(
+            context,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+          );
+        }
+      });
     }
   }
 
@@ -65,6 +84,8 @@ class _AppInputState extends State<AppInput> {
 
   @override
   void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
     if (_isInternalController) {
       _controller.dispose();
     }
@@ -83,6 +104,7 @@ class _AppInputState extends State<AppInput> {
           color: Colors.transparent,
           child: TextField(
           controller: _controller,
+          focusNode: _focusNode,
           onChanged: widget.onChanged,
           autofocus: widget.autofocus,
           autocorrect: false,

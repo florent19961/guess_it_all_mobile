@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
 import '../utils/constants.dart';
-import '../utils/word_categories.dart';
+import '../utils/word_categories/word_categories.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/app_input.dart';
 import '../widgets/common/app_back_button.dart';
@@ -47,10 +47,10 @@ class _WordsScreenState extends State<WordsScreen> {
     final player = provider.getPlayerById(playerId);
     if (player == null) return;
 
-    final wordsPerPlayer = provider.settings.wordsPerPlayer;
+    final wordsForPlayer = provider.getWordsCountForPlayer(playerId);
 
     // Initialiser les contrôleurs avec les mots existants
-    for (int i = 0; i < wordsPerPlayer; i++) {
+    for (int i = 0; i < wordsForPlayer; i++) {
       final existingWord = i < player.words.length ? player.words[i] : '';
       _wordControllers.add(TextEditingController(text: existingWord));
     }
@@ -290,7 +290,7 @@ class _WordsScreenState extends State<WordsScreen> {
       );
     }
 
-    final wordsPerPlayer = provider.settings.wordsPerPlayer;
+    final wordsForPlayer = provider.getWordsCountForPlayer(playerId);
 
     return ShootingStars(
       child: Stack(
@@ -320,8 +320,12 @@ class _WordsScreenState extends State<WordsScreen> {
                 Expanded(
                   child: _isInitialized
                       ? ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          itemCount: wordsPerPlayer,
+                          padding: EdgeInsets.only(
+                            left: 24,
+                            right: 24,
+                            bottom: MediaQuery.of(context).viewInsets.bottom + 100,
+                          ),
+                          itemCount: wordsForPlayer,
                           itemBuilder: (context, index) {
                             final error = _getWordError(index, provider, playerId);
                             final otherPlayersWords = _getOtherPlayersWords(provider, playerId);

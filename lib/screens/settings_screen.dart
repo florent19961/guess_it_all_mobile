@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
 import '../utils/constants.dart';
-import '../utils/word_categories.dart';
+import '../utils/word_categories/word_categories.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/app_counter.dart';
 import '../widgets/common/app_toggle.dart';
@@ -155,7 +155,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   const SizedBox(height: 32),
 
                   // Avertissement si trop de mots
-                  if (settings.numberOfPlayers * settings.wordsPerPlayer > 50)
+                  if (settings.totalWords > 50)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Row(
@@ -171,7 +171,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                             TextSpan(
                               children: [
                                 TextSpan(
-                                  text: '${settings.numberOfPlayers * settings.wordsPerPlayer} mots : partie longue ! Réglable via ',
+                                  text: '${settings.totalWords} mots : partie longue ! Réglable via ',
                                 ),
                                 const WidgetSpan(
                                   alignment: PlaceholderAlignment.middle,
@@ -202,7 +202,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     onPressed: () {
                       // Si mode aléatoire, vérifier le nombre de mots disponibles
                       if (settings.wordChoice == AppConstants.wordChoiceRandom) {
-                        final totalWordsNeeded = settings.numberOfPlayers * settings.wordsPerPlayer;
+                        final totalWordsNeeded = settings.totalWords;
                         final availableWords = getTotalWordsCount(
                           settings.selectedCategories,
                           difficultyLevels: settings.selectedDifficultyLevels,
@@ -397,14 +397,14 @@ class _SettingsScreenState extends State<SettingsScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Mots par joueur
+                // Nombre total de mots
                 AppSlider(
-                  label: 'Mots par joueur',
-                  min: AppConstants.minWordsPerPlayer.toDouble(),
-                  max: AppConstants.maxWordsPerPlayer.toDouble(),
-                  value: settings.wordsPerPlayer.toDouble(),
+                  label: 'Nombre total de mots',
+                  min: AppConstants.minTotalWords.toDouble(),
+                  max: AppConstants.maxTotalWords.toDouble(),
+                  value: settings.totalWords.toDouble(),
                   onChanged: (value) {
-                    provider.updateSettings(wordsPerPlayer: value.toInt());
+                    provider.updateSettings(totalWords: value.toInt());
                     setState(() {});
                   },
                 ),
@@ -505,13 +505,6 @@ class _SettingsScreenState extends State<SettingsScreen>
                       ),
                     );
                   }).toList(),
-                ),
-                const SizedBox(height: 24),
-
-                AppButton(
-                  text: 'Fermer',
-                  variant: AppButtonVariant.secondary,
-                  onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
             ),
