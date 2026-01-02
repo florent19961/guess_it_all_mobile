@@ -11,7 +11,7 @@ import 'categories/dictionnaire.dart';
 import 'categories/musique.dart';
 import 'categories/metro_parisien.dart';
 import 'categories/marques.dart';
-import 'categories/medecine.dart';
+import 'categories/science_medecine.dart';
 
 final Map<String, WordCategory> wordCategories = {
   '7eme_art': category7emeArt,
@@ -26,5 +26,5 @@ final Map<String, WordCategory> wordCategories = {
   'musique': categoryMusique,
   'metro_parisien': categoryMetroParisien,
   'marques': categoryMarques,
-  'medecine': categoryMedecine,
+  'science_medecine': categoryScienceMedecine,
 };

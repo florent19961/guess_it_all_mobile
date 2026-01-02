@@ -561,9 +561,9 @@ class _PlayersScreenState extends State<PlayersScreen> {
                                         decoration: BoxDecoration(
                                           color: isWordsFilled
                                               ? AppColors.success
-                                                  .withValues(alpha: 0.2)
+                                                  .withOpacity(0.2)
                                               : AppColors.error
-                                                  .withValues(alpha: 0.2),
+                                                  .withOpacity(0.2),
                                           borderRadius:
                                               BorderRadius.circular(12),
                                           border: Border.all(

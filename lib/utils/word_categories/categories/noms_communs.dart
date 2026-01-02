@@ -15,10 +15,10 @@ const categoryNomsCommuns = WordCategory(
       WordWithDifficulty('Console de jeux', difficulty: 1),
 
       // OBJETS ÉLECTRONIQUES - Moyen
-      WordWithDifficulty('Tablette', difficulty: 2),
-      WordWithDifficulty('Casque', difficulty: 2),
+      WordWithDifficulty('Tablette', difficulty: 1),
+      WordWithDifficulty('Casque', difficulty: 1),
       WordWithDifficulty('Enceinte', difficulty: 2),
-      WordWithDifficulty('Chargeur', difficulty: 2),
+      WordWithDifficulty('Chargeur', difficulty: 1),
       WordWithDifficulty('Clé USB', difficulty: 2),
       WordWithDifficulty('Clavier', difficulty: 2),
       WordWithDifficulty('Souris', difficulty: 2),
@@ -44,11 +44,16 @@ const categoryNomsCommuns = WordCategory(
       WordWithDifficulty('Lunettes', difficulty: 1),
       WordWithDifficulty('Clés', difficulty: 1),
       WordWithDifficulty('Sac à dos', difficulty: 1),
+      WordWithDifficulty('Brosse à dents', difficulty: 1),
+      WordWithDifficulty('Peigne', difficulty: 1),
+      WordWithDifficulty('Savon', difficulty: 1),
+      WordWithDifficulty('Serviette', difficulty: 1),
+      WordWithDifficulty('Télécommande', difficulty: 1),
 
       // OBJETS QUOTIDIEN - Moyen
-      WordWithDifficulty('Lampe', difficulty: 2),
+      WordWithDifficulty('Lampe', difficulty: 1),
       WordWithDifficulty('Horloge', difficulty: 2),
-      WordWithDifficulty('Réveil', difficulty: 2),
+      WordWithDifficulty('Réveil', difficulty: 1),
       WordWithDifficulty('Bougie', difficulty: 2),
       WordWithDifficulty('Vase', difficulty: 2),
       WordWithDifficulty('Cadre photo', difficulty: 2),
@@ -88,9 +93,9 @@ const categoryNomsCommuns = WordCategory(
       // MOBILIER - Difficile
       WordWithDifficulty('Banc', difficulty: 2),
       WordWithDifficulty('Pouf', difficulty: 3),
-      WordWithDifficulty('Matelas', difficulty: 3),
-      WordWithDifficulty('Oreiller', difficulty: 3),
-      WordWithDifficulty('Couverture', difficulty: 2),
+      WordWithDifficulty('Matelas', difficulty: 2),
+      WordWithDifficulty('Oreiller', difficulty: 1),
+      WordWithDifficulty('Couverture', difficulty: 1),
       WordWithDifficulty('Lustre', difficulty: 3),
       WordWithDifficulty('Buffet', difficulty: 2),
       WordWithDifficulty('Console', difficulty: 2),
@@ -206,7 +211,6 @@ const categoryNomsCommuns = WordCategory(
       // INSTRUMENTS À CORDES - Difficile
       WordWithDifficulty('Alto', difficulty: 3),
       WordWithDifficulty('Clavecin', difficulty: 3),
-      WordWithDifficulty('Mandoline', difficulty: 3),
       WordWithDifficulty('Luth', difficulty: 3),
 
       // INSTRUMENTS À VENT - Facile
@@ -246,7 +250,6 @@ const categoryNomsCommuns = WordCategory(
       WordWithDifficulty('Roue', difficulty: 1),
       WordWithDifficulty('Ampoule', difficulty: 1),
       WordWithDifficulty('Internet', difficulty: 1),
-      WordWithDifficulty('Téléphone', difficulty: 1),
 
       // INVENTIONS - Moyen
       WordWithDifficulty('Imprimerie', difficulty: 2),
@@ -262,13 +265,205 @@ const categoryNomsCommuns = WordCategory(
       WordWithDifficulty('Radiographie', difficulty: 3),
       WordWithDifficulty('Microprocesseur', difficulty: 3),
       WordWithDifficulty('GPS', difficulty: 3),
-      WordWithDifficulty('Wi-Fi', difficulty: 3),
-      WordWithDifficulty('Bluetooth', difficulty: 3),
-      WordWithDifficulty('Code-barres', difficulty: 3),
+      WordWithDifficulty('Wi-Fi', difficulty: 2),
+      WordWithDifficulty('Bluetooth', difficulty: 2),
+      WordWithDifficulty('Code-barres', difficulty: 2),
       WordWithDifficulty('Fermeture éclair', difficulty: 3),
       WordWithDifficulty('Velcro', difficulty: 3),
-      WordWithDifficulty('Post-it', difficulty: 3),
-      WordWithDifficulty('Laser', difficulty: 3),
-    
+      WordWithDifficulty('Post-it', difficulty: 2),
+      WordWithDifficulty('Laser', difficulty: 2),
+
+      // MAISON & HABITAT - Pièces - Facile
+      WordWithDifficulty('Cuisine', difficulty: 1),
+      WordWithDifficulty('Chambre', difficulty: 1),
+      WordWithDifficulty('Salon', difficulty: 1),
+      WordWithDifficulty('Salle de bain', difficulty: 1),
+      WordWithDifficulty('Garage', difficulty: 1),
+
+      // MAISON & HABITAT - Pièces - Moyen
+      WordWithDifficulty('Cave', difficulty: 2),
+      WordWithDifficulty('Grenier', difficulty: 2),
+      WordWithDifficulty('Couloir', difficulty: 1),
+      WordWithDifficulty('Entrée', difficulty: 1),
+      WordWithDifficulty('Terrasse', difficulty: 2),
+      WordWithDifficulty('Balcon', difficulty: 2),
+
+      // MAISON & HABITAT - Pièces - Difficile
+      WordWithDifficulty('Buanderie', difficulty: 2),
+      WordWithDifficulty('Cellier', difficulty: 2),
+      WordWithDifficulty('Véranda', difficulty: 2),
+      WordWithDifficulty('Vestibule', difficulty: 3),
+
+      // MAISON & HABITAT - Éléments construction - Facile
+      WordWithDifficulty('Porte', difficulty: 1),
+      WordWithDifficulty('Fenêtre', difficulty: 1),
+      WordWithDifficulty('Mur', difficulty: 1),
+      WordWithDifficulty('Toit', difficulty: 1),
+      WordWithDifficulty('Escalier', difficulty: 1),
+
+      // MAISON & HABITAT - Éléments construction - Moyen
+      WordWithDifficulty('Cheminée', difficulty: 2),
+      WordWithDifficulty('Plafond', difficulty: 2),
+      WordWithDifficulty('Sol', difficulty: 2),
+      WordWithDifficulty('Volet', difficulty: 2),
+      WordWithDifficulty('Radiateur', difficulty: 2),
+      WordWithDifficulty('Interrupteur', difficulty: 2),
+      WordWithDifficulty('Prise', difficulty: 2),
+
+      // MAISON & HABITAT - Éléments construction - Difficile
+      WordWithDifficulty('Plinthe', difficulty: 3),
+      WordWithDifficulty('Corniche', difficulty: 3),
+      WordWithDifficulty('Gouttière', difficulty: 2),
+      WordWithDifficulty('Charpente', difficulty: 2),
+      WordWithDifficulty('Tuile', difficulty: 2),
+      WordWithDifficulty('Ardoise', difficulty: 2),
+
+      // MAISON & HABITAT - Bâtiments - Facile
+      WordWithDifficulty('Maison', difficulty: 1),
+      WordWithDifficulty('Immeuble', difficulty: 1),
+      WordWithDifficulty('École', difficulty: 1),
+      WordWithDifficulty('Hôpital', difficulty: 1),
+      WordWithDifficulty('Église', difficulty: 1),
+
+      // MAISON & HABITAT - Bâtiments - Moyen
+      WordWithDifficulty('Château', difficulty: 2),
+      WordWithDifficulty('Pont', difficulty: 2),
+      WordWithDifficulty('Tour', difficulty: 2),
+      WordWithDifficulty('Musée', difficulty: 2),
+      WordWithDifficulty('Gare', difficulty: 2),
+      WordWithDifficulty('Aéroport', difficulty: 2),
+
+      // MAISON & HABITAT - Bâtiments - Difficile
+      WordWithDifficulty('Cathédrale', difficulty: 2),
+      WordWithDifficulty('Beffroi', difficulty: 3),
+      WordWithDifficulty('Phare', difficulty: 2),
+      WordWithDifficulty('Donjon', difficulty: 2),
+      WordWithDifficulty('Aqueduc', difficulty: 3),
+
+      // ÉDUCATION & LOISIRS - Matériel scolaire - Facile
+      WordWithDifficulty('Cartable', difficulty: 1),
+      WordWithDifficulty('Trousse', difficulty: 1),
+      WordWithDifficulty('Gomme', difficulty: 1),
+      WordWithDifficulty('Taille-crayon', difficulty: 1),
+      WordWithDifficulty('Feutre', difficulty: 1),
+      WordWithDifficulty('Surligneur', difficulty: 1),
+
+      // ÉDUCATION & LOISIRS - Matériel scolaire - Moyen
+      WordWithDifficulty('Rapporteur', difficulty: 2),
+      WordWithDifficulty('Compas', difficulty: 2),
+      WordWithDifficulty('Équerre', difficulty: 2),
+      WordWithDifficulty('Classeur', difficulty: 2),
+      WordWithDifficulty('Cahier de texte', difficulty: 2),
+
+      // ÉDUCATION & LOISIRS - Matériel scolaire - Difficile
+      WordWithDifficulty('Plumier', difficulty: 3),
+      WordWithDifficulty('Protège-cahier', difficulty: 3),
+      WordWithDifficulty('Perforatrice', difficulty: 3),
+
+      // ÉDUCATION & LOISIRS - Matériel bureau - Facile
+      WordWithDifficulty('Agrafeuse', difficulty: 1),
+      WordWithDifficulty('Trombones', difficulty: 1),
+      WordWithDifficulty('Scotch', difficulty: 1),
+
+      // ÉDUCATION & LOISIRS - Matériel bureau - Moyen
+      WordWithDifficulty('Dégrafeuse', difficulty: 3),
+      WordWithDifficulty('Colle', difficulty: 2),
+      WordWithDifficulty('Punaises', difficulty: 2),
+      WordWithDifficulty('Élastiques', difficulty: 2),
+
+      // ÉDUCATION & LOISIRS - Matériel bureau - Difficile
+      WordWithDifficulty('Massicot', difficulty: 3),
+      WordWithDifficulty('Reliure', difficulty: 3),
+
+      // ÉDUCATION & LOISIRS - Jouets - Facile
+      WordWithDifficulty('Ballon', difficulty: 1),
+      WordWithDifficulty('Poupée', difficulty: 1),
+      WordWithDifficulty('Voiture miniature', difficulty: 1),
+      WordWithDifficulty('Puzzle', difficulty: 1),
+      WordWithDifficulty('Peluche', difficulty: 1),
+
+      // ÉDUCATION & LOISIRS - Jouets - Moyen
+      WordWithDifficulty('Jeu de société', difficulty: 2),
+      WordWithDifficulty('Lego', difficulty: 2),
+      WordWithDifficulty('Yo-yo', difficulty: 2),
+      WordWithDifficulty('Toupie', difficulty: 2),
+      WordWithDifficulty('Marionnette', difficulty: 2),
+      WordWithDifficulty('Cerf-volant', difficulty: 2),
+
+      // ÉDUCATION & LOISIRS - Jouets - Difficile
+      WordWithDifficulty('Bilboquet', difficulty: 3),
+      WordWithDifficulty('Diabolo', difficulty: 2),
+      WordWithDifficulty('Kapla', difficulty: 2),
+      WordWithDifficulty('Billes', difficulty: 2),
+
+      // ÉDUCATION & LOISIRS - Sports - Facile
+      WordWithDifficulty('Raquette', difficulty: 1),
+      WordWithDifficulty('Ballon de foot', difficulty: 1),
+      WordWithDifficulty('Basket', difficulty: 1),
+      WordWithDifficulty('Skis', difficulty: 1),
+
+      // ÉDUCATION & LOISIRS - Sports - Moyen
+      WordWithDifficulty('Club de golf', difficulty: 2),
+      WordWithDifficulty('Crosse de hockey', difficulty: 2),
+      WordWithDifficulty('Arc', difficulty: 2),
+      WordWithDifficulty('Flèche', difficulty: 2),
+      WordWithDifficulty('Haltères', difficulty: 2),
+      WordWithDifficulty('Corde à sauter', difficulty: 2),
+
+      // EXTÉRIEUR & JARDINAGE - Facile
+      WordWithDifficulty('Pelle', difficulty: 1),
+      WordWithDifficulty('Râteau', difficulty: 1),
+      WordWithDifficulty('Arrosoir', difficulty: 1),
+      WordWithDifficulty('Tuyau', difficulty: 1),
+      WordWithDifficulty('Seau', difficulty: 1),
+
+      // EXTÉRIEUR & JARDINAGE - Moyen
+      WordWithDifficulty('Brouette', difficulty: 2),
+      WordWithDifficulty('Tondeuse', difficulty: 2),
+      WordWithDifficulty('Tronçonneuse', difficulty: 2),
+      WordWithDifficulty('Bêche', difficulty: 2),
+      WordWithDifficulty('Pioche', difficulty: 2),
+      WordWithDifficulty('Sécateur', difficulty: 2),
+      WordWithDifficulty('Cisailles', difficulty: 3),
+
+      // EXTÉRIEUR & JARDINAGE - Difficile
+      WordWithDifficulty('Binette', difficulty: 3),
+
+      // ACCESSOIRES & DÉCORATION - Bijoux - Facile
+      WordWithDifficulty('Collier', difficulty: 1),
+      WordWithDifficulty('Bracelet', difficulty: 1),
+      WordWithDifficulty('Bague', difficulty: 1),
+      WordWithDifficulty('Boucles d\'oreilles', difficulty: 1),
+
+      // ACCESSOIRES & DÉCORATION - Bijoux - Moyen
+      WordWithDifficulty('Broche', difficulty: 2),
+      WordWithDifficulty('Pendentif', difficulty: 2),
+      WordWithDifficulty('Médaillon', difficulty: 2),
+      WordWithDifficulty('Chevalière', difficulty: 2),
+
+      // ACCESSOIRES & DÉCORATION - Bijoux - Difficile
+      WordWithDifficulty('Diadème', difficulty: 2),
+      WordWithDifficulty('Parure', difficulty: 3),
+      WordWithDifficulty('Jonc', difficulty: 3),
+
+      // ACCESSOIRES & DÉCORATION - Récipients - Facile
+      WordWithDifficulty('Boîte', difficulty: 1),
+      WordWithDifficulty('Bocal', difficulty: 1),
+      WordWithDifficulty('Bouteille', difficulty: 1),
+      WordWithDifficulty('Sac plastique', difficulty: 1),
+
+      // ACCESSOIRES & DÉCORATION - Récipients - Moyen
+      WordWithDifficulty('Carafe', difficulty: 2),
+      WordWithDifficulty('Cruche', difficulty: 2),
+      WordWithDifficulty('Pot', difficulty: 2),
+      WordWithDifficulty('Corbeille', difficulty: 2),
+      WordWithDifficulty('Urne', difficulty: 2),
+
+      // ACCESSOIRES & DÉCORATION - Récipients - Difficile
+      WordWithDifficulty('Amphore', difficulty: 2),
+      WordWithDifficulty('Fiole', difficulty: 2),
+      WordWithDifficulty('Bonbonne', difficulty: 2),
+      WordWithDifficulty('Flacon', difficulty: 2),
+
   ],
 );

@@ -91,7 +91,7 @@ class StarsPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final random = Random(seed);
     final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.3)
+      ..color = Colors.white.withOpacity(0.3)
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
 

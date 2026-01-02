@@ -49,7 +49,6 @@ const categoryMetroParisien = WordCategory(
       WordWithDifficulty('Champs-Élysées-Clemenceau', difficulty: 2),
       WordWithDifficulty('Tuileries', difficulty: 2),
       WordWithDifficulty('Châtelet-Les Halles', difficulty: 2),
-      WordWithDifficulty('Hôtel de Ville', difficulty: 2),
       WordWithDifficulty('Saint-Paul', difficulty: 2),
       WordWithDifficulty('Château de Vincennes', difficulty: 2),
 

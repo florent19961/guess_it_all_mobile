@@ -42,7 +42,7 @@ class AppSlider extends StatelessWidget {
               activeTrackColor: AppColors.secondaryCyan,
               inactiveTrackColor: AppColors.gray700,
               thumbColor: AppColors.secondaryCyan,
-              overlayColor: AppColors.secondaryCyan.withValues(alpha: 0.2),
+              overlayColor: AppColors.secondaryCyan.withOpacity(0.2),
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
               trackHeight: 8,
             ),

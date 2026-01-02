@@ -53,8 +53,8 @@ const categoryMusique = WordCategory(
       WordWithDifficulty('Bohemian Rhapsody', difficulty: 2),
       WordWithDifficulty('Imagine', difficulty: 2),
       WordWithDifficulty('Let It Be', difficulty: 2),
-      WordWithDifficulty('Hotel California', difficulty: 2),
-      WordWithDifficulty('Smells Like Teen Spirit', difficulty: 2),
+      WordWithDifficulty('Hotel California', difficulty: 3),
+      WordWithDifficulty('Smells Like Teen Spirit', difficulty: 3),
       WordWithDifficulty('Billie Jean', difficulty: 2),
       WordWithDifficulty('Thriller', difficulty: 2),
       WordWithDifficulty('Beat It', difficulty: 2),
@@ -62,7 +62,7 @@ const categoryMusique = WordCategory(
       WordWithDifficulty('Lose Yourself', difficulty: 2),
 
       // CHANSONS INTERNATIONALES - Difficile
-      WordWithDifficulty('God Save the Queen', difficulty: 3),
+      WordWithDifficulty('God Save the Queen', difficulty: 2),
       WordWithDifficulty('No Woman, No Cry', difficulty: 3),
 
       // GENRES MUSICAUX - Facile
@@ -84,10 +84,10 @@ const categoryMusique = WordCategory(
       WordWithDifficulty('Metal', difficulty: 2),
       WordWithDifficulty('Punk', difficulty: 2),
       WordWithDifficulty('Disco', difficulty: 2),
-      WordWithDifficulty('Folk', difficulty: 2),
+      WordWithDifficulty('Folk', difficulty: 3),
       WordWithDifficulty('House', difficulty: 2),
       WordWithDifficulty('Techno', difficulty: 2),
-      WordWithDifficulty('Trap', difficulty: 2),
+      WordWithDifficulty('Trap', difficulty: 3),
       WordWithDifficulty('Zouk', difficulty: 2),
       WordWithDifficulty('Salsa', difficulty: 2),
 
@@ -132,6 +132,121 @@ const categoryMusique = WordCategory(
       WordWithDifficulty('Allegro', difficulty: 3),
       WordWithDifficulty('Fortissimo', difficulty: 3),
       WordWithDifficulty('Arpège', difficulty: 3),
-    
+
+      // COMPOSITEURS CLASSIQUES - Facile
+      WordWithDifficulty('Mozart', difficulty: 1),
+      WordWithDifficulty('Beethoven', difficulty: 1),
+      WordWithDifficulty('Bach', difficulty: 1),
+      WordWithDifficulty('Vivaldi', difficulty: 2),
+
+      // COMPOSITEURS CLASSIQUES - Moyen
+      WordWithDifficulty('Chopin', difficulty: 3),
+      WordWithDifficulty('Tchaïkovski', difficulty: 3),
+      WordWithDifficulty('Debussy', difficulty: 3),
+      WordWithDifficulty('Wagner', difficulty: 3),
+      WordWithDifficulty('Schubert', difficulty: 3),
+
+      // COMPOSITEURS CLASSIQUES - Difficile
+      WordWithDifficulty('Ravel', difficulty: 3),
+      WordWithDifficulty('Rachmaninov', difficulty: 3),
+      WordWithDifficulty('Stravinsky', difficulty: 3),
+
+      // FESTIVALS DE MUSIQUE - Facile
+      WordWithDifficulty('Coachella', difficulty: 2),
+      WordWithDifficulty('Tomorrowland', difficulty: 2),
+      WordWithDifficulty('Les Vieilles Charrues', difficulty: 3),
+
+      // FESTIVALS DE MUSIQUE - Moyen
+      WordWithDifficulty('Hellfest', difficulty: 2),
+      WordWithDifficulty('Rock en Seine', difficulty: 2),
+      WordWithDifficulty('Solidays', difficulty: 2),
+      WordWithDifficulty('Lollapalooza', difficulty: 2),
+      WordWithDifficulty('Main Square Festival', difficulty: 3),
+      WordWithDifficulty('Garorock', difficulty: 3),
+
+      // FESTIVALS DE MUSIQUE - Difficile
+      WordWithDifficulty('Glastonbury', difficulty: 3),
+      WordWithDifficulty('Montreux Jazz Festival', difficulty: 3),
+      WordWithDifficulty('Les Francofolies', difficulty: 3),
+
+      // COMÉDIES MUSICALES - Facile
+      WordWithDifficulty('Le Roi Lion', difficulty: 2),
+      WordWithDifficulty('Les Misérables', difficulty: 2),
+      WordWithDifficulty('Mamma Mia', difficulty: 2),
+
+      // COMÉDIES MUSICALES - Moyen
+      WordWithDifficulty('Notre-Dame de Paris', difficulty: 2),
+      WordWithDifficulty('Roméo et Juliette', difficulty: 2),
+      WordWithDifficulty('Le Fantôme de l\'Opéra', difficulty: 3),
+      WordWithDifficulty('Chicago', difficulty: 3),
+      WordWithDifficulty('Cats', difficulty: 3),
+      WordWithDifficulty('La La Land', difficulty: 2),
+      WordWithDifficulty('West Side Story', difficulty: 3),
+
+      // COMÉDIES MUSICALES - Difficile
+      WordWithDifficulty('Hamilton', difficulty: 3),
+      WordWithDifficulty('Les Demoiselles de Rochefort', difficulty: 3),
+      WordWithDifficulty('Starmania', difficulty: 3),
+      WordWithDifficulty('Mozart, l\'opéra rock', difficulty: 3),
+
+      // ÉMISSIONS/CONCOURS MUSICAUX - Facile
+      WordWithDifficulty('The Voice', difficulty: 1),
+      WordWithDifficulty('Star Academy', difficulty: 1),
+      WordWithDifficulty('Nouvelle Star', difficulty: 1),
+
+      // ÉMISSIONS/CONCOURS MUSICAUX - Moyen
+      WordWithDifficulty('Eurovision', difficulty: 2),
+      WordWithDifficulty('La France a un incroyable talent', difficulty: 2),
+      WordWithDifficulty('N\'oubliez pas les paroles', difficulty: 2),
+      WordWithDifficulty('Taratata', difficulty: 2),
+
+      // ÉMISSIONS/CONCOURS MUSICAUX - Difficile
+      WordWithDifficulty('Victoires de la Musique', difficulty: 3),
+      WordWithDifficulty('Les Enfoirés', difficulty: 3),
+
+      // CHANSONS DE FILMS/DESSINS ANIMÉS - Facile
+      WordWithDifficulty('Let It Go', difficulty: 2),
+      WordWithDifficulty('Hakuna Matata', difficulty: 1),
+      WordWithDifficulty('Je suis ton meilleur ami', difficulty: 2),
+      WordWithDifficulty('L\'histoire de la vie', difficulty: 2),
+
+      // CHANSONS DE FILMS/DESSINS ANIMÉS - Moyen
+      WordWithDifficulty('My Heart Will Go On', difficulty: 2),
+      WordWithDifficulty('Eye of the Tiger', difficulty: 2),
+      WordWithDifficulty('Sous l\'océan', difficulty: 2),
+      WordWithDifficulty('Ce rêve bleu', difficulty: 2),
+      WordWithDifficulty('Libérée, délivrée', difficulty: 2),
+      WordWithDifficulty('Skyfall', difficulty: 2),
+
+      // CHANSONS DE FILMS/DESSINS ANIMÉS - Difficile
+      WordWithDifficulty('Time of My Life', difficulty: 3),
+
+      // RÉCOMPENSES MUSICALES - Facile
+      WordWithDifficulty('Grammy Awards', difficulty: 3),
+      WordWithDifficulty('NRJ Music Awards', difficulty: 3),
+
+      // DANSES - Facile
+      WordWithDifficulty('Valse', difficulty: 2),
+      WordWithDifficulty('Tango', difficulty: 3),
+      WordWithDifficulty('Ballet', difficulty: 2),
+      WordWithDifficulty('Breakdance', difficulty: 2),
+
+      // DANSES - Moyen
+      WordWithDifficulty('Cha-cha', difficulty: 3),
+      WordWithDifficulty('Paso doble', difficulty: 3),
+      WordWithDifficulty('Swing', difficulty: 2),
+      WordWithDifficulty('Rumba', difficulty: 2),
+      WordWithDifficulty('Madison', difficulty: 3),
+      WordWithDifficulty('Rock and roll', difficulty: 2),
+
+      // DANSES - Difficile
+      WordWithDifficulty('Vogue', difficulty: 3),
+      WordWithDifficulty('Claquettes', difficulty: 2),
+
+      // OPÉRAS - Facile
+      WordWithDifficulty('Carmen', difficulty: 3),
+      WordWithDifficulty('La Traviata', difficulty: 3),
+
+
   ],
 );

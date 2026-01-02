@@ -14,12 +14,19 @@ const categoryGeographie = WordCategory(
       WordWithDifficulty('Royaume-Uni', difficulty: 1),
       WordWithDifficulty('Angleterre', difficulty: 1),
       WordWithDifficulty('Russie', difficulty: 1),
+      WordWithDifficulty('Berlin', difficulty: 1),
+      WordWithDifficulty('Madrid', difficulty: 1),
+      WordWithDifficulty('Lisbonne', difficulty: 1),
+      WordWithDifficulty('Athènes', difficulty: 1),
+      WordWithDifficulty('Paris', difficulty: 1),
+      WordWithDifficulty('Rome', difficulty: 1),
+      WordWithDifficulty('Londres', difficulty: 1),
 
       // PAYS EUROPE - Moyen
-      WordWithDifficulty('Belgique', difficulty: 2),
+      WordWithDifficulty('Belgique', difficulty: 1),
       WordWithDifficulty('Pays-Bas', difficulty: 2),
-      WordWithDifficulty('Suisse', difficulty: 2),
-      WordWithDifficulty('Portugal', difficulty: 2),
+      WordWithDifficulty('Suisse', difficulty: 1),
+      WordWithDifficulty('Portugal', difficulty: 1),
       WordWithDifficulty('Grèce', difficulty: 2),
       WordWithDifficulty('Pologne', difficulty: 2),
       WordWithDifficulty('Suède', difficulty: 2),
@@ -239,17 +246,17 @@ const categoryGeographie = WordCategory(
       WordWithDifficulty('Nil', difficulty: 1),
 
       // FLEUVES - Moyen
-      WordWithDifficulty('Amazone', difficulty: 2),
-      WordWithDifficulty('Mississippi', difficulty: 2),
+      WordWithDifficulty('Amazone', difficulty: 3),
+      WordWithDifficulty('Mississippi', difficulty: 3),
       WordWithDifficulty('Rhin', difficulty: 2),
       WordWithDifficulty('Danube', difficulty: 2),
       WordWithDifficulty('Tamise', difficulty: 2),
       WordWithDifficulty('Gange', difficulty: 2),
 
       // FLEUVES - Difficile
-      WordWithDifficulty('Loire', difficulty: 3),
-      WordWithDifficulty('Rhône', difficulty: 3),
-      WordWithDifficulty('Garonne', difficulty: 3),
+      WordWithDifficulty('Loire', difficulty: 2),
+      WordWithDifficulty('Rhône', difficulty: 2),
+      WordWithDifficulty('Garonne', difficulty: 2),
       WordWithDifficulty('Volga', difficulty: 3),
 
       // RÉGIONS FRANÇAISES - Facile
@@ -262,7 +269,7 @@ const categoryGeographie = WordCategory(
       // RÉGIONS FRANÇAISES - Moyen
       WordWithDifficulty('Occitanie', difficulty: 2),
       WordWithDifficulty('Nouvelle-Aquitaine', difficulty: 2),
-      WordWithDifficulty('Grand Est', difficulty: 2),
+      WordWithDifficulty('Grand Est', difficulty: 3),
 
       // RÉGIONS FRANÇAISES - Difficile
       WordWithDifficulty('Auvergne', difficulty: 3),
@@ -284,7 +291,7 @@ const categoryGeographie = WordCategory(
       WordWithDifficulty('Mer des Caraïbes', difficulty: 2),
       WordWithDifficulty('Mer Rouge', difficulty: 2),
       WordWithDifficulty('Mer Noire', difficulty: 2),
-      WordWithDifficulty('Mer Baltique', difficulty: 2),
+      WordWithDifficulty('Mer Baltique', difficulty: 3),
 
       // OCÉANS ET MERS - Difficile
       WordWithDifficulty('Océan Arctique', difficulty: 3),
@@ -304,16 +311,185 @@ const categoryGeographie = WordCategory(
       WordWithDifficulty('Kilimandjaro', difficulty: 2),
 
       // ÉLÉMENTS NATURELS - Difficile
-      WordWithDifficulty('Grand Canyon', difficulty: 3),
-      WordWithDifficulty('Chutes du Niagara', difficulty: 3),
+      WordWithDifficulty('Grand Canyon', difficulty: 2),
+      WordWithDifficulty('Chutes du Niagara', difficulty: 2),
       WordWithDifficulty('Grande Barrière de Corail', difficulty: 3),
-      WordWithDifficulty('Mont Blanc', difficulty: 3),
-      WordWithDifficulty('Vésuve', difficulty: 3),
-      WordWithDifficulty('Etna', difficulty: 3),
+      WordWithDifficulty('Mont Blanc', difficulty: 2),
       WordWithDifficulty('Yellowstone', difficulty: 3),
       WordWithDifficulty('Désert de Gobi', difficulty: 3),
       WordWithDifficulty('Patagonie', difficulty: 3),
       WordWithDifficulty('Antarctique', difficulty: 2),
-    
+
+      // VOLCANS - Facile
+      WordWithDifficulty('Vésuve', difficulty: 2),
+      WordWithDifficulty('Etna', difficulty: 2),
+
+      // VOLCANS - Moyen
+      WordWithDifficulty('Stromboli', difficulty: 3),
+      WordWithDifficulty('Mont Fuji', difficulty: 2),
+      WordWithDifficulty('Krakatoa', difficulty: 3),
+
+      // VOLCANS - Difficile
+      WordWithDifficulty('Piton de la Fournaise', difficulty: 3),
+      WordWithDifficulty('Popocatépetl', difficulty: 3),
+
+      // CAPITALES - Facile (non déjà listées ailleurs)
+      WordWithDifficulty('Washington', difficulty: 1),
+      WordWithDifficulty('Ottawa', difficulty: 3),
+
+      // CAPITALES - Moyen
+      WordWithDifficulty('Bruxelles', difficulty: 2),
+      WordWithDifficulty('Berne', difficulty: 2),
+      WordWithDifficulty('La Haye', difficulty: 3),
+      WordWithDifficulty('Rabat', difficulty: 3),
+      WordWithDifficulty('Tunis', difficulty: 3),
+      WordWithDifficulty('Alger', difficulty: 2),
+      WordWithDifficulty('Nairobi', difficulty: 3),
+      WordWithDifficulty('Lagos', difficulty: 2),
+      WordWithDifficulty('Téhéran', difficulty: 2),
+      WordWithDifficulty('Bagdad', difficulty: 2),
+      WordWithDifficulty('Kaboul', difficulty: 2),
+      WordWithDifficulty('Islamabad', difficulty: 2),
+      WordWithDifficulty('Dacca', difficulty: 3),
+      WordWithDifficulty('Katmandou', difficulty: 2),
+      WordWithDifficulty('Colombo', difficulty: 3),
+      WordWithDifficulty('Hanoï', difficulty: 2),
+      WordWithDifficulty('Manille', difficulty: 2),
+      WordWithDifficulty('Jakarta', difficulty: 2),
+      WordWithDifficulty('Kuala Lumpur', difficulty: 2),
+      WordWithDifficulty('Canberra', difficulty: 2),
+      WordWithDifficulty('Wellington', difficulty: 2),
+      WordWithDifficulty('Buenos Aires', difficulty: 2),
+      WordWithDifficulty('Santiago', difficulty: 2),
+      WordWithDifficulty('Lima', difficulty: 3),
+      WordWithDifficulty('Bogota', difficulty: 2),
+      WordWithDifficulty('Caracas', difficulty: 3),
+      WordWithDifficulty('La Havane', difficulty: 2),
+
+      // CAPITALES - Difficile
+      WordWithDifficulty('Montevideo', difficulty: 3),
+      WordWithDifficulty('La Paz', difficulty: 3),
+      WordWithDifficulty('Asunción', difficulty: 3),
+      WordWithDifficulty('San José', difficulty: 3),
+      WordWithDifficulty('Reykjavik', difficulty: 3),
+      WordWithDifficulty('Tallin', difficulty: 3),
+      WordWithDifficulty('Riga', difficulty: 3),
+      WordWithDifficulty('Vilnius', difficulty: 3),
+      WordWithDifficulty('Ljubljana', difficulty: 3),
+      WordWithDifficulty('Zagreb', difficulty: 3),
+      WordWithDifficulty('Belgrade', difficulty: 3),
+      WordWithDifficulty('Sofia', difficulty: 3),
+      WordWithDifficulty('Bratislava', difficulty: 3),
+      WordWithDifficulty('La Valette', difficulty: 3),
+      WordWithDifficulty('Nicosie', difficulty: 3),
+      WordWithDifficulty('Addis-Abeba', difficulty: 3),
+      WordWithDifficulty('Ouagadougou', difficulty: 3),
+      WordWithDifficulty('Bamako', difficulty: 3),
+      WordWithDifficulty('Niamey', difficulty: 3),
+      WordWithDifficulty('Khartoum', difficulty: 3),
+      WordWithDifficulty('Kampala', difficulty: 3),
+      WordWithDifficulty('Kigali', difficulty: 3),
+      WordWithDifficulty('Bujumbura', difficulty: 3),
+      WordWithDifficulty('Dodoma', difficulty: 3),
+      WordWithDifficulty('Lusaka', difficulty: 3),
+      WordWithDifficulty('Harare', difficulty: 3),
+      WordWithDifficulty('Gaborone', difficulty: 3),
+      WordWithDifficulty('Windhoek', difficulty: 3),
+      WordWithDifficulty('Antananarivo', difficulty: 3),
+
+      // DÉPARTEMENTS FRANÇAIS - Facile
+      WordWithDifficulty('75 - Paris', difficulty: 1),
+      WordWithDifficulty('13 - Bouches-du-Rhône', difficulty: 1),
+      WordWithDifficulty('69 - Rhône', difficulty: 1),
+      WordWithDifficulty('59 - Nord', difficulty: 1),
+      WordWithDifficulty('83 - Var', difficulty: 1),
+
+      // DÉPARTEMENTS FRANÇAIS - Moyen
+      WordWithDifficulty('33 - Gironde', difficulty: 2),
+      WordWithDifficulty('44 - Loire-Atlantique', difficulty: 2),
+      WordWithDifficulty('34 - Hérault', difficulty: 2),
+      WordWithDifficulty('31 - Haute-Garonne', difficulty: 2),
+      WordWithDifficulty('06 - Alpes-Maritimes', difficulty: 2),
+      WordWithDifficulty('35 - Ille-et-Vilaine', difficulty: 2),
+      WordWithDifficulty('67 - Bas-Rhin', difficulty: 2),
+      WordWithDifficulty('38 - Isère', difficulty: 2),
+      WordWithDifficulty('76 - Seine-Maritime', difficulty: 2),
+      WordWithDifficulty('29 - Finistère', difficulty: 2),
+
+      // DÉPARTEMENTS FRANÇAIS - Difficile
+      WordWithDifficulty('21 - Côte-d\'Or', difficulty: 3),
+      WordWithDifficulty('49 - Maine-et-Loire', difficulty: 3),
+      WordWithDifficulty('56 - Morbihan', difficulty: 3),
+      WordWithDifficulty('22 - Côtes-d\'Armor', difficulty: 3),
+      WordWithDifficulty('51 - Marne', difficulty: 3),
+      WordWithDifficulty('84 - Vaucluse', difficulty: 3),
+      WordWithDifficulty('48 - Lozère', difficulty: 3),
+      WordWithDifficulty('23 - Creuse', difficulty: 3),
+      WordWithDifficulty('15 - Cantal', difficulty: 3),
+      WordWithDifficulty('43 - Haute-Loire', difficulty: 3),
+
+      // ÎLES - Facile
+      WordWithDifficulty('Sicile', difficulty: 1),
+      WordWithDifficulty('Crète', difficulty: 1),
+
+      // ÎLES - Moyen
+      WordWithDifficulty('Sardaigne', difficulty: 2),
+      WordWithDifficulty('Majorque', difficulty: 2),
+      WordWithDifficulty('Ibiza', difficulty: 2),
+      WordWithDifficulty('Capri', difficulty: 2),
+      WordWithDifficulty('Rhodes', difficulty: 3),
+      WordWithDifficulty('Santorin', difficulty: 3),
+      WordWithDifficulty('Bali', difficulty: 3),
+      WordWithDifficulty('Hawaï', difficulty: 2),
+      WordWithDifficulty('Tahiti', difficulty: 2),
+      WordWithDifficulty('La Réunion', difficulty: 2),
+      WordWithDifficulty('Martinique', difficulty: 2),
+      WordWithDifficulty('Guadeloupe', difficulty: 2),
+
+      // ÎLES - Difficile
+      WordWithDifficulty('Île de Pâques', difficulty: 3),
+      WordWithDifficulty('Seychelles', difficulty: 3),
+      WordWithDifficulty('Maldives', difficulty: 3),
+      WordWithDifficulty('Açores', difficulty: 3),
+      WordWithDifficulty('Canaries', difficulty: 2),
+      WordWithDifficulty('Île Maurice', difficulty: 3),
+      WordWithDifficulty('Zanzibar', difficulty: 3),
+      WordWithDifficulty('Bora-Bora', difficulty: 3),
+      WordWithDifficulty('Île de Ré', difficulty: 2),
+      WordWithDifficulty('Île d\'Oléron', difficulty: 3),
+      WordWithDifficulty('Belle-Île-en-Mer', difficulty: 3),
+
+      // LACS - Facile
+      WordWithDifficulty('Lac Léman', difficulty: 2),
+
+      // LACS - Moyen
+      WordWithDifficulty('Lac Victoria', difficulty: 3),
+      WordWithDifficulty('Lac Baïkal', difficulty: 3),
+      WordWithDifficulty('Lac Tanganyika', difficulty: 3),
+      WordWithDifficulty('Grands Lacs', difficulty: 3),
+
+      // LACS - Difficile
+      WordWithDifficulty('Lac d\'Annecy', difficulty: 2),
+      WordWithDifficulty('Lac du Bourget', difficulty: 3),
+      WordWithDifficulty('Lac de Côme', difficulty: 3),
+      WordWithDifficulty('Lac Majeur', difficulty: 3),
+      WordWithDifficulty('Loch Ness', difficulty: 2),
+      WordWithDifficulty('Lac Balaton', difficulty: 3),
+
+      // DÉTROITS ET CANAUX - Facile
+      WordWithDifficulty('Canal de Suez', difficulty: 1),
+      WordWithDifficulty('Canal de Panama', difficulty: 1),
+
+      // DÉTROITS ET CANAUX - Moyen
+      WordWithDifficulty('Détroit de Gibraltar', difficulty: 2),
+      WordWithDifficulty('Détroit de Béring', difficulty: 3),
+      WordWithDifficulty('Manche', difficulty: 1),
+
+      // DÉTROITS ET CANAUX - Difficile
+      WordWithDifficulty('Détroit du Bosphore', difficulty: 3),
+      WordWithDifficulty('Détroit des Dardanelles', difficulty: 3),
+      WordWithDifficulty('Détroit de Magellan', difficulty: 3),
+      WordWithDifficulty('Canal de Corinthe', difficulty: 3),
+
   ],
 );

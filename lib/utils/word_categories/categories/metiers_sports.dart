@@ -98,6 +98,7 @@ const categoryMetiersSports = WordCategory(
 
       // MÉTIERS TRANSPORT - Facile
       WordWithDifficulty('Chauffeur', difficulty: 1),
+      WordWithDifficulty('Facteur', difficulty: 1),
       WordWithDifficulty('Conducteur de bus', difficulty: 1),
       WordWithDifficulty('Pilote', difficulty: 1),
 
@@ -171,6 +172,111 @@ const categoryMetiersSports = WordCategory(
       WordWithDifficulty('Viticulteur', difficulty: 3),
       WordWithDifficulty('Sylviculteur', difficulty: 3),
 
+      // MÉTIERS ADMINISTRATIFS - Facile
+      WordWithDifficulty('Secrétaire', difficulty: 1),
+      WordWithDifficulty('Réceptionniste', difficulty: 1),
+
+      // MÉTIERS ADMINISTRATIFS - Moyen
+      WordWithDifficulty('Assistant', difficulty: 2),
+      WordWithDifficulty('Fonctionnaire', difficulty: 2),
+      WordWithDifficulty('Employé de bureau', difficulty: 2),
+
+      // MÉTIERS ADMINISTRATIFS - Difficile
+      WordWithDifficulty('Archiviste', difficulty: 3),
+      WordWithDifficulty('Documentaliste', difficulty: 3),
+
+      // MÉTIERS SCIENTIFIQUES - Moyen
+      WordWithDifficulty('Chercheur', difficulty: 2),
+      WordWithDifficulty('Biologiste', difficulty: 2),
+      WordWithDifficulty('Chimiste', difficulty: 2),
+
+      // MÉTIERS SCIENTIFIQUES - Difficile
+      WordWithDifficulty('Physicien', difficulty: 2),
+      WordWithDifficulty('Géologue', difficulty: 3),
+      WordWithDifficulty('Astronome', difficulty: 3),
+      WordWithDifficulty('Paléontologue', difficulty: 3),
+      WordWithDifficulty('Archéologue', difficulty: 2),
+      WordWithDifficulty('Météorologue', difficulty: 2),
+
+      // MÉTIERS LOGISTIQUE - Facile
+      WordWithDifficulty('Livreur', difficulty: 1),
+      WordWithDifficulty('Magasinier', difficulty: 2),
+
+      // MÉTIERS LOGISTIQUE - Moyen
+      WordWithDifficulty('Préparateur de commandes', difficulty: 3),
+      WordWithDifficulty('Manutentionnaire', difficulty: 3),
+      WordWithDifficulty('Cariste', difficulty: 3),
+
+      // MÉTIERS LOGISTIQUE - Difficile
+      WordWithDifficulty('Gestionnaire de stocks', difficulty: 3),
+      WordWithDifficulty('Responsable logistique', difficulty: 3),
+
+      // MÉTIERS ENVIRONNEMENT - Moyen
+      WordWithDifficulty('Écologiste', difficulty: 2),
+      WordWithDifficulty('Garde forestier', difficulty: 2),
+
+      // MÉTIERS SERVICES À LA PERSONNE - Facile
+      WordWithDifficulty('Aide à domicile', difficulty: 1),
+      WordWithDifficulty('Baby-sitter', difficulty: 1),
+
+      // MÉTIERS SERVICES À LA PERSONNE - Moyen
+      WordWithDifficulty('Auxiliaire de vie', difficulty: 2),
+      WordWithDifficulty('Aide-soignant', difficulty: 2),
+
+      // MÉTIERS SERVICES À LA PERSONNE - Difficile
+      WordWithDifficulty('Accompagnant éducatif et social', difficulty: 3),
+
+      // MÉTIERS HÔTELLERIE/TOURISME - Facile
+      WordWithDifficulty('Guide touristique', difficulty: 1),
+
+      // MÉTIERS HÔTELLERIE/TOURISME - Moyen
+      WordWithDifficulty('Concierge', difficulty: 2),
+      WordWithDifficulty('Agent de voyage', difficulty: 3),
+      WordWithDifficulty('Gouvernante', difficulty: 2),
+
+      // MÉTIERS HÔTELLERIE/TOURISME - Difficile
+      WordWithDifficulty('Majordome', difficulty: 2),
+
+      // MÉTIERS MODE/BEAUTÉ - Facile
+      WordWithDifficulty('Mannequin', difficulty: 1),
+
+      // MÉTIERS MODE/BEAUTÉ - Moyen
+      WordWithDifficulty('Styliste', difficulty: 2),
+      WordWithDifficulty('Esthéticienne', difficulty: 2),
+      WordWithDifficulty('Maquilleur', difficulty: 2),
+
+      // MÉTIERS MODE/BEAUTÉ - Difficile
+      WordWithDifficulty('Couturier', difficulty: 2),
+
+      // MÉTIERS INDUSTRIE - Moyen
+      WordWithDifficulty('Technicien de maintenance', difficulty: 3),
+
+      // MÉTIERS INDUSTRIE - Difficile
+      WordWithDifficulty('Soudeur', difficulty: 2),
+      WordWithDifficulty('Chaudronnier', difficulty: 3),
+      WordWithDifficulty('Usineur', difficulty: 3),
+
+      // MÉTIERS COMMUNICATION/MARKETING - Moyen
+      WordWithDifficulty('Publicitaire', difficulty: 2),
+      WordWithDifficulty('Chargé de communication', difficulty: 3),
+
+      // MÉTIERS COMMUNICATION/MARKETING - Difficile
+      WordWithDifficulty('Community manager', difficulty: 3),
+      WordWithDifficulty('Attaché de presse', difficulty: 3),
+      WordWithDifficulty('Chef de produit', difficulty: 3),
+      WordWithDifficulty('Directeur marketing', difficulty: 3),
+
+      // MÉTIERS SPECTACLE - Moyen
+      WordWithDifficulty('Comédien', difficulty: 2),
+      WordWithDifficulty('Danseur', difficulty: 2),
+      WordWithDifficulty('Chanteur', difficulty: 2),
+
+      // MÉTIERS SPECTACLE - Difficile
+      WordWithDifficulty('Cascadeur', difficulty: 3),
+      WordWithDifficulty('Marionnettiste', difficulty: 3),
+      WordWithDifficulty('Mime', difficulty: 2),
+      WordWithDifficulty('Prestidigitateur', difficulty: 3),
+
       // SPORTS COLLECTIFS - Facile
       WordWithDifficulty('Football', difficulty: 1),
       WordWithDifficulty('Basketball', difficulty: 1),
@@ -220,7 +326,7 @@ const categoryMetiersSports = WordCategory(
 
       // SPORTS AQUATIQUES - Moyen
       WordWithDifficulty('Surf', difficulty: 1),
-      WordWithDifficulty('Voile', difficulty: 2),
+      WordWithDifficulty('Voile', difficulty: 1),
       WordWithDifficulty('Canoë-kayak', difficulty: 2),
       WordWithDifficulty('Aviron', difficulty: 2),
 
@@ -237,13 +343,13 @@ const categoryMetiersSports = WordCategory(
       WordWithDifficulty('Danse', difficulty: 1),
 
       // SPORTS INDIVIDUELS - Moyen
-      WordWithDifficulty('Athlétisme', difficulty: 2),
-      WordWithDifficulty('Gymnastique', difficulty: 2),
-      WordWithDifficulty('Escalade', difficulty: 2),
-      WordWithDifficulty('Équitation', difficulty: 2),
-      WordWithDifficulty('Patinage', difficulty: 2),
-      WordWithDifficulty('Skateboard', difficulty: 2),
-      WordWithDifficulty('Roller', difficulty: 2),
+      WordWithDifficulty('Athlétisme', difficulty: 1),
+      WordWithDifficulty('Gymnastique', difficulty: 1),
+      WordWithDifficulty('Escalade', difficulty: 1),
+      WordWithDifficulty('Équitation', difficulty: 1),
+      WordWithDifficulty('Patinage', difficulty: 1),
+      WordWithDifficulty('Skateboard', difficulty: 1),
+      WordWithDifficulty('Roller', difficulty: 1),
 
       // SPORTS INDIVIDUELS - Difficile
       WordWithDifficulty('Triathlon', difficulty: 2),
@@ -268,10 +374,76 @@ const categoryMetiersSports = WordCategory(
 
       // SPORTS EXTRÊMES - Difficile
       WordWithDifficulty('Parachutisme', difficulty: 2),
-      WordWithDifficulty('Saut à l\'élastique', difficulty: 3),
-      WordWithDifficulty('Deltaplane', difficulty: 3),
-      WordWithDifficulty('Parapente', difficulty: 3),
+      WordWithDifficulty('Saut à l\'élastique', difficulty: 2),
+      WordWithDifficulty('Deltaplane', difficulty: 2),
+      WordWithDifficulty('Parapente', difficulty: 2),
       WordWithDifficulty('Base jump', difficulty: 3),
-    
+
+      // SPORTS MÉCANIQUES - Facile
+      WordWithDifficulty('Karting', difficulty: 1),
+
+      // SPORTS MÉCANIQUES - Moyen
+      WordWithDifficulty('Rallye', difficulty: 2),
+      WordWithDifficulty('Motocross', difficulty: 2),
+
+      // SPORTS MÉCANIQUES - Difficile
+      WordWithDifficulty('Formule 1', difficulty: 2),
+      WordWithDifficulty('MotoGP', difficulty: 3),
+      WordWithDifficulty('Enduro', difficulty: 3),
+      WordWithDifficulty('Drift', difficulty: 3),
+
+      // SPORTS DE PRÉCISION - Facile
+      WordWithDifficulty('Pétanque', difficulty: 1),
+      WordWithDifficulty('Bowling', difficulty: 1),
+      WordWithDifficulty('Fléchettes', difficulty: 1),
+
+      // SPORTS DE PRÉCISION - Moyen
+      WordWithDifficulty('Billard', difficulty: 2),
+      WordWithDifficulty('Tir sportif', difficulty: 2),
+
+      // SPORTS DE PRÉCISION - Difficile
+      WordWithDifficulty('Snooker', difficulty: 3),
+      WordWithDifficulty('Billard américain', difficulty: 3),
+
+      // SPORTS AÉRIENS - Moyen
+      WordWithDifficulty('Vol en montgolfière', difficulty: 2),
+      WordWithDifficulty('Vol à voile', difficulty: 3),
+
+      // SPORTS AÉRIENS - Difficile
+      WordWithDifficulty('Wingsuit', difficulty: 3),
+      WordWithDifficulty('ULM', difficulty: 3),
+
+      // SPORTS URBAINS - Facile
+      WordWithDifficulty('Trottinette freestyle', difficulty: 2),
+
+      // SPORTS URBAINS - Moyen
+      WordWithDifficulty('Parkour', difficulty: 3),
+      WordWithDifficulty('Street workout', difficulty: 3),
+
+      // SPORTS URBAINS - Difficile
+      WordWithDifficulty('Slackline', difficulty: 3),
+
+      // SPORTS NATURE/MONTAGNE - Facile
+      WordWithDifficulty('Randonnée', difficulty: 1),
+      WordWithDifficulty('VTT', difficulty: 1),
+
+      // SPORTS NATURE/MONTAGNE - Moyen
+      WordWithDifficulty('Trail', difficulty: 2),
+      WordWithDifficulty('Canyoning', difficulty: 3),
+
+      // SPORTS NATURE/MONTAGNE - Difficile
+      WordWithDifficulty('Alpinisme', difficulty: 2),
+      WordWithDifficulty('Spéléologie', difficulty: 3),
+      WordWithDifficulty('Via ferrata', difficulty: 3),
+
+      // SPORTS ÉQUESTRES - Moyen
+      WordWithDifficulty('Dressage', difficulty: 2),
+      WordWithDifficulty('Saut d\'obstacles', difficulty: 2),
+      WordWithDifficulty('Concours complet', difficulty: 3),
+
+      // SPORTS ÉQUESTRES - Difficile
+      WordWithDifficulty('Polo', difficulty: 3),
+      WordWithDifficulty('Voltige', difficulty: 3),
+
   ],
 );

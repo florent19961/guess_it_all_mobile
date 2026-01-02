@@ -20,7 +20,7 @@ class AppModal extends StatelessWidget {
   }) {
     return showDialog<T>(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
+      barrierColor: Colors.black.withOpacity(0.7),
       builder: (context) => AppModal(
         title: title,
         onClose: () => Navigator.of(context).pop(),

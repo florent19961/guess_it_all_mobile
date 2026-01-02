@@ -63,6 +63,59 @@ lib/
 - **Cache équipes** : Composition et noms des équipes sont persistés
   - Si le nombre de joueurs change : les nouveaux sont ajoutés aléatoirement
 
+## Catégories de mots
+
+Le jeu propose **13 catégories de mots** avec exactement **4 703 mots** au total :
+
+1. **7ème Art** (🎬) - Films, séries, anime, personnages
+2. **Géographie** (🌍) - Pays, villes, monuments, fleuves
+3. **Nature et Gastronomie** (🌿) - Animaux, plantes, plats du monde, fromages, vins
+4. **Métiers & Sports** (💼) - Professions et tous les sports
+5. **Célébrités** (⭐) - Sportifs, acteurs, chanteurs, influenceurs
+6. **Noms communs** (🔧) - Objets quotidiens, instruments
+7. **Univers Arcade** (🎮) - Jeux vidéo, Pokémon, Clash Royale, jeux de société
+8. **Expressions** (🇫🇷) - Expressions françaises
+9. **Dictionnaire** (📖) - Vocabulaire général
+10. **Musique** (🎵) - Chansons, genres, artistes
+11. **Marques** (🏷️) - Vêtements, tech, alimentation
+12. **Science et Médecine** (🔬) - Anatomie, maladies, éléments chimiques, astronomie
+13. **Métro Parisien** (🚇) - Stations de métro
+
+### Détail par catégorie
+
+| Catégorie | Icône | Nombre de mots |
+|-----------|-------|----------------|
+| 7ème Art | 🎬 | 491 |
+| Dictionnaire | 📖 | 492 |
+| Nature et Gastronomie | 🌿 | 626 |
+| Science et Médecine | 🔬 | 484 |
+| Marques | 🏷️ | 465 |
+| Géographie | 🌍 | 384 |
+| Célébrités | ⭐ | 361 |
+| Noms communs | 🔧 | 345 |
+| Univers Arcade | 🎮 | 324 |
+| Métiers & Sports | 💼 | 284 |
+| Musique | 🎵 | 224 |
+| Expressions | 🇫🇷 | 118 |
+| Métro Parisien | 🚇 | 105 |
+| **TOTAL** | | **4 703** |
+
+### Catégories enrichies (Janvier 2026)
+
+#### Science et Médecine (anciennement Médecine)
+- **ID** : `science_medecine` (renommé de `medecine`)
+- **Icône** : 🔬
+- **484 mots** répartis en :
+  - **Section Médecine** : Anatomie, maladies, symptômes, traitements, spécialités médicales, équipements, traumatismes, pathologies, santé mentale, cancers, premiers secours, professions paramédicales
+  - **Section Science** : Éléments chimiques, domaines scientifiques, théories et lois, espace et astronomie, inventions et découvertes, scientifiques célèbres, phénomènes physiques, unités de mesure, biologie cellulaire, chimie, géologie
+
+#### Nature et Gastronomie (anciennement Nature)
+- **ID** : `nature` (inchangé)
+- **Icône** : 🌿
+- **626 mots** répartis en :
+  - **Section Nature** : Animaux (sauvages, domestiques, marins, oiseaux, insectes, reptiles), plantes et fleurs, arbres, fruits et légumes, champignons, phénomènes naturels, minéraux, géologie, astres, écosystèmes
+  - **Section Gastronomie** : Plats italiens, plats asiatiques, plats français traditionnels, plats du monde, techniques culinaires, ustensiles spécialisés, sauces célèbres, pâtisseries et desserts, fromages, vins et cépages, pains du monde, termes culinaires professionnels
+
 ## Commandes
 
 ```bash

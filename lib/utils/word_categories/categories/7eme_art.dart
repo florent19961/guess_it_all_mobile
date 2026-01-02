@@ -34,21 +34,21 @@ const category7emeArt = WordCategory(
     WordWithDifficulty('Gladiator', difficulty: 2),
     WordWithDifficulty('Le Seigneur des Anneaux', difficulty: 1),
     WordWithDifficulty('Pulp Fiction', difficulty: 2),
-    WordWithDifficulty('Terminator', difficulty: 2),
+    WordWithDifficulty('Terminator', difficulty: 1),
     WordWithDifficulty('Alien', difficulty: 2),
     WordWithDifficulty('Rocky', difficulty: 2),
-    WordWithDifficulty('Shrek', difficulty: 2),
+    WordWithDifficulty('Shrek', difficulty: 1),
     WordWithDifficulty('Interstellar', difficulty: 2),
     WordWithDifficulty('Top Gun', difficulty: 2),
     WordWithDifficulty('Le Loup de Wall Street', difficulty: 2),
     WordWithDifficulty('Gravity', difficulty: 2),
     WordWithDifficulty('Dune', difficulty: 2),
     WordWithDifficulty('Blade Runner', difficulty: 3),
-    WordWithDifficulty('Mad Max', difficulty: 2),
+    WordWithDifficulty('Mad Max', difficulty: 3),
     WordWithDifficulty('Apocalypse Now', difficulty: 2),
     WordWithDifficulty('Scarface', difficulty: 2),
     WordWithDifficulty('Taxi Driver', difficulty: 2),
-    WordWithDifficulty('Reservoir Dogs', difficulty: 2),
+    WordWithDifficulty('Reservoir Dogs', difficulty: 3),
     WordWithDifficulty('Kill Bill', difficulty: 2),
     WordWithDifficulty('Django Unchained', difficulty: 2),
     WordWithDifficulty('Le Prestige', difficulty: 2),
@@ -68,7 +68,6 @@ const category7emeArt = WordCategory(
     WordWithDifficulty('No Country for Old Men', difficulty: 3),
     WordWithDifficulty('There Will Be Blood', difficulty: 3),
     WordWithDifficulty("2001 L'Odyssée de l'espace", difficulty: 3),
-    WordWithDifficulty("Vol au-dessus d'un nid de coucou", difficulty: 3),
     WordWithDifficulty('Un Américain bien tranquille', difficulty: 3),
     WordWithDifficulty('La Vie est belle', difficulty: 3),
     WordWithDifficulty('Le Pont de la rivière Kwaï', difficulty: 3),
@@ -79,26 +78,26 @@ const category7emeArt = WordCategory(
     WordWithDifficulty('Batman', difficulty: 1),
     WordWithDifficulty('Superman', difficulty: 1),
     WordWithDifficulty('Spider-Man', difficulty: 1),
-    WordWithDifficulty('Iron Man', difficulty: 2),
-    WordWithDifficulty('Avengers', difficulty: 2),
+    WordWithDifficulty('Iron Man', difficulty: 1),
+    WordWithDifficulty('Avengers', difficulty: 1),
     WordWithDifficulty('Thor', difficulty: 2),
     WordWithDifficulty('Hulk', difficulty: 1),
-    WordWithDifficulty('X-Men', difficulty: 2),
+    WordWithDifficulty('X-Men', difficulty: 1),
     WordWithDifficulty('Les Gardiens de la Galaxie', difficulty: 2),
     WordWithDifficulty('Ant-Man', difficulty: 3),
 
     // SUPER-HÉROS - Moyen
     WordWithDifficulty('Black Panther', difficulty: 2),
-    WordWithDifficulty('Joker', difficulty: 2),
-    WordWithDifficulty('Captain America', difficulty: 2),
-    WordWithDifficulty('Wonder Woman', difficulty: 2),
-    WordWithDifficulty('Doctor Strange', difficulty: 2),
+    WordWithDifficulty('Joker', difficulty: 1),
+    WordWithDifficulty('Captain America', difficulty: 1),
+    WordWithDifficulty('Wonder Woman', difficulty: 1),
+    WordWithDifficulty('Doctor Strange', difficulty: 3),
     WordWithDifficulty('Deadpool', difficulty: 3),
     WordWithDifficulty('Black Widow', difficulty: 2),
     WordWithDifficulty('Aquaman', difficulty: 2),
     WordWithDifficulty('Shazam', difficulty: 2),
-    WordWithDifficulty('Venom', difficulty: 2),
-    WordWithDifficulty('Eternals', difficulty: 2),
+    WordWithDifficulty('Venom', difficulty: 3),
+    WordWithDifficulty('Eternals', difficulty: 3),
 
     // SUPER-HÉROS - Difficile
     WordWithDifficulty('Batman : The Dark Knight', difficulty: 2),
@@ -111,11 +110,11 @@ const category7emeArt = WordCategory(
     // DISNEY / PIXAR - Facile
     WordWithDifficulty('La Reine des Neiges', difficulty: 1),
     WordWithDifficulty('Toy Story', difficulty: 1),
-    WordWithDifficulty('Nemo', difficulty: 2),
+    WordWithDifficulty('Nemo', difficulty: 1),
     WordWithDifficulty('Cendrillon', difficulty: 1),
     WordWithDifficulty('Aladdin', difficulty: 1),
     WordWithDifficulty('Vaiana', difficulty: 2),
-    WordWithDifficulty('Raiponce', difficulty: 2),
+    WordWithDifficulty('Raiponce', difficulty: 1),
     WordWithDifficulty('Mulan', difficulty: 1),
     WordWithDifficulty('La Belle et la Bête', difficulty: 1),
     WordWithDifficulty('Pocahontas', difficulty: 1),
@@ -127,29 +126,30 @@ const category7emeArt = WordCategory(
 
     // DISNEY / PIXAR - Moyen
     WordWithDifficulty('Ratatouille', difficulty: 2),
-    WordWithDifficulty('Vice-Versa', difficulty: 2),
-    WordWithDifficulty('Coco', difficulty: 2),
+    WordWithDifficulty('Vice-Versa', difficulty: 1),
+    WordWithDifficulty('Coco', difficulty: 1),
     WordWithDifficulty('Wall-E', difficulty: 2),
-    WordWithDifficulty('Monstres et Cie', difficulty: 2),
-    WordWithDifficulty('Les Indestructibles', difficulty: 2),
+    WordWithDifficulty('Monstres et Cie', difficulty: 1),
+    WordWithDifficulty('Les Indestructibles', difficulty: 1),
     WordWithDifficulty('Rebelle', difficulty: 2),
-    WordWithDifficulty('Encanto', difficulty: 3),
-    WordWithDifficulty('Zootopie', difficulty: 2),
+    WordWithDifficulty('Encanto', difficulty: 2),
+    WordWithDifficulty('Zootopie', difficulty: 1),
     WordWithDifficulty('Là-haut', difficulty: 2),
-    WordWithDifficulty('Dory', difficulty: 3),
-    WordWithDifficulty('Luca', difficulty: 2),
-    WordWithDifficulty('Alerte Rouge', difficulty: 3),
+    WordWithDifficulty('Dory', difficulty: 1),
+    WordWithDifficulty('Luca', difficulty: 1),
+    WordWithDifficulty('Alerte Rouge', difficulty: 2),
     WordWithDifficulty('Strange World', difficulty: 3),
+    WordWithDifficulty('Raya', difficulty: 1),
 
     // DISNEY / PIXAR - Difficile
     WordWithDifficulty('La Princesse et la Grenouille', difficulty: 3),
     WordWithDifficulty('Atlantide', difficulty: 3),
-    WordWithDifficulty('Hercule', difficulty: 2),
-    WordWithDifficulty('Tarzan', difficulty: 2),
-    WordWithDifficulty('Soul', difficulty: 3),
-    WordWithDifficulty('Rox et Rouky', difficulty: 3),
-    WordWithDifficulty('Dinosaure', difficulty: 2),
-    WordWithDifficulty('Kuzco', difficulty: 3),
+    WordWithDifficulty('Hercule', difficulty: 1),
+    WordWithDifficulty('Tarzan', difficulty: 1),
+    WordWithDifficulty('Soul', difficulty: 2),
+    WordWithDifficulty('Rox et Rouky', difficulty: 2),
+    WordWithDifficulty('Dinosaure', difficulty: 1),
+    WordWithDifficulty('Kuzco', difficulty: 2),
     WordWithDifficulty('La Planète au Trésor', difficulty: 3),
     WordWithDifficulty('Frère des Ours', difficulty: 3),
 
@@ -159,17 +159,16 @@ const category7emeArt = WordCategory(
     WordWithDifficulty('Les Minions', difficulty: 2),
     WordWithDifficulty('Moi Moche et Méchant', difficulty: 1),
     WordWithDifficulty("L'Âge de Glace", difficulty: 1),
-    WordWithDifficulty('Shrek', difficulty: 1),
-    WordWithDifficulty('Le Chat Potté', difficulty: 2),
-    WordWithDifficulty('Les Trolls', difficulty: 2),
-    WordWithDifficulty('Rio', difficulty: 2),
+    WordWithDifficulty('Le Chat Potté', difficulty: 1),
+    WordWithDifficulty('Les Trolls', difficulty: 1),
+    WordWithDifficulty('Rio', difficulty: 1),
 
     // ANIMATION NON-DISNEY - Moyen
     WordWithDifficulty('Dragons', difficulty: 2),
     WordWithDifficulty('Lego Movie', difficulty: 3),
     WordWithDifficulty('Les Croods', difficulty: 3),
     WordWithDifficulty('Boss Baby', difficulty: 3),
-    WordWithDifficulty('Wallace et Gromit', difficulty: 2),
+    WordWithDifficulty('Wallace et Gromit', difficulty: 3),
     WordWithDifficulty('Chicken Run', difficulty: 3),
     WordWithDifficulty('Tempête de boulettes géantes', difficulty: 3),
 
@@ -178,8 +177,6 @@ const category7emeArt = WordCategory(
     WordWithDifficulty('Mon Voisin Totoro', difficulty: 3),
     WordWithDifficulty('Princesse Mononoké', difficulty: 3),
     WordWithDifficulty('Le Château Ambulant', difficulty: 3),
-    WordWithDifficulty('Ponyo sur la Falaise', difficulty: 3),
-    WordWithDifficulty('Porco Rosso', difficulty: 3),
 
     // SÉRIES - Facile
     WordWithDifficulty('Friends', difficulty: 1),
@@ -208,7 +205,7 @@ const category7emeArt = WordCategory(
     WordWithDifficulty('Succession', difficulty: 3),
     WordWithDifficulty('The Mandalorian', difficulty: 3),
     WordWithDifficulty('The Last of Us', difficulty: 2),
-    WordWithDifficulty('Westworld', difficulty: 2),
+    WordWithDifficulty('Westworld', difficulty: 3),
     WordWithDifficulty('The Boys', difficulty: 2),
 
     // SÉRIES - Difficile
@@ -249,7 +246,7 @@ const category7emeArt = WordCategory(
     WordWithDifficulty("Bienvenue chez les Ch'tis", difficulty: 3),
     WordWithDifficulty('Les Visiteurs', difficulty: 2),
     WordWithDifficulty('Le Grand Bleu', difficulty: 2),
-    WordWithDifficulty('Léon', difficulty: 2),
+    WordWithDifficulty('Léon', difficulty: 3),
     WordWithDifficulty('Nikita', difficulty: 3),
     WordWithDifficulty('La Boum', difficulty: 2),
     WordWithDifficulty('Les Bronzés', difficulty: 2),
@@ -289,11 +286,14 @@ const category7emeArt = WordCategory(
     WordWithDifficulty('Simba', difficulty: 1),
     WordWithDifficulty('Woody', difficulty: 2),
     WordWithDifficulty("Buzz l'Éclair", difficulty: 1),
-    WordWithDifficulty('Shrek', difficulty: 1),
-    WordWithDifficulty('Dory', difficulty: 2),
     WordWithDifficulty('Olaf', difficulty: 2),
     WordWithDifficulty('Maui', difficulty: 3),
-    WordWithDifficulty('Anna', difficulty: 3),
+    WordWithDifficulty('Anna', difficulty: 2),
+    WordWithDifficulty('Stitch', difficulty: 1),
+    WordWithDifficulty('Flash McQueen', difficulty: 1),
+    WordWithDifficulty('Martin', difficulty: 2),
+    WordWithDifficulty('Rémy', difficulty: 2),
+    WordWithDifficulty('Nala', difficulty: 1),
 
     // PERSONNAGES DE FILMS/SÉRIES - Moyen
     WordWithDifficulty('Dark Vador', difficulty: 1),
@@ -321,7 +321,7 @@ const category7emeArt = WordCategory(
     WordWithDifficulty('Scooby-Doo', difficulty: 1),
     WordWithDifficulty('Tom et Jerry', difficulty: 1),
     WordWithDifficulty("Dora l'Exploratrice", difficulty: 1),
-    WordWithDifficulty('Peppa Pig', difficulty: 2),
+    WordWithDifficulty('Peppa Pig', difficulty: 3),
     WordWithDifficulty('Pat Patrouille', difficulty: 3),
     WordWithDifficulty('Les Télétubbies', difficulty: 1),
 
@@ -341,5 +341,202 @@ const category7emeArt = WordCategory(
     WordWithDifficulty('Wakfu', difficulty: 3),
     WordWithDifficulty('Oggy et les Cafards', difficulty: 3),
     WordWithDifficulty("Les zinzins de l'espace", difficulty: 3),
+
+    // FILMS D'HORREUR - Facile
+    WordWithDifficulty('Ça', difficulty: 1),
+    WordWithDifficulty('Halloween', difficulty: 1),
+    WordWithDifficulty('Scream', difficulty: 1),
+    WordWithDifficulty('Saw', difficulty: 2),
+    WordWithDifficulty('Annabelle', difficulty: 2),
+    WordWithDifficulty('Chucky', difficulty: 1),
+    WordWithDifficulty('Vendredi 13', difficulty: 1),
+    WordWithDifficulty('The Ring', difficulty: 2),
+    WordWithDifficulty('Conjuring', difficulty: 2),
+    WordWithDifficulty('Insidious', difficulty: 2),
+
+    // FILMS D'HORREUR - Moyen
+    WordWithDifficulty("L'Exorciste", difficulty: 3),
+    WordWithDifficulty('The Shining', difficulty: 2),
+    WordWithDifficulty('Get Out', difficulty: 3),
+    WordWithDifficulty('Us', difficulty: 3),
+    WordWithDifficulty('A Quiet Place', difficulty: 3),
+    WordWithDifficulty('Sinister', difficulty: 3),
+    WordWithDifficulty('The Descent', difficulty: 3),
+    WordWithDifficulty('Paranormal Activity', difficulty: 3),
+    WordWithDifficulty('The Babadook', difficulty: 3),
+    WordWithDifficulty('Midsommar', difficulty: 3),
+    // COMÉDIES - Facile
+    WordWithDifficulty('Very Bad Trip', difficulty: 2),
+    WordWithDifficulty('Scary Movie', difficulty: 2),
+    WordWithDifficulty('Maman j\'ai raté l\'avion', difficulty: 2),
+    WordWithDifficulty('American Pie', difficulty: 2),
+
+    // COMÉDIES - Moyen
+    WordWithDifficulty('21 Jump Street', difficulty: 3),
+    WordWithDifficulty('La Nuit au Musée', difficulty: 2),
+    WordWithDifficulty('Dikkenek', difficulty: 2),
+    WordWithDifficulty('Borat', difficulty: 2),
+
+    // COMÉDIES - Difficile
+    WordWithDifficulty('The Grand Budapest Hotel', difficulty: 3),
+
+    // FILMS POLICIERS/THRILLERS - Facile
+    WordWithDifficulty('Taken', difficulty: 1),
+    WordWithDifficulty('Jason Bourne', difficulty: 2),
+    WordWithDifficulty('Ocean\'s Eleven', difficulty: 2),
+    WordWithDifficulty('Les Infiltrés', difficulty: 2),
+
+    // FILMS POLICIERS/THRILLERS - Moyen
+    WordWithDifficulty('Zodiac', difficulty: 2),
+    WordWithDifficulty('Mystic River', difficulty: 3),
+    WordWithDifficulty('Prisoners', difficulty: 2),
+    WordWithDifficulty('L.A. Confidential', difficulty: 3),
+    WordWithDifficulty('Heat', difficulty: 3),
+    WordWithDifficulty('Usual Suspects', difficulty: 2),
+    WordWithDifficulty('Memories of Murder', difficulty: 3),
+    WordWithDifficulty('Le Fugitif', difficulty: 2),
+
+    // WESTERNS - Facile
+    WordWithDifficulty('Les Sept Mercenaires', difficulty: 2),
+    WordWithDifficulty('Django', difficulty: 2),
+    WordWithDifficulty('Il était une fois dans l\'Ouest', difficulty: 3),
+
+    // WESTERNS - Moyen
+    WordWithDifficulty('Le Bon, la Brute et le Truand', difficulty: 2),
+    WordWithDifficulty('Impitoyable', difficulty: 3),
+
+    // FILMS ROMANTIQUES - Facile
+    WordWithDifficulty('The Notebook', difficulty: 3),
+    WordWithDifficulty('Dirty Dancing', difficulty: 1),
+    WordWithDifficulty('Ghost', difficulty: 1),
+    WordWithDifficulty('Pretty Woman', difficulty: 1),
+    WordWithDifficulty('Love Actually', difficulty: 2),
+    WordWithDifficulty('Coup de foudre à notting Hill', difficulty: 2),
+    WordWithDifficulty('Le Journal de Bridget Jones', difficulty: 2),
+
+    // FILMS ROMANTIQUES - Moyen
+    WordWithDifficulty('Nos étoiles contraires', difficulty: 2),
+    WordWithDifficulty('Et si c\'était vrai', difficulty: 3),
+    WordWithDifficulty('Crazy Stupid Love', difficulty: 2),
+    WordWithDifficulty('Moulin Rouge', difficulty: 2),
+
+    // FILMS ROMANTIQUES - Difficile
+    WordWithDifficulty('Orgueil et Préjugés', difficulty: 2),
+    WordWithDifficulty('Autant en emporte le vent', difficulty: 3),
+    WordWithDifficulty('Casablanca', difficulty: 3),
+    WordWithDifficulty('Les Parapluies de Cherbourg', difficulty: 3),
+
+    // FILMS DE GUERRE - Facile
+    WordWithDifficulty('Dunkerque', difficulty: 2),
+    WordWithDifficulty('1917', difficulty: 2),
+    WordWithDifficulty('Fury', difficulty: 3),
+    WordWithDifficulty('Pearl Harbor', difficulty: 2),
+
+    // FILMS DE GUERRE - Moyen
+    WordWithDifficulty('Platoon', difficulty: 3),
+    WordWithDifficulty('Full Metal Jacket', difficulty: 3),
+    WordWithDifficulty('Black Hawk Down', difficulty: 2),
+    WordWithDifficulty('Voyage au bout de l\'enfer', difficulty: 3),
+    WordWithDifficulty('Troie', difficulty: 2),
+    WordWithDifficulty('300', difficulty: 2),
+    WordWithDifficulty('Joyeux Noël', difficulty: 2),
+
+    // FILMS DE GUERRE - Difficile
+    WordWithDifficulty('La Chute', difficulty: 3),
+
+    // COMÉDIES MUSICALES - Facile
+    WordWithDifficulty('Grease', difficulty: 2),
+    WordWithDifficulty('Mamma Mia', difficulty: 2),
+    WordWithDifficulty('High School Musical', difficulty: 1),
+    WordWithDifficulty('Pitch Perfect', difficulty: 3),
+    WordWithDifficulty('Le Roi et Moi', difficulty: 2),
+
+    // COMÉDIES MUSICALES - Moyen
+    WordWithDifficulty('Les Misérables', difficulty: 2),
+    WordWithDifficulty('Chicago', difficulty: 2),
+    WordWithDifficulty('West Side Story', difficulty: 2),
+    WordWithDifficulty('The Greatest Showman', difficulty: 2),
+    WordWithDifficulty('Hairspray', difficulty: 3),
+    WordWithDifficulty('Singin\' in the Rain', difficulty: 3),
+
+    // COMÉDIES MUSICALES - Difficile
+    WordWithDifficulty('Cabaret', difficulty: 2),
+    WordWithDifficulty('La Mélodie du Bonheur', difficulty: 3),
+    WordWithDifficulty('Un Américain à Paris', difficulty: 3),
+    WordWithDifficulty('Les Demoiselles de Rochefort', difficulty: 3),
+
+    // FILMS DE SPORT - Facile
+    WordWithDifficulty('Creed', difficulty: 3),
+    WordWithDifficulty('Raging Bull', difficulty: 3),
+    WordWithDifficulty('Million Dollar Baby', difficulty: 2),
+    WordWithDifficulty('Rush', difficulty: 3),
+    WordWithDifficulty('Cool Runnings', difficulty: 3),
+
+    // FILMS DE SPORT - Moyen
+    WordWithDifficulty('Invictus', difficulty: 2),
+    WordWithDifficulty('Le Stratège', difficulty: 2),
+    WordWithDifficulty('Le Pacte des Loups', difficulty: 3),
+    WordWithDifficulty('Warrior', difficulty: 3),
+    WordWithDifficulty('Les Chariots de Feu', difficulty: 3),
+
+    // BIOPICS - Facile
+    WordWithDifficulty('Bohemian Rhapsody', difficulty: 1),
+    WordWithDifficulty('The Social Network', difficulty: 2),
+    WordWithDifficulty('A Beautiful Mind', difficulty: 3),
+    WordWithDifficulty('127 heures', difficulty: 3),
+    WordWithDifficulty('The Imitation Game', difficulty: 2),
+
+    // BIOPICS - Moyen
+    WordWithDifficulty('Rocketman', difficulty: 2),
+    WordWithDifficulty('Ray', difficulty: 2),
+    WordWithDifficulty('La Môme', difficulty: 2),
+    WordWithDifficulty('Jobs', difficulty: 2),
+    WordWithDifficulty('The King\'s Speech', difficulty: 3),
+    WordWithDifficulty('12 Years a Slave', difficulty: 3),
+
+    // BIOPICS - Difficile
+    WordWithDifficulty('Gandhi', difficulty: 2),
+    WordWithDifficulty('Malcolm X', difficulty: 3),
+    WordWithDifficulty('Amadeus', difficulty: 2),
+    WordWithDifficulty('Patton', difficulty: 3),
+    WordWithDifficulty('Lawrence d\'Arabie', difficulty: 3),
+
+    // FRANCHISES/SAGAS - Facile
+    WordWithDifficulty('Fast & Furious', difficulty: 1),
+    WordWithDifficulty('Marvel', difficulty: 2),
+    WordWithDifficulty('Star Trek', difficulty: 2),
+    WordWithDifficulty('Bourne', difficulty: 2),
+    WordWithDifficulty('Men in Black', difficulty: 2),
+
+    // FRANCHISES/SAGAS - Moyen
+    WordWithDifficulty('La Planète des Singes', difficulty: 2),
+    WordWithDifficulty('Predator', difficulty: 3),
+    WordWithDifficulty('RoboCop', difficulty: 3),
+    WordWithDifficulty('Rambo', difficulty: 3),
+    WordWithDifficulty('Die Hard', difficulty: 3),
+    WordWithDifficulty('Expendables', difficulty: 3),
+    WordWithDifficulty('John Wick', difficulty: 3),
+
+    // FRANCHISES/SAGAS - Difficile
+    WordWithDifficulty('Dune', difficulty: 3),
+    WordWithDifficulty('Dollars Trilogy', difficulty: 3),
+    WordWithDifficulty('Evil Dead', difficulty: 3),
+    WordWithDifficulty('Before Trilogy', difficulty: 3),
+
+    // FILMS DE NOËL - Facile
+    WordWithDifficulty('Le Grinch', difficulty: 2),
+    WordWithDifficulty('Maman j\'ai encore raté l\'avion', difficulty: 3),
+    WordWithDifficulty('Le Pôle Express', difficulty: 2),
+    WordWithDifficulty('L\'Étrange Noël de Mr Jack', difficulty: 2),
+
+    // FILMS DE NOËL - Moyen
+    WordWithDifficulty('Elf', difficulty: 3),
+    WordWithDifficulty('Klaus', difficulty: 2),
+
+    // FILMS DE NOËL - Difficile
+    WordWithDifficulty('Edward aux mains d\'argent', difficulty: 2),
+    WordWithDifficulty('La Vie est belle (It\'s a Wonderful Life)', difficulty: 3),
+    WordWithDifficulty('Gremlins', difficulty: 3),
+    WordWithDifficulty('Le Cauchemar avant Noël', difficulty: 3),
   ],
 );

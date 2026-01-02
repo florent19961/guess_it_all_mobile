@@ -74,7 +74,7 @@ class CategoriesScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       decoration: BoxDecoration(
                         color: allSelected
-                            ? AppColors.secondaryCyan.withValues(alpha: 0.2)
+                            ? AppColors.secondaryCyan.withOpacity(0.2)
                             : AppColors.backgroundCard,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
@@ -203,7 +203,7 @@ class CategoriesScreen extends StatelessWidget {
               height: 20,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isEnabled ? Colors.white : Colors.white.withValues(alpha: 0.6),
+                color: isEnabled ? Colors.white : Colors.white.withOpacity(0.6),
               ),
             ),
           ),

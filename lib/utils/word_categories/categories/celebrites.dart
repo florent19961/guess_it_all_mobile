@@ -163,7 +163,7 @@ const categoryCelebrites = WordCategory(
       WordWithDifficulty('Kev Adams', difficulty: 2),
 
       // TÉLÉ-RÉALITÉ / INFLUENCEURS - Difficile
-      WordWithDifficulty('Squeezie', difficulty: 3),
+      WordWithDifficulty('Squeezie', difficulty: 2),
       WordWithDifficulty('McFly et Carlito', difficulty: 3),
       WordWithDifficulty('Inès Reg', difficulty: 3),
 
@@ -235,7 +235,7 @@ const categoryCelebrites = WordCategory(
       WordWithDifficulty('François 1er', difficulty: 3),
       WordWithDifficulty('Henri IV', difficulty: 3),
       WordWithDifficulty('Robespierre', difficulty: 3),
-      WordWithDifficulty('De Gaulle', difficulty: 3),
+      WordWithDifficulty('De Gaulle', difficulty: 2),
       WordWithDifficulty('Churchill', difficulty: 3),
 
       // LEADERS MONDIAUX - Moyen
@@ -254,7 +254,7 @@ const categoryCelebrites = WordCategory(
       WordWithDifficulty('François Hollande', difficulty: 1),
 
       // POLITIQUES FRANÇAIS - Difficile
-      WordWithDifficulty('Jacques Chirac', difficulty: 3),
+      WordWithDifficulty('Jacques Chirac', difficulty: 2),
       WordWithDifficulty('François Mitterrand', difficulty: 3),
       WordWithDifficulty('Georges Pompidou', difficulty: 3),
       WordWithDifficulty('Valéry Giscard d\'Estaing', difficulty: 3),
@@ -269,11 +269,11 @@ const categoryCelebrites = WordCategory(
       WordWithDifficulty('Newton', difficulty: 2),
 
       // SCIENTIFIQUES - Difficile
-      WordWithDifficulty('Galilée', difficulty: 3),
-      WordWithDifficulty('Tesla', difficulty: 3),
-      WordWithDifficulty('Pythagore', difficulty: 3),
+      WordWithDifficulty('Galilée', difficulty: 2),
+      WordWithDifficulty('Tesla', difficulty: 2),
+      WordWithDifficulty('Pythagore', difficulty: 2),
       WordWithDifficulty('Archimède', difficulty: 3),
-      WordWithDifficulty('Léonard de Vinci', difficulty: 3),
+      WordWithDifficulty('Léonard de Vinci', difficulty: 2),
 
       // TECH/BUSINESS - Facile
       WordWithDifficulty('Steve Jobs', difficulty: 1),
@@ -283,7 +283,225 @@ const categoryCelebrites = WordCategory(
       WordWithDifficulty('Mark Zuckerberg', difficulty: 2),
 
       // TECH/BUSINESS - Difficile
-      WordWithDifficulty('Jeff Bezos', difficulty: 3),
-    
+      WordWithDifficulty('Jeff Bezos', difficulty: 2),
+
+      // RÉALISATEURS / CINÉASTES - Facile
+      WordWithDifficulty('Steven Spielberg', difficulty: 1),
+      WordWithDifficulty('Quentin Tarantino', difficulty: 1),
+      WordWithDifficulty('Christopher Nolan', difficulty: 2),
+
+      // RÉALISATEURS / CINÉASTES - Moyen
+      WordWithDifficulty('Martin Scorsese', difficulty: 2),
+      WordWithDifficulty('James Cameron', difficulty: 2),
+      WordWithDifficulty('Tim Burton', difficulty: 3),
+      WordWithDifficulty('Luc Besson', difficulty: 3),
+      WordWithDifficulty('Ridley Scott', difficulty: 3),
+      WordWithDifficulty('Denis Villeneuve', difficulty: 3),
+
+      // RÉALISATEURS / CINÉASTES - Difficile
+      WordWithDifficulty('Stanley Kubrick', difficulty: 3),
+      WordWithDifficulty('Alfred Hitchcock', difficulty: 3),
+
+      // ARTISTES PEINTRES / SCULPTEURS - Facile
+      WordWithDifficulty('Pablo Picasso', difficulty: 2),
+      WordWithDifficulty('Vincent Van Gogh', difficulty: 2),
+      WordWithDifficulty('Claude Monet', difficulty: 3),
+
+      // ARTISTES PEINTRES / SCULPTEURS - Moyen
+      WordWithDifficulty('Salvador Dalí', difficulty: 2),
+      WordWithDifficulty('Michel-Ange', difficulty: 2),
+      WordWithDifficulty('Auguste Rodin', difficulty: 3),
+      WordWithDifficulty('Rembrandt', difficulty: 3),
+      WordWithDifficulty('Edgar Degas', difficulty: 3),
+      WordWithDifficulty('Auguste Renoir', difficulty: 3),
+
+      // ARTISTES PEINTRES / SCULPTEURS - Difficile
+      WordWithDifficulty('Paul Cézanne', difficulty: 3),
+      WordWithDifficulty('Édouard Manet', difficulty: 3),
+      WordWithDifficulty('Henri Matisse', difficulty: 3),
+      WordWithDifficulty('Vassily Kandinsky', difficulty: 3),
+      WordWithDifficulty('Andy Warhol', difficulty: 2),
+      WordWithDifficulty('Banksy', difficulty: 3),
+      WordWithDifficulty('Frida Kahlo', difficulty: 3),
+
+      // DESIGNERS / CRÉATEURS DE MODE - Facile
+      WordWithDifficulty('Coco Chanel', difficulty: 2),
+      WordWithDifficulty('Karl Lagerfeld', difficulty: 2),
+
+      // DESIGNERS / CRÉATEURS DE MODE - Moyen
+      WordWithDifficulty('Yves Saint Laurent', difficulty: 2),
+      WordWithDifficulty('Christian Dior', difficulty: 2),
+      WordWithDifficulty('Giorgio Armani', difficulty: 3),
+      WordWithDifficulty('Gianni Versace', difficulty: 3),
+      WordWithDifficulty('Jean-Paul Gaultier', difficulty: 2),
+
+      // DESIGNERS / CRÉATEURS DE MODE - Difficile
+      WordWithDifficulty('Pierre Cardin', difficulty: 3),
+
+      // DJ / MUSIQUE ÉLECTRONIQUE - Facile
+      WordWithDifficulty('David Guetta', difficulty: 1),
+      WordWithDifficulty('Martin Garrix', difficulty: 2),
+
+      // DJ / MUSIQUE ÉLECTRONIQUE - Moyen
+      WordWithDifficulty('Calvin Harris', difficulty: 2),
+      WordWithDifficulty('Avicii', difficulty: 2),
+      WordWithDifficulty('DJ Snake', difficulty: 2),
+      WordWithDifficulty('Skrillex', difficulty: 3),
+      WordWithDifficulty('Tiësto', difficulty: 3),
+
+      // DJ / MUSIQUE ÉLECTRONIQUE - Difficile
+      WordWithDifficulty('Swedish House Mafia', difficulty: 2),
+      WordWithDifficulty('Justice', difficulty: 2),
+
+      // RAPPEURS FRANÇAIS - Facile
+      WordWithDifficulty('Booba', difficulty: 2),
+      WordWithDifficulty('Orelsan', difficulty: 1),
+
+      // RAPPEURS FRANÇAIS - Moyen
+      WordWithDifficulty('PNL', difficulty: 2),
+      WordWithDifficulty('Nekfeu', difficulty: 1),
+      WordWithDifficulty('Ninho', difficulty: 2),
+      WordWithDifficulty('Soprano', difficulty: 2),
+      WordWithDifficulty('Maître Gims', difficulty: 1),
+      WordWithDifficulty('Jul', difficulty: 1),
+
+      // RAPPEURS FRANÇAIS - Difficile
+      WordWithDifficulty('IAM', difficulty: 3),
+      WordWithDifficulty('NTM', difficulty: 3),
+      WordWithDifficulty('MC Solaar', difficulty: 3),
+      WordWithDifficulty('Oxmo Puccino', difficulty: 3),
+
+      // GROUPES DE ROCK/POP - Facile
+      WordWithDifficulty('The Beatles', difficulty: 2),
+      WordWithDifficulty('Queen', difficulty: 2),
+      WordWithDifficulty('Coldplay', difficulty: 2),
+
+      // GROUPES DE ROCK/POP - Moyen
+      WordWithDifficulty('The Rolling Stones', difficulty: 2),
+      WordWithDifficulty('Led Zeppelin', difficulty: 3),
+      WordWithDifficulty('Pink Floyd', difficulty: 3),
+      WordWithDifficulty('U2', difficulty: 2),
+      WordWithDifficulty('Nirvana', difficulty: 2),
+      WordWithDifficulty('AC/DC', difficulty: 2),
+      WordWithDifficulty('Metallica', difficulty: 3),
+      WordWithDifficulty('Red Hot Chili Peppers', difficulty: 2),
+      WordWithDifficulty('Radiohead', difficulty: 3),
+
+      // GROUPES DE ROCK/POP - Difficile
+      WordWithDifficulty('The Doors', difficulty: 3),
+      WordWithDifficulty('The Who', difficulty: 3),
+      WordWithDifficulty('Genesis', difficulty: 3),
+      WordWithDifficulty('Téléphone', difficulty: 2),
+      WordWithDifficulty('Indochine', difficulty: 2),
+
+      // ANIMATEURS TV - Facile
+      WordWithDifficulty('Nagui', difficulty: 2),
+
+      // ANIMATEURS TV - Moyen
+      WordWithDifficulty('Michel Drucker', difficulty: 2),
+      WordWithDifficulty('Laurent Ruquier', difficulty: 3),
+      WordWithDifficulty('Christophe Dechavanne', difficulty: 2),
+      WordWithDifficulty('Julien Lepers', difficulty: 2),
+      WordWithDifficulty('Nikos Aliagas', difficulty: 2),
+
+      // ANIMATEURS TV - Difficile
+      WordWithDifficulty('Michel Denisot', difficulty: 3),
+      WordWithDifficulty('Guy Lux', difficulty: 3),
+
+      // JOURNALISTES / PRÉSENTATEURS - Moyen
+      WordWithDifficulty('Laurent Delahousse', difficulty: 2),
+      WordWithDifficulty('David Pujadas', difficulty: 2),
+      WordWithDifficulty('Anne-Sophie Lapix', difficulty: 2),
+      WordWithDifficulty('Élise Lucet', difficulty: 2),
+
+      // JOURNALISTES / PRÉSENTATEURS - Difficile
+      WordWithDifficulty('Claire Chazal', difficulty: 2),
+
+      // STREAMERS / YOUTUBEURS GAMING - Facile
+      WordWithDifficulty('Gotaga', difficulty: 3),
+
+      // STREAMERS / YOUTUBEURS GAMING - Moyen
+      WordWithDifficulty('Kameto', difficulty: 3),
+      WordWithDifficulty('Locklear', difficulty: 3),
+      WordWithDifficulty('Domingo', difficulty: 3),
+      WordWithDifficulty('Sardoche', difficulty: 3),
+
+      // STREAMERS / YOUTUBEURS GAMING - Difficile
+      WordWithDifficulty('Joueur du Grenier', difficulty: 3),
+
+      // MAGICIENS / ILLUSIONNISTES - Facile
+      WordWithDifficulty('David Copperfield', difficulty: 3),
+
+      // MAGICIENS / ILLUSIONNISTES - Difficile
+      WordWithDifficulty('Houdini', difficulty: 3),
+
+      // CHEFS CUISINIERS - Facile
+      WordWithDifficulty('Gordon Ramsay', difficulty: 2),
+      WordWithDifficulty('Jamie Oliver', difficulty: 2),
+
+      // CHEFS CUISINIERS - Moyen
+      WordWithDifficulty('Cyril Lignac', difficulty: 2),
+      WordWithDifficulty('Philippe Etchebest', difficulty: 2),
+      WordWithDifficulty('Alain Ducasse', difficulty: 2),
+      WordWithDifficulty('Pierre Hermé', difficulty: 2),
+      WordWithDifficulty('Thierry Marx', difficulty: 2),
+
+      // CHEFS CUISINIERS - Difficile
+      WordWithDifficulty('Paul Bocuse', difficulty: 3),
+      WordWithDifficulty('Joël Robuchon', difficulty: 3),
+
+      // ASTRONAUTES - Facile
+      WordWithDifficulty('Neil Armstrong', difficulty: 2),
+      WordWithDifficulty('Thomas Pesquet', difficulty: 2),
+
+      // ASTRONAUTES - Moyen
+      WordWithDifficulty('Youri Gagarine', difficulty: 3),
+
+
+      // AVENTURIERS / EXPLORATEURS - Facile
+      WordWithDifficulty('Jacques Cousteau', difficulty: 2),
+
+      // AVENTURIERS / EXPLORATEURS - Moyen
+      WordWithDifficulty('Mike Horn', difficulty: 2),
+
+      // AVENTURIERS / EXPLORATEURS - Difficile
+      WordWithDifficulty('Magellan', difficulty: 2),
+      WordWithDifficulty('Vasco de Gama', difficulty: 3),
+      WordWithDifficulty('Marco Polo', difficulty: 2),
+
+      // MANNEQUINS / TOP MODELS - Facile
+      WordWithDifficulty('Naomi Campbell', difficulty: 3),
+      WordWithDifficulty('Kate Moss', difficulty: 2),
+
+      // MANNEQUINS / TOP MODELS - Moyen
+      WordWithDifficulty('Gisele Bündchen', difficulty: 3),
+      WordWithDifficulty('Claudia Schiffer', difficulty: 2),
+      WordWithDifficulty('Cindy Crawford', difficulty: 3),
+      WordWithDifficulty('Cara Delevingne', difficulty: 2),
+
+      // MANNEQUINS / TOP MODELS - Difficile
+      WordWithDifficulty('Laetitia Casta', difficulty: 3),
+
+      // ACTIVISTES / MILITANTS - Facile
+      WordWithDifficulty('Malala Yousafzai', difficulty: 3),
+      WordWithDifficulty('Greta Thunberg', difficulty: 2),
+
+      // ACTIVISTES / MILITANTS - Moyen
+      WordWithDifficulty('Rosa Parks', difficulty: 2),
+      WordWithDifficulty('Simone Veil', difficulty: 2),
+
+      // ACTIVISTES / MILITANTS - Difficile
+      WordWithDifficulty('Emmeline Pankhurst', difficulty: 3),
+      WordWithDifficulty('Che Guevara', difficulty: 2),
+      WordWithDifficulty('Malcolm X', difficulty: 3),
+
+      // PERSONNALITÉS RELIGIEUSES - Moyen
+      WordWithDifficulty('Le Pape François', difficulty: 2),
+      WordWithDifficulty('Sœur Emmanuelle', difficulty: 2),
+
+      // PERSONNALITÉS RELIGIEUSES - Difficile
+      WordWithDifficulty('Jean-Paul II', difficulty: 3),
+      WordWithDifficulty('Benoît XVI', difficulty: 3),
+
   ],
 );

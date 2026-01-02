@@ -61,7 +61,7 @@ class AppConstants {
     'musique',
     //'metro_parisien',
     'marques',
-    'medecine',
+    'science_medecine',
   ];
 
   // Difficulty levels

@@ -31,7 +31,7 @@ class TransitionScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
                     decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha: 0.2),
+                      color: AppColors.success.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(18),
                       border: Border.all(color: AppColors.success, width: 2),
                     ),
@@ -93,7 +93,7 @@ class TransitionScreen extends StatelessWidget {
                             margin: const EdgeInsets.only(bottom: 12),
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: teamColor.withValues(alpha: 0.2),
+                              color: teamColor.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(color: teamColor, width: 2),
                             ),
@@ -149,7 +149,7 @@ class TransitionScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppColors.warning.withValues(alpha: 0.2),
+                        color: AppColors.warning.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -198,7 +198,7 @@ class TransitionScreen extends StatelessWidget {
   void _showBackToVerificationDialog(BuildContext context, GameProvider provider) {
     showDialog(
       context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.7),
+      barrierColor: Colors.black.withOpacity(0.7),
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.backgroundMain,
         shape: RoundedRectangleBorder(

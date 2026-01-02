@@ -271,7 +271,7 @@ class _TeamCardState extends State<_TeamCard> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: isHovering
-                ? teamColor.withValues(alpha: 0.2)
+                ? teamColor.withOpacity(0.2)
                 : AppColors.backgroundCard,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
@@ -362,7 +362,7 @@ class _TeamCardState extends State<_TeamCard> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: teamColor.withValues(alpha: 0.9),
+            color: teamColor.withOpacity(0.9),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: AppColors.secondaryCyan, width: 2),
           ),
@@ -398,7 +398,7 @@ class _PlayerTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         border: Border(left: BorderSide(color: teamColor, width: 4)),
-        color: AppColors.backgroundMain.withValues(alpha: 0.5),
+        color: AppColors.backgroundMain.withOpacity(0.5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
