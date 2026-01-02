@@ -20,6 +20,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.14.2
+  flutter_native_splash: ^2.4.0
 
 flutter_launcher_icons:
   android: true
@@ -27,6 +28,15 @@ flutter_launcher_icons:
   image_path: "visuals/icone_guess_it_all.png"
   adaptive_icon_background: "#1a2744"
   adaptive_icon_foreground: "visuals/icone_guess_it_all.png"
+
+flutter_native_splash:
+  color: "#1a2744"
+  image: visuals/icone_guess_it_all.png
+  android: true
+  ios: true
+  android_12:
+    color: "#1a2744"
+    image: visuals/icone_guess_it_all.png
 
 flutter:
   uses-material-design: true
