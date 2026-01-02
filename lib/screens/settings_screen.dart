@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
+import '../services/storage_service.dart';
 import '../utils/constants.dart';
 import '../utils/word_categories/word_categories.dart';
 import '../widgets/common/app_button.dart';
@@ -23,6 +24,7 @@ class _SettingsScreenState extends State<SettingsScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
+  bool _showAdvancedAnimation = false;
 
   @override
   void initState() {
@@ -35,6 +37,18 @@ class _SettingsScreenState extends State<SettingsScreen>
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+
+    _checkAdvancedSettingsSeen();
+  }
+
+  Future<void> _checkAdvancedSettingsSeen() async {
+    final storage = StorageService();
+    final hasSeen = await storage.hasSeenAdvancedSettings();
+    if (!hasSeen && mounted) {
+      setState(() {
+        _showAdvancedAnimation = true;
+      });
+    }
   }
 
   @override
@@ -251,20 +265,37 @@ class _SettingsScreenState extends State<SettingsScreen>
                 const SizedBox(width: 12),
                 // Bouton paramètres avancés
                 GestureDetector(
-                  onTap: () => _showAdvancedSettings(context, provider),
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppColors.backgroundCard,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.gray600, width: 2),
-                    ),
-                    child: const Icon(
-                      Icons.settings,
-                      color: Colors.white,
-                      size: 24,
-                    ),
+                  onTap: () {
+                    // Marquer comme vu et arrêter l'animation
+                    if (_showAdvancedAnimation) {
+                      StorageService().markAdvancedSettingsSeen();
+                      setState(() {
+                        _showAdvancedAnimation = false;
+                      });
+                    }
+                    _showAdvancedSettings(context, provider);
+                  },
+                  child: AnimatedBuilder(
+                    animation: _pulseAnimation,
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _showAdvancedAnimation ? _pulseAnimation.value : 1.0,
+                        child: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: AppColors.backgroundCard,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppColors.gray600, width: 2),
+                          ),
+                          child: const Icon(
+                            Icons.settings,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],

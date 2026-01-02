@@ -93,4 +93,24 @@ class StorageService {
       print('Erreur lors de la suppression de l\'état: $e');
     }
   }
+
+  // ========== FLAGS UI (onboarding, etc.) ==========
+
+  Future<bool> hasSeenAdvancedSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(AppConstants.advancedSettingsSeenKey) ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<void> markAdvancedSettingsSeen() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(AppConstants.advancedSettingsSeenKey, true);
+    } catch (e) {
+      print('Erreur lors du marquage des paramètres avancés: $e');
+    }
+  }
 }

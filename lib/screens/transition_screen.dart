@@ -171,6 +171,38 @@ class TransitionScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                   ],
 
+                  // Bouton pour consulter les mots devinés du tour précédent
+                  if (provider.game.history.isNotEmpty) ...[
+                    Center(
+                      child: GestureDetector(
+                        onTap: () => _showGuessedWordsDialog(context, provider),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.gray600,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.checklist, size: 16, color: Colors.white70),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Voir les ${provider.game.history.last.wordsGuessed.length} mots devinés',
+                                style: const TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 13,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
                   AppButton(
                     text: isLastRound ? 'Voir les résultats' : 'Manche suivante',
                     variant: AppButtonVariant.primary,
@@ -236,6 +268,116 @@ class TransitionScreen extends StatelessWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  void _showGuessedWordsDialog(BuildContext context, GameProvider provider) {
+    final lastEntry = provider.game.history.last;
+    final team = provider.getTeamById(lastEntry.teamId);
+    final player = provider.getPlayerById(lastEntry.playerId);
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.7),
+      builder: (dialogContext) => Dialog(
+        backgroundColor: AppColors.backgroundMain,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: AppColors.gray500, width: 2),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header avec croix
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Tour précédent',
+                      style: AppTextStyles.subtitle(fontSize: 24),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.of(dialogContext).pop(),
+                    child: const Icon(
+                      Icons.close,
+                      color: AppColors.gray400,
+                      size: 24,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'par ${team?.name ?? "Équipe"} (${player?.name ?? "Joueur"})',
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 13,
+                  color: AppColors.gray400,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              // Contenu
+              if (lastEntry.wordsGuessed.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Text(
+                    'Aucun mot deviné durant ce tour',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      color: AppColors.gray400,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              else
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 300),
+                  child: SingleChildScrollView(
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: lastEntry.wordsGuessed.map((word) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.secondaryCyan.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: AppColors.secondaryCyan.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            word,
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 12),
+              Text(
+                '${lastEntry.wordsGuessed.length} mot${lastEntry.wordsGuessed.length > 1 ? "s" : ""} au total',
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 12,
+                  color: AppColors.gray400,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
