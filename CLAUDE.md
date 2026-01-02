@@ -65,17 +65,17 @@ lib/
 
 ## Catégories de mots
 
-Le jeu propose **13 catégories de mots** avec exactement **4 703 mots** au total :
+Le jeu propose **13 catégories de mots** avec environ **5 711 mots** au total :
 
 1. **7ème Art** (🎬) - Films, séries, anime, personnages
 2. **Géographie** (🌍) - Pays, villes, monuments, fleuves
-3. **Nature et Gastronomie** (🌿) - Animaux, plantes, plats du monde, fromages, vins
+3. **Nature et Gastronomie** (🌿) - Animaux, plantes, plats du monde, fromages, vins, boissons
 4. **Métiers & Sports** (💼) - Professions et tous les sports
 5. **Célébrités** (⭐) - Sportifs, acteurs, chanteurs, influenceurs
-6. **Noms communs** (🔧) - Objets quotidiens, instruments
+6. **Noms communs** (🔧) - Objets quotidiens, instruments, électroménager, vêtements
 7. **Univers Arcade** (🎮) - Jeux vidéo, Pokémon, Clash Royale, jeux de société
 8. **Expressions** (🇫🇷) - Expressions françaises
-9. **Dictionnaire** (📖) - Vocabulaire général
+9. **Dictionnaire** (📖) - Vocabulaire général, émotions, adjectifs, verbes
 10. **Musique** (🎵) - Chansons, genres, artistes
 11. **Marques** (🏷️) - Vêtements, tech, alimentation
 12. **Science et Médecine** (🔬) - Anatomie, maladies, éléments chimiques, astronomie
@@ -85,20 +85,20 @@ Le jeu propose **13 catégories de mots** avec exactement **4 703 mots** au tota
 
 | Catégorie | Icône | Nombre de mots |
 |-----------|-------|----------------|
+| Nature et Gastronomie | 🌿 | 883 |
+| Dictionnaire | 📖 | 870 |
+| Noms communs | 🔧 | 728 |
 | 7ème Art | 🎬 | 491 |
-| Dictionnaire | 📖 | 492 |
-| Nature et Gastronomie | 🌿 | 626 |
 | Science et Médecine | 🔬 | 484 |
 | Marques | 🏷️ | 465 |
 | Géographie | 🌍 | 384 |
 | Célébrités | ⭐ | 361 |
-| Noms communs | 🔧 | 345 |
 | Univers Arcade | 🎮 | 324 |
 | Métiers & Sports | 💼 | 284 |
 | Musique | 🎵 | 224 |
 | Expressions | 🇫🇷 | 118 |
 | Métro Parisien | 🚇 | 105 |
-| **TOTAL** | | **4 703** |
+| **TOTAL** | | **5 711** |
 
 ### Catégories enrichies (Janvier 2026)
 
@@ -109,12 +109,40 @@ Le jeu propose **13 catégories de mots** avec exactement **4 703 mots** au tota
   - **Section Médecine** : Anatomie, maladies, symptômes, traitements, spécialités médicales, équipements, traumatismes, pathologies, santé mentale, cancers, premiers secours, professions paramédicales
   - **Section Science** : Éléments chimiques, domaines scientifiques, théories et lois, espace et astronomie, inventions et découvertes, scientifiques célèbres, phénomènes physiques, unités de mesure, biologie cellulaire, chimie, géologie
 
-#### Nature et Gastronomie (anciennement Nature)
-- **ID** : `nature` (inchangé)
+#### Nature et Gastronomie
+- **ID** : `nature`
 - **Icône** : 🌿
-- **626 mots** répartis en :
-  - **Section Nature** : Animaux (sauvages, domestiques, marins, oiseaux, insectes, reptiles), plantes et fleurs, arbres, fruits et légumes, champignons, phénomènes naturels, minéraux, géologie, astres, écosystèmes
-  - **Section Gastronomie** : Plats italiens, plats asiatiques, plats français traditionnels, plats du monde, techniques culinaires, ustensiles spécialisés, sauces célèbres, pâtisseries et desserts, fromages, vins et cépages, pains du monde, termes culinaires professionnels
+- **883 mots** répartis en :
+  - **Section Nature** : Animaux (sauvages, domestiques, marins, oiseaux communs, insectes, reptiles, rongeurs, cervidés, bovidés), plantes et fleurs, arbres, arbustes, plantes d'intérieur, plantes grimpantes, fruits et légumes, champignons, phénomènes naturels, météo, minéraux, géologie, astres, écosystèmes, éléments naturels
+  - **Section Gastronomie** : Plats italiens, plats asiatiques, plats français traditionnels, plats du monde, techniques culinaires, ustensiles spécialisés, sauces célèbres, condiments, pâtisseries et desserts internationaux, confiseries, fromages, vins et cépages, pains du monde, termes culinaires, boissons chaudes et froides, boissons alcoolisées, cocktails, ingrédients cuisine, produits laitiers, viandes, charcuterie
+
+#### Noms communs
+- **ID** : `noms_communs`
+- **Icône** : 🔧
+- **728 mots** répartis en :
+  - Objets électroniques, objets quotidiens, mobilier, ustensiles cuisine
+  - Outils, moyens de transport, véhicules spécifiques
+  - Vêtements, sous-vêtements, chaussures, accessoires mode
+  - Instruments de musique, maison et habitat, jouets
+  - Électroménager (gros et petit), équipements sportifs
+  - Objets plage/vacances, matériel camping, matériel médical
+  - Matériel informatique, textiles maison, contenants et emballages
+  - Objets de décoration, bijoux, objets divers
+
+#### Dictionnaire
+- **ID** : `dictionnaire`
+- **Icône** : 📖
+- **870 mots** répartis en :
+  - Émotions positives et négatives, états physiques, états mentaux
+  - Adjectifs descriptifs, adjectifs de personnalité, adjectifs taille/forme
+  - Verbes du quotidien, verbes créatifs, verbes de communication
+  - Verbes domestiques, verbes de mouvement, actions physiques et mentales
+  - Couleurs, formes géométriques, nombres et quantités
+  - Temporalité, expressions temporelles, expressions de lieu
+  - Météo, relations et liens, textures et sensations
+  - Goûts et saveurs, odeurs, sons et bruits
+  - Concepts philosophiques, valeurs morales, noms abstraits
+  - Contraires et opposés, matériaux
 
 ## Commandes
 

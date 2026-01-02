@@ -94,6 +94,47 @@ class RulesScreen extends StatelessWidget {
                     icon: '⏭️',
                   ),
 
+                  _buildRuleSection(
+                    title: 'Mots passés',
+                    content: 'Un mot passé reste dans la manche et peut être deviné plus tard, '
+                        'même s\'il revient à un autre joueur ou à un autre moment.\n\n'
+                        'Exemple : Vous passez "Hippopotame" car trop difficile. Il reviendra '
+                        'plus tard dans votre tour ou dans celui d\'un autre joueur de votre équipe.',
+                    icon: '🔄',
+                  ),
+
+                  _buildRuleSection(
+                    title: 'Interdictions strictes',
+                    content: 'Certaines techniques sont interdites pour préserver l\'équité du jeu :\n\n'
+                        '• Traduction : Vous ne pouvez pas traduire le mot dans une autre langue.\n'
+                        '  Exemple : Pour "Chien", dire "Dog" est interdit.\n\n'
+                        '• Phonétique : Interdiction d\'utiliser des sons ou rimes.\n'
+                        '  Exemple : Pour "Bateau", dire "Ça rime avec château" est interdit.\n\n'
+                        '• Mots de la même racine : Ne pas utiliser des mots dérivés.\n'
+                        '  Exemple : Pour "Jardiner", dire "Jardin" ou "Jardinier" est interdit.',
+                    icon: '🚫',
+                  ),
+
+                  _buildRuleSection(
+                    title: 'Technique du rébus',
+                    content: 'Pour les mots très difficiles, vous pouvez décomposer le mot en syllabes ou sons.\n\n'
+                        'Exemple : Pour faire deviner "Parapluie" :\n'
+                        '• "Para" : "Se protéger, se..."\n'
+                        '• "Pluie" : "Eau qui tombe du ciel"\n\n'
+                        'Cette technique est particulièrement utile en manche 1 (Description).',
+                    icon: '🧩',
+                  ),
+
+                  _buildRuleSection(
+                    title: 'Répétition autorisée',
+                    content: 'Le joueur qui fait deviner peut répéter n\'importe quel mot déjà prononcé '
+                        'par ses coéquipiers qui cherchent à deviner.\n\n'
+                        'Exemple : Pour "Tigre", votre équipe propose "Lion, Félin, Chat".\n'
+                        'Vous pouvez répondre : "Oui, félin !" pour les encourager dans cette direction.\n\n'
+                        'Attention : Vous ne pouvez PAS dire un mot que personne n\'a encore prononcé.',
+                    icon: '🔁',
+                  ),
+
                   const SizedBox(height: 24),
                 ],
               ),
