@@ -1,3 +1,37 @@
+// ============================================================
+// CATÉGORIE : Célébrités
+// ============================================================
+//
+// DESCRIPTION :
+// Personnes célèbres de tous domaines : sport, musique,
+// cinéma, politique, médias et réseaux sociaux.
+//
+// SECTIONS EXISTANTES :
+// - Footballeurs (Mbappé, Messi, Ronaldo)
+// - Sportifs autres disciplines (Nadal, Hamilton, LeBron)
+// - Acteurs/actrices français et internationaux
+// - Chanteurs/chanteuses (Beyoncé, Ed Sheeran, Aya Nakamura)
+// - Humoristes (Gad Elmaleh, Florence Foresti)
+// - Influenceurs et YouTubers (Squeezie, Cyprien)
+// - Personnalités politiques
+// - Présentateurs TV
+//
+// IDÉES D'ENRICHISSEMENT :
+// - Streamers Twitch français (Zerator, Gotaga, Domingo)
+// - TikTokeurs populaires
+// - Sportifs français médaillés olympiques
+// - Chefs cuisiniers célèbres
+// - Mannequins et personnalités mode
+// - Podcasters connus
+// - E-sportifs professionnels
+//
+// CRITÈRES DE DIFFICULTÉ :
+// - 1 (Facile) : Stars mondiales (Messi, Taylor Swift)
+// - 2 (Moyen) : Connu en France (Squeezie, Kylian Mbappé)
+// - 3 (Difficile) : Niche ou ancienne génération
+//
+// ============================================================
+
 import '../models.dart';
 
 const categoryCelebrites = WordCategory(

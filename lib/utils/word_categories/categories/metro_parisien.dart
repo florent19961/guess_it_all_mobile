@@ -1,3 +1,33 @@
+// ============================================================
+// CATÉGORIE : Métro Parisien
+// ============================================================
+//
+// DESCRIPTION :
+// Stations du métro de Paris, incluant les stations
+// emblématiques et les correspondances importantes.
+//
+// SECTIONS EXISTANTES :
+// - Stations célèbres (Châtelet, Opéra, Bastille)
+// - Stations touristiques (Trocadéro, Louvre, Montmartre)
+// - Grandes gares (Gare du Nord, Gare de Lyon, Saint-Lazare)
+// - Stations de correspondance majeures
+// - Stations par ligne
+//
+// IDÉES D'ENRICHISSEMENT :
+// - Stations RER (La Défense, Marne-la-Vallée, CDG)
+// - Lignes de tramway
+// - Stations emblématiques de banlieue
+// - Nouvelles stations (Grand Paris Express)
+// - Stations historiques et leur origine
+// - Terminus de lignes
+//
+// CRITÈRES DE DIFFICULTÉ :
+// - 1 (Facile) : Très connues (Châtelet, République, Bastille)
+// - 2 (Moyen) : Connues des Parisiens (Strasbourg-Saint-Denis)
+// - 3 (Difficile) : Stations de banlieue ou peu fréquentées
+//
+// ============================================================
+
 import '../models.dart';
 
 const categoryMetroParisien = WordCategory(

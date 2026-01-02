@@ -1,3 +1,38 @@
+// ============================================================
+// CATÉGORIE : Nature et Gastronomie
+// ============================================================
+//
+// DESCRIPTION :
+// Monde naturel (faune, flore, phénomènes) et gastronomie
+// (plats du monde, boissons, fromages, vins).
+//
+// SECTIONS EXISTANTES :
+// - Animaux sauvages, domestiques, marins, oiseaux, insectes
+// - Félins, reptiles, rongeurs, primates, cervidés, bovidés
+// - Plantes, fleurs, arbres, arbustes, plantes d'intérieur
+// - Fruits, légumes, champignons
+// - Phénomènes naturels, météo, géologie, minéraux
+// - Plats italiens, asiatiques, français, du monde
+// - Fromages, vins, pains du monde
+// - Desserts, confiseries, pâtisseries
+// - Boissons chaudes, froides, alcoolisées, cocktails
+// - Condiments, sauces, ingrédients cuisine
+//
+// IDÉES D'ENRICHISSEMENT :
+// - Races de chiens et chats populaires
+// - Plantes médicinales et aromatiques
+// - Spécialités régionales françaises
+// - Poissons et fruits de mer moins connus
+// - Épices du monde
+// - Desserts et pâtisseries régionales
+//
+// CRITÈRES DE DIFFICULTÉ :
+// - 1 (Facile) : Animaux/plats très connus (chat, pizza, pomme)
+// - 2 (Moyen) : Moins courant mais reconnaissable (lynx, risotto)
+// - 3 (Difficile) : Spécialisé ou exotique (ornithorynque, bouillabaisse)
+//
+// ============================================================
+
 import '../models.dart';
 
 const categoryNature = WordCategory(
@@ -833,7 +868,389 @@ const categoryNature = WordCategory(
       WordWithDifficulty('Saignant', difficulty: 2),
 
       // ============================================
-      // FIN SECTION GASTRONOMIE
+      // ENRICHISSEMENT - OISEAUX COMMUNS
+      // ============================================
+
+      // OISEAUX COMMUNS - Facile
+      WordWithDifficulty('Pigeon', difficulty: 1),
+      WordWithDifficulty('Moineau', difficulty: 1),
+      WordWithDifficulty('Hirondelle', difficulty: 1),
+      WordWithDifficulty('Canari', difficulty: 1),
+      WordWithDifficulty('Merle', difficulty: 1),
+      WordWithDifficulty('Rouge-gorge', difficulty: 1),
+      WordWithDifficulty('Colombe', difficulty: 1),
+      WordWithDifficulty('Coucou', difficulty: 1),
+      WordWithDifficulty('Pic-vert', difficulty: 2),
+      WordWithDifficulty('Martinet', difficulty: 2),
+
+      // OISEAUX COMMUNS - Moyen
+      WordWithDifficulty('Rossignol', difficulty: 2),
+      WordWithDifficulty('Mésange', difficulty: 2),
+      WordWithDifficulty('Pinson', difficulty: 2),
+      WordWithDifficulty('Chardonneret', difficulty: 3),
+      WordWithDifficulty('Verdier', difficulty: 3),
+      WordWithDifficulty('Étourneau', difficulty: 2),
+      WordWithDifficulty('Geai', difficulty: 2),
+      WordWithDifficulty('Tourterelle', difficulty: 2),
+      WordWithDifficulty('Faisan', difficulty: 2),
+      WordWithDifficulty('Perdrix', difficulty: 2),
+      WordWithDifficulty('Caille', difficulty: 2),
+      WordWithDifficulty('Bécasse', difficulty: 3),
+      WordWithDifficulty('Héron', difficulty: 2),
+      WordWithDifficulty('Grue', difficulty: 2),
+      WordWithDifficulty('Cormoran', difficulty: 3),
+      WordWithDifficulty('Goéland', difficulty: 2),
+      WordWithDifficulty('Macareux', difficulty: 3),
+      WordWithDifficulty('Martin-pêcheur', difficulty: 2),
+
+      // ============================================
+      // ENRICHISSEMENT - POISSONS
+      // ============================================
+
+      // POISSONS - Facile
+      WordWithDifficulty('Sardine', difficulty: 1),
+      WordWithDifficulty('Maquereau', difficulty: 2),
+      WordWithDifficulty('Anchois', difficulty: 2),
+      WordWithDifficulty('Hareng', difficulty: 2),
+      WordWithDifficulty('Sole', difficulty: 2),
+      WordWithDifficulty('Cabillaud', difficulty: 2),
+      WordWithDifficulty('Morue', difficulty: 2),
+      WordWithDifficulty('Merlan', difficulty: 2),
+      WordWithDifficulty('Daurade', difficulty: 2),
+      WordWithDifficulty('Bar', difficulty: 2),
+      WordWithDifficulty('Loup de mer', difficulty: 2),
+      WordWithDifficulty('Rouget', difficulty: 3),
+      WordWithDifficulty('Turbot', difficulty: 3),
+      WordWithDifficulty('Flétan', difficulty: 3),
+      WordWithDifficulty('Espadon', difficulty: 2),
+      WordWithDifficulty('Mérou', difficulty: 3),
+      WordWithDifficulty('Lieu', difficulty: 3),
+      WordWithDifficulty('Colin', difficulty: 2),
+
+      // ============================================
+      // ENRICHISSEMENT - BOISSONS
+      // ============================================
+
+      // BOISSONS CHAUDES - Facile
+      WordWithDifficulty('Café', difficulty: 1),
+      WordWithDifficulty('Thé', difficulty: 1),
+      WordWithDifficulty('Chocolat chaud', difficulty: 1),
+      WordWithDifficulty('Cappuccino', difficulty: 1),
+      WordWithDifficulty('Expresso', difficulty: 2),
+      WordWithDifficulty('Latte', difficulty: 2),
+      WordWithDifficulty('Infusion', difficulty: 2),
+      WordWithDifficulty('Tisane', difficulty: 2),
+      WordWithDifficulty('Thé vert', difficulty: 2),
+      WordWithDifficulty('Maté', difficulty: 3),
+
+      // BOISSONS FROIDES - Facile
+      WordWithDifficulty('Jus d\'orange', difficulty: 1),
+      WordWithDifficulty('Jus de pomme', difficulty: 1),
+      WordWithDifficulty('Limonade', difficulty: 1),
+      WordWithDifficulty('Coca-Cola', difficulty: 1),
+      WordWithDifficulty('Orangina', difficulty: 1),
+      WordWithDifficulty('Sprite', difficulty: 1),
+      WordWithDifficulty('Fanta', difficulty: 1),
+      WordWithDifficulty('Eau gazeuse', difficulty: 1),
+      WordWithDifficulty('Sirop', difficulty: 1),
+      WordWithDifficulty('Smoothie', difficulty: 1),
+      WordWithDifficulty('Milkshake', difficulty: 1),
+      WordWithDifficulty('Jus de raisin', difficulty: 1),
+      WordWithDifficulty('Thé glacé', difficulty: 1),
+      WordWithDifficulty('Citronnade', difficulty: 2),
+      WordWithDifficulty('Grenadine', difficulty: 2),
+
+      // BOISSONS ALCOOLISÉES - Moyen
+      WordWithDifficulty('Bière', difficulty: 1),
+      WordWithDifficulty('Vin rouge', difficulty: 1),
+      WordWithDifficulty('Vin blanc', difficulty: 1),
+      WordWithDifficulty('Rosé', difficulty: 1),
+      WordWithDifficulty('Cidre', difficulty: 1),
+      WordWithDifficulty('Whisky', difficulty: 2),
+      WordWithDifficulty('Vodka', difficulty: 2),
+      WordWithDifficulty('Rhum', difficulty: 2),
+      WordWithDifficulty('Gin', difficulty: 2),
+      WordWithDifficulty('Tequila', difficulty: 2),
+      WordWithDifficulty('Cognac', difficulty: 2),
+      WordWithDifficulty('Pastis', difficulty: 2),
+      WordWithDifficulty('Mojito', difficulty: 2),
+      WordWithDifficulty('Margarita', difficulty: 2),
+      WordWithDifficulty('Piña colada', difficulty: 2),
+      WordWithDifficulty('Sangria', difficulty: 2),
+      WordWithDifficulty('Kir', difficulty: 2),
+      WordWithDifficulty('Spritz', difficulty: 2),
+
+      // BOISSONS ALCOOLISÉES - Difficile
+      WordWithDifficulty('Armagnac', difficulty: 3),
+      WordWithDifficulty('Calvados', difficulty: 3),
+      WordWithDifficulty('Limoncello', difficulty: 3),
+      WordWithDifficulty('Amaretto', difficulty: 3),
+      WordWithDifficulty('Chartreuse', difficulty: 3),
+      WordWithDifficulty('Génépi', difficulty: 3),
+      WordWithDifficulty('Absinthe', difficulty: 3),
+
+      // ============================================
+      // ENRICHISSEMENT - CONDIMENTS ET SAUCES
+      // ============================================
+
+      // CONDIMENTS - Facile
+      WordWithDifficulty('Sel', difficulty: 1),
+      WordWithDifficulty('Poivre', difficulty: 1),
+      WordWithDifficulty('Moutarde', difficulty: 1),
+      WordWithDifficulty('Ketchup', difficulty: 1),
+      WordWithDifficulty('Vinaigre', difficulty: 1),
+      WordWithDifficulty('Huile d\'olive', difficulty: 1),
+      WordWithDifficulty('Sucre', difficulty: 1),
+      WordWithDifficulty('Miel', difficulty: 1),
+      WordWithDifficulty('Confiture', difficulty: 1),
+      WordWithDifficulty('Beurre', difficulty: 1),
+      WordWithDifficulty('Crème', difficulty: 1),
+      WordWithDifficulty('Sauce tomate', difficulty: 1),
+      WordWithDifficulty('Sauce soja', difficulty: 2),
+      WordWithDifficulty('Sauce barbecue', difficulty: 2),
+      WordWithDifficulty('Tabasco', difficulty: 2),
+
+      // CONDIMENTS - Moyen
+      WordWithDifficulty('Harissa', difficulty: 2),
+      WordWithDifficulty('Wasabi', difficulty: 2),
+      WordWithDifficulty('Nuoc-mâm', difficulty: 3),
+      WordWithDifficulty('Pesto', difficulty: 2),
+      WordWithDifficulty('Guacamole', difficulty: 2),
+      WordWithDifficulty('Tzatziki', difficulty: 2),
+      WordWithDifficulty('Aïoli', difficulty: 2),
+      WordWithDifficulty('Tapenade', difficulty: 2),
+      WordWithDifficulty('Chutney', difficulty: 3),
+      WordWithDifficulty('Cornichon', difficulty: 1),
+      WordWithDifficulty('Câpres', difficulty: 2),
+      WordWithDifficulty('Olives', difficulty: 1),
+
+      // ============================================
+      // ENRICHISSEMENT - INGRÉDIENTS CUISINE
+      // ============================================
+
+      // PRODUITS LAITIERS - Facile
+      WordWithDifficulty('Lait', difficulty: 1),
+      WordWithDifficulty('Yaourt', difficulty: 1),
+      WordWithDifficulty('Fromage blanc', difficulty: 1),
+      WordWithDifficulty('Crème fraîche', difficulty: 1),
+      WordWithDifficulty('Mascarpone', difficulty: 2),
+      WordWithDifficulty('Ricotta', difficulty: 2),
+      WordWithDifficulty('Mozzarella', difficulty: 1),
+      WordWithDifficulty('Parmesan', difficulty: 1),
+      WordWithDifficulty('Gruyère', difficulty: 1),
+      WordWithDifficulty('Feta', difficulty: 2),
+
+      // FÉCULENTS ET CÉRÉALES - Facile
+      WordWithDifficulty('Farine', difficulty: 1),
+      WordWithDifficulty('Pain de mie', difficulty: 1),
+      WordWithDifficulty('Spaghetti', difficulty: 1),
+      WordWithDifficulty('Tagliatelles', difficulty: 2),
+      WordWithDifficulty('Penne', difficulty: 2),
+      WordWithDifficulty('Macaroni', difficulty: 1),
+      WordWithDifficulty('Semoule', difficulty: 2),
+      WordWithDifficulty('Polenta', difficulty: 2),
+      WordWithDifficulty('Nouilles', difficulty: 1),
+      WordWithDifficulty('Vermicelles', difficulty: 2),
+
+      // VIANDES ET PROTÉINES - Facile
+      WordWithDifficulty('Poulet', difficulty: 1),
+      WordWithDifficulty('Bœuf', difficulty: 1),
+      WordWithDifficulty('Porc', difficulty: 1),
+      WordWithDifficulty('Agneau', difficulty: 1),
+      WordWithDifficulty('Veau', difficulty: 1),
+      WordWithDifficulty('Dinde', difficulty: 1),
+      WordWithDifficulty('Jambon', difficulty: 1),
+      WordWithDifficulty('Saucisse', difficulty: 1),
+      WordWithDifficulty('Bacon', difficulty: 1),
+      WordWithDifficulty('Lard', difficulty: 2),
+      WordWithDifficulty('Steak', difficulty: 1),
+      WordWithDifficulty('Côtelette', difficulty: 2),
+      WordWithDifficulty('Escalope', difficulty: 2),
+      WordWithDifficulty('Filet', difficulty: 2),
+      WordWithDifficulty('Cuisse', difficulty: 2),
+      WordWithDifficulty('Aile', difficulty: 2),
+
+      // CHARCUTERIE - Moyen
+      WordWithDifficulty('Saucisson', difficulty: 1),
+      WordWithDifficulty('Pâté', difficulty: 2),
+      WordWithDifficulty('Rillettes', difficulty: 2),
+      WordWithDifficulty('Chorizo', difficulty: 2),
+      WordWithDifficulty('Salami', difficulty: 2),
+      WordWithDifficulty('Mortadelle', difficulty: 2),
+      WordWithDifficulty('Coppa', difficulty: 3),
+      WordWithDifficulty('Bresaola', difficulty: 3),
+      WordWithDifficulty('Jambon cru', difficulty: 2),
+      WordWithDifficulty('Andouillette', difficulty: 3),
+      WordWithDifficulty('Boudin', difficulty: 2),
+      WordWithDifficulty('Terrine', difficulty: 2),
+
+      // OEUFS ET DÉRIVÉS - Facile
+      WordWithDifficulty('Œuf', difficulty: 1),
+      WordWithDifficulty('Omelette', difficulty: 1),
+      WordWithDifficulty('Œuf dur', difficulty: 1),
+      WordWithDifficulty('Œuf au plat', difficulty: 1),
+      WordWithDifficulty('Œuf brouillé', difficulty: 2),
+      WordWithDifficulty('Œuf poché', difficulty: 2),
+
+      // ============================================
+      // ENRICHISSEMENT - DESSERTS DU MONDE
+      // ============================================
+
+      // DESSERTS INTERNATIONAUX - Facile
+      WordWithDifficulty('Brownie', difficulty: 1),
+      WordWithDifficulty('Cookie', difficulty: 1),
+      WordWithDifficulty('Muffin', difficulty: 1),
+      WordWithDifficulty('Cupcake', difficulty: 1),
+      WordWithDifficulty('Cheesecake', difficulty: 1),
+      WordWithDifficulty('Pancake', difficulty: 1),
+      WordWithDifficulty('Donut', difficulty: 1),
+      WordWithDifficulty('Churros', difficulty: 2),
+      WordWithDifficulty('Glace', difficulty: 1),
+      WordWithDifficulty('Sorbet', difficulty: 2),
+      WordWithDifficulty('Crème glacée', difficulty: 1),
+      WordWithDifficulty('Sundae', difficulty: 2),
+
+      // DESSERTS INTERNATIONAUX - Moyen
+      WordWithDifficulty('Strudel', difficulty: 2),
+      WordWithDifficulty('Baklava', difficulty: 2),
+      WordWithDifficulty('Mochi', difficulty: 2),
+      WordWithDifficulty('Crème caramel', difficulty: 2),
+      WordWithDifficulty('Flan', difficulty: 2),
+      WordWithDifficulty('Pudding', difficulty: 2),
+      WordWithDifficulty('Carrot cake', difficulty: 2),
+      WordWithDifficulty('Banana split', difficulty: 2),
+      WordWithDifficulty('Crumble', difficulty: 2),
+      WordWithDifficulty('Clafoutis', difficulty: 2),
+      WordWithDifficulty('Charlotte', difficulty: 2),
+      WordWithDifficulty('Pavlova', difficulty: 3),
+      WordWithDifficulty('Tarte Tatin', difficulty: 2),
+
+      // CONFISERIES - Facile
+      WordWithDifficulty('Bonbon', difficulty: 1),
+      WordWithDifficulty('Chocolat', difficulty: 1),
+      WordWithDifficulty('Caramel', difficulty: 1),
+      WordWithDifficulty('Sucette', difficulty: 1),
+      WordWithDifficulty('Chewing-gum', difficulty: 1),
+      WordWithDifficulty('Réglisse', difficulty: 2),
+      WordWithDifficulty('Nougat', difficulty: 2),
+      WordWithDifficulty('Guimauve', difficulty: 2),
+      WordWithDifficulty('Dragée', difficulty: 2),
+      WordWithDifficulty('Praline', difficulty: 2),
+      WordWithDifficulty('Calisson', difficulty: 3),
+      WordWithDifficulty('Berlingot', difficulty: 3),
+
+      // ============================================
+      // ENRICHISSEMENT - FRUITS DE MER
+      // ============================================
+
+      // FRUITS DE MER - Moyen
+      WordWithDifficulty('Palourde', difficulty: 2),
+      WordWithDifficulty('Pétoncle', difficulty: 3),
+      WordWithDifficulty('Praire', difficulty: 3),
+      WordWithDifficulty('Couteau', difficulty: 2),
+      WordWithDifficulty('Ormeau', difficulty: 3),
+      WordWithDifficulty('Oursin', difficulty: 2),
+      WordWithDifficulty('Gambas', difficulty: 2),
+      WordWithDifficulty('Coquillage', difficulty: 1),
+
+      // ============================================
+      // ENRICHISSEMENT - ANIMAUX SUPPLÉMENTAIRES
+      // ============================================
+
+      // ANIMAUX DE FERME - Facile
+      WordWithDifficulty('Bélier', difficulty: 2),
+      WordWithDifficulty('Brebis', difficulty: 2),
+      WordWithDifficulty('Poussin', difficulty: 1),
+      WordWithDifficulty('Poulain', difficulty: 2),
+      WordWithDifficulty('Taureau', difficulty: 2),
+      WordWithDifficulty('Jument', difficulty: 2),
+      WordWithDifficulty('Étalon', difficulty: 2),
+      WordWithDifficulty('Truie', difficulty: 2),
+      WordWithDifficulty('Verrat', difficulty: 3),
+
+      // RONGEURS ET PETITS ANIMAUX - Moyen
+      WordWithDifficulty('Gerbille', difficulty: 2),
+      WordWithDifficulty('Chinchilla', difficulty: 2),
+      WordWithDifficulty('Mulot', difficulty: 2),
+      WordWithDifficulty('Campagnol', difficulty: 3),
+      WordWithDifficulty('Musaraigne', difficulty: 3),
+      WordWithDifficulty('Lemming', difficulty: 3),
+      WordWithDifficulty('Marmotte', difficulty: 2),
+
+      // CERVIDÉS - Moyen
+      WordWithDifficulty('Biche', difficulty: 2),
+      WordWithDifficulty('Faon', difficulty: 2),
+      WordWithDifficulty('Chevreuil', difficulty: 2),
+      WordWithDifficulty('Daim', difficulty: 2),
+      WordWithDifficulty('Orignal', difficulty: 3),
+
+      // BOVIDÉS - Moyen
+      WordWithDifficulty('Bouc', difficulty: 2),
+      WordWithDifficulty('Bouquetin', difficulty: 3),
+      WordWithDifficulty('Mouflon', difficulty: 3),
+      WordWithDifficulty('Chamois', difficulty: 2),
+      WordWithDifficulty('Gnou', difficulty: 3),
+      WordWithDifficulty('Zébu', difficulty: 3),
+
+      // ============================================
+      // ENRICHISSEMENT - PLANTES SUPPLÉMENTAIRES
+      // ============================================
+
+      // PLANTES D'INTÉRIEUR - Moyen
+      WordWithDifficulty('Cactus', difficulty: 1),
+      WordWithDifficulty('Aloe vera', difficulty: 2),
+      WordWithDifficulty('Ficus', difficulty: 2),
+      WordWithDifficulty('Philodendron', difficulty: 3),
+      WordWithDifficulty('Monstera', difficulty: 2),
+      WordWithDifficulty('Yucca', difficulty: 2),
+      WordWithDifficulty('Dracaena', difficulty: 3),
+      WordWithDifficulty('Pothos', difficulty: 3),
+
+      // ARBUSTES - Moyen
+      WordWithDifficulty('Buis', difficulty: 2),
+      WordWithDifficulty('Houx', difficulty: 2),
+      WordWithDifficulty('Laurier', difficulty: 2),
+      WordWithDifficulty('Forsythia', difficulty: 3),
+      WordWithDifficulty('Azalée', difficulty: 2),
+      WordWithDifficulty('Troène', difficulty: 3),
+      WordWithDifficulty('Genêt', difficulty: 3),
+      WordWithDifficulty('Aubépine', difficulty: 3),
+      WordWithDifficulty('Sureau', difficulty: 3),
+
+      // PLANTES GRIMPANTES - Moyen
+      WordWithDifficulty('Vigne', difficulty: 1),
+      WordWithDifficulty('Clématite', difficulty: 3),
+      WordWithDifficulty('Chèvrefeuille', difficulty: 3),
+      WordWithDifficulty('Passiflore', difficulty: 3),
+      WordWithDifficulty('Bougainvillier', difficulty: 3),
+
+      // ============================================
+      // ENRICHISSEMENT - MÉTÉO ET ENVIRONNEMENT
+      // ============================================
+
+      // ÉLÉMENTS NATURELS - Facile
+      WordWithDifficulty('Sable', difficulty: 1),
+      WordWithDifficulty('Roche', difficulty: 1),
+      WordWithDifficulty('Terre', difficulty: 1),
+      WordWithDifficulty('Boue', difficulty: 1),
+      WordWithDifficulty('Argile', difficulty: 2),
+      WordWithDifficulty('Gravier', difficulty: 2),
+      WordWithDifficulty('Caillou', difficulty: 1),
+      WordWithDifficulty('Galet', difficulty: 2),
+
+      // PHÉNOMÈNES MÉTÉO SUPPLÉMENTAIRES - Moyen
+      WordWithDifficulty('Averse', difficulty: 2),
+      WordWithDifficulty('Giboulée', difficulty: 3),
+      WordWithDifficulty('Rafale', difficulty: 2),
+      WordWithDifficulty('Bourrasque', difficulty: 3),
+      WordWithDifficulty('Accalmie', difficulty: 3),
+      WordWithDifficulty('Canicule', difficulty: 2),
+      WordWithDifficulty('Gel', difficulty: 1),
+      WordWithDifficulty('Dégel', difficulty: 2),
+      WordWithDifficulty('Fonte', difficulty: 2),
+
+      // ============================================
+      // FIN SECTION GASTRONOMIE ET ENRICHISSEMENT
       // ============================================
 
   ],

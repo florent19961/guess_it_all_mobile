@@ -1,3 +1,37 @@
+// ============================================================
+// CATÉGORIE : 7ème Art
+// ============================================================
+//
+// DESCRIPTION :
+// Univers du cinéma, des séries TV et de l'animation :
+// films, personnages, réalisateurs et acteurs emblématiques.
+//
+// SECTIONS EXISTANTES :
+// - Films classiques internationaux (Titanic, Star Wars, Avatar)
+// - Films français (Intouchables, Amélie Poulain, Les Visiteurs)
+// - Films d'animation (Disney, Pixar, DreamWorks)
+// - Séries TV populaires (Game of Thrones, Friends, Breaking Bad)
+// - Anime et manga (Naruto, One Piece, Dragon Ball)
+// - Personnages de films (Darth Vader, Jack Sparrow, Joker)
+// - Réalisateurs célèbres (Spielberg, Tarantino, Nolan)
+// - Acteurs/actrices (DiCaprio, Hanks, Streep)
+//
+// IDÉES D'ENRICHISSEMENT :
+// - Films récents (2023-2025) : Barbie, Oppenheimer, etc.
+// - Séries Netflix/Disney+ récentes
+// - Films d'horreur cultes
+// - Comédies françaises classiques
+// - Films Marvel/DC supplémentaires
+// - Anime populaires récents
+// - Personnages secondaires mémorables
+//
+// CRITÈRES DE DIFFICULTÉ :
+// - 1 (Facile) : Blockbusters mondiaux (Avatar, Harry Potter)
+// - 2 (Moyen) : Connu des cinéphiles (Pulp Fiction, Blade Runner)
+// - 3 (Difficile) : Films d'auteur ou anciens (Citizen Kane)
+//
+// ============================================================
+
 import '../models.dart';
 
 const category7emeArt = WordCategory(

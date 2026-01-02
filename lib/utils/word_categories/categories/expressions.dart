@@ -1,3 +1,35 @@
+// ============================================================
+// CATÉGORIE : Expressions
+// ============================================================
+//
+// DESCRIPTION :
+// Expressions idiomatiques françaises, proverbes et
+// locutions populaires de la langue française.
+//
+// SECTIONS EXISTANTES :
+// - Expressions avec animaux (avoir le cafard, poser un lapin)
+// - Expressions avec couleurs (voir rouge, être vert de rage)
+// - Expressions avec corps humain (avoir la main verte)
+// - Expressions météo (il pleut des cordes)
+// - Proverbes français (qui dort dîne, l'habit ne fait pas le moine)
+// - Expressions familières courantes
+//
+// IDÉES D'ENRICHISSEMENT :
+// - Expressions régionales françaises
+// - Argot moderne et verlan
+// - Expressions du monde professionnel
+// - Dictons populaires
+// - Expressions avec nourriture
+// - Expressions sportives (être aux anges, jeter l'éponge)
+// - Nouvelles expressions génération Z
+//
+// CRITÈRES DE DIFFICULTÉ :
+// - 1 (Facile) : Très courant (avoir le cafard, tomber dans les pommes)
+// - 2 (Moyen) : Connu mais moins utilisé (tirer les vers du nez)
+// - 3 (Difficile) : Vieilli ou régional (avoir maille à partir)
+//
+// ============================================================
+
 import '../models.dart';
 
 const categoryExpressions = WordCategory(

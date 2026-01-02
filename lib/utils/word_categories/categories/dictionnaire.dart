@@ -1,3 +1,51 @@
+// ============================================================
+// CATÉGORIE : Dictionnaire
+// ============================================================
+//
+// DESCRIPTION :
+// Vocabulaire abstrait et conceptuel : émotions, qualités,
+// actions, concepts et mots du langage courant.
+//
+// SECTIONS EXISTANTES :
+// - Émotions positives (joie, amour, bonheur)
+// - Émotions négatives (colère, tristesse, peur)
+// - États physiques (fatigué, affamé, reposé)
+// - États mentaux (concentré, distrait, motivé)
+// - Adjectifs descriptifs (grand, petit, rapide)
+// - Adjectifs de personnalité (gentil, courageux, timide)
+// - Adjectifs taille/forme (énorme, minuscule, allongé)
+// - Verbes du quotidien (manger, dormir, marcher)
+// - Verbes de communication (parler, expliquer, discuter)
+// - Verbes domestiques (ranger, nettoyer, cuisiner)
+// - Verbes de mouvement (courir, sauter, grimper)
+// - Couleurs (rouge, bleu, vert)
+// - Formes géométriques (cercle, carré, triangle)
+// - Temporalité (hier, demain, maintenant)
+// - Expressions temporelles (parfois, souvent, jamais)
+// - Expressions de lieu (devant, derrière, dessus)
+// - Textures et sensations (doux, rugueux, lisse)
+// - Goûts et saveurs (sucré, salé, amer)
+// - Sons et bruits (silence, bruit, musique)
+// - Concepts philosophiques (liberté, justice, vérité)
+// - Noms abstraits (chance, succès, échec)
+// - Contraires et opposés (haut/bas, chaud/froid)
+// - Matériaux (bois, métal, plastique)
+//
+// IDÉES D'ENRICHISSEMENT :
+// - Verbes professionnels (négocier, présenter, analyser)
+// - Émotions nuancées (mélancolie, euphorie, sérénité)
+// - Concepts économiques (inflation, marché, profit)
+// - Termes relationnels (amitié, rivalité, complicité)
+// - Adverbes courants (rapidement, doucement, soudain)
+// - Qualités morales (honnêteté, générosité, loyauté)
+//
+// CRITÈRES DE DIFFICULTÉ :
+// - 1 (Facile) : Mots très courants (content, rouge, marcher)
+// - 2 (Moyen) : Moins fréquent mais connu (mélancolique, turquoise)
+// - 3 (Difficile) : Abstrait ou littéraire (éphémère, dichotomie)
+//
+// ============================================================
+
 import '../models.dart';
 
 const categoryDictionnaire = WordCategory(
@@ -613,6 +661,470 @@ const categoryDictionnaire = WordCategory(
       WordWithDifficulty('Ébène', difficulty: 2),
       WordWithDifficulty('Cachemire', difficulty: 3),
       WordWithDifficulty('Velours', difficulty: 2),
+
+      // ============================================
+      // ENRICHISSEMENT - ÉTATS PHYSIQUES
+      // ============================================
+
+      // ÉTATS PHYSIQUES - Facile
+      WordWithDifficulty('Fatigué', difficulty: 1),
+      WordWithDifficulty('Reposé', difficulty: 1),
+      WordWithDifficulty('Malade', difficulty: 1),
+      WordWithDifficulty('En forme', difficulty: 1),
+      WordWithDifficulty('Affamé', difficulty: 1),
+      WordWithDifficulty('Rassasié', difficulty: 2),
+      WordWithDifficulty('Assoiffé', difficulty: 2),
+      WordWithDifficulty('Endormi', difficulty: 1),
+      WordWithDifficulty('Éveillé', difficulty: 1),
+      WordWithDifficulty('Énergique', difficulty: 1),
+      WordWithDifficulty('Épuisé', difficulty: 2),
+      WordWithDifficulty('Ivre', difficulty: 2),
+      WordWithDifficulty('Sobre', difficulty: 2),
+      WordWithDifficulty('Blessé', difficulty: 1),
+      WordWithDifficulty('Guéri', difficulty: 2),
+
+      // ÉTATS PHYSIQUES - Moyen
+      WordWithDifficulty('Fébrile', difficulty: 3),
+      WordWithDifficulty('Convalescent', difficulty: 3),
+      WordWithDifficulty('Somnolent', difficulty: 2),
+      WordWithDifficulty('Vigoureux', difficulty: 2),
+      WordWithDifficulty('Affaibli', difficulty: 2),
+      WordWithDifficulty('Revigoré', difficulty: 3),
+      WordWithDifficulty('Exténué', difficulty: 3),
+      WordWithDifficulty('Alerte', difficulty: 2),
+      WordWithDifficulty('Apathique', difficulty: 3),
+      WordWithDifficulty('Dynamique', difficulty: 2),
+
+      // ============================================
+      // ENRICHISSEMENT - ÉTATS MENTAUX/SITUATIONS
+      // ============================================
+
+      // ÉTATS MENTAUX - Facile
+      WordWithDifficulty('Occupé', difficulty: 1),
+      WordWithDifficulty('Libre', difficulty: 1),
+      WordWithDifficulty('Pressé', difficulty: 1),
+      WordWithDifficulty('Détendu', difficulty: 1),
+      WordWithDifficulty('Concentré', difficulty: 1),
+      WordWithDifficulty('Distrait', difficulty: 2),
+      WordWithDifficulty('Motivé', difficulty: 1),
+      WordWithDifficulty('Démotivé', difficulty: 2),
+      WordWithDifficulty('Confus', difficulty: 2),
+      WordWithDifficulty('Clair', difficulty: 1),
+      WordWithDifficulty('Perdu', difficulty: 1),
+      WordWithDifficulty('Sûr', difficulty: 1),
+      WordWithDifficulty('Hésitant', difficulty: 2),
+      WordWithDifficulty('Décidé', difficulty: 2),
+      WordWithDifficulty('Prêt', difficulty: 1),
+      WordWithDifficulty('Débordé', difficulty: 2),
+
+      // ÉTATS MENTAUX - Moyen
+      WordWithDifficulty('Serein', difficulty: 2),
+      WordWithDifficulty('Angoissé', difficulty: 2),
+      WordWithDifficulty('Préoccupé', difficulty: 2),
+      WordWithDifficulty('Insouciant', difficulty: 2),
+      WordWithDifficulty('Absorbé', difficulty: 2),
+      WordWithDifficulty('Rêveur', difficulty: 2),
+      WordWithDifficulty('Lucide', difficulty: 2),
+      WordWithDifficulty('Hagard', difficulty: 3),
+      WordWithDifficulty('Médusé', difficulty: 3),
+      WordWithDifficulty('Ébahi', difficulty: 2),
+      WordWithDifficulty('Interloqué', difficulty: 3),
+      WordWithDifficulty('Abasourdi', difficulty: 3),
+
+      // ============================================
+      // ENRICHISSEMENT - ADJECTIFS DE PERSONNALITÉ
+      // ============================================
+
+      // PERSONNALITÉ - Facile
+      WordWithDifficulty('Sympa', difficulty: 1),
+      WordWithDifficulty('Drôle', difficulty: 1),
+      WordWithDifficulty('Sérieux', difficulty: 1),
+      WordWithDifficulty('Nerveux', difficulty: 1),
+      WordWithDifficulty('Bavard', difficulty: 1),
+      WordWithDifficulty('Silencieux', difficulty: 1),
+      WordWithDifficulty('Sociable', difficulty: 2),
+      WordWithDifficulty('Réservé', difficulty: 2),
+      WordWithDifficulty('Optimiste', difficulty: 2),
+      WordWithDifficulty('Pessimiste', difficulty: 2),
+      WordWithDifficulty('Créatif', difficulty: 2),
+      WordWithDifficulty('Pratique', difficulty: 2),
+
+      // PERSONNALITÉ - Moyen
+      WordWithDifficulty('Ambitieux', difficulty: 2),
+      WordWithDifficulty('Modeste', difficulty: 2),
+      WordWithDifficulty('Orgueilleux', difficulty: 2),
+      WordWithDifficulty('Humble', difficulty: 2),
+      WordWithDifficulty('Autoritaire', difficulty: 2),
+      WordWithDifficulty('Docile', difficulty: 2),
+      WordWithDifficulty('Rebelle', difficulty: 2),
+      WordWithDifficulty('Conformiste', difficulty: 3),
+      WordWithDifficulty('Original', difficulty: 2),
+      WordWithDifficulty('Excentrique', difficulty: 2),
+      WordWithDifficulty('Impulsif', difficulty: 2),
+      WordWithDifficulty('Réfléchi', difficulty: 2),
+      WordWithDifficulty('Spontané', difficulty: 2),
+      WordWithDifficulty('Calculateur', difficulty: 2),
+      WordWithDifficulty('Naïf', difficulty: 2),
+      WordWithDifficulty('Rusé', difficulty: 2),
+      WordWithDifficulty('Malin', difficulty: 1),
+      WordWithDifficulty('Bête', difficulty: 1),
+      WordWithDifficulty('Sensible', difficulty: 2),
+      WordWithDifficulty('Insensible', difficulty: 2),
+      WordWithDifficulty('Émotif', difficulty: 2),
+      WordWithDifficulty('Chaleureux', difficulty: 2),
+      WordWithDifficulty('Distant', difficulty: 2),
+      WordWithDifficulty('Avare', difficulty: 2),
+      WordWithDifficulty('Dépensier', difficulty: 2),
+      WordWithDifficulty('Économe', difficulty: 2),
+      WordWithDifficulty('Paresseux', difficulty: 1),
+      WordWithDifficulty('Travailleur', difficulty: 2),
+      WordWithDifficulty('Perfectionniste', difficulty: 2),
+      WordWithDifficulty('Négligent', difficulty: 2),
+      WordWithDifficulty('Soigneux', difficulty: 2),
+      WordWithDifficulty('Maladroit', difficulty: 2),
+      WordWithDifficulty('Adroit', difficulty: 2),
+      WordWithDifficulty('Gourmand', difficulty: 1),
+
+      // PERSONNALITÉ - Difficile
+      WordWithDifficulty('Susceptible', difficulty: 3),
+      WordWithDifficulty('Stoïque', difficulty: 3),
+      WordWithDifficulty('Volubile', difficulty: 3),
+      WordWithDifficulty('Taciturne', difficulty: 3),
+      WordWithDifficulty('Affable', difficulty: 3),
+      WordWithDifficulty('Bourru', difficulty: 3),
+      WordWithDifficulty('Bougon', difficulty: 2),
+      WordWithDifficulty('Enjoué', difficulty: 2),
+      WordWithDifficulty('Morose', difficulty: 3),
+      WordWithDifficulty('Jovial', difficulty: 2),
+      WordWithDifficulty('Acariâtre', difficulty: 3),
+      WordWithDifficulty('Débonnaire', difficulty: 3),
+
+      // ============================================
+      // ENRICHISSEMENT - VERBES DE COMMUNICATION
+      // ============================================
+
+      // COMMUNICATION - Facile
+      WordWithDifficulty('Dire', difficulty: 1),
+      WordWithDifficulty('Demander', difficulty: 1),
+      WordWithDifficulty('Répondre', difficulty: 1),
+      WordWithDifficulty('Expliquer', difficulty: 1),
+      WordWithDifficulty('Raconter', difficulty: 1),
+      WordWithDifficulty('Appeler', difficulty: 1),
+      WordWithDifficulty('Chuchoter', difficulty: 2),
+      WordWithDifficulty('Murmurer', difficulty: 2),
+      WordWithDifficulty('Hurler', difficulty: 2),
+      WordWithDifficulty('Annoncer', difficulty: 1),
+      WordWithDifficulty('Informer', difficulty: 2),
+      WordWithDifficulty('Prévenir', difficulty: 2),
+      WordWithDifficulty('Avertir', difficulty: 2),
+      WordWithDifficulty('Promettre', difficulty: 2),
+      WordWithDifficulty('Jurer', difficulty: 2),
+
+      // COMMUNICATION - Moyen
+      WordWithDifficulty('Discuter', difficulty: 1),
+      WordWithDifficulty('Négocier', difficulty: 2),
+      WordWithDifficulty('Convaincre', difficulty: 2),
+      WordWithDifficulty('Persuader', difficulty: 2),
+      WordWithDifficulty('Argumenter', difficulty: 2),
+      WordWithDifficulty('Débattre', difficulty: 2),
+      WordWithDifficulty('Contredire', difficulty: 2),
+      WordWithDifficulty('Approuver', difficulty: 2),
+      WordWithDifficulty('Refuser', difficulty: 1),
+      WordWithDifficulty('Accepter', difficulty: 1),
+      WordWithDifficulty('Proposer', difficulty: 1),
+      WordWithDifficulty('Suggérer', difficulty: 2),
+      WordWithDifficulty('Conseiller', difficulty: 2),
+      WordWithDifficulty('Recommander', difficulty: 2),
+      WordWithDifficulty('Avouer', difficulty: 2),
+      WordWithDifficulty('Confesser', difficulty: 2),
+      WordWithDifficulty('Mentir', difficulty: 1),
+      WordWithDifficulty('Tromper', difficulty: 2),
+      WordWithDifficulty('Rassurer', difficulty: 2),
+      WordWithDifficulty('Inquiéter', difficulty: 2),
+      WordWithDifficulty('Féliciter', difficulty: 2),
+      WordWithDifficulty('Complimenter', difficulty: 2),
+      WordWithDifficulty('Critiquer', difficulty: 2),
+      WordWithDifficulty('Reprocher', difficulty: 2),
+      WordWithDifficulty('Insulter', difficulty: 2),
+      WordWithDifficulty('Menacer', difficulty: 2),
+      WordWithDifficulty('Supplier', difficulty: 2),
+      WordWithDifficulty('Implorer', difficulty: 3),
+
+      // ============================================
+      // ENRICHISSEMENT - VERBES DOMESTIQUES
+      // ============================================
+
+      // VERBES DOMESTIQUES - Facile
+      WordWithDifficulty('Ranger', difficulty: 1),
+      WordWithDifficulty('Nettoyer', difficulty: 1),
+      WordWithDifficulty('Laver', difficulty: 1),
+      WordWithDifficulty('Sécher', difficulty: 1),
+      WordWithDifficulty('Repasser', difficulty: 2),
+      WordWithDifficulty('Plier', difficulty: 1),
+      WordWithDifficulty('Balayer', difficulty: 1),
+      WordWithDifficulty('Aspirer', difficulty: 2),
+      WordWithDifficulty('Frotter', difficulty: 2),
+      WordWithDifficulty('Essuyer', difficulty: 1),
+      WordWithDifficulty('Rincer', difficulty: 2),
+      WordWithDifficulty('Tremper', difficulty: 2),
+      WordWithDifficulty('Accrocher', difficulty: 1),
+      WordWithDifficulty('Décrocher', difficulty: 2),
+      WordWithDifficulty('Débrancher', difficulty: 2),
+      WordWithDifficulty('Brancher', difficulty: 1),
+      WordWithDifficulty('Allumer', difficulty: 1),
+      WordWithDifficulty('Éteindre', difficulty: 1),
+      WordWithDifficulty('Ouvrir', difficulty: 1),
+      WordWithDifficulty('Fermer', difficulty: 1),
+      WordWithDifficulty('Verrouiller', difficulty: 2),
+      WordWithDifficulty('Déverrouiller', difficulty: 2),
+
+      // VERBES DOMESTIQUES - Moyen
+      WordWithDifficulty('Récurer', difficulty: 3),
+      WordWithDifficulty('Dégraisser', difficulty: 3),
+      WordWithDifficulty('Détartrer', difficulty: 3),
+      WordWithDifficulty('Dépoussiérer', difficulty: 2),
+      WordWithDifficulty('Aérer', difficulty: 2),
+      WordWithDifficulty('Ventiler', difficulty: 2),
+      WordWithDifficulty('Chauffer', difficulty: 1),
+      WordWithDifficulty('Refroidir', difficulty: 2),
+      WordWithDifficulty('Congeler', difficulty: 2),
+      WordWithDifficulty('Décongeler', difficulty: 2),
+      WordWithDifficulty('Réchauffer', difficulty: 1),
+      WordWithDifficulty('Cuire', difficulty: 1),
+      WordWithDifficulty('Mijoter', difficulty: 2),
+      WordWithDifficulty('Bouillir', difficulty: 2),
+      WordWithDifficulty('Frire', difficulty: 2),
+      WordWithDifficulty('Griller', difficulty: 2),
+
+      // ============================================
+      // ENRICHISSEMENT - NOMS ABSTRAITS
+      // ============================================
+
+      // NOMS ABSTRAITS - Facile
+      WordWithDifficulty('Chance', difficulty: 1),
+      WordWithDifficulty('Malchance', difficulty: 1),
+      WordWithDifficulty('Succès', difficulty: 1),
+      WordWithDifficulty('Échec', difficulty: 1),
+      WordWithDifficulty('Victoire', difficulty: 1),
+      WordWithDifficulty('Défaite', difficulty: 1),
+      WordWithDifficulty('Effort', difficulty: 1),
+      WordWithDifficulty('Repos', difficulty: 1),
+      WordWithDifficulty('Travail', difficulty: 1),
+      WordWithDifficulty('Loisir', difficulty: 2),
+      WordWithDifficulty('Vacances', difficulty: 1),
+      WordWithDifficulty('Fête', difficulty: 1),
+      WordWithDifficulty('Voyage', difficulty: 1),
+      WordWithDifficulty('Aventure', difficulty: 1),
+      WordWithDifficulty('Rêve', difficulty: 1),
+      WordWithDifficulty('Cauchemar', difficulty: 1),
+      WordWithDifficulty('Secret', difficulty: 1),
+      WordWithDifficulty('Mystère', difficulty: 1),
+      WordWithDifficulty('Problème', difficulty: 1),
+      WordWithDifficulty('Solution', difficulty: 1),
+      WordWithDifficulty('Question', difficulty: 1),
+      WordWithDifficulty('Réponse', difficulty: 1),
+      WordWithDifficulty('Idée', difficulty: 1),
+      WordWithDifficulty('Opinion', difficulty: 2),
+      WordWithDifficulty('Avis', difficulty: 1),
+
+      // NOMS ABSTRAITS - Moyen
+      WordWithDifficulty('Destin', difficulty: 2),
+      WordWithDifficulty('Hasard', difficulty: 2),
+      WordWithDifficulty('Coïncidence', difficulty: 2),
+      WordWithDifficulty('Miracle', difficulty: 1),
+      WordWithDifficulty('Tragédie', difficulty: 2),
+      WordWithDifficulty('Drame', difficulty: 2),
+      WordWithDifficulty('Comédie', difficulty: 1),
+      WordWithDifficulty('Ironie', difficulty: 2),
+      WordWithDifficulty('Paradoxe', difficulty: 3),
+      WordWithDifficulty('Dilemme', difficulty: 2),
+      WordWithDifficulty('Choix', difficulty: 1),
+      WordWithDifficulty('Décision', difficulty: 1),
+      WordWithDifficulty('Conséquence', difficulty: 2),
+      WordWithDifficulty('Cause', difficulty: 2),
+      WordWithDifficulty('Effet', difficulty: 2),
+      WordWithDifficulty('Excuse', difficulty: 1),
+      WordWithDifficulty('Prétexte', difficulty: 2),
+      WordWithDifficulty('Motif', difficulty: 2),
+      WordWithDifficulty('But', difficulty: 1),
+      WordWithDifficulty('Objectif', difficulty: 2),
+      WordWithDifficulty('Ambition', difficulty: 2),
+      WordWithDifficulty('Désir', difficulty: 2),
+      WordWithDifficulty('Envie', difficulty: 1),
+      WordWithDifficulty('Besoin', difficulty: 1),
+      WordWithDifficulty('Nécessité', difficulty: 2),
+      WordWithDifficulty('Urgence', difficulty: 2),
+      WordWithDifficulty('Priorité', difficulty: 2),
+      WordWithDifficulty('Importance', difficulty: 2),
+
+      // ============================================
+      // ENRICHISSEMENT - EXPRESSIONS DE LIEU
+      // ============================================
+
+      // LIEUX - Facile
+      WordWithDifficulty('Devant', difficulty: 1),
+      WordWithDifficulty('Derrière', difficulty: 1),
+      WordWithDifficulty('Dessus', difficulty: 1),
+      WordWithDifficulty('Dessous', difficulty: 1),
+      WordWithDifficulty('Dedans', difficulty: 1),
+      WordWithDifficulty('Dehors', difficulty: 1),
+      WordWithDifficulty('À côté', difficulty: 1),
+      WordWithDifficulty('À droite', difficulty: 1),
+      WordWithDifficulty('À gauche', difficulty: 1),
+      WordWithDifficulty('En haut', difficulty: 1),
+      WordWithDifficulty('En bas', difficulty: 1),
+      WordWithDifficulty('Au milieu', difficulty: 1),
+      WordWithDifficulty('Au centre', difficulty: 1),
+      WordWithDifficulty('Au bord', difficulty: 1),
+      WordWithDifficulty('Au fond', difficulty: 1),
+      WordWithDifficulty('Près', difficulty: 1),
+      WordWithDifficulty('Loin', difficulty: 1),
+      WordWithDifficulty('Ici', difficulty: 1),
+      WordWithDifficulty('Là-bas', difficulty: 1),
+      WordWithDifficulty('Partout', difficulty: 1),
+      WordWithDifficulty('Nulle part', difficulty: 2),
+      WordWithDifficulty('Quelque part', difficulty: 2),
+      WordWithDifficulty('Ailleurs', difficulty: 2),
+
+      // ============================================
+      // ENRICHISSEMENT - ADJECTIFS TAILLE/FORME
+      // ============================================
+
+      // TAILLE ET DIMENSIONS - Facile
+      WordWithDifficulty('Énorme', difficulty: 1),
+      WordWithDifficulty('Minuscule', difficulty: 1),
+      WordWithDifficulty('Gigantesque', difficulty: 2),
+      WordWithDifficulty('Microscopique', difficulty: 2),
+      WordWithDifficulty('Long', difficulty: 1),
+      WordWithDifficulty('Court', difficulty: 1),
+      WordWithDifficulty('Large', difficulty: 1),
+      WordWithDifficulty('Étroit', difficulty: 2),
+      WordWithDifficulty('Épais', difficulty: 2),
+      WordWithDifficulty('Fin', difficulty: 1),
+      WordWithDifficulty('Mince', difficulty: 1),
+      WordWithDifficulty('Gros', difficulty: 1),
+      WordWithDifficulty('Maigre', difficulty: 1),
+      WordWithDifficulty('Lourd', difficulty: 1),
+      WordWithDifficulty('Léger', difficulty: 1),
+      WordWithDifficulty('Profond', difficulty: 2),
+      WordWithDifficulty('Superficiel', difficulty: 3),
+      WordWithDifficulty('Plat', difficulty: 1),
+      WordWithDifficulty('Bombé', difficulty: 2),
+      WordWithDifficulty('Creux', difficulty: 2),
+      WordWithDifficulty('Plein', difficulty: 1),
+      WordWithDifficulty('Vide', difficulty: 1),
+
+      // ============================================
+      // ENRICHISSEMENT - VERBES DE MOUVEMENT
+      // ============================================
+
+      // MOUVEMENT - Facile
+      WordWithDifficulty('Avancer', difficulty: 1),
+      WordWithDifficulty('Reculer', difficulty: 1),
+      WordWithDifficulty('Monter', difficulty: 1),
+      WordWithDifficulty('Descendre', difficulty: 1),
+      WordWithDifficulty('Entrer', difficulty: 1),
+      WordWithDifficulty('Sortir', difficulty: 1),
+      WordWithDifficulty('Partir', difficulty: 1),
+      WordWithDifficulty('Arriver', difficulty: 1),
+      WordWithDifficulty('Venir', difficulty: 1),
+      WordWithDifficulty('Aller', difficulty: 1),
+      WordWithDifficulty('Revenir', difficulty: 1),
+      WordWithDifficulty('Repartir', difficulty: 2),
+      WordWithDifficulty('Traverser', difficulty: 1),
+      WordWithDifficulty('Passer', difficulty: 1),
+      WordWithDifficulty('Contourner', difficulty: 2),
+      WordWithDifficulty('Longer', difficulty: 2),
+      WordWithDifficulty('Suivre', difficulty: 1),
+      WordWithDifficulty('Précéder', difficulty: 2),
+      WordWithDifficulty('Accompagner', difficulty: 2),
+      WordWithDifficulty('Guider', difficulty: 2),
+
+      // MOUVEMENT - Moyen
+      WordWithDifficulty('Glisser', difficulty: 2),
+      WordWithDifficulty('Rouler', difficulty: 1),
+      WordWithDifficulty('Déraper', difficulty: 2),
+      WordWithDifficulty('Patiner', difficulty: 2),
+      WordWithDifficulty('Flotter', difficulty: 2),
+      WordWithDifficulty('Couler', difficulty: 2),
+      WordWithDifficulty('Plonger', difficulty: 2),
+      WordWithDifficulty('Émerger', difficulty: 3),
+      WordWithDifficulty('Surgir', difficulty: 2),
+      WordWithDifficulty('Jaillir', difficulty: 3),
+      WordWithDifficulty('Bondir', difficulty: 2),
+      WordWithDifficulty('Rebondir', difficulty: 2),
+      WordWithDifficulty('Voler', difficulty: 1),
+      WordWithDifficulty('Planer', difficulty: 2),
+      WordWithDifficulty('Atterrir', difficulty: 2),
+      WordWithDifficulty('Décoller', difficulty: 2),
+      WordWithDifficulty('Se pencher', difficulty: 2),
+      WordWithDifficulty('Se redresser', difficulty: 2),
+      WordWithDifficulty('Se courber', difficulty: 2),
+      WordWithDifficulty('Se plier', difficulty: 2),
+      WordWithDifficulty('S\'étirer', difficulty: 2),
+      WordWithDifficulty('Se contracter', difficulty: 3),
+      WordWithDifficulty('Pivoter', difficulty: 2),
+      WordWithDifficulty('Tournoyer', difficulty: 2),
+      WordWithDifficulty('Virevolter', difficulty: 3),
+
+      // ============================================
+      // ENRICHISSEMENT - CONTRAIRES ET OPPOSÉS
+      // ============================================
+
+      // CONTRAIRES - Facile
+      WordWithDifficulty('Début', difficulty: 1),
+      WordWithDifficulty('Entrée', difficulty: 1),
+      WordWithDifficulty('Sortie', difficulty: 1),
+      WordWithDifficulty('Arrivée', difficulty: 1),
+      WordWithDifficulty('Départ', difficulty: 1),
+      WordWithDifficulty('Naissance', difficulty: 1),
+      WordWithDifficulty('Mort', difficulty: 1),
+      WordWithDifficulty('Vie', difficulty: 1),
+      WordWithDifficulty('Santé', difficulty: 1),
+      WordWithDifficulty('Maladie', difficulty: 1),
+      WordWithDifficulty('Richesse', difficulty: 2),
+      WordWithDifficulty('Pauvreté', difficulty: 2),
+      WordWithDifficulty('Abondance', difficulty: 2),
+      WordWithDifficulty('Pénurie', difficulty: 3),
+      WordWithDifficulty('Présence', difficulty: 2),
+      WordWithDifficulty('Absence', difficulty: 2),
+      WordWithDifficulty('Réalité', difficulty: 2),
+      WordWithDifficulty('Fiction', difficulty: 2),
+      WordWithDifficulty('Mensonge', difficulty: 1),
+      WordWithDifficulty('Ordre', difficulty: 1),
+      WordWithDifficulty('Désordre', difficulty: 2),
+      WordWithDifficulty('Chaos', difficulty: 2),
+      WordWithDifficulty('Harmonie', difficulty: 2),
+
+      // ============================================
+      // ENRICHISSEMENT - EXPRESSIONS TEMPORELLES
+      // ============================================
+
+      // TEMPS - Facile
+      WordWithDifficulty('Avant', difficulty: 1),
+      WordWithDifficulty('Après', difficulty: 1),
+      WordWithDifficulty('Pendant', difficulty: 1),
+      WordWithDifficulty('Durant', difficulty: 2),
+      WordWithDifficulty('Depuis', difficulty: 1),
+      WordWithDifficulty('Jusqu\'à', difficulty: 1),
+      WordWithDifficulty('Bientôt', difficulty: 1),
+      WordWithDifficulty('Maintenant', difficulty: 1),
+      WordWithDifficulty('Récemment', difficulty: 2),
+      WordWithDifficulty('Autrefois', difficulty: 2),
+      WordWithDifficulty('Jadis', difficulty: 3),
+      WordWithDifficulty('Naguère', difficulty: 3),
+      WordWithDifficulty('Désormais', difficulty: 2),
+      WordWithDifficulty('Dorénavant', difficulty: 3),
+      WordWithDifficulty('Immédiatement', difficulty: 2),
+      WordWithDifficulty('Instantanément', difficulty: 3),
+      WordWithDifficulty('Progressivement', difficulty: 2),
+      WordWithDifficulty('Graduellement', difficulty: 3),
+      WordWithDifficulty('Soudainement', difficulty: 2),
+      WordWithDifficulty('Brusquement', difficulty: 2),
+
+      // ============================================
+      // FIN ENRICHISSEMENT DICTIONNAIRE
+      // ============================================
 
   ],
 );

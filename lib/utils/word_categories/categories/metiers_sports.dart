@@ -1,3 +1,38 @@
+// ============================================================
+// CATÉGORIE : Métiers & Sports
+// ============================================================
+//
+// DESCRIPTION :
+// Professions de tous secteurs et disciplines sportives
+// pratiquées dans le monde.
+//
+// SECTIONS EXISTANTES :
+// - Métiers de la santé (médecin, infirmier, dentiste)
+// - Métiers de l'éducation (professeur, instituteur)
+// - Métiers du commerce (vendeur, caissier, commercial)
+// - Métiers de la construction (maçon, plombier, électricien)
+// - Métiers artistiques (acteur, musicien, peintre)
+// - Métiers du numérique (développeur, designer)
+// - Sports collectifs (football, basketball, rugby)
+// - Sports individuels (tennis, natation, athlétisme)
+// - Sports de combat (boxe, judo, karaté)
+// - Sports extrêmes et outdoor
+//
+// IDÉES D'ENRICHISSEMENT :
+// - Métiers émergents (influenceur, data scientist, UX designer)
+// - Métiers de l'artisanat (ébéniste, souffleur de verre)
+// - Sports olympiques moins connus
+// - E-sport et gaming professionnel
+// - Métiers de la restauration détaillés
+// - Sports traditionnels français (pétanque, pelote basque)
+//
+// CRITÈRES DE DIFFICULTÉ :
+// - 1 (Facile) : Métiers/sports très connus (médecin, football)
+// - 2 (Moyen) : Moins courant mais reconnaissable (ergothérapeute, curling)
+// - 3 (Difficile) : Spécialisé ou rare (actuaire, skeleton)
+//
+// ============================================================
+
 import '../models.dart';
 
 const categoryMetiersSports = WordCategory(

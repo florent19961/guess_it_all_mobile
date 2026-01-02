@@ -1,3 +1,35 @@
+// ============================================================
+// CATÉGORIE : Musique
+// ============================================================
+//
+// DESCRIPTION :
+// Univers musical : chansons célèbres, artistes, genres
+// musicaux et termes liés à la musique.
+//
+// SECTIONS EXISTANTES :
+// - Chansons françaises classiques (La vie en rose, La bohème)
+// - Chansons françaises récentes (Dernière danse, Balance ton quoi)
+// - Chansons internationales (Thriller, Bohemian Rhapsody)
+// - Artistes français (Édith Piaf, Johnny Hallyday, Stromae)
+// - Artistes internationaux (Michael Jackson, Beatles, Queen)
+// - Genres musicaux (Rock, Rap, Jazz, Électro)
+//
+// IDÉES D'ENRICHISSEMENT :
+// - Hits récents 2023-2025
+// - Rappeurs français actuels
+// - Artistes K-pop populaires
+// - Festivals de musique (Solidays, Vieilles Charrues)
+// - Groupes de rock légendaires
+// - Artistes de variété française
+// - Musiques de films célèbres
+//
+// CRITÈRES DE DIFFICULTÉ :
+// - 1 (Facile) : Tubes universels (Thriller, La vie en rose)
+// - 2 (Moyen) : Connu des mélomanes (Bohemian Rhapsody)
+// - 3 (Difficile) : Niche ou ancien (Gainsbourg, morceaux obscurs)
+//
+// ============================================================
+
 import '../models.dart';
 
 const categoryMusique = WordCategory(

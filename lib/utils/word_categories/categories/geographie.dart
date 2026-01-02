@@ -1,3 +1,38 @@
+// ============================================================
+// CATÉGORIE : Géographie
+// ============================================================
+//
+// DESCRIPTION :
+// Lieux géographiques du monde : pays, villes, monuments,
+// reliefs et cours d'eau remarquables.
+//
+// SECTIONS EXISTANTES :
+// - Pays du monde (France, États-Unis, Japon)
+// - Capitales (Paris, Londres, Tokyo)
+// - Grandes villes françaises (Lyon, Marseille, Bordeaux)
+// - Villes mondiales célèbres (New York, Rome, Dubaï)
+// - Monuments et merveilles (Tour Eiffel, Pyramides, Colisée)
+// - Fleuves et rivières (Seine, Nil, Amazone)
+// - Montagnes et sommets (Everest, Mont Blanc, Kilimandjaro)
+// - Îles et archipels (Corse, Hawaï, Maldives)
+// - Mers et océans
+//
+// IDÉES D'ENRICHISSEMENT :
+// - Sites UNESCO français et mondiaux
+// - Régions françaises et leurs spécialités
+// - Déserts célèbres (Sahara, Gobi, Atacama)
+// - Volcans actifs (Etna, Vésuve, Fuji)
+// - Lacs célèbres (Léman, Baïkal, Titicaca)
+// - Parcs nationaux (Yellowstone, Kruger)
+// - Frontières naturelles remarquables
+//
+// CRITÈRES DE DIFFICULTÉ :
+// - 1 (Facile) : Très connu (France, Paris, Tour Eiffel)
+// - 2 (Moyen) : Culture générale (Machu Picchu, Bosphore)
+// - 3 (Difficile) : Spécialisé (Ouagadougou, Chimborazo)
+//
+// ============================================================
+
 import '../models.dart';
 
 const categoryGeographie = WordCategory(

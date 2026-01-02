@@ -1,3 +1,39 @@
+// ============================================================
+// CATÉGORIE : Science et Médecine
+// ============================================================
+//
+// DESCRIPTION :
+// Vocabulaire scientifique et médical : anatomie, maladies,
+// éléments chimiques, astronomie, inventions et découvertes.
+//
+// SECTIONS EXISTANTES :
+// - Anatomie (parties du corps, organes, os)
+// - Maladies courantes (grippe, diabète, cancer)
+// - Symptômes (fièvre, toux, douleur)
+// - Spécialités médicales (cardiologie, neurologie)
+// - Éléments chimiques (oxygène, hydrogène, carbone)
+// - Espace et astronomie (planètes, étoiles, galaxies)
+// - Inventions et découvertes
+// - Scientifiques célèbres (Einstein, Newton, Curie)
+// - Phénomènes physiques (gravité, électricité)
+// - Unités de mesure
+//
+// IDÉES D'ENRICHISSEMENT :
+// - Technologies médicales récentes (IRM, scanner)
+// - Découvertes scientifiques 2020-2025
+// - Prix Nobel et leurs découvertes
+// - Maladies rares mais connues
+// - Termes de biologie cellulaire
+// - Minéraux et géologie
+// - Théories scientifiques célèbres
+//
+// CRITÈRES DE DIFFICULTÉ :
+// - 1 (Facile) : Connu de tous (cœur, grippe, Soleil)
+// - 2 (Moyen) : Culture scientifique (ADN, photosynthèse)
+// - 3 (Difficile) : Spécialisé (mitochondrie, boson de Higgs)
+//
+// ============================================================
+
 import '../models.dart';
 
 const categoryScienceMedecine = WordCategory(

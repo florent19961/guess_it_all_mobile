@@ -1,3 +1,37 @@
+// ============================================================
+// CATÉGORIE : Marques
+// ============================================================
+//
+// DESCRIPTION :
+// Noms de marques commerciales connues : vêtements,
+// automobile, technologie, alimentation, luxe.
+//
+// SECTIONS EXISTANTES :
+// - Marques de vêtements (Nike, Adidas, Zara)
+// - Marques de luxe (Gucci, Chanel, Louis Vuitton)
+// - Marques automobiles (Renault, BMW, Tesla)
+// - Marques tech (Apple, Samsung, Google)
+// - Marques alimentaires (Coca-Cola, Nutella, McDonald's)
+// - Marques de cosmétiques (L'Oréal, Nivea)
+// - Fast-food et restauration
+// - Marques de sport
+//
+// IDÉES D'ENRICHISSEMENT :
+// - Marques françaises historiques
+// - Startups et licornes connues
+// - Marques de jeux vidéo (Nintendo, PlayStation)
+// - Marques de streaming (Netflix, Spotify)
+// - Chaînes de distribution (Carrefour, IKEA)
+// - Marques horlogères et joaillerie
+// - Compagnies aériennes
+//
+// CRITÈRES DE DIFFICULTÉ :
+// - 1 (Facile) : Marques mondiales (Apple, Nike, Coca-Cola)
+// - 2 (Moyen) : Connues mais moins universelles (Uniqlo, Tesla)
+// - 3 (Difficile) : Luxe ou niche (Hermès, Bang & Olufsen)
+//
+// ============================================================
+
 import '../models.dart';
 
 const categoryMarques = WordCategory(

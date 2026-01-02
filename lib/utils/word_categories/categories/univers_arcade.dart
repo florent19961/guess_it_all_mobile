@@ -1,3 +1,36 @@
+// ============================================================
+// CATÉGORIE : Univers Arcade
+// ============================================================
+//
+// DESCRIPTION :
+// Monde du jeu vidéo et des jeux de société : franchises,
+// personnages, Pokémon, et références gaming.
+//
+// SECTIONS EXISTANTES :
+// - Pokémon (génération 1 à 9, légendaires)
+// - Clash Royale (troupes, sorts, bâtiments)
+// - Jeux vidéo classiques (Mario, Zelda, Sonic)
+// - Jeux vidéo récents (Fortnite, Minecraft, GTA)
+// - Personnages de jeux vidéo
+// - Jeux de société (Monopoly, Scrabble, Uno)
+// - Consoles de jeux
+//
+// IDÉES D'ENRICHISSEMENT :
+// - Jeux mobile populaires (Candy Crush, Subway Surfers)
+// - Jeux indépendants cultes (Hollow Knight, Hades)
+// - Nouveaux Pokémon (Paldea, Hisui)
+// - Personnages Smash Bros
+// - Jeux de cartes (Magic, Yu-Gi-Oh!)
+// - Jeux de rôle (D&D, Final Fantasy)
+// - E-sport et équipes pro
+//
+// CRITÈRES DE DIFFICULTÉ :
+// - 1 (Facile) : Icônes universelles (Mario, Pikachu, Minecraft)
+// - 2 (Moyen) : Connu des gamers (Link, Kratos, Geralt)
+// - 3 (Difficile) : Niche ou ancien (Pokémon rares, jeux rétro)
+//
+// ============================================================
+
 import '../models.dart';
 
 const categoryUniversArcade = WordCategory(
