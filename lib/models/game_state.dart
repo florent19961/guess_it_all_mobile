@@ -53,6 +53,7 @@ class HistoryEntry {
 }
 
 class GameState {
+  String? gameId; // UUID v4 unique pour cette partie (analytics)
   String currentScreen;
   int currentRound;
   int currentTurn;
@@ -86,6 +87,7 @@ class GameState {
   List<String>? restoredValidatedWords; // Mots validés à restaurer lors du retour en arrière
 
   GameState({
+    this.gameId,
     this.currentScreen = AppConstants.screenHome,
     this.currentRound = 1,
     this.currentTurn = 1,
@@ -124,6 +126,8 @@ class GameState {
   }
 
   GameState copyWith({
+    String? gameId,
+    bool clearGameId = false,
     String? currentScreen,
     int? currentRound,
     int? currentTurn,
@@ -161,6 +165,7 @@ class GameState {
     bool clearRestoredValidatedWords = false,
   }) {
     return GameState(
+      gameId: clearGameId ? null : (gameId ?? this.gameId),
       currentScreen: currentScreen ?? this.currentScreen,
       currentRound: currentRound ?? this.currentRound,
       currentTurn: currentTurn ?? this.currentTurn,
@@ -193,6 +198,7 @@ class GameState {
 
   Map<String, dynamic> toJson() {
     return {
+      'gameId': gameId,
       'currentScreen': currentScreen,
       'currentRound': currentRound,
       'currentTurn': currentTurn,
@@ -223,6 +229,7 @@ class GameState {
 
   factory GameState.fromJson(Map<String, dynamic> json) {
     return GameState(
+      gameId: json['gameId'] as String?,
       currentScreen: json['currentScreen'] as String? ?? AppConstants.screenHome,
       currentRound: json['currentRound'] as int? ?? 1,
       currentTurn: json['currentTurn'] as int? ?? 1,
