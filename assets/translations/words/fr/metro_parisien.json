@@ -1,0 +1,530 @@
+{
+  "categoryId": "metro_parisien",
+  "words": [
+    {
+      "word": "Châtelet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gare du Nord",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gare de Lyon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "République",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bastille",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nation",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Opéra",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Concorde",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Invalides",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Étoile",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Trocadéro",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "La Défense",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Saint-Lazare",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Montparnasse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Denfert-Rochereau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hôtel de Ville",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Réaumur-Sébastopol",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Strasbourg-Saint-Denis",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Barbès-Rochechouart",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Belleville",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pigalle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Champs-Élysées",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Franklin D. Roosevelt",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Saint-Michel",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Odéon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Luxembourg",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Palais Royal",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Louvre-Rivoli",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pyramides",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Madeleine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Esplanade de La Défense",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pont de Neuilly",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Porte Maillot",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Argentine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "George V",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Champs-Élysées-Clemenceau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tuileries",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Châtelet-Les Halles",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Saint-Paul",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Château de Vincennes",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Porte de Clignancourt",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Porte de Versailles",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Porte d'Orléans",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Porte de Bagnolet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Porte de Vincennes",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Porte de Pantin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Porte de Champerret",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Porte Dauphine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Abbesses",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Anvers",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Blanche",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cluny-La Sorbonne",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Maubert-Mutualité",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cardinal Lemoine",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Jussieu",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sully-Morland",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Quai de la Rapée",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bir-Hakeim",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Passy",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "La Muette",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Jasmin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ranelagh",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Michel-Ange Auteuil",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Boulogne-Jean Jaurès",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Créteil-Préfecture",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mairie de Montreuil",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bobigny-Pablo Picasso",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Villejuif-Louis Aragon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mairie d'Issy",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mairie de Saint-Ouen",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gallieni",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Boulogne-Pont de Saint-Cloud",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Arts et Métiers",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Parmentier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Voltaire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Charonne",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Alexandre Dumas",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Avron",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Buzenval",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Maraîchers",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Faidherbe-Chaligny",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ledru-Rollin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bréguet-Sabin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chemin Vert",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Saint-Sébastien-Froissart",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Filles du Calvaire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Oberkampf",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Temple",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rambuteau",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Étienne Marcel",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sentier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bonne Nouvelle",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Poissonnière",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cadet",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Le Peletier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chaussée d'Antin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Havre-Caumartin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Saint-Augustin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Miromesnil",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Saint-Philippe du Roule",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Alma-Marceau",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Iéna",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Boissière",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Kléber",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Victor Hugo",
+      "difficulty": 3,
+      "language": "international"
+    }
+  ]
+}

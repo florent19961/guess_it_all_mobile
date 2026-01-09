@@ -1,0 +1,4355 @@
+{
+  "categoryId": "dictionnaire",
+  "words": [
+    {
+      "word": "Joie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bonheur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Amour",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Surprise",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Plaisir",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Calme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Confiance",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Espoir",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Excitation",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Enthousiasme",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tendresse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fierté",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Satisfaction",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Soulagement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Admiration",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Reconnaissance",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Compassion",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sympathie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Euphorie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Plénitude",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Émerveillement",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gratitude",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sérénité",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Béatitude",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Exaltation",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ravissement",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tristesse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Colère",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Peur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Douleur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Inquiétude",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Regret",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mélancolie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Angoisse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jalousie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Honte",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ennui",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Stress",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nostalgie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Déception",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Impatience",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Embarras",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Solitude",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chagrin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Désespoir",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Fureur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Terreur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Panique",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dégoût",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mépris",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Culpabilité",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Humiliation",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Frustration",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Perplexité",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rancœur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Amertume",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Consternation",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Grand",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Petit",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Beau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Joli",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gentil",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Méchant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Heureux",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Triste",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chaud",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Froid",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Facile",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Difficile",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeune",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vieux",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Propre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sale",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Magnifique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Splendide",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Courageux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Timide",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Généreux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Intelligent",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Stupide",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rapide",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lent",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fort",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Faible",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Amusant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ennuyeux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Curieux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Patient",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Honnête",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Poli",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Magnanime",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Perspicace",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Éloquent",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Époustouflant",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Majestueux",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Téméraire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Intrépide",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pugnace",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Circonspect",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Méticuleux",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Impétueux",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Belliqueux",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Versatile",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Imperturbable",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Marcher",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Courir",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sauter",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Manger",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Boire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dormir",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Parler",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Écouter",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Regarder",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jouer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pleurer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Penser",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aimer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Danser",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chanter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dessiner",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Écrire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cuisiner",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Conduire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nager",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Grimper",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Construire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Peindre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sculpter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Composer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Créer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ramper",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jongler",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Escalader",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Méditer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Scruter",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Persévérer",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Contempler",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sillonner",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Vagabonder",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Déambuler",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Procrastiner",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Divaguer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lever",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Baisser",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tourner",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pousser",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tirer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lancer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Attraper",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tomber",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Soulever",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Porter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jeter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Frapper",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Caresser",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Applaudir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Siffler",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Crier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Réfléchir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Imaginer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rêver",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Comprendre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Apprendre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mémoriser",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Oublier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Décider",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Analyser",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Synthétiser",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Conceptualiser",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Philosopher",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ratiociner",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bien",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mal",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vite",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lentement",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rapidement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Doucement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fortement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Souvent",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Parfois",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jamais",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Toujours",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ensemble",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Seul",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Énormément",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Promptement",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Délicatement",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Méticuleusement",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Frénétiquement",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Inlassablement",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Inexorablement",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Obstinément",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Résolument",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Vaillamment",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ardemment",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rouge",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bleu",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jaune",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vert",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Noir",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Blanc",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rose",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Orange",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Violet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gris",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Turquoise",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bordeaux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Beige",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Marron",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Argenté",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Doré",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pourpre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Indigo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Émeraude",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Azur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Écarlate",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Vermillon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Grenat",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ocre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cyan",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Magenta",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Améthyste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Saphir",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ivoire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Carmin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Carré",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cercle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Triangle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rectangle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rond",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ligne",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Point",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Losange",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ovale",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hexagone",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pentagone",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Étoile",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cube",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sphère",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cylindre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pyramide",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Parallélépipède",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Octogone",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Trapèze",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ellipse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Prisme",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tétraèdre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dodécaèdre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Icosaèdre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Un",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Deux",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Trois",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dix",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cent",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mille",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Beaucoup",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Peu",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dizaine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Centaine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Paire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Trio",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Douzaine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Moitié",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Quart",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tiers",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Double",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Triple",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Quintuple",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Décuple",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Infinité",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Multitude",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Poignée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Kyrielle",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pléthore",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Matin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Midi",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Soir",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nuit",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jour",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Semaine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mois",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Année",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aujourd'hui",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Demain",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Printemps",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Été",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Automne",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hiver",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aube",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Crépuscule",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Décennie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Siècle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Instant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Moment",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Millénaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Quinzaine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lustrum",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Éternité",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Éphémère",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pérennité",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Postérité",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pluie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Soleil",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nuage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vent",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Neige",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Orage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ciel",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Arc-en-ciel",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Brouillard",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tempête",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Éclair",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tonnerre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Grêle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Canicule",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rosée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Givre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Verglas",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Blizzard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cyclone",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tornade",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ouragan",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tsunami",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Trombe",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bruine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Crachin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Avalanche",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ami",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Famille",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Père",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mère",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Frère",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sœur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Enfant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bébé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Voisin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Collègue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cousin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Oncle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tante",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Neveu",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nièce",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Parrain",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Marraine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Camarade",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Aïeul",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Descendant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ancêtre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rival",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Antagoniste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Complice",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Allié",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Contemporain",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Doux",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lisse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mou",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sec",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mouillé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rugueux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Collant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Glissant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Râpeux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Moelleux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Soyeux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Épineux",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pelucheux",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Visqueux",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Granuleux",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Velouté",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Spongieux",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Friable",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Grumeleux",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Croustillant",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sucré",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Salé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mauvais",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Amer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Acide",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Épicé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Piquant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fade",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Savoureux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Délicieux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Âcre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Aigre-doux",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Astringent",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Umami",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Âpre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Succulent",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Parfum",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Odeur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fleur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Parfumé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fleuri",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Boisé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mentholé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fruité",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Aromatique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Musqué",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Nauséabond",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Fétide",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pestilentiel",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Entêtant",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Capiteux",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bruit",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cri",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Musique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Silence",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Murmure",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chuchotement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sifflement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bourdonnement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Craquement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Grincement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Claquement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tintement",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Vrombissement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tumulte",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Vacarme",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Fracas",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Crescendo",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cacophonie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Stridulation",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bruissement",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Vérité",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Liberté",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Paix",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Guerre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Justice",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Égalité",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sagesse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Connaissance",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Conscience",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Raison",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bonté",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Beauté",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Transcendance",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Immanence",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Métaphysique",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ontologie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Épistémologie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dialectique",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Absolu",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Nihilisme",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Respect",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Partage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aide",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Honnêteté",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Loyauté",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Courage",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Persévérance",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Humilité",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tolérance",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bienveillance",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Solidarité",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Intégrité",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Probité",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Abnégation",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Altruisme",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mansuétude",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Magnanimité",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Clémence",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bois",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pierre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Verre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Papier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tissu",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Plastique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Métal",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Acier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cuivre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bronze",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Argent",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Or",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Marbre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Granit",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Béton",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Céramique",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Aluminium",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Titane",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Platine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Porcelaine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ébène",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cachemire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Velours",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fatigué",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Reposé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Malade",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "En forme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Affamé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rassasié",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Assoiffé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Endormi",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Éveillé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Énergique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Épuisé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ivre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sobre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Blessé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Guéri",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fébrile",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Convalescent",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Somnolent",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vigoureux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Affaibli",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Revigoré",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Exténué",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Alerte",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Apathique",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dynamique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Occupé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Libre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pressé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Détendu",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Concentré",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Distrait",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Motivé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Démotivé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Confus",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Clair",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Perdu",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sûr",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hésitant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Décidé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Prêt",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Débordé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Serein",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Angoissé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Préoccupé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Insouciant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Absorbé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rêveur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lucide",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hagard",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Médusé",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ébahi",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Interloqué",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Abasourdi",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sympa",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Drôle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sérieux",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nerveux",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bavard",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Silencieux",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sociable",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Réservé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Optimiste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pessimiste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Créatif",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pratique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ambitieux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Modeste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Orgueilleux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Humble",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Autoritaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Docile",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rebelle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Conformiste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Original",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Excentrique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Impulsif",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Réfléchi",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Spontané",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Calculateur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Naïf",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rusé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Malin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bête",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sensible",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Insensible",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Émotif",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chaleureux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Distant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Avare",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dépensier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Économe",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Paresseux",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Travailleur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Perfectionniste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Négligent",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Soigneux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Maladroit",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Adroit",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gourmand",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Susceptible",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Stoïque",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Volubile",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Taciturne",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Affable",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bourru",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bougon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Enjoué",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Morose",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Jovial",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Acariâtre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Débonnaire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Demander",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Répondre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Expliquer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Raconter",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Appeler",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chuchoter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Murmurer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hurler",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Annoncer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Informer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Prévenir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Avertir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Promettre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jurer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Discuter",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Négocier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Convaincre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Persuader",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Argumenter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Débattre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Contredire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Approuver",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Refuser",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Accepter",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Proposer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Suggérer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Conseiller",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Recommander",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Avouer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Confesser",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mentir",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tromper",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rassurer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Inquiéter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Féliciter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Complimenter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Critiquer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Reprocher",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Insulter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Menacer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Supplier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Implorer",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ranger",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nettoyer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Laver",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sécher",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Repasser",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Plier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Balayer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aspirer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Frotter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Essuyer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rincer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tremper",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Accrocher",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Décrocher",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Débrancher",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Brancher",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Allumer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Éteindre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ouvrir",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fermer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Verrouiller",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Déverrouiller",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Récurer",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dégraisser",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Détartrer",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dépoussiérer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Aérer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ventiler",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chauffer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Refroidir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Congeler",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Décongeler",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Réchauffer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cuire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mijoter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bouillir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Frire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Griller",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chance",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Malchance",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Succès",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Échec",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Victoire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Défaite",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Effort",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Repos",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Travail",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Loisir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vacances",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fête",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Voyage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aventure",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rêve",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cauchemar",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Secret",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mystère",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Problème",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Solution",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Question",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Réponse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Idée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Opinion",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Avis",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Destin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hasard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Coïncidence",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Miracle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tragédie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Drame",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Comédie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ironie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Paradoxe",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dilemme",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Choix",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Décision",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Conséquence",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cause",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Effet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Excuse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Prétexte",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Motif",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "But",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Objectif",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ambition",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Désir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Envie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Besoin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nécessité",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Urgence",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Priorité",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Importance",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Devant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Derrière",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dessus",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dessous",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dedans",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dehors",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "À côté",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "À droite",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "À gauche",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "En haut",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "En bas",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Au milieu",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Au centre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Au bord",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Au fond",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Près",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Loin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ici",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Là-bas",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Partout",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nulle part",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Quelque part",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ailleurs",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Énorme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Minuscule",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gigantesque",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Microscopique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Long",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Court",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Large",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Étroit",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Épais",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mince",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gros",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Maigre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lourd",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Léger",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Profond",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Superficiel",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Plat",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bombé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Creux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Plein",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vide",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Avancer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Reculer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Monter",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Descendre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Entrer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sortir",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Partir",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Arriver",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Venir",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aller",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Revenir",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Repartir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Traverser",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Passer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Contourner",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Longer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Suivre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Précéder",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Accompagner",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Guider",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Glisser",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rouler",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Déraper",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Patiner",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Flotter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Couler",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Plonger",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Émerger",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Surgir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jaillir",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bondir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rebondir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Voler",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Planer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Atterrir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Décoller",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Se pencher",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Se redresser",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Se courber",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Se plier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "S'étirer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Se contracter",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pivoter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tournoyer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Virevolter",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Début",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Entrée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sortie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Arrivée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Départ",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Naissance",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mort",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Santé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Maladie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Richesse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pauvreté",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Abondance",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pénurie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Présence",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Absence",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Réalité",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fiction",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mensonge",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ordre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Désordre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chaos",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Harmonie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Avant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Après",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pendant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Durant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Depuis",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jusqu'à",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bientôt",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Maintenant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Récemment",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Autrefois",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jadis",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Naguère",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Désormais",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dorénavant",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Immédiatement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Instantanément",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Progressivement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Graduellement",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Soudainement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Brusquement",
+      "difficulty": 2,
+      "language": "international"
+    }
+  ]
+}

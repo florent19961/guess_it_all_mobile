@@ -1,0 +1,3645 @@
+{
+  "categoryId": "noms_communs",
+  "words": [
+    {
+      "word": "Téléphone",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ordinateur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Télévision",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Radio",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Appareil photo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Console de jeux",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tablette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Casque",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Enceinte",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chargeur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Clé USB",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Clavier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Souris",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Imprimante",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Scanner",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Webcam",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Drone",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Projecteur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Disque dur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Carte mémoire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Stylo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Crayon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cahier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Livre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Parapluie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sac",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Valise",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Montre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lunettes",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Clés",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sac à dos",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Brosse à dents",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Peigne",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Savon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Serviette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Télécommande",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lampe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Horloge",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Réveil",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bougie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vase",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cadre photo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Panier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ciseaux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Règle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Portefeuille",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Briquet",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Boussole",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Loupe",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Jumelles",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Théière",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chaise",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Table",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lit",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Canapé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Armoire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Placard",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bureau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fauteuil",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Étagère",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Commode",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bibliothèque",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tabouret",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tapis",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rideau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Miroir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lampadaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Table de chevet",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Banc",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pouf",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Matelas",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Oreiller",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Couverture",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lustre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Buffet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Console",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Couteau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fourchette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cuillère",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Assiette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Verre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tasse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Casserole",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Poêle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Passoire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fouet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Spatule",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Louche",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Saladier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Écumoire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chinois",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mandoline",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Presse-agrumes",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Marteau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tournevis",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Scie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Perceuse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pince",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Clé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Niveau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mètre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rabot",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Étau",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Serre-joint",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lime",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Voiture",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Avion",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Train",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bateau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vélo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bus",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Métro",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Scooter",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Moto",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Camion",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tramway",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Taxi",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hélicoptère",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Voilier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Péniche",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ferry",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fusée",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sous-marin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Montgolfière",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Parachute",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ascenseur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Escalator",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Trottinette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Skateboard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Téléphérique",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "T-shirt",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pantalon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Robe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jupe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chaussures",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chaussettes",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Manteau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pull",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chemise",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Veste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Écharpe",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gants",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bonnet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cravate",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gilet",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cardigan",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pardessus",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chapka",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Guitare",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Piano",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Violon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Harpe",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Violoncelle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Contrebasse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ukulélé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Banjo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Alto",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Clavecin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Luth",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Flûte",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Trompette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Saxophone",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Clarinette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Trombone",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cor",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Harmonica",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hautbois",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Basson",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tuba",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cornemuse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ocarina",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Batterie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tambour",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Xylophone",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cymbales",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Maracas",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Djembé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gong",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Timbales",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Triangle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Roue",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ampoule",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Internet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Imprimerie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Télégraphe",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Microscope",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vaccin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Moteur à explosion",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Locomotive",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pénicilline",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Anesthésie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Radiographie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Microprocesseur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "GPS",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Wi-Fi",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bluetooth",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Code-barres",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fermeture éclair",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Velcro",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Post-it",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Laser",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cuisine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chambre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Salon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Salle de bain",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Garage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cave",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Grenier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Couloir",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Entrée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Terrasse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Balcon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Buanderie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cellier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Véranda",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vestibule",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Porte",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fenêtre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Toit",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Escalier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cheminée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Plafond",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sol",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Volet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Radiateur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Interrupteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Prise",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Plinthe",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Corniche",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gouttière",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Charpente",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tuile",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ardoise",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Maison",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Immeuble",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "École",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hôpital",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Église",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Château",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pont",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tour",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Musée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gare",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Aéroport",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cathédrale",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Beffroi",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Phare",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Donjon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Aqueduc",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cartable",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Trousse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gomme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Taille-crayon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Feutre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Surligneur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rapporteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Compas",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Équerre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Classeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cahier de texte",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Plumier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Protège-cahier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Perforatrice",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Agrafeuse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Trombones",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Scotch",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dégrafeuse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Colle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Punaises",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Élastiques",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Massicot",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Reliure",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ballon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Poupée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Voiture miniature",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Puzzle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Peluche",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de société",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lego",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Yo-yo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Toupie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Marionnette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cerf-volant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bilboquet",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Diabolo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Kapla",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Billes",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Raquette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ballon de foot",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Basket",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Skis",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Club de golf",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Crosse de hockey",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Arc",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Flèche",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Haltères",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Corde à sauter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pelle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Râteau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Arrosoir",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tuyau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Seau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Brouette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tondeuse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tronçonneuse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bêche",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pioche",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sécateur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cisailles",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Binette",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Collier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bracelet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bague",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Boucles d'oreilles",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Broche",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pendentif",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Médaillon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chevalière",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Diadème",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Parure",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Jonc",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Boîte",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bocal",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bouteille",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sac plastique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Carafe",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cruche",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pot",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Corbeille",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Urne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Amphore",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fiole",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bonbonne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Flacon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Réfrigérateur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Congélateur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lave-linge",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lave-vaisselle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Four",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cuisinière",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sèche-linge",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Climatiseur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chauffe-eau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Micro-ondes",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Grille-pain",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cafetière",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bouilloire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mixeur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Robot cuisine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Blender",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fer à repasser",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aspirateur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ventilateur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sèche-cheveux",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Friteuse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cuiseur vapeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gaufrier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Crêpière",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Machine à pain",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Machine à café",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Centrifugeuse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Yaourtière",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Raclette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fondue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Plancha",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Barbecue",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Autocuiseur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Thermomix",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Déshumidificateur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Humidificateur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Purificateur d'air",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ballon de basket",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ballon de rugby",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ballon de volley",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Raquette de tennis",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Raquette de ping-pong",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Filet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "But",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gant de boxe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Kimono",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Genouillère",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Protège-tibia",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Crampon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Batte",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Club",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Palet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Crosse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Volant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cible",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Trampoline",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tapis de gym",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vélo elliptique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rameur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tapis de course",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Stepper",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Banc de musculation",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Barre de traction",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Kettlebell",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Élastique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ballon de gym",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Roller",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Patin à glace",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Planche à roulettes",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Surf",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bodyboard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Paddle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Kayak",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Canoë",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bouée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gilet de sauvetage",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Épée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fleuret",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sabre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Punching-ball",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Punchingball",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ceinture",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chapeau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Casquette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Béret",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sac à main",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pochette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Foulard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nœud papillon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Boutons de manchette",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bretelles",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Paréo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bandana",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Turban",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bob",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fedora",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Panama",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mitaines",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Moufles",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cache-oreilles",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cagoule",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Baskets",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bottes",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sandales",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tongs",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Escarpins",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mocassins",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ballerines",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bottines",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sabots",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pantoufles",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chaussons",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Talons",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Compensées",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Derbies",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Richelieu",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Parasol",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Transat",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Serviette de plage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Crème solaire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lunettes de soleil",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Maillot de bain",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bikini",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Masque de plongée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Palmes",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pelle de plage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Château de sable",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ballon de plage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Matelas gonflable",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Glacière",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gourde",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tente",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sac de couchage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lampe torche",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Réchaud",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gamelle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Canif",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hamac",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chaise pliante",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Table pliante",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Auvent",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Caravane",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Camping-car",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Thermomètre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pansement",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bandage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Compresse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sparadrap",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Béquille",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fauteuil roulant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Attelle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Plâtre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Seringue",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Stéthoscope",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tensiomètre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Glucomètre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Inhalateur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Civière",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Brancard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Déambulateur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Minerve",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Corset",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Prothèse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Orthèse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Appareil auditif",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lunettes de vue",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lentilles",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Poche de glace",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bouillotte",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Écran",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Moniteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ordinateur portable",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Processeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Carte graphique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Barrette RAM",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Câble",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rallonge",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Multiprise",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Routeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Box internet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Adaptateur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hub USB",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Batterie externe",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Coque",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Protection écran",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Support téléphone",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Trépi",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Selfie stick",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Microphone",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Haut-parleur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Écouteurs",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Drap",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Drap-housse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Couette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Taie d'oreiller",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Housse de couette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Plaid",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nappe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Serviette de table",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Torchon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gant de toilette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Peignoir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Coussin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Traversin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Édredon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Moquette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Store",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Voilage",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sachet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Carton",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cagette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Caisse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bac",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Barquette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tupperware",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Boîte hermétique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Thermos",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Conserve",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Canette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bidon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jerrican",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tonneau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Baril",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Paquet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Enveloppe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tube",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Spray",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tableau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Poster",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Affiche",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Photo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Statue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Figurine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bibelot",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Horloge murale",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pendule",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bougeoir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chandelier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Photophore",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Guirlande",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Couronne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mobile",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Trophée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Médaille",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Coupe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Diplôme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Calendrier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Agenda",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Album photo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Carnet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ambulance",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pompier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Camion de pompier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Voiture de police",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Corbillard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dépanneuse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Benne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bulldozer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pelleteuse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Grue",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chariot élévateur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tracteur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Moissonneuse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Remorque",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Semi-remorque",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Quad",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jet-ski",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Yacht",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Paquebot",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cargo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pétrolier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chalutier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Canot",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Barque",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Catamaran",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Planeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Deltaplane",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "ULM",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Navette spatiale",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Satellite",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Short",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bermuda",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Legging",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jogging",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Survêtement",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Polo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sweat",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sweat à capuche",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Débardeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bustier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Combinaison",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Salopette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Costume",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Smoking",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tailleur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Imperméable",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Blouson",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Doudoune",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Parka",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Trench",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cape",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Poncho",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "K-way",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pyjama",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nuisette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Robe de chambre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sous-vêtement",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Slip",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Caleçon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Boxer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Soutien-gorge",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Culotte",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Collant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bas",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Porte-jarretelles",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Body",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Caraco",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Visseuse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ponceuse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Meuleuse",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Scie sauteuse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Scie circulaire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Décapeur",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Chalumeau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fer à souder",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cutter",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fil à plomb",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mètre ruban",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pied de biche",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Masse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Maillet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Burin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ciseau à bois",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rouleau à pâtisserie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Moule à gâteau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Plaque de cuisson",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cocotte",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Marmite",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sauteuse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Wok",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Faitout",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tajine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Grill",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Poêle à crêpes",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Économe",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Épluche-légumes",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ouvre-boîte",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tire-bouchon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Décapsuleur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mortier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pilon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Presse-ail",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Râpe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Zesteur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Casse-noix",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pince à sucre",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Pelle à tarte",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Poche à douille",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tamis",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Entonnoir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Balance",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Minuteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Thermomètre de cuisine",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Porte-clés",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cadenas",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Antivol",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Badge",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Carte de visite",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ticket",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Billet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pièce de monnaie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Carte bancaire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Carte d'identité",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Passeport",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Permis de conduire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Carnet de santé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ordonnance",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Facture",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Reçu",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Contrat",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Formulaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Paravent",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Poubelle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cendrier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Porte-manteau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Patère",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Cintre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pèse-personne",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Miroir de poche",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Éventail",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ombrelle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Canne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chapeau de pluie",
+      "difficulty": 2,
+      "language": "international"
+    }
+  ]
+}

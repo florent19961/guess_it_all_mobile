@@ -90,14 +90,14 @@ class _WordsScreenState extends State<WordsScreen> {
   }
 
   // Génère un mot unique qui n'est pas utilisé
-  String? _generateUniqueWord(
+  Future<String?> _generateUniqueWord(
     GameProvider provider,
     Set<String> otherPlayersWords,
     List<String> currentWords,
-  ) {
+  ) async {
     int attempts = 0;
     while (attempts < 100) {
-      final words = generateWordsFromCategories(
+      final words = await generateWordsFromCategoriesAsync(
         provider.settings.selectedCategories,
         1,
         difficultyLevels: provider.settings.selectedDifficultyLevels,
@@ -234,7 +234,7 @@ class _WordsScreenState extends State<WordsScreen> {
     );
   }
 
-  void _fillAllEmptyWords(GameProvider provider, String playerId) {
+  Future<void> _fillAllEmptyWords(GameProvider provider, String playerId) async {
     final otherPlayersWords = _getOtherPlayersWords(provider, playerId);
     final emptyFieldsCount = _wordControllers
         .where((c) => c.text.trim().isEmpty)
@@ -243,27 +243,27 @@ class _WordsScreenState extends State<WordsScreen> {
     if (emptyFieldsCount == 0) return;
 
     int filledCount = 0;
-    setState(() {
-      final filledWords = _wordControllers
-          .map((c) => c.text.trim())
-          .where((w) => w.isNotEmpty)
-          .toList();
+    final filledWords = _wordControllers
+        .map((c) => c.text.trim())
+        .where((w) => w.isNotEmpty)
+        .toList();
 
-      for (int i = 0; i < _wordControllers.length; i++) {
-        if (_wordControllers[i].text.trim().isEmpty) {
-          final newWord = _generateUniqueWord(
-            provider,
-            otherPlayersWords,
-            filledWords,
-          );
-          if (newWord != null) {
+    for (int i = 0; i < _wordControllers.length; i++) {
+      if (_wordControllers[i].text.trim().isEmpty) {
+        final newWord = await _generateUniqueWord(
+          provider,
+          otherPlayersWords,
+          filledWords,
+        );
+        if (newWord != null) {
+          setState(() {
             _wordControllers[i].text = newWord;
-            filledWords.add(newWord);
-            filledCount++;
-          }
+          });
+          filledWords.add(newWord);
+          filledCount++;
         }
       }
-    });
+    }
 
     if (filledCount == 0) {
       _showNoWordsAvailableWarning(context);
@@ -312,7 +312,7 @@ class _WordsScreenState extends State<WordsScreen> {
                     text: 'Grosse flemme 😴',
                     variant: AppButtonVariant.secondary,
                     fullWidth: true,
-                    onPressed: () => _fillAllEmptyWords(provider, playerId),
+                    onPressed: () async => await _fillAllEmptyWords(provider, playerId),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -346,7 +346,7 @@ class _WordsScreenState extends State<WordsScreen> {
                                   const SizedBox(width: 8),
                                   // Bouton shuffle
                                   GestureDetector(
-                                    onTap: () {
+                                    onTap: () async {
                                       final currentWords = _wordControllers
                                           .asMap()
                                           .entries
@@ -355,7 +355,7 @@ class _WordsScreenState extends State<WordsScreen> {
                                           .where((w) => w.isNotEmpty)
                                           .toList();
 
-                                      final newWord = _generateUniqueWord(
+                                      final newWord = await _generateUniqueWord(
                                         provider,
                                         otherPlayersWords,
                                         currentWords,

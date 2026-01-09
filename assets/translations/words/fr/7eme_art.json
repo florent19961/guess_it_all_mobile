@@ -1,0 +1,2120 @@
+{
+  "categoryId": "7eme_art",
+  "words": [
+    {
+      "word": "Titanic",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Avatar",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Star Wars",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jurassic Park",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Le Roi Lion",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Harry Potter",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Forrest Gump",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Retour vers le futur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Indiana Jones",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pirates des Caraïbes",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Transformers",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fast and Furious",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mission Impossible",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "James Bond",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "La La Land",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "E.T.",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Les Dents de la Mer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ghostbusters",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "King Kong",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Godzilla",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Le Parrain",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Matrix",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Inception",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gladiator",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Le Seigneur des Anneaux",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pulp Fiction",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Terminator",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Alien",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rocky",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Shrek",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Interstellar",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Top Gun",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Le Loup de Wall Street",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gravity",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dune",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Blade Runner",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mad Max",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Apocalypse Now",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Scarface",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Taxi Driver",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Reservoir Dogs",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Kill Bill",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Django Unchained",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Le Prestige",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Le Silence des Agneaux",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Les Évadés",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "La Liste de Schindler",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Il faut sauver le soldat Ryan",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Fight Club",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Seven",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Shutter Island",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "The Truman Show",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Eternal Sunshine",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Whiplash",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gone Girl",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "No Country for Old Men",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "There Will Be Blood",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "2001 L'Odyssée de l'espace",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Un Américain bien tranquille",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "La Vie est belle",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Le Pont de la rivière Kwaï",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lawrence d'Arabie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Citizen Kane",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Batman",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Superman",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Spider-Man",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Iron Man",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Avengers",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Thor",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hulk",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "X-Men",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Les Gardiens de la Galaxie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ant-Man",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Black Panther",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Joker",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Captain America",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Wonder Woman",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Doctor Strange",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Deadpool",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Black Widow",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Aquaman",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Shazam",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Venom",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Eternals",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Batman : The Dark Knight",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Logan",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Watchmen",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "V pour Vendetta",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Kick-Ass",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Hellboy",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "La Reine des Neiges",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Toy Story",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nemo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cendrillon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aladdin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vaiana",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Raiponce",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mulan",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "La Belle et la Bête",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pocahontas",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cars",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Blanche-Neige",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "La Petite Sirène",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dumbo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bambi",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ratatouille",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vice-Versa",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Coco",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Wall-E",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Monstres et Cie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Les Indestructibles",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rebelle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Encanto",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Zootopie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Là-haut",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dory",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Luca",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Alerte Rouge",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Strange World",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Raya",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "La Princesse et la Grenouille",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Atlantide",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Hercule",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tarzan",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Soul",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rox et Rouky",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dinosaure",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Kuzco",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "La Planète au Trésor",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Frère des Ours",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Kung Fu Panda",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Madagascar",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Les Minions",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Moi Moche et Méchant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "L'Âge de Glace",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Le Chat Potté",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Les Trolls",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rio",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dragons",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lego Movie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Les Croods",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Boss Baby",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Wallace et Gromit",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chicken Run",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tempête de boulettes géantes",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Le Voyage de Chihiro",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mon Voisin Totoro",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Princesse Mononoké",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Le Château Ambulant",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Friends",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Game of Thrones",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Stranger Things",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "La Casa de Papel",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "The Walking Dead",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Grey's Anatomy",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "How I Met Your Mother",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "The Big Bang Theory",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vikings",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lupin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Breaking Bad",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Peaky Blinders",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Narcos",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Black Mirror",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sherlock",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Squid Game",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Wednesday",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "The Witcher",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "The Crown",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bridgerton",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Emily in Paris",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Succession",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "The Mandalorian",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "The Last of Us",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Westworld",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "The Boys",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "The Office",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lost",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Prison Break",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dexter",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "House",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Better Call Saul",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ozark",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "True Detective",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Fargo",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "The Wire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "The Sopranos",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mad Men",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Six Feet Under",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Fleabag",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Intouchables",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Taxi",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Astérix et Obélix Mission Cléopâtre",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Les Trois Frères",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Amélie Poulain",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Les Choristes",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Le Fabuleux Destin d'Amélie Poulain",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "OSS 117",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Qu'est-ce qu'on a fait au Bon Dieu",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "La Famille Bélier",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Le Prénom",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Les Tuche",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "La Haine",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Le Dîner de Cons",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Bienvenue chez les Ch'tis",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Les Visiteurs",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Le Grand Bleu",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Léon",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Nikita",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "La Boum",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Les Bronzés",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Le Père Noël est une ordure",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Naruto",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dragon Ball",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "One Piece",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pokémon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sailor Moon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Olive et Tom",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Les Chevaliers du Zodiaque",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "L'Attaque des Titans",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Death Note",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Demon Slayer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "My Hero Academia",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "One Punch Man",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Fairy Tail",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Black Clover",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bleach",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Fullmetal Alchemist",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sword Art Online",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Hunter x Hunter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jujutsu Kaisen",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tokyo Ghoul",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Vinland Saga",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mickey Mouse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Donald Duck",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Elsa",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Simba",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Woody",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Buzz l'Éclair",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Olaf",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Maui",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Anna",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Stitch",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Flash McQueen",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Martin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rémy",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nala",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dark Vador",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Voldemort",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Thanos",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sauron",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gandalf",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Frodon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hermione",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ron Weasley",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dumbledore",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Severus Rogue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jack Sparrow",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tony Stark",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Peter Parker",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bruce Wayne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hannibal Lecter",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Don Corleone",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bob l'éponge",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Les Simpson",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Scooby-Doo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tom et Jerry",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dora l'Exploratrice",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Peppa Pig",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pat Patrouille",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Les Télétubbies",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rick et Morty",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "South Park",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Totally Spies",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Code Lyoko",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Avatar le dernier maître de l'air",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ben 10",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Inspecteur Gadget",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Il était une fois la vie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Il était une fois l'homme",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Les Mystérieuses Cités d'Or",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Wakfu",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Oggy et les Cafards",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Les zinzins de l'espace",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ça",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Halloween",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Scream",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Saw",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Annabelle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chucky",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vendredi 13",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "The Ring",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Conjuring",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Insidious",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "L'Exorciste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "The Shining",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Get Out",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Us",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "A Quiet Place",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sinister",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "The Descent",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Paranormal Activity",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "The Babadook",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Midsommar",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Very Bad Trip",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Scary Movie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Maman j'ai raté l'avion",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "American Pie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "21 Jump Street",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "La Nuit au Musée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dikkenek",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Borat",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "The Grand Budapest Hotel",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Taken",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jason Bourne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ocean's Eleven",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Les Infiltrés",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Zodiac",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mystic River",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Prisoners",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "L.A. Confidential",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Heat",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Usual Suspects",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Memories of Murder",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Le Fugitif",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Les Sept Mercenaires",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Django",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Il était une fois dans l'Ouest",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Le Bon, la Brute et le Truand",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Impitoyable",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "The Notebook",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dirty Dancing",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ghost",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pretty Woman",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Love Actually",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Coup de foudre à notting Hill",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Le Journal de Bridget Jones",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nos étoiles contraires",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Et si c'était vrai",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Crazy Stupid Love",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Moulin Rouge",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Orgueil et Préjugés",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Autant en emporte le vent",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Casablanca",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Les Parapluies de Cherbourg",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dunkerque",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "1917",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fury",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pearl Harbor",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Platoon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Full Metal Jacket",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Black Hawk Down",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Voyage au bout de l'enfer",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Troie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "300",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Joyeux Noël",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "La Chute",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Grease",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mamma Mia",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "High School Musical",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pitch Perfect",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Le Roi et Moi",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Les Misérables",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chicago",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "West Side Story",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "The Greatest Showman",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hairspray",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Singin' in the Rain",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cabaret",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "La Mélodie du Bonheur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Un Américain à Paris",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Les Demoiselles de Rochefort",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Creed",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Raging Bull",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Million Dollar Baby",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rush",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cool Runnings",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Invictus",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Le Stratège",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Le Pacte des Loups",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Warrior",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Les Chariots de Feu",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bohemian Rhapsody",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "The Social Network",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "A Beautiful Mind",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "127 heures",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "The Imitation Game",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rocketman",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ray",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "La Môme",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jobs",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "The King's Speech",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "12 Years a Slave",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gandhi",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Malcolm X",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Amadeus",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Patton",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lawrence d'Arabie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Fast & Furious",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Marvel",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Star Trek",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bourne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Men in Black",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "La Planète des Singes",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Predator",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "RoboCop",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rambo",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Die Hard",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Expendables",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "John Wick",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dune",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dollars Trilogy",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Evil Dead",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Before Trilogy",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Le Grinch",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Maman j'ai encore raté l'avion",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Le Pôle Express",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "L'Étrange Noël de Mr Jack",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Elf",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Klaus",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Edward aux mains d'argent",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "La Vie est belle (It's a Wonderful Life)",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gremlins",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Le Cauchemar avant Noël",
+      "difficulty": 3,
+      "language": "international"
+    }
+  ]
+}

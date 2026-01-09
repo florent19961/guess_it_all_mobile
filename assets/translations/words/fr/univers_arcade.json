@@ -1,0 +1,3225 @@
+{
+  "categoryId": "univers_arcade",
+  "words": [
+    {
+      "word": "Pikachu",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dracaufeu",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bulbizarre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Salamèche",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Carapuce",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ronflex",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Évoli",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mewtwo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mew",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rattata",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Roucool",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chenipan",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Florizarre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tortank",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Raichu",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Aquali",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Voltali",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pyroli",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rondoudou",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mélofée",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Psykokwak",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Magicarpe",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Léviator",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dracolosse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Piafabec",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sabelette",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Goupix",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ramoloss",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Soporifik",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lugia",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ho-Oh",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rayquaza",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Kyogre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Groudon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dialga",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Palkia",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Giratina",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Artikodin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Électhor",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sulfura",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Suicune",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Entei",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chevalier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Archers",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Géant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "P.E.K.K.A",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dragon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sorcier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Squelettes",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gobelins",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Prince",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Princesse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Valkyrie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Golem",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ballon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Méga chevalier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bûcheron",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sorcière",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Barbare",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mini P.E.K.K.A",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mousquetaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Électro-géant",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Archer magique",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mineur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bandit",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Fantôme royal",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Golem de glace",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lavahound",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Boulet de canon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Garde royale",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Boule de feu",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Flèches",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Zap",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Foudre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rage",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gel",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tornade",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Clone",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Guérison",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Poison",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Boule de neige",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mario",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Zelda",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Minecraft",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fortnite",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sonic",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pac-Man",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tetris",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Among Us",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Spider-Man",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "GTA",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Call of Duty",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "FIFA",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Assassin's Creed",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "The Witcher",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "League of Legends",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Animal Crossing",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Super Smash Bros",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rocket League",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Apex Legends",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sims",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Subway Surfers",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Just Dance",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Wii Sports",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pokemon GO",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Donkey Kong",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Final Fantasy",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "World of Warcraft",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dofus",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Spyro",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Monopoly",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Scrabble",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Uno",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Échecs",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dames",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Petits chevaux",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bonne paye",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dominos",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mikado",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cluedo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Risk",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Trivial Pursuit",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Puissance 4",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Time's Up",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jungle Speed",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dobble",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pictionary",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Taboo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Loups-garous",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mille bornes",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Catan",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "7 Wonders",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Blanc-manger coco",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Codenames",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Splendor",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Les aventuriers du rail",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nintendo Switch",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "PlayStation",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Xbox",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Wii",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Game Boy",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nintendo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nintendo 64",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "GameCube",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "PlayStation 2",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nintendo DS",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "PSP",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Xbox 360",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Super Nintendo",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Game Boy Advance",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Luigi",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Peach",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bowser",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Yoshi",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Kirby",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Link",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Daisy",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Crash Bandicoot",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lara Croft",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Toad",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Waluigi",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Wario",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nathan Drake",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Candy Crush",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Temple Run",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Angry Birds",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fruit Ninja",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Clash of Clans",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Brawl Stars",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hay Day",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Plants vs Zombies",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Space Invaders",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Street Fighter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mortal Kombat",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pong",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Centipede",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Carapace rouge",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Carapace verte",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Banane",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Champignon turbo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Étoile",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Éclair",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Carapace bleue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bill Ball",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Route Arc-en-ciel",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Circuit Mario",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Autodrome Toad",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Château de Bowser",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Captain Falcon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Fox",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Marth",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Roy",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Falco",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Meta Knight",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lucario",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Need for Speed",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gran Turismo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Forza",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Trackmania",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Fall Guys",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Champignon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pièce d'or",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Coffre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bombe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Anneau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Clé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gemme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "PokéBall",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Potion",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Épée de légende",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Triforce",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ocarina",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Grappin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Goomba",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Koopa",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Zombie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Squelette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fantôme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Roi Boo",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ganondorf",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Terraria",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Isaac",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pokémon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hearthstone",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Yu-Gi-Oh",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Magic",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Slay the Spire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Resident Evil",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "The Last of Us",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bataille navale",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Morpion",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Memory",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Loto",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bingo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de l'oie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Serpents et échelles",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Qui est-ce",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Devine tête",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Twister",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jenga",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rummy",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Yams",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Yahtzee",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mastermind",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Othello",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Backgammon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Go",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cartes",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dés",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pions",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Plateau de jeu",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cache-cache",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chat perché",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Colin-maillard",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Un, deux, trois, soleil",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Marelle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Corde à sauter",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Élastique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Billes",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Osselets",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Toupie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Yo-yo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cerf-volant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Balançoire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Toboggan",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Trampoline",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cabane",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Château de sable",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pâte à modeler",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Coloriage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Puzzle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Construction",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Poupée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Peluche",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ours en peluche",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Voiture télécommandée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Train électrique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Circuit de voitures",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lego",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Playmobil",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Kapla",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Figurine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Action man",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Robot",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dinosaure",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pistolet à eau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Frisbee",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hula hoop",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Skateboard",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Trottinette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vélo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rollers",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mickey Mouse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Donald Duck",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dingo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Minnie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pluto",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Winnie l'ourson",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tigrou",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bourriquet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Porcinet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bugs Bunny",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Titi et Grosminet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tom et Jerry",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Scooby-Doo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bob l'éponge",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Patrick",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bart Simpson",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Homer Simpson",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Shrek",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "L'Âne",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hello Kitty",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dora",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pat Patrouille",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Peppa Pig",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Miraculous",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ladybug",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Manette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Joystick",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Écran",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Niveau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Boss",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Game over",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Score",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Power-up",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bonus",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Trésor",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Carte",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mission",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Quête",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Équipe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Joueur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Avatar",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Skin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Emote",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Danse de victoire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sauvegarde",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Checkpoint",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Respawn",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Spawn",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lag",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bug",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Glitch",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cheat",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Code",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Combo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "KO",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Headshot",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Frag",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Kill",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Death",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vie extra",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "High score",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Record",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Multijoueur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Solo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Co-op",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Versus",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "PvP",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "PvE",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Raid",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Donjon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Loot",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Drop",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "XP",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Level up",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Craft",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Inventaire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Équipement",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Arme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Armure",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Casque",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bouclier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Épée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Arc",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Flèche",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Baguette magique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sort",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Magie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mana",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "HP",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Point de vie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Barre de vie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Régénération",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Buff",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Debuff",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tank",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Healer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "DPS",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Support",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Classe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Race",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Faction",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Guilde",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Clan",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Alliance",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ennemi",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Allié",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "PNJ",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "NPC",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Marchand",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Forgeron",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aubergiste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Quêteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mini-boss",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Boss final",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Monde ouvert",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Map",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Zone",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Région",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Village",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Château",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Forêt",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Grotte",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Temple",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ruines",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tour",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Portail",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Téléporteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Warp",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fast travel",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Monture",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Compagnon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Familier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de plateforme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de tir",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de course",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de sport",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de combat",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de rôle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu d'aventure",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu d'horreur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de stratégie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de simulation",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de puzzle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de musique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu éducatif",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de danse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de fitness",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de cuisine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de mode",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de ferme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de ville",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de survie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de zombie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de guerre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de foot",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de basket",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de tennis",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de golf",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de skate",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de moto",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de voiture",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de camion",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu d'avion",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de bateau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de train",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Casque gamer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Clavier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Souris",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tapis de souris",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Webcam",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Micro",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Écran gaming",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chaise gamer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bureau gamer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "LED",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "RGB",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Carte graphique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Processeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "RAM",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "SSD",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ventilateur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Refroidissement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "PC gamer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Setup",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Stream deck",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Capture card",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "VR",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Réalité virtuelle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Casque VR",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lunettes 3D",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Volant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pédalier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Arcade stick",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Flight stick",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gun controller",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dance pad",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Balance board",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ring Fit",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Stitch",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Simba",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mufasa",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Scar",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Timon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pumba",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nala",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rafiki",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ariel",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sébastien",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Polochon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ursula",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Belle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "La Bête",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gaston",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lumière",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Big Ben",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cendrillon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Blanche-Neige",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aurore",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Raiponce",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vaiana",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Maui",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Elsa",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Anna",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Olaf",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Kristoff",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sven",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Buzz l'Éclair",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Woody",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jessie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rex",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Baymax",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Némo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dory",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Marin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Les Indestructibles",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mr Indestructible",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Elastigirl",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Violette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Flash",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jack-Jack",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Wall-E",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Eve",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ratatouille",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rémy",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cars",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Flash McQueen",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Martin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sally",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Monstres et Cie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sully",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bob Razowski",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bouh",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Randall",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Vice-Versa",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Joie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tristesse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Colère",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Peur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dégoût",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Coco",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Miguel",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Luca",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Alberto",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Soul",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Élémentaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Poker",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Blackjack",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Belote",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tarot",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bridge",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bataille",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Menteur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pouilleux",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rami",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Crapette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Solitaire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Patience",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Réussite",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mao",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Président",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Huit américain",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mistigri",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Coinche",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Manille",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Piquet",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Canasta",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gin rami",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Joker",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "As",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Roi",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dame",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Valet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cœur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Carreau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Trèfle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Atout",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Trump",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Main",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pli",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mise",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bluff",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Relance",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tapis",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Full",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Brelan",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Paire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Suite",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Couleur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Quinte flush",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Royal flush",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Charade",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Devinette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Énigme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rébus",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mot croisé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mots fléchés",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sudoku",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mots mêlés",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Labyrinthe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Casse-tête",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rubik's Cube",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tangram",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Casse-tête chinois",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tour de Hanoï",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pentamino",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Kakuro",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Nonogram",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Jeu de différences",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cherche et trouve",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Où est Charlie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Coloriage magique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Point à relier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Origami",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pliage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Découpage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Collage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dessin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Peinture",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aquarelle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gouache",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pastel",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Crayon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Feutre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pinceau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Palette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chevalet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Toile",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cadre",
+      "difficulty": 1,
+      "language": "international"
+    }
+  ]
+}

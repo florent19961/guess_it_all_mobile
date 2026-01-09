@@ -5,17 +5,23 @@ import '../models/player.dart';
 import '../models/team.dart';
 import '../models/game_settings.dart';
 import '../models/game_state.dart';
+import '../models/word_stats.dart';
 import '../services/storage_service.dart';
+import '../services/analytics_service.dart';
+import '../services/user_service.dart';
 import '../utils/constants.dart';
 
 class GameProvider extends ChangeNotifier {
   final StorageService _storage = StorageService();
+  final AnalyticsService _analytics = AnalyticsService();
+  final UserService _userService = UserService();
 
   GameSettings _settings = GameSettings.initial();
   List<Player> _players = [];
   List<Team> _teams = [];
   GameState _game = GameState.initial();
   String? _currentEditingPlayerId;
+  Map<String, WordMetadata>? _wordMetadataCache;
 
   // Getters
   GameSettings get settings => _settings;
@@ -28,6 +34,11 @@ class GameProvider extends ChangeNotifier {
   void setCurrentEditingPlayer(String? playerId) {
     _currentEditingPlayerId = playerId;
     notifyListeners();
+  }
+
+  /// Stocke les métadonnées des mots générés (mode aléatoire)
+  void setWordMetadataCache(Map<String, WordMetadata> metadata) {
+    _wordMetadataCache = metadata;
   }
 
   // Constructor
@@ -331,7 +342,7 @@ class GameProvider extends ChangeNotifier {
 
   // ========== ACTIONS - GAME ==========
 
-  void startGame() {
+  Future<void> startGame() async {
     // Créer le pool de tous les mots
     final List<String> allWords = [];
     for (final player in _players) {
@@ -349,7 +360,11 @@ class GameProvider extends ChangeNotifier {
     final firstPlayerIndex =
         playOrder['playerOrderByTeam']![_teams[firstTeamIndex].id]![0];
 
+    // Générer un gameId unique pour cette partie
+    final gameId = _userService.generateGameId();
+
     _game = _game.copyWith(
+      gameId: gameId,
       currentScreen: AppConstants.screenGame,
       currentRound: 1,
       currentTurn: 1,
@@ -368,8 +383,58 @@ class GameProvider extends ChangeNotifier {
       history: [],
     );
 
+    // Initialiser le tracking analytics
+    await _initializeAnalytics(gameId, shuffledWords);
+
     notifyListeners();
     _saveGameState();
+  }
+
+  /// Initialise le tracking analytics pour une nouvelle partie
+  Future<void> _initializeAnalytics(String gameId, List<String> words) async {
+    // Créer les métadonnées des mots
+    final wordMetadata = <String, WordMetadata>{};
+
+    // En mode aléatoire, les mots ont des métadonnées de catégorie
+    // En mode personnalisé, on lie les mots aux joueurs
+    if (_settings.wordChoice == AppConstants.wordChoiceRandom) {
+      // Mode aléatoire : utiliser le cache de métadonnées
+      if (_wordMetadataCache != null) {
+        for (final word in words) {
+          if (_wordMetadataCache!.containsKey(word)) {
+            wordMetadata[word] = _wordMetadataCache![word]!;
+          } else {
+            wordMetadata[word] = WordMetadata(word: word);
+          }
+        }
+      } else {
+        // Fallback si pas de cache
+        for (final word in words) {
+          wordMetadata[word] = WordMetadata(word: word);
+        }
+      }
+    } else {
+      // Mode personnalisé : lier les mots aux joueurs
+      for (final player in _players) {
+        for (final word in player.words) {
+          wordMetadata[word] = WordMetadata.custom(
+            word: word,
+            submittedBy: player.id,
+          );
+        }
+      }
+    }
+
+    await _analytics.startGame(
+      gameId: gameId,
+      numberOfPlayers: _players.length,
+      numberOfTeams: _teams.length,
+      totalWords: words.length,
+      turnDuration: _settings.turnDuration,
+      selectedCategories: _settings.selectedCategories,
+      selectedDifficultyLevels: _settings.selectedDifficultyLevels,
+      wordMetadata: wordMetadata,
+    );
   }
 
   Map<String, dynamic> _generatePlayOrder() {
@@ -430,13 +495,36 @@ class GameProvider extends ChangeNotifier {
       clearTurnBonusTime: true,
     );
 
+    // Tracker l'affichage du premier mot
+    _trackWordShown();
+
     notifyListeners();
     _saveGameState();
+  }
+
+  /// Notifie le service analytics qu'un nouveau mot est affiché
+  void _trackWordShown() {
+    final currentWord = _game.currentWord;
+    if (currentWord == null || !_analytics.isTracking) return;
+
+    final currentTeam = getCurrentTeam();
+    final currentPlayer = getCurrentPlayer();
+
+    _analytics.onWordShown(
+      word: currentWord,
+      round: _game.currentRound,
+      turn: _game.currentTurn,
+      teamId: currentTeam?.id ?? '',
+      playerId: currentPlayer?.id ?? '',
+    );
   }
 
   void markWordAsGuessed() {
     final currentWord = _game.currentWord;
     if (currentWord == null) return;
+
+    // Tracker le mot deviné AVANT de changer l'état
+    _analytics.onWordGuessed(currentWord);
 
     final newGuessedWords = List<String>.from(_game.wordsGuessedThisTurn);
     if (!newGuessedWords.contains(currentWord)) {
@@ -466,6 +554,9 @@ class GameProvider extends ChangeNotifier {
           remainingWords: restoredWords,
           currentWord: nextCurrentWord,
         );
+
+        // Tracker le nouveau mot affiché
+        _trackWordShown();
       } else {
         // Vraie fin de manche (plus aucun mot disponible ni passé)
         _game = _game.copyWith(
@@ -485,6 +576,9 @@ class GameProvider extends ChangeNotifier {
         wordsGuessedThisTurn: newGuessedWords,
         passedWordsThisTurn: newPassedWords,
       );
+
+      // Tracker le nouveau mot affiché
+      _trackWordShown();
     }
 
     notifyListeners();
@@ -505,6 +599,9 @@ class GameProvider extends ChangeNotifier {
 
     // Vérifier qu'il y a assez de temps
     if (currentRemaining < passPenalty) return;
+
+    // Tracker le pass AVANT de changer l'état
+    _analytics.onWordPassed(currentWord);
 
     // Calculer le nouveau timestamp
     final newRemainingSeconds = currentRemaining - passPenalty;
@@ -534,6 +631,11 @@ class GameProvider extends ChangeNotifier {
       timeRemaining: newRemainingSeconds,
     );
 
+    // Tracker le nouveau mot affiché
+    if (newCurrentWord != null) {
+      _trackWordShown();
+    }
+
     notifyListeners();
     _saveGameState();
   }
@@ -547,6 +649,11 @@ class GameProvider extends ChangeNotifier {
     // Si la manche n'est pas finie et qu'il y avait un mot en cours, le sauvegarder comme "expiré"
     final isRoundFinished = _game.remainingWords.isEmpty;
     final expiredWord = isRoundFinished ? null : _game.currentWord;
+
+    // Tracker le mot expiré si applicable
+    if (expiredWord != null) {
+      _analytics.onWordExpired(expiredWord);
+    }
 
     _game = _game.copyWith(
       timeRemaining: timeRemaining,
@@ -595,6 +702,21 @@ class GameProvider extends ChangeNotifier {
       ...invalidatedPassedWords,
       if (isExpiredWordInvalidated) expiredWord,
     ];
+
+    // Tracker les mots invalidés pour les analytics
+    for (final word in allInvalidatedWords) {
+      _analytics.onWordInvalidated(word);
+    }
+
+    // Tracker les mots passed/expired qui sont validés comme guessed
+    final validatedPassedWords =
+        passedWordsThisTurn.where((w) => validatedWords.contains(w)).toList();
+    for (final word in validatedPassedWords) {
+      _analytics.onWordValidatedAsGuessed(word);
+    }
+    if (isExpiredWordValidated) {
+      _analytics.onWordValidatedAsGuessed(expiredWord!);
+    }
 
     // Remettre les mots invalidés dans le pool (Set garantit l'unicité)
     final newRemainingWords = <String>{
@@ -783,7 +905,10 @@ class GameProvider extends ChangeNotifier {
     }
   }
 
-  void suspendGame() {
+  Future<void> suspendGame() async {
+    // Sauvegarder les analytics en cours (au cas où l'app serait tuée)
+    await _analytics.saveCurrentGame();
+
     final now = DateTime.now().millisecondsSinceEpoch;
     final pausedTime = _game.turnEndTimestamp != null
         ? ((_game.turnEndTimestamp! - now) / 1000).ceil().clamp(0, 999)
@@ -829,6 +954,9 @@ class GameProvider extends ChangeNotifier {
 
   // Fin de partie normale → efface gameState, garde session pour "Rejouer"
   Future<void> endGameAndGoHome() async {
+    // Terminer le tracking analytics et sauvegarder
+    await _analytics.endGame();
+
     await _storage.clearGameState();
     _game = GameState.initial();
     notifyListeners();
@@ -836,6 +964,11 @@ class GameProvider extends ChangeNotifier {
 
   // Nouvelle partie complète → efface session ET state, garde settings
   Future<void> startNewGame() async {
+    // Terminer et sauvegarder les analytics si une partie était en cours
+    if (_analytics.isTracking) {
+      await _analytics.endGame();
+    }
+
     await _storage.clearGameSession();
     await _storage.clearGameState();
     _players = [];
@@ -846,6 +979,11 @@ class GameProvider extends ChangeNotifier {
 
   // Rejouer avec mêmes joueurs → efface mots, reset scores, va aux paramètres
   Future<void> restartWithSamePlayers() async {
+    // Terminer et sauvegarder les analytics si une partie était en cours
+    if (_analytics.isTracking) {
+      await _analytics.endGame();
+    }
+
     await _storage.clearGameState();
 
     // Effacer les mots de tous les joueurs

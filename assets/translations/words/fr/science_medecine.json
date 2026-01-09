@@ -1,0 +1,2295 @@
+{
+  "categoryId": "science_medecine",
+  "words": [
+    {
+      "word": "Tête",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bras",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jambe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Main",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pied",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cœur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Poumon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Estomac",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cerveau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Œil",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Oreille",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nez",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bouche",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dent",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Foie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rein",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Intestin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pancréas",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rate",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vésicule",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Œsophage",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Trachée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Larynx",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pharynx",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Colonne vertébrale",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Côte",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Crâne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fémur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tibia",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rotule",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Diaphragme",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Thyroïde",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Hypothalamus",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Péroné",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Humérus",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Radius",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cubitus",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sternum",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Omoplate",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Clavicule",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rhume",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Grippe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fièvre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Toux",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Migraine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Angine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gastro",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Allergie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bronchite",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pneumonie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Asthme",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Diabète",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hypertension",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Arthrose",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Appendicite",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Otite",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sinusite",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Conjonctivite",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Colite",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Anémie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Méningite",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Hépatite",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Péritonite",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Thrombose",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Embolie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "AVC",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Infarctus",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tuberculose",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sclérose en plaques",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Parkinson",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Alzheimer",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Douleur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fatigue",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nausée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vertige",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Éternuement",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vomissement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Diarrhée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Constipation",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Éruption",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Démangeaison",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Frissons",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Transpiration",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Essoufflement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Palpitations",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Piqûre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Perfusion",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Injection",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pansement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Plâtre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Attelle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Radiographie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Échographie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Scanner",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "IRM",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Prise de sang",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vaccination",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chimiothérapie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Radiothérapie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dialyse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Transfusion",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Greffe",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Transplantation",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Anesthésie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Réanimation",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cardiologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dermatologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pneumologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Neurologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pédiatre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gynécologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ophtalmologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "ORL",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dentiste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Kinésithérapeute",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Radiologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Anesthésiste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chirurgien",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Urologue",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rhumatologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gastro-entérologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Oncologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Aspirine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Paracétamol",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sirop",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pommade",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Antibiotique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Anti-inflammatoire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Antidouleur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Antihistaminique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Stéthoscope",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Thermomètre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tensiomètre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Scalpel",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Seringue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bistouri",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Défibrillateur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bleu",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bosse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Coupure",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Égratignure",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fracture",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Entorse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Foulure",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Brûlure",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Contusion",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hématome",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ecchymose",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Plaie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hémorragie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Saignement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Luxation",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Commotion",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Traumatisme crânien",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Varicelle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rougeole",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Oreillons",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rubéole",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Coqueluche",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Diphtérie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bouton",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Acné",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Verrue",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Eczéma",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mycose",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Urticaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Zona",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Furoncle",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Abcès",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Psoriasis",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Vitiligo",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rosacée",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dermite",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Myopie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lunettes",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Presbytie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Astigmatisme",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Strabisme",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Orgelet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cataracte",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Glaucome",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "DMLA",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dépression",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Anxiété",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Stress",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Insomnie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Phobie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Anorexie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Boulimie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bipolarité",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Schizophrénie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "TOC",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Paranoïa",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Burn-out",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cancer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tumeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Métastase",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Leucémie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lymphome",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mélanome",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sarcome",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Carcinome",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mucoviscidose",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Trisomie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Myopathie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Urgence",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ambulance",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "SAMU",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Massage cardiaque",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bouche-à-bouche",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Garrot",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Brancard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hôpital",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Clinique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chambre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lit",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Service",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Urgences",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bloc opératoire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Salle de réveil",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Consultation",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dispensaire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Unité de soins intensifs",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bloc stérile",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Infirmier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pharmacien",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aide-soignant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sage-femme",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ambulancier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Psychologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Orthophoniste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Podologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ostéopathe",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Diététicien",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ergothérapeute",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Psychomotricien",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Orthoptiste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Manipulateur radio",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Prothèse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Béquilles",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fauteuil roulant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Appareil auditif",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lentilles",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pacemaker",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Stimulateur cardiaque",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pompe à insuline",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Valve cardiaque",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Virus",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bactérie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Microbe",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Infection",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Staphylocoque",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "E. coli",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Salmonelle",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "COVID",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "VIH",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Addiction",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dépendance",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sevrage",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Alcoolisme",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tabagisme",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Toxicomanie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Vitamine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Calcium",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Protéine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Glucide",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lipide",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fibre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Magnésium",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Potassium",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Zinc",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Oméga-3",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Antioxydant",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Oligoélément",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Oxygène",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hydrogène",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Azote",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Carbone",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Or",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Argent",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hélium",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Néon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sodium",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chlore",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Phosphore",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Soufre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Aluminium",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cuivre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Plomb",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Platine",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Uranium",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Iode",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Silicium",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Physique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chimie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Biologie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Astronomie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mathématiques",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Géologie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Écologie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Botanique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Zoologie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Génétique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Paléontologie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Archéologie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Météorologie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Océanographie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Astrophysique",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Biochimie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Microbiologie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Électromagnétisme",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Thermodynamique",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mécanique quantique",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Relativité générale",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cosmologie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gravité",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Atome",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Molécule",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Énergie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Évolution",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Big Bang",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Photosynthèse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Magnétisme",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Radioactivité",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fusion nucléaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Relativité",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Quantique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Entropie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sélection naturelle",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tectonique des plaques",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Terre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lune",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Soleil",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mars",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jupiter",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Saturne",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vénus",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Étoile",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Neptune",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Uranus",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Voie lactée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Système solaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Galaxie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Satellite",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fusée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Station spatiale",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Comète",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Astéroïde",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Éclipse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Météorite",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Trou noir",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Exoplanète",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Constellation",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Matière noire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Énergie sombre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Supernova",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Nébuleuse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Roue",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Feu",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Imprimerie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ampoule",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Téléphone",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ordinateur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Moteur à vapeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pénicilline",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Microscope",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Télescope",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Boussole",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Poudre à canon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Papier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Photographie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pasteurisation",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Transistor",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Laser",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fission nucléaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rayons X",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Edison",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lavoisier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mendeleïev",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Archimède",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Copernic",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Kepler",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Hawking",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Turing",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Schrödinger",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Heisenberg",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bohr",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Planck",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Faraday",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lumière",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Son",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chaleur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Froid",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vent",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Onde",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fréquence",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Réfraction",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Réflexion",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Diffraction",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pression",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Densité",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Viscosité",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Condensation",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Évaporation",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Plasma",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Supraconductivité",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Interférence",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Polarisation",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Effet Doppler",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mètre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gramme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Litre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Seconde",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Kilomètre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Kelvin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Newton",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Joule",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Watt",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Volt",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ampère",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ohm",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Celsius",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hertz",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pascal",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Becquerel",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Noyau cellulaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Membrane",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cytoplasme",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ribosome",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Enzyme",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "ARN",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mitose",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Méiose",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Eau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sel",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sucre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Acide",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Base",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "pH",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Réaction chimique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Catalyseur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cristal",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Solution",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mélange",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Électrolyse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Oxydation",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Réduction",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Polymère",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Isomère",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Liaison covalente",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Roche sédimentaire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Roche métamorphique",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Roche magmatique",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Fossile",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Éruption volcanique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Magma",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sismologie",
+      "difficulty": 3,
+      "language": "international"
+    }
+  ]
+}

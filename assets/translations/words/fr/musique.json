@@ -1,0 +1,2345 @@
+{
+  "categoryId": "musique",
+  "words": [
+    {
+      "word": "La vie en rose",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Non, je ne regrette rien",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Aux Champs-Élysées",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Dernière danse",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Andalouse",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Tout oublier",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Balance ton quoi",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "La bohème",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Comme d'habitude",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ne me quitte pas",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "L'aventurier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Foule sentimentale",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Savoir aimer",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Je veux",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Papaoutai",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Formidable",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Tous les mêmes",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Djadja",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Bande organisée",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Amsterdam",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Les copains d'abord",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "L'hymne à l'amour",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Les Champs-Élysées",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Que je t'aime",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Maintenant",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Shape of You",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Despacito",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Uptown Funk",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Happy",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hello",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rolling in the Deep",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Someone Like You",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Blinding Lights",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Levitating",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bad Guy",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bohemian Rhapsody",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Imagine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Let It Be",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hotel California",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Smells Like Teen Spirit",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Billie Jean",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Thriller",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Beat It",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Wonderwall",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lose Yourself",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "God Save the Queen",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "No Woman, No Cry",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pop",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rock",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rap",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jazz",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Classique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Électro",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Reggae",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Country",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hip-hop",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Blues",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Soul",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Funk",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "R&B",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Metal",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Punk",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Disco",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Folk",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "House",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Techno",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Trap",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Zouk",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Salsa",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dubstep",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Drum and Bass",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Hardstyle",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Trance",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Hardcore",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bossa Nova",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Flamenco",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gospel",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Indie Rock",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Afrobeat",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "K-pop",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Drill",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Beatles",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Queen",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Michael Jackson",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Madonna",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Elvis Presley",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Adele",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rihanna",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Beyoncé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pink Floyd",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Led Zeppelin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rolling Stones",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nirvana",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Radiohead",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Coldplay",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "U2",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bob Marley",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "David Bowie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Prince",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Crescendo",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Allegro",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Fortissimo",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Arpège",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mozart",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Beethoven",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bach",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vivaldi",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chopin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tchaïkovski",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Debussy",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Wagner",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Schubert",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ravel",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rachmaninov",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Stravinsky",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Coachella",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tomorrowland",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Les Vieilles Charrues",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Hellfest",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rock en Seine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Solidays",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lollapalooza",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Main Square Festival",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Garorock",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Glastonbury",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Montreux Jazz Festival",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Les Francofolies",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Le Roi Lion",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Les Misérables",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mamma Mia",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Notre-Dame de Paris",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Roméo et Juliette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Le Fantôme de l'Opéra",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chicago",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cats",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "La La Land",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "West Side Story",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Hamilton",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Les Demoiselles de Rochefort",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Starmania",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mozart, l'opéra rock",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "The Voice",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Star Academy",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nouvelle Star",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Eurovision",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "La France a un incroyable talent",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "N'oubliez pas les paroles",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Taratata",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Victoires de la Musique",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Les Enfoirés",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Let It Go",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hakuna Matata",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Je suis ton meilleur ami",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "L'histoire de la vie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "My Heart Will Go On",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Eye of the Tiger",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sous l'océan",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ce rêve bleu",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Libérée, délivrée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Skyfall",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Time of My Life",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Grammy Awards",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "NRJ Music Awards",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Valse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tango",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ballet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Breakdance",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cha-cha",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Paso doble",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Swing",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rumba",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Madison",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rock and roll",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vogue",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Claquettes",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Carmen",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "La Traviata",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Piano",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Guitare",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Violon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Batterie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Flûte",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Trompette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Saxophone",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Harmonica",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Accordéon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tambour",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Triangle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cymbales",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Xylophone",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Harpe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Orgue",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Synthétiseur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Clavier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Basse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ukulélé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Banjo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mandoline",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Violoncelle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Contrebasse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Clarinette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hautbois",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Basson",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Trombone",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cor",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tuba",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Maracas",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Castagnettes",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tambourin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bongo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Djembé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gong",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Carillon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Métronome",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Diapason",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Stromae",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Angèle",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Aya Nakamura",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Jul",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Gims",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Nekfeu",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Orelsan",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "PNL",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Soprano",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Kendji Girac",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Louane",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Vianney",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Amir",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Vitaa",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Slimane",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Matt Pokora",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Shy'm",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jenifer",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Christophe Maé",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Zaz",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Indila",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Nolwenn Leroy",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Calogero",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Patrick Bruel",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Francis Cabrel",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Jean-Jacques Goldman",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Johnny Hallyday",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Édith Piaf",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Charles Aznavour",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Jacques Brel",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Serge Gainsbourg",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "France Gall",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Claude François",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Michel Sardou",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Mylène Farmer",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Patricia Kaas",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Céline Dion",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Lara Fabian",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Florent Pagny",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Pascal Obispo",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Garou",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Hoshi",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Clara Luciani",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Pomme",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Bigflo et Oli",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Black M",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Maître Gims",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Booba",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Kaaris",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Ninho",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "SCH",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Niska",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Damso",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Rohff",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "La Fouine",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Sexion d'Assaut",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "IAM",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "NTM",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "MC Solaar",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Daft Punk",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "David Guetta",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "DJ Snake",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Martin Solveig",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Bob Sinclar",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Laurent Garnier",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Taylor Swift",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ed Sheeran",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bruno Mars",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Justin Bieber",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ariana Grande",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dua Lipa",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "The Weeknd",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Harry Styles",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Billie Eilish",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lady Gaga",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Katy Perry",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Shakira",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Miley Cyrus",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Selena Gomez",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Demi Lovato",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jennifer Lopez",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Britney Spears",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Christina Aguilera",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mariah Carey",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Whitney Houston",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Celine Dion",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Eminem",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Drake",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Kanye West",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jay-Z",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Snoop Dogg",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "50 Cent",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dr. Dre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Kendrick Lamar",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Travis Scott",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Post Malone",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lil Nas X",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cardi B",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nicki Minaj",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Imagine Dragons",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "One Direction",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "BTS",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Blackpink",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "ABBA",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bee Gees",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "AC/DC",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Guns N' Roses",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Metallica",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Linkin Park",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Green Day",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Maroon 5",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "One Republic",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "The Chainsmokers",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Calvin Harris",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Avicii",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Kygo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Marshmello",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sia",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sam Smith",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "John Legend",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Alicia Keys",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Usher",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chris Brown",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jason Derulo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pitbull",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Enrique Iglesias",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Luis Fonsi",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Daddy Yankee",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bad Bunny",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "J Balvin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Maluma",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Joyeux anniversaire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Frère Jacques",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Au clair de la lune",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Alouette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Petit papa Noël",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vive le vent",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mon beau sapin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Douce nuit",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Il est né le divin enfant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Les champs Élysées",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "La Marseillaise",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bella Ciao",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "We Are the Champions",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "We Will Rock You",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Another One Bites the Dust",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "I Will Survive",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "YMCA",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Stayin' Alive",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Macarena",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gangnam Style",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Baby Shark",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Old Town Road",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dance Monkey",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Shallow",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Perfect",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Thinking Out Loud",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "All of Me",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hallelujah",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Amazing Grace",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ave Maria",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ode à la joie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "La lettre à Élise",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Clair de lune",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Le lac des cygnes",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Casse-Noisette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Les quatre saisons",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "La chevauchée des Walkyries",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "La Cinquième Symphonie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Toccata et Fugue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Requiem",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Le Boléro",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chanson",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Musique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mélodie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rythme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Note",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Accord",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Refrain",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Couplet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Paroles",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Voix",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chœur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Solo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Duo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Trio",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Quatuor",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Orchestre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Groupe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Concert",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Spectacle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Album",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Single",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Clip",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tournée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Playlist",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "DJ",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rappeur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chanteur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chanteuse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Guitariste",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pianiste",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Batteur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bassiste",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Violoniste",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Saxophoniste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Trompettiste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Flûtiste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Producteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Compositeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Auteur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Interprète",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Artiste",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Star",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fan",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Public",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Scène",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Micro",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ampli",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Enceinte",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Casque",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Écouteurs",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Radio",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vinyle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "CD",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "MP3",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Karaoké",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Playback",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Live",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Remix",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cover",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mashup",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Beat",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Drop",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hook",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bridge",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Intro",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Outro",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fade out",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tempo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gamme",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tonalité",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Majeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mineur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bémol",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dièse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Clé de sol",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Clé de fa",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Partition",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Portée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Solfège",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Do ré mi",
+      "difficulty": 1,
+      "language": "international"
+    }
+  ]
+}

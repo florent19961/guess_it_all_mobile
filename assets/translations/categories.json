@@ -1,0 +1,453 @@
+{
+  "categories": [
+    {
+      "id": "7eme_art",
+      "icon": "🎬",
+      "names": {
+        "fr": "7ème Art"
+      },
+      "availableLocales": [
+        "fr"
+      ],
+      "metadata": {
+        "description": "Univers du cinéma, des séries TV et de l'animation : films, personnages, réalisateurs et acteurs emblématiques.",
+        "sections": [
+          "Films classiques internationaux (Titanic, Star Wars, Avatar)",
+          "Films français (Intouchables, Amélie Poulain, Les Visiteurs)",
+          "Films d'animation (Disney, Pixar, DreamWorks)",
+          "Séries TV populaires (Game of Thrones, Friends, Breaking Bad)",
+          "Anime et manga (Naruto, One Piece, Dragon Ball)",
+          "Personnages de films (Darth Vader, Jack Sparrow, Joker)",
+          "Réalisateurs célèbres (Spielberg, Tarantino, Nolan)",
+          "Acteurs/actrices (DiCaprio, Hanks, Streep)"
+        ],
+        "enrichmentIdeas": [
+          "Films récents (2023-2025) : Barbie, Oppenheimer, etc.",
+          "Séries Netflix/Disney+ récentes",
+          "Films d'horreur cultes",
+          "Comédies françaises classiques",
+          "Films Marvel/DC supplémentaires",
+          "Anime populaires récents",
+          "Personnages secondaires mémorables"
+        ],
+        "difficultyCriteria": {}
+      }
+    },
+    {
+      "id": "celebrites",
+      "icon": "⭐",
+      "names": {
+        "fr": "Célébrités"
+      },
+      "availableLocales": [
+        "fr"
+      ],
+      "metadata": {
+        "description": "Personnes célèbres de tous domaines : sport, musique, cinéma, politique, médias et réseaux sociaux.",
+        "sections": [
+          "Footballeurs (Mbappé, Messi, Ronaldo)",
+          "Sportifs autres disciplines (Nadal, Hamilton, LeBron)",
+          "Acteurs/actrices français et internationaux",
+          "Chanteurs/chanteuses (Beyoncé, Ed Sheeran, Aya Nakamura)",
+          "Humoristes (Gad Elmaleh, Florence Foresti)",
+          "Influenceurs et YouTubers (Squeezie, Cyprien)",
+          "Personnalités politiques",
+          "Présentateurs TV"
+        ],
+        "enrichmentIdeas": [
+          "Streamers Twitch français (Zerator, Gotaga, Domingo)",
+          "TikTokeurs populaires",
+          "Sportifs français médaillés olympiques",
+          "Chefs cuisiniers célèbres",
+          "Mannequins et personnalités mode",
+          "Podcasters connus",
+          "E-sportifs professionnels"
+        ],
+        "difficultyCriteria": {}
+      }
+    },
+    {
+      "id": "dictionnaire",
+      "icon": "📖",
+      "names": {
+        "fr": "Dictionnaire"
+      },
+      "availableLocales": [
+        "fr"
+      ],
+      "metadata": {
+        "description": "Vocabulaire abstrait et conceptuel : émotions, qualités, actions, concepts et mots du langage courant.",
+        "sections": [
+          "Émotions positives (joie, amour, bonheur)",
+          "Émotions négatives (colère, tristesse, peur)",
+          "États physiques (fatigué, affamé, reposé)",
+          "États mentaux (concentré, distrait, motivé)",
+          "Adjectifs descriptifs (grand, petit, rapide)",
+          "Adjectifs de personnalité (gentil, courageux, timide)",
+          "Adjectifs taille/forme (énorme, minuscule, allongé)",
+          "Verbes du quotidien (manger, dormir, marcher)",
+          "Verbes de communication (parler, expliquer, discuter)",
+          "Verbes domestiques (ranger, nettoyer, cuisiner)",
+          "Verbes de mouvement (courir, sauter, grimper)",
+          "Couleurs (rouge, bleu, vert)",
+          "Formes géométriques (cercle, carré, triangle)",
+          "Temporalité (hier, demain, maintenant)",
+          "Expressions temporelles (parfois, souvent, jamais)",
+          "Expressions de lieu (devant, derrière, dessus)",
+          "Textures et sensations (doux, rugueux, lisse)",
+          "Goûts et saveurs (sucré, salé, amer)",
+          "Sons et bruits (silence, bruit, musique)",
+          "Concepts philosophiques (liberté, justice, vérité)",
+          "Noms abstraits (chance, succès, échec)",
+          "Contraires et opposés (haut/bas, chaud/froid)",
+          "Matériaux (bois, métal, plastique)"
+        ],
+        "enrichmentIdeas": [
+          "Verbes professionnels (négocier, présenter, analyser)",
+          "Émotions nuancées (mélancolie, euphorie, sérénité)",
+          "Concepts économiques (inflation, marché, profit)",
+          "Termes relationnels (amitié, rivalité, complicité)",
+          "Adverbes courants (rapidement, doucement, soudain)",
+          "Qualités morales (honnêteté, générosité, loyauté)"
+        ],
+        "difficultyCriteria": {}
+      }
+    },
+    {
+      "id": "expressions",
+      "icon": "🇫🇷",
+      "names": {
+        "fr": "Expressions"
+      },
+      "availableLocales": [
+        "fr"
+      ],
+      "metadata": {
+        "description": "Expressions idiomatiques françaises, proverbes et locutions populaires de la langue française.",
+        "sections": [
+          "Expressions avec animaux (avoir le cafard, poser un lapin)",
+          "Expressions avec couleurs (voir rouge, être vert de rage)",
+          "Expressions avec corps humain (avoir la main verte)",
+          "Expressions météo (il pleut des cordes)",
+          "Proverbes français (qui dort dîne, l'habit ne fait pas le moine)",
+          "Expressions familières courantes"
+        ],
+        "enrichmentIdeas": [
+          "Expressions régionales françaises",
+          "Argot moderne et verlan",
+          "Expressions du monde professionnel",
+          "Dictons populaires",
+          "Expressions avec nourriture",
+          "Expressions sportives (être aux anges, jeter l'éponge)",
+          "Nouvelles expressions génération Z"
+        ],
+        "difficultyCriteria": {}
+      }
+    },
+    {
+      "id": "geographie",
+      "icon": "🌍",
+      "names": {
+        "fr": "Géographie"
+      },
+      "availableLocales": [
+        "fr"
+      ],
+      "metadata": {
+        "description": "Lieux géographiques du monde : pays, villes, monuments, reliefs et cours d'eau remarquables.",
+        "sections": [
+          "Pays du monde (France, États-Unis, Japon)",
+          "Capitales (Paris, Londres, Tokyo)",
+          "Grandes villes françaises (Lyon, Marseille, Bordeaux)",
+          "Villes mondiales célèbres (New York, Rome, Dubaï)",
+          "Monuments et merveilles (Tour Eiffel, Pyramides, Colisée)",
+          "Fleuves et rivières (Seine, Nil, Amazone)",
+          "Montagnes et sommets (Everest, Mont Blanc, Kilimandjaro)",
+          "Îles et archipels (Corse, Hawaï, Maldives)",
+          "Mers et océans"
+        ],
+        "enrichmentIdeas": [
+          "Sites UNESCO français et mondiaux",
+          "Régions françaises et leurs spécialités",
+          "Déserts célèbres (Sahara, Gobi, Atacama)",
+          "Volcans actifs (Etna, Vésuve, Fuji)",
+          "Lacs célèbres (Léman, Baïkal, Titicaca)",
+          "Parcs nationaux (Yellowstone, Kruger)",
+          "Frontières naturelles remarquables"
+        ],
+        "difficultyCriteria": {}
+      }
+    },
+    {
+      "id": "marques",
+      "icon": "🏷️",
+      "names": {
+        "fr": "Marques"
+      },
+      "availableLocales": [
+        "fr"
+      ],
+      "metadata": {
+        "description": "Noms de marques commerciales connues : vêtements, automobile, technologie, alimentation, luxe.",
+        "sections": [
+          "Marques de vêtements (Nike, Adidas, Zara)",
+          "Marques de luxe (Gucci, Chanel, Louis Vuitton)",
+          "Marques automobiles (Renault, BMW, Tesla)",
+          "Marques tech (Apple, Samsung, Google)",
+          "Marques alimentaires (Coca-Cola, Nutella, McDonald's)",
+          "Marques de cosmétiques (L'Oréal, Nivea)",
+          "Fast-food et restauration",
+          "Marques de sport"
+        ],
+        "enrichmentIdeas": [
+          "Marques françaises historiques",
+          "Startups et licornes connues",
+          "Marques de jeux vidéo (Nintendo, PlayStation)",
+          "Marques de streaming (Netflix, Spotify)",
+          "Chaînes de distribution (Carrefour, IKEA)",
+          "Marques horlogères et joaillerie",
+          "Compagnies aériennes"
+        ],
+        "difficultyCriteria": {}
+      }
+    },
+    {
+      "id": "metiers_sports",
+      "icon": "💼",
+      "names": {
+        "fr": "Métiers & Sports"
+      },
+      "availableLocales": [
+        "fr"
+      ],
+      "metadata": {
+        "description": "Professions de tous secteurs et disciplines sportives pratiquées dans le monde.",
+        "sections": [
+          "Métiers de la santé (médecin, infirmier, dentiste)",
+          "Métiers de l'éducation (professeur, instituteur)",
+          "Métiers du commerce (vendeur, caissier, commercial)",
+          "Métiers de la construction (maçon, plombier, électricien)",
+          "Métiers artistiques (acteur, musicien, peintre)",
+          "Métiers du numérique (développeur, designer)",
+          "Sports collectifs (football, basketball, rugby)",
+          "Sports individuels (tennis, natation, athlétisme)",
+          "Sports de combat (boxe, judo, karaté)",
+          "Sports extrêmes et outdoor"
+        ],
+        "enrichmentIdeas": [
+          "Métiers émergents (influenceur, data scientist, UX designer)",
+          "Métiers de l'artisanat (ébéniste, souffleur de verre)",
+          "Sports olympiques moins connus",
+          "E-sport et gaming professionnel",
+          "Métiers de la restauration détaillés",
+          "Sports traditionnels français (pétanque, pelote basque)"
+        ],
+        "difficultyCriteria": {}
+      }
+    },
+    {
+      "id": "metro_parisien",
+      "icon": "🚇",
+      "names": {
+        "fr": "Métro Parisien"
+      },
+      "availableLocales": [
+        "fr"
+      ],
+      "metadata": {
+        "description": "Stations du métro de Paris, incluant les stations emblématiques et les correspondances importantes.",
+        "sections": [
+          "Stations célèbres (Châtelet, Opéra, Bastille)",
+          "Stations touristiques (Trocadéro, Louvre, Montmartre)",
+          "Grandes gares (Gare du Nord, Gare de Lyon, Saint-Lazare)",
+          "Stations de correspondance majeures",
+          "Stations par ligne"
+        ],
+        "enrichmentIdeas": [
+          "Stations RER (La Défense, Marne-la-Vallée, CDG)",
+          "Lignes de tramway",
+          "Stations emblématiques de banlieue",
+          "Nouvelles stations (Grand Paris Express)",
+          "Stations historiques et leur origine",
+          "Terminus de lignes"
+        ],
+        "difficultyCriteria": {}
+      }
+    },
+    {
+      "id": "musique",
+      "icon": "🎵",
+      "names": {
+        "fr": "Musique"
+      },
+      "availableLocales": [
+        "fr"
+      ],
+      "metadata": {
+        "description": "Univers musical : chansons célèbres, artistes, genres musicaux et termes liés à la musique.",
+        "sections": [
+          "Chansons françaises classiques (La vie en rose, La bohème)",
+          "Chansons françaises récentes (Dernière danse, Balance ton quoi)",
+          "Chansons internationales (Thriller, Bohemian Rhapsody)",
+          "Artistes français (Édith Piaf, Johnny Hallyday, Stromae)",
+          "Artistes internationaux (Michael Jackson, Beatles, Queen)",
+          "Genres musicaux (Rock, Rap, Jazz, Électro)"
+        ],
+        "enrichmentIdeas": [
+          "Hits récents 2023-2025",
+          "Rappeurs français actuels",
+          "Artistes K-pop populaires",
+          "Festivals de musique (Solidays, Vieilles Charrues)",
+          "Groupes de rock légendaires",
+          "Artistes de variété française",
+          "Musiques de films célèbres"
+        ],
+        "difficultyCriteria": {}
+      }
+    },
+    {
+      "id": "nature",
+      "icon": "🌿",
+      "names": {
+        "fr": "Nature et Gastronomie"
+      },
+      "availableLocales": [
+        "fr"
+      ],
+      "metadata": {
+        "description": "Monde naturel (faune, flore, phénomènes) et gastronomie (plats du monde, boissons, fromages, vins).",
+        "sections": [
+          "Animaux sauvages, domestiques, marins, oiseaux, insectes",
+          "Félins, reptiles, rongeurs, primates, cervidés, bovidés",
+          "Plantes, fleurs, arbres, arbustes, plantes d'intérieur",
+          "Fruits, légumes, champignons",
+          "Phénomènes naturels, météo, géologie, minéraux",
+          "Plats italiens, asiatiques, français, du monde",
+          "Fromages, vins, pains du monde",
+          "Desserts, confiseries, pâtisseries",
+          "Boissons chaudes, froides, alcoolisées, cocktails",
+          "Condiments, sauces, ingrédients cuisine"
+        ],
+        "enrichmentIdeas": [
+          "Races de chiens et chats populaires",
+          "Plantes médicinales et aromatiques",
+          "Spécialités régionales françaises",
+          "Poissons et fruits de mer moins connus",
+          "Épices du monde",
+          "Desserts et pâtisseries régionales"
+        ],
+        "difficultyCriteria": {}
+      }
+    },
+    {
+      "id": "noms_communs",
+      "icon": "🔧",
+      "names": {
+        "fr": "Noms communs"
+      },
+      "availableLocales": [
+        "fr"
+      ],
+      "metadata": {
+        "description": "Objets physiques du quotidien, équipements, vêtements, outils et accessoires de la vie courante.",
+        "sections": [
+          "Objets électroniques (téléphone, ordinateur, télévision)",
+          "Objets quotidiens (clés, lunettes, parapluie)",
+          "Mobilier (chaise, table, armoire, lit)",
+          "Ustensiles de cuisine (casserole, couteau, fourchette)",
+          "Outils (marteau, tournevis, perceuse)",
+          "Transports et véhicules (voiture, vélo, avion)",
+          "Vêtements et chaussures (pantalon, chemise, basket)",
+          "Accessoires mode (ceinture, sac, chapeau)",
+          "Instruments de musique (guitare, piano, batterie)",
+          "Maison et habitat (porte, fenêtre, escalier)",
+          "Jouets (ballon, poupée, lego)",
+          "Électroménager (lave-linge, four, aspirateur)",
+          "Équipements sportifs (raquette, ballon, crampon)",
+          "Objets plage/vacances (parasol, bouée, tuba)",
+          "Matériel médical (thermomètre, béquille, bandage)",
+          "Matériel informatique (clavier, souris, écran)",
+          "Textiles (drap, serviette, rideau)",
+          "Contenants (boîte, sac, panier)",
+          "Décoration (cadre, vase, coussin)"
+        ],
+        "enrichmentIdeas": [
+          "Fournitures de bureau (agrafeuse, classeur, post-it)",
+          "Matériel de jardinage (râteau, arrosoir, sécateur)",
+          "Équipement bébé (biberon, poussette, couche)",
+          "Matériel scolaire (cahier, règle, compas)",
+          "Équipement cuisine pro (mandoline, chinois, fouet)",
+          "Accessoires auto (GPS, dashcam, antivol)"
+        ],
+        "difficultyCriteria": {}
+      }
+    },
+    {
+      "id": "science_medecine",
+      "icon": "🔬",
+      "names": {
+        "fr": "Science et Médecine"
+      },
+      "availableLocales": [
+        "fr"
+      ],
+      "metadata": {
+        "description": "Vocabulaire scientifique et médical : anatomie, maladies, éléments chimiques, astronomie, inventions et découvertes.",
+        "sections": [
+          "Anatomie (parties du corps, organes, os)",
+          "Maladies courantes (grippe, diabète, cancer)",
+          "Symptômes (fièvre, toux, douleur)",
+          "Spécialités médicales (cardiologie, neurologie)",
+          "Éléments chimiques (oxygène, hydrogène, carbone)",
+          "Espace et astronomie (planètes, étoiles, galaxies)",
+          "Inventions et découvertes",
+          "Scientifiques célèbres (Einstein, Newton, Curie)",
+          "Phénomènes physiques (gravité, électricité)",
+          "Unités de mesure"
+        ],
+        "enrichmentIdeas": [
+          "Technologies médicales récentes (IRM, scanner)",
+          "Découvertes scientifiques 2020-2025",
+          "Prix Nobel et leurs découvertes",
+          "Maladies rares mais connues",
+          "Termes de biologie cellulaire",
+          "Minéraux et géologie",
+          "Théories scientifiques célèbres"
+        ],
+        "difficultyCriteria": {}
+      }
+    },
+    {
+      "id": "univers_arcade",
+      "icon": "🎮",
+      "names": {
+        "fr": "Univers Arcade"
+      },
+      "availableLocales": [
+        "fr"
+      ],
+      "metadata": {
+        "description": "Monde du jeu vidéo et des jeux de société : franchises, personnages, Pokémon, et références gaming.",
+        "sections": [
+          "Pokémon (génération 1 à 9, légendaires)",
+          "Clash Royale (troupes, sorts, bâtiments)",
+          "Jeux vidéo classiques (Mario, Zelda, Sonic)",
+          "Jeux vidéo récents (Fortnite, Minecraft, GTA)",
+          "Personnages de jeux vidéo",
+          "Jeux de société (Monopoly, Scrabble, Uno)",
+          "Consoles de jeux"
+        ],
+        "enrichmentIdeas": [
+          "Jeux mobile populaires (Candy Crush, Subway Surfers)",
+          "Jeux indépendants cultes (Hollow Knight, Hades)",
+          "Nouveaux Pokémon (Paldea, Hisui)",
+          "Personnages Smash Bros",
+          "Jeux de cartes (Magic, Yu-Gi-Oh!)",
+          "Jeux de rôle (D&D, Final Fantasy)",
+          "E-sport et équipes pro"
+        ],
+        "difficultyCriteria": {}
+      }
+    }
+  ]
+}

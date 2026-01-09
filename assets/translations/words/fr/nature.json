@@ -1,0 +1,4265 @@
+{
+  "categoryId": "nature",
+  "words": [
+    {
+      "word": "Lion",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tigre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Éléphant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Girafe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Zèbre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ours",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Loup",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Renard",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Singe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Crocodile",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Serpent",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aigle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pingouin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Kangourou",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chat",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chien",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lapin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cheval",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vache",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cochon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mouton",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Poule",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Coq",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Canard",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Oie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hamster",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Âne",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dindon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cochon d'Inde",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dauphin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Requin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Baleine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Poisson",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Crabe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Étoile de mer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Léopard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Panthère",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Guépard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lynx",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Puma",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rhinocéros",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hippopotame",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gorille",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chimpanzé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Orang-outan",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Panda",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Koala",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Buffle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bison",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Orque",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Otarie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Phoque",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pieuvre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Méduse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Raie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Thon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Saumon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tortue marine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Caméléon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Iguane",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lézard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tortue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Python",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cobra",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Perroquet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Flamant rose",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Autruche",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hibou",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chouette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Faucon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vautour",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Corbeau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mouette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cigogne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Écureuil",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hérisson",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Castor",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Taupe",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Souris",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rat",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jaguar",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Fennec",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chacal",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Coyote",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dingo",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chameau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dromadaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Yak",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Antilope",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gazelle",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cerf",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Renne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Élan",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Babouin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ouistiti",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lémurien",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Macaque",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Morse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lamantin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Narval",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Béluga",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Calmar",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Hippocampe",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Murène",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Barracuda",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Alligator",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Anaconda",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Varan",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gecko",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Salamandre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Toucan",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pélican",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Paon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Colibri",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Condor",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Albatros",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cacatoès",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Loutre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Raton laveur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Blaireau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Belette",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Hermine",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Furet",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Wallaby",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Wombat",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ornithorynque",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Diable de Tasmanie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Papillon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Abeille",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fourmi",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Coccinelle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mouche",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Moustique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Araignée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Guêpe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Libellule",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sauterelle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Criquet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cigale",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Grillon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bourdon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Frelon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mille-pattes",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Scarabée",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mante religieuse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Phasme",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Hanneton",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Puceron",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Termite",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rose",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tulipe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Marguerite",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tournesol",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Muguet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pensée",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Orchidée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lavande",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jasmin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pivoine",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Coquelicot",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lilas",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hortensia",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Géranium",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bégonia",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Iris",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Narcisse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Jonquille",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dahlia",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Glycine",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rhododendron",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Camélia",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Magnolia",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Hibiscus",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chêne",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sapin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Palmier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pommier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cerisier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Érable",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hêtre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bouleau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Platane",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tilleul",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Peuplier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Saule",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Marronnier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Séquoia",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Baobab",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cyprès",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cèdre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Olivier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Eucalyptus",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Acacia",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Châtaignier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Noyer",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pomme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Banane",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Orange",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fraise",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cerise",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Raisin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pêche",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Poire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Kiwi",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ananas",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pastèque",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Melon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Prune",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Abricot",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mangue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Citron",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pamplemousse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Framboise",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Myrtille",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mûre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nectarine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mandarine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Clémentine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Figue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Datte",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Avocat",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Grenade",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Litchi",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Papaye",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Fruit de la passion",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Goyave",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Kumquat",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Coing",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cassis",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Groseille",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Carotte",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tomate",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Salade",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Concombre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pomme de terre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Oignon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Poivron",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Radis",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Maïs",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Courgette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aubergine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Brocoli",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chou-fleur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Épinard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Haricot",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Petit pois",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Poireau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Céleri",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chou",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Courge",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Citrouille",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Asperge",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Artichaut",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Betterave",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Navet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Panais",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rutabaga",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Topinambour",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Endive",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fenouil",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Salsifis",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Grenouille",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Crapaud",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Triton",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rainette",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Crevette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Homard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Langouste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Écrevisse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Langoustine",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tourteau",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bernard-l'ermite",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Araignée de mer",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cloporte",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Escargot",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Moule",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Huître",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Seiche",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Limace",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Coquille Saint-Jacques",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bigorneau",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bulot",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Poulpe",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ours polaire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ours brun",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ours noir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Grizzly",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Poisson rouge",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Carpe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Truite",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Brochet",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Perche",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gardon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Silure",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Anguille",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tanche",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Scorpion",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tarentule",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Veuve noire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tique",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Acarien",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Basilic",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Menthe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Persil",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Thym",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Romarin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Origan",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ciboulette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Coriandre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Estragon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Safran",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cardamome",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cannelle",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Curcuma",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gingembre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Anis",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Vanille",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Muscade",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Blé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Riz",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Orge",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Avoine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Seigle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lentilles",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pois chiches",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Quinoa",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sarrasin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Épeautre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Soja",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Fèves",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Noix",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Noisette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cacahuète",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Amande",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pistache",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Raisin sec",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Abricot sec",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Noix de cajou",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Noix de pécan",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Noix de macadamia",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pignon de pin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Châtaigne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Champignon de Paris",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pleurote",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Shiitake",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cèpe",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Morille",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Girolle",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Truffe",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bolet",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chanterelle",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Fougère",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mousse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lierre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Algue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bambou",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Roseau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lichen",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Jonc",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bruyère",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Trèfle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pissenlit",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ortie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ronce",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chardon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chiendent",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Orage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Arc-en-ciel",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pluie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Neige",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vent",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Éclair",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tonnerre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Grêle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Brouillard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rosée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Givre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Éclipse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tsunami",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Volcan",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tornade",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Avalanche",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Séisme",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cyclone",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ouragan",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Aurore boréale",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Or",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Diamant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Argent",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rubis",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Émeraude",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Saphir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Quartz",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Améthyste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Topaze",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Opale",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Jade",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Turquoise",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Agate",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Obsidienne",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Grenat",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Montagne",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vallée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Plage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Île",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Canyon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Grotte",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Falaise",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dune",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Glacier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Plateau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Colline",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cratère",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fjord",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Stalactite",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Stalagmite",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Archipel",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Isthme",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rivière",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lac",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Océan",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cascade",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ruisseau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Étang",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fleuve",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Torrent",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Marais",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Marécage",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lagune",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Estuaire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Delta",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Geyser",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Soleil",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lune",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Étoile",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Planète",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Comète",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Météorite",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Galaxie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nébuleuse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Trou noir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Supernova",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Forêt",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Désert",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jungle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Savane",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Prairie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Steppe",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Taïga",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Toundra",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Récif corallien",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mangrove",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pampa",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lande",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pizza",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pâtes",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lasagne",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Risotto",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tiramisu",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Osso buco",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Carpaccio",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Panna cotta",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bruschetta",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Arancini",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sushi",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ramen",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nems",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Riz cantonais",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pad thaï",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pho",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tempura",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bahn mi",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Curry",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Samosa",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bibimbap",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gyoza",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tandoori",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Croissant",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Baguette",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Crêpe",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Quiche",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Ratatouille",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Steak frites",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Poulet rôti",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Raclette",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Fondue",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Gaufre",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Bouillabaisse",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Cassoulet",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Coq au vin",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Pot-au-feu",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Blanquette de veau",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Bœuf bourguignon",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Choucroute",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Gratin dauphinois",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Navarin d'agneau",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Aligot",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Brandade",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Paella",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tacos",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Kebab",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Falafel",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Houmous",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Couscous",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tajine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fish and chips",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hamburger",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Moussaka",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pastrami",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Chimichurri",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Ceviche",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Empanada",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pocher",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Braiser",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sauter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rôtir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Griller",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Émincer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ciseler",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Flamber",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Confire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Déglacer",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Émulsionner",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Suer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Blanchir",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mandoline",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chinois",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fouet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Spatule",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Passoire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Siphon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Emporte-pièce",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Béchamel",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hollandaise",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Béarnaise",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mayonnaise",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vinaigrette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rémoulade",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gâteau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tarte",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Éclair au chocolat",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Macaron",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Crème brûlée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tarte aux pommes",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mousse au chocolat",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Profiterole",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mille-feuille",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Paris-Brest",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Saint-Honoré",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Opéra",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Religieuse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cannelé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Financier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dacquoise",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Baba au rhum",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Camembert",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Brie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Comté",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Roquefort",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chèvre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Reblochon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Munster",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Beaufort",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Emmental",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cantal",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Morbier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Époisses",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Maroilles",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Salers",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ossau-Iraty",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bordeaux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bourgogne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Champagne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pinot noir",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chardonnay",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cabernet",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Châteauneuf-du-Pape",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Côtes-du-Rhône",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pain",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Brioche",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ciabatta",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Focaccia",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pain pita",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Naan",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bagel",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pain de seigle",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Panettone",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Challah",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mise en place",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Al dente",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "À point",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Saignant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pigeon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Moineau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hirondelle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Canari",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Merle",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rouge-gorge",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Colombe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Coucou",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pivert",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rossignol",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Faisan",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Perdrix",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bécasse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Héron",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Grue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Goéland",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sardine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Maquereau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Anchois",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sole",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cabillaud",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Morue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bar",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lieu",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Café",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Thé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chocolat chaud",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cappuccino",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Expresso",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Latte",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Infusion",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tisane",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Thé vert",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Maté",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Jus d'orange",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jus de pomme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Limonade",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Coca-Cola",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Orangina",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sprite",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fanta",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Eau gazeuse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sirop",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Smoothie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Milkshake",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jus de raisin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Thé glacé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Citronnade",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Grenadine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bière",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vin rouge",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vin blanc",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rosé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cidre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Whisky",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vodka",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rhum",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tequila",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cognac",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pastis",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mojito",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Margarita",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Piña colada",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sangria",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Kir",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Spritz",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Armagnac",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Calvados",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Limoncello",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Amaretto",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chartreuse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Génépi",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Absinthe",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sel",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Poivre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Moutarde",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ketchup",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vinaigre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Huile d'olive",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sucre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Miel",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Confiture",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Beurre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Crème",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sauce tomate",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sauce soja",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sauce barbecue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tabasco",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Harissa",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Wasabi",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nuoc-mâm",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pesto",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Guacamole",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tzatziki",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Aïoli",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tapenade",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chutney",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cornichon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Câpres",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Olives",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lait",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Yaourt",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fromage blanc",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Crème fraîche",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mascarpone",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ricotta",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mozzarella",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Parmesan",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gruyère",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Feta",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Farine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pain de mie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Spaghetti",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tagliatelles",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Penne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Macaroni",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Semoule",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Polenta",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nouilles",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vermicelles",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Poulet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bœuf",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Porc",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Agneau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Veau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dinde",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jambon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Saucisse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bacon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Steak",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Côtelette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Escalope",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Filet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cuisse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Aile",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Saucisson",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pâté",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rillettes",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chorizo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Salami",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mortadelle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Coppa",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bresaola",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Jambon cru",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Andouillette",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Boudin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Terrine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Œuf",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Omelette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Œuf dur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Œuf au plat",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Œuf brouillé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Œuf poché",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Brownie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cookie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Muffin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cupcake",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cheesecake",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pancake",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Donut",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Churros",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Glace",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sorbet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Crème glacée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sundae",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Strudel",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Baklava",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mochi",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Crème caramel",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Flan",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pudding",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Carrot cake",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Banana split",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Crumble",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Clafoutis",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Charlotte",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pavlova",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tarte Tatin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bonbon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chocolat",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Caramel",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sucette",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chewing-gum",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Réglisse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nougat",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Guimauve",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dragée",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Praline",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Calisson",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Berlingot",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Palourde",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pétoncle",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Praire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Couteau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ormeau",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Oursin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gambas",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Coquillage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bélier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Brebis",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Poussin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Poulain",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Taureau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jument",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Étalon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Truie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Verrat",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gerbille",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Chinchilla",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Mulot",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Campagnol",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Musaraigne",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Marmotte",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Biche",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Faon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chevreuil",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Daim",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Orignal",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Bouc",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bouquetin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mouflon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chamois",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gnou",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Zébu",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Cactus",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Aloe vera",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ficus",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Yucca",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Buis",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Houx",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Laurier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Genêt",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Aubépine",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Sureau",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Vigne",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chèvrefeuille",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Passiflore",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Bougainvillier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sable",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Roche",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Terre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Boue",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Argile",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gravier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Caillou",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Galet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Averse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Giboulée",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rafale",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bourrasque",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Accalmie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Canicule",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gel",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dégel",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fonte",
+      "difficulty": 2,
+      "language": "international"
+    }
+  ]
+}

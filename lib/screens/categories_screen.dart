@@ -3,21 +3,80 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
 import '../utils/constants.dart';
-import '../utils/word_categories/word_categories.dart';
+import '../services/word_loader_service.dart';
+import '../models/category_metadata.dart';
 import '../widgets/common/app_back_button.dart';
 import '../widgets/effects/shooting_stars.dart';
 
-class CategoriesScreen extends StatelessWidget {
+class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
 
+  @override
+  State<CategoriesScreen> createState() => _CategoriesScreenState();
+}
+
+class _CategoriesScreenState extends State<CategoriesScreen> {
   // Catégories à exclure du "Toutes les catégories"
   static const List<String> _excludedFromSelectAll = ['metro_parisien'];
+
+  List<CategoryMetadata>? _categories;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      final loader = WordLoaderService();
+      final categories = loader.getCategoriesMetadata();
+      setState(() {
+        _categories = categories;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Erreur chargement catégories: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<GameProvider>();
     final settings = provider.settings;
-    final categories = getCategoryList();
+
+    // Afficher un loader pendant le chargement
+    if (_isLoading) {
+      return const ShootingStars(
+        child: Center(
+          child: CircularProgressIndicator(
+            color: AppColors.primaryPink,
+          ),
+        ),
+      );
+    }
+
+    // Afficher une erreur si échec du chargement
+    if (_categories == null || _categories!.isEmpty) {
+      return const ShootingStars(
+        child: Center(
+          child: Text(
+            'Erreur de chargement des catégories',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 16,
+              color: AppColors.error,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final categories = _categories!;
 
     final hasSelection = settings.selectedCategories.isNotEmpty;
 
@@ -149,7 +208,7 @@ class CategoriesScreen extends StatelessWidget {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                    category.name,
+                                    category.getLocalizedName('fr'),
                                     style: TextStyle(
                                       fontFamily: 'Poppins',
                                       fontSize: 16,

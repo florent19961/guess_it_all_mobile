@@ -1,0 +1,3765 @@
+{
+  "categoryId": "geographie",
+  "words": [
+    {
+      "word": "France",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Allemagne",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Italie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Espagne",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Royaume-Uni",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Angleterre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Russie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lisbonne",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Athènes",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Belgique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pays-Bas",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Suisse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Portugal",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Grèce",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pologne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Suède",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Norvège",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Irlande",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Écosse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Turquie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ukraine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Autriche",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Roumanie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Hongrie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tchéquie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Finlande",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Danemark",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Islande",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Croatie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Slovénie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Serbie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bulgarie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Slovaquie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Estonie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lettonie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lituanie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Luxembourg",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Malte",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chypre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "États-Unis",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Canada",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mexique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Brésil",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Argentine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chili",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pérou",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Colombie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Venezuela",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cuba",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Uruguay",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Équateur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bolivie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Paraguay",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Costa Rica",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Panama",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Guatemala",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Japon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Inde",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Corée du Sud",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Thaïlande",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vietnam",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Malaisie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Singapour",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Indonésie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Philippines",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pakistan",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Iran",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Irak",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bangladesh",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sri Lanka",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Népal",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Birmanie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cambodge",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Laos",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mongolie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Kazakhstan",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ouzbékistan",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Afghanistan",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Égypte",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Maroc",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Afrique du Sud",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Algérie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tunisie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Kenya",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nigeria",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Éthiopie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sénégal",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cameroun",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Libye",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ghana",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Côte d'Ivoire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Congo",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Madagascar",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tanzanie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Australie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nouvelle-Zélande",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fidji",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Samoa",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Paris",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Marseille",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Lyon",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Toulouse",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Nice",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Bordeaux",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Nantes",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Strasbourg",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Lille",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Rennes",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Montpellier",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Grenoble",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Dijon",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Angers",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Brest",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Le Havre",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Reims",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Saint-Étienne",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Londres",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "New York",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tokyo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rome",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Madrid",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Berlin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pékin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Los Angeles",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chicago",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Moscou",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Amsterdam",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Barcelone",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vienne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Prague",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sydney",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rio de Janeiro",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Le Caire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Istanbul",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dubaï",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mumbai",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Shanghai",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hong Kong",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Séoul",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bangkok",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Budapest",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bucarest",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Stockholm",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Oslo",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Helsinki",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Copenhague",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Varsovie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cracovie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Naples",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Florence",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Venise",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Milan",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tour Eiffel",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Statue de la Liberté",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Big Ben",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Colisée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tour de Pise",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Notre-Dame de Paris",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Arc de Triomphe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sagrada Familia",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Taj Mahal",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Grande Muraille de Chine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pyramides de Gizeh",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Christ Rédempteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Opéra de Sydney",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Empire State Building",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Golden Gate",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Buckingham Palace",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Château de Versailles",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mont Saint-Michel",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Acropole",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Parthénon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Stonehenge",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Machu Picchu",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Angkor Vat",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Petra",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Kremlin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Basilique Saint-Pierre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "La cité interdite",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Seine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nil",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Amazone",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mississippi",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rhin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Danube",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tamise",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gange",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Loire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rhône",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Garonne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Volga",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bretagne",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Normandie",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Provence",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Alsace",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Corse",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Occitanie",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Nouvelle-Aquitaine",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Grand Est",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Auvergne",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Bourgogne",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Aquitaine",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Languedoc",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Lorraine",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Franche-Comté",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Limousin",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Poitou-Charentes",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Océan Atlantique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Océan Pacifique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mer Méditerranée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Océan Indien",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mer des Caraïbes",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mer Rouge",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mer Noire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mer Baltique",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Océan Arctique",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mer Caspienne",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mer du Nord",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sahara",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Alpes",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Everest",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Himalaya",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Amazonie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pyrénées",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cordillère des Andes",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Kilimandjaro",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Grand Canyon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chutes du Niagara",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Grande Barrière de Corail",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mont Blanc",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Yellowstone",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Désert de Gobi",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Patagonie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Antarctique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vésuve",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Etna",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Stromboli",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mont Fuji",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Krakatoa",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Piton de la Fournaise",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Popocatépetl",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Washington",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ottawa",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bruxelles",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Berne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "La Haye",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rabat",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tunis",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Alger",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nairobi",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lagos",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Téhéran",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bagdad",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Kaboul",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Islamabad",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dacca",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Katmandou",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Colombo",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Hanoï",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Manille",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jakarta",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Kuala Lumpur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Canberra",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Wellington",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Buenos Aires",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Santiago",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lima",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bogota",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Caracas",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "La Havane",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Montevideo",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "La Paz",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Asunción",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "San José",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Reykjavik",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tallin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Riga",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Vilnius",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ljubljana",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Zagreb",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Belgrade",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sofia",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bratislava",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "La Valette",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Nicosie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Addis-Abeba",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ouagadougou",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bamako",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Niamey",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Khartoum",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Kampala",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Kigali",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bujumbura",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dodoma",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lusaka",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Harare",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gaborone",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Windhoek",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Antananarivo",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "75 - Paris",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "13 - Bouches-du-Rhône",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "69 - Rhône",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "59 - Nord",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "83 - Var",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "33 - Gironde",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "44 - Loire-Atlantique",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "34 - Hérault",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "31 - Haute-Garonne",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "06 - Alpes-Maritimes",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "35 - Ille-et-Vilaine",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "67 - Bas-Rhin",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "38 - Isère",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "76 - Seine-Maritime",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "29 - Finistère",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "21 - Côte-d'Or",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "49 - Maine-et-Loire",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "56 - Morbihan",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "22 - Côtes-d'Armor",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "51 - Marne",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "84 - Vaucluse",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "48 - Lozère",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "23 - Creuse",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "15 - Cantal",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "43 - Haute-Loire",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Sicile",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Crète",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sardaigne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Majorque",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ibiza",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Capri",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rhodes",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Santorin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bali",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Hawaï",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tahiti",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "La Réunion",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Martinique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Guadeloupe",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Île de Pâques",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Seychelles",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Maldives",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Açores",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Canaries",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Île Maurice",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Zanzibar",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bora-Bora",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Île de Ré",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Île d'Oléron",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Belle-Île-en-Mer",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lac Léman",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lac Victoria",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lac Baïkal",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lac Tanganyika",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Grands Lacs",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lac d'Annecy",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lac du Bourget",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lac de Côme",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lac Majeur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Loch Ness",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lac Balaton",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Canal de Suez",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Canal de Panama",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Détroit de Gibraltar",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Détroit de Béring",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Manche",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Détroit du Bosphore",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Détroit des Dardanelles",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Détroit de Magellan",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Canal de Corinthe",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Continent",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pays",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ville",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Village",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Capitale",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Région",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Département",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Province",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "État",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Territoire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Frontière",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Limite",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Zone",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Quartier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Arrondissement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Commune",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Canton",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hameau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Banlieue",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Centre-ville",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Périphérie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Agglomération",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Métropole",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mégapole",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nord",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sud",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Est",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ouest",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nord-Est",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nord-Ouest",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sud-Est",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sud-Ouest",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Centre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gauche",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Droite",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Haut",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bas",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pôle Nord",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pôle Sud",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tropique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Méridien",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Latitude",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Longitude",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hémisphère",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Boussole",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "GPS",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Carte",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Plan",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Globe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Atlas",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Montagne",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Colline",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vallée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Plaine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Plateau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sommet",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pic",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Crête",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Falaise",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rocher",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Grotte",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Caverne",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Canyon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gorge",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ravin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Précipice",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gouffre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cratère",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Volcan",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lave",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Éruption",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Geyser",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Source chaude",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Glacier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Banquise",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Iceberg",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Glace",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pergélisol",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Toundra",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Océan",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lac",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Étang",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mare",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rivière",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fleuve",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ruisseau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Torrent",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cascade",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chute d'eau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rapides",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Source",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Embouchure",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Delta",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Estuaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Confluent",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Affluent",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Méandre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Berge",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rive",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bord de l'eau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Canal",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Écluse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Barrage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Digue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pont",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Passerelle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Viaduc",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Aqueduc",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Plage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sable",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Galets",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Côte",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Littoral",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bord de mer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Baie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Golfe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Anse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Crique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Calanque",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fjord",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cap",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pointe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Presqu'île",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Péninsule",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Isthme",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Île",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Îlot",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Archipel",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Atoll",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Récif",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Corail",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lagune",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lagon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Marée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vague",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Houle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Courant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Port",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Quai",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jetée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Phare",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Marina",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Forêt",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bois",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jungle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Savane",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Prairie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pré",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Champ",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pâturage",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Désert",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dune",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Oasis",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Steppe",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lande",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Marais",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Marécage",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tourbière",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mangrove",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Taïga",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Garrigue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Maquis",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Verger",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vignoble",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Plantation",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rizière",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jardin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Parc",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Réserve naturelle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Parc national",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Zoo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aquarium",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Route",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chemin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sentier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Autoroute",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Boulevard",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Avenue",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rue",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ruelle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Impasse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Place",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rond-point",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Carrefour",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tunnel",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Péage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aire de repos",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Station-service",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Parking",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gare",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gare routière",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aéroport",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aérodrome",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Héliport",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Piste d'atterrissage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Terminal",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Quai de gare",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Voie ferrée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rail",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Métro",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tramway",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Funiculaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Téléphérique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Télésiège",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Maison",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Immeuble",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tour",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gratte-ciel",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Château",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Palais",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Forteresse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Citadelle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rempart",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Muraille",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Donjon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cathédrale",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Église",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chapelle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Basilique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Abbaye",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Monastère",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mosquée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Synagogue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Temple",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pagode",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Stupa",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Musée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Galerie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bibliothèque",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Théâtre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Opéra",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cinéma",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Stade",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Arène",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Amphithéâtre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hippodrome",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vélodrome",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Piscine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gymnase",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Centre commercial",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Supermarché",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Marché",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hôpital",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Clinique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pharmacie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "École",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Collège",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lycée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Université",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Campus",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mairie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hôtel de ville",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Préfecture",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tribunal",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Prison",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Caserne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Commissariat",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Poste",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Banque",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hôtel",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Restaurant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Café",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bar",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Discothèque",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Casino",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Camping",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Refuge",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Auberge",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gîte",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Usine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Entrepôt",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hangar",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Silo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ferme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Grange",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Moulin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Éolienne",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Centrale",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Raffinerie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Carrière",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Puits",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fontaine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Monument",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Statue",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Obélisque",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mémorial",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cimetière",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tombeau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pyramide",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ruines",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vestige",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Site archéologique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Climat",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Météo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Température",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chaleur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Froid",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Canicule",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gel",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Soleil",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pluie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Neige",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Grêle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Verglas",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Brouillard",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Brume",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nuage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Orage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tonnerre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Éclair",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Foudre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Arc-en-ciel",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vent",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Brise",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tempête",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ouragan",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cyclone",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Typhon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tornade",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mousson",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sécheresse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Inondation",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tsunami",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tremblement de terre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Séisme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Avalanche",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Glissement de terrain",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Éboulement",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Horizon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Paysage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Panorama",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vue",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Point de vue",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Belvédère",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Terrasse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Balcon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Terre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sol",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sous-sol",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Surface",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Relief",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Altitude",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Profondeur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Niveau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pente",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Versant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Flanc",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cime",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sommet enneigé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Col",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Passage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Défilé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cirque",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cuvette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bassin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lit de rivière",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Crue",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Décrue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nappe phréatique",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Aquifère",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Érosion",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sédiment",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Alluvion",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Limon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Argile",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Granit",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Calcaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Schiste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Basalte",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Grès",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Marbre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Minerai",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pétrole",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gaz naturel",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Charbon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Or",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Argent",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Diamant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cuivre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fer",
+      "difficulty": 1,
+      "language": "international"
+    }
+  ]
+}

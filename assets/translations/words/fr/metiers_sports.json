@@ -1,0 +1,3475 @@
+{
+  "categoryId": "metiers_sports",
+  "words": [
+    {
+      "word": "Médecin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Infirmier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dentiste",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pharmacien",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chirurgien",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vétérinaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sage-femme",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ambulancier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Radiologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Kinésithérapeute",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ostéopathe",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Psychologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cardiologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dermatologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ophtalmologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pédiatre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Anesthésiste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Orthophoniste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Podologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Professeur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Instituteur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Éducateur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Directeur d'école",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Psychologue scolaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bibliothécaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pompier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Policier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gendarme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Militaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Agent de sécurité",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Maître-chien",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Démineur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Garde du corps",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Boulanger",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cuisinier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Serveur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pâtissier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Boucher",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Poissonnier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sommelier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Barman",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chef cuisinier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fromager",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chocolatier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Glacier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Traiteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Coiffeur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mécanicien",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Menuisier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Électricien",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Maçon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Peintre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jardinier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Carreleur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ébéniste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Charpentier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Serrurier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Couvreur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tapissier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Vitrier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Forgeron",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chauffeur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Facteur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Conducteur de bus",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pilote",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chauffeur de taxi",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Conducteur de train",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hôtesse de l'air",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Contrôleur aérien",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Avocat",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Juge",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Commissaire de police",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Notaire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Huissier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Greffier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Magistrat",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Procureur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Architecte",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Journaliste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Photographe",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Designer",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Graphiste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Musicien",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Acteur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Scénariste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Monteur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ingénieur du son",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Réalisateur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Illustrateur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Développeur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Informaticien",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Webdesigner",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Data scientist",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Administrateur système",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Vendeur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Caissier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Comptable",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Commercial",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Agent immobilier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Banquier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Expert-comptable",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Commissaire aux comptes",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Trader",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Agriculteur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Éleveur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Apiculteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Maraîcher",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Viticulteur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sylviculteur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Secrétaire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Réceptionniste",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Assistant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fonctionnaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Employé de bureau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Archiviste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Documentaliste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chercheur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Biologiste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chimiste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Physicien",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Géologue",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Astronome",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Paléontologue",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Archéologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Météorologue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Livreur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Magasinier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Préparateur de commandes",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Manutentionnaire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cariste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gestionnaire de stocks",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Responsable logistique",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Écologiste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Garde forestier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Aide à domicile",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Baby-sitter",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Auxiliaire de vie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Aide-soignant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Accompagnant éducatif et social",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Guide touristique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Concierge",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Agent de voyage",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gouvernante",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Majordome",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Styliste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Esthéticienne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Maquilleur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Couturier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Technicien de maintenance",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Soudeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chaudronnier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Usineur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Publicitaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chargé de communication",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Community manager",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Attaché de presse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Chef de produit",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Directeur marketing",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Comédien",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Danseur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chanteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cascadeur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Marionnettiste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mime",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Prestidigitateur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Football",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Basketball",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Volleyball",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Handball",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rugby",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hockey",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Baseball",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Water-polo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Football américain",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Hockey sur glace",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cricket",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ultimate (frisbee)",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tennis",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Badminton",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tennis de table",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Squash",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Padel",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Boxe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Judo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Karaté",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Taekwondo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Kung Fu",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Krav Maga",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "MMA",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lutte gréco-romaine",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Aïkido",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Jiu-jitsu",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Natation",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Plongée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Surf",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Voile",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Canoë-kayak",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Aviron",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Wakeboard",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Kitesurf",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Planche à voile",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cyclisme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Course à pied",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ski",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Golf",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Danse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Athlétisme",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gymnastique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Escalade",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Équitation",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Patinage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Skateboard",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Roller",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Triathlon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pentathlon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Haltérophilie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Escrime",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tir à l'arc",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "BMX",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Snowboard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ski de fond",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Luge",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Biathlon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Patinage artistique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Curling",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bobsleigh",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Skeleton",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ski acrobatique",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Parachutisme",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Saut à l'élastique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Deltaplane",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Parapente",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Base jump",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Karting",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rallye",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Motocross",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Formule 1",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "MotoGP",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Enduro",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Drift",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pétanque",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bowling",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fléchettes",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Billard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tir sportif",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Snooker",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Billard américain",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Vol en montgolfière",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vol à voile",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Wingsuit",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "ULM",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Trottinette freestyle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Parkour",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Street workout",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Slackline",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Randonnée",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "VTT",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Trail",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Canyoning",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Alpinisme",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Spéléologie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Via ferrata",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dressage",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Saut d'obstacles",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Concours complet",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Polo",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Voltige",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Docteur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Maîtresse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Directeur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Président",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Maire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Roi",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Reine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Prince",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Princesse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Soldat",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Capitaine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chef",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Patron",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ouvrier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fermier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Berger",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chasseur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Garde",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gardien",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Portier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Caméra",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Présentateur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Animateur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Humoriste",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Clown",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Magicien",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Acrobate",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jongleur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Trapéziste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dompteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cow-boy",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pirate",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ninja",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Samouraï",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chevalier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Guerrier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Explorateur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Aventurier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Détective",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Espion",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Agent secret",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Superhéros",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sauveteur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nageur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Plongeur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Skieur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Surfeur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Patineur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Coureur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sprinter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Marathonien",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Boxeur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lutteur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Catcheur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Footballeur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Basketteur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tennisman",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Golfeur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cycliste",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Motard",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pilote de course",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Arbitre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Entraîneur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Coach",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Capitaine d'équipe",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gardien de but",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Attaquant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Défenseur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Milieu de terrain",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Quarterback",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lanceur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Receveur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Plombier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bricoleur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Réparateur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Installateur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Déménageur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chauffeur de camion",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Routier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Conducteur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Marin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pêcheur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Capitaine de bateau",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Astronaute",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cosmonaute",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Inventeur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Savant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Scientifique",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Professeur de sport",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Maître-nageur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Moniteur de ski",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Guide de montagne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Curé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Prêtre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pasteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Moine",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nonne",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pape",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Évêque",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cardinal",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rabbin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Imam",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fossoyeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Croque-mort",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fleuriste",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bijoutier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Horloger",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Opticien",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cordonnier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tailleur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Couturière",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tisserand",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Potier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sculpteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Graveur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Relieur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Imprimeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Libraire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Écrivain",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Auteur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Poète",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Romancier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dramaturge",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Compositeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Producteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Caméraman",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Preneur de son",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Éclairagiste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Décorateur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Accessoiriste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Maquettiste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Régisseur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Costumier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Perruquier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Doubleur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Figurant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mannequin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Top model",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Disc-jockey",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "DJ",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rappeur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rockeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Guitariste",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Batteur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bassiste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pianiste",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Violoniste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Flûtiste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Trompettiste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Saxophoniste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chef d'orchestre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Choriste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Soliste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ténor",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Soprano",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Baryton",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Conteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Narrateur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Présentateur TV",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Journaliste sportif",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Commentateur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chroniqueur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rédacteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Éditeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Traducteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Interprète",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Guide",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Accompagnateur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Animateur radio",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Technicien",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ingénieur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Programmeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Testeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Webmaster",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Blogueur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Youtuber",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Influenceur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Streamer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gamer pro",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Testeur de jeux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Livreur Uber",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Chauffeur VTC",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Coursier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Éboueur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Balayeur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Agent d'entretien",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Femme de ménage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Homme de ménage",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nourrice",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Nounou",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Au pair",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Puéricultrice",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Éducateur spécialisé",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Animateur de centre aéré",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Moniteur de colonie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Surveillant",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pion",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "CPE",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Principal",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Proviseur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Inspecteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Recteur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Doyen",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chancelier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ambassadeur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Consul",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Diplomate",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Député",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sénateur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ministre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Premier ministre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Gouverneur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Préfet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Conseiller municipal",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Élu",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Politicien",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dictateur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Empereur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pharaon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Sultan",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tsar",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Duc",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Comte",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Baron",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Marquis",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Seigneur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Vassal",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Écuyer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Page",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Héraut",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Bourreau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Geôlier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gardien de prison",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Surveillant pénitentiaire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Directeur de prison",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Shérif",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Marshal",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ranger",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Agent FBI",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Agent CIA",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sniper",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Commando",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Parachutiste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Légionnaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Général",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Colonel",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lieutenant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sergent",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Caporal",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Amiral",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Commandant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Major",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Maréchal",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mercenaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gladiateur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Viking",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Spartiate",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Centurion",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Légionnaire romain",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mousquetaire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Archer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lancier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cavalier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Fantassin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Artilleur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tankiste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Aviateur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sous-marinier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Plongeur démineur",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Secouriste",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Brancardier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Infirmier militaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Médecin urgentiste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chirurgien de guerre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Aide humanitaire",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bénévole",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Volontaire",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Militant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Activiste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Syndicaliste",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gréviste",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Manifestant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Réfugié",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Migrant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Immigrant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Expatrié",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Voyageur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Touriste",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Randonneur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Campeur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Backpacker",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Routard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Globe-trotter",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nomade",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vagabond",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Clochard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sans-abri",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mendiant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Saut en longueur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Saut en hauteur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lancer de poids",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lancer de javelot",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lancer de disque",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lancer de marteau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Course de haies",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Relais",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Marathon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Semi-marathon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sprint",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Footing",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jogging",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Marche nordique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Marche rapide",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Cross-country",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Saut à la perche",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Triple saut",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Décathlon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Heptathlon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gymnastique artistique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gymnastique rythmique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Trampoline",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Poutre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Barres asymétriques",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Barres parallèles",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Anneaux",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cheval d'arçons",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sol",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Saut de cheval",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Plongeon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Natation synchronisée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Crawl",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dos crawlé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Brasse",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Papillon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nage libre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Plongée sous-marine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Apnée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Snorkeling",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bodyboard",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Stand up paddle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jet ski",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ski nautique",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rafting",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Canoë",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Kayak",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pirogue",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pédalo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Voilier",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Catamaran",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bateau à moteur",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Yacht",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Croisière",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Régate",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ski alpin",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Slalom",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Descente",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Super-G",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Combiné",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ski freestyle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Half-pipe",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Slopestyle",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Big air",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Téléski",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Télésiège",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Télécabine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Raquettes",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Motoneige",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chiens de traîneau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Short track",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Patinage de vitesse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Hockey sur gazon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Crosse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lacrosse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pelote basque",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jai alai",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Handball de plage",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Beach-volley",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Beach soccer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Footvolley",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Futsal",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Foot à 5",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Foot en salle",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Streetball",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "3x3 basket",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Slam dunk",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tir à 3 points",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lancer franc",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Double pas",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Dribble",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Passe décisive",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Contre",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rebond",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Interception",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Faute",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Carton jaune",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Carton rouge",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Penalty",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Coup franc",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Corner",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Touche",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Hors-jeu",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "But",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Essai",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Transformation",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Drop",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mêlée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Touche rugby",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Plaquage",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Maul",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ruck",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "En-avant",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ace",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Service",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Revers",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Coup droit",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Volée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Smash",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Lob",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Amorti",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Passing shot",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tie-break",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Set",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Match point",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Balle de break",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Double faute",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Let",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Filet",
+      "difficulty": 1,
+      "language": "international"
+    }
+  ]
+}

@@ -1,0 +1,1645 @@
+{
+  "categoryId": "celebrites",
+  "words": [
+    {
+      "word": "Messi",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ronaldo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mbappé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Neymar",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Griezmann",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Zinedine Zidane",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pelé",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Maradona",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Thierry Henry",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Benzema",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Giroud",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pogba",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Kanté",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Platini",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Beckham",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Iniesta",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Xavi",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Nadal",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Federer",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Michael Jordan",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Usain Bolt",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Djokovic",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Serena Williams",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tiger Woods",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "LeBron James",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mohammed Ali",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Michael Phelps",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tony Parker",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Kobe Bryant",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mike Tyson",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Simone Biles",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lewis Hamilton",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Michael Schumacher",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ayrton Senna",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Beyoncé",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Rihanna",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Taylor Swift",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Ed Sheeran",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Adele",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Justin Bieber",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Shakira",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Elvis Presley",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Michael Jackson",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Madonna",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Prince",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "David Bowie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Freddie Mercury",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bob Marley",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Lady Gaga",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Ariana Grande",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Eminem",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Drake",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "The Weeknd",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Bruno Mars",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Katy Perry",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "John Lennon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Kanye West",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Amy Winehouse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Whitney Houston",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Frank Sinatra",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Céline Dion",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Johnny Hallyday",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Stromae",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Renaud",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Jacques Brel",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Serge Gainsbourg",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Charles Aznavour",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Claude François",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Michel Sardou",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Jean-Jacques Goldman",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Édith Piaf",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Daft Punk",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Georges Brassens",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Léo Ferré",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Barbara",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Leonardo DiCaprio",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Brad Pitt",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Tom Cruise",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Will Smith",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Johnny Depp",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Dwayne Johnson",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Marilyn Monroe",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Charlie Chaplin",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tom Hanks",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Robert De Niro",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Al Pacino",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Morgan Freeman",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Denzel Washington",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Meryl Streep",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Scarlett Johansson",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jennifer Lawrence",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Angelina Jolie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Emma Watson",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "George Clooney",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Matt Damon",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Audrey Hepburn",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "James Dean",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Marlon Brando",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ryan Gosling",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cate Blanchett",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Kate Winslet",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Margot Robbie",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Jean Dujardin",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Omar Sy",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Marion Cotillard",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Louis de Funès",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Fernandel",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Sophie Marceau",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Alain Delon",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Jean-Paul Belmondo",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Brigitte Bardot",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Catherine Deneuve",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Isabelle Adjani",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Kim Kardashian",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Kylie Jenner",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nabilla",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Les Marseillais",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Kev Adams",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Squeezie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "McFly et Carlito",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Inès Reg",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gad Elmaleh",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jamel Debbouze",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Florence Foresti",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Laurent Gerra",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Anne Roumanoff",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Franck Dubosc",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Coluche",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Roman Frayssinet",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Raymond Devos",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Victor Hugo",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jules Verne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "J.K. Rowling",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Molière",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Alexandre Dumas",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Émile Zola",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gustave Flaubert",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Guy de Maupassant",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Albert Camus",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Shakespeare",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tolkien",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Honoré de Balzac",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Marcel Proust",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Jean-Paul Sartre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Simone de Beauvoir",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Baudelaire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rimbaud",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Voltaire",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rousseau",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Montesquieu",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Hemingway",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Platon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Aristote",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Socrate",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Descartes",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Nietzsche",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Napoléon",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Jeanne d'Arc",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Louis XIV",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Charlemagne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vercingétorix",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Louis XVI",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Marie-Antoinette",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Christophe Colomb",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jules César",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cléopâtre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Attila",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "François 1er",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Henri IV",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Robespierre",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "De Gaulle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Churchill",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gandhi",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nelson Mandela",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Martin Luther King",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Abraham Lincoln",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "John F. Kennedy",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Mère Teresa",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Dalai Lama",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Emmanuel Macron",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "François Hollande",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Jacques Chirac",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "François Mitterrand",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Georges Pompidou",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Valéry Giscard d'Estaing",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Einstein",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Marie Curie",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Pasteur",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Darwin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Newton",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Galilée",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tesla",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pythagore",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Archimède",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Léonard de Vinci",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Steve Jobs",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Bill Gates",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Mark Zuckerberg",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jeff Bezos",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Steven Spielberg",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Quentin Tarantino",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Christopher Nolan",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Martin Scorsese",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "James Cameron",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Tim Burton",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Luc Besson",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ridley Scott",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Denis Villeneuve",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Stanley Kubrick",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Alfred Hitchcock",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pablo Picasso",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vincent Van Gogh",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Claude Monet",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Salvador Dalí",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Michel-Ange",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Auguste Rodin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rembrandt",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Edgar Degas",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Auguste Renoir",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Paul Cézanne",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Édouard Manet",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Henri Matisse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Vassily Kandinsky",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Andy Warhol",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Banksy",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Frida Kahlo",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Coco Chanel",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Karl Lagerfeld",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Yves Saint Laurent",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Christian Dior",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Giorgio Armani",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gianni Versace",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Jean-Paul Gaultier",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pierre Cardin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "David Guetta",
+      "difficulty": 1,
+      "language": "international"
+    },
+    {
+      "word": "Martin Garrix",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Calvin Harris",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Avicii",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "DJ Snake",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Skrillex",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Tiësto",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Swedish House Mafia",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Justice",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Booba",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Orelsan",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "PNL",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Nekfeu",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Ninho",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Soprano",
+      "difficulty": 2,
+      "language": "french"
+    },
+    {
+      "word": "Maître Gims",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "Jul",
+      "difficulty": 1,
+      "language": "french"
+    },
+    {
+      "word": "IAM",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "NTM",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "MC Solaar",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "Oxmo Puccino",
+      "difficulty": 3,
+      "language": "french"
+    },
+    {
+      "word": "The Beatles",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Queen",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Coldplay",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "The Rolling Stones",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Led Zeppelin",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Pink Floyd",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "U2",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nirvana",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "AC/DC",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Metallica",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Red Hot Chili Peppers",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Radiohead",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "The Doors",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "The Who",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Genesis",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Téléphone",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Indochine",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nagui",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Michel Drucker",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Laurent Ruquier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Christophe Dechavanne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Julien Lepers",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Nikos Aliagas",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Michel Denisot",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Guy Lux",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Laurent Delahousse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "David Pujadas",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Anne-Sophie Lapix",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Élise Lucet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Claire Chazal",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gotaga",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Kameto",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Locklear",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Domingo",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Sardoche",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Joueur du Grenier",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "David Copperfield",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Houdini",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Gordon Ramsay",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jamie Oliver",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cyril Lignac",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Philippe Etchebest",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Alain Ducasse",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Pierre Hermé",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Thierry Marx",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Paul Bocuse",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Joël Robuchon",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Neil Armstrong",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Thomas Pesquet",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Youri Gagarine",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Jacques Cousteau",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Mike Horn",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Magellan",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Vasco de Gama",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Marco Polo",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Naomi Campbell",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Kate Moss",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Gisele Bündchen",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Claudia Schiffer",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Cindy Crawford",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Cara Delevingne",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Laetitia Casta",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Malala Yousafzai",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Greta Thunberg",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Rosa Parks",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Simone Veil",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Emmeline Pankhurst",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Che Guevara",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Malcolm X",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Le Pape François",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sœur Emmanuelle",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Jean-Paul II",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Benoît XVI",
+      "difficulty": 3,
+      "language": "international"
+    }
+  ]
+}
