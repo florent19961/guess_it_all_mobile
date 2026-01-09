@@ -48,3 +48,12 @@ app.*.map.json
 android/key.properties
 *.jks
 *.keystore
+
+# Firebase sensitive files
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
+# Work files
+log_fake_game.json
+science_medecine_annotated.json
+lib/utils/word_categories/backup/
