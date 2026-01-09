@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import 'providers/game_provider.dart';
 import 'services/analytics_service.dart';
 import 'services/word_loader_service.dart';
+import 'services/word_history_service.dart';
 import 'services/connectivity_service.dart';
 import 'services/firebase_sync_service.dart';
 import 'app.dart';
@@ -23,7 +24,7 @@ void main() async {
   print('');
 
   // Initialiser Firebase
-  print('[Main] Step 1/4: Initializing Firebase...');
+  print('[Main] Step 1/5: Initializing Firebase...');
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -39,7 +40,7 @@ void main() async {
 
   // Initialiser les services de connectivité et sync (si Firebase OK)
   if (_firebaseInitialized) {
-    print('[Main] Step 2/4: Initializing ConnectivityService...');
+    print('[Main] Step 2/5: Initializing ConnectivityService...');
     try {
       await ConnectivityService().initialize();
       print('[Main] ConnectivityService ready');
@@ -47,7 +48,7 @@ void main() async {
       print('[Main] ConnectivityService FAILED: $e');
     }
 
-    print('[Main] Step 3/4: Initializing FirebaseSyncService...');
+    print('[Main] Step 3/5: Initializing FirebaseSyncService...');
     try {
       await FirebaseSyncService().initialize();
       print('[Main] FirebaseSyncService ready');
@@ -55,17 +56,26 @@ void main() async {
       print('[Main] FirebaseSyncService FAILED: $e');
     }
   } else {
-    print('[Main] Step 2/4: SKIPPED (Firebase not available)');
-    print('[Main] Step 3/4: SKIPPED (Firebase not available)');
+    print('[Main] Step 2/5: SKIPPED (Firebase not available)');
+    print('[Main] Step 3/5: SKIPPED (Firebase not available)');
   }
 
   // Initialiser le service de chargement de mots
-  print('[Main] Step 4/4: Initializing WordLoaderService...');
+  print('[Main] Step 4/5: Initializing WordLoaderService...');
   try {
     await WordLoaderService().initialize(locale: 'fr');
     print('[Main] WordLoaderService ready');
   } catch (e) {
     print('[Main] WordLoaderService FAILED: $e');
+  }
+
+  // Initialiser le service d'historique des mots
+  print('[Main] Step 5/5: Initializing WordHistoryService...');
+  try {
+    await WordHistoryService().initialize();
+    print('[Main] WordHistoryService ready');
+  } catch (e) {
+    print('[Main] WordHistoryService FAILED: $e');
   }
 
   // Récupérer les parties orphelines (après un kill)

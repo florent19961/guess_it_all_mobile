@@ -43,6 +43,7 @@ lib/
 │   ├── storage_service.dart      # Persistance locale (settings, session, state)
 │   ├── analytics_service.dart    # Tracking temps réel et persistance analytics
 │   ├── user_service.dart         # Identité utilisateur (userId, deviceInfo)
+│   ├── word_history_service.dart # Historique des mots joués (priorisation)
 │   ├── connectivity_service.dart # Détection connectivité réseau
 │   └── firebase_sync_service.dart # Synchronisation analytics vers Firestore
 ├── theme/
@@ -294,4 +295,37 @@ flutterfire configure
 firebase_core: ^3.8.0      # SDK Firebase
 cloud_firestore: ^5.5.0    # Base de données Firestore
 connectivity_plus: ^6.1.0  # Détection réseau
+```
+
+## Historique des Mots (Priorisation)
+
+Le système priorise les mots que l'utilisateur n'a jamais vus lors de la génération aléatoire.
+
+### Principe de fonctionnement
+
+1. **Mots jamais vus** (seenCount = 0) : sélectionnés en premier
+2. **Mots les moins vus** : si plus assez de mots à 0, prendre ceux à seenCount = 1, puis 2, etc.
+3. **Randomisation** : au sein d'un même niveau de priorité, les mots sont mélangés
+
+### Service
+
+- **WordHistoryService** : Singleton gérant l'historique `mot → seenCount`
+  - Stockage : `guessItAll_word_history` (Map<String, int> sérialisé en JSON)
+  - Incrémentation à la fin de chaque partie via `AnalyticsService.endGame()`
+
+### Clés de stockage
+
+| Clé | Description |
+|-----|-------------|
+| `guessItAll_word_history` | Map JSON : mot (lowercase) → nombre de fois joué |
+
+### Exemple de fonctionnement
+
+```
+Catégorie "Expressions" : 118 mots
+Historique : 113 mots vus, 5 mots jamais vus
+Demande : 40 mots
+
+→ Résultat : 5 mots jamais vus + 35 mots avec seenCount le plus bas
+→ Après la partie : tous les 40 mots ont leur compteur +1
 ```

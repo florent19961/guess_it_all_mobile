@@ -1,5 +1,5 @@
-import 'dart:math';
 import '../../services/word_loader_service.dart';
+import '../../services/word_history_service.dart';
 import '../../models/category_metadata.dart';
 import '../../models/word_stats.dart';
 
@@ -15,18 +15,24 @@ Future<List<CategoryMetadata>> getCategoryListAsync() async {
   return loader.getCategoriesMetadata();
 }
 
-/// Générer des mots aléatoires depuis les catégories
+/// Générer des mots depuis les catégories avec priorité aux mots jamais vus
 ///
-/// Charge les catégories depuis JSON et génère une liste de mots uniques
-/// en respectant les niveaux de difficulté sélectionnés.
+/// Charge les catégories depuis JSON et génère une liste de mots en
+/// priorisant ceux que l'utilisateur n'a jamais vus (seenCount = 0),
+/// puis ceux avec le compteur le plus bas.
 Future<List<String>> generateWordsFromCategoriesAsync(
   List<String> selectedCategories,
   int count, {
   List<int>? difficultyLevels,
 }) async {
   final loader = WordLoaderService();
+  final historyService = WordHistoryService();
+
   if (!loader.isInitialized) {
     await loader.initialize();
+  }
+  if (!historyService.isInitialized) {
+    await historyService.initialize();
   }
 
   // Charger les catégories sélectionnées
@@ -51,12 +57,11 @@ Future<List<String>> generateWordsFromCategoriesAsync(
     }
   }
 
-  final random = Random();
-  combinedWords.shuffle(random);
-
+  // Dédupliquer
   final uniqueWords = combinedWords.toSet().toList();
 
-  return uniqueWords.take(count).toList();
+  // Sélection prioritaire (mots jamais vus d'abord)
+  return historyService.selectWordsByPriority(uniqueWords, count);
 }
 
 /// Compter le nombre total de mots disponibles
@@ -96,18 +101,24 @@ Future<int> getTotalWordsCountAsync(
   return combinedWords.length;
 }
 
-/// Générer des mots aléatoires avec leurs métadonnées complètes
+/// Générer des mots avec leurs métadonnées en priorisant les mots jamais vus
 ///
 /// Retourne une Map<String, WordMetadata> avec les informations
 /// de catégorie, difficulté et langue pour chaque mot.
+/// Les mots jamais vus par l'utilisateur sont sélectionnés en priorité.
 Future<Map<String, WordMetadata>> generateWordsWithMetadataAsync(
   List<String> selectedCategories,
   int count, {
   List<int>? difficultyLevels,
 }) async {
   final loader = WordLoaderService();
+  final historyService = WordHistoryService();
+
   if (!loader.isInitialized) {
     await loader.initialize();
+  }
+  if (!historyService.isInitialized) {
+    await historyService.initialize();
   }
 
   final categoriesToUse = selectedCategories.isNotEmpty
@@ -116,20 +127,23 @@ Future<Map<String, WordMetadata>> generateWordsWithMetadataAsync(
 
   final allowedLevels = difficultyLevels ?? [1, 2, 3, 4];
 
-  // Collecter les mots avec leurs métadonnées
-  final List<WordMetadata> allWords = [];
+  // Collecter les mots avec leurs métadonnées (dédupliqués)
+  final Map<String, WordMetadata> allWordsMap = {};
 
   for (final categoryId in categoriesToUse) {
     try {
       final category = await loader.loadCategory(categoryId);
       for (final w in category.words) {
         if (allowedLevels.contains(w.difficulty)) {
-          allWords.add(WordMetadata.fromCategory(
-            word: w.word,
-            categoryId: categoryId,
-            difficulty: w.difficulty,
-            language: w.language,
-          ));
+          // Garder la première occurrence pour déduplication
+          if (!allWordsMap.containsKey(w.word)) {
+            allWordsMap[w.word] = WordMetadata.fromCategory(
+              word: w.word,
+              categoryId: categoryId,
+              difficulty: w.difficulty,
+              language: w.language,
+            );
+          }
         }
       }
     } catch (e) {
@@ -137,15 +151,14 @@ Future<Map<String, WordMetadata>> generateWordsWithMetadataAsync(
     }
   }
 
-  // Mélanger
-  allWords.shuffle(Random());
+  // Sélection prioritaire (mots jamais vus d'abord)
+  final allWordsList = allWordsMap.keys.toList();
+  final selectedWords = historyService.selectWordsByPriority(allWordsList, count);
 
-  // Dédupliquer et limiter
+  // Construire le résultat avec les métadonnées
   final Map<String, WordMetadata> result = {};
-  for (final meta in allWords) {
-    if (!result.containsKey(meta.word) && result.length < count) {
-      result[meta.word] = meta;
-    }
+  for (final word in selectedWords) {
+    result[word] = allWordsMap[word]!;
   }
 
   return result;

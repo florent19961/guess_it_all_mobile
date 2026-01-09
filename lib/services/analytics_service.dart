@@ -5,6 +5,7 @@ import '../models/word_event.dart';
 import '../models/word_stats.dart';
 import 'user_service.dart';
 import 'firebase_sync_service.dart';
+import 'word_history_service.dart';
 
 /// Service de tracking et de persistance des analytics
 ///
@@ -81,6 +82,12 @@ class AnalyticsService {
 
     // Sauvegarder la partie localement (toujours fait, même si sync échoue)
     await saveCurrentGame();
+
+    // Incrémenter l'historique des mots joués
+    final playedWords = _currentGame!.wordMetadata.keys.toList();
+    if (playedWords.isNotEmpty) {
+      await WordHistoryService().incrementWords(playedWords);
+    }
 
     // Marquer pour synchronisation Firebase (fire-and-forget, ne bloque pas l'UI)
     // ignore: unawaited_futures
