@@ -213,11 +213,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                     variant: AppButtonVariant.primary,
                     size: AppButtonSize.large,
                     fullWidth: true,
-                    onPressed: () {
+                    onPressed: () async {
                       // Si mode aléatoire, vérifier le nombre de mots disponibles
                       if (settings.wordChoice == AppConstants.wordChoiceRandom) {
                         final totalWordsNeeded = settings.totalWords;
-                        final availableWords = getTotalWordsCount(
+                        final availableWords = await getTotalWordsCountAsync(
                           settings.selectedCategories,
                           difficultyLevels: settings.selectedDifficultyLevels,
                         );
@@ -500,7 +500,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: [1, 2, 3].map((level) {
+                  children: [1, 2, 3, 4].map((level) {
                     final isSelected = settings.selectedDifficultyLevels.contains(level);
                     return GestureDetector(
                       onTap: () {

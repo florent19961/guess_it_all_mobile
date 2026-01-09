@@ -69,11 +69,13 @@ class AppConstants {
   static const int difficultyEasy = 1;
   static const int difficultyMedium = 2;
   static const int difficultyHard = 3;
+  static const int difficultyAstronomic = 4;
 
   static const Map<int, String> difficultyLabels = {
     1: 'Facile',
     2: 'Moyen',
     3: 'Difficile',
+    4: 'Astronomique',
   };
 
   static const List<int> defaultDifficultyLevels = [1, 2]; // Facile + Moyen

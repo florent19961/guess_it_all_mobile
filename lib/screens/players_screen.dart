@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
 import '../models/player.dart';
+import '../models/word_stats.dart';
 import '../utils/constants.dart';
 import '../utils/word_categories/word_categories.dart';
 import '../widgets/common/app_button.dart';
@@ -23,6 +24,10 @@ class _PlayersScreenState extends State<PlayersScreen> {
   final Map<String, String> _errors = {};
   bool _isInitialized = false;
 
+  // Pool de mots pré-générés avec métadonnées (mode aléatoire)
+  Map<String, WordMetadata>? _wordPool;
+  List<String>? _availableWords;
+
   @override
   void initState() {
     super.initState();
@@ -31,7 +36,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
     });
   }
 
-  void _syncPlayersWithSettings() {
+  Future<void> _syncPlayersWithSettings() async {
     final provider = context.read<GameProvider>();
     final settings = provider.settings;
 
@@ -64,9 +69,21 @@ class _PlayersScreenState extends State<PlayersScreen> {
 
     // 3. En mode aléatoire : générer/compléter les mots pour TOUS les joueurs
     if (settings.wordChoice == AppConstants.wordChoiceRandom) {
+      // Pré-générer le pool de mots avec métadonnées (2x le total pour avoir de la marge)
+      if (_wordPool == null) {
+        _wordPool = await generateWordsWithMetadataAsync(
+          settings.selectedCategories,
+          settings.totalWords * 2,
+          difficultyLevels: settings.selectedDifficultyLevels,
+        );
+        _availableWords = _wordPool!.keys.toList()..shuffle();
+        // Stocker le cache dans GameProvider
+        provider.setWordMetadataCache(_wordPool!);
+      }
+
       for (final player in provider.players) {
         final wordsNeeded = provider.getWordsCountForPlayer(player.id);
-        _ensureWordsForPlayer(player.id, provider, wordsNeeded);
+        await _ensureWordsForPlayer(player.id, provider, wordsNeeded);
       }
     } else {
       // 4. En mode personnalisé : tronquer si trop de mots
@@ -89,8 +106,8 @@ class _PlayersScreenState extends State<PlayersScreen> {
   }
 
   // Génère/complète les mots pour atteindre le nombre requis
-  void _ensureWordsForPlayer(
-      String playerId, GameProvider provider, int wordsNeeded) {
+  Future<void> _ensureWordsForPlayer(
+      String playerId, GameProvider provider, int wordsNeeded) async {
     final player = provider.players.firstWhere((p) => p.id == playerId);
 
     if (player.words.length >= wordsNeeded) {
@@ -107,7 +124,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
     final newWords = <String>[...player.words];
 
     while (newWords.length < wordsNeeded) {
-      final word = _generateUniqueWord(provider, otherPlayersWords, newWords);
+      final word = await _generateUniqueWord(provider, otherPlayersWords, newWords);
       if (word != null) {
         newWords.add(word);
       } else {
@@ -211,14 +228,29 @@ class _PlayersScreenState extends State<PlayersScreen> {
   }
 
   // Génère un mot unique qui n'est pas utilisé
-  String? _generateUniqueWord(
+  Future<String?> _generateUniqueWord(
     GameProvider provider,
     Set<String> otherPlayersWords,
     List<String> currentModalWords,
-  ) {
+  ) async {
+    // Utiliser le pool pré-généré si disponible (mode aléatoire optimisé)
+    if (_availableWords != null && _availableWords!.isNotEmpty) {
+      for (int i = 0; i < _availableWords!.length; i++) {
+        final word = _availableWords![i];
+        final wordLower = word.toLowerCase();
+        if (!otherPlayersWords.contains(wordLower) &&
+            !currentModalWords.map((w) => w.toLowerCase()).contains(wordLower)) {
+          _availableWords!.removeAt(i);
+          return word;
+        }
+      }
+      return null; // Plus de mots uniques disponibles
+    }
+
+    // Fallback : générer via l'ancienne méthode
     int attempts = 0;
     while (attempts < 100) {
-      final words = generateWordsFromCategories(
+      final words = await generateWordsFromCategoriesAsync(
         provider.settings.selectedCategories,
         1,
         difficultyLevels: provider.settings.selectedDifficultyLevels,
@@ -352,7 +384,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                   text: 'Grosse flemme 😴',
                   variant: AppButtonVariant.secondary,
                   fullWidth: true,
-                  onPressed: () {
+                  onPressed: () async {
                     // Compter les champs vides avant remplissage
                     final emptyFieldsCount = wordControllers
                         .where((c) => c.text.trim().isEmpty)
@@ -361,29 +393,29 @@ class _PlayersScreenState extends State<PlayersScreen> {
                     if (emptyFieldsCount == 0) return; // Rien à remplir
 
                     int filledCount = 0;
-                    setModalState(() {
-                      // Collecter les mots déjà remplis dans le modal
-                      final filledWords = wordControllers
-                          .map((c) => c.text.trim())
-                          .where((w) => w.isNotEmpty)
-                          .toList();
+                    // Collecter les mots déjà remplis dans le modal
+                    final filledWords = wordControllers
+                        .map((c) => c.text.trim())
+                        .where((w) => w.isNotEmpty)
+                        .toList();
 
-                      // Remplir tous les champs vides
-                      for (int i = 0; i < wordControllers.length; i++) {
-                        if (wordControllers[i].text.trim().isEmpty) {
-                          final newWord = _generateUniqueWord(
-                            provider,
-                            otherPlayersWords,
-                            filledWords,
-                          );
-                          if (newWord != null) {
+                    // Remplir tous les champs vides
+                    for (int i = 0; i < wordControllers.length; i++) {
+                      if (wordControllers[i].text.trim().isEmpty) {
+                        final newWord = await _generateUniqueWord(
+                          provider,
+                          otherPlayersWords,
+                          filledWords,
+                        );
+                        if (newWord != null) {
+                          setModalState(() {
                             wordControllers[i].text = newWord;
-                            filledWords.add(newWord);
-                            filledCount++;
-                          }
+                          });
+                          filledWords.add(newWord);
+                          filledCount++;
                         }
                       }
-                    });
+                    }
 
                     // Afficher le message approprié
                     if (filledCount == 0) {
@@ -414,7 +446,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                       ),
                       const SizedBox(width: 8),
                       GestureDetector(
-                        onTap: () {
+                        onTap: () async {
                           // Mots actuels dans le modal (sauf celui qu'on remplace)
                           final currentModalWords = wordControllers
                               .asMap()
@@ -424,7 +456,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                               .where((w) => w.isNotEmpty)
                               .toList();
 
-                          final newWord = _generateUniqueWord(
+                          final newWord = await _generateUniqueWord(
                             provider,
                             otherPlayersWords,
                             currentModalWords,

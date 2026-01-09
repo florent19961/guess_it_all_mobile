@@ -86,6 +86,9 @@ class HomeButton extends StatelessWidget {
           ],
         ),
       );
+    } else if (currentScreen == AppConstants.screenResults) {
+      // Depuis l'écran des résultats, terminer proprement la partie
+      provider.endGameAndGoHome();
     } else {
       provider.goToScreen(AppConstants.screenHome);
     }
