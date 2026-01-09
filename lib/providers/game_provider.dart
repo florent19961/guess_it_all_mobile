@@ -160,6 +160,20 @@ class GameProvider extends ChangeNotifier {
     _saveSettings();
   }
 
+  void toggleDifficultyLevel(int level) {
+    final newLevels = List<int>.from(_settings.selectedDifficultyLevels);
+    if (newLevels.contains(level)) {
+      // Ne pas désélectionner si c'est le dernier niveau
+      if (newLevels.length > 1) {
+        newLevels.remove(level);
+      }
+    } else {
+      newLevels.add(level);
+    }
+    newLevels.sort();
+    updateSettings(selectedDifficultyLevels: newLevels);
+  }
+
   // Compare deux listes
   bool _listEquals<T>(List<T> a, List<T> b) {
     if (a.length != b.length) return false;

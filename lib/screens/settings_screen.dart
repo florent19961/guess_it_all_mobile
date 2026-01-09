@@ -147,7 +147,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                           ),
                           const SizedBox(width: 10),
                           const Text(
-                            'Catégories',
+                            'Catégories & Difficultés',
                             style: TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 14,
@@ -389,7 +389,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             children: [
               Expanded(
                 child: AppButton(
-                  text: 'Catégories',
+                  text: 'Catégories & Difficultés',
                   variant: AppButtonVariant.secondary,
                   onPressed: () {
                     Navigator.pop(context);
@@ -466,76 +466,6 @@ class _SettingsScreenState extends State<SettingsScreen>
                     provider.updateSettings(passPenalty: value.toInt());
                     setState(() {});
                   },
-                ),
-                const SizedBox(height: 24),
-
-                // Niveaux de difficulté
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Difficulté',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Sélectionnez au moins 1 niveau',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 12,
-                          color: AppColors.gray400,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [1, 2, 3, 4].map((level) {
-                    final isSelected = settings.selectedDifficultyLevels.contains(level);
-                    return GestureDetector(
-                      onTap: () {
-                        final newLevels = List<int>.from(settings.selectedDifficultyLevels);
-                        if (isSelected) {
-                          if (newLevels.length > 1) {
-                            newLevels.remove(level);
-                          }
-                        } else {
-                          newLevels.add(level);
-                        }
-                        newLevels.sort();
-                        provider.updateSettings(selectedDifficultyLevels: newLevels);
-                        setState(() {});
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: isSelected ? AppColors.secondaryCyan : AppColors.backgroundCard,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isSelected ? AppColors.secondaryCyan : AppColors.gray600,
-                            width: 2,
-                          ),
-                        ),
-                        child: Text(
-                          AppConstants.difficultyLabels[level]!,
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            color: isSelected ? Colors.white : AppColors.gray400,
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
                 ),
               ],
             ),

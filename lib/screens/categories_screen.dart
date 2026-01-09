@@ -97,136 +97,146 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               children: [
                 const SizedBox(height: 64),
                 Text(
-                  'Catégories',
-                  style: AppTextStyles.subtitle(fontSize: 40),
+                  'Personnalise ta partie',
+                  style: AppTextStyles.subtitle(fontSize: 32),
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
-                // Message d'avertissement si aucune catégorie sélectionnée
-                if (!hasSelection)
-                  const Text(
-                    'Sélectionnez au moins une catégorie',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 14,
-                      color: AppColors.error,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  )
-                else
-                  const SizedBox(height: 14), // Placeholder pour garder l'alignement
                 const SizedBox(height: 24),
 
-                // Bouton "Toutes les catégories"
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: GestureDetector(
-                    onTap: () {
-                      if (allSelected) {
-                        // Désélectionner toutes les catégories
-                        provider.updateSettings(selectedCategories: []);
-                      } else {
-                        // Sélectionner toutes les catégories (sauf exclues)
-                        provider.updateSettings(selectedCategories: selectableCategories);
-                      }
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: allSelected
-                            ? AppColors.secondaryCyan.withOpacity(0.2)
-                            : AppColors.backgroundCard,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: allSelected ? AppColors.secondaryCyan : AppColors.gray600,
-                          width: 2,
+                // Liste scrollable avec Difficulté + Catégories
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    children: [
+                      // === SECTION DIFFICULTÉ ===
+                      _buildDifficultySection(provider),
+                      const SizedBox(height: 24),
+
+                      // === SECTION CATÉGORIES ===
+                      const Text(
+                        'CATÉGORIES',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          letterSpacing: 1,
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.select_all,
-                            size: 24,
-                            color: allSelected ? AppColors.secondaryCyan : AppColors.gray400,
+                      const SizedBox(height: 4),
+                      Text(
+                        hasSelection
+                            ? '${settings.selectedCategories.length} catégorie${settings.selectedCategories.length > 1 ? 's' : ''} sélectionnée${settings.selectedCategories.length > 1 ? 's' : ''}'
+                            : 'Sélectionne au moins 1 catégorie',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 12,
+                          color: hasSelection ? AppColors.gray400 : AppColors.error,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Bouton "Toutes les catégories"
+                      GestureDetector(
+                        onTap: () {
+                          if (allSelected) {
+                            provider.updateSettings(selectedCategories: []);
+                          } else {
+                            provider.updateSettings(selectedCategories: selectableCategories);
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: allSelected
+                                ? AppColors.secondaryCyan.withOpacity(0.2)
+                                : AppColors.backgroundCard,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: allSelected ? AppColors.secondaryCyan : AppColors.gray600,
+                              width: 2,
+                            ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Toutes les catégories',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.select_all,
+                                size: 24,
                                 color: allSelected ? AppColors.secondaryCyan : AppColors.gray400,
                               ),
-                            ),
-                          ),
-                          _buildSwitch(allSelected, true),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Liste des catégories
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    itemCount: categories.length,
-                    itemBuilder: (context, index) {
-                      final category = categories[index];
-                      final isSelected = settings.selectedCategories.contains(category.id);
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: GestureDetector(
-                          onTap: () {
-                            final newCategories = List<String>.from(settings.selectedCategories);
-                            if (isSelected) {
-                              newCategories.remove(category.id);
-                            } else {
-                              newCategories.add(category.id);
-                            }
-                            provider.updateSettings(selectedCategories: newCategories);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                            decoration: BoxDecoration(
-                              color: AppColors.backgroundCard,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: isSelected ? AppColors.secondaryCyan : AppColors.gray600,
-                                width: 2,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Text(
-                                  category.icon,
-                                  style: const TextStyle(fontSize: 24),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    category.getLocalizedName('fr'),
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                      color: isSelected ? Colors.white : AppColors.gray400,
-                                    ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'Toutes les catégories',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: allSelected ? AppColors.secondaryCyan : AppColors.gray400,
                                   ),
                                 ),
-                                _buildSwitch(isSelected, true),
-                              ],
-                            ),
+                              ),
+                              _buildSwitch(allSelected, true),
+                            ],
                           ),
                         ),
-                      );
-                    },
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Liste des catégories
+                      ...categories.map((category) {
+                        final isSelected = settings.selectedCategories.contains(category.id);
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: GestureDetector(
+                            onTap: () {
+                              final newCategories = List<String>.from(settings.selectedCategories);
+                              if (isSelected) {
+                                newCategories.remove(category.id);
+                              } else {
+                                newCategories.add(category.id);
+                              }
+                              provider.updateSettings(selectedCategories: newCategories);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                              decoration: BoxDecoration(
+                                color: AppColors.backgroundCard,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isSelected ? AppColors.secondaryCyan : AppColors.gray600,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    category.icon,
+                                    style: const TextStyle(fontSize: 24),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      category.getLocalizedName('fr'),
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color: isSelected ? Colors.white : AppColors.gray400,
+                                      ),
+                                    ),
+                                  ),
+                                  _buildSwitch(isSelected, true),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                      const SizedBox(height: 24),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -237,6 +247,88 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             disabled: !hasSelection,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDifficultySection(GameProvider provider) {
+    final selectedLevels = provider.settings.selectedDifficultyLevels;
+    final hasValidSelection = selectedLevels.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'DIFFICULTÉ',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          hasValidSelection
+              ? '${selectedLevels.length} niveau${selectedLevels.length > 1 ? 'x' : ''} sélectionné${selectedLevels.length > 1 ? 's' : ''}'
+              : 'Sélectionne au moins 1 niveau',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 12,
+            color: hasValidSelection ? AppColors.gray400 : AppColors.error,
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Grille 2x2
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          childAspectRatio: 2.5,
+          children: [1, 2, 3, 4].map((level) {
+            final isSelected = selectedLevels.contains(level);
+            return _buildDifficultyCard(level, isSelected, provider);
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDifficultyCard(int level, bool isSelected, GameProvider provider) {
+    return GestureDetector(
+      onTap: () => provider.toggleDifficultyLevel(level),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.secondaryCyan : AppColors.gray700,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              AppConstants.difficultyEmojis[level] ?? '',
+              style: const TextStyle(fontSize: 20),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              AppConstants.difficultyLabels[level] ?? '',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : AppColors.gray400,
+              ),
+            ),
+            if (isSelected) ...[
+              const SizedBox(width: 6),
+              const Icon(Icons.check, color: Colors.white, size: 16),
+            ],
+          ],
+        ),
       ),
     );
   }

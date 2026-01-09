@@ -75,7 +75,14 @@ class AppConstants {
     1: 'Facile',
     2: 'Moyen',
     3: 'Difficile',
-    4: 'Astronomique',
+    4: 'Extrême',
+  };
+
+  static const Map<int, String> difficultyEmojis = {
+    1: '👶',
+    2: '🧐',
+    3: '😰',
+    4: '🤯',
   };
 
   static const List<int> defaultDifficultyLevels = [1, 2]; // Facile + Moyen
