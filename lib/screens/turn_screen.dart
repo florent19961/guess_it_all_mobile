@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
@@ -452,6 +453,7 @@ class _TurnScreenState extends State<TurnScreen> {
                         child: GestureDetector(
                           onTap: canPass && !_isPaused
                               ? () {
+                                  HapticFeedback.mediumImpact();
                                   AudioService.playWhoosh();
                                   provider.passWord();
                                 }
@@ -509,6 +511,7 @@ class _TurnScreenState extends State<TurnScreen> {
                         flex: 2,
                         child: GestureDetector(
                           onTap: _isPaused ? null : () {
+                            HapticFeedback.lightImpact();
                             AudioService.playDing();
                             provider.markWordAsGuessed();
                           },
