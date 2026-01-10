@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -364,6 +365,8 @@ class _TurnScreenState extends State<TurnScreen> {
                     ),
                   ),
 
+                  const SizedBox(height: 32),
+
                   // Zone centrale flexible
                   Expanded(
                     child: Column(
@@ -391,36 +394,29 @@ class _TurnScreenState extends State<TurnScreen> {
                         const SizedBox(height: 32),
 
                         // Current word
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              final text = currentWord ?? '';
-                              // Calculer la taille de police adaptée
-                              double fontSize = 64;
-                              if (text.length > 30) {
-                                fontSize = 48;
-                              } else if (text.length > 20) {
-                                fontSize = 56;
-                              }
-                              return Text(
-                                text,
-                                style: TextStyle(
-                                  fontFamily: 'Bangers',
-                                  fontSize: fontSize,
-                                  color: Colors.white,
-                                  shadows: const [
-                                    Shadow(
-                                      offset: Offset(2, 2),
-                                      color: AppColors.primaryPinkDark,
-                                      blurRadius: 0,
-                                    ),
-                                  ],
-                                ),
-                                textAlign: TextAlign.center,
-                                maxLines: 3,
-                              );
-                            },
+                        Flexible(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: AutoSizeText(
+                              currentWord ?? '',
+                              style: const TextStyle(
+                                fontFamily: 'Bangers',
+                                fontSize: 85,
+                                color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    offset: Offset(2, 2),
+                                    color: AppColors.primaryPinkDark,
+                                    blurRadius: 0,
+                                  ),
+                                ],
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 3,
+                              minFontSize: 24,
+                              wrapWords: false,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         ),
 
@@ -444,6 +440,8 @@ class _TurnScreenState extends State<TurnScreen> {
                       ],
                     ),
                   ),
+
+                  const SizedBox(height: 32),
 
                   // Action buttons (fixes en bas)
                   Row(
