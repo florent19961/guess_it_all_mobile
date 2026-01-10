@@ -28,6 +28,11 @@ class _PlayersScreenState extends State<PlayersScreen> {
   Map<String, WordMetadata>? _wordPool;
   List<String>? _availableWords;
 
+  // Cache des settings utilisés pour générer le pool (pour détecter les changements)
+  int? _cachedTotalWords;
+  List<String>? _cachedCategories;
+  List<int>? _cachedDifficulties;
+
   @override
   void initState() {
     super.initState();
@@ -69,16 +74,33 @@ class _PlayersScreenState extends State<PlayersScreen> {
 
     // 3. En mode aléatoire : générer/compléter les mots pour TOUS les joueurs
     if (settings.wordChoice == AppConstants.wordChoiceRandom) {
-      // Pré-générer le pool de mots avec métadonnées (2x le total pour avoir de la marge)
+      // Vérifier si les settings ont changé (invalider le cache si nécessaire)
+      final settingsChanged = _wordPool != null && (
+        _cachedTotalWords != settings.totalWords ||
+        !_listEquals(_cachedCategories, settings.selectedCategories) ||
+        !_listEquals(_cachedDifficulties, settings.selectedDifficultyLevels)
+      );
+
+      if (settingsChanged) {
+        print('[WordPool] Settings changed, invalidating cache');
+        _wordPool = null;
+        _availableWords = null;
+      }
+
+      // Pré-générer le pool de mots avec métadonnées
       if (_wordPool == null) {
         _wordPool = await generateWordsWithMetadataAsync(
           settings.selectedCategories,
-          settings.totalWords * 2,
+          settings.totalWords,
           difficultyLevels: settings.selectedDifficultyLevels,
         );
         _availableWords = _wordPool!.keys.toList()..shuffle();
         // Stocker le cache dans GameProvider
         provider.setWordMetadataCache(_wordPool!);
+        // Mémoriser les settings utilisés
+        _cachedTotalWords = settings.totalWords;
+        _cachedCategories = List.from(settings.selectedCategories);
+        _cachedDifficulties = List.from(settings.selectedDifficultyLevels);
       }
 
       for (final player in provider.players) {
@@ -684,5 +706,16 @@ class _PlayersScreenState extends State<PlayersScreen> {
         ],
       ),
     );
+  }
+
+  /// Compare deux listes pour l'égalité (ordre et contenu)
+  bool _listEquals<T>(List<T>? a, List<T>? b) {
+    if (a == null && b == null) return true;
+    if (a == null || b == null) return false;
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 }
