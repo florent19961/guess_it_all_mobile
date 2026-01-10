@@ -126,16 +126,16 @@ class _CountdownScreenState extends State<CountdownScreen>
                 );
               },
               child: _showGo
-                  ? Text(
+                  ? const Text(
                       'GO !',
                       style: TextStyle(
                         fontFamily: 'Bangers',
                         fontSize: 120,
-                        color: AppColors.secondaryCyan,
+                        color: Colors.white,
                         shadows: [
                           Shadow(
-                            offset: const Offset(4, 4),
-                            color: AppColors.secondaryCyanDark,
+                            offset: Offset(4, 4),
+                            color: AppColors.error,
                             blurRadius: 0,
                           ),
                         ],
@@ -143,14 +143,14 @@ class _CountdownScreenState extends State<CountdownScreen>
                     )
                   : Text(
                       '$_countdown',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontFamily: 'Bangers',
-                        fontSize: 160,
-                        color: AppColors.getTeamColor(0),
+                        fontSize: 120,
+                        color: Colors.white,
                         shadows: [
                           Shadow(
-                            offset: const Offset(4, 4),
-                            color: AppColors.getTeamColor(0).withOpacity(0.5),
+                            offset: Offset(4, 4),
+                            color: AppColors.error,
                             blurRadius: 0,
                           ),
                         ],
