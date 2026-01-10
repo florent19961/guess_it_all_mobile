@@ -739,6 +739,10 @@ class _StatsScreenState extends State<StatsScreen> {
       teamTurnCount[team.id] = 0;
     }
 
+    // Détecter le premier tour de chaque manche (pour les barres verticales)
+    Map<int, int> roundStartX = {}; // round -> premier X (teamTurnCount)
+    Map<String, int> lastRoundSeen = {}; // teamId -> dernière manche vue
+
     // Parcourir l'historique
     for (final entry in provider.game.history) {
       final teamId = entry.teamId;
@@ -762,12 +766,25 @@ class _StatsScreenState extends State<StatsScreen> {
         // Nouveau tour : incrémenter le compteur et ajouter un point
         teamTurnCount[teamId] = (teamTurnCount[teamId] ?? 0) + 1;
 
+        // Détecter si c'est le premier tour d'une nouvelle manche
+        final lastRound = lastRoundSeen[teamId] ?? 0;
+        if (entry.round > lastRound && !roundStartX.containsKey(entry.round)) {
+          roundStartX[entry.round] = teamTurnCount[teamId]!;
+        }
+        lastRoundSeen[teamId] = entry.round;
+
         teamSpots[teamId]!.add(FlSpot(
           teamTurnCount[teamId]!.toDouble(),
           teamCumulativeScore[teamId]!.toDouble(),
         ));
       }
     }
+
+    // Créer la liste des positions X pour les barres M2 et M3
+    final List<double> mancheStartsX = [
+      if (roundStartX.containsKey(2)) roundStartX[2]!.toDouble(),
+      if (roundStartX.containsKey(3)) roundStartX[3]!.toDouble(),
+    ];
 
     // Trouver les max pour les axes
     int maxTurn = 1;
@@ -922,6 +939,27 @@ class _StatsScreenState extends State<StatsScreen> {
                 maxX: maxTurn.toDouble(),
                 minY: 0,
                 maxY: maxScore.toDouble() * 1.1,
+                extraLinesData: ExtraLinesData(
+                  verticalLines: [
+                    for (int i = 0; i < mancheStartsX.length; i++)
+                      VerticalLine(
+                        x: mancheStartsX[i],
+                        color: Colors.white.withOpacity(0.4),
+                        strokeWidth: 2,
+                        dashArray: [5, 5],
+                        label: VerticalLineLabel(
+                          show: true,
+                          alignment: Alignment.topRight,
+                          labelResolver: (_) => 'M${i + 2}',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
