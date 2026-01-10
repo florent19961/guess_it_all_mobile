@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'analytics_service.dart';
 import 'connectivity_service.dart';
@@ -38,7 +39,13 @@ class FirebaseSyncService {
   // Collection Firestore pour les parties
   static const String _gamesCollection = 'games';
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // Lazy-loaded pour éviter crash sur web sans Firebase configuré
+  FirebaseFirestore? _firestoreInstance;
+  FirebaseFirestore get _firestore {
+    _firestoreInstance ??= FirebaseFirestore.instance;
+    return _firestoreInstance!;
+  }
+
   final AnalyticsService _analytics = AnalyticsService();
   final ConnectivityService _connectivity = ConnectivityService();
 
@@ -65,6 +72,13 @@ class FirebaseSyncService {
 
   /// Initialise le service et configure l'écoute de la connectivité
   Future<void> initialize() async {
+    // Ignorer Firebase sur web (non configuré)
+    if (kIsWeb) {
+      print('[Firebase] Web platform detected, skipping Firebase sync');
+      _isInitialized = true;
+      return;
+    }
+
     if (_isInitialized) {
       print('[Firebase] Service already initialized, skipping');
       return;
@@ -118,6 +132,9 @@ class FirebaseSyncService {
   /// Si Firebase n'est pas configuré, la partie est quand même ajoutée
   /// à la liste pour sync ultérieure.
   Future<void> markForSync(String gameId) async {
+    // Ignorer Firebase sur web (non configuré)
+    if (kIsWeb) return;
+
     print('[Firebase] ──────────────────────────────────────────');
     print('[Firebase] markForSync called for gameId: $gameId');
 
@@ -213,6 +230,11 @@ class FirebaseSyncService {
   /// Retourne un [SyncResult] avec le nombre de parties synchronisées,
   /// échouées et restantes.
   Future<SyncResult> syncPendingGames() async {
+    // Ignorer Firebase sur web (non configuré)
+    if (kIsWeb) {
+      return SyncResult(synced: 0, failed: 0, pending: 0);
+    }
+
     // Éviter les synchronisations concurrentes
     if (_isSyncing) {
       print('[Firebase] Sync already in progress, skipping');
