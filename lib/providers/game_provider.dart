@@ -163,10 +163,7 @@ class GameProvider extends ChangeNotifier {
   void toggleDifficultyLevel(int level) {
     final newLevels = List<int>.from(_settings.selectedDifficultyLevels);
     if (newLevels.contains(level)) {
-      // Ne pas désélectionner si c'est le dernier niveau
-      if (newLevels.length > 1) {
-        newLevels.remove(level);
-      }
+      newLevels.remove(level);
     } else {
       newLevels.add(level);
     }

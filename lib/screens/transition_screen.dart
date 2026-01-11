@@ -62,7 +62,7 @@ class TransitionScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  Flexible(
+                  Expanded(
                     child: SingleChildScrollView(
                       child: Column(
                         children: sortedTeams.asMap().entries.map((entry) {
@@ -134,8 +134,6 @@ class TransitionScreen extends StatelessWidget {
                                       color: AppColors.gray400,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  Icon(Icons.people_outline, color: teamColor.withOpacity(0.6), size: 18),
                                 ],
                               ),
                             ),
@@ -145,7 +143,7 @@ class TransitionScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const Spacer(),
+                  const SizedBox(height: 16),
 
                   // Time bonus indicator (only show if not last round)
                   if (provider.game.turnBonusTime != null &&

@@ -32,12 +32,12 @@ class ResultsScreen extends StatelessWidget {
               const SizedBox(height: 32),
 
               // Podium
-              _buildPodium(provider, sortedTeams),
+              _buildPodium(context, provider, sortedTeams),
 
               const SizedBox(height: 32),
 
               // Detailed scores
-              _buildDetailedScores(provider, sortedTeams),
+              _buildDetailedScores(context, provider, sortedTeams),
 
               const SizedBox(height: 32),
 
@@ -142,7 +142,7 @@ class ResultsScreen extends StatelessWidget {
     }
   }
 
-  Widget _buildPodium(GameProvider provider, List<dynamic> sortedTeams) {
+  Widget _buildPodium(BuildContext context, GameProvider provider, List<dynamic> sortedTeams) {
     if (sortedTeams.isEmpty) return const SizedBox();
 
     // Calculer les rangs pour les 3 premières équipes
@@ -157,6 +157,8 @@ class ResultsScreen extends StatelessWidget {
         // 2nd place (ou ex æquo)
         if (sortedTeams.length > 1)
           _buildPodiumPosition(
+            context: context,
+            provider: provider,
             team: sortedTeams[1],
             originalIndex: provider.teams.indexOf(sortedTeams[1]),
             rank: rank1,
@@ -169,6 +171,8 @@ class ResultsScreen extends StatelessWidget {
 
         // 1st place
         _buildPodiumPosition(
+          context: context,
+          provider: provider,
           team: sortedTeams[0],
           originalIndex: provider.teams.indexOf(sortedTeams[0]),
           rank: rank0,
@@ -180,6 +184,8 @@ class ResultsScreen extends StatelessWidget {
         // 3rd place (ou ex æquo)
         if (sortedTeams.length > 2)
           _buildPodiumPosition(
+            context: context,
+            provider: provider,
             team: sortedTeams[2],
             originalIndex: provider.teams.indexOf(sortedTeams[2]),
             rank: rank2,
@@ -192,6 +198,8 @@ class ResultsScreen extends StatelessWidget {
   }
 
   Widget _buildPodiumPosition({
+    required BuildContext context,
+    required GameProvider provider,
     required dynamic team,
     required int originalIndex,
     required int rank,
@@ -200,53 +208,56 @@ class ResultsScreen extends StatelessWidget {
     final teamColor = AppColors.getTeamColor(originalIndex);
     final displayPosition = rank + 1;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          team.name,
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: teamColor,
+    return GestureDetector(
+      onTap: () => _showTeamMembersDialog(context, team, provider, teamColor),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            team.name,
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: teamColor,
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '${team.score} pts',
-          style: TextStyle(
-            fontFamily: 'Bangers',
-            fontSize: 24,
-            color: teamColor,
+          const SizedBox(height: 4),
+          Text(
+            '${team.score} pts',
+            style: TextStyle(
+              fontFamily: 'Bangers',
+              fontSize: 24,
+              color: teamColor,
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          width: 100,
-          height: height,
-          decoration: BoxDecoration(
-            color: teamColor.withOpacity(0.3),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            border: Border.all(color: teamColor, width: 2),
-          ),
-          child: Center(
-            child: Text(
-              '$displayPosition',
-              style: TextStyle(
-                fontFamily: 'Bangers',
-                fontSize: 48,
-                color: teamColor,
+          const SizedBox(height: 8),
+          Container(
+            width: 100,
+            height: height,
+            decoration: BoxDecoration(
+              color: teamColor.withOpacity(0.3),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              border: Border.all(color: teamColor, width: 2),
+            ),
+            child: Center(
+              child: Text(
+                '$displayPosition',
+                style: TextStyle(
+                  fontFamily: 'Bangers',
+                  fontSize: 48,
+                  color: teamColor,
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildDetailedScores(GameProvider provider, List<dynamic> sortedTeams) {
+  Widget _buildDetailedScores(BuildContext context, GameProvider provider, List<dynamic> sortedTeams) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -322,13 +333,16 @@ class ResultsScreen extends StatelessWidget {
                 children: [
                   Expanded(
                     flex: 2,
-                    child: Text(
-                      team.name,
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: teamColor,
+                    child: GestureDetector(
+                      onTap: () => _showTeamMembersDialog(context, team, provider, teamColor),
+                      child: Text(
+                        team.name,
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: teamColor,
+                        ),
                       ),
                     ),
                   ),
@@ -362,6 +376,55 @@ class ResultsScreen extends StatelessWidget {
             );
           }),
         ],
+      ),
+    );
+  }
+
+  void _showTeamMembersDialog(BuildContext context, dynamic team, GameProvider provider, Color teamColor) {
+    if (team == null) return;
+
+    final players = team.playerIds
+        .map((id) => provider.getPlayerById(id))
+        .where((p) => p != null)
+        .toList();
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (context) => Dialog(
+        backgroundColor: AppColors.backgroundMain,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: teamColor, width: 2),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                team.name,
+                style: TextStyle(
+                  fontFamily: 'Bangers',
+                  fontSize: 24,
+                  color: teamColor,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...players.map((p) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(
+                  p!.name,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              )),
+            ],
+          ),
+        ),
       ),
     );
   }

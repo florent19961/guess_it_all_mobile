@@ -78,7 +78,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
     final categories = _categories!;
 
-    final hasSelection = settings.selectedCategories.isNotEmpty;
+    final hasCategorySelection = settings.selectedCategories.isNotEmpty;
+    final hasDifficultySelection = settings.selectedDifficultyLevels.isNotEmpty;
+    final hasSelection = hasCategorySelection && hasDifficultySelection;
 
     // Vérifier si toutes les catégories (sauf exclues) sont sélectionnées
     final selectableCategories = categories
@@ -125,13 +127,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        hasSelection
+                        hasCategorySelection
                             ? '${settings.selectedCategories.length} catégorie${settings.selectedCategories.length > 1 ? 's' : ''} sélectionnée${settings.selectedCategories.length > 1 ? 's' : ''}'
                             : 'Sélectionne au moins 1 catégorie',
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 12,
-                          color: hasSelection ? AppColors.gray400 : AppColors.error,
+                          color: hasCategorySelection ? AppColors.gray400 : AppColors.error,
                         ),
                       ),
                       const SizedBox(height: 12),
