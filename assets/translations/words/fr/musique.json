@@ -13,12 +13,12 @@
     },
     {
       "word": "Aux Champs-Élysées",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "french"
     },
     {
       "word": "Dernière danse",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
@@ -43,8 +43,8 @@
     },
     {
       "word": "Comme d'habitude",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Ne me quitte pas",
@@ -54,7 +54,7 @@
     {
       "word": "L'aventurier",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Foule sentimentale",
@@ -83,7 +83,7 @@
     },
     {
       "word": "Tous les mêmes",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
@@ -104,12 +104,12 @@
     {
       "word": "Les copains d'abord",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "L'hymne à l'amour",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Les Champs-Élysées",
@@ -118,12 +118,12 @@
     },
     {
       "word": "Que je t'aime",
-      "difficulty": 3,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Maintenant",
-      "difficulty": 3,
+      "difficulty": 2,
       "language": "french"
     },
     {
@@ -153,17 +153,17 @@
     },
     {
       "word": "Rolling in the Deep",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Someone Like You",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Blinding Lights",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -183,7 +183,7 @@
     },
     {
       "word": "Imagine",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -198,7 +198,7 @@
     },
     {
       "word": "Smells Like Teen Spirit",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -263,17 +263,17 @@
     },
     {
       "word": "Électro",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Reggae",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Country",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -288,12 +288,12 @@
     },
     {
       "word": "Soul",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Funk",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -338,7 +338,7 @@
     },
     {
       "word": "Zouk",
-      "difficulty": 2,
+      "difficulty": 23,
       "language": "international"
     },
     {
@@ -348,12 +348,12 @@
     },
     {
       "word": "Dubstep",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Drum and Bass",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -388,12 +388,12 @@
     },
     {
       "word": "Indie Rock",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Afrobeat",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -428,7 +428,7 @@
     },
     {
       "word": "Elvis Presley",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -448,7 +448,7 @@
     },
     {
       "word": "Pink Floyd",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -468,7 +468,7 @@
     },
     {
       "word": "Radiohead",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -478,7 +478,7 @@
     },
     {
       "word": "U2",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -548,7 +548,7 @@
     },
     {
       "word": "Debussy",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -568,12 +568,12 @@
     },
     {
       "word": "Rachmaninov",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Stravinsky",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -589,26 +589,26 @@
     {
       "word": "Les Vieilles Charrues",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Hellfest",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Rock en Seine",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Solidays",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Lollapalooza",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -618,8 +618,8 @@
     },
     {
       "word": "Garorock",
-      "difficulty": 3,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Glastonbury",
@@ -628,13 +628,13 @@
     },
     {
       "word": "Montreux Jazz Festival",
-      "difficulty": 3,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Les Francofolies",
-      "difficulty": 3,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Le Roi Lion",
@@ -654,7 +654,7 @@
     {
       "word": "Notre-Dame de Paris",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Roméo et Juliette",
@@ -663,7 +663,7 @@
     },
     {
       "word": "Le Fantôme de l'Opéra",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -688,23 +688,23 @@
     },
     {
       "word": "Hamilton",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Les Demoiselles de Rochefort",
-      "difficulty": 3,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Starmania",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Mozart, l'opéra rock",
-      "difficulty": 3,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "The Voice",
@@ -713,13 +713,13 @@
     },
     {
       "word": "Star Academy",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Nouvelle Star",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Eurovision",
@@ -728,28 +728,28 @@
     },
     {
       "word": "La France a un incroyable talent",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "N'oubliez pas les paroles",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Taratata",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Victoires de la Musique",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Les Enfoirés",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Let It Go",
@@ -763,22 +763,22 @@
     },
     {
       "word": "Je suis ton meilleur ami",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "L'histoire de la vie",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "My Heart Will Go On",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Eye of the Tiger",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -803,17 +803,17 @@
     },
     {
       "word": "Time of My Life",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Grammy Awards",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "NRJ Music Awards",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -843,7 +843,7 @@
     },
     {
       "word": "Paso doble",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -868,7 +868,7 @@
     },
     {
       "word": "Vogue",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -878,12 +878,12 @@
     },
     {
       "word": "Carmen",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "La Traviata",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -943,7 +943,7 @@
     },
     {
       "word": "Cymbales",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -963,7 +963,7 @@
     },
     {
       "word": "Synthétiseur",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -978,17 +978,17 @@
     },
     {
       "word": "Ukulélé",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Banjo",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Mandoline",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1013,17 +1013,17 @@
     },
     {
       "word": "Basson",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Trombone",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Cor",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1033,12 +1033,12 @@
     },
     {
       "word": "Maracas",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Castagnettes",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1048,22 +1048,22 @@
     },
     {
       "word": "Bongo",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Djembé",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Gong",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Carillon",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1073,7 +1073,7 @@
     },
     {
       "word": "Diapason",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1138,57 +1138,57 @@
     },
     {
       "word": "Amir",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "french"
     },
     {
       "word": "Vitaa",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
       "word": "Slimane",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
       "word": "Matt Pokora",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "french"
     },
     {
       "word": "Shy'm",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Jenifer",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "french"
     },
     {
       "word": "Christophe Maé",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "french"
     },
     {
       "word": "Zaz",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "french"
     },
     {
       "word": "Indila",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
       "word": "Nolwenn Leroy",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
       "word": "Calogero",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
@@ -1198,7 +1198,7 @@
     },
     {
       "word": "Francis Cabrel",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "french"
     },
     {
@@ -1237,11 +1237,6 @@
       "language": "french"
     },
     {
-      "word": "Claude François",
-      "difficulty": 1,
-      "language": "french"
-    },
-    {
       "word": "Michel Sardou",
       "difficulty": 2,
       "language": "french"
@@ -1253,7 +1248,7 @@
     },
     {
       "word": "Patricia Kaas",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "french"
     },
     {
@@ -1263,17 +1258,17 @@
     },
     {
       "word": "Lara Fabian",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
       "word": "Florent Pagny",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "french"
     },
     {
       "word": "Pascal Obispo",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
@@ -1283,12 +1278,12 @@
     },
     {
       "word": "Hoshi",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
       "word": "Clara Luciani",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
@@ -1298,12 +1293,12 @@
     },
     {
       "word": "Bigflo et Oli",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "french"
     },
     {
       "word": "Black M",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
@@ -1318,22 +1313,22 @@
     },
     {
       "word": "Kaaris",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
       "word": "Ninho",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
       "word": "SCH",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
       "word": "Niska",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
@@ -1343,37 +1338,37 @@
     },
     {
       "word": "Rohff",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
       "word": "La Fouine",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
       "word": "Sexion d'Assaut",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "IAM",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
       "word": "NTM",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
       "word": "MC Solaar",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
       "word": "Daft Punk",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "french"
     },
     {
@@ -1398,7 +1393,7 @@
     },
     {
       "word": "Laurent Garnier",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "french"
     },
     {
@@ -1433,12 +1428,12 @@
     },
     {
       "word": "The Weeknd",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Harry Styles",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1473,12 +1468,12 @@
     },
     {
       "word": "Demi Lovato",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Jennifer Lopez",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1488,7 +1483,7 @@
     },
     {
       "word": "Christina Aguilera",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1498,7 +1493,7 @@
     },
     {
       "word": "Whitney Houston",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1518,47 +1513,47 @@
     },
     {
       "word": "Kanye West",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Jay-Z",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Snoop Dogg",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "50 Cent",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Dr. Dre",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Kendrick Lamar",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Travis Scott",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Post Malone",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Lil Nas X",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1573,7 +1568,7 @@
     },
     {
       "word": "Imagine Dragons",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1583,12 +1578,12 @@
     },
     {
       "word": "BTS",
-      "difficulty": 1,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Blackpink",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1608,22 +1603,22 @@
     },
     {
       "word": "Guns N' Roses",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Metallica",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Linkin Park",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Green Day",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1638,7 +1633,7 @@
     },
     {
       "word": "The Chainsmokers",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1653,42 +1648,42 @@
     },
     {
       "word": "Kygo",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Marshmello",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Sia",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Sam Smith",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "John Legend",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Alicia Keys",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Usher",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Chris Brown",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1703,22 +1698,22 @@
     },
     {
       "word": "Enrique Iglesias",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Luis Fonsi",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Daddy Yankee",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Bad Bunny",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1728,7 +1723,7 @@
     },
     {
       "word": "Maluma",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1738,82 +1733,82 @@
     },
     {
       "word": "Frère Jacques",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Au clair de la lune",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Alouette",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Petit papa Noël",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Vive le vent",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Mon beau sapin",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Douce nuit",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Il est né le divin enfant",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Les champs Élysées",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "La Marseillaise",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Bella Ciao",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "We Are the Champions",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "We Will Rock You",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Another One Bites the Dust",
       "difficulty": 2,
       "language": "international"
     },
     {
+      "word": "We Are the Champions",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "We Will Rock You",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Another One Bites the Dust",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
       "word": "I Will Survive",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "YMCA",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1828,72 +1823,67 @@
     },
     {
       "word": "Gangnam Style",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Baby Shark",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Old Town Road",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Dance Monkey",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Shallow",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Perfect",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Thinking Out Loud",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "All of Me",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Hallelujah",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Amazing Grace",
       "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Ave Maria",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Ode à la joie",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "La lettre à Élise",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Clair de lune",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1903,37 +1893,32 @@
     },
     {
       "word": "Casse-Noisette",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Les quatre saisons",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "La chevauchée des Walkyries",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "La Cinquième Symphonie",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Toccata et Fugue",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Requiem",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Le Boléro",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1993,27 +1978,27 @@
     },
     {
       "word": "Chœur",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Solo",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Duo",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Trio",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Quatuor",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2233,47 +2218,47 @@
     },
     {
       "word": "Cover",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Mashup",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Beat",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Drop",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Hook",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Bridge",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Intro",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Outro",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Fade out",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2313,12 +2298,12 @@
     },
     {
       "word": "Clé de sol",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Clé de fa",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {

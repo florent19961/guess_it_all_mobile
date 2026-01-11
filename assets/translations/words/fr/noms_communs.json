@@ -23,12 +23,12 @@
     },
     {
       "word": "Appareil photo",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Console de jeux",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -448,17 +448,17 @@
     },
     {
       "word": "Écumoire",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Chinois",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Mandoline",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -508,7 +508,7 @@
     },
     {
       "word": "Rabot",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -518,7 +518,7 @@
     },
     {
       "word": "Serre-joint",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -728,12 +728,12 @@
     },
     {
       "word": "Cardigan",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Pardessus",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -793,7 +793,7 @@
     },
     {
       "word": "Luth",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -853,7 +853,7 @@
     },
     {
       "word": "Ocarina",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -923,7 +923,7 @@
     },
     {
       "word": "Télégraphe",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -938,7 +938,7 @@
     },
     {
       "word": "Moteur à explosion",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -963,7 +963,7 @@
     },
     {
       "word": "Microprocesseur",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1063,12 +1063,12 @@
     },
     {
       "word": "Buanderie",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Cellier",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1078,7 +1078,7 @@
     },
     {
       "word": "Vestibule",
-      "difficulty": 3,
+      "difficulty": 5,
       "language": "international"
     },
     {
@@ -1148,7 +1148,7 @@
     },
     {
       "word": "Corniche",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1158,7 +1158,7 @@
     },
     {
       "word": "Charpente",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1233,7 +1233,7 @@
     },
     {
       "word": "Beffroi",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1243,12 +1243,12 @@
     },
     {
       "word": "Donjon",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Aqueduc",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1307,11 +1307,6 @@
       "language": "international"
     },
     {
-      "word": "Plumier",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Protège-cahier",
       "difficulty": 3,
       "language": "international"
@@ -1338,7 +1333,7 @@
     },
     {
       "word": "Dégrafeuse",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1358,7 +1353,7 @@
     },
     {
       "word": "Massicot",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1378,7 +1373,7 @@
     },
     {
       "word": "Voiture miniature",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1423,7 +1418,7 @@
     },
     {
       "word": "Bilboquet",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1463,12 +1458,12 @@
     },
     {
       "word": "Club de golf",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Crosse de hockey",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1553,7 +1548,7 @@
     },
     {
       "word": "Binette",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1578,22 +1573,22 @@
     },
     {
       "word": "Broche",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Pendentif",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Médaillon",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Chevalière",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1603,12 +1598,12 @@
     },
     {
       "word": "Parure",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Jonc",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1638,7 +1633,7 @@
     },
     {
       "word": "Cruche",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1658,7 +1653,7 @@
     },
     {
       "word": "Amphore",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1713,7 +1708,7 @@
     },
     {
       "word": "Climatiseur",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1798,22 +1793,22 @@
     },
     {
       "word": "Machine à pain",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Machine à café",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Centrifugeuse",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Yaourtière",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1838,17 +1833,17 @@
     },
     {
       "word": "Autocuiseur",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Thermomix",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Déshumidificateur",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1858,7 +1853,7 @@
     },
     {
       "word": "Purificateur d'air",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1898,7 +1893,7 @@
     },
     {
       "word": "Gant de boxe",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1963,7 +1958,7 @@
     },
     {
       "word": "Vélo elliptique",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1973,17 +1968,17 @@
     },
     {
       "word": "Tapis de course",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Stepper",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Banc de musculation",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1993,7 +1988,7 @@
     },
     {
       "word": "Kettlebell",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2028,7 +2023,7 @@
     },
     {
       "word": "Bodyboard",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2073,11 +2068,6 @@
     },
     {
       "word": "Punching-ball",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Punchingball",
       "difficulty": 2,
       "language": "international"
     },
@@ -2133,12 +2123,12 @@
     },
     {
       "word": "Paréo",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Bandana",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2152,18 +2142,8 @@
       "language": "international"
     },
     {
-      "word": "Fedora",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Panama",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Mitaines",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2203,12 +2183,12 @@
     },
     {
       "word": "Escarpins",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Mocassins",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2223,7 +2203,7 @@
     },
     {
       "word": "Sabots",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2233,7 +2213,7 @@
     },
     {
       "word": "Chaussons",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2243,17 +2223,17 @@
     },
     {
       "word": "Compensées",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Derbies",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Richelieu",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2268,7 +2248,7 @@
     },
     {
       "word": "Serviette de plage",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2293,7 +2273,7 @@
     },
     {
       "word": "Masque de plongée",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2318,7 +2298,7 @@
     },
     {
       "word": "Matelas gonflable",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2348,17 +2328,17 @@
     },
     {
       "word": "Réchaud",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Gamelle",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Canif",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2368,17 +2348,17 @@
     },
     {
       "word": "Chaise pliante",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Table pliante",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Auvent",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2408,12 +2388,12 @@
     },
     {
       "word": "Compresse",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Sparadrap",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2448,22 +2428,17 @@
     },
     {
       "word": "Tensiomètre",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Glucomètre",
       "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Inhalateur",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Civière",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2533,7 +2508,7 @@
     },
     {
       "word": "Ordinateur portable",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2597,8 +2572,8 @@
       "language": "international"
     },
     {
-      "word": "Protection écran",
-      "difficulty": 2,
+      "word": "Protection d'écran",
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2607,13 +2582,8 @@
       "language": "international"
     },
     {
-      "word": "Trépi",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Selfie stick",
-      "difficulty": 2,
+      "word": "Trépied",
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2668,7 +2638,7 @@
     },
     {
       "word": "Serviette de table",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2678,7 +2648,7 @@
     },
     {
       "word": "Gant de toilette",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2713,7 +2683,7 @@
     },
     {
       "word": "Voilage",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2748,12 +2718,12 @@
     },
     {
       "word": "Tupperware",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Boîte hermétique",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2808,7 +2778,7 @@
     },
     {
       "word": "Spray",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2843,12 +2813,12 @@
     },
     {
       "word": "Bibelot",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Horloge murale",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2948,7 +2918,7 @@
     },
     {
       "word": "Corbillard",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2978,7 +2948,7 @@
     },
     {
       "word": "Chariot élévateur",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3023,7 +2993,7 @@
     },
     {
       "word": "Cargo",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3088,7 +3058,7 @@
     },
     {
       "word": "Legging",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -3098,7 +3068,7 @@
     },
     {
       "word": "Survêtement",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -3123,7 +3093,7 @@
     },
     {
       "word": "Bustier",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3148,7 +3118,7 @@
     },
     {
       "word": "Tailleur",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3168,12 +3138,12 @@
     },
     {
       "word": "Parka",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Trench",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3183,7 +3153,7 @@
     },
     {
       "word": "Poncho",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3198,7 +3168,7 @@
     },
     {
       "word": "Nuisette",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3254,11 +3224,6 @@
     {
       "word": "Body",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Caraco",
-      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3328,7 +3293,7 @@
     },
     {
       "word": "Maillet",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3338,7 +3303,7 @@
     },
     {
       "word": "Ciseau à bois",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3378,7 +3343,7 @@
     },
     {
       "word": "Faitout",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3428,7 +3393,7 @@
     },
     {
       "word": "Pilon",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3628,7 +3593,7 @@
     },
     {
       "word": "Ombrelle",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3638,7 +3603,7 @@
     },
     {
       "word": "Chapeau de pluie",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     }
   ]

@@ -88,17 +88,17 @@
     },
     {
       "word": "Pancréas",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Rate",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Vésicule",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -113,12 +113,12 @@
     },
     {
       "word": "Larynx",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Pharynx",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -158,12 +158,12 @@
     },
     {
       "word": "Thyroïde",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Hypothalamus",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -173,17 +173,17 @@
     },
     {
       "word": "Humérus",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Radius",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Cubitus",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -263,7 +263,7 @@
     },
     {
       "word": "Hypertension",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -278,27 +278,27 @@
     },
     {
       "word": "Otite",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Sinusite",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Conjonctivite",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Colite",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Anémie",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -313,12 +313,12 @@
     },
     {
       "word": "Péritonite",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Thrombose",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -338,12 +338,12 @@
     },
     {
       "word": "Tuberculose",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Sclérose en plaques",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -423,7 +423,7 @@
     },
     {
       "word": "Palpitations",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -648,7 +648,7 @@
     },
     {
       "word": "Antihistaminique",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -668,7 +668,7 @@
     },
     {
       "word": "Scalpel",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -678,7 +678,7 @@
     },
     {
       "word": "Bistouri",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -738,7 +738,7 @@
     },
     {
       "word": "Ecchymose",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -778,27 +778,27 @@
     },
     {
       "word": "Rougeole",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Oreillons",
       "difficulty": 2,
       "language": "international"
     },
     {
-      "word": "Rubéole",
+      "word": "Oreillons",
       "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Rubéole",
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Coqueluche",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Diphtérie",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -833,12 +833,12 @@
     },
     {
       "word": "Zona",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Furoncle",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -848,22 +848,22 @@
     },
     {
       "word": "Psoriasis",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Vitiligo",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Rosacée",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Dermite",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -878,12 +878,12 @@
     },
     {
       "word": "Presbytie",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Astigmatisme",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -893,22 +893,22 @@
     },
     {
       "word": "Orgelet",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Cataracte",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Glaucome",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "DMLA",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -983,31 +983,11 @@
     },
     {
       "word": "Métastase",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Leucémie",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Lymphome",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Mélanome",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Sarcome",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Carcinome",
       "difficulty": 3,
       "language": "international"
     },
@@ -1023,7 +1003,7 @@
     },
     {
       "word": "Myopathie",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1098,7 +1078,7 @@
     },
     {
       "word": "Salle de réveil",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1108,17 +1088,17 @@
     },
     {
       "word": "Dispensaire",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Unité de soins intensifs",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Bloc stérile",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1173,22 +1153,22 @@
     },
     {
       "word": "Ergothérapeute",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Psychomotricien",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Orthoptiste",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Manipulateur radio",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1218,17 +1198,12 @@
     },
     {
       "word": "Pacemaker",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Stimulateur cardiaque",
       "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Pompe à insuline",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1263,12 +1238,12 @@
     },
     {
       "word": "E. coli",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Salmonelle",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1348,17 +1323,17 @@
     },
     {
       "word": "Magnésium",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Potassium",
       "difficulty": 3,
       "language": "international"
     },
     {
+      "word": "Potassium",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
       "word": "Zinc",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1373,7 +1348,7 @@
     },
     {
       "word": "Oligoélément",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1423,7 +1398,7 @@
     },
     {
       "word": "Chlore",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1433,12 +1408,12 @@
     },
     {
       "word": "Soufre",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Aluminium",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1448,12 +1423,12 @@
     },
     {
       "word": "Plomb",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Platine",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1463,12 +1438,12 @@
     },
     {
       "word": "Iode",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Silicium",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1538,7 +1513,7 @@
     },
     {
       "word": "Océanographie",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1568,17 +1543,17 @@
     },
     {
       "word": "Mécanique quantique",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Relativité générale",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Cosmologie",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1608,17 +1583,17 @@
     },
     {
       "word": "Big Bang",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Photosynthèse",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Magnétisme",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1628,7 +1603,7 @@
     },
     {
       "word": "Fusion nucléaire",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1643,7 +1618,7 @@
     },
     {
       "word": "Entropie",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1653,7 +1628,7 @@
     },
     {
       "word": "Tectonique des plaques",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1773,22 +1748,22 @@
     },
     {
       "word": "Matière noire",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Énergie sombre",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Supernova",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Nébuleuse",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1888,67 +1863,57 @@
     },
     {
       "word": "Edison",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Lavoisier",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Mendeleïev",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Archimède",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Copernic",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Kepler",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Hawking",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Turing",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Schrödinger",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Heisenberg",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Bohr",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Planck",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Faraday",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1998,7 +1963,7 @@
     },
     {
       "word": "Diffraction",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2013,7 +1978,7 @@
     },
     {
       "word": "Viscosité",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2028,27 +1993,17 @@
     },
     {
       "word": "Plasma",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Supraconductivité",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Interférence",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Polarisation",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Effet Doppler",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2078,17 +2033,17 @@
     },
     {
       "word": "Kelvin",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Newton",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Joule",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2098,17 +2053,17 @@
     },
     {
       "word": "Volt",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Ampère",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Ohm",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2117,58 +2072,18 @@
       "language": "international"
     },
     {
-      "word": "Hertz",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Pascal",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Becquerel",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Noyau cellulaire",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Membrane",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Cytoplasme",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Ribosome",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Enzyme",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "ARN",
       "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Mitose",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Méiose",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2198,17 +2113,17 @@
     },
     {
       "word": "pH",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Réaction chimique",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Catalyseur",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2228,12 +2143,7 @@
     },
     {
       "word": "Électrolyse",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Oxydation",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2242,33 +2152,8 @@
       "language": "international"
     },
     {
-      "word": "Polymère",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Isomère",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Liaison covalente",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Roche sédimentaire",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Roche métamorphique",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Roche magmatique",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2283,7 +2168,7 @@
     },
     {
       "word": "Magma",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {

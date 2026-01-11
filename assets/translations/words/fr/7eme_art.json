@@ -18,7 +18,7 @@
     },
     {
       "word": "Jurassic Park",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -98,7 +98,7 @@
     },
     {
       "word": "Godzilla",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -188,17 +188,17 @@
     },
     {
       "word": "Apocalypse Now",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Scarface",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Taxi Driver",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -208,7 +208,7 @@
     },
     {
       "word": "Kill Bill",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -248,7 +248,7 @@
     },
     {
       "word": "Seven",
-      "difficulty": 3,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -292,27 +292,7 @@
       "language": "international"
     },
     {
-      "word": "Un Américain bien tranquille",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "La Vie est belle",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Le Pont de la rivière Kwaï",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Lawrence d'Arabie",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Citizen Kane",
       "difficulty": 3,
       "language": "international"
     },
@@ -418,7 +398,7 @@
     },
     {
       "word": "Eternals",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -443,12 +423,12 @@
     },
     {
       "word": "Kick-Ass",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Hellboy",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -578,12 +558,12 @@
     },
     {
       "word": "Dory",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Luca",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -597,7 +577,7 @@
       "language": "international"
     },
     {
-      "word": "Raya",
+      "word": "Raya le dernier dragon",
       "difficulty": 1,
       "language": "international"
     },
@@ -733,17 +713,17 @@
     },
     {
       "word": "Mon Voisin Totoro",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Princesse Mononoké",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Le Château Ambulant",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -908,7 +888,7 @@
     },
     {
       "word": "Ozark",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -923,27 +903,27 @@
     },
     {
       "word": "The Wire",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "The Sopranos",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Mad Men",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Six Feet Under",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Fleabag",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -963,7 +943,7 @@
     },
     {
       "word": "Les Trois Frères",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "french"
     },
     {
@@ -979,7 +959,7 @@
     {
       "word": "Le Fabuleux Destin d'Amélie Poulain",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "OSS 117",
@@ -989,7 +969,7 @@
     {
       "word": "Qu'est-ce qu'on a fait au Bon Dieu",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "La Famille Bélier",
@@ -1019,7 +999,7 @@
     {
       "word": "Bienvenue chez les Ch'tis",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Les Visiteurs",
@@ -1078,7 +1058,7 @@
     },
     {
       "word": "Sailor Moon",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1088,22 +1068,22 @@
     },
     {
       "word": "Les Chevaliers du Zodiaque",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "L'Attaque des Titans",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Death Note",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Demon Slayer",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1113,37 +1093,37 @@
     },
     {
       "word": "One Punch Man",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Fairy Tail",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Black Clover",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Bleach",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Fullmetal Alchemist",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Sword Art Online",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Hunter x Hunter",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1153,12 +1133,12 @@
     },
     {
       "word": "Tokyo Ghoul",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Vinland Saga",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1228,7 +1208,7 @@
     },
     {
       "word": "Nala",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1248,7 +1228,7 @@
     },
     {
       "word": "Sauron",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1308,7 +1288,7 @@
     },
     {
       "word": "Don Corleone",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1358,7 +1338,7 @@
     },
     {
       "word": "South Park",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1368,7 +1348,7 @@
     },
     {
       "word": "Code Lyoko",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1379,61 +1359,61 @@
     {
       "word": "Ben 10",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Inspecteur Gadget",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Il était une fois la vie",
-      "difficulty": 3,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Il était une fois l'homme",
-      "difficulty": 3,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Les Mystérieuses Cités d'Or",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Wakfu",
-      "difficulty": 3,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Oggy et les Cafards",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Les zinzins de l'espace",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Ça",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Halloween",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Scream",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Saw",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1443,37 +1423,37 @@
     },
     {
       "word": "Chucky",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Vendredi 13",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "The Ring",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Conjuring",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Insidious",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "L'Exorciste",
       "difficulty": 3,
       "language": "international"
     },
     {
-      "word": "The Shining",
+      "word": "Vendredi 13",
       "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "The Ring",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Conjuring",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Insidious",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "L'Exorciste",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "The Shining",
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1488,32 +1468,22 @@
     },
     {
       "word": "A Quiet Place",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Sinister",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "The Descent",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Paranormal Activity",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "The Babadook",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Midsommar",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1583,7 +1553,7 @@
     },
     {
       "word": "Zodiac",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1593,37 +1563,37 @@
     },
     {
       "word": "Prisoners",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "L.A. Confidential",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Heat",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Usual Suspects",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Memories of Murder",
       "difficulty": 3,
       "language": "international"
     },
     {
+      "word": "Memories of Murder",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
       "word": "Le Fugitif",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Les Sept Mercenaires",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1683,7 +1653,7 @@
     },
     {
       "word": "Nos étoiles contraires",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1798,7 +1768,7 @@
     },
     {
       "word": "Pitch Perfect",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1828,7 +1798,7 @@
     },
     {
       "word": "Hairspray",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1848,13 +1818,13 @@
     },
     {
       "word": "Un Américain à Paris",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Les Demoiselles de Rochefort",
-      "difficulty": 3,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Creed",
@@ -1863,22 +1833,22 @@
     },
     {
       "word": "Raging Bull",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Million Dollar Baby",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Rush",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Cool Runnings",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1888,17 +1858,17 @@
     },
     {
       "word": "Le Stratège",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Le Pacte des Loups",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Warrior",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1933,12 +1903,12 @@
     },
     {
       "word": "Rocketman",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Ray",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1968,7 +1938,7 @@
     },
     {
       "word": "Malcolm X",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1978,12 +1948,12 @@
     },
     {
       "word": "Patton",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Lawrence d'Arabie",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2013,17 +1983,17 @@
     },
     {
       "word": "La Planète des Singes",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Predator",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "RoboCop",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2038,12 +2008,12 @@
     },
     {
       "word": "Expendables",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "John Wick",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2053,22 +2023,22 @@
     },
     {
       "word": "Dollars Trilogy",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Evil Dead",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Before Trilogy",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Le Grinch",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2078,7 +2048,7 @@
     },
     {
       "word": "Le Pôle Express",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2088,7 +2058,7 @@
     },
     {
       "word": "Elf",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2098,21 +2068,11 @@
     },
     {
       "word": "Edward aux mains d'argent",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "La Vie est belle (It's a Wonderful Life)",
       "difficulty": 3,
       "language": "international"
     },
     {
-      "word": "Gremlins",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Le Cauchemar avant Noël",
+      "word": "La Vie est belle",
       "difficulty": 3,
       "language": "international"
     }

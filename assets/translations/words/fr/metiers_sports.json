@@ -288,7 +288,7 @@
     },
     {
       "word": "Couvreur",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -428,12 +428,12 @@
     },
     {
       "word": "Monteur",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Ingénieur du son",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -458,7 +458,7 @@
     },
     {
       "word": "Webdesigner",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -468,7 +468,7 @@
     },
     {
       "word": "Administrateur système",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -543,7 +543,7 @@
     },
     {
       "word": "Sylviculteur",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -573,7 +573,7 @@
     },
     {
       "word": "Archiviste",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -638,42 +638,42 @@
     },
     {
       "word": "Préparateur de commandes",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Manutentionnaire",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Cariste",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Gestionnaire de stocks",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Responsable logistique",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Écologiste",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Garde forestier",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Aide à domicile",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -683,17 +683,12 @@
     },
     {
       "word": "Auxiliaire de vie",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Aide-soignant",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Accompagnant éducatif et social",
-      "difficulty": 3,
       "language": "international"
     },
     {
@@ -708,7 +703,7 @@
     },
     {
       "word": "Agent de voyage",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -753,12 +748,12 @@
     },
     {
       "word": "Chaudronnier",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Usineur",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -768,12 +763,12 @@
     },
     {
       "word": "Chargé de communication",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Community manager",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -783,7 +778,7 @@
     },
     {
       "word": "Chef de produit",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -823,7 +818,7 @@
     },
     {
       "word": "Prestidigitateur",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -938,7 +933,7 @@
     },
     {
       "word": "Krav Maga",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -953,12 +948,12 @@
     },
     {
       "word": "Aïkido",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Jiu-jitsu",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1123,7 +1118,7 @@
     },
     {
       "word": "Curling",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1193,7 +1188,7 @@
     },
     {
       "word": "Enduro",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1238,12 +1233,12 @@
     },
     {
       "word": "Vol en montgolfière",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Vol à voile",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1588,7 +1583,7 @@
     },
     {
       "word": "Marathonien",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1777,8 +1772,8 @@
       "language": "international"
     },
     {
-      "word": "Professeur de sport",
-      "difficulty": 1,
+      "word": "Professeur d'E.P.S.",
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1788,7 +1783,7 @@
     },
     {
       "word": "Moniteur de ski",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1798,7 +1793,7 @@
     },
     {
       "word": "Curé",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1813,12 +1808,12 @@
     },
     {
       "word": "Moine",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Nonne",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1848,12 +1843,12 @@
     },
     {
       "word": "Fossoyeur",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Croque-mort",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1863,12 +1858,12 @@
     },
     {
       "word": "Bijoutier",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Horloger",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1883,17 +1878,17 @@
     },
     {
       "word": "Tailleur",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Couturière",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Tisserand",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1923,7 +1918,7 @@
     },
     {
       "word": "Libraire",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1967,23 +1962,18 @@
       "language": "international"
     },
     {
-      "word": "Preneur de son",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Éclairagiste",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Décorateur",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Accessoiriste",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1993,32 +1983,32 @@
     },
     {
       "word": "Régisseur",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Costumier",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Perruquier",
       "difficulty": 3,
       "language": "international"
     },
     {
+      "word": "Perruquier",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
       "word": "Doubleur",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Figurant",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Mannequin",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2028,12 +2018,12 @@
     },
     {
       "word": "Disc-jockey",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "DJ",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2048,12 +2038,12 @@
     },
     {
       "word": "Guitariste",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Batteur",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2063,7 +2053,7 @@
     },
     {
       "word": "Pianiste",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2083,7 +2073,7 @@
     },
     {
       "word": "Saxophoniste",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2098,17 +2088,17 @@
     },
     {
       "word": "Soliste",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Ténor",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Soprano",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2202,38 +2192,28 @@
       "language": "international"
     },
     {
-      "word": "Webmaster",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Blogueur",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Youtuber",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Influenceur",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Streamer",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Gamer pro",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Testeur de jeux",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2263,17 +2243,17 @@
     },
     {
       "word": "Agent d'entretien",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Femme de ménage",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Homme de ménage",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2303,12 +2283,12 @@
     },
     {
       "word": "Animateur de centre aéré",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Moniteur de colonie",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2348,7 +2328,7 @@
     },
     {
       "word": "Doyen",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2398,12 +2378,12 @@
     },
     {
       "word": "Préfet",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Conseiller municipal",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2468,12 +2448,12 @@
     },
     {
       "word": "Vassal",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Écuyer",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2482,13 +2462,8 @@
       "language": "international"
     },
     {
-      "word": "Héraut",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Bourreau",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2498,7 +2473,7 @@
     },
     {
       "word": "Gardien de prison",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2523,17 +2498,17 @@
     },
     {
       "word": "Ranger",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Agent FBI",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Agent CIA",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2543,17 +2518,17 @@
     },
     {
       "word": "Commando",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Parachutiste",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Légionnaire",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2578,7 +2553,7 @@
     },
     {
       "word": "Caporal",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2598,12 +2573,12 @@
     },
     {
       "word": "Maréchal",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Mercenaire",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2628,7 +2603,7 @@
     },
     {
       "word": "Légionnaire romain",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2643,27 +2618,27 @@
     },
     {
       "word": "Lancier",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Cavalier",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Fantassin",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Artilleur",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Tankiste",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2672,13 +2647,8 @@
       "language": "international"
     },
     {
-      "word": "Sous-marinier",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Plongeur démineur",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2703,12 +2673,12 @@
     },
     {
       "word": "Chirurgien de guerre",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Aide humanitaire",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2728,17 +2698,17 @@
     },
     {
       "word": "Activiste",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Syndicaliste",
       "difficulty": 3,
       "language": "international"
     },
     {
+      "word": "Syndicaliste",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
       "word": "Gréviste",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2762,11 +2732,6 @@
       "language": "international"
     },
     {
-      "word": "Expatrié",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Voyageur",
       "difficulty": 1,
       "language": "international"
@@ -2783,32 +2748,32 @@
     },
     {
       "word": "Campeur",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Backpacker",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Routard",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Globe-trotter",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Nomade",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Vagabond",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2818,12 +2783,12 @@
     },
     {
       "word": "Sans-abri",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Mendiant",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2903,7 +2868,7 @@
     },
     {
       "word": "Cross-country",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2933,7 +2898,7 @@
     },
     {
       "word": "Gymnastique rythmique",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3013,7 +2978,7 @@
     },
     {
       "word": "Plongée sous-marine",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3023,7 +2988,7 @@
     },
     {
       "word": "Snorkeling",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3053,12 +3018,12 @@
     },
     {
       "word": "Canoë",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Kayak",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -3068,17 +3033,17 @@
     },
     {
       "word": "Pédalo",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Voilier",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Catamaran",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3088,7 +3053,7 @@
     },
     {
       "word": "Yacht",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -3098,7 +3063,7 @@
     },
     {
       "word": "Régate",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3133,12 +3098,12 @@
     },
     {
       "word": "Half-pipe",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Slopestyle",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3153,12 +3118,12 @@
     },
     {
       "word": "Télésiège",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Télécabine",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3168,27 +3133,27 @@
     },
     {
       "word": "Motoneige",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Chiens de traîneau",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Short track",
       "difficulty": 3,
       "language": "international"
     },
     {
+      "word": "Chiens de traîneau",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Short track",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
       "word": "Patinage de vitesse",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Hockey sur gazon",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3197,23 +3162,13 @@
       "language": "international"
     },
     {
-      "word": "Lacrosse",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Pelote basque",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Jai alai",
-      "difficulty": 3,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Handball de plage",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3233,37 +3188,32 @@
     },
     {
       "word": "Futsal",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Foot à 5",
-      "difficulty": 1,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Foot en salle",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Streetball",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "3x3 basket",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Slam dunk",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Tir à 3 points",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3278,27 +3228,27 @@
     },
     {
       "word": "Dribble",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Passe décisive",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Contre",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Rebond",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Interception",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3308,12 +3258,12 @@
     },
     {
       "word": "Carton jaune",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Carton rouge",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -3338,7 +3288,7 @@
     },
     {
       "word": "Hors-jeu",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -3358,7 +3308,7 @@
     },
     {
       "word": "Drop",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3368,7 +3318,7 @@
     },
     {
       "word": "Touche rugby",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3378,12 +3328,12 @@
     },
     {
       "word": "Maul",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Ruck",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3418,22 +3368,22 @@
     },
     {
       "word": "Smash",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Lob",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Amorti",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Passing shot",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3443,22 +3393,22 @@
     },
     {
       "word": "Set",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Match point",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Balle de break",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Double faute",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {

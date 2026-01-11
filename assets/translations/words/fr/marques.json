@@ -3,42 +3,42 @@
   "words": [
     {
       "word": "Nike",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Adidas",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Zara",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "H&M",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Lacoste",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Puma",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Converse",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Vans",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -48,12 +48,12 @@
     },
     {
       "word": "Tommy Hilfiger",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Calvin Klein",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -68,17 +68,17 @@
     },
     {
       "word": "Gap",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Uniqlo",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Mango",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -112,18 +112,8 @@
       "language": "international"
     },
     {
-      "word": "Versace",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Armani",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Burberry",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -133,37 +123,37 @@
     },
     {
       "word": "Peugeot",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Citroën",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Volkswagen",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Toyota",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Ford",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Mercedes",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "BMW",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -173,47 +163,7 @@
     },
     {
       "word": "Nissan",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Honda",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Mazda",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Hyundai",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Kia",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Fiat",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Seat",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Skoda",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Opel",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -223,32 +173,32 @@
     },
     {
       "word": "Lamborghini",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Porsche",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Maserati",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Bugatti",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Bentley",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Rolls-Royce",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -263,7 +213,7 @@
     },
     {
       "word": "Samsung",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -283,17 +233,17 @@
     },
     {
       "word": "LG",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "HP",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Dell",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -307,33 +257,8 @@
       "language": "international"
     },
     {
-      "word": "Acer",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Philips",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Panasonic",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Toshiba",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Huawei",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Xiaomi",
-      "difficulty": 3,
       "language": "international"
     },
     {
@@ -363,22 +288,22 @@
     },
     {
       "word": "Nestlé",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Danone",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Lu",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Orangina",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -388,88 +313,88 @@
     },
     {
       "word": "Volvic",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Perrier",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Heinz",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Président",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Capri-Sun",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Tropicana",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Bonne Maman",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Panzani",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Barilla",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Herta",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Fleury Michon",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Charal",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Bonduelle",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Yoplait",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Activia",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Kellogg's",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Céréales Lion",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Mars",
@@ -478,11 +403,6 @@
     },
     {
       "word": "Snickers",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Milka",
       "difficulty": 2,
       "language": "international"
     },
@@ -498,7 +418,7 @@
     },
     {
       "word": "Pringles",
-      "difficulty": 2,
+      "difficulty": 1,
       "language": "international"
     },
     {
@@ -518,7 +438,7 @@
     },
     {
       "word": "Ben & Jerry's",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -528,7 +448,7 @@
     },
     {
       "word": "Bounty",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -538,37 +458,37 @@
     },
     {
       "word": "Skittles",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Tic Tac",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Mentos",
-      "difficulty": 2,
+      "difficulty": 1,
       "language": "international"
     },
     {
       "word": "Chupa Chups",
-      "difficulty": 2,
+      "difficulty": 1,
       "language": "international"
     },
     {
       "word": "Carambar",
-      "difficulty": 2,
+      "difficulty": 1,
       "language": "international"
     },
     {
       "word": "Malabar",
-      "difficulty": 2,
+      "difficulty": 1,
       "language": "international"
     },
     {
       "word": "Tagada",
-      "difficulty": 2,
+      "difficulty": 1,
       "language": "international"
     },
     {
@@ -583,7 +503,7 @@
     },
     {
       "word": "Monster Energy",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -604,82 +524,82 @@
     {
       "word": "Cristaline",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Badoit",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "San Pellegrino",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Contrex",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Vittel",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Amora",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Maille",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Kikkoman",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Tabasco",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Philadelphia",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Babybel",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "La Vache qui rit",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Kiri",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Boursin",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Caprice des Dieux",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Saint Môret",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Häagen-Dazs",
@@ -694,27 +614,12 @@
     {
       "word": "Carte d'Or",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Brossard",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "St Michel",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Gerblé",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Bjorg",
-      "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Uncle Ben's",
@@ -722,42 +627,7 @@
       "language": "international"
     },
     {
-      "word": "Ebly",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Lustucru",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Tipiak",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Cassegrain",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "D'aucy",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Géant Vert",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "William Saurin",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Côte d'Or",
       "difficulty": 2,
       "language": "international"
     },
@@ -772,154 +642,149 @@
       "language": "international"
     },
     {
-      "word": "Raffaello",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Ferrero Rocher",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Mon Chéri",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Celebrations",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Poulain",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Banania",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Ricoré",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Belvita",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Grany",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Pitch",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Savane",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Napolitain",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Granola",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Petit Écolier",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Paille d'Or",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Petit Beurre",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "BN",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Mikado",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Pepito",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Prince",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Figolu",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Finger",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Pépito",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Curly",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Benenuts",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Vico",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Apéricube",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Tuc",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Cracotte",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Krisprolls",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "McDonald's",
@@ -948,7 +813,7 @@
     },
     {
       "word": "Domino's",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -958,8 +823,8 @@
     },
     {
       "word": "Paul",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Brioche Dorée",
@@ -973,7 +838,7 @@
     },
     {
       "word": "Chipotle",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -993,18 +858,18 @@
     },
     {
       "word": "Courtepaille",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Flunch",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Léon de Bruxelles",
-      "difficulty": 3,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Carrefour",
@@ -1013,17 +878,17 @@
     },
     {
       "word": "Auchan",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Leclerc",
       "difficulty": 1,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Lidl",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1038,8 +903,8 @@
     },
     {
       "word": "Darty",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Décathlon",
@@ -1049,42 +914,42 @@
     {
       "word": "Leroy Merlin",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Castorama",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Boulanger",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Conforama",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "But",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Monoprix",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Franprix",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Intermarché",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Bosch",
@@ -1108,57 +973,57 @@
     },
     {
       "word": "Nivea",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Garnier",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Dove",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Lancôme",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Reebok",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "New Balance",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Asics",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Under Armour",
       "difficulty": 3,
       "language": "international"
     },
     {
+      "word": "Garnier",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Dove",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Lancôme",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
+      "word": "Reebok",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "New Balance",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Asics",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Under Armour",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
       "word": "The North Face",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Columbia",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Quiksilver",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1178,72 +1043,22 @@
     },
     {
       "word": "Hot Wheels",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Nerf",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Moulinex",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "SEB",
-      "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Tefal",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Dyson",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Rowenta",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Whirlpool",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Electrolux",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Miele",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Calor",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "DeLonghi",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Brandt",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Siemens",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1253,8 +1068,8 @@
     },
     {
       "word": "Crédit Agricole",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Société Générale",
@@ -1263,108 +1078,33 @@
     },
     {
       "word": "AXA",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "La Poste",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "MAIF",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "MAAF",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Groupama",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Caisse d'Épargne",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Banque Populaire",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "LCL",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Crédit Mutuel",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Macif",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "GMF",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Direct Assurance",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Boursorama",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "ING",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Allianz",
-      "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Orange",
       "difficulty": 1,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "SFR",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Bouygues Telecom",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Free",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Red by SFR",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Sosh",
-      "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Heineken",
@@ -1378,7 +1118,7 @@
     },
     {
       "word": "1664",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1404,12 +1144,12 @@
     {
       "word": "Ricard",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Pastis 51",
-      "difficulty": 3,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Smirnoff",
@@ -1418,7 +1158,7 @@
     },
     {
       "word": "Bacardi",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1433,7 +1173,7 @@
     },
     {
       "word": "Baileys",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1463,52 +1203,37 @@
     },
     {
       "word": "Stella Artois",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Jupiler",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Affligem",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Chivas",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Jameson",
       "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Grey Goose",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Bombay Sapphire",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Havana Club",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Hennessy",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Rémy Martin",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1568,7 +1293,7 @@
     },
     {
       "word": "Atari",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1618,7 +1343,7 @@
     },
     {
       "word": "Casio",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1628,72 +1353,7 @@
     },
     {
       "word": "Fossil",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Tissot",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Seiko",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Longines",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Tag Heuer",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Michael Kors",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Pandora",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Rolex",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Omega",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Cartier",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Breitling",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Hublot",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Bulgari",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Tiffany & Co",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1703,7 +1363,7 @@
     },
     {
       "word": "Jean Paul Gaultier",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1713,7 +1373,7 @@
     },
     {
       "word": "Yves Saint Laurent",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1728,12 +1388,12 @@
     },
     {
       "word": "Givenchy",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Terre d'Hermès",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1742,27 +1402,7 @@
       "language": "international"
     },
     {
-      "word": "One Million",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "L'Homme",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Acqua di Gio",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "La Vie est Belle",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Black Opium",
       "difficulty": 3,
       "language": "international"
     },
@@ -1788,22 +1428,22 @@
     },
     {
       "word": "Amazon Prime",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Disney+",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Deezer",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Apple Music",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1818,18 +1458,18 @@
     },
     {
       "word": "HBO Max",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Paramount+",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Canal+ Séries",
       "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "OCS",
@@ -1838,12 +1478,12 @@
     },
     {
       "word": "Salto",
-      "difficulty": 3,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Apple TV+",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1867,61 +1507,6 @@
       "language": "international"
     },
     {
-      "word": "Emirates",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Lufthansa",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "British Airways",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Transavia",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "KLM",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Vueling",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Air Caraibes",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Qatar Airways",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Etihad",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Singapore Airlines",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Turkish Airlines",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Harley-Davidson",
       "difficulty": 2,
       "language": "international"
@@ -1933,206 +1518,96 @@
     },
     {
       "word": "Kawasaki",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Ducati",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Suzuki",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "BMW Motorrad",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "KTM",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Triumph",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Ibis",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Formule 1",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Novotel",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Mercure",
-      "difficulty": 1,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Sofitel",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Campanile",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Kyriad",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "B&B Hotels",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Hilton",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Marriott",
       "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Le Monde",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Le Figaro",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "TF1",
       "difficulty": 1,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "France 2",
       "difficulty": 1,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "M6",
       "difficulty": 1,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Canal+",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "France 3",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Arte",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "L'Équipe",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Le Parisien",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Libération",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "20 Minutes",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "RTL",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Europe 1",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "RMC",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Les Échos",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "L'Obs",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Marianne",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Le Point",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "L'Express",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Challenges",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Courrier International",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "France Info",
-      "difficulty": 3,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Smarties",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Fraises Tagada",
       "difficulty": 1,
       "language": "international"
     },
@@ -2153,7 +1628,7 @@
     },
     {
       "word": "Nounours",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2183,117 +1658,112 @@
     },
     {
       "word": "Nougat",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Calissons",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Bêtises de Cambrai",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Berlingots",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Chocapic",
       "difficulty": 1,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Nesquik",
       "difficulty": 1,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Miel Pops",
       "difficulty": 1,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Frosties",
       "difficulty": 1,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Coco Pops",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Trésor",
       "difficulty": 1,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Special K",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "All-Bran",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Fitness",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Cheerios",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Corn Flakes",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Rice Krispies",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Crunch",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Cookie Crisp",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Petit Lu",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Dinosaurus",
-      "difficulty": 1,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Kango",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Choco BN",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Crackers",
-      "difficulty": 1,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2303,17 +1773,17 @@
     },
     {
       "word": "Madeleines",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Financiers",
       "difficulty": 2,
       "language": "international"
     },
     {
+      "word": "Financiers",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
       "word": "Quatre-quarts",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2328,12 +1798,12 @@
     },
     {
       "word": "Muffin",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Donut",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2344,46 +1814,36 @@
     {
       "word": "Pain au chocolat",
       "difficulty": 1,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Brioche",
       "difficulty": 1,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Chausson aux pommes",
       "difficulty": 1,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Pain aux raisins",
       "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Jus d'orange",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Jus de pomme",
-      "difficulty": 1,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Limonade",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Eau gazeuse",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Eau plate",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2393,7 +1853,7 @@
     },
     {
       "word": "Grenadine",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2403,7 +1863,7 @@
     },
     {
       "word": "Thé glacé",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2413,112 +1873,82 @@
     },
     {
       "word": "Chocolat chaud",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Lait",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Smoothie",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Milkshake",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Ice tea",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Fanta",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Sprite",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "7Up",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Dr Pepper",
       "difficulty": 2,
       "language": "international"
     },
     {
-      "word": "Mountain Dew",
+      "word": "Lait",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Smoothie",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Milkshake",
+      "difficulty": 3,
+      "language": "international"
+    },
+    {
+      "word": "Ice tea",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Fanta",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Sprite",
       "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Danette",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Flamby",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Mont Blanc",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Petit Suisse",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Gervais",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Danonino",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Actimel",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Yakult",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Fjord",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Perle de Lait",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Taillefine",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Skyr",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2528,12 +1958,12 @@
     },
     {
       "word": "Fromage blanc",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Crème fraîche",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2563,7 +1993,7 @@
     },
     {
       "word": "McCain",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2578,17 +2008,12 @@
     },
     {
       "word": "Cordon bleu",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Fish sticks",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Pizza surgelée",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2598,112 +2023,42 @@
     },
     {
       "word": "Sorbet",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Bâtonnet glacé",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Cornetto",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Solero",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Calippo",
       "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Jordan",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Fila",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Champion",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Kappa",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Umbro",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Ellesse",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Le Coq Sportif",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Sergio Tacchini",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Mizuno",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Saucony",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Hoka",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "On Running",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Brooks",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Salomon",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Timberland",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Caterpillar",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Dr. Martens",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2713,552 +2068,92 @@
     },
     {
       "word": "Crocs",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Havaianas",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Primark",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Kiabi",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Gémo",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "La Halle",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Celio",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Jules",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Camaïeu",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Promod",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Bershka",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Pull & Bear",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Stradivarius",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Massimo Dutti",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Oysho",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Reserved",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "C&A",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "New Yorker",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Jennyfer",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Pimkie",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Etam",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Undiz",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Calzedonia",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Intimissimi",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Tezenis",
       "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Colgate",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Signal",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Oral-B",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Aquafresh",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Head & Shoulders",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Pantene",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "L'Oréal Paris",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Schwarzkopf",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Fructis",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Elsève",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Ultra Doux",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "DOP",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Palmolive",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Sanex",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Dettol",
-      "difficulty": 1,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Le Petit Marseillais",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Ushuaïa",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 2,
+      "language": "french"
     },
     {
       "word": "Tahiti",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Monsavon",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Cadum",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Mixa",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Bioderma",
-      "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "La Roche-Posay",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Avène",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Vichy",
       "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Nuxe",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Caudalie",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Klorane",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Ducray",
-      "difficulty": 2,
-      "language": "international"
+      "language": "french"
     },
     {
       "word": "Rexona",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Axe",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Mennen",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Old Spice",
-      "difficulty": 2,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Gillette",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Wilkinson",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Venus",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Veet",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Nair",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Ajax",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Cif",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Mr Propre",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Febreze",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Swiffer",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Scotch-Brite",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Spontex",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Sopalin",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Lotus",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Kleenex",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Okay",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Tempo",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Pampers",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Huggies",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Ariel",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Skip",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Persil",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Omo",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Dash",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Mir",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Le Chat",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "X-tra",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Lenor",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Soupline",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Cillit Bang",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Destop",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Harpic",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Canard WC",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Javel La Croix",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Eau écarlate",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Fisher-Price",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Vtech",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Little Tikes",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Smoby",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Hasbro",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Mattel",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Spin Master",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Bandai",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Ravensburger",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Nathan",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Djeco",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Haba",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Janod",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Brio",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Thomas",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Paw Patrol",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Peppa",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3268,7 +2163,7 @@
     },
     {
       "word": "Marvel",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -3277,287 +2172,67 @@
       "language": "international"
     },
     {
-      "word": "Transformers",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Power Rangers",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Mon Petit Poney",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Littlest Pet Shop",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Polly Pocket",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Sylvanian Families",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Bic",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Stabilo",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Pilot",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Staedtler",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Faber-Castell",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Crayola",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Maped",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Oxford",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Clairefontaine",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Rhodia",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Canson",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Post-it",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Scotch",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Tipp-Ex",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Uhu",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Pritt",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Kebab",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Tacos",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "O'Tacos",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Popeyes",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Taco Bell",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Wendy's",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Dunkin",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Krispy Kreme",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Pret A Manger",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Class Croute",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "La Croissanterie",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Bagelstein",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Jour",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Prêt à Manger",
       "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Sushi Shop",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Planet Sushi",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Eat Sushi",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "JBL",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Bose",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Marshall",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Beats",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "AirPods",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "GoPro",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Canon",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Nikon",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Polaroid",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Fujifilm",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Kodak",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Logitech",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Razer",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "SteelSeries",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Corsair",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "HyperX",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Anker",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Belkin",
       "difficulty": 2,
       "language": "international"
     },
@@ -3593,172 +2268,117 @@
     },
     {
       "word": "Discord",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Telegram",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Pinterest",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "LinkedIn",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Reddit",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Tumblr",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "BeReal",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Threads",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "X",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Uber",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Uber Eats",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Deliveroo",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Just Eat",
-      "difficulty": 1,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Bolt",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Lydia",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "PayPal",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Google Maps",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Waze",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Booking",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Airbnb",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Vinted",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Leboncoin",
-      "difficulty": 1,
-      "language": "international"
+      "difficulty": 3,
+      "language": "french"
     },
     {
       "word": "Amazon",
       "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "eBay",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "AliExpress",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Shein",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Temu",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Wish",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Cdiscount",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Rakuten",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Zalando",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Asos",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Veepee",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Showroomprivé",
-      "difficulty": 2,
       "language": "international"
     }
   ]

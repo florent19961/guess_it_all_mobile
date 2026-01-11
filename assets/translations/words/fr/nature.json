@@ -123,7 +123,7 @@
     },
     {
       "word": "Oie",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -143,7 +143,7 @@
     },
     {
       "word": "Cochon d'Inde",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -193,7 +193,7 @@
     },
     {
       "word": "Lynx",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -223,7 +223,7 @@
     },
     {
       "word": "Orang-outan",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -238,12 +238,12 @@
     },
     {
       "word": "Buffle",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Bison",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -253,7 +253,7 @@
     },
     {
       "word": "Otarie",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -263,7 +263,7 @@
     },
     {
       "word": "Pieuvre",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -288,17 +288,17 @@
     },
     {
       "word": "Tortue marine",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Caméléon",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Iguane",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -318,7 +318,7 @@
     },
     {
       "word": "Cobra",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -423,7 +423,7 @@
     },
     {
       "word": "Coyote",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -443,7 +443,7 @@
     },
     {
       "word": "Yak",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -468,12 +468,12 @@
     },
     {
       "word": "Élan",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Babouin",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -483,7 +483,7 @@
     },
     {
       "word": "Lémurien",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -498,7 +498,7 @@
     },
     {
       "word": "Lamantin",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -523,12 +523,12 @@
     },
     {
       "word": "Murène",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Barracuda",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -543,7 +543,7 @@
     },
     {
       "word": "Varan",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -553,7 +553,7 @@
     },
     {
       "word": "Salamandre",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -578,17 +578,17 @@
     },
     {
       "word": "Condor",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Albatros",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Cacatoès",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -613,7 +613,7 @@
     },
     {
       "word": "Hermine",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -623,12 +623,12 @@
     },
     {
       "word": "Wallaby",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Wombat",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -638,7 +638,7 @@
     },
     {
       "word": "Diable de Tasmanie",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -703,7 +703,7 @@
     },
     {
       "word": "Grillon",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -738,7 +738,7 @@
     },
     {
       "word": "Hanneton",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -778,7 +778,7 @@
     },
     {
       "word": "Pensée",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -798,7 +798,7 @@
     },
     {
       "word": "Pivoine",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -813,62 +813,12 @@
     },
     {
       "word": "Hortensia",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Géranium",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Bégonia",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Iris",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Narcisse",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Jonquille",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Dahlia",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Glycine",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Rhododendron",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Camélia",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Magnolia",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Hibiscus",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -913,7 +863,7 @@
     },
     {
       "word": "Bouleau",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -923,17 +873,17 @@
     },
     {
       "word": "Tilleul",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Peuplier",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Saule",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -958,7 +908,7 @@
     },
     {
       "word": "Cèdre",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -968,12 +918,12 @@
     },
     {
       "word": "Eucalyptus",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Acacia",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1143,7 +1093,7 @@
     },
     {
       "word": "Kumquat",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1293,12 +1243,12 @@
     },
     {
       "word": "Rutabaga",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Topinambour",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1313,7 +1263,7 @@
     },
     {
       "word": "Salsifis",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1328,12 +1278,12 @@
     },
     {
       "word": "Triton",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Rainette",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1358,12 +1308,12 @@
     },
     {
       "word": "Langoustine",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Tourteau",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1397,18 +1347,13 @@
       "language": "international"
     },
     {
-      "word": "Seiche",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Limace",
       "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Coquille Saint-Jacques",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1428,17 +1373,17 @@
     },
     {
       "word": "Ours polaire",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Ours brun",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Ours noir",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1453,7 +1398,7 @@
     },
     {
       "word": "Carpe",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1463,7 +1408,7 @@
     },
     {
       "word": "Brochet",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1478,7 +1423,7 @@
     },
     {
       "word": "Silure",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1488,7 +1433,7 @@
     },
     {
       "word": "Tanche",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1498,12 +1443,12 @@
     },
     {
       "word": "Tarentule",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Veuve noire",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1543,7 +1488,7 @@
     },
     {
       "word": "Origan",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1568,7 +1513,7 @@
     },
     {
       "word": "Cardamome",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1613,17 +1558,17 @@
     },
     {
       "word": "Orge",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Avoine",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Seigle",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1648,7 +1593,7 @@
     },
     {
       "word": "Épeautre",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1703,12 +1648,12 @@
     },
     {
       "word": "Noix de pécan",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Noix de macadamia",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1728,7 +1673,7 @@
     },
     {
       "word": "Pleurote",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1738,17 +1683,17 @@
     },
     {
       "word": "Cèpe",
-      "difficulty": 3,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Morille",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Girolle",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1758,12 +1703,12 @@
     },
     {
       "word": "Bolet",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Chanterelle",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1803,12 +1748,12 @@
     },
     {
       "word": "Jonc",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Bruyère",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1838,7 +1783,7 @@
     },
     {
       "word": "Chiendent",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1888,12 +1833,12 @@
     },
     {
       "word": "Rosée",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Givre",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1938,7 +1883,7 @@
     },
     {
       "word": "Aurore boréale",
-      "difficulty": 3,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1968,52 +1913,32 @@
     },
     {
       "word": "Saphir",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Quartz",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Améthyste",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Topaze",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Opale",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Jade",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Turquoise",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Agate",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Obsidienne",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Grenat",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2098,7 +2023,7 @@
     },
     {
       "word": "Isthme",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2158,7 +2083,7 @@
     },
     {
       "word": "Lagune",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2258,12 +2183,12 @@
     },
     {
       "word": "Taïga",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Toundra",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2273,7 +2198,7 @@
     },
     {
       "word": "Mangrove",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2368,12 +2293,12 @@
     },
     {
       "word": "Tempura",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Bahn mi",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2388,7 +2313,7 @@
     },
     {
       "word": "Bibimbap",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2493,8 +2418,8 @@
     },
     {
       "word": "Navarin d'agneau",
-      "difficulty": 3,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Aligot",
@@ -2543,7 +2468,7 @@
     },
     {
       "word": "Fish and chips",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2618,12 +2543,12 @@
     },
     {
       "word": "Confire",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Déglacer",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2703,7 +2628,7 @@
     },
     {
       "word": "Rémoulade",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2798,37 +2723,37 @@
     },
     {
       "word": "Brie",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Comté",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Roquefort",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Chèvre",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Reblochon",
       "difficulty": 2,
       "language": "international"
     },
     {
-      "word": "Munster",
+      "word": "Comté",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Roquefort",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Chèvre",
+      "difficulty": 2,
+      "language": "international"
+    },
+    {
+      "word": "Reblochon",
       "difficulty": 3,
       "language": "international"
     },
     {
+      "word": "Munster",
+      "difficulty": 4,
+      "language": "international"
+    },
+    {
       "word": "Beaufort",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -2838,7 +2763,7 @@
     },
     {
       "word": "Cantal",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2848,18 +2773,18 @@
     },
     {
       "word": "Époisses",
-      "difficulty": 3,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Maroilles",
-      "difficulty": 3,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Salers",
-      "difficulty": 3,
-      "language": "international"
+      "difficulty": 4,
+      "language": "french"
     },
     {
       "word": "Ossau-Iraty",
@@ -2882,23 +2807,8 @@
       "language": "international"
     },
     {
-      "word": "Pinot noir",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Chardonnay",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Cabernet",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Châteauneuf-du-Pape",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2983,12 +2893,12 @@
     },
     {
       "word": "Moineau",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Hirondelle",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2998,61 +2908,56 @@
     },
     {
       "word": "Merle",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Rouge-gorge",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Colombe",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Coucou",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Pivert",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Rossignol",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Faisan",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Perdrix",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Bécasse",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Héron",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Grue",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Goéland",
       "difficulty": 3,
       "language": "international"
     },
@@ -3073,7 +2978,7 @@
     },
     {
       "word": "Sole",
-      "difficulty": 2,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3138,12 +3043,12 @@
     },
     {
       "word": "Thé vert",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Maté",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3313,12 +3218,12 @@
     },
     {
       "word": "Armagnac",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Calvados",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3328,12 +3233,12 @@
     },
     {
       "word": "Amaretto",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Chartreuse",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3423,7 +3328,7 @@
     },
     {
       "word": "Harissa",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3433,7 +3338,7 @@
     },
     {
       "word": "Nuoc-mâm",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3453,7 +3358,7 @@
     },
     {
       "word": "Aïoli",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3463,7 +3368,7 @@
     },
     {
       "word": "Chutney",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3508,7 +3413,7 @@
     },
     {
       "word": "Ricotta",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3698,7 +3603,7 @@
     },
     {
       "word": "Bresaola",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3748,7 +3653,7 @@
     },
     {
       "word": "Œuf poché",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3813,12 +3718,12 @@
     },
     {
       "word": "Strudel",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Baklava",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3828,7 +3733,7 @@
     },
     {
       "word": "Crème caramel",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3838,17 +3743,17 @@
     },
     {
       "word": "Pudding",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Carrot cake",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Banana split",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3928,37 +3833,12 @@
     },
     {
       "word": "Calisson",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
       "word": "Berlingot",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Palourde",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Pétoncle",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Praire",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Couteau",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Ormeau",
-      "difficulty": 3,
+      "difficulty": 4,
       "language": "international"
     },
     {
@@ -3968,7 +3848,7 @@
     },
     {
       "word": "Gambas",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -4008,16 +3888,11 @@
     },
     {
       "word": "Étalon",
-      "difficulty": 2,
+      "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Truie",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Verrat",
       "difficulty": 3,
       "language": "international"
     },
