@@ -65,7 +65,7 @@ class _AppInputState extends State<AppInput> {
             context,
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeInOut,
-            alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+            alignment: 0.5,
           );
         }
       });

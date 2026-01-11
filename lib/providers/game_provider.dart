@@ -1160,6 +1160,7 @@ class GameProvider extends ChangeNotifier {
   void savePreValidationState(List<String> validatedWords) {
     _game = _game.copyWith(
       preValidationSnapshot: {
+        'currentRound': _game.currentRound,
         'currentTeamIndex': _game.currentTeamIndex,
         'currentPlayerIndexInTeam': _game.currentPlayerIndexInTeam,
         'currentTurn': _game.currentTurn,
@@ -1214,6 +1215,7 @@ class GameProvider extends ChangeNotifier {
     // Restaurer l'état du jeu
     _game = _game.copyWith(
       currentScreen: AppConstants.screenVerification,
+      currentRound: snapshot['currentRound'] as int,
       currentTeamIndex: snapshot['currentTeamIndex'] as int,
       currentPlayerIndexInTeam: snapshot['currentPlayerIndexInTeam'] as int,
       currentTurn: snapshot['currentTurn'] as int,

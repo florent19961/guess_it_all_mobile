@@ -17,86 +17,51 @@ bool _firebaseInitialized = false;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  print('');
-  print('╔════════════════════════════════════════════════════════════╗');
-  print('║           GUESS IT ALL - APPLICATION STARTUP               ║');
-  print('╚════════════════════════════════════════════════════════════╝');
-  print('');
-
   // Initialiser Firebase
-  print('[Main] Step 1/5: Initializing Firebase...');
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
     _firebaseInitialized = true;
-    print('[Main] Firebase initialized successfully');
-    print('[Main] Firebase project: ${Firebase.app().options.projectId}');
   } catch (e) {
-    print('[Main] Firebase initialization FAILED: $e');
-    print('[Main] App will run in OFFLINE-ONLY mode');
-    print('[Main] To enable sync, run: flutterfire configure');
+    // Firebase non disponible, mode offline
   }
 
   // Initialiser les services de connectivité et sync (si Firebase OK)
   if (_firebaseInitialized) {
-    print('[Main] Step 2/5: Initializing ConnectivityService...');
     try {
       await ConnectivityService().initialize();
-      print('[Main] ConnectivityService ready');
     } catch (e) {
-      print('[Main] ConnectivityService FAILED: $e');
+      // Erreur silencieuse
     }
 
-    print('[Main] Step 3/5: Initializing FirebaseSyncService...');
     try {
       await FirebaseSyncService().initialize();
-      print('[Main] FirebaseSyncService ready');
     } catch (e) {
-      print('[Main] FirebaseSyncService FAILED: $e');
+      // Erreur silencieuse
     }
-  } else {
-    print('[Main] Step 2/5: SKIPPED (Firebase not available)');
-    print('[Main] Step 3/5: SKIPPED (Firebase not available)');
   }
 
   // Initialiser le service de chargement de mots
-  print('[Main] Step 4/5: Initializing WordLoaderService...');
   try {
     await WordLoaderService().initialize(locale: 'fr');
-    print('[Main] WordLoaderService ready');
   } catch (e) {
-    print('[Main] WordLoaderService FAILED: $e');
+    // Erreur silencieuse
   }
 
   // Initialiser le service d'historique des mots
-  print('[Main] Step 5/5: Initializing WordHistoryService...');
   try {
     await WordHistoryService().initialize();
-    print('[Main] WordHistoryService ready');
   } catch (e) {
-    print('[Main] WordHistoryService FAILED: $e');
+    // Erreur silencieuse
   }
 
   // Récupérer les parties orphelines (après un kill)
-  print('[Main] Checking for orphaned games...');
   try {
-    final orphanedCount = await AnalyticsService().finalizeOrphanedGames();
-    if (orphanedCount > 0) {
-      print('[Main] Recovered $orphanedCount orphaned game(s)');
-    } else {
-      print('[Main] No orphaned games found');
-    }
+    await AnalyticsService().finalizeOrphanedGames();
   } catch (e) {
-    print('[Main] Orphaned games check FAILED: $e');
+    // Erreur silencieuse
   }
-
-  print('');
-  print('[Main] ════════════════════════════════════════════════════════');
-  print('[Main] Startup complete - Launching app...');
-  print('[Main] Firebase enabled: $_firebaseInitialized');
-  print('[Main] ════════════════════════════════════════════════════════');
-  print('');
 
   // Force portrait mode
   SystemChrome.setPreferredOrientations([

@@ -89,50 +89,55 @@ class TransitionScreen extends StatelessWidget {
                                           ? '🍫'
                                           : '';
 
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: teamColor.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: teamColor, width: 2),
-                            ),
-                            child: Row(
-                              children: [
-                                if (medal.isNotEmpty)
-                                  Text(
-                                    medal,
-                                    style: const TextStyle(fontSize: 20),
+                          return GestureDetector(
+                            onTap: () => _showTeamMembersDialog(context, team, provider, teamColor),
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: teamColor.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: teamColor, width: 2),
+                              ),
+                              child: Row(
+                                children: [
+                                  if (medal.isNotEmpty)
+                                    Text(
+                                      medal,
+                                      style: const TextStyle(fontSize: 20),
+                                    ),
+                                  if (medal.isNotEmpty) const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      team.name,
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: teamColor,
+                                      ),
+                                    ),
                                   ),
-                                if (medal.isNotEmpty) const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    team.name,
+                                  Text(
+                                    '${team.score}',
                                     style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
+                                      fontFamily: 'Bangers',
+                                      fontSize: 28,
                                       color: teamColor,
                                     ),
                                   ),
-                                ),
-                                Text(
-                                  '${team.score}',
-                                  style: TextStyle(
-                                    fontFamily: 'Bangers',
-                                    fontSize: 28,
-                                    color: teamColor,
+                                  const Text(
+                                    ' pts',
+                                    style: TextStyle(
+                                      fontFamily: 'Poppins',
+                                      fontSize: 12,
+                                      color: AppColors.gray400,
+                                    ),
                                   ),
-                                ),
-                                const Text(
-                                  ' pts',
-                                  style: TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontSize: 12,
-                                    color: AppColors.gray400,
-                                  ),
-                                ),
-                              ],
+                                  const SizedBox(width: 8),
+                                  Icon(Icons.people_outline, color: teamColor.withOpacity(0.6), size: 18),
+                                ],
+                              ),
                             ),
                           );
                         }).toList(),
@@ -140,7 +145,7 @@ class TransitionScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  const Spacer(),
 
                   // Time bonus indicator (only show if not last round)
                   if (provider.game.turnBonusTime != null &&
@@ -268,6 +273,55 @@ class TransitionScreen extends StatelessWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  void _showTeamMembersDialog(BuildContext context, dynamic team, GameProvider provider, Color teamColor) {
+    if (team == null) return;
+
+    final players = team.playerIds
+        .map((id) => provider.getPlayerById(id))
+        .where((p) => p != null)
+        .toList();
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (context) => Dialog(
+        backgroundColor: AppColors.backgroundMain,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: teamColor, width: 2),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                team.name,
+                style: TextStyle(
+                  fontFamily: 'Bangers',
+                  fontSize: 24,
+                  color: teamColor,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...players.map((p) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(
+                  p!.name,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              )),
+            ],
+          ),
+        ),
       ),
     );
   }

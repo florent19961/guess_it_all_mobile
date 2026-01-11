@@ -33,11 +33,8 @@ class ConnectivityService {
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    print('[Connectivity] Initializing service...');
-
     // Vérifier l'état initial
     final results = await _connectivity.checkConnectivity();
-    print('[Connectivity] Initial check: $results');
     _updateConnectionStatus(results);
 
     // Écouter les changements
@@ -45,27 +42,18 @@ class ConnectivityService {
         _connectivity.onConnectivityChanged.listen(_handleConnectivityChange);
 
     _isInitialized = true;
-    print('[Connectivity] Service initialized - isConnected: $_isConnected');
   }
 
   void _handleConnectivityChange(List<ConnectivityResult> results) {
-    print('[Connectivity] Network change detected: $results');
     _updateConnectionStatus(results);
   }
 
   void _updateConnectionStatus(List<ConnectivityResult> results) {
-    final wasConnected = _isConnected;
-
     // Considérer comme connecté si wifi, mobile ou ethernet
     _isConnected = results.any((r) =>
         r == ConnectivityResult.wifi ||
         r == ConnectivityResult.mobile ||
         r == ConnectivityResult.ethernet);
-
-    // Log si changement d'état
-    if (wasConnected != _isConnected) {
-      print('[Connectivity] Status changed: ${wasConnected ? "ONLINE" : "OFFLINE"} -> ${_isConnected ? "ONLINE" : "OFFLINE"}');
-    }
 
     // Notifier le stream
     _connectionStatusController.add(_isConnected);

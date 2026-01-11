@@ -401,7 +401,7 @@ class _TurnScreenState extends State<TurnScreen> {
                               currentWord ?? '',
                               style: const TextStyle(
                                 fontFamily: 'Bangers',
-                                fontSize: 85,
+                                fontSize: 72,
                                 color: Colors.white,
                                 shadows: [
                                   Shadow(
@@ -413,7 +413,7 @@ class _TurnScreenState extends State<TurnScreen> {
                               ),
                               textAlign: TextAlign.center,
                               maxLines: 3,
-                              minFontSize: 24,
+                              minFontSize: 36,
                               wrapWords: false,
                               overflow: TextOverflow.ellipsis,
                             ),

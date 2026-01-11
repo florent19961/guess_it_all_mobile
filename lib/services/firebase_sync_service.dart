@@ -62,10 +62,8 @@ class FirebaseSyncService {
   /// Vérifie si Firebase est configuré et disponible
   bool get _isFirebaseAvailable {
     try {
-      final available = Firebase.apps.isNotEmpty;
-      return available;
+      return Firebase.apps.isNotEmpty;
     } catch (e) {
-      print('[Firebase] Error checking availability: $e');
       return false;
     }
   }
@@ -74,55 +72,32 @@ class FirebaseSyncService {
   Future<void> initialize() async {
     // Ignorer Firebase sur web (non configuré)
     if (kIsWeb) {
-      print('[Firebase] Web platform detected, skipping Firebase sync');
       _isInitialized = true;
       return;
     }
 
     if (_isInitialized) {
-      print('[Firebase] Service already initialized, skipping');
       return;
-    }
-
-    print('[Firebase] ══════════════════════════════════════════');
-    print('[Firebase] Initializing FirebaseSyncService...');
-    print('[Firebase] Firebase available: $_isFirebaseAvailable');
-
-    if (_isFirebaseAvailable) {
-      print('[Firebase] Firebase apps: ${Firebase.apps.map((a) => a.name).toList()}');
     }
 
     // S'assurer que le service de connectivité est initialisé
     if (!_connectivity.isInitialized) {
-      print('[Firebase] Connectivity service not ready, initializing...');
       await _connectivity.initialize();
     }
 
     // Écouter les changements de connectivité
     _connectivitySubscription = _connectivity.connectionStatus.listen((isConnected) {
-      print('[Firebase] Connectivity changed -> isConnected: $isConnected');
       if (isConnected) {
-        print('[Firebase] Network restored, triggering sync...');
         syncPendingGames();
       }
     });
 
     _isInitialized = true;
 
-    // Afficher l'état de la queue
-    final pendingCount = await getPendingCount();
-    print('[Firebase] Pending games in queue: $pendingCount');
-
     // Synchronisation initiale si online
     if (_connectivity.isConnected) {
-      print('[Firebase] Online at startup, attempting initial sync...');
       await syncPendingGames();
-    } else {
-      print('[Firebase] Offline at startup, sync will happen when connected');
     }
-
-    print('[Firebase] Service initialized successfully');
-    print('[Firebase] ══════════════════════════════════════════');
   }
 
   /// Marque une partie pour synchronisation
@@ -135,92 +110,54 @@ class FirebaseSyncService {
     // Ignorer Firebase sur web (non configuré)
     if (kIsWeb) return;
 
-    print('[Firebase] ──────────────────────────────────────────');
-    print('[Firebase] markForSync called for gameId: $gameId');
-
     final prefs = await SharedPreferences.getInstance();
     final pending = prefs.getStringList(_pendingSyncKey) ?? [];
 
     if (!pending.contains(gameId)) {
       pending.add(gameId);
       await prefs.setStringList(_pendingSyncKey, pending);
-      print('[Firebase] Game added to sync queue (${pending.length} total pending)');
-    } else {
-      print('[Firebase] Game already in sync queue');
     }
 
     // Tenter sync immédiat si Firebase disponible et online
-    print('[Firebase] Checking sync conditions:');
-    print('[Firebase]   - Firebase available: $_isFirebaseAvailable');
-    print('[Firebase]   - Network connected: ${_connectivity.isConnected}');
-
     if (_isFirebaseAvailable && _connectivity.isConnected) {
-      print('[Firebase] Conditions met, attempting immediate sync...');
       // Fire-and-forget : ne bloque pas l'appelant
-      syncGame(gameId).then((success) {
-        if (success) {
-          print('[Firebase] Sync completed in background');
-        }
-      }).catchError((e) {
-        print('[Firebase] Background sync error: $e');
+      syncGame(gameId).catchError((e) {
+        // Erreur silencieuse, la partie reste dans la queue
       });
-    } else if (!_isFirebaseAvailable) {
-      print('[Firebase] Firebase NOT configured - game queued for later');
-      print('[Firebase] Run "flutterfire configure" to setup Firebase');
-    } else {
-      print('[Firebase] Offline - game queued for sync when connected');
     }
-    print('[Firebase] ──────────────────────────────────────────');
   }
 
   /// Synchronise une partie spécifique vers Firestore
   ///
   /// Retourne true si la synchronisation a réussi, false sinon.
   Future<bool> syncGame(String gameId) async {
-    print('[Firebase] syncGame: $gameId');
-
     // Vérifier que Firebase est disponible
     if (!_isFirebaseAvailable) {
-      print('[Firebase] SKIP: Firebase not available');
       return false;
     }
 
     try {
       // Charger les données depuis le stockage local
-      print('[Firebase] Loading game data from local storage...');
       final game = await _analytics.loadGameAnalytics(gameId);
 
       if (game == null) {
-        print('[Firebase] ERROR: Game not found locally, removing from queue');
         await _removeFromPending(gameId);
         return false;
       }
-
-      print('[Firebase] Game loaded:');
-      print('[Firebase]   - gameId: ${game.gameId}');
-      print('[Firebase]   - userId: ${game.userId}');
-      print('[Firebase]   - Events: ${game.events.length}');
-      print('[Firebase]   - Words: ${game.wordStats.length}');
-      print('[Firebase]   - Started: ${game.startedAt}');
 
       // Convertir en Map et ajouter le timestamp de synchronisation
       final data = game.toJson();
       data['syncedAt'] = FieldValue.serverTimestamp();
 
       // Upload vers Firestore
-      print('[Firebase] Uploading to Firestore collection: $_gamesCollection');
-      print('[Firebase] Document ID: $gameId');
-
       await _firestore.collection(_gamesCollection).doc(gameId).set(data);
 
       // Retirer de la liste pending
       await _removeFromPending(gameId);
 
-      print('[Firebase] SUCCESS: Game synced to Firestore!');
       return true;
-    } catch (e, stackTrace) {
-      print('[Firebase] ERROR syncing game: $e');
-      print('[Firebase] Stack trace: $stackTrace');
+    } catch (e) {
+      // Erreur de sync, la partie reste dans la queue
       return false;
     }
   }
@@ -237,7 +174,6 @@ class FirebaseSyncService {
 
     // Éviter les synchronisations concurrentes
     if (_isSyncing) {
-      print('[Firebase] Sync already in progress, skipping');
       return SyncResult(synced: 0, failed: 0, pending: await getPendingCount());
     }
 
@@ -248,12 +184,8 @@ class FirebaseSyncService {
       final pending = prefs.getStringList(_pendingSyncKey) ?? [];
 
       if (pending.isEmpty) {
-        print('[Firebase] No pending games to sync');
         return SyncResult(synced: 0, failed: 0, pending: 0);
       }
-
-      print('[Firebase] ══════════════════════════════════════════');
-      print('[Firebase] Starting batch sync of ${pending.length} games...');
 
       int synced = 0;
       int failed = 0;
@@ -261,28 +193,16 @@ class FirebaseSyncService {
       // Copie pour éviter modification pendant itération
       final toSync = List<String>.from(pending);
 
-      for (int i = 0; i < toSync.length; i++) {
-        final gameId = toSync[i];
-        print('[Firebase] [${i + 1}/${toSync.length}] Syncing: $gameId');
-
+      for (final gameId in toSync) {
         final success = await syncGame(gameId);
         if (success) {
           synced++;
-          print('[Firebase] [${i + 1}/${toSync.length}] OK');
         } else {
           failed++;
-          print('[Firebase] [${i + 1}/${toSync.length}] FAILED');
         }
       }
 
       final remaining = await getPendingCount();
-
-      print('[Firebase] ══════════════════════════════════════════');
-      print('[Firebase] Batch sync completed:');
-      print('[Firebase]   - Synced: $synced');
-      print('[Firebase]   - Failed: $failed');
-      print('[Firebase]   - Remaining: $remaining');
-      print('[Firebase] ══════════════════════════════════════════');
 
       return SyncResult(synced: synced, failed: failed, pending: remaining);
     } finally {
@@ -308,17 +228,13 @@ class FirebaseSyncService {
     final pending = prefs.getStringList(_pendingSyncKey) ?? [];
     pending.remove(gameId);
     await prefs.setStringList(_pendingSyncKey, pending);
-    print('[Firebase] Removed from pending queue: $gameId');
   }
 
   /// Force une tentative de synchronisation
   ///
   /// Utile pour déclencher manuellement une sync (ex: bouton refresh).
   Future<SyncResult> forceSyncNow() async {
-    print('[Firebase] Force sync requested');
-
     if (!_connectivity.isConnected) {
-      print('[Firebase] Cannot sync - no network connection');
       return SyncResult(synced: 0, failed: 0, pending: await getPendingCount());
     }
 
@@ -327,7 +243,6 @@ class FirebaseSyncService {
 
   /// Libère les ressources du service
   void dispose() {
-    print('[Firebase] Disposing FirebaseSyncService');
     _connectivitySubscription?.cancel();
     _isInitialized = false;
   }

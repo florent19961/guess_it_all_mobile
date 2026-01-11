@@ -29,12 +29,8 @@ class WordHistoryService {
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    print('[WordHistory] Initializing service...');
     _historyCache = await _loadHistory();
     _isInitialized = true;
-
-    final totalTracked = _historyCache?.length ?? 0;
-    print('[WordHistory] Loaded $totalTracked words from history');
   }
 
   /// Retourne le nombre de fois qu'un mot a été vu (case-insensitive)
@@ -55,7 +51,6 @@ class WordHistoryService {
     }
 
     await _saveHistory();
-    print('[WordHistory] Incremented ${words.length} words');
   }
 
   /// Sélectionne des mots avec priorité (jamais vus d'abord, puis les moins vus)
@@ -72,18 +67,12 @@ class WordHistoryService {
       return shuffled;
     }
 
-    print('[WordHistory] Selecting $count words from ${availableWords.length} available');
-
     // Grouper les mots par seenCount
     final byCount = <int, List<String>>{};
     for (final word in availableWords) {
       final seenCount = getSeenCount(word);
       byCount.putIfAbsent(seenCount, () => []).add(word);
     }
-
-    // Log de la distribution
-    final distribution = byCount.map((k, v) => MapEntry(k, v.length));
-    print('[WordHistory] Priority distribution: $distribution');
 
     // Trier les clés par ordre croissant (0, 1, 2, ...)
     final sortedCounts = byCount.keys.toList()..sort();
@@ -99,10 +88,6 @@ class WordHistoryService {
       final remaining = count - selected.length;
       final toTake = wordsAtThisCount.take(remaining).toList();
       selected.addAll(toTake);
-
-      if (toTake.isNotEmpty) {
-        print('[WordHistory] Selected ${toTake.length} from seenCount=$seenCount');
-      }
     }
 
     return selected;
@@ -131,7 +116,6 @@ class WordHistoryService {
 
   /// Efface tout l'historique (pour tests/reset)
   Future<void> clearHistory() async {
-    print('[WordHistory] Clearing all history');
     _historyCache = {};
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_historyKey);
@@ -151,7 +135,6 @@ class WordHistoryService {
       final jsonString = prefs.getString(_historyKey);
 
       if (jsonString == null) {
-        print('[WordHistory] No history found, starting fresh');
         return {};
       }
 
