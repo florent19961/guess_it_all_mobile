@@ -30,6 +30,13 @@
             border-left: 4px solid #4caf50;
             margin: 20px 0;
         }
+        .info-box {
+            background-color: #fff3e0;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ff9800;
+            margin: 20px 0;
+        }
         .contact {
             background-color: #e3f2fd;
             padding: 15px;
@@ -46,6 +53,19 @@
         a {
             color: #1976d2;
         }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f5f5f5;
+        }
     </style>
 </head>
 <body>
@@ -53,7 +73,8 @@
     <p><strong>Application : Guess It All</strong></p>
 
     <div class="highlight">
-        <strong>En résumé :</strong> Guess It All ne collecte, ne stocke et ne partage aucune donnée personnelle. Toutes les informations restent sur votre appareil.
+        <strong>En résumé :</strong> Guess It All collecte des statistiques de jeu anonymes pour améliorer l'expérience.
+        Vos noms de joueurs et d'équipes ne sont jamais transmis. Seul un identifiant anonyme est utilisé.
     </div>
 
     <h2>1. Introduction</h2>
@@ -63,77 +84,106 @@
     </p>
 
     <h2>2. Données collectées</h2>
+
+    <h3>2.1 Données stockées localement (sur votre appareil)</h3>
+    <p>L'application stocke sur votre appareil :</p>
+    <ul>
+        <li>Les paramètres de jeu (nombre d'équipes, durée des tours, catégories sélectionnées)</li>
+        <li>Les noms des joueurs et des équipes</li>
+        <li>L'historique des 50 dernières parties</li>
+        <li>L'historique des mots joués (pour éviter les répétitions)</li>
+    </ul>
+    <p><strong>Ces données restent exclusivement sur votre appareil.</strong></p>
+
+    <h3>2.2 Données synchronisées (anonymes)</h3>
+    <div class="info-box">
+        <strong>Important :</strong> Lorsque vous êtes connecté à Internet, des statistiques de jeu anonymes
+        peuvent être synchronisées vers nos serveurs pour améliorer l'équilibrage des mots et l'expérience de jeu.
+    </div>
+
+    <p><strong>Données transmises :</strong></p>
+    <table>
+        <tr>
+            <th>Donnée</th>
+            <th>Exemple</th>
+            <th>Objectif</th>
+        </tr>
+        <tr>
+            <td>Identifiant anonyme</td>
+            <td><code>a1b2c3d4-e5f6-...</code></td>
+            <td>Distinguer les appareils (sans vous identifier)</td>
+        </tr>
+        <tr>
+            <td>Statistiques de partie</td>
+            <td>Durée, nombre de mots devinés, passes</td>
+            <td>Améliorer l'équilibrage du jeu</td>
+        </tr>
+        <tr>
+            <td>Mots joués</td>
+            <td>Temps de réponse par mot, difficulté perçue</td>
+            <td>Ajuster la difficulté des mots</td>
+        </tr>
+        <tr>
+            <td>Configuration</td>
+            <td>Catégories choisies, niveaux de difficulté</td>
+            <td>Comprendre les préférences des joueurs</td>
+        </tr>
+    </table>
+
+    <p><strong>Données JAMAIS transmises :</strong></p>
+    <ul>
+        <li>❌ Noms des joueurs (ex: "Florent", "Marie")</li>
+        <li>❌ Noms des équipes (ex: "Les Champions")</li>
+        <li>❌ Mots personnalisés saisis par les joueurs</li>
+        <li>❌ Données de localisation</li>
+        <li>❌ Informations personnelles identifiables</li>
+    </ul>
+
+    <h2>3. Stockage et sécurité</h2>
     <p>
-        <strong>Guess It All ne collecte aucune donnée personnelle.</strong>
-    </p>
-    <p>
-        L'application fonctionne entièrement hors ligne. Les informations que vous saisissez dans l'application
-        (noms des joueurs, mots à deviner, scores) sont stockées uniquement sur votre appareil et ne sont
-        jamais transmises à des serveurs externes.
+        Les données anonymes synchronisées sont stockées sur des serveurs sécurisés (Google Firebase)
+        situés dans l'Union Européenne. Elles sont utilisées uniquement à des fins d'amélioration du jeu
+        et ne sont jamais vendues ou partagées avec des tiers.
     </p>
 
-    <h2>3. Stockage local</h2>
+    <h2>4. Fonctionnement hors ligne</h2>
     <p>
-        L'application utilise le stockage local de votre appareil pour sauvegarder :
+        L'application fonctionne parfaitement <strong>sans connexion Internet</strong>.
+        Les données sont stockées localement et synchronisées uniquement lorsqu'une connexion est disponible.
+        Vous pouvez jouer en mode avion sans aucune limitation.
     </p>
-    <ul>
-        <li>Les paramètres de jeu (nombre d'équipes, durée des tours, etc.)</li>
-        <li>Les préférences utilisateur</li>
-    </ul>
-    <p>
-        Ces données restent exclusivement sur votre appareil et peuvent être supprimées à tout moment
-        en désinstallant l'application ou en effaçant les données de l'application dans les paramètres de votre téléphone.
-    </p>
-
-    <h2>4. Partage de données</h2>
-    <p>
-        Guess It All <strong>ne partage aucune donnée avec des tiers</strong>. L'application :
-    </p>
-    <ul>
-        <li>Ne contient pas de publicités</li>
-        <li>N'utilise pas d'outils d'analyse (analytics)</li>
-        <li>Ne se connecte à aucun serveur externe</li>
-        <li>Ne requiert pas de connexion internet pour fonctionner</li>
-    </ul>
 
     <h2>5. Autorisations</h2>
     <p>
-        L'application ne demande aucune autorisation spéciale (pas d'accès à la caméra, aux contacts,
-        à la localisation, etc.).
+        L'application demande uniquement l'accès à Internet pour la synchronisation optionnelle des statistiques.
+        Aucune autre autorisation n'est requise (pas d'accès à la caméra, aux contacts, à la localisation, etc.).
     </p>
 
-    <h2>6. Sécurité</h2>
-    <p>
-        Puisque toutes les données restent sur votre appareil et ne sont jamais transmises,
-        la sécurité de vos informations dépend uniquement de la sécurité de votre appareil.
-    </p>
-
-    <h2>7. Vos droits</h2>
-    <p>
-        Vous pouvez à tout moment :
-    </p>
+    <h2>6. Vos droits</h2>
+    <p>Vous pouvez à tout moment :</p>
     <ul>
-        <li>Supprimer toutes les données en désinstallant l'application</li>
-        <li>Effacer les données de l'application via les paramètres de votre téléphone</li>
+        <li><strong>Supprimer toutes les données locales</strong> en désinstallant l'application ou en effaçant ses données dans les paramètres de votre téléphone</li>
+        <li><strong>Demander la suppression de vos données synchronisées</strong> en nous contactant avec votre identifiant anonyme (visible dans les paramètres de l'application)</li>
+        <li><strong>Jouer hors ligne</strong> pour éviter toute synchronisation</li>
     </ul>
 
-    <h2>8. Modifications</h2>
+    <h2>7. Modifications</h2>
     <p>
         Cette politique de confidentialité peut être mise à jour occasionnellement.
         Toute modification sera reflétée sur cette page avec une nouvelle date de mise à jour.
     </p>
 
     <div class="contact">
-        <h2>9. Contact</h2>
+        <h2>8. Contact</h2>
         <p>
-            Pour toute question concernant cette politique de confidentialité ou l'application,
-            vous pouvez me contacter à l'adresse suivante :
+            Pour toute question concernant cette politique de confidentialité,
+            demande de suppression de données, ou autre sujet relatif à l'application :
         </p>
         <p><strong>Email :</strong> <a href="mailto:florentmely@gmail.com">florentmely@gmail.com</a></p>
     </div>
 
     <p class="update-date">
-        Dernière mise à jour : 10 décembre 2024
+        Dernière mise à jour : 11 janvier 2025
     </p>
 </body>
 </html>
