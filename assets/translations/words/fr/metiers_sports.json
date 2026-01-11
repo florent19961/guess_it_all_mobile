@@ -167,11 +167,6 @@
       "language": "international"
     },
     {
-      "word": "Boulanger",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Cuisinier",
       "difficulty": 1,
       "language": "international"
@@ -218,11 +213,6 @@
     },
     {
       "word": "Chocolatier",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Glacier",
       "difficulty": 2,
       "language": "international"
     },
@@ -1347,11 +1337,6 @@
       "language": "international"
     },
     {
-      "word": "Président",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Maire",
       "difficulty": 1,
       "language": "international"
@@ -1363,11 +1348,6 @@
     },
     {
       "word": "Reine",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Prince",
       "difficulty": 1,
       "language": "international"
     },
@@ -1802,11 +1782,6 @@
       "language": "international"
     },
     {
-      "word": "Pasteur",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Moine",
       "difficulty": 2,
       "language": "international"
@@ -2093,11 +2068,6 @@
     },
     {
       "word": "Ténor",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Soprano",
       "difficulty": 3,
       "language": "international"
     },
@@ -2497,11 +2467,6 @@
       "language": "international"
     },
     {
-      "word": "Ranger",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Agent FBI",
       "difficulty": 3,
       "language": "international"
@@ -2882,11 +2847,6 @@
       "language": "international"
     },
     {
-      "word": "Décathlon",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Heptathlon",
       "difficulty": 3,
       "language": "international"
@@ -2929,11 +2889,6 @@
     {
       "word": "Cheval d'arçons",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Sol",
-      "difficulty": 1,
       "language": "international"
     },
     {
@@ -3117,11 +3072,6 @@
       "language": "international"
     },
     {
-      "word": "Télésiège",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Télécabine",
       "difficulty": 3,
       "language": "international"
@@ -3289,11 +3239,6 @@
     {
       "word": "Hors-jeu",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "But",
-      "difficulty": 1,
       "language": "international"
     },
     {

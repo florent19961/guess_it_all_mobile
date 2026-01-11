@@ -97,11 +97,6 @@
       "language": "french"
     },
     {
-      "word": "Amsterdam",
-      "difficulty": 3,
-      "language": "french"
-    },
-    {
       "word": "Les copains d'abord",
       "difficulty": 3,
       "language": "french"
@@ -118,11 +113,6 @@
     },
     {
       "word": "Que je t'aime",
-      "difficulty": 2,
-      "language": "french"
-    },
-    {
-      "word": "Maintenant",
       "difficulty": 2,
       "language": "french"
     },
@@ -173,11 +163,6 @@
     },
     {
       "word": "Bad Guy",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Bohemian Rhapsody",
       "difficulty": 2,
       "language": "international"
     },
@@ -287,11 +272,6 @@
       "language": "international"
     },
     {
-      "word": "Soul",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Funk",
       "difficulty": 3,
       "language": "international"
@@ -319,11 +299,6 @@
     {
       "word": "Folk",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "House",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -412,93 +387,8 @@
       "language": "international"
     },
     {
-      "word": "Queen",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Michael Jackson",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Madonna",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Elvis Presley",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Adele",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Rihanna",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Beyoncé",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Pink Floyd",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Led Zeppelin",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Rolling Stones",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Nirvana",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Radiohead",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Coldplay",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "U2",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Bob Marley",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "David Bowie",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Prince",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Crescendo",
-      "difficulty": 3,
       "language": "international"
     },
     {
@@ -637,26 +527,6 @@
       "language": "french"
     },
     {
-      "word": "Le Roi Lion",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Les Misérables",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Mamma Mia",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Notre-Dame de Paris",
-      "difficulty": 2,
-      "language": "french"
-    },
-    {
       "word": "Roméo et Juliette",
       "difficulty": 2,
       "language": "international"
@@ -667,22 +537,7 @@
       "language": "international"
     },
     {
-      "word": "Chicago",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Cats",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "La La Land",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "West Side Story",
       "difficulty": 3,
       "language": "international"
     },
@@ -690,11 +545,6 @@
       "word": "Hamilton",
       "difficulty": 4,
       "language": "international"
-    },
-    {
-      "word": "Les Demoiselles de Rochefort",
-      "difficulty": 4,
-      "language": "french"
     },
     {
       "word": "Starmania",
@@ -937,11 +787,6 @@
       "language": "international"
     },
     {
-      "word": "Triangle",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Cymbales",
       "difficulty": 2,
       "language": "international"
@@ -1077,11 +922,6 @@
       "language": "international"
     },
     {
-      "word": "Stromae",
-      "difficulty": 1,
-      "language": "french"
-    },
-    {
       "word": "Angèle",
       "difficulty": 1,
       "language": "french"
@@ -1092,32 +932,7 @@
       "language": "french"
     },
     {
-      "word": "Jul",
-      "difficulty": 1,
-      "language": "french"
-    },
-    {
       "word": "Gims",
-      "difficulty": 1,
-      "language": "french"
-    },
-    {
-      "word": "Nekfeu",
-      "difficulty": 2,
-      "language": "french"
-    },
-    {
-      "word": "Orelsan",
-      "difficulty": 2,
-      "language": "french"
-    },
-    {
-      "word": "PNL",
-      "difficulty": 2,
-      "language": "french"
-    },
-    {
-      "word": "Soprano",
       "difficulty": 1,
       "language": "french"
     },
@@ -1202,42 +1017,7 @@
       "language": "french"
     },
     {
-      "word": "Jean-Jacques Goldman",
-      "difficulty": 1,
-      "language": "french"
-    },
-    {
-      "word": "Johnny Hallyday",
-      "difficulty": 1,
-      "language": "french"
-    },
-    {
-      "word": "Édith Piaf",
-      "difficulty": 1,
-      "language": "french"
-    },
-    {
-      "word": "Charles Aznavour",
-      "difficulty": 1,
-      "language": "french"
-    },
-    {
-      "word": "Jacques Brel",
-      "difficulty": 2,
-      "language": "french"
-    },
-    {
-      "word": "Serge Gainsbourg",
-      "difficulty": 2,
-      "language": "french"
-    },
-    {
       "word": "France Gall",
-      "difficulty": 2,
-      "language": "french"
-    },
-    {
-      "word": "Michel Sardou",
       "difficulty": 2,
       "language": "french"
     },
@@ -1249,11 +1029,6 @@
     {
       "word": "Patricia Kaas",
       "difficulty": 4,
-      "language": "french"
-    },
-    {
-      "word": "Céline Dion",
-      "difficulty": 1,
       "language": "french"
     },
     {
@@ -1302,22 +1077,7 @@
       "language": "french"
     },
     {
-      "word": "Maître Gims",
-      "difficulty": 1,
-      "language": "french"
-    },
-    {
-      "word": "Booba",
-      "difficulty": 2,
-      "language": "french"
-    },
-    {
       "word": "Kaaris",
-      "difficulty": 3,
-      "language": "french"
-    },
-    {
-      "word": "Ninho",
       "difficulty": 3,
       "language": "french"
     },
@@ -1352,36 +1112,6 @@
       "language": "international"
     },
     {
-      "word": "IAM",
-      "difficulty": 3,
-      "language": "french"
-    },
-    {
-      "word": "NTM",
-      "difficulty": 3,
-      "language": "french"
-    },
-    {
-      "word": "MC Solaar",
-      "difficulty": 3,
-      "language": "french"
-    },
-    {
-      "word": "Daft Punk",
-      "difficulty": 2,
-      "language": "french"
-    },
-    {
-      "word": "David Guetta",
-      "difficulty": 1,
-      "language": "french"
-    },
-    {
-      "word": "DJ Snake",
-      "difficulty": 2,
-      "language": "french"
-    },
-    {
       "word": "Martin Solveig",
       "difficulty": 2,
       "language": "french"
@@ -1397,38 +1127,8 @@
       "language": "french"
     },
     {
-      "word": "Taylor Swift",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Ed Sheeran",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Bruno Mars",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Justin Bieber",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Ariana Grande",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Dua Lipa",
       "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "The Weeknd",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1438,21 +1138,6 @@
     },
     {
       "word": "Billie Eilish",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Lady Gaga",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Katy Perry",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Shakira",
       "difficulty": 1,
       "language": "international"
     },
@@ -1492,28 +1177,8 @@
       "language": "international"
     },
     {
-      "word": "Whitney Houston",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Celine Dion",
       "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Eminem",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Drake",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Kanye West",
-      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1597,17 +1262,7 @@
       "language": "international"
     },
     {
-      "word": "AC/DC",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Guns N' Roses",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Metallica",
       "difficulty": 3,
       "language": "international"
     },
@@ -1634,16 +1289,6 @@
     {
       "word": "The Chainsmokers",
       "difficulty": 4,
-      "language": "international"
-    },
-    {
-      "word": "Calvin Harris",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Avicii",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1927,16 +1572,6 @@
       "language": "international"
     },
     {
-      "word": "Musique",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Chant",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Mélodie",
       "difficulty": 1,
       "language": "international"
@@ -1992,11 +1627,6 @@
       "language": "international"
     },
     {
-      "word": "Trio",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Quatuor",
       "difficulty": 3,
       "language": "international"
@@ -2047,83 +1677,8 @@
       "language": "international"
     },
     {
-      "word": "DJ",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Rappeur",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Chanteur",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Chanteuse",
       "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Guitariste",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Pianiste",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Batteur",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Bassiste",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Violoniste",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Saxophoniste",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Trompettiste",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Flûtiste",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Producteur",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Compositeur",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Auteur",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Interprète",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2229,11 +1784,6 @@
     {
       "word": "Beat",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Drop",
-      "difficulty": 3,
       "language": "international"
     },
     {

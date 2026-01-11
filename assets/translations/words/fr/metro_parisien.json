@@ -32,22 +32,12 @@
       "language": "international"
     },
     {
-      "word": "Opéra",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Concorde",
       "difficulty": 1,
       "language": "international"
     },
     {
       "word": "Invalides",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Étoile",
       "difficulty": 1,
       "language": "international"
     },
@@ -73,11 +63,6 @@
     },
     {
       "word": "Denfert-Rochereau",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Hôtel de Ville",
       "difficulty": 2,
       "language": "international"
     },
@@ -127,11 +112,6 @@
       "language": "international"
     },
     {
-      "word": "Luxembourg",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Palais Royal",
       "difficulty": 2,
       "language": "international"
@@ -163,11 +143,6 @@
     },
     {
       "word": "Porte Maillot",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Argentine",
       "difficulty": 2,
       "language": "international"
     },
@@ -372,17 +347,7 @@
       "language": "international"
     },
     {
-      "word": "Voltaire",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Charonne",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Alexandre Dumas",
       "difficulty": 3,
       "language": "international"
     },
@@ -437,22 +402,12 @@
       "language": "international"
     },
     {
-      "word": "Temple",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Rambuteau",
       "difficulty": 3,
       "language": "international"
     },
     {
       "word": "Étienne Marcel",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Sentier",
       "difficulty": 3,
       "language": "international"
     },
@@ -518,11 +473,6 @@
     },
     {
       "word": "Kléber",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Victor Hugo",
       "difficulty": 3,
       "language": "international"
     }

@@ -442,11 +442,6 @@
       "language": "international"
     },
     {
-      "word": "Madagascar",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Tanzanie",
       "difficulty": 4,
       "language": "international"
@@ -558,11 +553,6 @@
     },
     {
       "word": "Los Angeles",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Chicago",
       "difficulty": 1,
       "language": "international"
     },
@@ -1972,11 +1962,6 @@
       "language": "international"
     },
     {
-      "word": "Bois",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Jungle",
       "difficulty": 1,
       "language": "international"
@@ -2008,11 +1993,6 @@
     },
     {
       "word": "Désert",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Dune",
       "difficulty": 1,
       "language": "international"
     },
@@ -2692,11 +2672,6 @@
       "language": "international"
     },
     {
-      "word": "Pyramide",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Ruines",
       "difficulty": 1,
       "language": "international"
@@ -2732,47 +2707,7 @@
       "language": "international"
     },
     {
-      "word": "Froid",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Canicule",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Gel",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Soleil",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Pluie",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Neige",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Grêle",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Verglas",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Brouillard",
       "difficulty": 1,
       "language": "international"
     },
@@ -2782,37 +2717,7 @@
       "language": "international"
     },
     {
-      "word": "Nuage",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Orage",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Tonnerre",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Éclair",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Foudre",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Arc-en-ciel",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Vent",
       "difficulty": 1,
       "language": "international"
     },
@@ -2822,28 +2727,8 @@
       "language": "international"
     },
     {
-      "word": "Tempête",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Ouragan",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Cyclone",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Typhon",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Tornade",
-      "difficulty": 1,
       "language": "international"
     },
     {
@@ -2862,22 +2747,12 @@
       "language": "international"
     },
     {
-      "word": "Tsunami",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Tremblement de terre",
       "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Séisme",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Avalanche",
       "difficulty": 1,
       "language": "international"
     },
@@ -3062,18 +2937,8 @@
       "language": "international"
     },
     {
-      "word": "Granit",
-      "difficulty": 4,
-      "language": "international"
-    },
-    {
       "word": "Calcaire",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Marbre",
-      "difficulty": 1,
       "language": "international"
     },
     {
@@ -3097,27 +2962,7 @@
       "language": "international"
     },
     {
-      "word": "Or",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Argent",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Diamant",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Cuivre",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Fer",
       "difficulty": 1,
       "language": "international"
     }

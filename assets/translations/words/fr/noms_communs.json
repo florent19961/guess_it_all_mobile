@@ -2,22 +2,12 @@
   "categoryId": "noms_communs",
   "words": [
     {
-      "word": "Téléphone",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Ordinateur",
       "difficulty": 1,
       "language": "international"
     },
     {
       "word": "Télévision",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Radio",
       "difficulty": 1,
       "language": "international"
     },
@@ -37,32 +27,12 @@
       "language": "international"
     },
     {
-      "word": "Casque",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Enceinte",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Chargeur",
       "difficulty": 1,
       "language": "international"
     },
     {
       "word": "Clé USB",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Clavier",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Souris",
       "difficulty": 2,
       "language": "international"
     },
@@ -237,11 +207,6 @@
       "language": "international"
     },
     {
-      "word": "Boussole",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Loupe",
       "difficulty": 3,
       "language": "international"
@@ -303,11 +268,6 @@
     },
     {
       "word": "Commode",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Bibliothèque",
       "difficulty": 2,
       "language": "international"
     },
@@ -402,11 +362,6 @@
       "language": "international"
     },
     {
-      "word": "Verre",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Tasse",
       "difficulty": 1,
       "language": "international"
@@ -422,21 +377,6 @@
       "language": "international"
     },
     {
-      "word": "Passoire",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Fouet",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Spatule",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Louche",
       "difficulty": 2,
       "language": "international"
@@ -448,16 +388,6 @@
     },
     {
       "word": "Écumoire",
-      "difficulty": 4,
-      "language": "international"
-    },
-    {
-      "word": "Chinois",
-      "difficulty": 4,
-      "language": "international"
-    },
-    {
-      "word": "Mandoline",
       "difficulty": 4,
       "language": "international"
     },
@@ -493,11 +423,6 @@
     },
     {
       "word": "Clé",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Niveau",
       "difficulty": 2,
       "language": "international"
     },
@@ -557,11 +482,6 @@
       "language": "international"
     },
     {
-      "word": "Métro",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Scooter",
       "difficulty": 1,
       "language": "international"
@@ -577,22 +497,7 @@
       "language": "international"
     },
     {
-      "word": "Tramway",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Taxi",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Hélicoptère",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Voilier",
       "difficulty": 2,
       "language": "international"
     },
@@ -639,16 +544,6 @@
     {
       "word": "Trottinette",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Skateboard",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Téléphérique",
-      "difficulty": 3,
       "language": "international"
     },
     {
@@ -742,46 +637,6 @@
       "language": "international"
     },
     {
-      "word": "Guitare",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Piano",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Violon",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Harpe",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Violoncelle",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Contrebasse",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Ukulélé",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Banjo",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Alto",
       "difficulty": 3,
       "language": "international"
@@ -797,56 +652,6 @@
       "language": "international"
     },
     {
-      "word": "Flûte",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Trompette",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Saxophone",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Clarinette",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Trombone",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Cor",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Harmonica",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Hautbois",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Basson",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Tuba",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Cornemuse",
       "difficulty": 3,
       "language": "international"
@@ -857,48 +662,8 @@
       "language": "international"
     },
     {
-      "word": "Batterie",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Tambour",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Xylophone",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Cymbales",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Maracas",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Djembé",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Gong",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Timbales",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Triangle",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -967,11 +732,6 @@
       "language": "international"
     },
     {
-      "word": "GPS",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Wi-Fi",
       "difficulty": 2,
       "language": "international"
@@ -994,11 +754,6 @@
     {
       "word": "Velcro",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Post-it",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1044,21 +799,6 @@
     {
       "word": "Couloir",
       "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Entrée",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Terrasse",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Balcon",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1117,11 +857,6 @@
       "language": "international"
     },
     {
-      "word": "Sol",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Volet",
       "difficulty": 2,
       "language": "international"
@@ -1172,82 +907,7 @@
       "language": "international"
     },
     {
-      "word": "Maison",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Immeuble",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "École",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Hôpital",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Église",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Château",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Pont",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Tour",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Musée",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Gare",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Aéroport",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Cathédrale",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Beffroi",
-      "difficulty": 4,
-      "language": "international"
-    },
-    {
-      "word": "Phare",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Donjon",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Aqueduc",
       "difficulty": 4,
       "language": "international"
     },
@@ -1327,11 +987,6 @@
       "language": "international"
     },
     {
-      "word": "Scotch",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Dégrafeuse",
       "difficulty": 4,
       "language": "international"
@@ -1388,11 +1043,6 @@
     },
     {
       "word": "Jeu de société",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Lego",
       "difficulty": 2,
       "language": "international"
     },
@@ -1602,11 +1252,6 @@
       "language": "international"
     },
     {
-      "word": "Jonc",
-      "difficulty": 4,
-      "language": "international"
-    },
-    {
       "word": "Boîte",
       "difficulty": 1,
       "language": "international"
@@ -1812,16 +1457,6 @@
       "language": "international"
     },
     {
-      "word": "Raclette",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Fondue",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Plancha",
       "difficulty": 2,
       "language": "international"
@@ -1882,16 +1517,6 @@
       "language": "international"
     },
     {
-      "word": "Filet",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "But",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Gant de boxe",
       "difficulty": 2,
       "language": "international"
@@ -1932,11 +1557,6 @@
       "language": "international"
     },
     {
-      "word": "Crosse",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Volant",
       "difficulty": 2,
       "language": "international"
@@ -1944,11 +1564,6 @@
     {
       "word": "Cible",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Trampoline",
-      "difficulty": 1,
       "language": "international"
     },
     {
@@ -2002,11 +1617,6 @@
       "language": "international"
     },
     {
-      "word": "Roller",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Patin à glace",
       "difficulty": 2,
       "language": "international"
@@ -2017,27 +1627,7 @@
       "language": "international"
     },
     {
-      "word": "Surf",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Bodyboard",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Paddle",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Kayak",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Canoë",
       "difficulty": 2,
       "language": "international"
     },
@@ -2482,11 +2072,6 @@
       "language": "international"
     },
     {
-      "word": "Lentilles",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Poche de glace",
       "difficulty": 2,
       "language": "international"
@@ -2593,11 +2178,6 @@
     },
     {
       "word": "Haut-parleur",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Écouteurs",
       "difficulty": 1,
       "language": "international"
     },
@@ -2802,11 +2382,6 @@
       "language": "international"
     },
     {
-      "word": "Statue",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Figurine",
       "difficulty": 1,
       "language": "international"
@@ -2902,11 +2477,6 @@
       "language": "international"
     },
     {
-      "word": "Pompier",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Camion de pompier",
       "difficulty": 1,
       "language": "international"
@@ -2939,11 +2509,6 @@
     {
       "word": "Pelleteuse",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Grue",
-      "difficulty": 1,
       "language": "international"
     },
     {
@@ -2982,11 +2547,6 @@
       "language": "international"
     },
     {
-      "word": "Yacht",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Paquebot",
       "difficulty": 2,
       "language": "international"
@@ -3017,23 +2577,8 @@
       "language": "international"
     },
     {
-      "word": "Catamaran",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Planeur",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Deltaplane",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "ULM",
-      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3062,18 +2607,8 @@
       "language": "international"
     },
     {
-      "word": "Jogging",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Survêtement",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Polo",
-      "difficulty": 1,
       "language": "international"
     },
     {
@@ -3114,11 +2649,6 @@
     {
       "word": "Smoking",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Tailleur",
-      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3208,11 +2738,6 @@
     },
     {
       "word": "Collant",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Bas",
       "difficulty": 2,
       "language": "international"
     },
@@ -3347,11 +2872,6 @@
       "language": "international"
     },
     {
-      "word": "Tajine",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Grill",
       "difficulty": 2,
       "language": "international"
@@ -3359,11 +2879,6 @@
     {
       "word": "Poêle à crêpes",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Économe",
-      "difficulty": 2,
       "language": "international"
     },
     {

@@ -507,11 +507,6 @@
       "language": "international"
     },
     {
-      "word": "Oasis",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Schweppes",
       "difficulty": 2,
       "language": "international"
@@ -687,11 +682,6 @@
       "language": "french"
     },
     {
-      "word": "Savane",
-      "difficulty": 3,
-      "language": "french"
-    },
-    {
       "word": "Napolitain",
       "difficulty": 3,
       "language": "french"
@@ -728,11 +718,6 @@
     },
     {
       "word": "Pepito",
-      "difficulty": 2,
-      "language": "french"
-    },
-    {
-      "word": "Prince",
       "difficulty": 2,
       "language": "french"
     },
@@ -872,11 +857,6 @@
       "language": "french"
     },
     {
-      "word": "Carrefour",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Auchan",
       "difficulty": 2,
       "language": "french"
@@ -929,11 +909,6 @@
     {
       "word": "Conforama",
       "difficulty": 2,
-      "language": "french"
-    },
-    {
-      "word": "But",
-      "difficulty": 3,
       "language": "french"
     },
     {
@@ -1282,11 +1257,6 @@
       "language": "international"
     },
     {
-      "word": "Pokémon",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Sega",
       "difficulty": 3,
       "language": "international"
@@ -1372,16 +1342,6 @@
       "language": "international"
     },
     {
-      "word": "Yves Saint Laurent",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Giorgio Armani",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Dior Sauvage",
       "difficulty": 3,
       "language": "international"
@@ -1398,11 +1358,6 @@
     },
     {
       "word": "Bleu de Chanel",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "La Vie est Belle",
       "difficulty": 3,
       "language": "international"
     },
@@ -1867,11 +1822,6 @@
       "language": "international"
     },
     {
-      "word": "Café",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Chocolat chaud",
       "difficulty": 2,
       "language": "international"
@@ -1917,11 +1867,6 @@
       "language": "french"
     },
     {
-      "word": "Mont Blanc",
-      "difficulty": 3,
-      "language": "french"
-    },
-    {
       "word": "Petit Suisse",
       "difficulty": 2,
       "language": "french"
@@ -1934,11 +1879,6 @@
     {
       "word": "Actimel",
       "difficulty": 3,
-      "language": "french"
-    },
-    {
-      "word": "Fjord",
-      "difficulty": 2,
       "language": "french"
     },
     {
@@ -2017,11 +1957,6 @@
       "language": "international"
     },
     {
-      "word": "Glace",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Sorbet",
       "difficulty": 2,
       "language": "international"
@@ -2097,11 +2032,6 @@
       "language": "french"
     },
     {
-      "word": "Tahiti",
-      "difficulty": 2,
-      "language": "french"
-    },
-    {
       "word": "La Roche-Posay",
       "difficulty": 2,
       "language": "french"
@@ -2158,16 +2088,6 @@
     },
     {
       "word": "Disney",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Marvel",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Star Wars",
       "difficulty": 1,
       "language": "international"
     },

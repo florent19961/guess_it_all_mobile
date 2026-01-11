@@ -197,11 +197,6 @@
       "language": "international"
     },
     {
-      "word": "Puma",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Rhinocéros",
       "difficulty": 1,
       "language": "international"
@@ -642,11 +637,6 @@
       "language": "international"
     },
     {
-      "word": "Papillon",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Abeille",
       "difficulty": 1,
       "language": "international"
@@ -792,11 +782,6 @@
       "language": "international"
     },
     {
-      "word": "Jasmin",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Pivoine",
       "difficulty": 4,
       "language": "international"
@@ -937,17 +922,7 @@
       "language": "international"
     },
     {
-      "word": "Pomme",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Banane",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Orange",
       "difficulty": 1,
       "language": "international"
     },
@@ -1058,11 +1033,6 @@
     },
     {
       "word": "Datte",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Avocat",
       "difficulty": 2,
       "language": "international"
     },
@@ -1467,11 +1437,6 @@
       "language": "international"
     },
     {
-      "word": "Menthe",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Persil",
       "difficulty": 1,
       "language": "international"
@@ -1787,117 +1752,12 @@
       "language": "international"
     },
     {
-      "word": "Orage",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Arc-en-ciel",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Pluie",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Neige",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Vent",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Éclair",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Tonnerre",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Grêle",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Brouillard",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Rosée",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Givre",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Éclipse",
       "difficulty": 2,
       "language": "international"
     },
     {
-      "word": "Tsunami",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Volcan",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Tornade",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Avalanche",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Séisme",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Cyclone",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Ouragan",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Aurore boréale",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Or",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Diamant",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Argent",
       "difficulty": 2,
       "language": "international"
     },
@@ -1942,71 +1802,6 @@
       "language": "international"
     },
     {
-      "word": "Montagne",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Vallée",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Plage",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Île",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Canyon",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Grotte",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Falaise",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Dune",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Glacier",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Plateau",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Colline",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Cratère",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Fjord",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Stalactite",
       "difficulty": 2,
       "language": "international"
@@ -2017,102 +1812,7 @@
       "language": "international"
     },
     {
-      "word": "Archipel",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Isthme",
-      "difficulty": 4,
-      "language": "international"
-    },
-    {
-      "word": "Rivière",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Lac",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Océan",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Mer",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Cascade",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Ruisseau",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Étang",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Fleuve",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Torrent",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Marais",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Marécage",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Lagune",
-      "difficulty": 4,
-      "language": "international"
-    },
-    {
-      "word": "Estuaire",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Delta",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Geyser",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Soleil",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Lune",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Étoile",
       "difficulty": 1,
       "language": "international"
     },
@@ -2152,62 +1852,12 @@
       "language": "international"
     },
     {
-      "word": "Forêt",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Désert",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Jungle",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Savane",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Prairie",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Steppe",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Taïga",
-      "difficulty": 4,
-      "language": "international"
-    },
-    {
-      "word": "Toundra",
-      "difficulty": 4,
-      "language": "international"
-    },
-    {
       "word": "Récif corallien",
       "difficulty": 3,
       "language": "international"
     },
     {
-      "word": "Mangrove",
-      "difficulty": 4,
-      "language": "international"
-    },
-    {
       "word": "Pampa",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Lande",
       "difficulty": 3,
       "language": "international"
     },
@@ -2327,11 +1977,6 @@
       "language": "international"
     },
     {
-      "word": "Croissant",
-      "difficulty": 1,
-      "language": "french"
-    },
-    {
       "word": "Baguette",
       "difficulty": 1,
       "language": "french"
@@ -2343,11 +1988,6 @@
     },
     {
       "word": "Quiche",
-      "difficulty": 1,
-      "language": "french"
-    },
-    {
-      "word": "Ratatouille",
       "difficulty": 1,
       "language": "french"
     },
@@ -2442,11 +2082,6 @@
       "language": "international"
     },
     {
-      "word": "Kebab",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Falafel",
       "difficulty": 2,
       "language": "international"
@@ -2512,17 +2147,7 @@
       "language": "international"
     },
     {
-      "word": "Sauter",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Rôtir",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Griller",
       "difficulty": 2,
       "language": "international"
     },
@@ -2564,11 +2189,6 @@
     {
       "word": "Blanchir",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Mandoline",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2687,11 +2307,6 @@
       "language": "international"
     },
     {
-      "word": "Opéra",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Religieuse",
       "difficulty": 2,
       "language": "international"
@@ -2792,11 +2407,6 @@
       "language": "international"
     },
     {
-      "word": "Bordeaux",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Bourgogne",
       "difficulty": 2,
       "language": "international"
@@ -2818,11 +2428,6 @@
     },
     {
       "word": "Pain",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Brioche",
       "difficulty": 1,
       "language": "international"
     },
@@ -2992,27 +2597,12 @@
       "language": "international"
     },
     {
-      "word": "Bar",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Lieu",
       "difficulty": 3,
       "language": "international"
     },
     {
-      "word": "Café",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Thé",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Chocolat chaud",
       "difficulty": 1,
       "language": "international"
     },
@@ -3062,68 +2652,13 @@
       "language": "international"
     },
     {
-      "word": "Limonade",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Coca-Cola",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Orangina",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Sprite",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Fanta",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Eau gazeuse",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Sirop",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Smoothie",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Milkshake",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Jus de raisin",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Thé glacé",
       "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Citronnade",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Grenadine",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -3297,11 +2832,6 @@
       "language": "international"
     },
     {
-      "word": "Beurre",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Crème",
       "difficulty": 1,
       "language": "international"
@@ -3318,11 +2848,6 @@
     },
     {
       "word": "Sauce barbecue",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Tabasco",
       "difficulty": 2,
       "language": "international"
     },
@@ -3383,26 +2908,6 @@
     },
     {
       "word": "Olives",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Lait",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Yaourt",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Fromage blanc",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Crème fraîche",
       "difficulty": 1,
       "language": "international"
     },
@@ -3552,11 +3057,6 @@
       "language": "international"
     },
     {
-      "word": "Filet",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Cuisse",
       "difficulty": 2,
       "language": "international"
@@ -3657,21 +3157,6 @@
       "language": "international"
     },
     {
-      "word": "Brownie",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Cookie",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Muffin",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Cupcake",
       "difficulty": 1,
       "language": "international"
@@ -3687,22 +3172,7 @@
       "language": "international"
     },
     {
-      "word": "Donut",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Churros",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Glace",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Sorbet",
       "difficulty": 2,
       "language": "international"
     },
@@ -3787,16 +3257,6 @@
       "language": "international"
     },
     {
-      "word": "Chocolat",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Caramel",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Sucette",
       "difficulty": 1,
       "language": "international"
@@ -3804,16 +3264,6 @@
     {
       "word": "Chewing-gum",
       "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Réglisse",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Nougat",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -3869,11 +3319,6 @@
     {
       "word": "Poussin",
       "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Poulain",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -4052,28 +3497,13 @@
       "language": "international"
     },
     {
-      "word": "Sable",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Roche",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Terre",
       "difficulty": 1,
       "language": "international"
     },
     {
       "word": "Boue",
       "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Argile",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -4114,16 +3544,6 @@
     {
       "word": "Accalmie",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Canicule",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Gel",
-      "difficulty": 1,
       "language": "international"
     },
     {

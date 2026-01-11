@@ -127,11 +127,6 @@
       "language": "international"
     },
     {
-      "word": "Côte",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Crâne",
       "difficulty": 2,
       "language": "international"
@@ -357,11 +352,6 @@
       "language": "international"
     },
     {
-      "word": "Douleur",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Fatigue",
       "difficulty": 1,
       "language": "international"
@@ -393,11 +383,6 @@
     },
     {
       "word": "Constipation",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Éruption",
       "difficulty": 2,
       "language": "international"
     },
@@ -442,32 +427,7 @@
       "language": "international"
     },
     {
-      "word": "Pansement",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Plâtre",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Attelle",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Radiographie",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Échographie",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Scanner",
       "difficulty": 2,
       "language": "international"
     },
@@ -517,23 +477,8 @@
       "language": "international"
     },
     {
-      "word": "Anesthésie",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Réanimation",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Cardiologue",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Dermatologue",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -547,47 +492,12 @@
       "language": "international"
     },
     {
-      "word": "Pédiatre",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Gynécologue",
       "difficulty": 2,
       "language": "international"
     },
     {
-      "word": "Ophtalmologue",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "ORL",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Dentiste",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Kinésithérapeute",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Radiologue",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Anesthésiste",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Chirurgien",
       "difficulty": 2,
       "language": "international"
     },
@@ -622,11 +532,6 @@
       "language": "international"
     },
     {
-      "word": "Sirop",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Pommade",
       "difficulty": 1,
       "language": "international"
@@ -652,28 +557,8 @@
       "language": "international"
     },
     {
-      "word": "Stéthoscope",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Thermomètre",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Tensiomètre",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Scalpel",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Seringue",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -872,11 +757,6 @@
       "language": "international"
     },
     {
-      "word": "Lunettes",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Presbytie",
       "difficulty": 3,
       "language": "international"
@@ -918,11 +798,6 @@
     },
     {
       "word": "Anxiété",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Stress",
       "difficulty": 2,
       "language": "international"
     },
@@ -1007,16 +882,6 @@
       "language": "international"
     },
     {
-      "word": "Urgence",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Ambulance",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "SAMU",
       "difficulty": 1,
       "language": "international"
@@ -1033,36 +898,6 @@
     },
     {
       "word": "Garrot",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Brancard",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Hôpital",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Clinique",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Chambre",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Lit",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Service",
       "difficulty": 2,
       "language": "international"
     },
@@ -1102,51 +937,6 @@
       "language": "international"
     },
     {
-      "word": "Infirmier",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Pharmacien",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Aide-soignant",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Sage-femme",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Ambulancier",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Psychologue",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Orthophoniste",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Podologue",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Ostéopathe",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Diététicien",
       "difficulty": 2,
       "language": "international"
@@ -1172,27 +962,7 @@
       "language": "international"
     },
     {
-      "word": "Prothèse",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Béquilles",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Fauteuil roulant",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Appareil auditif",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Lentilles",
       "difficulty": 2,
       "language": "international"
     },
@@ -1297,11 +1067,6 @@
       "language": "international"
     },
     {
-      "word": "Fer",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Protéine",
       "difficulty": 2,
       "language": "international"
@@ -1372,16 +1137,6 @@
       "language": "international"
     },
     {
-      "word": "Or",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Argent",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Hélium",
       "difficulty": 2,
       "language": "international"
@@ -1412,23 +1167,8 @@
       "language": "international"
     },
     {
-      "word": "Aluminium",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Cuivre",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Plomb",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Platine",
-      "difficulty": 4,
       "language": "international"
     },
     {
@@ -1632,26 +1372,6 @@
       "language": "international"
     },
     {
-      "word": "Terre",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Lune",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Soleil",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Mars",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Jupiter",
       "difficulty": 1,
       "language": "international"
@@ -1663,11 +1383,6 @@
     },
     {
       "word": "Vénus",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Étoile",
       "difficulty": 1,
       "language": "international"
     },
@@ -1692,48 +1407,13 @@
       "language": "international"
     },
     {
-      "word": "Galaxie",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Satellite",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Fusée",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Station spatiale",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Comète",
       "difficulty": 2,
       "language": "international"
     },
     {
       "word": "Astéroïde",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Éclipse",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Météorite",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Trou noir",
-      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1757,42 +1437,7 @@
       "language": "international"
     },
     {
-      "word": "Supernova",
-      "difficulty": 4,
-      "language": "international"
-    },
-    {
-      "word": "Nébuleuse",
-      "difficulty": 4,
-      "language": "international"
-    },
-    {
-      "word": "Roue",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Feu",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Imprimerie",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Ampoule",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Téléphone",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Ordinateur",
       "difficulty": 1,
       "language": "international"
     },
@@ -1802,32 +1447,12 @@
       "language": "international"
     },
     {
-      "word": "Pénicilline",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Microscope",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Télescope",
       "difficulty": 2,
       "language": "international"
     },
     {
-      "word": "Boussole",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Poudre à canon",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Papier",
       "difficulty": 2,
       "language": "international"
     },
@@ -1844,11 +1469,6 @@
     {
       "word": "Transistor",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Laser",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1873,11 +1493,6 @@
     },
     {
       "word": "Mendeleïev",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Archimède",
       "difficulty": 3,
       "language": "international"
     },
@@ -1923,21 +1538,6 @@
     },
     {
       "word": "Son",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Chaleur",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Froid",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Vent",
       "difficulty": 1,
       "language": "international"
     },
@@ -2007,11 +1607,6 @@
       "language": "international"
     },
     {
-      "word": "Mètre",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Gramme",
       "difficulty": 1,
       "language": "international"
@@ -2034,11 +1629,6 @@
     {
       "word": "Kelvin",
       "difficulty": 4,
-      "language": "international"
-    },
-    {
-      "word": "Newton",
-      "difficulty": 3,
       "language": "international"
     },
     {
@@ -2092,21 +1682,6 @@
       "language": "international"
     },
     {
-      "word": "Sel",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Sucre",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Acide",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Base",
       "difficulty": 2,
       "language": "international"
@@ -2128,11 +1703,6 @@
     },
     {
       "word": "Cristal",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Solution",
       "difficulty": 2,
       "language": "international"
     },

@@ -162,11 +162,6 @@
       "language": "international"
     },
     {
-      "word": "Chevalier",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Archers",
       "difficulty": 3,
       "language": "international"
@@ -202,16 +197,6 @@
       "language": "international"
     },
     {
-      "word": "Prince",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Princesse",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Valkyrie",
       "difficulty": 4,
       "language": "international"
@@ -219,11 +204,6 @@
     {
       "word": "Golem",
       "difficulty": 4,
-      "language": "international"
-    },
-    {
-      "word": "Ballon",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -252,11 +232,6 @@
       "language": "international"
     },
     {
-      "word": "Mousquetaire",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Électro-géant",
       "difficulty": 4,
       "language": "international"
@@ -264,11 +239,6 @@
     {
       "word": "Archer magique",
       "difficulty": 4,
-      "language": "international"
-    },
-    {
-      "word": "Mineur",
-      "difficulty": 3,
       "language": "international"
     },
     {
@@ -292,22 +262,7 @@
       "language": "international"
     },
     {
-      "word": "Foudre",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Rage",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Gel",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Tornade",
       "difficulty": 2,
       "language": "international"
     },
@@ -323,26 +278,6 @@
     },
     {
       "word": "Poison",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Mario",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Zelda",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Minecraft",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Fortnite",
       "difficulty": 2,
       "language": "international"
     },
@@ -367,32 +302,7 @@
       "language": "international"
     },
     {
-      "word": "Spider-Man",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "GTA",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Call of Duty",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "FIFA",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Assassin's Creed",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "The Witcher",
       "difficulty": 3,
       "language": "international"
     },
@@ -512,11 +422,6 @@
       "language": "international"
     },
     {
-      "word": "Mikado",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Cluedo",
       "difficulty": 3,
       "language": "international"
@@ -612,27 +517,7 @@
       "language": "international"
     },
     {
-      "word": "PlayStation",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Xbox",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Wii",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Game Boy",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Nintendo",
       "difficulty": 1,
       "language": "international"
     },
@@ -817,21 +702,6 @@
       "language": "international"
     },
     {
-      "word": "Banane",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Étoile",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Éclair",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Carapace bleue",
       "difficulty": 2,
       "language": "international"
@@ -942,11 +812,6 @@
       "language": "international"
     },
     {
-      "word": "Clé",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Gemme",
       "difficulty": 2,
       "language": "international"
@@ -968,11 +833,6 @@
     },
     {
       "word": "Triforce",
-      "difficulty": 4,
-      "language": "international"
-    },
-    {
-      "word": "Ocarina",
       "difficulty": 4,
       "language": "international"
     },
@@ -1024,11 +884,6 @@
     {
       "word": "Isaac",
       "difficulty": 4,
-      "language": "international"
-    },
-    {
-      "word": "Pokémon",
-      "difficulty": 1,
       "language": "international"
     },
     {
@@ -1167,38 +1022,8 @@
       "language": "international"
     },
     {
-      "word": "Corde à sauter",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Élastique",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Billes",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Osselets",
       "difficulty": 4,
-      "language": "international"
-    },
-    {
-      "word": "Toupie",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Yo-yo",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Cerf-volant",
-      "difficulty": 1,
       "language": "international"
     },
     {
@@ -1212,17 +1037,7 @@
       "language": "international"
     },
     {
-      "word": "Trampoline",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Cabane",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Château de sable",
       "difficulty": 1,
       "language": "international"
     },
@@ -1237,22 +1052,7 @@
       "language": "international"
     },
     {
-      "word": "Puzzle",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Construction",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Poupée",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Peluche",
       "difficulty": 1,
       "language": "international"
     },
@@ -1277,32 +1077,7 @@
       "language": "international"
     },
     {
-      "word": "Lego",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Playmobil",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Kapla",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Figurine",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Robot",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Dinosaure",
       "difficulty": 1,
       "language": "international"
     },
@@ -1322,38 +1097,8 @@
       "language": "international"
     },
     {
-      "word": "Skateboard",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Trottinette",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Vélo",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Rollers",
       "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Mickey Mouse",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Donald Duck",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Dingo",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1397,21 +1142,6 @@
       "language": "international"
     },
     {
-      "word": "Tom et Jerry",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Scooby-Doo",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Bob l'éponge",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Patrick",
       "difficulty": 3,
       "language": "international"
@@ -1424,11 +1154,6 @@
     {
       "word": "Homer Simpson",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Shrek",
-      "difficulty": 1,
       "language": "international"
     },
     {
@@ -1447,16 +1172,6 @@
       "language": "international"
     },
     {
-      "word": "Pat Patrouille",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Peppa Pig",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Manette",
       "difficulty": 1,
       "language": "international"
@@ -1464,16 +1179,6 @@
     {
       "word": "Joystick",
       "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Écran",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Niveau",
-      "difficulty": 1,
       "language": "international"
     },
     {
@@ -1492,22 +1197,7 @@
       "language": "international"
     },
     {
-      "word": "Vie",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Bonus",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Trésor",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Carte",
       "difficulty": 1,
       "language": "international"
     },
@@ -1529,11 +1219,6 @@
     {
       "word": "Joueur",
       "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Avatar",
-      "difficulty": 3,
       "language": "international"
     },
     {
@@ -1587,27 +1272,12 @@
       "language": "international"
     },
     {
-      "word": "Solo",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Raid",
       "difficulty": 2,
       "language": "international"
     },
     {
-      "word": "Donjon",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Loot",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Drop",
       "difficulty": 2,
       "language": "international"
     },
@@ -1647,27 +1317,7 @@
       "language": "international"
     },
     {
-      "word": "Casque",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Bouclier",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Épée",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Arc",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Flèche",
       "difficulty": 1,
       "language": "international"
     },
@@ -1717,41 +1367,6 @@
       "language": "international"
     },
     {
-      "word": "Allié",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Forêt",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Grotte",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Mine",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Temple",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Ruines",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Tour",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Portail",
       "difficulty": 1,
       "language": "international"
@@ -1778,26 +1393,6 @@
     },
     {
       "word": "Familier",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Clavier",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Souris",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Stitch",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Simba",
       "difficulty": 2,
       "language": "international"
     },
@@ -1857,28 +1452,8 @@
       "language": "international"
     },
     {
-      "word": "Cendrillon",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Blanche-Neige",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Aurore",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Raiponce",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Vaiana",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1887,32 +1462,7 @@
       "language": "international"
     },
     {
-      "word": "Buzz l'Éclair",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Woody",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Némo",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Dory",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Marin",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Les Indestructibles",
       "difficulty": 1,
       "language": "international"
     },
@@ -1927,48 +1477,13 @@
       "language": "international"
     },
     {
-      "word": "Wall-E",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Eve",
       "difficulty": 2,
       "language": "international"
     },
     {
-      "word": "Ratatouille",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
-      "word": "Rémy",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Cars",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Flash McQueen",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Martin",
-      "difficulty": 3,
-      "language": "international"
-    },
-    {
       "word": "Sally",
       "difficulty": 4,
-      "language": "international"
-    },
-    {
-      "word": "Monstres et Cie",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1992,11 +1507,6 @@
       "language": "french"
     },
     {
-      "word": "Bridge",
-      "difficulty": 2,
-      "language": "international"
-    },
-    {
       "word": "Bataille",
       "difficulty": 1,
       "language": "international"
@@ -2017,17 +1527,7 @@
       "language": "french"
     },
     {
-      "word": "Joker",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "As",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Roi",
       "difficulty": 1,
       "language": "international"
     },
@@ -2047,17 +1547,7 @@
       "language": "international"
     },
     {
-      "word": "Cœur",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Carreau",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Trèfle",
       "difficulty": 1,
       "language": "international"
     },
@@ -2087,11 +1577,6 @@
       "language": "international"
     },
     {
-      "word": "Tapis",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
       "word": "Full",
       "difficulty": 3,
       "language": "international"
@@ -2099,11 +1584,6 @@
     {
       "word": "Brelan",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Paire",
-      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2199,16 +1679,6 @@
     {
       "word": "Pastel",
       "difficulty": 3,
-      "language": "international"
-    },
-    {
-      "word": "Crayon",
-      "difficulty": 1,
-      "language": "international"
-    },
-    {
-      "word": "Feutre",
-      "difficulty": 1,
       "language": "international"
     },
     {
