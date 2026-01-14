@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:upgrader/upgrader.dart';
 import 'theme/app_theme.dart';
 import 'providers/game_provider.dart';
 import 'utils/constants.dart';
@@ -21,6 +23,18 @@ import 'screens/categories_screen.dart';
 class GuessItAllApp extends StatelessWidget {
   const GuessItAllApp({super.key});
 
+  // Configuration de l'upgrader pour les mises à jour forcées
+  static final _upgrader = Upgrader(
+    storeController: UpgraderStoreController(
+      onAndroid: () => UpgraderPlayStore(),
+      oniOS: () => UpgraderAppStore(appId: '6756429415'),
+    ),
+    dialogStyle: Platform.isIOS
+        ? UpgradeDialogStyle.cupertino
+        : UpgradeDialogStyle.material,
+    languageCode: 'fr',
+  );
+
   @override
   Widget build(BuildContext context) {
     return Consumer<GameProvider>(
@@ -29,7 +43,10 @@ class GuessItAllApp extends StatelessWidget {
           title: 'Guess It All',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.darkTheme,
-          home: _buildCurrentScreen(provider.game.currentScreen),
+          home: UpgradeAlert(
+            upgrader: _upgrader,
+            child: _buildCurrentScreen(provider.game.currentScreen),
+          ),
         );
       },
     );

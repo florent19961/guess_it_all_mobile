@@ -26,6 +26,9 @@ dependencies:
   # Connectivity - Detect network status for sync
   connectivity_plus: ^6.1.0
 
+  # Force update - Check for app updates
+  upgrader: ^11.5.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

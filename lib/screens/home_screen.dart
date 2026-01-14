@@ -67,7 +67,7 @@ class HomeScreen extends StatelessWidget {
                   size: AppButtonSize.large,
                   fullWidth: true,
                   onPressed: () async {
-                    await provider.startNewGame();
+                    await provider.clearLocalStorage();
                     provider.goToScreen(AppConstants.screenSettings);
                   },
                 ),
@@ -79,7 +79,8 @@ class HomeScreen extends StatelessWidget {
                   variant: AppButtonVariant.primary,
                   size: AppButtonSize.large,
                   fullWidth: true,
-                  onPressed: () {
+                  onPressed: () async {
+                    await provider.clearLocalStorage();
                     provider.goToScreen(AppConstants.screenSettings);
                   },
                 ),
@@ -130,7 +131,7 @@ class HomeScreen extends StatelessWidget {
                   variant: AppButtonVariant.primary,
                   onPressed: () async {
                     Navigator.of(context).pop();
-                    await provider.startNewGame();
+                    await provider.clearLocalStorage();
                     provider.goToScreen(AppConstants.screenSettings);
                   },
                 ),

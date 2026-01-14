@@ -297,6 +297,40 @@ cloud_firestore: ^5.5.0    # Base de données Firestore
 connectivity_plus: ^6.1.0  # Détection réseau
 ```
 
+## Mises à jour forcées
+
+Le package `upgrader` permet d'afficher un popup natif (Cupertino sur iOS, Material sur Android) lorsqu'une nouvelle version de l'app est disponible sur les stores.
+
+### Configuration
+
+Dans `lib/app.dart`, l'`UpgradeAlert` wrapper détecte automatiquement les nouvelles versions :
+
+```dart
+static final _upgrader = Upgrader(
+  storeController: UpgraderStoreController(
+    onAndroid: () => UpgraderPlayStore(),
+    oniOS: () => UpgraderAppStore(appId: '6756429415'),
+  ),
+  dialogStyle: Platform.isIOS
+      ? UpgradeDialogStyle.cupertino
+      : UpgradeDialogStyle.material,
+  languageCode: 'fr',
+);
+```
+
+### Identifiants des stores
+
+| Plateforme | Identifiant |
+|------------|-------------|
+| Android | `com.guessitall.guess_it_all_mobile` |
+| iOS | `6756429415` |
+
+### Dépendance
+
+```yaml
+upgrader: ^11.5.1  # Mise à jour forcée
+```
+
 ## Historique des Mots (Priorisation)
 
 Le système priorise les mots que l'utilisateur n'a jamais vus lors de la génération aléatoire.

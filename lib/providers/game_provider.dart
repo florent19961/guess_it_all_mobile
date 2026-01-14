@@ -125,6 +125,7 @@ class GameProvider extends ChangeNotifier {
     List<int>? selectedDifficultyLevels,
   }) {
     // Sauvegarder les anciennes valeurs pour détecter les changements
+    final oldNumberOfTeams = _settings.numberOfTeams;
     final oldWordChoice = _settings.wordChoice;
     final oldCategories = _settings.selectedCategories;
     final oldDifficulties = _settings.selectedDifficultyLevels;
@@ -154,6 +155,15 @@ class GameProvider extends ChangeNotifier {
     if (modeChanged ||
         (_settings.wordChoice == 'Aléatoire' && (categoriesChanged || difficultiesChanged))) {
       _clearAllPlayersWords();
+    }
+
+    // Détecter le changement de nombre d'équipes
+    final teamCountChanged = numberOfTeams != null &&
+        numberOfTeams != oldNumberOfTeams;
+
+    // Recréer les équipes si le nombre change
+    if (teamCountChanged && _teams.isNotEmpty) {
+      createTeams();
     }
 
     notifyListeners();
