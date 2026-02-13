@@ -3,6 +3,41 @@ import '../../services/word_history_service.dart';
 import '../../models/category_metadata.dart';
 import '../../models/word_stats.dart';
 
+/// Lookup direct des métadonnées pour une liste de mots
+///
+/// Parcourt toutes les catégories chargées par WordLoaderService pour
+/// retrouver categoryId, difficulty et language de chaque mot.
+/// Utilisé comme fallback quand le cache en mémoire est absent ou incomplet.
+Future<Map<String, WordMetadata>> lookupWordsMetadata(List<String> words) async {
+  final loader = WordLoaderService();
+  if (!loader.isInitialized) {
+    await loader.initialize();
+  }
+
+  final Map<String, WordMetadata> index = {};
+  final wordsSet = words.toSet();
+
+  for (final meta in loader.getCategoriesMetadata()) {
+    try {
+      final category = await loader.loadCategory(meta.id);
+      for (final w in category.words) {
+        if (wordsSet.contains(w.word) && !index.containsKey(w.word)) {
+          index[w.word] = WordMetadata.fromCategory(
+            word: w.word,
+            categoryId: meta.id,
+            difficulty: w.difficulty,
+            language: w.language,
+          );
+        }
+      }
+    } catch (e) {
+      print('Erreur lookup catégorie ${meta.id}: $e');
+    }
+  }
+
+  return index;
+}
+
 /// Obtenir la liste des catégories (métadonnées uniquement)
 ///
 /// Version asynchrone qui utilise WordLoaderService.

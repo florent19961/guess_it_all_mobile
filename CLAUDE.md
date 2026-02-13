@@ -306,17 +306,30 @@ Le package `upgrader` permet d'afficher un popup natif (Cupertino sur iOS, Mater
 Dans `lib/app.dart`, l'`UpgradeAlert` wrapper détecte automatiquement les nouvelles versions :
 
 ```dart
+// Configuration de l'upgrader
 static final _upgrader = Upgrader(
   storeController: UpgraderStoreController(
     onAndroid: () => UpgraderPlayStore(),
-    oniOS: () => UpgraderAppStore(appId: '6756429415'),
+    oniOS: () => UpgraderAppStore(),
   ),
-  dialogStyle: Platform.isIOS
-      ? UpgradeDialogStyle.cupertino
-      : UpgradeDialogStyle.material,
   languageCode: 'fr',
 );
+
+// Dans le build, dialogStyle est passé à UpgradeAlert
+// Utiliser kIsWeb et defaultTargetPlatform (pas Platform.isIOS qui ne fonctionne pas sur web)
+UpgradeAlert(
+  upgrader: _upgrader,
+  dialogStyle: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+      ? UpgradeDialogStyle.cupertino
+      : UpgradeDialogStyle.material,
+  child: ...,
+)
 ```
+
+**Notes** :
+- Dans upgrader 11.5.1+, `UpgraderAppStore` détecte automatiquement l'App ID via le bundle identifier
+- Le `dialogStyle` est un paramètre de `UpgradeAlert`, pas de `Upgrader`
+- Utiliser `kIsWeb` et `defaultTargetPlatform` de `package:flutter/foundation.dart` (pas `Platform.isIOS` de `dart:io` qui ne fonctionne pas sur web)
 
 ### Identifiants des stores
 

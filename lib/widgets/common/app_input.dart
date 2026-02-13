@@ -14,6 +14,7 @@ class AppInput extends StatefulWidget {
   final VoidCallback? onSubmitted;
   final bool autofocus;
   final TextEditingController? controller;
+  final FocusNode? focusNode;
   final TextCapitalization textCapitalization;
   final int? maxLength;
 
@@ -29,6 +30,7 @@ class AppInput extends StatefulWidget {
     this.onSubmitted,
     this.autofocus = false,
     this.controller,
+    this.focusNode,
     this.textCapitalization = TextCapitalization.words,
     this.maxLength,
     super.key,
@@ -42,6 +44,7 @@ class _AppInputState extends State<AppInput> {
   late TextEditingController _controller;
   late FocusNode _focusNode;
   bool _isInternalController = false;
+  bool _isInternalFocusNode = false;
 
   @override
   void initState() {
@@ -53,22 +56,11 @@ class _AppInputState extends State<AppInput> {
       _isInternalController = true;
     }
 
-    _focusNode = FocusNode();
-    _focusNode.addListener(_onFocusChange);
-  }
-
-  void _onFocusChange() {
-    if (_focusNode.hasFocus) {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted) {
-          Scrollable.ensureVisible(
-            context,
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
-            alignment: 0.5,
-          );
-        }
-      });
+    if (widget.focusNode != null) {
+      _focusNode = widget.focusNode!;
+    } else {
+      _focusNode = FocusNode();
+      _isInternalFocusNode = true;
     }
   }
 
@@ -84,8 +76,9 @@ class _AppInputState extends State<AppInput> {
 
   @override
   void dispose() {
-    _focusNode.removeListener(_onFocusChange);
-    _focusNode.dispose();
+    if (_isInternalFocusNode) {
+      _focusNode.dispose();
+    }
     if (_isInternalController) {
       _controller.dispose();
     }

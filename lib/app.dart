@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:upgrader/upgrader.dart';
@@ -27,11 +27,8 @@ class GuessItAllApp extends StatelessWidget {
   static final _upgrader = Upgrader(
     storeController: UpgraderStoreController(
       onAndroid: () => UpgraderPlayStore(),
-      oniOS: () => UpgraderAppStore(appId: '6756429415'),
+      oniOS: () => UpgraderAppStore(),
     ),
-    dialogStyle: Platform.isIOS
-        ? UpgradeDialogStyle.cupertino
-        : UpgradeDialogStyle.material,
     languageCode: 'fr',
   );
 
@@ -45,6 +42,9 @@ class GuessItAllApp extends StatelessWidget {
           theme: AppTheme.darkTheme,
           home: UpgradeAlert(
             upgrader: _upgrader,
+            dialogStyle: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+                ? UpgradeDialogStyle.cupertino
+                : UpgradeDialogStyle.material,
             child: _buildCurrentScreen(provider.game.currentScreen),
           ),
         );

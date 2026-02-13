@@ -19,6 +19,7 @@ class WordsScreen extends StatefulWidget {
 
 class _WordsScreenState extends State<WordsScreen> {
   final List<TextEditingController> _wordControllers = [];
+  final List<FocusNode> _focusNodes = [];
   bool _isInitialized = false;
   GameProvider? _provider;
   String? _playerId;
@@ -49,10 +50,11 @@ class _WordsScreenState extends State<WordsScreen> {
 
     final wordsForPlayer = provider.getWordsCountForPlayer(playerId);
 
-    // Initialiser les contrôleurs avec les mots existants
+    // Initialiser les contrôleurs et FocusNodes avec les mots existants
     for (int i = 0; i < wordsForPlayer; i++) {
       final existingWord = i < player.words.length ? player.words[i] : '';
       _wordControllers.add(TextEditingController(text: existingWord));
+      _focusNodes.add(FocusNode());
     }
 
     setState(() {
@@ -64,6 +66,9 @@ class _WordsScreenState extends State<WordsScreen> {
   void dispose() {
     for (final controller in _wordControllers) {
       controller.dispose();
+    }
+    for (final node in _focusNodes) {
+      node.dispose();
     }
     super.dispose();
   }
@@ -329,6 +334,7 @@ class _WordsScreenState extends State<WordsScreen> {
                           itemBuilder: (context, index) {
                             final error = _getWordError(index, provider, playerId);
                             final otherPlayersWords = _getOtherPlayersWords(provider, playerId);
+                            final isLastWord = index == wordsForPlayer - 1;
 
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 12),
@@ -337,8 +343,15 @@ class _WordsScreenState extends State<WordsScreen> {
                                   Expanded(
                                     child: AppInput(
                                       controller: _wordControllers[index],
+                                      focusNode: _focusNodes[index],
                                       placeholder: 'Mot ${index + 1}',
                                       error: error,
+                                      textInputAction: isLastWord ? TextInputAction.done : TextInputAction.next,
+                                      onSubmitted: isLastWord
+                                          ? () => FocusScope.of(context).unfocus()
+                                          : () {
+                                              _focusNodes[index + 1].requestFocus();
+                                            },
                                       onChanged: (_) => setState(() {}),
                                       maxLength: 36,
                                     ),

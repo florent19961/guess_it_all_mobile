@@ -10,6 +10,7 @@ import '../services/storage_service.dart';
 import '../services/analytics_service.dart';
 import '../services/user_service.dart';
 import '../utils/constants.dart';
+import '../utils/word_categories/utils.dart' show lookupWordsMetadata;
 
 class GameProvider extends ChangeNotifier {
   final StorageService _storage = StorageService();
@@ -420,17 +421,24 @@ class GameProvider extends ChangeNotifier {
     // En mode personnalisé, on lie les mots aux joueurs
     if (_settings.wordChoice == AppConstants.wordChoiceRandom) {
       // Mode aléatoire : utiliser le cache de métadonnées
-      if (_wordMetadataCache != null) {
-        for (final word in words) {
-          if (_wordMetadataCache!.containsKey(word)) {
-            wordMetadata[word] = _wordMetadataCache![word]!;
-          } else {
-            wordMetadata[word] = WordMetadata(word: word);
-          }
-        }
-      } else {
-        // Fallback si pas de cache
-        for (final word in words) {
+      // Identifier les mots absents du cache (cache null ou incomplet)
+      final missingWords = _wordMetadataCache == null
+          ? words
+          : words.where((w) => !_wordMetadataCache!.containsKey(w)).toList();
+
+      // Lookup direct dans les catégories pour les mots manquants
+      Map<String, WordMetadata> lookedUp = {};
+      if (missingWords.isNotEmpty) {
+        lookedUp = await lookupWordsMetadata(missingWords);
+      }
+
+      for (final word in words) {
+        if (_wordMetadataCache != null && _wordMetadataCache!.containsKey(word)) {
+          wordMetadata[word] = _wordMetadataCache![word]!;
+        } else if (lookedUp.containsKey(word)) {
+          wordMetadata[word] = lookedUp[word]!;
+        } else {
+          // Dernier fallback (mot vraiment introuvable)
           wordMetadata[word] = WordMetadata(word: word);
         }
       }
