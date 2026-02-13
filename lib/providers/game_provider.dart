@@ -759,6 +759,11 @@ class GameProvider extends ChangeNotifier {
       newRemainingWords.remove(expiredWord);
     }
 
+    // Retirer les mots passés validés du pool (ils peuvent y être si recyclés pendant le tour)
+    for (final word in validatedPassedWords) {
+      newRemainingWords.remove(word);
+    }
+
     // Calculer les points
     final pointsScored = validatedWords.length;
 
