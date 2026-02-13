@@ -780,8 +780,10 @@ class _StatsScreenState extends State<StatsScreen> {
       }
     }
 
-    // Créer la liste des positions X pour les barres M2 et M3
+    // Créer la liste des positions X pour les barres M1, M2 et M3
+    // M1 est toujours à x=0 (début du graphique)
     final List<double> mancheStartsX = [
+      0,
       if (roundStartX.containsKey(2)) roundStartX[2]!.toDouble(),
       if (roundStartX.containsKey(3)) roundStartX[3]!.toDouble(),
     ];
@@ -950,7 +952,7 @@ class _StatsScreenState extends State<StatsScreen> {
                         label: VerticalLineLabel(
                           show: true,
                           alignment: Alignment.topRight,
-                          labelResolver: (_) => 'M${i + 2}',
+                          labelResolver: (_) => 'M${i + 1}',
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 10,
