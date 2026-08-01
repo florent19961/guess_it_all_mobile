@@ -41,10 +41,14 @@ empiler des correctifs. Convergence saine = profil des findings qui décroît pa
 ## Amont — créer un epic NEUF (1× par EPIC)
 
 **Cadrage AVANT d'écrire quoi que ce soit :** design réellement ouvert → `superpowers:brainstorming`
-(divergent) ; puis **`grill-me` SYSTÉMATIQUE avant tout epic (ou US isolée)** — interview
+(divergent) ; puis **grilling SYSTÉMATIQUE avant tout epic (ou US isolée)** — interview
 convergente, une question à la fois, jusqu'à résolution de chaque branche de l'arbre de décision.
 C'est le pare-feu contre les epics sous-spécifiés — et la raison pour laquelle le gate ① est sauté
 (cf. §Par story 3).
+
+⚠️ **Quelle skill invoquer** : `grilling` (model-invocable). `grill-me` porte
+`disable-model-invocation: true` — c'est le raccourci **utilisateur** `/grill-me`, qui délègue à
+`grilling`. Un agent qui appelle `grill-me` ne déclenche rien.
 
 Pour qu'un epic *neuf* dérive d'un tout cohérent, enchaîne ensuite : `bmad-prd` (léger, le
 QUOI/POURQUOI) → `bmad-create-architecture` (décisions transverses : forme des états, schéma

@@ -39,8 +39,11 @@ racine plutôt qu'empiler des fixes en revue).
 chaque session ; les règles projet ci-dessous surchargent les skills en cas de conflit.
 
 1. **Idée / design ouvert** → `superpowers:brainstorming` (divergent — jamais pour une pile de fixes).
-2. **Cadrage — SYSTÉMATIQUE avant d'écrire un epic (ou une US isolée)** → `grill-me` : interview
+2. **Cadrage — SYSTÉMATIQUE avant d'écrire un epic (ou une US isolée)** → `grilling` : interview
    convergente, question par question, jusqu'à résolution de chaque branche de décision.
+   ⚠️ La skill **model-invocable** est `grilling`. `grill-me` porte
+   `disable-model-invocation: true` : c'est le raccourci **utilisateur** (`/grill-me`), qui délègue
+   à `grilling` — un agent qui tente d'invoquer `grill-me` ne déclenche rien.
 3. **Écrire l'epic + ses US** → `bmad-create-epics-and-stories`.
 4. **Planifier l'exécution du lot** → `guessitall-epic-intake` : intérêt/US, graphe de conflits →
    lanes, dosage, prompt-pack.
