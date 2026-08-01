@@ -11,9 +11,14 @@ cd /home/florent19961/guess_it_all_mobile
 flutter pub get      # une fois — et OBLIGATOIRE dans chaque worktree neuf
 ```
 
-SDK Flutter = `~/development/flutter` (Linux natif). Un `flutter` Windows traîne aussi dans le
-`PATH` (`/mnt/c/Users/flore/flutter`) : **ne pas l'utiliser depuis WSL** — c'est lui qui, avec une
-version différente, réécrit `pubspec.lock` à chaque `pub get`.
+SDK Flutter = `~/development/flutter` (Linux natif, **3.44.8 / Dart 3.12.2**). Un `flutter` Windows
+traîne aussi dans le `PATH` (`/mnt/c/Users/flore/flutter`, **3.38.3**) : **ne pas l'utiliser depuis
+WSL** — deux SDK de versions différentes réécrivent `pubspec.lock` à tour de rôle.
+
+⚠️ **Depuis WSL on code et on teste, on ne BUILD pas.** `flutter doctor` : pas d'Android SDK, pas
+de Chrome, pas de toolchain Linux desktop. Donc `flutter analyze` et `flutter test` ✅ ;
+`flutter run` / `flutter build apk|appbundle|ipa` ❌. Les builds et les recettes sur device se font
+depuis Windows. Une story dont l'acceptation exige de voir l'app tourner doit le dire.
 
 ## Branches — `main` = tronc, release = **tag**, pas branche
 

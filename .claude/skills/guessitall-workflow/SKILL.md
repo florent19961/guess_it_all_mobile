@@ -153,11 +153,37 @@ DISTINCTES, à ne pas mélanger :
    et `flutter test` échoue à la compilation. Un vrai smoke test n'est pas gratuit : il faut
    fournir un `GameProvider` (donc `SharedPreferences`) et neutraliser `UpgradeAlert` (qui
    interroge le store). Suivi dans `docs/notes_pour_plus_tard.md`.
-2. **`lib/utils/word_categories/backup/*.dart` — 4 `error`, mais ces fichiers sont GITIGNORÉS**
-   (`.gitignore` l.59) et absents d'un clone neuf. `flutter analyze` analyse le disque, pas
-   l'index : ces erreurs polluent donc TON analyze local sans exister en CI ni chez un autre dev.
-   Si `flutter analyze` doit devenir un gate dur, les exclure explicitement via
-   `analysis_options.yaml` (`analyzer: exclude:`) plutôt que de compter sur `.gitignore`.
+2. **`lib/utils/word_categories/backup/*.dart`** produisait 4 `error` supplémentaires : fichiers
+   GITIGNORÉS, absents d'un clone neuf, mais présents sur le disque — et `flutter analyze` analyse
+   le DISQUE, pas l'index. **Réglé** par `analyzer: exclude:` dans `analysis_options.yaml`.
+
+**Baseline vérifiée le 2026-08-02 sous Flutter 3.44.8 / Dart 3.12.2** (`flutter analyze` = 88
+issues) :
+
+| Sévérité | Nb | Détail |
+|---|---|---|
+| `error` | **1** | `test/widget_test.dart:16` — `MyApp` inexistant (cf. point 1) |
+| `warning` | **2** | `game_provider.dart:747` (`!` inutile) ; `firebase_sync_service.dart:124` |
+| `info` | 85 | majoritairement `avoid_print` (dans `tools/` et les services) |
+
+🔴 **`firebase_sync_service.dart:124` n'est pas un warning cosmétique.** `syncGame()` rend un
+`Future<bool>`, mais le `catchError` de `markForSync` a un callback **sans `return`** → au moment
+où la sync échoue, il rend `null` là où un `bool` est attendu et lève un `TypeError` asynchrone
+non capturé. Autrement dit : le chemin censé **absorber** l'échec réseau est précisément celui qui
+casse. À traiter avant toute story qui touche la sync.
+
+## Ce qu'on peut lancer depuis WSL (et ce qu'on ne peut pas)
+
+`flutter doctor` : **pas d'Android SDK, pas de Chrome, pas de toolchain Linux desktop**. Donc
+depuis ce checkout WSL :
+
+- ✅ écrire du code, `flutter analyze`, `flutter test` (VM Dart pure), tout le pipeline de revue.
+- ❌ `flutter run`, `flutter build apk/appbundle/ipa` — **aucun device buildable** (le seul device
+  listé est « Linux (desktop) », dont la toolchain manque aussi).
+
+Conséquence pour le gate : la vérification se fait par **tests + analyze**, jamais par une recette
+manuelle sur device depuis WSL. Toute story dont l'acceptation exige de VOIR l'app tourner doit
+être testée depuis l'environnement Windows — et le dire explicitement dans la story.
 
 ## Release store (étape SÉPARÉE — jamais dans un closeout)
 
