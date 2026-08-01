@@ -1,0 +1,13 @@
+# Personal overrides for _bmad/config.toml.
+# VERSIONNÉ (2026-06-03) pour la complétude des worktrees : c'est la 4ᵉ couche
+# du resolver (.toml) et elle est "never touched by the installer" → trackable
+# sans churn. Duplique user_name/language déjà présents dans _bmad/bmm/config.yaml
+# (tracké) — belt-and-suspenders pour les skills qui passent par le resolver.
+# Wins over base config and team overrides.
+
+[core]
+user_name = "Florent19961"
+communication_language = "French"
+
+[modules.bmm]
+user_skill_level = "intermediate"

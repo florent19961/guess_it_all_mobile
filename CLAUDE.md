@@ -1,378 +1,161 @@
-# Guess It All Mobile
+# CLAUDE.md — Guess It All
 
-## Description
-Jeu mobile multijoueur de devinettes de mots en équipe, inspiré du jeu "Time's Up". Les joueurs forment des équipes et doivent faire deviner des mots à leurs coéquipiers à travers 3 manches avec des règles différentes.
+Jeu mobile multijoueur de devinettes de mots en équipe (inspiré de « Time's Up »). Flutter,
+publié sur l'App Store et le Play Store. Les joueurs forment des équipes et font deviner des mots
+sur 3 manches aux règles différentes.
 
-## Stack Technique
-- **Framework** : Flutter (Dart SDK ^3.10.1)
-- **State Management** : Provider
-- **Stockage local** : shared_preferences
-- **Cloud** : Firebase Firestore (synchronisation analytics)
-- **Polices** : Bangers, Poppins
-
-## Architecture
-
-```
-lib/
-├── main.dart              # Point d'entrée, configuration système
-├── app.dart               # Widget racine de l'application
-├── models/                # Modèles de données
-│   ├── game_settings.dart # Paramètres de jeu (équipes, durée, mots)
-│   ├── game_state.dart    # État de la partie en cours (+ gameId)
-│   ├── game_analytics.dart # Analytics complètes d'une partie
-│   ├── word_event.dart    # Événements atomiques (shown, guessed, passed, etc.)
-│   ├── word_stats.dart    # Stats par mot (WordMetadata, WordRoundStats, WordStats)
-│   ├── player.dart        # Modèle joueur
-│   └── team.dart          # Modèle équipe
-├── providers/
-│   └── game_provider.dart # Provider principal (logique métier + tracking analytics)
-├── screens/               # Écrans de l'application
-│   ├── home_screen.dart
-│   ├── settings_screen.dart
-│   ├── players_screen.dart
-│   ├── teams_screen.dart
-│   ├── game_screen.dart
-│   ├── countdown_screen.dart
-│   ├── turn_screen.dart
-│   ├── verification_screen.dart
-│   ├── transition_screen.dart
-│   ├── results_screen.dart
-│   ├── stats_screen.dart
-│   └── rules_screen.dart
-├── services/
-│   ├── storage_service.dart      # Persistance locale (settings, session, state)
-│   ├── analytics_service.dart    # Tracking temps réel et persistance analytics
-│   ├── user_service.dart         # Identité utilisateur (userId, deviceInfo)
-│   ├── word_history_service.dart # Historique des mots joués (priorisation)
-│   ├── connectivity_service.dart # Détection connectivité réseau
-│   └── firebase_sync_service.dart # Synchronisation analytics vers Firestore
-├── theme/
-│   └── app_theme.dart     # Thème et styles
-├── utils/
-│   ├── constants.dart     # Constantes de l'app
-│   └── word_categories.dart # Catégories de mots
-└── widgets/
-    ├── common/            # Widgets réutilisables (boutons, inputs, etc.)
-    └── effects/           # Effets visuels (shooting_stars)
-
-docs/
-└── ANALYTICS.md           # Documentation détaillée du système analytics
-```
-
-## Flux de Jeu
-
-1. **Configuration** : Nombre d'équipes, joueurs, nombre total de mots (20-100), durée du tour, pénalité de passe
-2. **Inscription joueurs** : Saisie des noms
-3. **Formation équipes** : Attribution manuelle ou aléatoire (composition en cache)
-4. **Saisie des mots** : Chaque joueur entre ses mots (répartition dynamique selon totalWords)
-5. **Partie** : 3 manches avec tous les mots remis dans le pool à chaque manche
-6. **Résultats** : Affichage des scores par équipe et par manche
-
-## Paramètres de jeu
-
-- **totalWords** (20-100, défaut 40) : Nombre total de mots à deviner
-  - Répartition : Les premiers joueurs ont 1 mot de plus si répartition inégale
-  - Ex: 40 mots / 6 joueurs = 7+7+7+7+6+6
-- **Cache équipes** : Composition et noms des équipes sont persistés
-  - Si le nombre de joueurs change : les nouveaux sont ajoutés aléatoirement
-
-## Catégories de mots
-
-Le jeu propose **13 catégories de mots** avec environ **5 711 mots** au total :
-
-1. **7ème Art** (🎬) - Films, séries, anime, personnages
-2. **Géographie** (🌍) - Pays, villes, monuments, fleuves
-3. **Nature et Gastronomie** (🌿) - Animaux, plantes, plats du monde, fromages, vins, boissons
-4. **Métiers & Sports** (💼) - Professions et tous les sports
-5. **Célébrités** (⭐) - Sportifs, acteurs, chanteurs, influenceurs
-6. **Noms communs** (🔧) - Objets quotidiens, instruments, électroménager, vêtements
-7. **Univers Arcade** (🎮) - Jeux vidéo, Pokémon, Clash Royale, jeux de société
-8. **Expressions** (🇫🇷) - Expressions françaises
-9. **Dictionnaire** (📖) - Vocabulaire général, émotions, adjectifs, verbes
-10. **Musique** (🎵) - Chansons, genres, artistes
-11. **Marques** (🏷️) - Vêtements, tech, alimentation
-12. **Science et Médecine** (🔬) - Anatomie, maladies, éléments chimiques, astronomie
-13. **Métro Parisien** (🚇) - Stations de métro
-
-### Détail par catégorie
-
-| Catégorie | Icône | Nombre de mots |
-|-----------|-------|----------------|
-| Nature et Gastronomie | 🌿 | 883 |
-| Dictionnaire | 📖 | 870 |
-| Noms communs | 🔧 | 728 |
-| 7ème Art | 🎬 | 491 |
-| Science et Médecine | 🔬 | 484 |
-| Marques | 🏷️ | 465 |
-| Géographie | 🌍 | 384 |
-| Célébrités | ⭐ | 361 |
-| Univers Arcade | 🎮 | 324 |
-| Métiers & Sports | 💼 | 284 |
-| Musique | 🎵 | 224 |
-| Expressions | 🇫🇷 | 118 |
-| Métro Parisien | 🚇 | 105 |
-| **TOTAL** | | **5 711** |
-
-### Catégories enrichies (Janvier 2026)
-
-#### Science et Médecine (anciennement Médecine)
-- **ID** : `science_medecine` (renommé de `medecine`)
-- **Icône** : 🔬
-- **484 mots** répartis en :
-  - **Section Médecine** : Anatomie, maladies, symptômes, traitements, spécialités médicales, équipements, traumatismes, pathologies, santé mentale, cancers, premiers secours, professions paramédicales
-  - **Section Science** : Éléments chimiques, domaines scientifiques, théories et lois, espace et astronomie, inventions et découvertes, scientifiques célèbres, phénomènes physiques, unités de mesure, biologie cellulaire, chimie, géologie
-
-#### Nature et Gastronomie
-- **ID** : `nature`
-- **Icône** : 🌿
-- **883 mots** répartis en :
-  - **Section Nature** : Animaux (sauvages, domestiques, marins, oiseaux communs, insectes, reptiles, rongeurs, cervidés, bovidés), plantes et fleurs, arbres, arbustes, plantes d'intérieur, plantes grimpantes, fruits et légumes, champignons, phénomènes naturels, météo, minéraux, géologie, astres, écosystèmes, éléments naturels
-  - **Section Gastronomie** : Plats italiens, plats asiatiques, plats français traditionnels, plats du monde, techniques culinaires, ustensiles spécialisés, sauces célèbres, condiments, pâtisseries et desserts internationaux, confiseries, fromages, vins et cépages, pains du monde, termes culinaires, boissons chaudes et froides, boissons alcoolisées, cocktails, ingrédients cuisine, produits laitiers, viandes, charcuterie
-
-#### Noms communs
-- **ID** : `noms_communs`
-- **Icône** : 🔧
-- **728 mots** répartis en :
-  - Objets électroniques, objets quotidiens, mobilier, ustensiles cuisine
-  - Outils, moyens de transport, véhicules spécifiques
-  - Vêtements, sous-vêtements, chaussures, accessoires mode
-  - Instruments de musique, maison et habitat, jouets
-  - Électroménager (gros et petit), équipements sportifs
-  - Objets plage/vacances, matériel camping, matériel médical
-  - Matériel informatique, textiles maison, contenants et emballages
-  - Objets de décoration, bijoux, objets divers
-
-#### Dictionnaire
-- **ID** : `dictionnaire`
-- **Icône** : 📖
-- **870 mots** répartis en :
-  - Émotions positives et négatives, états physiques, états mentaux
-  - Adjectifs descriptifs, adjectifs de personnalité, adjectifs taille/forme
-  - Verbes du quotidien, verbes créatifs, verbes de communication
-  - Verbes domestiques, verbes de mouvement, actions physiques et mentales
-  - Couleurs, formes géométriques, nombres et quantités
-  - Temporalité, expressions temporelles, expressions de lieu
-  - Météo, relations et liens, textures et sensations
-  - Goûts et saveurs, odeurs, sons et bruits
-  - Concepts philosophiques, valeurs morales, noms abstraits
-  - Contraires et opposés, matériaux
-
-## Commandes
+## ⚠️ Working directory
 
 ```bash
-# Installer les dépendances
-flutter pub get
-
-# Lancer en mode debug
-flutter run
-
-# Build Android
-flutter build apk
-
-# Build iOS
-flutter build ios
+cd /home/florent19961/guess_it_all_mobile
+flutter pub get      # une fois — et OBLIGATOIRE dans chaque worktree neuf
 ```
 
-## Conventions
+SDK Flutter = `~/development/flutter` (Linux natif). Un `flutter` Windows traîne aussi dans le
+`PATH` (`/mnt/c/Users/flore/flutter`) : **ne pas l'utiliser depuis WSL** — c'est lui qui, avec une
+version différente, réécrit `pubspec.lock` à chaque `pub get`.
 
-- Langue du code : Anglais
-- Messages UI : Français
-- Pattern : Provider pour la gestion d'état globale
-- Modèles immuables avec `copyWith()`
-- Persistance automatique après chaque modification d'état
+## Branches — `main` = tronc, release = **tag**, pas branche
 
-## Règles de Développement
+- **Toute PR de story/feature/fix → base `main`** (squash-merge).
+- Il n'y a **pas de branche de prod** : ce qui est publié est un **build soumis au store**,
+  matérialisé par un tag `vX.Y.Z+N` posé sur `main`. Un closeout ne bump **jamais**
+  `pubspec.yaml` et ne pousse **jamais** de tag.
+- Runbook de release → skill **`guessitall-workflow` §Release** + `docs/releases-stores.md`.
 
-### Maintien de la documentation
-- **Toute modification du projet** (ajout, suppression, modification de fichiers ou fonctionnalités) **doit être reflétée dans ce fichier CLAUDE.md**
-- Mettre à jour l'arborescence si des fichiers sont ajoutés/supprimés
-- Documenter les nouvelles fonctionnalités ou changements de flux
+## Posture de travail
 
-### Vérification des impacts
-- **Avant toute modification** (ajout, suppression, refactoring), **vérifier les implications sur les autres parties du projet**
-- Rechercher les usages/dépendances du code concerné
-- S'assurer que les modifications n'introduisent pas de régressions
-- Tester les écrans et fonctionnalités impactés
+**Socle générique → `~/.claude/CLAUDE.md`** (toujours chargé, tous projets) :
+Réfléchir avant de coder · Simplicité d'abord · Changements chirurgicaux ·
+Exécution dirigée par l'objectif.
 
-## Système Analytics
+Prolongements **process/revue** propres à ce projet (skill `guessitall-workflow`) : « doser
+rigueur ↔ risque » (ne pas sur-cérémonialiser) et « simplifier bat sur-corriger » (retirer la
+racine plutôt qu'empiler des fixes en revue).
 
-Le jeu intègre un système de tracking détaillé pour collecter des statistiques par mot, par joueur et par équipe. Voir `docs/ANALYTICS.md` pour la documentation complète.
+## Skills — cycle de vie d'une évolution
 
-### Flux de tracking
+**La méthodologie vit dans les skills, pas ici.** La liste exhaustive est injectée par le harness à
+chaque session ; les règles projet ci-dessous surchargent les skills en cas de conflit.
 
-1. **Début de partie** : Génération `gameId` (UUID v4), initialisation des métadonnées des mots
-2. **Pendant le jeu** : Événements atomiques (`shown`, `guessed`, `passed`, `expired`, `invalidated`)
-3. **Fin de partie** : Calcul des statistiques agrégées, persistance locale
+1. **Idée / design ouvert** → `superpowers:brainstorming` (divergent — jamais pour une pile de fixes).
+2. **Cadrage — SYSTÉMATIQUE avant d'écrire un epic (ou une US isolée)** → `grill-me` : interview
+   convergente, question par question, jusqu'à résolution de chaque branche de décision.
+3. **Écrire l'epic + ses US** → `bmad-create-epics-and-stories`.
+4. **Planifier l'exécution du lot** → `guessitall-epic-intake` : intérêt/US, graphe de conflits →
+   lanes, dosage, prompt-pack.
+5. **Implémenter chaque lane** → un worktree par lane, en suivant **`guessitall-workflow`** : TDD,
+   puis **gate ②** (1 reviewer adversarial spec-aveugle + Codex cross-LLM + consolidation).
+   **Pas de gate ①** — cf. garde-fous.
+6. **Teach-back puis closeout** → `teach-back` (gate de compréhension avant merge — skip auto si
+   trivial) puis `guessitall-pr-closeout` (PR base `main`) — **merge uniquement sur go explicite de
+   Florent**.
 
-### Clés de stockage (SharedPreferences)
+Hors cycle : bug / test rouge / comportement inattendu → `bmad-investigate` ; artefact externe
+(RFC/plan d'un autre LLM) à distiller → `bmad-spec`.
 
-| Clé | Description |
-|-----|-------------|
-| `guessItAll_userId` | UUID v4 persistant de l'utilisateur |
-| `guessItAll_analytics_index` | Liste des gameIds stockés |
-| `guessItAll_analytics_{gameId}` | JSON complet de GameAnalytics |
+**Garde-fous** (mécanique complète dans `guessitall-workflow`) :
 
-### Modèles clés
+- **Dosage** : trivial (ajout de mots, copy, 1 écran) → direct, zéro cérémonie. **Tier risqué** →
+  pipeline complet : ① machine à états de la partie, ② scoring, ③ schéma `SharedPreferences`,
+  ④ sync Firestore/offline, ⑤ intégrité analytics, ⑥ timer & cycle de vie. Le dosage décide *si* un
+  gate tourne, **jamais** sa forme quand il tourne.
+- 🔴 **Gate ① (revue de spec) SAUTÉ par défaut** — ne pas le proposer, ne pas demander
+  confirmation. Le pare-feu amont est le **`grill-me` systématique** avant tout epic. Contrepartie :
+  le gate ② tourne **en entier**.
+- ⚠️ `bmad-*` = skills (Skill tool), **pas** des `subagent_type`. Les reviewers de gate se spawnent
+  en `general-purpose` + rubrique inline.
 
-- **WordEvent** : Événement atomique avec type, timestamp, durée, contexte (round, turn, team, player)
-- **WordMetadata** : Catégorie, difficulté, submittedBy, language
-- **WordRoundStats** : Stats par manche (timesPassed, totalTimeMs, guessTimeMs, passEvents)
-- **WordStats** : Agrégation sur 3 manches avec getters (totalTimesPassed, avgGuessTimeMs, etc.)
-- **GameAnalytics** : Conteneur principal avec métadonnées device, configuration partie, events, wordStats
+## Règles projet
 
-### Services
+1. **Lire avant de modifier** — jamais de modification à l'aveugle.
+2. **Tests — ciblé en dev, complet au gate.** En dev : `scripts/with-test-slot.sh flutter test test/<fichier>`.
+   **Suite complète une seule fois avant la PR** : `scripts/run-full-suite.sh` (format + analyze +
+   test). 🔴 **Tout run de tests passe par `scripts/with-test-slot.sh`** — la machine est contrainte
+   par la **RAM** (~7 Go sous WSL2), pas par le CPU, et le sémaphore est **partagé avec WasReal** :
+   sans lui, deux projets qui testent en même temps font tomber la machine par OOM.
+   ⚠️ **Baseline actuellement ROUGE** : `test/widget_test.dart` est le scaffold Flutter jamais
+   adapté → aucun test ne tourne sur ce dépôt. Détail + coût réel : `docs/notes_pour_plus_tard.md`.
+3. **Pas de fichiers .md** sauf si demandé explicitement. Emplacements autorisés : specs BMad dans
+   `_bmad-output/specs/`, reviews dans `_bmad-output/reviews/`, docs projet dans `docs/`.
+4. **Maintenir les CLAUDE.md à jour** — après ajout/suppression d'écran, service, modèle ou
+   dépendance, mettre à jour le `CLAUDE.md` du module concerné (`lib/*/CLAUDE.md`) ET ce fichier si
+   un invariant bouge. Les CLAUDE.md sont des fichiers d'**invariants + pointeurs** : le détail vit
+   dans `docs/`, pas ici.
+5. **Maintenir `docs/tracking_evolution.md`** — après chaque décision technique significative, une
+   entrée datée : ce qui change et **pourquoi ce choix**.
+6. **Maintenir `docs/notes_pour_plus_tard.md`** — quand une décision est délibérément reportée :
+   contexte, décision, raison, **signal déclencheur**, esquisse.
+7. 🔴 **Rétro-compatibilité des données joueur — RÈGLE DURE.** L'app est **publiée** et `upgrader`
+   **force** la mise à jour : les données écrites par la version en store sont sur les téléphones
+   des joueurs, et une release atteint tout le parc. Tout changement de **forme** d'une clé
+   `guessItAll_*` (`SharedPreferences`) exige une **migration explicite** — jamais un « ça repartira
+   de zéro ». Une partie en cours au moment d'une mise à jour doit rester lisible ou être invalidée
+   proprement, pas crasher.
+8. **Parité Android ↔ iOS** — toute évolution qui sort du déjà-implémenté se vérifie sur **les deux
+   plateformes**. Points d'attention : `dart:io` `Platform.*` (utiliser `defaultTargetPlatform`),
+   permissions, popup `upgrader` (Cupertino vs Material), safe areas. Si une plateforme est
+   **délibérément** exclue, le dire explicitement dans la story/PR — jamais de divergence en
+   silence.
 
-- **UserService** : Singleton pour userId persistant et infos device (appVersion, platform, locale, deviceModel)
-- **AnalyticsService** : Singleton pour tracking temps réel et persistance (rétention : 50 parties)
+## Stack & architecture
 
-### Dépendances analytics
+- **Framework** : Flutter (Dart) · **State** : Provider (`GameProvider`, unique) ·
+  **Stockage local** : `shared_preferences` · **Cloud** : Firebase Firestore (sync analytics,
+  offline-first) · **Polices** : Bangers, Poppins.
+- **Architecture** : `Provider → Screens → Widgets`, services **singletons** →
+  `SharedPreferences`/Firebase, modèles **immuables** avec `copyWith()`, persistance automatique
+  après chaque modification d'état.
+- **Arborescence détaillée + rôle de chaque fichier** → les `CLAUDE.md` par module :
+  `lib/CLAUDE.md`, `lib/models/`, `lib/providers/`, `lib/screens/`, `lib/services/`,
+  `lib/widgets/`, `lib/theme/`, `lib/utils/`.
 
-```yaml
-uuid: ^4.5.1              # Génération UUID v4
-device_info_plus: ^11.2.0 # Info device
-package_info_plus: ^8.1.2 # Info app
-```
+🔴 **Points de collision structurels** (un seul track à la fois dessus, cf.
+`guessitall-epic-intake`) : `lib/providers/game_provider.dart`, `lib/models/game_state.dart`,
+`lib/services/storage_service.dart` + les clés `guessItAll_*`.
 
-## Synchronisation Firebase
+## Flux de jeu
 
-Le jeu fonctionne en mode **offline-first** : les données sont stockées localement et synchronisées vers Firebase Firestore lorsque le réseau est disponible.
+1. **Configuration** — nombre d'équipes, joueurs, nombre total de mots (20-100, défaut 40), durée
+   du tour, pénalité de passe.
+2. **Inscription joueurs** — saisie des noms.
+3. **Formation des équipes** — manuelle ou aléatoire (composition mise en cache et persistée ; si
+   le nombre de joueurs change, les nouveaux sont ajoutés aléatoirement).
+4. **Saisie des mots** — répartition dynamique selon `totalWords` ; les premiers joueurs ont 1 mot
+   de plus si la division n'est pas entière (ex. 40 mots / 6 joueurs = 7+7+7+7+6+6).
+5. **Partie** — 3 manches, tous les mots remis dans le pool à chaque manche.
+6. **Résultats** — scores par équipe et par manche.
 
-### Architecture
+> Un seul mode existe aujourd'hui (**mode libre**). Le **mode Fiesta** (modificateurs de jeu) est
+> en cadrage — cf. `_bmad-output/implementation-artifacts/sprint-status.yaml`.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    FIN DE PARTIE                             │
-├─────────────────────────────────────────────────────────────┤
-│  1. endGame() sauvegarde en local                           │
-│  2. markForSync() ajoute gameId à pendingSyncIndex          │
-│  3. Si online → sync immédiat vers Firestore                │
-│  4. Si offline → sync au retour de la connexion             │
-└─────────────────────────────────────────────────────────────┘
-```
+## Conventions de code
 
-### Services
+- Langue du **code** : anglais. Langue des **messages UI** : français.
+- Provider pour l'état global ; modèles immuables + `copyWith()`.
+- Persistance automatique après chaque modification d'état.
 
-- **ConnectivityService** : Singleton détectant l'état réseau (wifi, mobile, ethernet)
-- **FirebaseSyncService** : Singleton gérant la queue de sync et les uploads Firestore
+## Docs de référence
 
-### Clés de stockage supplémentaires
+| Document | Contenu |
+|----------|---------|
+| `docs/ANALYTICS.md` | Système analytics : modèles, events, services, flux de tracking, exemples |
+| `FIREBASE.md` | Setup Firebase/Firestore de bout en bout (FlutterFire, règles, Android/iOS) |
+| `docs/word-categories.md` | Les 13 catégories, leur contenu, et la priorisation des mots jamais vus |
+| `docs/releases-stores.md` | Identifiants stores, `upgrader`, modèle de release par tag |
+| `docs/tracking_evolution.md` | Journal des évolutions techniques et raisons des choix |
+| `docs/notes_pour_plus_tard.md` | Journal des dettes techniques **assumées** |
+| `docs/SUPPORT.md` | Page support publiée |
+| `_bmad-output/implementation-artifacts/sprint-status.yaml` | Colonne vertébrale US → epic → gate |
+| `docs/agent-memory/` | **Backup mirror** de l'auto-memory Claude Code (canonical = `~/.claude/`) — sync via `scripts/sync-agent-memory.sh` (`--restore` pour repeupler) |
 
-| Clé | Description |
-|-----|-------------|
-| `guessItAll_pending_sync` | Liste des gameIds en attente de synchronisation |
+## Outillage agent
 
-### Configuration Firebase (requise)
-
-Pour activer la synchronisation, exécuter :
+`AGENTS.md` (lu par Codex) est un **symlink vers ce fichier** ; `.codex/skills/` est un mirror en
+symlinks de `.claude/skills/` — il n'y a donc **rien à re-synchroniser à la main**.
 
 ```bash
-# Installer FlutterFire CLI
-dart pub global activate flutterfire_cli
-
-# Se connecter à Firebase
-firebase login
-
-# Configurer le projet (génère firebase_options.dart)
-flutterfire configure
-```
-
-### Structure Firestore
-
-```
-/games/{gameId}
-  ├── userId, appVersion, platform, locale, deviceModel
-  ├── startedAt, endedAt, syncedAt
-  ├── numberOfPlayers, numberOfTeams, totalWords, turnDuration
-  ├── selectedCategories, selectedDifficultyLevels
-  ├── events: [WordEvent...]
-  ├── wordMetadata: {word: WordMetadata}
-  └── wordStats: {word: WordStats}
-```
-
-### Dépendances Firebase
-
-```yaml
-firebase_core: ^3.8.0      # SDK Firebase
-cloud_firestore: ^5.5.0    # Base de données Firestore
-connectivity_plus: ^6.1.0  # Détection réseau
-```
-
-## Mises à jour forcées
-
-Le package `upgrader` permet d'afficher un popup natif (Cupertino sur iOS, Material sur Android) lorsqu'une nouvelle version de l'app est disponible sur les stores.
-
-### Configuration
-
-Dans `lib/app.dart`, l'`UpgradeAlert` wrapper détecte automatiquement les nouvelles versions :
-
-```dart
-// Configuration de l'upgrader
-static final _upgrader = Upgrader(
-  storeController: UpgraderStoreController(
-    onAndroid: () => UpgraderPlayStore(),
-    oniOS: () => UpgraderAppStore(),
-  ),
-  languageCode: 'fr',
-);
-
-// Dans le build, dialogStyle est passé à UpgradeAlert
-// Utiliser kIsWeb et defaultTargetPlatform (pas Platform.isIOS qui ne fonctionne pas sur web)
-UpgradeAlert(
-  upgrader: _upgrader,
-  dialogStyle: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
-      ? UpgradeDialogStyle.cupertino
-      : UpgradeDialogStyle.material,
-  child: ...,
-)
-```
-
-**Notes** :
-- Dans upgrader 11.5.1+, `UpgraderAppStore` détecte automatiquement l'App ID via le bundle identifier
-- Le `dialogStyle` est un paramètre de `UpgradeAlert`, pas de `Upgrader`
-- Utiliser `kIsWeb` et `defaultTargetPlatform` de `package:flutter/foundation.dart` (pas `Platform.isIOS` de `dart:io` qui ne fonctionne pas sur web)
-
-### Identifiants des stores
-
-| Plateforme | Identifiant |
-|------------|-------------|
-| Android | `com.guessitall.guess_it_all_mobile` |
-| iOS | `6756429415` |
-
-### Dépendance
-
-```yaml
-upgrader: ^11.5.1  # Mise à jour forcée
-```
-
-## Historique des Mots (Priorisation)
-
-Le système priorise les mots que l'utilisateur n'a jamais vus lors de la génération aléatoire.
-
-### Principe de fonctionnement
-
-1. **Mots jamais vus** (seenCount = 0) : sélectionnés en premier
-2. **Mots les moins vus** : si plus assez de mots à 0, prendre ceux à seenCount = 1, puis 2, etc.
-3. **Randomisation** : au sein d'un même niveau de priorité, les mots sont mélangés
-
-### Service
-
-- **WordHistoryService** : Singleton gérant l'historique `mot → seenCount`
-  - Stockage : `guessItAll_word_history` (Map<String, int> sérialisé en JSON)
-  - Incrémentation à la fin de chaque partie via `AnalyticsService.endGame()`
-
-### Clés de stockage
-
-| Clé | Description |
-|-----|-------------|
-| `guessItAll_word_history` | Map JSON : mot (lowercase) → nombre de fois joué |
-
-### Exemple de fonctionnement
-
-```
-Catégorie "Expressions" : 118 mots
-Historique : 113 mots vus, 5 mots jamais vus
-Demande : 40 mots
-
-→ Résultat : 5 mots jamais vus + 35 mots avec seenCount le plus bas
-→ Après la partie : tous les 40 mots ont leur compteur +1
+scripts/run-full-suite.sh          # plancher déterministe (format + analyze + test)
+scripts/with-test-slot.sh <cmd>    # sémaphore RAM machine-global (obligatoire)
+scripts/sync-agent-memory.sh       # backup de l'auto-memory vers docs/agent-memory/
 ```

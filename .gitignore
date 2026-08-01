@@ -57,3 +57,12 @@ ios/Runner/GoogleService-Info.plist
 log_fake_game.json
 science_medecine_annotated.json
 lib/utils/word_categories/backup/
+
+# Harness agent — les SKILLS sont versionnées, le reste de .claude/ est personnel
+# (settings.local.json = permissions locales, worktrees/ = état machine).
+.claude/**
+!.claude/skills/
+!.claude/skills/**
+
+# Scratchpad de session (prompt-packs d'epic-intake, sorties temporaires)
+/scratchpad/

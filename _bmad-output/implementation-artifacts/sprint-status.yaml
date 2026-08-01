@@ -1,0 +1,69 @@
+# Sprint Status — Guess It All (colonne vertébrale BMad : US → epic → gate)
+# Créé 2026-08-01 lors du portage du harness. Maintenu par bmad-dev-story /
+# bmad-sprint-status / à la main.
+#
+# STATUS DEFINITIONS
+#   backlog        : identifié, story PAS encore écrite (pas de fichier .md)
+#   needs-decision : bloqué sur un arbitrage produit/Florent avant d'écrire la story
+#   needs-design   : design ouvert → grill-me / brainstorming / party-mode avant story
+#   ready-for-dev  : story écrite + figée → dev-story peut prendre
+#   in-progress    : dev-story en cours
+#   review         : implémenté + gate ② clos, en attente validation/merge Florent
+#   done           : mergé sur main (accepté)
+#   wont-do        : story abandonnée (décision produit)
+#   deferred       : story ÉCRITE + décision figée, implémentation REPORTÉE
+#   blocked        : dépendance amont non satisfaite (voir depends)
+#
+# Convention worktree (parallélisme) : 1 session = 1 worktree dédié feat/<slug>
+# depuis origin/main. Un seul track à la fois sur game_provider.dart et sur le
+# schéma SharedPreferences (points de collision structurels du dépôt).
+#
+# ⚠️ `done` = mergé ET accepté. Un merge provisoire sous-revue reste `review`.
+
+project: guess_it_all_mobile
+last_updated: 2026-08-01
+
+epics:
+  epic-0-harness:
+    title: "Portage du harness agent (skills, gates, board, scripts) depuis WasReal"
+    status: in-progress
+  epic-1-dette-baseline:
+    title: "Solder la baseline rouge (aucun test qui tourne)"
+    status: backlog
+  epic-2-mode-fiesta:
+    title: "Mode Fiesta — modificateurs de jeu par-dessus le mode libre"
+    status: needs-design   # → grill-me AVANT d'écrire quoi que ce soit
+
+stories:
+  0-1-harness-port:
+    epic: epic-0-harness
+    title: "Porter skills BMad + skills projet + scripts + board depuis WasReal"
+    status: in-progress
+    note: >-
+      Portage initial 2026-08-01. Gates allégés actés (1 reviewer adversarial +
+      Codex cross-LLM). Tronc = main, releases par tag vX.Y.Z+N.
+
+  1-1-widget-test-scaffold:
+    epic: epic-1-dette-baseline
+    title: "Remplacer test/widget_test.dart (scaffold cassé) par un vrai smoke test"
+    status: backlog
+    note: >-
+      Le seul fichier de test du dépôt est le scaffold Flutter par défaut : il
+      pumpWidget(const MyApp()) alors que la racine est GuessItAllApp, et teste un
+      compteur inexistant. Conséquence : `flutter test` échoue à la COMPILATION →
+      le dépôt n'a AUCUN test qui tourne, et le plancher déterministe est
+      inutilisable. Coût réel : il faut fournir un GameProvider (SharedPreferences)
+      et neutraliser UpgradeAlert (interroge le store) → ce n'est pas un fix
+      mécanique. Bloque de fait le TDD de tout le pipeline.
+
+  2-1-fiesta-cadrage:
+    epic: epic-2-mode-fiesta
+    title: "Cadrage grill-me du mode Fiesta (liste de modificateurs → arbitrages)"
+    status: needs-design
+    note: >-
+      Ébauche fournie par Florent 2026-08-01 (~25 pistes de modificateurs :
+      contraintes de mime, blocage de joueurs, malus/bonus de temps, règles par
+      manche, tour bonus de rattrapage, manche 4 dessin…). À passer au grill-me
+      AVANT bmad-create-epics-and-stories : la question structurante est le MODÈLE
+      (un modificateur = quoi exactement ? portée tour/manche/partie, cumulabilité,
+      effet sur le scoring et sur les analytics existantes).

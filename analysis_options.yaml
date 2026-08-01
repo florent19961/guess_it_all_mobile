@@ -9,6 +9,15 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  exclude:
+    # Code mort déjà gitignoré (.gitignore) : absent d'un clone neuf, mais présent
+    # sur la machine de Florent où il produit 4 `error` d'analyse.
+    # `flutter analyze` lit le DISQUE, pas l'index git — sans cette exclusion, le
+    # plancher déterministe (scripts/run-full-suite.sh) est rouge chez lui et vert
+    # partout ailleurs.
+    - lib/utils/word_categories/backup/**
+
 linter:
   # The lint rules applied to this project can be customized in the
   # section below to disable rules from the `package:flutter_lints/flutter.yaml`
