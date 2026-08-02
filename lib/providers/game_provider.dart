@@ -6,6 +6,7 @@ import '../models/team.dart';
 import '../models/game_settings.dart';
 import '../models/game_state.dart';
 import '../models/turn_clock.dart';
+import '../models/turn_resolution.dart';
 import '../models/word_stats.dart';
 import '../services/storage_service.dart';
 import '../services/analytics_service.dart';
@@ -801,27 +802,22 @@ class GameProvider extends ChangeNotifier {
 
   void validateWords(List<String> validatedWords) {
     final currentTeam = _teams[_game.currentTeamIndex];
-    final wordsGuessedThisTurn = _game.wordsGuessedThisTurn;
     final passedWordsThisTurn = _game.passedWordsThisTurn;
-    final expiredWord = _game.expiredWord;
 
-    // Mots invalidés
-    final invalidatedGuessedWords =
-        wordsGuessedThisTurn.where((w) => !validatedWords.contains(w)).toList();
-    final invalidatedPassedWords =
-        passedWordsThisTurn.where((w) => !validatedWords.contains(w)).toList();
+    // Tout le CALCUL (classification, pool, score) vit dans `resolveTurn`, une
+    // fonction pure et testée. Ne reste ici que ce qui a des effets de bord :
+    // tracking analytics, mutation des équipes, avancement du tour.
+    final resolution = resolveTurn(
+      validatedWords: validatedWords,
+      guessedThisTurn: _game.wordsGuessedThisTurn,
+      passedThisTurn: passedWordsThisTurn,
+      expiredWord: _game.expiredWord,
+      currentPool: _game.remainingWords,
+    );
 
-    // Gérer le mot expiré
-    final isExpiredWordValidated =
-        expiredWord != null && validatedWords.contains(expiredWord);
-    final isExpiredWordInvalidated =
-        expiredWord != null && !validatedWords.contains(expiredWord);
-
-    final allInvalidatedWords = [
-      ...invalidatedGuessedWords,
-      ...invalidatedPassedWords,
-      if (isExpiredWordInvalidated) expiredWord,
-    ];
+    final allInvalidatedWords = resolution.allInvalidated;
+    final newRemainingWords = resolution.remainingPool;
+    final pointsScored = resolution.pointsScored;
 
     // Tracker les mots invalidés pour les analytics
     for (final word in allInvalidatedWords) {
@@ -829,34 +825,12 @@ class GameProvider extends ChangeNotifier {
     }
 
     // Tracker les mots passed/expired qui sont validés comme guessed
-    final validatedPassedWords =
-        passedWordsThisTurn.where((w) => validatedWords.contains(w)).toList();
-    for (final word in validatedPassedWords) {
+    for (final word in resolution.validatedPassed) {
       _analytics.onWordValidatedAsGuessed(word);
     }
-    if (isExpiredWordValidated) {
-      _analytics.onWordValidatedAsGuessed(expiredWord);
+    if (resolution.expiredValidated) {
+      _analytics.onWordValidatedAsGuessed(resolution.expiredWord!);
     }
-
-    // Remettre les mots invalidés dans le pool (Set garantit l'unicité)
-    final newRemainingWords = <String>{
-      ..._game.remainingWords,
-      ...invalidatedGuessedWords,
-      ...invalidatedPassedWords,
-    }.toList();
-
-    // Si le mot expiré est validé, le retirer du pool
-    if (isExpiredWordValidated) {
-      newRemainingWords.remove(expiredWord);
-    }
-
-    // Retirer les mots passés validés du pool (ils peuvent y être si recyclés pendant le tour)
-    for (final word in validatedPassedWords) {
-      newRemainingWords.remove(word);
-    }
-
-    // Calculer les points
-    final pointsScored = validatedWords.length;
 
     // Mettre à jour le score
     final teamIndex = _teams.indexWhere((t) => t.id == currentTeam.id);
@@ -1282,22 +1256,20 @@ class GameProvider extends ChangeNotifier {
 
   // Sauvegarde l'état avant validation (appelé dans verification_screen)
   // validatedWords = les mots que l'utilisateur a choisi de valider
+  //
+  // 🔴 Le snapshot réutilise `GameState.toJson()`, la sérialisation CANONIQUE.
+  // Avant, c'était une SECONDE sérialisation écrite à la main : 15 champs
+  // recopiés, à re-synchroniser à chaque ajout de champ — et relus avec des
+  // casts durs (`as int`, `as List`) qui levaient sur la moindre absence.
+  // Un champ ajouté à GameState et oublié ici se traduisait par une restauration
+  // silencieusement incomplète. C'est exactement le piège que le mode Fiesta
+  // aurait déclenché, lui qui ajoutera des champs d'état par construction.
   void savePreValidationState(List<String> validatedWords) {
     _game = _game.copyWith(
       preValidationSnapshot: {
-        'currentRound': _game.currentRound,
-        'currentTeamIndex': _game.currentTeamIndex,
-        'currentPlayerIndexInTeam': _game.currentPlayerIndexInTeam,
-        'currentTurn': _game.currentTurn,
-        'currentTurnIndex': _game.currentTurnIndex,
-        'wordsGuessedThisTurn': List<String>.from(_game.wordsGuessedThisTurn),
-        'passedWordsThisTurn': List<String>.from(_game.passedWordsThisTurn),
-        'expiredWord': _game.expiredWord,
-        'remainingWords': List<String>.from(_game.remainingWords),
-        'currentWord': _game.currentWord,
-        'timeRemaining': _game.timeRemaining,
-        'turnBonusTime': _game.turnBonusTime,
-        'history': _game.history.map((e) => e.toJson()).toList(),
+        // On retire le snapshot de lui-même : sans ça, chaque sauvegarde
+        // imbriquerait la précédente et le blob grossirait sans fin.
+        'game': _game.copyWith(clearPreValidationSnapshot: true).toJson(),
         'teamScores': _teams
             .map((t) => {
                   'id': t.id,
@@ -1305,7 +1277,6 @@ class GameProvider extends ChangeNotifier {
                   'scoreByRound': List<int>.from(t.scoreByRound),
                 })
             .toList(),
-        'pendingBonusTurnId': _game.pendingBonusTurnId,
         'validatedWords': List<String>.from(validatedWords),
       },
     );
@@ -1318,53 +1289,35 @@ class GameProvider extends ChangeNotifier {
     final snapshot = _game.preValidationSnapshot;
     if (snapshot == null) return;
 
+    final gameJson = snapshot['game'];
+    // Un snapshot écrit par l'ancienne version (format à plat) ou corrompu :
+    // on renonce au retour arrière plutôt que de crasher. L'utilisateur perd la
+    // possibilité de revenir sur CE tour, rien d'autre.
+    if (gameJson is! Map<String, dynamic>) return;
+
     // Restaurer les scores des équipes
-    final teamScores = snapshot['teamScores'] as List;
-    for (final ts in teamScores) {
-      final idx = _teams.indexWhere((t) => t.id == ts['id']);
-      if (idx != -1) {
-        _teams[idx] = _teams[idx].copyWith(
-          score: ts['score'] as int,
-          scoreByRound: List<int>.from(ts['scoreByRound'] as List),
-        );
+    final teamScores = snapshot['teamScores'];
+    if (teamScores is List) {
+      for (final ts in teamScores) {
+        if (ts is! Map) continue;
+        final idx = _teams.indexWhere((t) => t.id == ts['id']);
+        if (idx != -1) {
+          _teams[idx] = _teams[idx].copyWith(
+            score: ts['score'] as int? ?? _teams[idx].score,
+            scoreByRound: (ts['scoreByRound'] as List?)?.cast<int>() ??
+                _teams[idx].scoreByRound,
+          );
+        }
       }
     }
 
-    // Restaurer l'historique
-    final historyJson = snapshot['history'] as List;
-    final restoredHistory = historyJson
-        .map((e) => HistoryEntry.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final validatedWords = snapshot['validatedWords'];
 
-    // Restaurer les mots validés par l'utilisateur
-    final validatedWords = snapshot['validatedWords'] as List?;
-
-    // Restaurer l'état du jeu
-    _game = _game.copyWith(
+    _game = GameState.fromJson(gameJson).copyWith(
       currentScreen: AppConstants.screenVerification,
-      currentRound: snapshot['currentRound'] as int,
-      currentTeamIndex: snapshot['currentTeamIndex'] as int,
-      currentPlayerIndexInTeam: snapshot['currentPlayerIndexInTeam'] as int,
-      currentTurn: snapshot['currentTurn'] as int,
-      currentTurnIndex: snapshot['currentTurnIndex'] as int,
-      wordsGuessedThisTurn:
-          List<String>.from(snapshot['wordsGuessedThisTurn'] as List),
-      passedWordsThisTurn:
-          List<String>.from(snapshot['passedWordsThisTurn'] as List),
-      expiredWord: snapshot['expiredWord'] as String?,
-      clearExpiredWord: snapshot['expiredWord'] == null,
-      remainingWords: List<String>.from(snapshot['remainingWords'] as List),
-      currentWord: snapshot['currentWord'] as String?,
-      clearCurrentWord: snapshot['currentWord'] == null,
-      timeRemaining: snapshot['timeRemaining'] as int,
-      turnBonusTime: snapshot['turnBonusTime'] as int?,
-      clearTurnBonusTime: snapshot['turnBonusTime'] == null,
-      history: restoredHistory,
-      pendingBonusTurnId: snapshot['pendingBonusTurnId'] as int?,
-      clearPendingBonusTurnId: snapshot['pendingBonusTurnId'] == null,
       clearPreValidationSnapshot: true,
       restoredValidatedWords:
-          validatedWords != null ? List<String>.from(validatedWords) : null,
+          validatedWords is List ? validatedWords.cast<String>() : null,
     );
 
     notifyListeners();
