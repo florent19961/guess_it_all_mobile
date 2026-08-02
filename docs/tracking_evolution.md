@@ -63,3 +63,72 @@ que le Flutter Linux. Chaque `flutter pub get` depuis WSL réécrivait ~30 ligne
 **Conséquence.** `pubspec.lock` se re-résout une fois proprement. Gotcha inscrit dans
 `guessitall-pr-closeout` : un `pubspec.lock` qui apparaît dans un diff **sans** changement de
 `pubspec.yaml` est un artefact de SDK, pas un changement de story → le restaurer.
+
+---
+
+## 2026-08-02 — Remédiation de l'audit : 6 chantiers + réglages persistés + historique
+
+**Quoi.** Le lot issu de l'audit du 2026-08-02 (`_bmad-output/reviews/audit-code-2026-08-02.md`),
+livré en 8 commits sur `feat/audit-remediation`. Il transforme un dépôt à zéro test en une base
+testée (97 tests), et pose les invariants dont le mode Fiesta a besoin.
+
+**Les décisions structurantes, et pourquoi.**
+
+1. **`runApp()` avant tout réseau** (`app_bootstrap.dart`). Le démarrage `await`-ait Firebase et la
+   sync avant de peindre quoi que ce soit : sur un réseau capricieux, l'app restait sur l'écran
+   noir de lancement. La distinction posée est **local (attendu) vs réseau (fire-and-forget)** —
+   pas « init rapide vs lente » : c'est la *nature* de la dépendance qui décide, une init locale
+   lente reste bloquante parce que l'UI en dépend.
+
+2. **Un seul propriétaire du temps** (`turn_clock.dart` + `GameProvider`). Le temps restant vivait
+   en trois exemplaires : une deadline dans le widget, un `pausedTimeRemaining` dans l'état, un
+   `Timer` local. Ouvrir un dialogue gelait l'affichage mais **pas** la deadline — le joueur perdait
+   les secondes passées dans la confirmation. `TurnClock` est immuable et rend `_endMs` et
+   `_frozenMs` **mutuellement exclusifs** : il n'existe plus d'état où « en cours » et « gelé »
+   sont vrais en même temps, donc plus de désynchronisation possible à réconcilier.
+   Corollaire : `didChangeAppLifecycleState` met en pause quand l'app passe en arrière-plan —
+   auparavant le chrono continuait de tourner pendant un appel entrant.
+
+3. **Enveloppe de version + quarantaine** (`persisted_schema.dart`). L'app est **publiée** et
+   `upgrader` force la mise à jour : un blob écrit par une version future ou corrompu ne doit ni
+   crasher au boot, ni se rejouer à chaque ouverture. Un blob **sans** `schemaVersion` est le
+   format actuellement en production et se lit tel quel — ce n'est pas une corruption.
+   Règle dure : une panne de la *couche de stockage* n'efface rien ; seule une donnée
+   effectivement illisible est mise en quarantaine.
+
+4. **Machine à états extraite en fonctions pures** (`turn_resolution.dart`, `play_rotation.dart`).
+   La résolution d'un tour et la rotation des joueurs étaient enfouies dans un provider de
+   ~1 500 lignes, donc non testables sans monter l'app. `teamIndexAtTurn`/`playerIndexAtTurn`
+   remplacent un ordre de jeu pré-calculé et stocké : c'est le pré-requis du mode Fiesta, qui
+   devra insérer des tours bonus sans réécrire l'ordre.
+   ⚠️ Précondition documentée : le cycle de base doit être une **permutation** des équipes.
+
+5. **Les réglages survivent au démarrage d'une partie.** `startNewGame()` remplace
+   `clearLocalStorage()` sur les trois entrées « Jouer / Nouvelle partie ». L'ancien chemin
+   réécrivait `GameSettings.initial()` sur le disque : le joueur reperdait ses réglages avancés à
+   chaque partie. Le bug ne vivait pas dans le provider (les tests provider passaient **avant
+   comme après** le fix) mais chez l'appelant — d'où un test **widget** sur l'écran d'accueil.
+   La remise à zéro explicite reste offerte par le bouton « Réinitialiser » des réglages.
+
+6. **Historique des 10 dernières parties** (`game_result.dart`, `game_history_service.dart`,
+   `history_screen.dart`). `GameAnalytics` ne portait ni scores, ni équipes, ni joueurs : la donnée
+   n'existait pas, elle est **archivée à la fin de partie** (les deux chemins de fin y mènent).
+   Elle est écrite dans sa **propre clé**, bornée à 10 entrées, et stocke les **noms** des joueurs
+   plutôt que leurs ids — un id ne survit pas à la partie qui l'a créé. Dédoublonnage par `gameId`,
+   parce que la fin de partie est atteignable plusieurs fois (retour arrière, reprise).
+
+7. **Un dialogue de confirmation au lieu de six copies** (`app_confirm_dialog.dart`,
+   `game_dialogs.dart`). `AppConfirmDialog.show()` rend un `bool` et **jamais `null`** : fermer en
+   tapant à côté vaut refus. Sans ce défaut, un appelant écrivant `if (confirme)` sur un `bool?`
+   abandonnerait une partie sur un tap malencontreux.
+
+**Ce qui a été volontairement laissé de côté.** La sortie des analytics hors de
+`SharedPreferences` — voir `notes_pour_plus_tard.md` (2026-08-02).
+
+**Effet de bord sur la doc.** Deux fichiers d'instructions agent affirmaient des choses fausses et
+ont été corrigés : `lib/theme/CLAUDE.md` décrivait une palette inexistante (noir `#0A0A0A`, rose
+`#FF3B7F`, cyan `#00E5FF`) là où le code est en ardoise / rose poudré / vert d'eau ; et
+`docs/word-categories.md` annonçait des comptes de mots inventés ainsi que **deux IDs de catégorie
+qui n'existent pas** (`arcade`, `metro` — au lieu de `univers_arcade`, `metro_parisien`).
+Les deux pointent désormais vers la commande qui re-mesure, plutôt que de recopier des valeurs qui
+dérivent en silence.

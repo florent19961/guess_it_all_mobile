@@ -5,38 +5,46 @@ Le `CLAUDE.md` racine ne garde que le pointeur vers ce fichier.
 
 ## Vue d'ensemble
 
-**13 catégories**, environ **5 711 mots**.
+**13 catégories**, **5 822 mots** en français.
 
 | Catégorie | ID | Icône | Mots |
 |-----------|-----|-------|------|
-| Nature et Gastronomie | `nature` | 🌿 | 883 |
-| Dictionnaire | `dictionnaire` | 📖 | 870 |
-| Noms communs | `noms_communs` | 🔧 | 728 |
-| 7ème Art | `7eme_art` | 🎬 | 491 |
-| Science et Médecine | `science_medecine` | 🔬 | 484 |
-| Marques | `marques` | 🏷️ | 465 |
-| Géographie | `geographie` | 🌍 | 384 |
-| Célébrités | `celebrites` | ⭐ | 361 |
-| Univers Arcade | `arcade` | 🎮 | 324 |
-| Métiers & Sports | `metiers_sports` | 💼 | 284 |
-| Musique | `musique` | 🎵 | 224 |
-| Expressions | `expressions` | 🇫🇷 | 118 |
-| Métro Parisien | `metro` | 🚇 | 105 |
-| **TOTAL** | | | **5 711** |
+| Dictionnaire | `dictionnaire` | 📖 | 750 |
+| Nature et Gastronomie | `nature` | 🌿 | 711 |
+| Métiers & Sports | `metiers_sports` | 💼 | 673 |
+| Noms communs | `noms_communs` | 🔧 | 624 |
+| Géographie | `geographie` | 🌍 | 593 |
+| Marques | `marques` | 🏷️ | 460 |
+| 7ème Art | `7eme_art` | 🎬 | 413 |
+| Musique | `musique` | 🎵 | 375 |
+| Science et Médecine | `science_medecine` | 🔬 | 349 |
+| Univers Arcade | `univers_arcade` | 🎮 | 341 |
+| Célébrités | `celebrites` | ⭐ | 323 |
+| Expressions | `expressions` | 🇫🇷 | 115 |
+| Métro Parisien | `metro_parisien` | 🚇 | 95 |
+| **TOTAL** | | | **5 822** |
 
-> ⚠️ Ces comptes datent de l'enrichissement de janvier 2026. Les **vérifier dans les JSON**
-> (`assets/translations/words/fr/`) avant de les citer dans une spec — un chiffre de doc vieillit.
+> 🔴 Ce tableau a été **mesuré**, pas recopié. La version précédente de cette page
+> annonçait des comptes inventés (`nature` 883 au lieu de 711, `metiers_sports` 284
+> au lieu de 673) et **deux IDs qui n'existent pas** — `arcade` et `metro`, alors que
+> le code attend `univers_arcade` et `metro_parisien`. Un `loadCategory('arcade')`
+> part droit dans le `catch` silencieux de `utils.dart`.
+>
+> Re-mesurer avant de citer un chiffre en spec :
+> ```bash
+> python3 -c "import json,os; c=json.load(open('assets/translations/categories.json'))['categories']; print(sum(len(json.load(open('assets/translations/words/fr/%s.json'%x['id']))['words']) for x in c))"
+> ```
 
 ## Contenu par catégorie (catégories enrichies, janvier 2026)
 
-### Science et Médecine (`science_medecine`, ex-`medecine`) — 🔬 484 mots
+### Science et Médecine (`science_medecine`, ex-`medecine`) — 🔬 349 mots
 - **Médecine** : anatomie, maladies, symptômes, traitements, spécialités médicales, équipements,
   traumatismes, pathologies, santé mentale, cancers, premiers secours, professions paramédicales.
 - **Science** : éléments chimiques, domaines scientifiques, théories et lois, espace et astronomie,
   inventions et découvertes, scientifiques célèbres, phénomènes physiques, unités de mesure,
   biologie cellulaire, chimie, géologie.
 
-### Nature et Gastronomie (`nature`) — 🌿 883 mots
+### Nature et Gastronomie (`nature`) — 🌿 711 mots
 - **Nature** : animaux (sauvages, domestiques, marins, oiseaux, insectes, reptiles, rongeurs,
   cervidés, bovidés), plantes et fleurs, arbres, arbustes, plantes d'intérieur, plantes grimpantes,
   fruits et légumes, champignons, phénomènes naturels, météo, minéraux, géologie, astres,
@@ -47,14 +55,14 @@ Le `CLAUDE.md` racine ne garde que le pointeur vers ce fichier.
   boissons chaudes/froides/alcoolisées, cocktails, ingrédients, produits laitiers, viandes,
   charcuterie.
 
-### Noms communs (`noms_communs`) — 🔧 728 mots
+### Noms communs (`noms_communs`) — 🔧 624 mots
 Objets électroniques, objets quotidiens, mobilier, ustensiles de cuisine, outils, moyens de
 transport, véhicules spécifiques, vêtements, sous-vêtements, chaussures, accessoires mode,
 instruments de musique, maison et habitat, jouets, électroménager (gros et petit), équipements
 sportifs, objets plage/vacances, matériel camping, matériel médical, matériel informatique,
 textiles maison, contenants et emballages, objets de décoration, bijoux, objets divers.
 
-### Dictionnaire (`dictionnaire`) — 📖 870 mots
+### Dictionnaire (`dictionnaire`) — 📖 750 mots
 Émotions positives et négatives, états physiques, états mentaux, adjectifs descriptifs / de
 personnalité / de taille-forme, verbes du quotidien / créatifs / de communication / domestiques /
 de mouvement, actions physiques et mentales, couleurs, formes géométriques, nombres et quantités,
@@ -67,11 +75,11 @@ noms abstraits, contraires et opposés, matériaux.
 - **Géographie** (🌍) — pays, villes, monuments, fleuves.
 - **Métiers & Sports** (💼) — professions et sports.
 - **Célébrités** (⭐) — sportifs, acteurs, chanteurs, influenceurs.
-- **Univers Arcade** (🎮) — jeux vidéo, Pokémon, Clash Royale, jeux de société.
+- **Univers Arcade** (`univers_arcade`, 🎮) — jeux vidéo, Pokémon, Clash Royale, jeux de société.
 - **Expressions** (🇫🇷) — expressions françaises.
 - **Musique** (🎵) — chansons, genres, artistes.
 - **Marques** (🏷️) — vêtements, tech, alimentation.
-- **Métro Parisien** (🚇) — stations de métro.
+- **Métro Parisien** (`metro_parisien`, 🚇) — stations de métro.
 
 ## Historique des mots — priorisation de ce qui sort
 
@@ -88,7 +96,7 @@ Incrémentation à la fin de chaque partie, via `AnalyticsService.endGame()`.
 |---|---|
 | `guessItAll_word_history` | `Map<String, int>` sérialisée en JSON : mot → nombre de fois joué |
 
-**Exemple.** Catégorie « Expressions » (118 mots), historique = 113 vus / 5 jamais vus, demande de
+**Exemple.** Catégorie « Expressions » (115 mots), historique = 110 vus / 5 jamais vus, demande de
 40 mots → 5 jamais vus + 35 au `seenCount` le plus bas ; après la partie, les 40 passent à +1.
 
 ⚠️ **Couplage à connaître** : la priorisation dépend d'un compteur écrit par le chemin analytics.

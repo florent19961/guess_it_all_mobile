@@ -53,3 +53,34 @@ demande pourquoi `word_categories/` a un jumeau.
 
 **Esquisse.** Vérifier que les JSON de `assets/translations/words/fr/` couvrent bien tout ce que
 `backup/` contient, puis `rm -rf` et retirer l'exclusion de `analysis_options.yaml`.
+
+---
+
+## 2026-08-02 — Les analytics restent dans SharedPreferences
+
+**Contexte.** L'audit reprochait à `SharedPreferences` de porter des blobs qui n'ont rien à y
+faire : l'état de partie, l'historique des mots, **et l'historique analytique complet**
+(`GameAnalytics`, un événement par mot joué). SharedPreferences relit et réécrit **tout le
+fichier** à chaque `setString` — le coût croît donc avec la taille du blob, sur le thread de
+plateforme. Le chantier 5 devait alléger le persisté *et* sortir les analytics.
+
+**Décision reportée.** La seconde moitié : déplacer `GameAnalytics` vers un stockage adapté
+(fichier JSON Lines en append, ou `sqflite`).
+
+**Raison.** Sortir les analytics change le **format d'une donnée déjà installée chez les joueurs**
+— et `upgrader` force la mise à jour, donc il n'y a pas de version antérieure vers laquelle
+revenir. Ça mérite sa propre story avec sa propre migration, pas un passage en marge d'un lot de
+remédiation. Ce qui a été fait à la place et qui suffisait au besoin : le compactage du snapshot
+de partie (`clearPreValidationSnapshot`), l'enveloppe de version + quarantaine (`persisted_schema`)
+qui rend le format *migrable*, et l'historique des parties écrit dans **sa propre clé** bornée à
+10 entrées — donc sans faire grossir le blob analytics.
+
+**Signal déclencheur.** Un joueur régulier qui voit l'app ralentir au fil des parties, **ou** le
+premier modificateur Fiesta qui veut journaliser un événement par mot (le mode multiplie
+mécaniquement le volume d'événements). Mesure à faire avant de trancher : la taille réelle de
+`guessItAll_analytics` après ~30 parties.
+
+**Esquisse.** (a) `AnalyticsService` écrit en append dans un fichier via `path_provider` plutôt que
+`prefs.setString` ; (b) borner par nombre de parties, comme `GameHistoryService.maxEntries` ;
+(c) la lecture passe par le même `unwrapSchema`/quarantaine que le reste — le contrat de robustesse
+est déjà posé, il ne resterait que le support.
