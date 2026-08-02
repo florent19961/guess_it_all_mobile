@@ -279,27 +279,19 @@ class _PlayersScreenState extends State<PlayersScreen> {
       return null; // Plus de mots uniques disponibles
     }
 
-    // Fallback : générer via l'ancienne méthode
-    int attempts = 0;
-    while (attempts < 100) {
-      final words = await generateWordsFromCategoriesAsync(
-        provider.settings.selectedCategories,
-        1,
-        difficultyLevels: provider.settings.selectedDifficultyLevels,
-      );
-      if (words.isNotEmpty) {
-        final word = words[0];
-        final wordLower = word.toLowerCase();
-        // Vérifier que le mot n'est pas utilisé par d'autres joueurs ni dans le modal actuel
-        if (!otherPlayersWords.contains(wordLower) &&
-            !currentModalWords
-                .map((w) => w.toLowerCase())
-                .contains(wordLower)) {
-          return word;
-        }
-      }
-      attempts++;
-    }
+    // Repli quand le pool pré-chargé est épuisé.
+    //
+    // 🔴 C'était un copier-coller de la boucle à 100 tentatives de
+    // `words_screen` : un tirage complet du corpus par essai, rejeté si le mot
+    // était déjà pris. Le générateur sait maintenant exclure, donc un appel
+    // suffit et le cas « plus rien de disponible » se voit tout de suite.
+    final tirage = await generateWordsFromCategoriesAsync(
+      provider.settings.selectedCategories,
+      1,
+      difficultyLevels: provider.settings.selectedDifficultyLevels,
+      exclude: {...otherPlayersWords, ...currentModalWords},
+    );
+    if (tirage.isNotEmpty) return tirage.first;
     return null;
   }
 

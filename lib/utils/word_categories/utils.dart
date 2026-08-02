@@ -56,10 +56,17 @@ Future<List<CategoryMetadata>> getCategoryListAsync() async {
 /// Charge les catégories depuis JSON et génère une liste de mots en
 /// priorisant ceux que l'utilisateur n'a jamais vus (seenCount = 0),
 /// puis ceux avec le compteur le plus bas.
+///
+/// [exclude] retire des mots du tirage, en comparaison **insensible à la
+/// casse**. 🔴 C'est ce qui permet de demander N mots uniques en UN appel :
+/// sans lui, l'appelant qui voulait éviter des doublons ne pouvait que tirer
+/// un mot, le rejeter, et recommencer — jusqu'à 100 fois, chaque tentative
+/// re-scannant les ~5 800 entrées du corpus, sur l'isolate de l'UI.
 Future<List<String>> generateWordsFromCategoriesAsync(
   List<String> selectedCategories,
   int count, {
   List<int>? difficultyLevels,
+  Set<String> exclude = const {},
 }) async {
   final loader = WordLoaderService();
   final historyService = WordHistoryService();
@@ -94,7 +101,13 @@ Future<List<String>> generateWordsFromCategoriesAsync(
   }
 
   // Dédupliquer
-  final uniqueWords = combinedWords.toSet().toList();
+  var uniqueWords = combinedWords.toSet().toList();
+
+  if (exclude.isNotEmpty) {
+    final interdits = exclude.map((w) => w.toLowerCase()).toSet();
+    uniqueWords =
+        uniqueWords.where((w) => !interdits.contains(w.toLowerCase())).toList();
+  }
 
   // Sélection prioritaire (mots jamais vus d'abord)
   return historyService.selectWordsByPriority(uniqueWords, count);

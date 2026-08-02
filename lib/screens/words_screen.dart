@@ -95,30 +95,29 @@ class _WordsScreenState extends State<WordsScreen> {
     return otherWords;
   }
 
-  // Génère un mot unique qui n'est pas utilisé
-  Future<String?> _generateUniqueWord(
+  // Génère [count] mots uniques, en UN seul tirage.
+  //
+  // 🔴 Avant : une boucle `while (attempts < 100)` tirait UN mot à la fois et le
+  // rejetait s'il était déjà pris. Chaque tentative re-scannait les ~5 800
+  // entrées du corpus et mélangeait un bucket de plusieurs milliers d'éléments
+  // pour n'en garder qu'un — le tout sur l'isolate de l'UI, sans frame
+  // intercalée (les `await` ne sont que des microtâches quand le cache de
+  // catégories est chaud). Remplir 10 champs vides pouvait donc coûter jusqu'à
+  // 1 000 scans complets, et l'écran se figeait.
+  //
+  // Le générateur sait désormais exclure : un appel suffit.
+  Future<List<String>> _generateUniqueWords(
     GameProvider provider,
-    Set<String> otherPlayersWords,
-    List<String> currentWords,
+    Set<String> dejaPris,
+    int count,
   ) async {
-    int attempts = 0;
-    while (attempts < 100) {
-      final words = await generateWordsFromCategoriesAsync(
-        provider.settings.selectedCategories,
-        1,
-        difficultyLevels: provider.settings.selectedDifficultyLevels,
-      );
-      if (words.isNotEmpty) {
-        final word = words[0];
-        final wordLower = word.toLowerCase();
-        if (!otherPlayersWords.contains(wordLower) &&
-            !currentWords.map((w) => w.toLowerCase()).contains(wordLower)) {
-          return word;
-        }
-      }
-      attempts++;
-    }
-    return null;
+    if (count <= 0) return const [];
+    return generateWordsFromCategoriesAsync(
+      provider.settings.selectedCategories,
+      count,
+      difficultyLevels: provider.settings.selectedDifficultyLevels,
+      exclude: dejaPris,
+    );
   }
 
   // Vérifie si un mot est en doublon
@@ -242,39 +241,34 @@ class _WordsScreenState extends State<WordsScreen> {
 
   Future<void> _fillAllEmptyWords(
       GameProvider provider, String playerId) async {
-    final otherPlayersWords = _getOtherPlayersWords(provider, playerId);
-    final emptyFieldsCount =
-        _wordControllers.where((c) => c.text.trim().isEmpty).length;
-
-    if (emptyFieldsCount == 0) return;
-
-    int filledCount = 0;
-    final filledWords = _wordControllers
-        .map((c) => c.text.trim())
-        .where((w) => w.isNotEmpty)
-        .toList();
-
+    final indicesVides = <int>[];
     for (int i = 0; i < _wordControllers.length; i++) {
-      if (_wordControllers[i].text.trim().isEmpty) {
-        final newWord = await _generateUniqueWord(
-          provider,
-          otherPlayersWords,
-          filledWords,
-        );
-        if (newWord != null) {
-          setState(() {
-            _wordControllers[i].text = newWord;
-          });
-          filledWords.add(newWord);
-          filledCount++;
-        }
-      }
+      if (_wordControllers[i].text.trim().isEmpty) indicesVides.add(i);
     }
+    if (indicesVides.isEmpty) return;
 
-    if (filledCount == 0) {
+    // Tout ce qui est déjà pris : les mots des autres joueurs ET ceux déjà
+    // saisis dans ce formulaire.
+    final dejaPris = _getOtherPlayersWords(provider, playerId)
+      ..addAll(_wordControllers
+          .map((c) => c.text.trim())
+          .where((w) => w.isNotEmpty)
+          .map((w) => w.toLowerCase()));
+
+    final nouveaux =
+        await _generateUniqueWords(provider, dejaPris, indicesVides.length);
+    if (!mounted) return;
+
+    setState(() {
+      for (int k = 0; k < nouveaux.length && k < indicesVides.length; k++) {
+        _wordControllers[indicesVides[k]].text = nouveaux[k];
+      }
+    });
+
+    if (nouveaux.isEmpty) {
       _showNoWordsAvailableWarning(context);
-    } else if (filledCount < emptyFieldsCount) {
-      _showPartialFillWarning(context, filledCount, emptyFieldsCount);
+    } else if (nouveaux.length < indicesVides.length) {
+      _showPartialFillWarning(context, nouveaux.length, indicesVides.length);
     }
   }
 
@@ -369,24 +363,26 @@ class _WordsScreenState extends State<WordsScreen> {
                                   // Bouton shuffle
                                   GestureDetector(
                                     onTap: () async {
-                                      final currentWords = _wordControllers
-                                          .asMap()
-                                          .entries
-                                          .where((e) => e.key != index)
-                                          .map((e) => e.value.text.trim())
-                                          .where((w) => w.isNotEmpty)
-                                          .toList();
+                                      final dejaPris = <String>{
+                                        ...otherPlayersWords,
+                                        ..._wordControllers
+                                            .asMap()
+                                            .entries
+                                            .where((e) => e.key != index)
+                                            .map((e) => e.value.text
+                                                .trim()
+                                                .toLowerCase())
+                                            .where((w) => w.isNotEmpty),
+                                      };
 
-                                      final newWord = await _generateUniqueWord(
-                                        provider,
-                                        otherPlayersWords,
-                                        currentWords,
-                                      );
+                                      final tirage = await _generateUniqueWords(
+                                          provider, dejaPris, 1);
+                                      if (!mounted) return;
 
-                                      if (newWord != null) {
+                                      if (tirage.isNotEmpty) {
                                         setState(() {
                                           _wordControllers[index].text =
-                                              newWord;
+                                              tirage.first;
                                         });
                                       } else {
                                         _showNoWordsAvailableWarning(context);

@@ -88,6 +88,15 @@ class GameProvider extends ChangeNotifier {
                 .toList() ??
             _teams;
         _game = GameState.fromJson(savedState['game'] ?? {});
+
+        // 🔴 Reprendre AUSSI le tracking, pas seulement l'état de jeu. Sans ça,
+        // une partie rouverte après un kill terminait sans jamais incrémenter
+        // l'historique des mots — donc les mêmes mots ressortaient ensuite.
+        // Durcir la boucle ne suffisait pas : il fallait durcir la REPRISE.
+        final gameId = _game.gameId;
+        if (gameId != null && _game.allWords.isNotEmpty) {
+          await _analytics.resumeGame(gameId);
+        }
       }
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -951,6 +960,12 @@ class GameProvider extends ChangeNotifier {
 
     notifyListeners();
     _saveGameState();
+
+    // Point de reprise du tracking : la fin d'un tour est le moment où un lot
+    // d'événements est complet. On ne le fait PAS à chaque `_saveGameState()`
+    // (appelé au moindre changement d'écran) — ce serait doubler l'écriture la
+    // plus lourde de l'app pour rien.
+    unawaited(_analytics.saveCurrentGame());
   }
 
   Map<String, int> _getNextPlayerWithRotation() {

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/services/persisted_schema.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -45,4 +46,36 @@ Future<Map<String, dynamic>?> persistedData(String key) async {
   final raw = await rawString(key);
   if (raw == null) return null;
   return unwrapSchema(jsonDecode(raw)).data;
+}
+
+/// Neutralise les plugins natifs qui n'existent pas dans un test unitaire.
+///
+/// `AnalyticsService.startGame()` passe par `UserService.getDeviceInfo()`, qui
+/// interroge `package_info_plus` et `device_info_plus` : hors appareil, ces
+/// canaux lèvent `MissingPluginException`. On rend des valeurs fixes plutôt que
+/// d'injecter une abstraction dans le code de production pour un besoin de test.
+void givenFakePlatformPlugins() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  final messenger =
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+
+  messenger.setMockMethodCallHandler(
+    const MethodChannel('dev.fluttercommunity.plus/package_info'),
+    (call) async => <String, dynamic>{
+      'appName': 'Guess It All',
+      'packageName': 'com.test.guessitall',
+      'version': '1.0.0',
+      'buildNumber': '1',
+    },
+  );
+
+  messenger.setMockMethodCallHandler(
+    const MethodChannel('dev.fluttercommunity.plus/device_info'),
+    (call) async => <String, dynamic>{
+      'model': 'test-device',
+      'version': <String, dynamic>{'release': '14'},
+      'systemName': 'test-os',
+      'systemVersion': '14',
+    },
+  );
 }
