@@ -26,22 +26,114 @@ last_updated: 2026-08-01
 epics:
   epic-0-harness:
     title: "Portage du harness agent (skills, gates, board, scripts) depuis WasReal"
-    status: in-progress
+    status: done
   epic-1-dette-baseline:
     title: "Solder la baseline rouge (aucun test qui tourne)"
     status: backlog
   epic-2-mode-fiesta:
     title: "Mode Fiesta — modificateurs de jeu par-dessus le mode libre"
-    status: needs-design   # → grill-me AVANT d'écrire quoi que ce soit
+    status: needs-design   # → grilling AVANT d'écrire quoi que ce soit
+  epic-3-audit-remediation:
+    title: "Remédiation de l'audit du 2026-08-02 (3 blockers, 20 majors)"
+    status: backlog
+    note: >-
+      Rapport : _bmad-output/reviews/audit-code-2026-08-02.md
+      3 des 6 chantiers sont des PRÉ-REQUIS au mode Fiesta (temps, schéma
+      persisté, testabilité de la machine à états).
 
 stories:
   0-1-harness-port:
     epic: epic-0-harness
     title: "Porter skills BMad + skills projet + scripts + board depuis WasReal"
-    status: in-progress
+    status: done
     note: >-
-      Portage initial 2026-08-01. Gates allégés actés (1 reviewer adversarial +
-      Codex cross-LLM). Tronc = main, releases par tag vX.Y.Z+N.
+      ✅ Mergé sur main le 2026-08-02 (sur instruction Florent). Gates allégés
+      actés (1 reviewer adversarial + Codex cross-LLM). Tronc = main, releases
+      par tag vX.Y.Z+N. SDK Flutter local aligné 3.24.5 → 3.44.8.
+
+  # ── epic-3 : remédiation de l'audit ────────────────────────────────────────
+  # Rapport complet : _bmad-output/reviews/audit-code-2026-08-02.md
+  3-1-runapp-avant-reseau:
+    epic: epic-3-audit-remediation
+    title: "runApp() avant tout réseau : sortir la sync Firestore du chemin de boot"
+    status: backlog
+    severity: blocker
+    effort: S
+    note: >-
+      main.dart:39 attend FirebaseSyncService().initialize(), qui se termine par
+      `await syncPendingGames()` (firebase_sync_service.dart:99) → `set()` sans
+      timeout (l.153). Queue non vide + Wi-Fi captif (isConnected ne teste que le
+      TYPE d'interface) = l'app ne démarre JAMAIS. Vérifié à la main 2026-08-02.
+      Fix : initialize() en fire-and-forget APRÈS runApp() + .timeout() sur le
+      set() individuel (borner la boucle ne suffit pas).
+
+  3-2-modele-du-temps:
+    epic: epic-3-audit-remediation
+    title: "Unifier le modèle du temps (une seule autorité) + brancher le cycle de vie"
+    status: backlog
+    severity: blocker
+    effort: M
+    prerequisite_for: epic-2-mode-fiesta
+    note: >-
+      Regroupe 5 findings de MÊME RACINE : le temps a 3 représentations
+      (_timeRemaining widget, game.timeRemaining poussé 10×/s, turnEndTimestamp
+      horloge murale) et AUCUNE n'est jamais gelée. _handleHomePress
+      (turn_screen.dart:146) capture le temps restant puis ne gèle pas la
+      deadline ; suspendGame (game_provider.dart:947) recalcule depuis la
+      deadline périmée et IGNORE la valeur correcte → clamp(0,999) → tour terminé
+      au retour. Zéro WidgetsBindingObserver dans lib/. Vérifié à la main.
+      🔴 PRÉ-REQUIS FIESTA : malus de temps, tours bonus et règles par manche sont
+      tous des mutations du temps de tour.
+
+  3-3-schema-persiste:
+    epic: epic-3-audit-remediation
+    title: "Versionner le schéma persisté + quarantaine des blobs illisibles"
+    status: backlog
+    severity: major
+    effort: M
+    prerequisite_for: epic-2-mode-fiesta
+    note: >-
+      Aucune schemaVersion sur les 9 clés guessItAll_*. Un blob illisible n'est
+      jamais purgé (échec permanent), et word_history_service.dart:143 EFFACE
+      l'historique sur une seule lecture ratée. 🔴 PRÉ-REQUIS FIESTA : Fiesta
+      ajoute par construction des champs à GameState (modificateurs actifs,
+      joueurs bloqués) — exactement l'événement contre lequel ce chantier protège.
+
+  3-4-machine-etats-testable:
+    epic: epic-3-audit-remediation
+    title: "Rendre la machine à états testable (découper validateWords, tuer le snapshot manuel)"
+    status: backlog
+    severity: major
+    effort: L
+    prerequisite_for: epic-2-mode-fiesta
+    depends: [1-1-widget-test-scaffold]
+    note: >-
+      validateWords fait 167 lignes (game_provider.dart:711) ; aucune règle de
+      score n'est atteignable sans instancier SharedPreferences + AnalyticsService
+      + UserService. 🔴 PRÉ-REQUIS FIESTA : chaque modificateur est une variante
+      de règle — sans point d'entrée testable, on les valide à la main en soirée.
+
+  3-5-alleger-persiste:
+    epic: epic-3-audit-remediation
+    title: "Alléger le blob persisté + sortir les analytics de SharedPreferences"
+    status: backlog
+    severity: major
+    effort: M
+    note: >-
+      ~95 % du blob persisté est du remplissage (ordre de jeu matérialisé en 1000
+      cycles) ; les analytics partagent le même fichier que l'état de jeu.
+      Fortement recommandé avant Fiesta, pas bloquant.
+
+  3-6-dedupliquer-ecrans:
+    epic: epic-3-audit-remediation
+    title: "Dédupliquer les dialogues d'écran + remettre le design system en circuit"
+    status: backlog
+    severity: major
+    effort: M
+    note: >-
+      341 lignes de dialogues copiées à l'octet près sur 4 écrans ; 7 usages
+      d'AppModal contre 15 dialogues manuels ; stats_screen.dart = 972 lignes dont
+      4 builders quasi identiques. Dette pure — acceptable APRÈS Fiesta.
 
   1-1-widget-test-scaffold:
     epic: epic-1-dette-baseline
