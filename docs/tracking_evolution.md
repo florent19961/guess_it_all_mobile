@@ -132,3 +132,74 @@ ont été corrigés : `lib/theme/CLAUDE.md` décrivait une palette inexistante (
 qui n'existent pas** (`arcade`, `metro` — au lieu de `univers_arcade`, `metro_parisien`).
 Les deux pointent désormais vers la commande qui re-mesure, plutôt que de recopier des valeurs qui
 dérivent en silence.
+
+---
+
+## 2026-08-02 — Gate ② : la pause rendait du temps, et une entrée abîmée vidait l'historique
+
+**Quoi.** Le lot de remédiation a été passé au gate ② (relecture adverse + Codex en
+cross-LLM). Cinq défauts en sont sortis, tous vérifiés à la main dans le code avant
+correction, tous couverts par un test qui échoue sur le code d'avant.
+
+**Les deux qui comptent, et ce qu'ils apprennent.**
+
+1. **Une correction peut survivre… dans le chemin de persistance.** Le chantier 2 avait
+   tué le motif « arrondir le reste puis ré-ancrer la deadline dessus » sur la pénalité de
+   passe. Le même motif est resté intact dans l'aller-retour disque : `_withClock`
+   persistait le temps gelé arrondi **à la seconde supérieure**, et le getter `turnClock`
+   le relisait comme des millisecondes. Une pause à 29 001 ms repartait à 30 000 ms —
+   **le joueur gagnait jusqu'à 999 ms par pause, autant de fois qu'il ouvrait un
+   dialogue**. Et `suspendGame`/`resumeGame` aggravaient le cas en écrivant les champs
+   d'horloge à la main, alors que le commentaire du provider affirme qu'on passe toujours
+   par `_withClock`. Ils y passent désormais : il n'existe plus qu'un seul écrivain.
+   ⚠️ `pausedTimeRemaining` est en secondes et c'est **le format en production** : on ne
+   peut pas changer son unité. D'où un champ `pausedRemainingMs` qui fait autorité, avec
+   repli sur l'ancien pour les parties héritées.
+
+2. **Un invariant affirmé en commentaire n'est pas un invariant.** `load()` de
+   l'historique porte « une seule entrée abîmée ne doit pas effacer tout l'historique ».
+   Or `GameResult.tryFromJson` castait `teams` en dur : un objet là où un tableau est
+   attendu levait, l'exception remontait hors du `.map()` (paresseux), tombait dans le
+   `catch` générique, `load()` rendait vide **sans quarantaine** — et le `record()` suivant
+   réécrivait la clé avec la seule partie nouvelle. Toutes les parties saines détruites.
+   Même famille dans `TeamResult.fromJson`, où `.cast<int>()` est paresseux et ne levait
+   qu'au **rendu**, pas au parsing.
+
+**Les trois autres.** Un blob de forme invalide (`[]`) dans l'historique des mots était
+classé « panne transitoire » et non « corruption », ce qui armait `_degraded` à vie sans
+jamais nettoyer la clé ; le test de reprise du chrono n'assertait que la seconde
+*affichée*, donc il ne pouvait pas voir le défaut n°1 ; et `TurnClock.fromJson`
+contournait l'invariant de sa propre classe en passant les deux champs bruts au
+constructeur privé.
+
+**Méthode retenue.** Les gates sortent leurs meilleurs findings sur les chemins de
+**reprise** et de **persistance**, pas sur la boucle nominale — c'est cohérent avec le
+reste du projet. Et un finding « le test ne prouve rien » vaut un finding de code : c'est
+lui qui explique pourquoi le défaut avait survécu au chantier qui devait le tuer.
+
+---
+
+## 2026-08-02 — Les trois `[major]` d'audit que les 6 chantiers ne couvraient pas
+
+**Quoi.** En construisant la table de couverture de l'audit, trois findings `[major]` se
+sont révélés orphelins. Ils sont traités.
+
+1. **Le tracking analytics n'était jamais réhydraté.** Après un kill, la partie reprenait
+   mais `isTracking` restait faux, donc `endGame()` sortait en early-return — or c'est lui
+   qui appelle `incrementWords()`. L'impact n'est pas de la télémétrie : la priorisation
+   « mots jamais vus » ne s'appliquait plus, donc **les mêmes mots ressortaient à la partie
+   suivante**. `AnalyticsService.resumeGame()` recharge la partie depuis le disque, et
+   **refuse une partie déjà clôturée** — la rouvrir rejouerait son `endGame()`, donc un
+   second comptage sur les mêmes mots. Les analytics sont sauvegardés à chaque **fin de
+   tour**, pas à chaque `_saveGameState()` (qui part au moindre changement d'écran).
+
+2. **Tirer un mot scannait tout le corpus.** `_fillAllEmptyWords` bouclait jusqu'à 100 fois
+   *par champ vide* : jusqu'à 1 000 scans des ~5 800 entrées sur l'isolate de l'UI, sans
+   frame intercalée. Le générateur accepte désormais un paramètre d'exclusion, donc un
+   appel unique suffit — et les deux boucles à 100 tentatives disparaissent, y compris le
+   copier-coller de `players_screen`.
+
+3. **`stats_screen.dart` : 987 → 573 lignes.** Quatre builders identiques à l'octet près
+   au titre et à deux tailles de police. Le filtre « manche N » était le seul axe de
+   variation : il devient un paramètre `int? round` sur deux fonctions **pures**, les
+   premières du dépôt à porter des règles de classement testables.
