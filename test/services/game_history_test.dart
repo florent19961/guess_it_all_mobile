@@ -99,6 +99,53 @@ void main() {
       expect(loaded.single.gameId, 'bon');
     });
 
+    test(
+        'une entrée dont `teams` n\'est pas une liste n\'efface pas les autres',
+        () async {
+      // 🔴 Le cas qui DÉTRUISAIT l'historique : `teams` castée en dur levait un
+      // TypeError, l'exception remontait hors du `.map()` paresseux, `load()`
+      // rendait vide SANS quarantaine — et le `record()` suivant réécrivait la
+      // clé avec la seule partie nouvelle. Le test voisin ne l'attrapait pas :
+      // son entrée fautive sortait AVANT le cast.
+      await givenPrefs();
+      await history.record(game(id: 'bon'));
+
+      final raw = jsonDecode((await rawString(GameHistoryService.storageKey))!)
+          as Map<String, dynamic>;
+      (raw['data']['entries'] as List).add({
+        'gameId': 'abime',
+        'playedAt': '2026-01-01T00:00:00.000',
+        'teams': <String, dynamic>{}, // un objet là où un tableau est attendu
+      });
+      await givenPrefs({GameHistoryService.storageKey: jsonEncode(raw)});
+
+      final loaded = await history.load();
+      expect(loaded.map((g) => g.gameId), contains('bon'),
+          reason: 'la partie saine doit survivre à sa voisine abîmée');
+
+      // Et surtout : l'archivage suivant ne doit pas l'avoir effacée.
+      await history.record(game(id: 'nouvelle'));
+      expect((await history.load()).map((g) => g.gameId), contains('bon'));
+    });
+
+    test('un champ de liste au mauvais type ne lève pas au rendu', () async {
+      // `cast<int>()` est paresseux : il passait le parsing et levait à
+      // l'affichage du détail par manche.
+      await givenPrefs();
+      await history.record(game(id: 'bon'));
+
+      final raw = jsonDecode((await rawString(GameHistoryService.storageKey))!)
+          as Map<String, dynamic>;
+      (raw['data']['entries'][0]['teams'][0]['scoreByRound'] as List)
+        ..clear()
+        ..addAll(['pas un entier', 3]);
+      await givenPrefs({GameHistoryService.storageKey: jsonEncode(raw)});
+
+      final restored = (await history.load()).single;
+      // La lecture des éléments est le moment où l'ancien code levait.
+      expect(restored.teams.first.scoreByRound.toList(), [3]);
+    });
+
     test('un historique illisible est mis en quarantaine', () async {
       await givenPrefs({GameHistoryService.storageKey: 'pas du JSON'});
 

@@ -117,10 +117,20 @@ class TurnClock {
         'frozenMs': _frozenMs,
       };
 
-  factory TurnClock.fromJson(Map<String, dynamic> json) => TurnClock._(
-        json['endMs'] as int?,
-        json['frozenMs'] as int?,
-      );
+  /// 🔴 Le gel l'emporte sur la deadline.
+  ///
+  /// Les fabriques garantissent « court XOR gelé », mais cette entrée-ci vient
+  /// du DISQUE : rien n'empêche un blob de porter les deux champs. Les passer
+  /// tels quels au constructeur privé rendrait une horloge à la fois
+  /// `isRunning` et `isPaused`, que `isExpiredAt` ferait expirer — précisément
+  /// ce que la classe promet impossible.
+  factory TurnClock.fromJson(Map<String, dynamic> json) {
+    final frozen = json['frozenMs'] as int?;
+    if (frozen != null) return TurnClock.frozen(frozen);
+
+    final end = json['endMs'] as int?;
+    return end == null ? const TurnClock.stopped() : TurnClock.endingAt(end);
+  }
 
   @override
   bool operator ==(Object other) =>

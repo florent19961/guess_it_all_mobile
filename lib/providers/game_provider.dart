@@ -520,6 +520,7 @@ class GameProvider extends ChangeNotifier {
       turnStartTimestamp: now,
       turnEndTimestamp: now + durationMs,
       clearPausedTimeRemaining: true,
+      clearPausedRemainingMs: true,
       timeRemaining: durationSeconds,
       clearTurnBonusTime: true,
     );
@@ -610,6 +611,7 @@ class GameProvider extends ChangeNotifier {
           clearTurnStartTimestamp: true,
           clearTurnEndTimestamp: true,
           clearPausedTimeRemaining: true,
+          clearPausedRemainingMs: true,
         );
       }
     } else {
@@ -715,6 +717,7 @@ class GameProvider extends ChangeNotifier {
       // tour, et le `then` du dialogue « Terminer le tour » la reprend — ce qui
       // ré-arme une deadline sur l'écran de vérification.
       clearPausedTimeRemaining: true,
+      clearPausedRemainingMs: true,
     );
 
     notifyListeners();
@@ -732,6 +735,12 @@ class GameProvider extends ChangeNotifier {
     final end = _game.turnEndTimestamp;
     if (end != null) return TurnClock.endingAt(end);
 
+    // Les millisecondes exactes font foi. Le champ en secondes n'est relu que
+    // pour une partie mise en pause par une version ANTÉRIEURE de l'app, qui
+    // ne l'écrivait pas — sinon on rendrait au joueur l'arrondi au supérieur.
+    final pausedMs = _game.pausedRemainingMs;
+    if (pausedMs != null) return TurnClock.frozen(pausedMs);
+
     final pausedSeconds = _game.pausedTimeRemaining;
     if (pausedSeconds != null) return TurnClock.frozen(pausedSeconds * 1000);
 
@@ -747,6 +756,10 @@ class GameProvider extends ChangeNotifier {
     return state.copyWith(
       turnEndTimestamp: clock.endTimestampMs,
       clearTurnEndTimestamp: clock.endTimestampMs == null,
+      // Les ms exactes sont l'autorité ; la version en secondes reste écrite
+      // pour qu'un downgrade éventuel retrouve un champ qu'il sait lire.
+      pausedRemainingMs: clock.frozenRemainingMs,
+      clearPausedRemainingMs: !clock.isPaused,
       pausedTimeRemaining:
           clock.isPaused ? (clock.frozenRemainingMs! / 1000).ceil() : null,
       clearPausedTimeRemaining: !clock.isPaused,
@@ -1058,17 +1071,19 @@ class GameProvider extends ChangeNotifier {
     // La valeur correcte était pourtant déjà capturée par le widget, et ignorée.
     // `pauseAt` est idempotent : si l'écran a déjà gelé, on garde son reste.
     final frozen = turnClock.pauseAt(now);
-    final pausedTime = frozen.isPaused
-        ? (frozen.frozenRemainingMs! / 1000).ceil()
-        : _game.timeRemaining;
 
-    _game = _game.copyWith(
+    // Suspendre hors d'un tour (écran équipes, réglages…) : il n'y a pas
+    // d'horloge à geler, mais l'ancien code posait quand même un reste égal au
+    // temps affiché. On conserve ce comportement au lieu de le changer au
+    // passage — ce n'est pas l'objet de ce correctif.
+    final clock = frozen.isStopped
+        ? TurnClock.frozen(_game.timeRemaining * 1000)
+        : frozen;
+
+    _game = _withClock(_game, clock, nowMs: now).copyWith(
       isGameSuspended: true,
       suspendedScreen: _game.currentScreen,
       currentScreen: AppConstants.screenHome,
-      pausedTimeRemaining: pausedTime,
-      timeRemaining: pausedTime,
-      clearTurnEndTimestamp: true,
     );
 
     notifyListeners();
@@ -1077,18 +1092,16 @@ class GameProvider extends ChangeNotifier {
 
   void resumeGame() {
     final now = DateTime.now().millisecondsSinceEpoch;
-    final pausedTime = _game.pausedTimeRemaining ?? _game.timeRemaining;
-    final newEndTimestamp = now + (pausedTime * 1000);
 
-    _game = _game.copyWith(
+    // 🔴 Passer par `_withClock`, et non écrire les champs à la main : c'est CE
+    // contournement qui rendait du temps au joueur. `suspendGame` écrivait un
+    // reste arrondi à la seconde SUPÉRIEURE, `resumeGame` le relisait comme
+    // exact — donc chaque aller-retour par l'accueil allongeait le tour de
+    // jusqu'à 999 ms, autant de fois qu'on le répétait.
+    _game = _withClock(_game, turnClock.resumeAt(now), nowMs: now).copyWith(
       currentScreen: _game.suspendedScreen ?? AppConstants.screenGame,
       isGameSuspended: false,
       clearSuspendedScreen: true,
-      turnEndTimestamp: newEndTimestamp,
-      // Le reste gelé a été consommé pour reconstruire la deadline : le garder
-      // laisserait l'état dans les DEUX représentations à la fois, exactement
-      // l'incohérence que TurnClock élimine.
-      clearPausedTimeRemaining: true,
     );
 
     notifyListeners();

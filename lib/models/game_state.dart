@@ -81,7 +81,22 @@ class GameState {
 
   int? turnStartTimestamp;
   int? turnEndTimestamp;
+
+  /// Reste gelé, en SECONDES arrondies au supérieur.
+  ///
+  /// 🔴 Champ HISTORIQUE : c'est le format présent sur les téléphones des
+  /// joueurs. On ne peut pas changer son unité — une partie en pause déjà
+  /// persistée relirait 30 ms au lieu de 30 s. Il n'est plus l'autorité : voir
+  /// [pausedRemainingMs].
   int? pausedTimeRemaining;
+
+  /// Reste gelé, en MILLISECONDES exactes — l'autorité.
+  ///
+  /// 🔴 Sans lui, geler puis reprendre RENDAIT du temps au joueur : le reste
+  /// était arrondi à la seconde supérieure pour être persisté, puis relu comme
+  /// des millisecondes. Une pause à 29 001 ms repartait à 30 000 ms, et ouvrir
+  /// puis fermer un dialogue en boucle allongeait le tour sans limite.
+  int? pausedRemainingMs;
 
   bool isGameSuspended;
   String? suspendedScreen;
@@ -114,6 +129,7 @@ class GameState {
     this.turnStartTimestamp,
     this.turnEndTimestamp,
     this.pausedTimeRemaining,
+    this.pausedRemainingMs,
     this.isGameSuspended = false,
     this.suspendedScreen,
     List<HistoryEntry>? history,
@@ -160,6 +176,8 @@ class GameState {
     bool clearTurnEndTimestamp = false,
     int? pausedTimeRemaining,
     bool clearPausedTimeRemaining = false,
+    int? pausedRemainingMs,
+    bool clearPausedRemainingMs = false,
     bool? isGameSuspended,
     String? suspendedScreen,
     bool clearSuspendedScreen = false,
@@ -205,6 +223,9 @@ class GameState {
       pausedTimeRemaining: clearPausedTimeRemaining
           ? null
           : (pausedTimeRemaining ?? this.pausedTimeRemaining),
+      pausedRemainingMs: clearPausedRemainingMs
+          ? null
+          : (pausedRemainingMs ?? this.pausedRemainingMs),
       isGameSuspended: isGameSuspended ?? this.isGameSuspended,
       suspendedScreen: clearSuspendedScreen
           ? null
@@ -244,6 +265,7 @@ class GameState {
       'turnStartTimestamp': turnStartTimestamp,
       'turnEndTimestamp': turnEndTimestamp,
       'pausedTimeRemaining': pausedTimeRemaining,
+      'pausedRemainingMs': pausedRemainingMs,
       'isGameSuspended': isGameSuspended,
       'suspendedScreen': suspendedScreen,
       'history': history.map((e) => e.toJson()).toList(),
@@ -287,6 +309,7 @@ class GameState {
       turnStartTimestamp: json['turnStartTimestamp'] as int?,
       turnEndTimestamp: json['turnEndTimestamp'] as int?,
       pausedTimeRemaining: json['pausedTimeRemaining'] as int?,
+      pausedRemainingMs: json['pausedRemainingMs'] as int?,
       isGameSuspended: json['isGameSuspended'] as bool? ?? false,
       suspendedScreen: json['suspendedScreen'] as String?,
       history: (json['history'] as List<dynamic>?)

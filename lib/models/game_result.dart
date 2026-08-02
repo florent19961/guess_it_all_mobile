@@ -37,10 +37,17 @@ class TeamResult {
         id: json['id'] as String? ?? '',
         name: json['name'] as String? ?? '',
         score: json['score'] as int? ?? 0,
-        scoreByRound:
-            (json['scoreByRound'] as List<dynamic>?)?.cast<int>() ?? const [],
-        playerNames:
-            (json['playerNames'] as List<dynamic>?)?.cast<String>() ?? const [],
+        // `cast` est PARESSEUX : il ne lève qu'à la lecture de l'élément,
+        // donc au rendu de l'écran et non au parsing. `whereType` filtre tout
+        // de suite, et une valeur qui n'est pas une liste ne lève plus.
+        scoreByRound: json['scoreByRound'] is List
+            ? (json['scoreByRound'] as List<dynamic>).whereType<int>().toList()
+            : const <int>[],
+        playerNames: json['playerNames'] is List
+            ? (json['playerNames'] as List<dynamic>)
+                .whereType<String>()
+                .toList()
+            : const <String>[],
       );
 }
 
@@ -119,10 +126,18 @@ class GameResult {
     return GameResult(
       gameId: gameId,
       playedAt: playedAt,
-      teams: (json['teams'] as List<dynamic>? ?? const [])
-          .whereType<Map<String, dynamic>>()
-          .map(TeamResult.fromJson)
-          .toList(),
+      // 🔴 `as List<dynamic>?` LÈVE si `teams` est autre chose qu'un tableau —
+      // un objet, par exemple. L'exception remontait hors du `.map()` (évalué
+      // paresseusement par le `.toList()` de l'appelant), tombait dans le
+      // `catch` générique de `load()`, et l'historique repartait VIDE sans
+      // quarantaine : le `record()` suivant écrasait alors toutes les parties
+      // saines. Le commentaire de `load()` promettait exactement l'inverse.
+      teams: json['teams'] is List
+          ? (json['teams'] as List<dynamic>)
+              .whereType<Map<String, dynamic>>()
+              .map(TeamResult.fromJson)
+              .toList()
+          : const <TeamResult>[],
       totalWords: json['totalWords'] as int? ?? 0,
       turnDuration: json['turnDuration'] as int? ?? 0,
       roundsPlayed: json['roundsPlayed'] as int? ?? 0,

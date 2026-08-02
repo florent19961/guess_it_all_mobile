@@ -156,7 +156,16 @@ class WordHistoryService {
         return {};
       }
 
-      final decoded = jsonDecode(jsonString) as Map<String, dynamic>;
+      final raw = jsonDecode(jsonString);
+      // 🔴 Un JSON valide mais de forme inattendue (`[]`, une chaîne…) faisait
+      // lever le cast avec un TypeError, PAS une FormatException : il tombait
+      // donc dans la branche « panne transitoire », qui arme `_degraded` à vie.
+      // Résultat : la clé n'était jamais nettoyée et plus aucun incrément
+      // n'était sauvegardé, à chaque démarrage, pour toujours.
+      if (raw is! Map<String, dynamic>) {
+        throw const FormatException('historique des mots : forme inattendue');
+      }
+      final decoded = raw;
       // Une entrée non entière est ignorée plutôt que de faire échouer tout le
       // chargement.
       final result = <String, int>{};

@@ -71,6 +71,74 @@ void main() {
       expect(provider.turnClock.displayedSecondsAt(now), figeAuGel);
     });
 
+    test('un aller-retour pause/reprise ne RESTITUE pas de temps au joueur',
+        () async {
+      // 🔴 Ce test existe parce que le précédent ne prouvait rien : il ne
+      // comparait que la seconde AFFICHÉE, donc 30 contre 30, alors que le
+      // reste réel passait de 29 001 ms à 30 000 ms. Le tour s'allongeait de
+      // près d'une seconde à chaque ouverture de dialogue, indéfiniment.
+      final provider = await givenProvider();
+      provider.startTurnTimer();
+
+      // On se place volontairement sur un reste NON rond : c'est le seul cas
+      // où l'arrondi de persistance se voit.
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+
+      provider.pauseTurn();
+      final resteAuGel = provider.turnClock.frozenRemainingMs!;
+      expect(resteAuGel % 1000, isNot(0),
+          reason: 'sans reste fractionnaire, le test ne prouverait rien');
+
+      provider.resumeTurn();
+      final apres = provider.turnClock
+          .remainingMsAt(DateTime.now().millisecondsSinceEpoch);
+
+      // Tolérance d'exécution seulement : le temps réel s'écoule entre les deux
+      // mesures, donc `apres` doit être <= au gel, jamais au-dessus.
+      expect(apres, lessThanOrEqualTo(resteAuGel),
+          reason: 'reprendre ne doit JAMAIS rendre plus que ce qui a été gelé');
+      expect(apres, greaterThan(resteAuGel - 200),
+          reason: 'et ne doit pas non plus en perdre');
+    });
+
+    test(
+        'suspendre puis reprendre par l\'accueil ne rend pas de temps non plus',
+        () async {
+      // Même défaut, autre chemin : `suspendGame`/`resumeGame` écrivaient les
+      // champs à la main au lieu de passer par l'horloge.
+      final provider = await givenProvider();
+      provider.startTurnTimer();
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+
+      provider.pauseTurn();
+      final resteAuGel = provider.turnClock.frozenRemainingMs!;
+      expect(resteAuGel % 1000, isNot(0));
+
+      await provider.suspendGame();
+      expect(provider.turnClock.frozenRemainingMs, resteAuGel,
+          reason: 'suspendre ne doit rien arrondir');
+
+      provider.resumeGame();
+      final apres = provider.turnClock
+          .remainingMsAt(DateTime.now().millisecondsSinceEpoch);
+      expect(apres, lessThanOrEqualTo(resteAuGel));
+      expect(apres, greaterThan(resteAuGel - 200));
+    });
+
+    test('une partie gelée par une version ANTÉRIEURE reste lisible', () async {
+      // L'app est publiée : un joueur peut avoir une partie en pause écrite par
+      // la version en store, qui n'a que le champ en secondes. On la relit —
+      // au pire elle rend l'arrondi historique, on ne la casse pas.
+      final provider = await givenProvider();
+      provider.startTurnTimer();
+      provider.pauseTurn();
+
+      provider.game.pausedRemainingMs = null; // format d'avant
+      expect(provider.turnClock.isPaused, isTrue);
+      expect(provider.turnClock.frozenRemainingMs,
+          provider.game.pausedTimeRemaining! * 1000);
+    });
+
     test('pauseTurn et resumeTurn sont idempotents', () async {
       final provider = await givenProvider();
       provider.startTurnTimer();
