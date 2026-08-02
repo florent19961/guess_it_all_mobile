@@ -84,3 +84,31 @@ mécaniquement le volume d'événements). Mesure à faire avant de trancher : la
 `prefs.setString` ; (b) borner par nombre de parties, comme `GameHistoryService.maxEntries` ;
 (c) la lecture passe par le même `unwrapSchema`/quarantaine que le reste — le contrat de robustesse
 est déjà posé, il ne resterait que le support.
+
+---
+
+## 2026-08-02 — Les 66 `info` de `flutter analyze` restent en l'état
+
+**Contexte.** `flutter analyze` sort **non-zero dès le premier `info`**. Le dépôt en a 66,
+tous antérieurs au harness, en trois familles : `withOpacity` déprécié (~40 sites d'écrans),
+`avoid_print` (loaders de mots, outil de conversion), `use_build_context_synchronously`
+(3 sites dans `words_screen.dart`).
+
+**Décision reportée.** Les solder. `run-full-suite.sh` gate donc sur **error + warning** et se
+contente d'**afficher** le compte d'infos.
+
+**Raison.** Les trois familles sont de nature différente et deux ne sont pas cosmétiques :
+`use_build_context_synchronously` est un vrai risque (utiliser un `BuildContext` après un `await`
+sur un widget démonté), tandis que `withOpacity` est une migration mécanique mais qui touche ~40
+sites d'écrans sans rapport avec ce lot. Les mélanger dans un lot de remédiation aurait noyé les
+changements de comportement sous un diff de style.
+
+**Signal déclencheur.** (a) La montée de version Flutter où `withOpacity` passe de *deprecated* à
+*supprimé* — le build casse alors d'un coup ; (b) tout bug d'écran blanc / `setState` après
+démontage sur `words_screen.dart`, qui pointerait droit sur les 3 `use_build_context_synchronously`.
+
+**Esquisse.** Traiter `use_build_context_synchronously` **d'abord et séparément** (3 sites, vraie
+correction), puis `withOpacity` → `withValues(alpha:)` en un sweep mécanique isolé, puis décider
+pour `avoid_print` (un `debugPrint` conditionnel, ou une exclusion assumée dans
+`analysis_options.yaml` pour `tools/`). Une fois à zéro, durcir `run-full-suite.sh` en
+`--fatal-infos` pour que la baisse soit un cliquet.
