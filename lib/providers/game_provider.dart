@@ -5,6 +5,7 @@ import '../models/player.dart';
 import '../models/team.dart';
 import '../models/game_settings.dart';
 import '../models/game_state.dart';
+import '../models/turn_clock.dart';
 import '../models/word_stats.dart';
 import '../services/storage_service.dart';
 import '../services/analytics_service.dart';
@@ -591,13 +592,28 @@ class GameProvider extends ChangeNotifier {
         // Tracker le nouveau mot affiché
         _trackWordShown();
       } else {
-        // Vraie fin de manche (plus aucun mot disponible ni passé)
+        // Vraie fin de manche (plus aucun mot disponible ni passé).
+        //
+        // 🔴 Ce chemin doit ARRÊTER l'horloge et reporter le temps restant en
+        // bonus, exactement comme `endTurn`. Sans ça : la deadline restait
+        // vivante pendant l'écran de vérification (le ticker pouvait encore
+        // déclencher `endTurn`), et le temps gagné en finissant la manche en
+        // avance était simplement perdu. C'était le seul des deux chemins vers
+        // l'écran de vérification à ne pas le faire.
+        final now = DateTime.now().millisecondsSinceEpoch;
+        final bonusSeconds = turnClock.displayedSecondsAt(now);
+
         _game = _game.copyWith(
           wordsGuessedThisTurn: newGuessedWords,
           passedWordsThisTurn: newPassedWords,
           remainingWords: newRemainingWords,
           clearCurrentWord: true,
           currentScreen: AppConstants.screenVerification,
+          turnBonusTime: bonusSeconds,
+          timeRemaining: bonusSeconds,
+          clearTurnStartTimestamp: true,
+          clearTurnEndTimestamp: true,
+          clearPausedTimeRemaining: true,
         );
       }
     } else {
@@ -621,24 +637,25 @@ class GameProvider extends ChangeNotifier {
   void passWord() {
     final passPenalty = _settings.passPenalty;
     final currentWord = _game.currentWord;
-    final turnEndTimestamp = _game.turnEndTimestamp;
+    final clock = turnClock;
 
-    if (currentWord == null || turnEndTimestamp == null) return;
+    if (currentWord == null || !clock.isRunning) return;
 
-    // Calculer le temps réel restant
     final now = DateTime.now().millisecondsSinceEpoch;
-    final currentRemaining =
-        ((turnEndTimestamp - now) / 1000).ceil().clamp(0, 999);
 
-    // Vérifier qu'il y a assez de temps
-    if (currentRemaining < passPenalty) return;
+    // Garde inchangée : elle porte sur la seconde AFFICHÉE, pas sur les ms.
+    // C'est délibéré — passer avec « 5 » à l'écran et une pénalité de 5 reste
+    // autorisé et met le chrono à zéro, comme avant. Comparer les ms refuserait
+    // ce cas et changerait la règle du jeu en douce.
+    if (clock.displayedSecondsAt(now) < passPenalty) return;
 
     // Tracker le pass AVANT de changer l'état
     _analytics.onWordPassed(currentWord);
 
-    // Calculer le nouveau timestamp
-    final newRemainingSeconds = currentRemaining - passPenalty;
-    final newEndTimestamp = now + (newRemainingSeconds * 1000);
+    // La pénalité est retirée à la deadline, en ms exactes : plus de ré-ancrage
+    // sur une seconde arrondie au supérieur (qui rendait du temps à chaque passe
+    // et faisait remonter le chrono à pénalité 0).
+    final newClock = clock.applyPenalty(passPenalty, now);
 
     final newPassedWords = List<String>.from(_game.passedWordsThisTurn);
     if (!newPassedWords.contains(currentWord)) {
@@ -656,12 +673,14 @@ class GameProvider extends ChangeNotifier {
     final newCurrentWord =
         newRemainingWords.isNotEmpty ? newRemainingWords[0] : null;
 
-    _game = _game.copyWith(
-      currentWord: newCurrentWord,
-      passedWordsThisTurn: newPassedWords,
-      remainingWords: newRemainingWords,
-      turnEndTimestamp: newEndTimestamp,
-      timeRemaining: newRemainingSeconds,
+    _game = _withClock(
+      _game.copyWith(
+        currentWord: newCurrentWord,
+        passedWordsThisTurn: newPassedWords,
+        remainingWords: newRemainingWords,
+      ),
+      newClock,
+      nowMs: now,
     );
 
     // Tracker le nouveau mot affiché
@@ -675,9 +694,9 @@ class GameProvider extends ChangeNotifier {
 
   void endTurn() {
     final now = DateTime.now().millisecondsSinceEpoch;
-    final timeRemaining = _game.turnEndTimestamp != null
-        ? ((_game.turnEndTimestamp! - now) / 1000).ceil().clamp(0, 999)
-        : 0;
+    // Passe par l'horloge : si le tour était GELÉ (app en arrière-plan, dialogue
+    // ouvert), c'est le reste gelé qui compte — pas une deadline périmée.
+    final timeRemaining = turnClock.displayedSecondsAt(now);
 
     // Si la manche n'est pas finie et qu'il y avait un mot en cours, le sauvegarder comme "expiré"
     final isRoundFinished = _game.remainingWords.isEmpty;
@@ -696,19 +715,87 @@ class GameProvider extends ChangeNotifier {
       clearExpiredWord: isRoundFinished,
       clearTurnStartTimestamp: true,
       clearTurnEndTimestamp: true,
+      // Purger AUSSI le gel : sinon l'horloge reste « en pause » après la fin du
+      // tour, et le `then` du dialogue « Terminer le tour » la reprend — ce qui
+      // ré-arme une deadline sur l'écran de vérification.
+      clearPausedTimeRemaining: true,
     );
 
     notifyListeners();
     _saveGameState();
   }
 
-  void updateTimeRemaining(int time) {
-    _game = _game.copyWith(timeRemaining: time);
-    notifyListeners();
+  // ========== TEMPS DU TOUR ==========
+  //
+  // 🔴 `TurnClock` est la SEULE autorité sur le temps de jeu. `turnEndTimestamp`
+  // et `pausedTimeRemaining` ne sont que sa forme persistée : on ne les écrit
+  // jamais à la main, on passe par [_applyClock].
+
+  /// Reconstruit l'horloge depuis l'état persisté.
+  TurnClock get turnClock {
+    final end = _game.turnEndTimestamp;
+    if (end != null) return TurnClock.endingAt(end);
+
+    final pausedSeconds = _game.pausedTimeRemaining;
+    if (pausedSeconds != null) return TurnClock.frozen(pausedSeconds * 1000);
+
+    return const TurnClock.stopped();
   }
 
-  void updateTurnEndTimestamp(int timestamp) {
-    _game = _game.copyWith(turnEndTimestamp: timestamp);
+  /// Écrit [clock] dans l'état, en gardant les deux champs persistés cohérents.
+  ///
+  /// L'un exclut l'autre : une deadline vivante ET un reste gelé, c'est
+  /// exactement l'incohérence qui faisait terminer un tour au retour d'un
+  /// dialogue.
+  GameState _withClock(GameState state, TurnClock clock, {required int nowMs}) {
+    return state.copyWith(
+      turnEndTimestamp: clock.endTimestampMs,
+      clearTurnEndTimestamp: clock.endTimestampMs == null,
+      pausedTimeRemaining:
+          clock.isPaused ? (clock.frozenRemainingMs! / 1000).ceil() : null,
+      clearPausedTimeRemaining: !clock.isPaused,
+      timeRemaining: clock.displayedSecondsAt(nowMs),
+    );
+  }
+
+  void _applyClock(TurnClock clock, {required int nowMs, bool persist = true}) {
+    _game = _withClock(_game, clock, nowMs: nowMs);
+    notifyListeners();
+    if (persist) _saveGameState();
+  }
+
+  /// Gèle le tour en cours (dialogue ouvert, app en arrière-plan, appel entrant).
+  ///
+  /// Idempotent : appelable depuis plusieurs sources sans risque de double gel.
+  void pauseTurn() {
+    final clock = turnClock;
+    if (!clock.isRunning) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    _applyClock(clock.pauseAt(now), nowMs: now);
+  }
+
+  /// Reprend le tour là où il avait été gelé.
+  void resumeTurn() {
+    final clock = turnClock;
+    if (!clock.isPaused) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    _applyClock(clock.resumeAt(now), nowMs: now);
+  }
+
+  /// Rafraîchit la seconde affichée depuis l'horloge.
+  ///
+  /// ⚠️ N'émet une notification que lorsque la seconde CHANGE. L'ancien code
+  /// poussait une valeur dix fois par seconde et notifiait à chaque tick, ce qui
+  /// reconstruisait tout l'arbre sous le `Consumer` racine 10 fois/s.
+  void refreshDisplayedTime() {
+    final clock = turnClock;
+    if (!clock.isRunning) return;
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final seconds = clock.displayedSecondsAt(now);
+    if (seconds == _game.timeRemaining) return;
+
+    _game = _game.copyWith(timeRemaining: seconds);
     notifyListeners();
   }
 
@@ -748,7 +835,7 @@ class GameProvider extends ChangeNotifier {
       _analytics.onWordValidatedAsGuessed(word);
     }
     if (isExpiredWordValidated) {
-      _analytics.onWordValidatedAsGuessed(expiredWord!);
+      _analytics.onWordValidatedAsGuessed(expiredWord);
     }
 
     // Remettre les mots invalidés dans le pool (Set garantit l'unicité)
@@ -949,8 +1036,17 @@ class GameProvider extends ChangeNotifier {
     await _analytics.saveCurrentGame();
 
     final now = DateTime.now().millisecondsSinceEpoch;
-    final pausedTime = _game.turnEndTimestamp != null
-        ? ((_game.turnEndTimestamp! - now) / 1000).ceil().clamp(0, 999)
+
+    // 🔴 On GÈLE l'horloge au lieu de relire une deadline restée vivante.
+    // Avant : l'écran mettait `_isPaused = true` sans toucher à la deadline,
+    // puis cette méthode recalculait le reste depuis cette deadline périmée —
+    // donc tout le temps passé dans le dialogue était décompté, et au-delà du
+    // temps restant le `clamp` donnait 0, ce qui terminait le tour au retour.
+    // La valeur correcte était pourtant déjà capturée par le widget, et ignorée.
+    // `pauseAt` est idempotent : si l'écran a déjà gelé, on garde son reste.
+    final frozen = turnClock.pauseAt(now);
+    final pausedTime = frozen.isPaused
+        ? (frozen.frozenRemainingMs! / 1000).ceil()
         : _game.timeRemaining;
 
     _game = _game.copyWith(
@@ -959,6 +1055,7 @@ class GameProvider extends ChangeNotifier {
       currentScreen: AppConstants.screenHome,
       pausedTimeRemaining: pausedTime,
       timeRemaining: pausedTime,
+      clearTurnEndTimestamp: true,
     );
 
     notifyListeners();
@@ -975,6 +1072,10 @@ class GameProvider extends ChangeNotifier {
       isGameSuspended: false,
       clearSuspendedScreen: true,
       turnEndTimestamp: newEndTimestamp,
+      // Le reste gelé a été consommé pour reconstruire la deadline : le garder
+      // laisserait l'état dans les DEUX représentations à la fois, exactement
+      // l'incohérence que TurnClock élimine.
+      clearPausedTimeRemaining: true,
     );
 
     notifyListeners();
