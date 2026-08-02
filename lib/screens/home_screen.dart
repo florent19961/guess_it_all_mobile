@@ -103,6 +103,14 @@ class HomeScreen extends StatelessWidget {
                 size: AppButtonSize.medium,
                 onPressed: () => provider.goToScreen(AppConstants.screenRules),
               ),
+              const SizedBox(height: 8),
+              AppButton(
+                text: 'Historique',
+                variant: AppButtonVariant.ghost,
+                size: AppButtonSize.medium,
+                onPressed: () =>
+                    provider.goToScreen(AppConstants.screenHistory),
+              ),
               const Spacer(),
               const SizedBox(height: 16),
             ],

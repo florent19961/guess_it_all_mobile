@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
@@ -6,9 +7,11 @@ import '../models/team.dart';
 import '../models/game_settings.dart';
 import '../models/game_state.dart';
 import '../models/turn_clock.dart';
+import '../models/game_result.dart';
 import '../models/play_rotation.dart';
 import '../models/turn_resolution.dart';
 import '../models/word_stats.dart';
+import '../services/game_history_service.dart';
 import '../services/storage_service.dart';
 import '../services/analytics_service.dart';
 import '../services/user_service.dart';
@@ -19,6 +22,7 @@ class GameProvider extends ChangeNotifier {
   final StorageService _storage = StorageService();
   final AnalyticsService _analytics = AnalyticsService();
   final UserService _userService = UserService();
+  final GameHistoryService _history = GameHistoryService();
 
   GameSettings _settings = GameSettings.initial();
   List<Player> _players = [];
@@ -902,6 +906,9 @@ class GameProvider extends ChangeNotifier {
         pendingBonusTurnId: shouldPrepareBonusFusion ? _game.currentTurn : null,
         clearPendingBonusTurnId: !shouldPrepareBonusFusion,
       );
+
+      // Dernière manche terminée : la partie est finie, on l'archive.
+      if (isLastRound) _archiveGameResult();
     } else {
       // Mélanger les mots restants
       newRemainingWords.shuffle(Random());
@@ -968,6 +975,7 @@ class GameProvider extends ChangeNotifier {
       _game = _game.copyWith(
         currentScreen: AppConstants.screenResults,
       );
+      _archiveGameResult();
     } else {
       // Réinitialiser le pool de mots
       final shuffledWords = List<String>.from(_game.allWords)
@@ -986,6 +994,43 @@ class GameProvider extends ChangeNotifier {
 
     notifyListeners();
     _saveGameState();
+  }
+
+  /// Archive la partie terminée pour l'écran d'historique.
+  ///
+  /// On enregistre le résultat **tel qu'il a été montré aux joueurs**, pas une
+  /// reconstruction depuis les events : la validation manuelle de fin de tour
+  /// invalide des mots, les mots passés sont recyclés, et ces règles évolueront
+  /// (mode Fiesta). Un score recalculé après coup finirait par diverger de celui
+  /// affiché — et c'est le score affiché qui fait foi pour les joueurs.
+  ///
+  /// Volontairement fire-and-forget et enveloppé : l'archivage est une commodité,
+  /// il ne doit jamais empêcher l'écran de résultats de s'afficher.
+  void _archiveGameResult() {
+    final gameId = _game.gameId;
+    if (gameId == null || _teams.isEmpty) return;
+
+    final result = GameResult(
+      gameId: gameId,
+      playedAt: DateTime.now(),
+      teams: _teams
+          .map((team) => TeamResult(
+                id: team.id,
+                name: team.name,
+                score: team.score,
+                scoreByRound: List<int>.from(team.scoreByRound),
+                playerNames: team.playerIds
+                    .map((id) => getPlayerById(id)?.name)
+                    .whereType<String>()
+                    .toList(),
+              ))
+          .toList(),
+      totalWords: _game.allWords.length,
+      turnDuration: _settings.turnDuration,
+      roundsPlayed: _game.currentRound,
+    );
+
+    unawaited(_history.record(result));
   }
 
   // ========== ACTIONS - NAVIGATION ==========

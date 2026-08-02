@@ -44,6 +44,7 @@ class AppConstants {
   static const String screenResults = 'results';
   static const String screenStats = 'stats';
   static const String screenCategories = 'categories';
+  static const String screenHistory = 'history';
 
   // Word choice modes
   static const String wordChoiceCustom = 'Personnalisé';
