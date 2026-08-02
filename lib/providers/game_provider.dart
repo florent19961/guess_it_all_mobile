@@ -6,6 +6,7 @@ import '../models/team.dart';
 import '../models/game_settings.dart';
 import '../models/game_state.dart';
 import '../models/turn_clock.dart';
+import '../models/play_rotation.dart';
 import '../models/turn_resolution.dart';
 import '../models/word_stats.dart';
 import '../services/storage_service.dart';
@@ -476,29 +477,19 @@ class GameProvider extends ChangeNotifier {
     final shuffledTeamIndices = List<int>.generate(_teams.length, (i) => i)
       ..shuffle(Random());
 
-    // Créer un cycle (répéter 1000 fois)
-    final List<int> teamPlayOrder = [];
-    for (int i = 0; i < 1000; i++) {
-      teamPlayOrder.addAll(shuffledTeamIndices);
-    }
-
-    // Pour chaque équipe, mélanger l'ordre de ses joueurs
+    // On ne stocke que LE CYCLE, pas ses répétitions : l'ordre est périodique,
+    // donc il se dérive (voir play_rotation.dart). Avant, la permutation était
+    // recopiée 1000 fois — ~24 000 entiers pour 4 équipes et 20 joueurs,
+    // ré-écrits sur disque à chaque mot deviné.
     final Map<String, List<int>> playerOrderByTeam = {};
     for (final team in _teams) {
-      final playerIndices = List<int>.generate(team.playerIds.length, (i) => i)
-        ..shuffle(Random());
-
-      // Créer un cycle pour les joueurs
-      final List<int> cycledPlayerOrder = [];
-      for (int i = 0; i < 1000; i++) {
-        cycledPlayerOrder.addAll(playerIndices);
-      }
-
-      playerOrderByTeam[team.id] = cycledPlayerOrder;
+      playerOrderByTeam[team.id] =
+          List<int>.generate(team.playerIds.length, (i) => i)
+            ..shuffle(Random());
     }
 
     return {
-      'teamPlayOrder': teamPlayOrder,
+      'teamPlayOrder': shuffledTeamIndices,
       'playerOrderByTeam': playerOrderByTeam,
     };
   }
@@ -944,21 +935,24 @@ class GameProvider extends ChangeNotifier {
 
   Map<String, int> _getNextPlayerWithRotation() {
     final nextTurnIndex = _game.currentTurnIndex + 1;
-    final nextTeamIndex = _game.teamPlayOrder[nextTurnIndex];
+
+    // La longueur du cycle est le NOMBRE D'ÉQUIPES, pas la longueur de la liste
+    // stockée : c'est ce qui rend le calcul identique sur une partie sauvegardée
+    // à l'ancien format (permutation répétée 1000 fois) et sur le nouveau.
+    final cycleLength = _teams.length;
+
+    final nextTeamIndex = teamIndexAtTurn(
+      teamPlayOrder: _game.teamPlayOrder,
+      cycleLength: cycleLength,
+      turnIndex: nextTurnIndex,
+    );
     final nextTeam = _teams[nextTeamIndex];
 
-    // Compter combien de fois cette équipe a joué
-    int teamPlayCount = 0;
-    for (int i = 0; i <= nextTurnIndex; i++) {
-      if (_game.teamPlayOrder[i] == nextTeamIndex) {
-        teamPlayCount++;
-      }
-    }
-
-    // Index du joueur
-    final playerOrderForTeam = _game.playerOrderByTeam[nextTeam.id]!;
-    final nextPlayerIndexInTeam =
-        playerOrderForTeam[(teamPlayCount - 1) % playerOrderForTeam.length];
+    final nextPlayerIndexInTeam = playerIndexAtTurn(
+      playerOrderForTeam: _game.playerOrderByTeam[nextTeam.id] ?? const [],
+      cycleLength: cycleLength,
+      turnIndex: nextTurnIndex,
+    );
 
     return {
       'nextTurnIndex': nextTurnIndex,
