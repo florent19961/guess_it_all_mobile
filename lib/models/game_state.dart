@@ -44,7 +44,8 @@ class HistoryEntry {
       teamId: json['teamId'] as String,
       playerId: json['playerId'] as String,
       wordsGuessed: (json['wordsGuessed'] as List<dynamic>).cast<String>(),
-      wordsInvalidated: (json['wordsInvalidated'] as List<dynamic>).cast<String>(),
+      wordsInvalidated:
+          (json['wordsInvalidated'] as List<dynamic>).cast<String>(),
       wordsPassed: (json['wordsPassed'] as List<dynamic>).cast<String>(),
       timeSpent: json['timeSpent'] as int,
       isBonusContinuation: json['isBonusContinuation'] as bool? ?? false,
@@ -83,8 +84,10 @@ class GameState {
 
   List<HistoryEntry> history;
   int? pendingBonusTurnId; // Tour en attente de fusion après bonus time
-  Map<String, dynamic>? preValidationSnapshot; // Snapshot pour restauration après validation
-  List<String>? restoredValidatedWords; // Mots validés à restaurer lors du retour en arrière
+  Map<String, dynamic>?
+      preValidationSnapshot; // Snapshot pour restauration après validation
+  List<String>?
+      restoredValidatedWords; // Mots validés à restaurer lors du retour en arrière
 
   GameState({
     this.gameId,
@@ -170,29 +173,48 @@ class GameState {
       currentRound: currentRound ?? this.currentRound,
       currentTurn: currentTurn ?? this.currentTurn,
       currentTeamIndex: currentTeamIndex ?? this.currentTeamIndex,
-      currentPlayerIndexInTeam: currentPlayerIndexInTeam ?? this.currentPlayerIndexInTeam,
+      currentPlayerIndexInTeam:
+          currentPlayerIndexInTeam ?? this.currentPlayerIndexInTeam,
       teamPlayOrder: teamPlayOrder ?? List.from(this.teamPlayOrder),
-      playerOrderByTeam: playerOrderByTeam ?? Map.from(this.playerOrderByTeam.map(
-        (key, value) => MapEntry(key, List<int>.from(value)),
-      )),
+      playerOrderByTeam: playerOrderByTeam ??
+          Map.from(this.playerOrderByTeam.map(
+                (key, value) => MapEntry(key, List<int>.from(value)),
+              )),
       currentTurnIndex: currentTurnIndex ?? this.currentTurnIndex,
       allWords: allWords ?? List.from(this.allWords),
       remainingWords: remainingWords ?? List.from(this.remainingWords),
       currentWord: clearCurrentWord ? null : (currentWord ?? this.currentWord),
-      wordsGuessedThisTurn: wordsGuessedThisTurn ?? List.from(this.wordsGuessedThisTurn),
-      passedWordsThisTurn: passedWordsThisTurn ?? List.from(this.passedWordsThisTurn),
+      wordsGuessedThisTurn:
+          wordsGuessedThisTurn ?? List.from(this.wordsGuessedThisTurn),
+      passedWordsThisTurn:
+          passedWordsThisTurn ?? List.from(this.passedWordsThisTurn),
       expiredWord: clearExpiredWord ? null : (expiredWord ?? this.expiredWord),
       timeRemaining: timeRemaining ?? this.timeRemaining,
-      turnBonusTime: clearTurnBonusTime ? null : (turnBonusTime ?? this.turnBonusTime),
-      turnStartTimestamp: clearTurnStartTimestamp ? null : (turnStartTimestamp ?? this.turnStartTimestamp),
-      turnEndTimestamp: clearTurnEndTimestamp ? null : (turnEndTimestamp ?? this.turnEndTimestamp),
-      pausedTimeRemaining: clearPausedTimeRemaining ? null : (pausedTimeRemaining ?? this.pausedTimeRemaining),
+      turnBonusTime:
+          clearTurnBonusTime ? null : (turnBonusTime ?? this.turnBonusTime),
+      turnStartTimestamp: clearTurnStartTimestamp
+          ? null
+          : (turnStartTimestamp ?? this.turnStartTimestamp),
+      turnEndTimestamp: clearTurnEndTimestamp
+          ? null
+          : (turnEndTimestamp ?? this.turnEndTimestamp),
+      pausedTimeRemaining: clearPausedTimeRemaining
+          ? null
+          : (pausedTimeRemaining ?? this.pausedTimeRemaining),
       isGameSuspended: isGameSuspended ?? this.isGameSuspended,
-      suspendedScreen: clearSuspendedScreen ? null : (suspendedScreen ?? this.suspendedScreen),
+      suspendedScreen: clearSuspendedScreen
+          ? null
+          : (suspendedScreen ?? this.suspendedScreen),
       history: history ?? List.from(this.history),
-      pendingBonusTurnId: clearPendingBonusTurnId ? null : (pendingBonusTurnId ?? this.pendingBonusTurnId),
-      preValidationSnapshot: clearPreValidationSnapshot ? null : (preValidationSnapshot ?? this.preValidationSnapshot),
-      restoredValidatedWords: clearRestoredValidatedWords ? null : (restoredValidatedWords ?? this.restoredValidatedWords),
+      pendingBonusTurnId: clearPendingBonusTurnId
+          ? null
+          : (pendingBonusTurnId ?? this.pendingBonusTurnId),
+      preValidationSnapshot: clearPreValidationSnapshot
+          ? null
+          : (preValidationSnapshot ?? this.preValidationSnapshot),
+      restoredValidatedWords: clearRestoredValidatedWords
+          ? null
+          : (restoredValidatedWords ?? this.restoredValidatedWords),
     );
   }
 
@@ -230,24 +252,33 @@ class GameState {
   factory GameState.fromJson(Map<String, dynamic> json) {
     return GameState(
       gameId: json['gameId'] as String?,
-      currentScreen: json['currentScreen'] as String? ?? AppConstants.screenHome,
+      currentScreen:
+          json['currentScreen'] as String? ?? AppConstants.screenHome,
       currentRound: json['currentRound'] as int? ?? 1,
       currentTurn: json['currentTurn'] as int? ?? 1,
       currentTeamIndex: json['currentTeamIndex'] as int? ?? 0,
       currentPlayerIndexInTeam: json['currentPlayerIndexInTeam'] as int? ?? 0,
-      teamPlayOrder: (json['teamPlayOrder'] as List<dynamic>?)?.cast<int>() ?? [],
-      playerOrderByTeam: (json['playerOrderByTeam'] as Map<String, dynamic>?)?.map(
-            (key, value) => MapEntry(key, (value as List<dynamic>).cast<int>()),
-          ) ??
-          {},
+      teamPlayOrder:
+          (json['teamPlayOrder'] as List<dynamic>?)?.cast<int>() ?? [],
+      playerOrderByTeam:
+          (json['playerOrderByTeam'] as Map<String, dynamic>?)?.map(
+                (key, value) =>
+                    MapEntry(key, (value as List<dynamic>).cast<int>()),
+              ) ??
+              {},
       currentTurnIndex: json['currentTurnIndex'] as int? ?? 0,
       allWords: (json['allWords'] as List<dynamic>?)?.cast<String>() ?? [],
-      remainingWords: (json['remainingWords'] as List<dynamic>?)?.cast<String>() ?? [],
+      remainingWords:
+          (json['remainingWords'] as List<dynamic>?)?.cast<String>() ?? [],
       currentWord: json['currentWord'] as String?,
-      wordsGuessedThisTurn: (json['wordsGuessedThisTurn'] as List<dynamic>?)?.cast<String>() ?? [],
-      passedWordsThisTurn: (json['passedWordsThisTurn'] as List<dynamic>?)?.cast<String>() ?? [],
+      wordsGuessedThisTurn:
+          (json['wordsGuessedThisTurn'] as List<dynamic>?)?.cast<String>() ??
+              [],
+      passedWordsThisTurn:
+          (json['passedWordsThisTurn'] as List<dynamic>?)?.cast<String>() ?? [],
       expiredWord: json['expiredWord'] as String?,
-      timeRemaining: json['timeRemaining'] as int? ?? AppConstants.defaultTurnDuration,
+      timeRemaining:
+          json['timeRemaining'] as int? ?? AppConstants.defaultTurnDuration,
       turnBonusTime: json['turnBonusTime'] as int?,
       turnStartTimestamp: json['turnStartTimestamp'] as int?,
       turnEndTimestamp: json['turnEndTimestamp'] as int?,
@@ -259,8 +290,10 @@ class GameState {
               .toList() ??
           [],
       pendingBonusTurnId: json['pendingBonusTurnId'] as int?,
-      preValidationSnapshot: json['preValidationSnapshot'] as Map<String, dynamic>?,
-      restoredValidatedWords: (json['restoredValidatedWords'] as List<dynamic>?)?.cast<String>(),
+      preValidationSnapshot:
+          json['preValidationSnapshot'] as Map<String, dynamic>?,
+      restoredValidatedWords:
+          (json['restoredValidatedWords'] as List<dynamic>?)?.cast<String>(),
     );
   }
 }

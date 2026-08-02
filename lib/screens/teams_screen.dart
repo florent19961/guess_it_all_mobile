@@ -42,7 +42,8 @@ class TeamsScreen extends StatelessWidget {
                   text: 'Mélanger',
                   variant: AppButtonVariant.secondary,
                   size: AppButtonSize.small,
-                  icon: const Icon(Icons.shuffle, color: Colors.white, size: 18),
+                  icon:
+                      const Icon(Icons.shuffle, color: Colors.white, size: 18),
                   onPressed: () => provider.randomizeTeams(),
                 ),
                 const SizedBox(height: 24),
@@ -74,7 +75,8 @@ class TeamsScreen extends StatelessWidget {
                         size: AppButtonSize.large,
                         fullWidth: true,
                         disabled: !allTeamsValid,
-                        onPressed: allTeamsValid ? () => provider.startGame() : null,
+                        onPressed:
+                            allTeamsValid ? () => provider.startGame() : null,
                       ),
                     ],
                   ),
@@ -299,7 +301,8 @@ class _TeamCardState extends State<_TeamCard> {
                         ),
                         decoration: const InputDecoration(
                           isDense: true,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                          contentPadding:
+                              EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
@@ -334,7 +337,8 @@ class _TeamCardState extends State<_TeamCard> {
                   ),
                 )
               else
-                ...players.map((player) => _buildDraggablePlayer(player, teamColor)),
+                ...players
+                    .map((player) => _buildDraggablePlayer(player, teamColor)),
               if (players.length < 2)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),

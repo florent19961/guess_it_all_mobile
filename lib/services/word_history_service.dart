@@ -96,7 +96,11 @@ class WordHistoryService {
   /// Retourne les statistiques de l'historique (pour debug/UI)
   Map<String, dynamic> getStats() {
     if (_historyCache == null || _historyCache!.isEmpty) {
-      return {'totalTracked': 0, 'maxSeenCount': 0, 'distribution': <int, int>{}};
+      return {
+        'totalTracked': 0,
+        'maxSeenCount': 0,
+        'distribution': <int, int>{}
+      };
     }
 
     final distribution = <int, int>{};

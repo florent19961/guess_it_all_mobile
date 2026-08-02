@@ -33,7 +33,8 @@ void main() {
       expect(settings.turnDuration, AppConstants.defaultTurnDuration);
       expect(settings.passPenalty, AppConstants.defaultPassPenalty);
       expect(settings.selectedCategories, AppConstants.defaultCategories);
-      expect(settings.selectedDifficultyLevels, AppConstants.defaultDifficultyLevels);
+      expect(settings.selectedDifficultyLevels,
+          AppConstants.defaultDifficultyLevels);
     });
 
     test('un JSON partiel ne perd que les champs absents', () {
@@ -65,7 +66,8 @@ void main() {
       copy.selectedCategories.add('marques');
 
       expect(base.selectedCategories, ['musique'],
-          reason: 'la liste de l\'original ne doit pas suivre celle de la copie');
+          reason:
+              'la liste de l\'original ne doit pas suivre celle de la copie');
     });
   });
 }

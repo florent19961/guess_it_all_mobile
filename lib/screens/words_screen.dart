@@ -84,7 +84,8 @@ class _WordsScreenState extends State<WordsScreen> {
   }
 
   // Récupère tous les mots déjà utilisés par les autres joueurs
-  Set<String> _getOtherPlayersWords(GameProvider provider, String currentPlayerId) {
+  Set<String> _getOtherPlayersWords(
+      GameProvider provider, String currentPlayerId) {
     final otherWords = <String>{};
     for (final p in provider.players) {
       if (p.id != currentPlayerId) {
@@ -239,11 +240,11 @@ class _WordsScreenState extends State<WordsScreen> {
     );
   }
 
-  Future<void> _fillAllEmptyWords(GameProvider provider, String playerId) async {
+  Future<void> _fillAllEmptyWords(
+      GameProvider provider, String playerId) async {
     final otherPlayersWords = _getOtherPlayersWords(provider, playerId);
-    final emptyFieldsCount = _wordControllers
-        .where((c) => c.text.trim().isEmpty)
-        .length;
+    final emptyFieldsCount =
+        _wordControllers.where((c) => c.text.trim().isEmpty).length;
 
     if (emptyFieldsCount == 0) return;
 
@@ -317,7 +318,8 @@ class _WordsScreenState extends State<WordsScreen> {
                     text: 'Grosse flemme 😴',
                     variant: AppButtonVariant.secondary,
                     fullWidth: true,
-                    onPressed: () async => await _fillAllEmptyWords(provider, playerId),
+                    onPressed: () async =>
+                        await _fillAllEmptyWords(provider, playerId),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -328,12 +330,15 @@ class _WordsScreenState extends State<WordsScreen> {
                           padding: EdgeInsets.only(
                             left: 24,
                             right: 24,
-                            bottom: MediaQuery.of(context).viewInsets.bottom + 100,
+                            bottom:
+                                MediaQuery.of(context).viewInsets.bottom + 100,
                           ),
                           itemCount: wordsForPlayer,
                           itemBuilder: (context, index) {
-                            final error = _getWordError(index, provider, playerId);
-                            final otherPlayersWords = _getOtherPlayersWords(provider, playerId);
+                            final error =
+                                _getWordError(index, provider, playerId);
+                            final otherPlayersWords =
+                                _getOtherPlayersWords(provider, playerId);
                             final isLastWord = index == wordsForPlayer - 1;
 
                             return Padding(
@@ -346,11 +351,15 @@ class _WordsScreenState extends State<WordsScreen> {
                                       focusNode: _focusNodes[index],
                                       placeholder: 'Mot ${index + 1}',
                                       error: error,
-                                      textInputAction: isLastWord ? TextInputAction.done : TextInputAction.next,
+                                      textInputAction: isLastWord
+                                          ? TextInputAction.done
+                                          : TextInputAction.next,
                                       onSubmitted: isLastWord
-                                          ? () => FocusScope.of(context).unfocus()
+                                          ? () =>
+                                              FocusScope.of(context).unfocus()
                                           : () {
-                                              _focusNodes[index + 1].requestFocus();
+                                              _focusNodes[index + 1]
+                                                  .requestFocus();
                                             },
                                       onChanged: (_) => setState(() {}),
                                       maxLength: 36,
@@ -376,7 +385,8 @@ class _WordsScreenState extends State<WordsScreen> {
 
                                       if (newWord != null) {
                                         setState(() {
-                                          _wordControllers[index].text = newWord;
+                                          _wordControllers[index].text =
+                                              newWord;
                                         });
                                       } else {
                                         _showNoWordsAvailableWarning(context);

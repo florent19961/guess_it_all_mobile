@@ -2,10 +2,10 @@ import 'package:uuid/uuid.dart';
 
 /// Types d'événements possibles sur un mot
 enum WordEventType {
-  shown,       // Mot affiché à un joueur
-  guessed,     // Mot deviné avec succès
-  passed,      // Mot passé (skip)
-  expired,     // Temps écoulé avec ce mot affiché
+  shown, // Mot affiché à un joueur
+  guessed, // Mot deviné avec succès
+  passed, // Mot passé (skip)
+  expired, // Temps écoulé avec ce mot affiché
   invalidated, // Mot invalidé lors de la vérification
 }
 
@@ -86,32 +86,32 @@ class WordEvent {
   }
 
   Map<String, dynamic> toJson() => {
-    'eventId': eventId,
-    'word': word,
-    'eventType': eventType.name,
-    'timestamp': timestamp,
-    'round': round,
-    'turn': turn,
-    'teamId': teamId,
-    'playerId': playerId,
-    'gameId': gameId,
-    'durationMs': durationMs,
-  };
+        'eventId': eventId,
+        'word': word,
+        'eventType': eventType.name,
+        'timestamp': timestamp,
+        'round': round,
+        'turn': turn,
+        'teamId': teamId,
+        'playerId': playerId,
+        'gameId': gameId,
+        'durationMs': durationMs,
+      };
 
   factory WordEvent.fromJson(Map<String, dynamic> json) => WordEvent(
-    eventId: json['eventId'] as String,
-    word: json['word'] as String,
-    eventType: WordEventType.values.firstWhere(
-      (e) => e.name == json['eventType'],
-    ),
-    timestamp: json['timestamp'] as int,
-    round: json['round'] as int,
-    turn: json['turn'] as int,
-    teamId: json['teamId'] as String,
-    playerId: json['playerId'] as String,
-    gameId: json['gameId'] as String,
-    durationMs: json['durationMs'] as int?,
-  );
+        eventId: json['eventId'] as String,
+        word: json['word'] as String,
+        eventType: WordEventType.values.firstWhere(
+          (e) => e.name == json['eventType'],
+        ),
+        timestamp: json['timestamp'] as int,
+        round: json['round'] as int,
+        turn: json['turn'] as int,
+        teamId: json['teamId'] as String,
+        playerId: json['playerId'] as String,
+        gameId: json['gameId'] as String,
+        durationMs: json['durationMs'] as int?,
+      );
 
   @override
   String toString() =>
@@ -149,20 +149,20 @@ class PassEvent {
   }
 
   Map<String, dynamic> toJson() => {
-    'timestamp': timestamp,
-    'turn': turn,
-    'teamId': teamId,
-    'playerId': playerId,
-    'durationMs': durationMs,
-  };
+        'timestamp': timestamp,
+        'turn': turn,
+        'teamId': teamId,
+        'playerId': playerId,
+        'durationMs': durationMs,
+      };
 
   factory PassEvent.fromJson(Map<String, dynamic> json) => PassEvent(
-    timestamp: json['timestamp'] as int,
-    turn: json['turn'] as int,
-    teamId: json['teamId'] as String,
-    playerId: json['playerId'] as String,
-    durationMs: json['durationMs'] as int,
-  );
+        timestamp: json['timestamp'] as int,
+        turn: json['turn'] as int,
+        teamId: json['teamId'] as String,
+        playerId: json['playerId'] as String,
+        durationMs: json['durationMs'] as int,
+      );
 
   @override
   String toString() =>

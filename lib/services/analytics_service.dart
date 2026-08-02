@@ -338,9 +338,8 @@ class AnalyticsService {
         // Partie orpheline = pas de endedAt mais des events
         if (game.endedAt == null && game.events.isNotEmpty) {
           // Calculer les stats et marquer comme terminée
-          final finalizedGame = game
-              .copyWith(endedAt: DateTime.now())
-              .computeStats();
+          final finalizedGame =
+              game.copyWith(endedAt: DateTime.now()).computeStats();
 
           // Sauvegarder directement dans SharedPreferences
           final prefs = await SharedPreferences.getInstance();

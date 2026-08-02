@@ -26,7 +26,8 @@ class AppConstants {
   static const String settingsKey = 'guessItAll_settings';
   static const String gameSessionKey = 'guessItAll_gameSession';
   static const String gameStateKey = 'guessItAll_gameState';
-  static const String advancedSettingsSeenKey = 'guessItAll_advancedSettingsSeen';
+  static const String advancedSettingsSeenKey =
+      'guessItAll_advancedSettingsSeen';
 
   // Screen names
   static const String screenHome = 'home';

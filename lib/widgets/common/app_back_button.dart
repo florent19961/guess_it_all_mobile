@@ -23,7 +23,8 @@ class AppBackButton extends StatelessWidget {
               color: disabled ? AppColors.gray600 : AppColors.primaryPink,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.chevron_left, color: Colors.white, size: 28),
+            child:
+                const Icon(Icons.chevron_left, color: Colors.white, size: 28),
           ),
         ),
       ),

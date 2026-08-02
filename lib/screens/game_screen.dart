@@ -33,13 +33,15 @@ class GameScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        AppConstants.roundModes[provider.game.currentRound] ?? '',
+                        AppConstants.roundModes[provider.game.currentRound] ??
+                            '',
                         style: AppTextStyles.subtitle(fontSize: 44),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(width: 12),
                       GestureDetector(
-                        onTap: () => _showRulesDialog(context, provider.game.currentRound),
+                        onTap: () => _showRulesDialog(
+                            context, provider.game.currentRound),
                         child: Container(
                           width: 32,
                           height: 32,
@@ -60,9 +62,11 @@ class GameScreen extends StatelessWidget {
 
                   // Team card (cliquable pour voir la composition)
                   GestureDetector(
-                    onTap: () => _showTeamMembersDialog(context, currentTeam, provider, teamColor),
+                    onTap: () => _showTeamMembersDialog(
+                        context, currentTeam, provider, teamColor),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 20),
                       decoration: BoxDecoration(
                         color: teamColor.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(20),
@@ -122,7 +126,8 @@ class GameScreen extends StatelessWidget {
                       GestureDetector(
                         onTap: () => _showAllScoresDialog(context, provider),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
                             color: AppColors.gray600,
                             borderRadius: BorderRadius.circular(8),
@@ -130,7 +135,8 @@ class GameScreen extends StatelessWidget {
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.leaderboard, size: 14, color: Colors.white70),
+                              Icon(Icons.leaderboard,
+                                  size: 14, color: Colors.white70),
                               SizedBox(width: 4),
                               Text(
                                 'Scores',
@@ -148,9 +154,11 @@ class GameScreen extends StatelessWidget {
                       if (provider.game.history.isNotEmpty) ...[
                         const SizedBox(width: 8),
                         GestureDetector(
-                          onTap: () => _showGuessedWordsDialog(context, provider),
+                          onTap: () =>
+                              _showGuessedWordsDialog(context, provider),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
                               color: AppColors.gray600,
                               borderRadius: BorderRadius.circular(8),
@@ -158,7 +166,8 @@ class GameScreen extends StatelessWidget {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.checklist, size: 14, color: Colors.white70),
+                                const Icon(Icons.checklist,
+                                    size: 14, color: Colors.white70),
                                 const SizedBox(width: 4),
                                 Text(
                                   '${provider.game.history.last.wordsGuessed.length} mots',
@@ -181,7 +190,8 @@ class GameScreen extends StatelessWidget {
                   // Time bonus indicator
                   if (provider.game.turnBonusTime != null) ...[
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         color: AppColors.warning.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
@@ -189,7 +199,8 @@ class GameScreen extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.timer, color: AppColors.warning, size: 18),
+                          const Icon(Icons.timer,
+                              color: AppColors.warning, size: 18),
                           const SizedBox(width: 8),
                           Text(
                             'Temps bonus : ${provider.game.turnBonusTime}s',
@@ -278,7 +289,8 @@ class GameScreen extends StatelessWidget {
     );
   }
 
-  void _showBackToVerificationDialog(BuildContext context, GameProvider provider) {
+  void _showBackToVerificationDialog(
+      BuildContext context, GameProvider provider) {
     showDialog(
       context: context,
       barrierColor: Colors.black.withOpacity(0.7),
@@ -362,7 +374,8 @@ class GameScreen extends StatelessWidget {
               ...provider.teams.asMap().entries.map((entry) {
                 final team = entry.value;
                 final teamColor = AppColors.getTeamColor(entry.key);
-                final isCurrentTeam = entry.key == provider.game.currentTeamIndex;
+                final isCurrentTeam =
+                    entry.key == provider.game.currentTeamIndex;
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
@@ -383,7 +396,9 @@ class GameScreen extends StatelessWidget {
                           style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 16,
-                            fontWeight: isCurrentTeam ? FontWeight.w600 : FontWeight.w400,
+                            fontWeight: isCurrentTeam
+                                ? FontWeight.w600
+                                : FontWeight.w400,
                             color: teamColor,
                           ),
                         ),
@@ -459,7 +474,8 @@ class GameScreen extends StatelessWidget {
     );
   }
 
-  void _showTeamMembersDialog(BuildContext context, dynamic team, GameProvider provider, Color teamColor) {
+  void _showTeamMembersDialog(BuildContext context, dynamic team,
+      GameProvider provider, Color teamColor) {
     if (team == null) return;
 
     final players = team.playerIds
@@ -491,16 +507,16 @@ class GameScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               ...players.map((p) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  p!.name,
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
-              )),
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      p!.name,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )),
             ],
           ),
         ),
@@ -580,7 +596,8 @@ class GameScreen extends StatelessWidget {
                       runSpacing: 8,
                       children: lastEntry.wordsGuessed.map((word) {
                         return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: AppColors.secondaryCyan.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(16),

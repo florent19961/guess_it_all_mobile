@@ -30,82 +30,82 @@ class RulesScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 32),
-
                   _buildRuleSection(
                     title: 'But du jeu',
-                    content: 'Faites deviner un maximum de mots à votre équipe ! '
+                    content:
+                        'Faites deviner un maximum de mots à votre équipe ! '
                         'La partie se joue en 3 manches avec les mêmes mots, mais des règles différentes à chaque fois. '
                         'L\'équipe qui cumule le plus de points à la fin des 3 manches remporte la partie.',
                     icon: '🎯',
                   ),
-
                   _buildRuleSection(
                     title: 'Préparation',
-                    content: 'Les joueurs forment des équipes (minimum 2 joueurs par équipe). '
+                    content:
+                        'Les joueurs forment des équipes (minimum 2 joueurs par équipe). '
                         'Ensuite, les mots à deviner sont choisis selon le mode sélectionné :\n\n'
                         '• Mode "Personnalisé" : chaque joueur écrit ses propres mots secrets.\n\n'
                         '• Mode "Aléatoire" : les mots sont tirés automatiquement parmi des catégories '
                         '(Célébrités, Objets, Lieux, Films...) et des niveaux de difficulté configurables.',
                     icon: '📝',
                   ),
-
                   _buildRuleSection(
                     title: 'Déroulement',
-                    content: 'Les équipes jouent à tour de rôle. À chaque tour, un joueur de l\'équipe '
+                    content:
+                        'Les équipes jouent à tour de rôle. À chaque tour, un joueur de l\'équipe '
                         'fait deviner les mots pendant que ses coéquipiers tentent de trouver. '
                         'Le temps est limité ! Une fois le temps écoulé, c\'est au tour de l\'équipe suivante. '
                         'La manche se termine quand tous les mots ont été devinés.',
                     icon: '🔄',
                   ),
-
                   _buildRuleSection(
                     title: 'Manche 1 : Description',
-                    content: 'Décrivez le mot avec autant de mots que vous voulez.\n\n'
+                    content:
+                        'Décrivez le mot avec autant de mots que vous voulez.\n\n'
                         'Interdit : dire le mot à deviner, ses dérivés, ou épeler des lettres.',
                     icon: '1️⃣',
                   ),
-
                   _buildRuleSection(
                     title: 'Manche 2 : Un seul mot',
-                    content: 'Vous n\'avez droit qu\'à UN SEUL mot pour faire deviner. Choisissez-le bien !\n\n'
+                    content:
+                        'Vous n\'avez droit qu\'à UN SEUL mot pour faire deviner. Choisissez-le bien !\n\n'
                         'Interdit : faire des gestes, mimer, ou donner plusieurs mots.',
                     icon: '2️⃣',
                   ),
-
                   _buildRuleSection(
                     title: 'Manche 3 : Mime',
-                    content: 'Mimez le mot sans parler. L\'expression corporelle est votre seule arme !\n\n'
+                    content:
+                        'Mimez le mot sans parler. L\'expression corporelle est votre seule arme !\n\n'
                         'Interdit : parler, faire des bruits, ou pointer des objets/personnes.',
                     icon: '3️⃣',
                   ),
-
                   _buildRuleSection(
                     title: 'Points',
-                    content: 'Chaque mot correctement deviné rapporte 1 point à l\'équipe. '
+                    content:
+                        'Chaque mot correctement deviné rapporte 1 point à l\'équipe. '
                         'Les points s\'accumulent sur les 3 manches.',
                     icon: '⭐',
                   ),
-
                   _buildRuleSection(
                     title: 'Passer un mot',
-                    content: 'Vous pouvez passer un mot difficile, mais attention : '
+                    content:
+                        'Vous pouvez passer un mot difficile, mais attention : '
                         'cela coûte du temps (pénalité configurable dans les paramètres). '
                         'Le mot passé reviendra plus tard dans la manche.',
                     icon: '⏭️',
                   ),
-
                   _buildRuleSection(
                     title: 'Mots passés',
-                    content: 'Un mot passé reste dans la manche et peut être deviné plus tard, '
+                    content:
+                        'Un mot passé reste dans la manche et peut être deviné plus tard, '
                         'même s\'il revient à un autre joueur ou à un autre moment.\n\n'
                         'Exemple : Vous passez "Hippopotame" car trop difficile. Il reviendra '
                         'plus tard dans votre tour ou dans celui d\'un autre joueur de votre équipe.',
                     icon: '🔄',
                   ),
-
                   _buildRuleSection(
                     title: 'Interdictions strictes',
-                    content: 'Certaines techniques sont interdites pour préserver l\'équité du jeu :\n\n'
+                    content:
+                        'Certaines techniques sont interdites pour préserver l\'équité du jeu :\n\n'
                         '• Traduction : Vous ne pouvez pas traduire le mot dans une autre langue.\n'
                         '  Exemple : Pour "Chien", dire "Dog" est interdit.\n\n'
                         '• Phonétique : Interdiction d\'utiliser des sons ou rimes.\n'
@@ -114,27 +114,26 @@ class RulesScreen extends StatelessWidget {
                         '  Exemple : Pour "Jardiner", dire "Jardin" ou "Jardinier" est interdit.',
                     icon: '🚫',
                   ),
-
                   _buildRuleSection(
                     title: 'Technique du rébus',
-                    content: 'Pour les mots très difficiles, vous pouvez décomposer le mot en syllabes ou sons.\n\n'
+                    content:
+                        'Pour les mots très difficiles, vous pouvez décomposer le mot en syllabes ou sons.\n\n'
                         'Exemple : Pour faire deviner "Parapluie" :\n'
                         '• "Para" : "Se protéger, se..."\n'
                         '• "Pluie" : "Eau qui tombe du ciel"\n\n'
                         'Cette technique est particulièrement utile en manche 1 (Description).',
                     icon: '🧩',
                   ),
-
                   _buildRuleSection(
                     title: 'Répétition autorisée',
-                    content: 'Le joueur qui fait deviner peut répéter n\'importe quel mot déjà prononcé '
+                    content:
+                        'Le joueur qui fait deviner peut répéter n\'importe quel mot déjà prononcé '
                         'par ses coéquipiers qui cherchent à deviner.\n\n'
                         'Exemple : Pour "Tigre", votre équipe propose "Lion, Félin, Chat".\n'
                         'Vous pouvez répondre : "Oui, félin !" pour les encourager dans cette direction.\n\n'
                         'Attention : Vous ne pouvez PAS dire un mot que personne n\'a encore prononcé.',
                     icon: '🔁',
                   ),
-
                   const SizedBox(height: 24),
                 ],
               ),

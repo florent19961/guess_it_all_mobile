@@ -8,7 +8,8 @@ import '../../models/word_stats.dart';
 /// Parcourt toutes les catégories chargées par WordLoaderService pour
 /// retrouver categoryId, difficulty et language de chaque mot.
 /// Utilisé comme fallback quand le cache en mémoire est absent ou incomplet.
-Future<Map<String, WordMetadata>> lookupWordsMetadata(List<String> words) async {
+Future<Map<String, WordMetadata>> lookupWordsMetadata(
+    List<String> words) async {
   final loader = WordLoaderService();
   if (!loader.isInitialized) {
     await loader.initialize();
@@ -188,7 +189,8 @@ Future<Map<String, WordMetadata>> generateWordsWithMetadataAsync(
 
   // Sélection prioritaire (mots jamais vus d'abord)
   final allWordsList = allWordsMap.keys.toList();
-  final selectedWords = historyService.selectWordsByPriority(allWordsList, count);
+  final selectedWords =
+      historyService.selectWordsByPriority(allWordsList, count);
 
   // Construire le résultat avec les métadonnées
   final Map<String, WordMetadata> result = {};

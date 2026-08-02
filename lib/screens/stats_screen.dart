@@ -55,7 +55,8 @@ class _StatsScreenState extends State<StatsScreen> {
                     },
                     child: Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 14, horizontal: 16),
                       decoration: BoxDecoration(
                         color: AppColors.backgroundCard,
                         borderRadius: BorderRadius.circular(12),
@@ -91,19 +92,26 @@ class _StatsScreenState extends State<StatsScreen> {
                   // Section 3: Stats avancées (déroulable)
                   if (_showAdvancedStats) ...[
                     const SizedBox(height: 16),
-                    _buildPlayerRanking(provider),  // Temps moyen par mot (partie entière)
+                    _buildPlayerRanking(
+                        provider), // Temps moyen par mot (partie entière)
                     const SizedBox(height: 16),
-                    _buildPlayerRankingByRound(provider, 1),  // Temps moyen par mot (manche 1)
+                    _buildPlayerRankingByRound(
+                        provider, 1), // Temps moyen par mot (manche 1)
                     const SizedBox(height: 16),
-                    _buildTopPlayersWordsByRound(provider, 1), // Top joueurs (manche 1)
+                    _buildTopPlayersWordsByRound(
+                        provider, 1), // Top joueurs (manche 1)
                     const SizedBox(height: 16),
-                    _buildPlayerRankingByRound(provider, 2),  // Temps moyen par mot (manche 2)
+                    _buildPlayerRankingByRound(
+                        provider, 2), // Temps moyen par mot (manche 2)
                     const SizedBox(height: 16),
-                    _buildTopPlayersWordsByRound(provider, 2), // Top joueurs (manche 2)
+                    _buildTopPlayersWordsByRound(
+                        provider, 2), // Top joueurs (manche 2)
                     const SizedBox(height: 16),
-                    _buildPlayerRankingByRound(provider, 3),  // Temps moyen par mot (manche 3)
+                    _buildPlayerRankingByRound(
+                        provider, 3), // Temps moyen par mot (manche 3)
                     const SizedBox(height: 16),
-                    _buildTopPlayersWordsByRound(provider, 3), // Top joueurs (manche 3)
+                    _buildTopPlayersWordsByRound(
+                        provider, 3), // Top joueurs (manche 3)
                   ],
 
                   const SizedBox(height: 32),
@@ -177,7 +185,8 @@ class _StatsScreenState extends State<StatsScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.emoji_events, color: AppColors.warning, size: 24),
+              const Icon(Icons.emoji_events,
+                  color: AppColors.warning, size: 24),
               const SizedBox(width: 8),
               const Text(
                 'Top joueurs',
@@ -394,7 +403,9 @@ class _StatsScreenState extends State<StatsScreen> {
                         ),
                         FractionallySizedBox(
                           // Barre inversée : plus le temps est court, plus la barre est longue
-                          widthFactor: maxTime > 0 && avgTime > 0 ? (1 - (avgTime / maxTime)) * 0.8 + 0.2 : 0,
+                          widthFactor: maxTime > 0 && avgTime > 0
+                              ? (1 - (avgTime / maxTime)) * 0.8 + 0.2
+                              : 0,
                           child: Container(
                             height: 20,
                             decoration: BoxDecoration(
@@ -430,9 +441,8 @@ class _StatsScreenState extends State<StatsScreen> {
 
   Widget _buildPlayerRankingByRound(GameProvider provider, int round) {
     // Filtrer l'historique par round
-    final roundHistory = provider.game.history
-        .where((entry) => entry.round == round)
-        .toList();
+    final roundHistory =
+        provider.game.history.where((entry) => entry.round == round).toList();
 
     // Calculer le temps total et mots total par joueur pour cette manche
     final Map<String, int> playerTotalTime = {};
@@ -545,7 +555,9 @@ class _StatsScreenState extends State<StatsScreen> {
                         ),
                         FractionallySizedBox(
                           // Barre inversée : plus le temps est court, plus la barre est longue
-                          widthFactor: maxTime > 0 && avgTime > 0 ? (1 - (avgTime / maxTime)) * 0.8 + 0.2 : 0,
+                          widthFactor: maxTime > 0 && avgTime > 0
+                              ? (1 - (avgTime / maxTime)) * 0.8 + 0.2
+                              : 0,
                           child: Container(
                             height: 20,
                             decoration: BoxDecoration(
@@ -581,9 +593,8 @@ class _StatsScreenState extends State<StatsScreen> {
 
   Widget _buildTopPlayersWordsByRound(GameProvider provider, int round) {
     // Filtrer l'historique par round
-    final roundHistory = provider.game.history
-        .where((entry) => entry.round == round)
-        .toList();
+    final roundHistory =
+        provider.game.history.where((entry) => entry.round == round).toList();
 
     // Calculer le nombre total de mots devinés par joueur pour cette manche
     final Map<String, int> playerTotalWords = {};
@@ -617,7 +628,8 @@ class _StatsScreenState extends State<StatsScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.emoji_events, color: AppColors.warning, size: 24),
+              const Icon(Icons.emoji_events,
+                  color: AppColors.warning, size: 24),
               const SizedBox(width: 8),
               Text(
                 'Top joueurs (manche $round)',
@@ -884,7 +896,8 @@ class _StatsScreenState extends State<StatsScreen> {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  horizontalInterval: (maxScore / 4).ceilToDouble().clamp(1, 100),
+                  horizontalInterval:
+                      (maxScore / 4).ceilToDouble().clamp(1, 100),
                   getDrawingHorizontalLine: (value) {
                     return FlLine(
                       color: AppColors.gray600,
@@ -914,10 +927,12 @@ class _StatsScreenState extends State<StatsScreen> {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 24,
-                      interval: maxTurn <= 10 ? 1 : (maxTurn / 5).ceilToDouble(),
+                      interval:
+                          maxTurn <= 10 ? 1 : (maxTurn / 5).ceilToDouble(),
                       getTitlesWidget: (value, meta) {
                         if (value == 0) return const Text('');
-                        if (value != value.roundToDouble()) return const Text('');
+                        if (value != value.roundToDouble())
+                          return const Text('');
                         return Text(
                           value.toInt().toString(),
                           style: const TextStyle(

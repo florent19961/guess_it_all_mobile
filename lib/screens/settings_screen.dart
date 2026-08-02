@@ -84,7 +84,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                       value: settings.numberOfPlayers,
                       min: settings.numberOfTeams * 2, // Minimum dynamique
                       max: AppConstants.maxPlayers,
-                      onChange: (value) => provider.updateSettings(numberOfPlayers: value),
+                      onChange: (value) =>
+                          provider.updateSettings(numberOfPlayers: value),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -112,22 +113,29 @@ class _SettingsScreenState extends State<SettingsScreen>
                   _buildSection(
                     title: 'Choix des mots',
                     child: AppToggle(
-                      options: const [AppConstants.wordChoiceCustom, AppConstants.wordChoiceRandom],
+                      options: const [
+                        AppConstants.wordChoiceCustom,
+                        AppConstants.wordChoiceRandom
+                      ],
                       selected: settings.wordChoice,
-                      onChange: (value) => provider.updateSettings(wordChoice: value),
+                      onChange: (value) =>
+                          provider.updateSettings(wordChoice: value),
                     ),
                   ),
                   const SizedBox(height: 12),
 
                   // Choix des catégories (sous le toggle)
                   GestureDetector(
-                    onTap: () => provider.goToScreen(AppConstants.screenCategories),
+                    onTap: () =>
+                        provider.goToScreen(AppConstants.screenCategories),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 16),
                       decoration: BoxDecoration(
                         color: AppColors.backgroundCard,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.gray600, width: 1.5),
+                        border:
+                            Border.all(color: AppColors.gray600, width: 1.5),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -185,7 +193,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                             TextSpan(
                               children: [
                                 TextSpan(
-                                  text: '${settings.totalWords} mots : partie longue ! Réglable via ',
+                                  text:
+                                      '${settings.totalWords} mots : partie longue ! Réglable via ',
                                 ),
                                 const WidgetSpan(
                                   alignment: PlaceholderAlignment.middle,
@@ -215,7 +224,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                     fullWidth: true,
                     onPressed: () async {
                       // Si mode aléatoire, vérifier le nombre de mots disponibles
-                      if (settings.wordChoice == AppConstants.wordChoiceRandom) {
+                      if (settings.wordChoice ==
+                          AppConstants.wordChoiceRandom) {
                         final totalWordsNeeded = settings.totalWords;
                         final availableWords = await getTotalWordsCountAsync(
                           settings.selectedCategories,
@@ -223,7 +233,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                         );
 
                         if (availableWords < totalWordsNeeded) {
-                          _showNotEnoughWordsWarning(context, provider, availableWords, totalWordsNeeded);
+                          _showNotEnoughWordsWarning(context, provider,
+                              availableWords, totalWordsNeeded);
                           return;
                         }
                       }
@@ -279,14 +290,17 @@ class _SettingsScreenState extends State<SettingsScreen>
                     animation: _pulseAnimation,
                     builder: (context, child) {
                       return Transform.scale(
-                        scale: _showAdvancedAnimation ? _pulseAnimation.value : 1.0,
+                        scale: _showAdvancedAnimation
+                            ? _pulseAnimation.value
+                            : 1.0,
                         child: Container(
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
                             color: AppColors.backgroundCard,
                             shape: BoxShape.circle,
-                            border: Border.all(color: AppColors.gray600, width: 2),
+                            border:
+                                Border.all(color: AppColors.gray600, width: 2),
                           ),
                           child: const Icon(
                             Icons.settings,

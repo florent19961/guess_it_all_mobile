@@ -29,38 +29,39 @@ class ResultsScreen extends StatelessWidget {
                     'Résultats',
                     style: AppTextStyles.title(fontSize: 48),
                   ),
-              const SizedBox(height: 32),
+                  const SizedBox(height: 32),
 
-              // Podium
-              _buildPodium(context, provider, sortedTeams),
+                  // Podium
+                  _buildPodium(context, provider, sortedTeams),
 
-              const SizedBox(height: 32),
+                  const SizedBox(height: 32),
 
-              // Detailed scores
-              _buildDetailedScores(context, provider, sortedTeams),
+                  // Detailed scores
+                  _buildDetailedScores(context, provider, sortedTeams),
 
-              const SizedBox(height: 32),
+                  const SizedBox(height: 32),
 
-              // Action buttons
-              AppButton(
-                text: 'Rejouer',
-                variant: AppButtonVariant.primary,
-                size: AppButtonSize.large,
-                fullWidth: true,
-                icon: const Icon(Icons.refresh, color: Colors.white),
-                onPressed: () async {
-                  await provider.restartWithSamePlayers();
-                },
-              ),
-              const SizedBox(height: 16),
-              AppButton(
-                text: 'Voir les statistiques',
-                variant: AppButtonVariant.secondary,
-                fullWidth: true,
-                icon: const Icon(Icons.bar_chart, color: Colors.white),
-                onPressed: () => provider.goToScreen(AppConstants.screenStats),
-              ),
-              const SizedBox(height: 24),
+                  // Action buttons
+                  AppButton(
+                    text: 'Rejouer',
+                    variant: AppButtonVariant.primary,
+                    size: AppButtonSize.large,
+                    fullWidth: true,
+                    icon: const Icon(Icons.refresh, color: Colors.white),
+                    onPressed: () async {
+                      await provider.restartWithSamePlayers();
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  AppButton(
+                    text: 'Voir les statistiques',
+                    variant: AppButtonVariant.secondary,
+                    fullWidth: true,
+                    icon: const Icon(Icons.bar_chart, color: Colors.white),
+                    onPressed: () =>
+                        provider.goToScreen(AppConstants.screenStats),
+                  ),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
@@ -76,7 +77,8 @@ class ResultsScreen extends StatelessWidget {
     );
   }
 
-  void _showBackToVerificationDialog(BuildContext context, GameProvider provider) {
+  void _showBackToVerificationDialog(
+      BuildContext context, GameProvider provider) {
     showDialog(
       context: context,
       barrierColor: Colors.black.withOpacity(0.7),
@@ -142,7 +144,8 @@ class ResultsScreen extends StatelessWidget {
     }
   }
 
-  Widget _buildPodium(BuildContext context, GameProvider provider, List<dynamic> sortedTeams) {
+  Widget _buildPodium(
+      BuildContext context, GameProvider provider, List<dynamic> sortedTeams) {
     if (sortedTeams.isEmpty) return const SizedBox();
 
     // Calculer les rangs pour les 3 premières équipes
@@ -238,7 +241,8 @@ class ResultsScreen extends StatelessWidget {
             height: height,
             decoration: BoxDecoration(
               color: teamColor.withOpacity(0.3),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(12)),
               border: Border.all(color: teamColor, width: 2),
             ),
             child: Center(
@@ -257,7 +261,8 @@ class ResultsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailedScores(BuildContext context, GameProvider provider, List<dynamic> sortedTeams) {
+  Widget _buildDetailedScores(
+      BuildContext context, GameProvider provider, List<dynamic> sortedTeams) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -334,7 +339,8 @@ class ResultsScreen extends StatelessWidget {
                   Expanded(
                     flex: 2,
                     child: GestureDetector(
-                      onTap: () => _showTeamMembersDialog(context, team, provider, teamColor),
+                      onTap: () => _showTeamMembersDialog(
+                          context, team, provider, teamColor),
                       child: Text(
                         team.name,
                         style: TextStyle(
@@ -380,7 +386,8 @@ class ResultsScreen extends StatelessWidget {
     );
   }
 
-  void _showTeamMembersDialog(BuildContext context, dynamic team, GameProvider provider, Color teamColor) {
+  void _showTeamMembersDialog(BuildContext context, dynamic team,
+      GameProvider provider, Color teamColor) {
     if (team == null) return;
 
     final players = team.playerIds
@@ -412,16 +419,16 @@ class ResultsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               ...players.map((p) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  p!.name,
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
-              )),
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      p!.name,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )),
             ],
           ),
         ),

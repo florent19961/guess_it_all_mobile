@@ -68,7 +68,9 @@ void main() {
   });
 
   group('GameState — copyWith', () {
-    test('les drapeaux clearX remettent le champ à null, contrairement au passage de null', () {
+    test(
+        'les drapeaux clearX remettent le champ à null, contrairement au passage de null',
+        () {
       final base = GameState(
         currentWord: 'chat',
         turnEndTimestamp: 31000,
@@ -79,7 +81,8 @@ void main() {
       expect(base.copyWith(currentWord: null).currentWord, 'chat');
       // … seul le drapeau efface réellement.
       expect(base.copyWith(clearCurrentWord: true).currentWord, isNull);
-      expect(base.copyWith(clearTurnEndTimestamp: true).turnEndTimestamp, isNull);
+      expect(
+          base.copyWith(clearTurnEndTimestamp: true).turnEndTimestamp, isNull);
       expect(base.copyWith(clearExpiredWord: true).expiredWord, isNull);
     });
 
@@ -100,7 +103,8 @@ void main() {
       expect(base.allWords, ['chat']);
       expect(base.history, hasLength(1));
       expect(base.playerOrderByTeam['team-0'], [0, 1],
-          reason: 'la copie de playerOrderByTeam doit être profonde, pas seulement Map.from');
+          reason:
+              'la copie de playerOrderByTeam doit être profonde, pas seulement Map.from');
     });
   });
 

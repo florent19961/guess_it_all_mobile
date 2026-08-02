@@ -39,7 +39,8 @@ class WordLoaderService {
           .map((c) => CategoryMetadata.fromJson(c as Map<String, dynamic>))
           .toList();
 
-      print('WordLoaderService initialisé: ${_categoriesMetadata!.length} catégories');
+      print(
+          'WordLoaderService initialisé: ${_categoriesMetadata!.length} catégories');
     } catch (e) {
       print('Erreur lors du chargement de categories.json: $e');
       rethrow;
@@ -79,11 +80,13 @@ class WordLoaderService {
       // Trouver les métadonnées correspondantes
       final metadata = _categoriesMetadata?.firstWhere(
         (m) => m.id == categoryId,
-        orElse: () => throw StateError('Métadonnées introuvables pour $categoryId'),
+        orElse: () =>
+            throw StateError('Métadonnées introuvables pour $categoryId'),
       );
 
       if (metadata == null) {
-        throw StateError('Catégorie $categoryId introuvable dans categories.json');
+        throw StateError(
+            'Catégorie $categoryId introuvable dans categories.json');
       }
 
       // Créer l'objet WordCategory

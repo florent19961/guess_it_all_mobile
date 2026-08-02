@@ -5,10 +5,10 @@ import 'word_event.dart';
 /// Stocke les informations contextuelles sur l'origine du mot.
 class WordMetadata {
   final String word;
-  final String? categoryId;    // ID de la catégorie (null si mode personnalisé)
-  final int? difficulty;       // Niveau 1-3 (null si mode personnalisé)
-  final String? submittedBy;   // Player ID qui a soumis (mode personnalisé)
-  final String? language;      // 'french' | 'international'
+  final String? categoryId; // ID de la catégorie (null si mode personnalisé)
+  final int? difficulty; // Niveau 1-3 (null si mode personnalisé)
+  final String? submittedBy; // Player ID qui a soumis (mode personnalisé)
+  final String? language; // 'french' | 'international'
 
   const WordMetadata({
     required this.word,
@@ -49,20 +49,20 @@ class WordMetadata {
   }
 
   Map<String, dynamic> toJson() => {
-    'word': word,
-    'categoryId': categoryId,
-    'difficulty': difficulty,
-    'submittedBy': submittedBy,
-    'language': language,
-  };
+        'word': word,
+        'categoryId': categoryId,
+        'difficulty': difficulty,
+        'submittedBy': submittedBy,
+        'language': language,
+      };
 
   factory WordMetadata.fromJson(Map<String, dynamic> json) => WordMetadata(
-    word: json['word'] as String,
-    categoryId: json['categoryId'] as String?,
-    difficulty: json['difficulty'] as int?,
-    submittedBy: json['submittedBy'] as String?,
-    language: json['language'] as String?,
-  );
+        word: json['word'] as String,
+        categoryId: json['categoryId'] as String?,
+        difficulty: json['difficulty'] as int?,
+        submittedBy: json['submittedBy'] as String?,
+        language: json['language'] as String?,
+      );
 }
 
 /// Stats d'un mot pour une manche spécifique
@@ -70,10 +70,10 @@ class WordMetadata {
 /// À chaque manche, TOUS les mots doivent être devinés exactement 1 fois.
 /// Un mot peut être passé plusieurs fois avant d'être deviné.
 class WordRoundStats {
-  final int round;                // 1, 2 ou 3
-  final int timesPassed;          // Nombre de fois passé AVANT d'être deviné
-  final int totalTimeMs;          // Temps cumulatif (tous les pass + deviné)
-  final int guessTimeMs;          // Temps pris par l'équipe qui a deviné
+  final int round; // 1, 2 ou 3
+  final int timesPassed; // Nombre de fois passé AVANT d'être deviné
+  final int totalTimeMs; // Temps cumulatif (tous les pass + deviné)
+  final int guessTimeMs; // Temps pris par l'équipe qui a deviné
   final String guessedByTeamId;
   final String guessedByPlayerId;
   final int guessedInTurn;
@@ -92,15 +92,15 @@ class WordRoundStats {
 
   /// Créer un WordRoundStats vide (pour initialisation)
   factory WordRoundStats.empty(int round) => WordRoundStats(
-    round: round,
-    timesPassed: 0,
-    totalTimeMs: 0,
-    guessTimeMs: 0,
-    guessedByTeamId: '',
-    guessedByPlayerId: '',
-    guessedInTurn: 0,
-    passEvents: const [],
-  );
+        round: round,
+        timesPassed: 0,
+        totalTimeMs: 0,
+        guessTimeMs: 0,
+        guessedByTeamId: '',
+        guessedByPlayerId: '',
+        guessedInTurn: 0,
+        passEvents: const [],
+      );
 
   /// Créer depuis une liste de WordEvent pour ce mot et cette manche
   factory WordRoundStats.fromEvents(int round, List<WordEvent> events) {
@@ -137,28 +137,28 @@ class WordRoundStats {
   }
 
   Map<String, dynamic> toJson() => {
-    'round': round,
-    'timesPassed': timesPassed,
-    'totalTimeMs': totalTimeMs,
-    'guessTimeMs': guessTimeMs,
-    'guessedByTeamId': guessedByTeamId,
-    'guessedByPlayerId': guessedByPlayerId,
-    'guessedInTurn': guessedInTurn,
-    'passEvents': passEvents.map((e) => e.toJson()).toList(),
-  };
+        'round': round,
+        'timesPassed': timesPassed,
+        'totalTimeMs': totalTimeMs,
+        'guessTimeMs': guessTimeMs,
+        'guessedByTeamId': guessedByTeamId,
+        'guessedByPlayerId': guessedByPlayerId,
+        'guessedInTurn': guessedInTurn,
+        'passEvents': passEvents.map((e) => e.toJson()).toList(),
+      };
 
   factory WordRoundStats.fromJson(Map<String, dynamic> json) => WordRoundStats(
-    round: json['round'] as int,
-    timesPassed: json['timesPassed'] as int,
-    totalTimeMs: json['totalTimeMs'] as int,
-    guessTimeMs: json['guessTimeMs'] as int,
-    guessedByTeamId: json['guessedByTeamId'] as String,
-    guessedByPlayerId: json['guessedByPlayerId'] as String,
-    guessedInTurn: json['guessedInTurn'] as int,
-    passEvents: (json['passEvents'] as List)
-        .map((e) => PassEvent.fromJson(e as Map<String, dynamic>))
-        .toList(),
-  );
+        round: json['round'] as int,
+        timesPassed: json['timesPassed'] as int,
+        totalTimeMs: json['totalTimeMs'] as int,
+        guessTimeMs: json['guessTimeMs'] as int,
+        guessedByTeamId: json['guessedByTeamId'] as String,
+        guessedByPlayerId: json['guessedByPlayerId'] as String,
+        guessedInTurn: json['guessedInTurn'] as int,
+        passEvents: (json['passEvents'] as List)
+            .map((e) => PassEvent.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
 }
 
 /// Stats agrégées d'un mot sur une partie complète (3 manches)
@@ -177,8 +177,7 @@ class WordStats {
   int get totalTimesPassed =>
       roundStats.fold(0, (sum, r) => sum + r.timesPassed);
 
-  int get totalTimeMs =>
-      roundStats.fold(0, (sum, r) => sum + r.totalTimeMs);
+  int get totalTimeMs => roundStats.fold(0, (sum, r) => sum + r.totalTimeMs);
 
   double get avgTotalTimeMs =>
       roundStats.isEmpty ? 0 : totalTimeMs / roundStats.length;
@@ -224,18 +223,19 @@ class WordStats {
   }
 
   Map<String, dynamic> toJson() => {
-    'word': word,
-    'metadata': metadata.toJson(),
-    'roundStats': roundStats.map((r) => r.toJson()).toList(),
-  };
+        'word': word,
+        'metadata': metadata.toJson(),
+        'roundStats': roundStats.map((r) => r.toJson()).toList(),
+      };
 
   factory WordStats.fromJson(Map<String, dynamic> json) => WordStats(
-    word: json['word'] as String,
-    metadata: WordMetadata.fromJson(json['metadata'] as Map<String, dynamic>),
-    roundStats: (json['roundStats'] as List)
-        .map((r) => WordRoundStats.fromJson(r as Map<String, dynamic>))
-        .toList(),
-  );
+        word: json['word'] as String,
+        metadata:
+            WordMetadata.fromJson(json['metadata'] as Map<String, dynamic>),
+        roundStats: (json['roundStats'] as List)
+            .map((r) => WordRoundStats.fromJson(r as Map<String, dynamic>))
+            .toList(),
+      );
 
   @override
   String toString() =>

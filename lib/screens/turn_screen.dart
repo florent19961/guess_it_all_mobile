@@ -62,7 +62,8 @@ class _TurnScreenState extends State<TurnScreen> {
     if (_isPaused) {
       // Resume - recalculer turnEndTimestamp basé sur le temps pausé
       final now = DateTime.now().millisecondsSinceEpoch;
-      final newEndTimestamp = now + ((_pausedTimeRemaining ?? _timeRemaining) * 1000);
+      final newEndTimestamp =
+          now + ((_pausedTimeRemaining ?? _timeRemaining) * 1000);
       provider.updateTurnEndTimestamp(newEndTimestamp);
       setState(() {
         _isPaused = false;
@@ -181,7 +182,8 @@ class _TurnScreenState extends State<TurnScreen> {
             variant: AppButtonVariant.ghost,
             size: AppButtonSize.small,
             onPressed: () {
-              Navigator.of(dialogContext).pop(false); // false = ne pas aller à l'accueil
+              Navigator.of(dialogContext)
+                  .pop(false); // false = ne pas aller à l'accueil
             },
           ),
           AppButton(
@@ -269,7 +271,8 @@ class _TurnScreenState extends State<TurnScreen> {
     });
   }
 
-  void _showTeamMembersDialog(BuildContext context, dynamic team, GameProvider provider, Color teamColor) {
+  void _showTeamMembersDialog(BuildContext context, dynamic team,
+      GameProvider provider, Color teamColor) {
     if (team == null) return;
 
     final players = team.playerIds
@@ -301,16 +304,16 @@ class _TurnScreenState extends State<TurnScreen> {
               ),
               const SizedBox(height: 16),
               ...players.map((p) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  p!.name,
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
-              )),
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      p!.name,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )),
             ],
           ),
         ),
@@ -346,7 +349,11 @@ class _TurnScreenState extends State<TurnScreen> {
                 children: [
                   // Player and team info (fixe en haut, cliquable pour voir l'équipe)
                   GestureDetector(
-                    onTap: () => _showTeamMembersDialog(context, currentTeam, provider, AppColors.getTeamColor(provider.game.currentTeamIndex)),
+                    onTap: () => _showTeamMembersDialog(
+                        context,
+                        currentTeam,
+                        provider,
+                        AppColors.getTeamColor(provider.game.currentTeamIndex)),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -360,7 +367,8 @@ class _TurnScreenState extends State<TurnScreen> {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        const Icon(Icons.info_outline, size: 14, color: AppColors.gray400),
+                        const Icon(Icons.info_outline,
+                            size: 14, color: AppColors.gray400),
                       ],
                     ),
                   ),
@@ -384,7 +392,9 @@ class _TurnScreenState extends State<TurnScreen> {
                                 style: TextStyle(
                                   fontFamily: 'Bangers',
                                   fontSize: 64,
-                                  color: isLowTime ? AppColors.error : AppColors.secondaryCyan,
+                                  color: isLowTime
+                                      ? AppColors.error
+                                      : AppColors.secondaryCyan,
                                 ),
                               ),
                             );
@@ -425,7 +435,8 @@ class _TurnScreenState extends State<TurnScreen> {
                         // Words remaining (incluant passés recyclables, sans le mot actuel)
                         Builder(
                           builder: (context) {
-                            final remaining = provider.effectiveRemainingWordsCount;
+                            final remaining =
+                                provider.effectiveRemainingWordsCount;
                             final count = remaining < 0 ? 0 : remaining;
                             return Text(
                               '$count ${count <= 1 ? 'mot restant' : 'mots restants'}',
@@ -492,7 +503,7 @@ class _TurnScreenState extends State<TurnScreen> {
                                       fontFamily: 'Poppins',
                                       fontSize: 12,
                                       color: canPass && !_isPaused
-                                          ? Colors.white.withOpacity( 0.7)
+                                          ? Colors.white.withOpacity(0.7)
                                           : AppColors.gray600,
                                     ),
                                   ),
@@ -508,11 +519,13 @@ class _TurnScreenState extends State<TurnScreen> {
                       Expanded(
                         flex: 2,
                         child: GestureDetector(
-                          onTap: _isPaused ? null : () {
-                            HapticFeedback.lightImpact();
-                            AudioService.playDing();
-                            provider.markWordAsGuessed();
-                          },
+                          onTap: _isPaused
+                              ? null
+                              : () {
+                                  HapticFeedback.lightImpact();
+                                  AudioService.playDing();
+                                  provider.markWordAsGuessed();
+                                },
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 33),
                             decoration: BoxDecoration(
@@ -523,9 +536,8 @@ class _TurnScreenState extends State<TurnScreen> {
                             ),
                             child: Icon(
                               Icons.check,
-                              color: _isPaused
-                                  ? AppColors.gray500
-                                  : Colors.white,
+                              color:
+                                  _isPaused ? AppColors.gray500 : Colors.white,
                               size: 48,
                             ),
                           ),

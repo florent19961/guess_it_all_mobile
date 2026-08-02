@@ -154,13 +154,14 @@ class GameProvider extends ChangeNotifier {
     // 1. On change de mode (Aléatoire ↔ Personnalisé)
     // 2. OU on est en Aléatoire ET catégories/difficultés changent
     if (modeChanged ||
-        (_settings.wordChoice == 'Aléatoire' && (categoriesChanged || difficultiesChanged))) {
+        (_settings.wordChoice == 'Aléatoire' &&
+            (categoriesChanged || difficultiesChanged))) {
       _clearAllPlayersWords();
     }
 
     // Détecter le changement de nombre d'équipes
-    final teamCountChanged = numberOfTeams != null &&
-        numberOfTeams != oldNumberOfTeams;
+    final teamCountChanged =
+        numberOfTeams != null && numberOfTeams != oldNumberOfTeams;
 
     // Recréer les équipes si le nombre change
     if (teamCountChanged && _teams.isNotEmpty) {
@@ -336,7 +337,8 @@ class GameProvider extends ChangeNotifier {
 
     // 2. Trouver les joueurs non assignés (avec un nom)
     final unassignedPlayers = _players
-        .where((p) => p.name.trim().isNotEmpty && !playersInTeams.contains(p.id))
+        .where(
+            (p) => p.name.trim().isNotEmpty && !playersInTeams.contains(p.id))
         .toList();
 
     // 3. Distribuer les nouveaux joueurs aléatoirement dans l'équipe la plus petite
@@ -433,7 +435,8 @@ class GameProvider extends ChangeNotifier {
       }
 
       for (final word in words) {
-        if (_wordMetadataCache != null && _wordMetadataCache!.containsKey(word)) {
+        if (_wordMetadataCache != null &&
+            _wordMetadataCache!.containsKey(word)) {
           wordMetadata[word] = _wordMetadataCache![word]!;
         } else if (lookedUp.containsKey(word)) {
           wordMetadata[word] = lookedUp[word]!;
@@ -574,7 +577,8 @@ class GameProvider extends ChangeNotifier {
       // Vérifier s'il reste des mots passés à recycler
       if (newPassedWords.isNotEmpty) {
         // Remettre les mots passés dans la pile
-        final restoredWords = List<String>.from(newPassedWords)..shuffle(Random());
+        final restoredWords = List<String>.from(newPassedWords)
+          ..shuffle(Random());
         final nextCurrentWord = restoredWords[0];
 
         _game = _game.copyWith(
@@ -781,8 +785,7 @@ class GameProvider extends ChangeNotifier {
     // Vérifier si on doit fusionner avec l'entrée précédente (bonus time)
     // La fusion se fait toujours quand il y a un bonus pending, même avec des mots invalidés
     final hasBonusPending = _game.pendingBonusTurnId != null;
-    final shouldMergeWithPrevious = hasBonusPending &&
-        _game.history.isNotEmpty;
+    final shouldMergeWithPrevious = hasBonusPending && _game.history.isNotEmpty;
 
     // Calculer le temps passé pour ce segment
     final currentTimeSpent = _settings.turnDuration - _game.timeRemaining;
@@ -839,7 +842,9 @@ class GameProvider extends ChangeNotifier {
       _game = _game.copyWith(
         history: newHistory,
         remainingWords: newRemainingWords,
-        currentScreen: isLastRound ? AppConstants.screenResults : AppConstants.screenTransition,
+        currentScreen: isLastRound
+            ? AppConstants.screenResults
+            : AppConstants.screenTransition,
         turnBonusTime: _game.timeRemaining,
         clearExpiredWord: true,
         pendingBonusTurnId: shouldPrepareBonusFusion ? _game.currentTurn : null,
@@ -1172,8 +1177,7 @@ class GameProvider extends ChangeNotifier {
       _game.history.isEmpty && _game.currentRound == 1;
 
   // Vérifie si on peut revenir à l'écran de vérification
-  bool get canGoBackToVerification =>
-      _game.preValidationSnapshot != null;
+  bool get canGoBackToVerification => _game.preValidationSnapshot != null;
 
   // Sauvegarde l'état avant validation (appelé dans verification_screen)
   // validatedWords = les mots que l'utilisateur a choisi de valider
@@ -1193,11 +1197,13 @@ class GameProvider extends ChangeNotifier {
         'timeRemaining': _game.timeRemaining,
         'turnBonusTime': _game.turnBonusTime,
         'history': _game.history.map((e) => e.toJson()).toList(),
-        'teamScores': _teams.map((t) => {
-          'id': t.id,
-          'score': t.score,
-          'scoreByRound': List<int>.from(t.scoreByRound),
-        }).toList(),
+        'teamScores': _teams
+            .map((t) => {
+                  'id': t.id,
+                  'score': t.score,
+                  'scoreByRound': List<int>.from(t.scoreByRound),
+                })
+            .toList(),
         'pendingBonusTurnId': _game.pendingBonusTurnId,
         'validatedWords': List<String>.from(validatedWords),
       },
@@ -1240,8 +1246,10 @@ class GameProvider extends ChangeNotifier {
       currentPlayerIndexInTeam: snapshot['currentPlayerIndexInTeam'] as int,
       currentTurn: snapshot['currentTurn'] as int,
       currentTurnIndex: snapshot['currentTurnIndex'] as int,
-      wordsGuessedThisTurn: List<String>.from(snapshot['wordsGuessedThisTurn'] as List),
-      passedWordsThisTurn: List<String>.from(snapshot['passedWordsThisTurn'] as List),
+      wordsGuessedThisTurn:
+          List<String>.from(snapshot['wordsGuessedThisTurn'] as List),
+      passedWordsThisTurn:
+          List<String>.from(snapshot['passedWordsThisTurn'] as List),
       expiredWord: snapshot['expiredWord'] as String?,
       clearExpiredWord: snapshot['expiredWord'] == null,
       remainingWords: List<String>.from(snapshot['remainingWords'] as List),
@@ -1254,7 +1262,8 @@ class GameProvider extends ChangeNotifier {
       pendingBonusTurnId: snapshot['pendingBonusTurnId'] as int?,
       clearPendingBonusTurnId: snapshot['pendingBonusTurnId'] == null,
       clearPreValidationSnapshot: true,
-      restoredValidatedWords: validatedWords != null ? List<String>.from(validatedWords) : null,
+      restoredValidatedWords:
+          validatedWords != null ? List<String>.from(validatedWords) : null,
     );
 
     notifyListeners();

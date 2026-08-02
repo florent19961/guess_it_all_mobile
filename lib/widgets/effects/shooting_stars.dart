@@ -105,7 +105,10 @@ class StarsPainter extends CustomPainter {
       final x = startX + adjustedProgress * (size.width + length);
       final y = startY + adjustedProgress * (size.height + length);
 
-      if (x > -length && x < size.width + length && y > -length && y < size.height + length) {
+      if (x > -length &&
+          x < size.width + length &&
+          y > -length &&
+          y < size.height + length) {
         canvas.drawLine(
           Offset(x, y),
           Offset(x + length * 0.3, y + length * 0.3),

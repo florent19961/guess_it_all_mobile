@@ -32,12 +32,12 @@ class CategoryMetadata {
 
   /// Conversion vers JSON
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'icon': icon,
-    'names': names,
-    'availableLocales': availableLocales,
-    if (metadata != null) 'metadata': metadata,
-  };
+        'id': id,
+        'icon': icon,
+        'names': names,
+        'availableLocales': availableLocales,
+        if (metadata != null) 'metadata': metadata,
+      };
 
   /// Obtenir le nom localisé pour une langue donnée
   ///

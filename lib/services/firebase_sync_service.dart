@@ -19,7 +19,8 @@ class SyncResult {
   });
 
   @override
-  String toString() => 'SyncResult(synced: $synced, failed: $failed, pending: $pending)';
+  String toString() =>
+      'SyncResult(synced: $synced, failed: $failed, pending: $pending)';
 }
 
 /// Service de synchronisation des analytics vers Firebase Firestore.
@@ -38,6 +39,14 @@ class FirebaseSyncService {
 
   // Collection Firestore pour les parties
   static const String _gamesCollection = 'games';
+
+  /// Plafond d'une écriture Firestore individuelle.
+  ///
+  /// Sans lui, la Future d'un `set()` peut ne jamais se résoudre (portail
+  /// captif : les paquets partent, rien ne revient, aucune erreur n'est levée).
+  /// 10 s est large pour un réseau mobile lent et court pour un utilisateur qui
+  /// attend — et de toute façon l'échec est bénin : la partie reste en queue.
+  static const Duration firestoreWriteTimeout = Duration(seconds: 10);
 
   // Lazy-loaded pour éviter crash sur web sans Firebase configuré
   FirebaseFirestore? _firestoreInstance;
@@ -86,7 +95,8 @@ class FirebaseSyncService {
     }
 
     // Écouter les changements de connectivité
-    _connectivitySubscription = _connectivity.connectionStatus.listen((isConnected) {
+    _connectivitySubscription =
+        _connectivity.connectionStatus.listen((isConnected) {
       if (isConnected) {
         syncPendingGames();
       }
@@ -120,10 +130,15 @@ class FirebaseSyncService {
 
     // Tenter sync immédiat si Firebase disponible et online
     if (_isFirebaseAvailable && _connectivity.isConnected) {
-      // Fire-and-forget : ne bloque pas l'appelant
-      syncGame(gameId).catchError((e) {
+      // Fire-and-forget : ne bloque pas l'appelant.
+      // ⚠️ `syncGame` rend un Future<bool> : le handler DOIT rendre un bool.
+      // Sans `return false`, il rend `null` là où un bool est attendu et lève un
+      // TypeError asynchrone non capturé — au moment précis où la sync échoue,
+      // c'est-à-dire sur le chemin censé absorber la panne réseau.
+      unawaited(syncGame(gameId).catchError((Object e) {
         // Erreur silencieuse, la partie reste dans la queue
-      });
+        return false;
+      }));
     }
   }
 
@@ -149,8 +164,17 @@ class FirebaseSyncService {
       final data = game.toJson();
       data['syncedAt'] = FieldValue.serverTimestamp();
 
-      // Upload vers Firestore
-      await _firestore.collection(_gamesCollection).doc(gameId).set(data);
+      // Upload vers Firestore.
+      // 🔴 Le timeout porte sur l'écriture INDIVIDUELLE, pas sur la boucle de
+      // `syncPendingGames` : la Future d'un `set()` ne se résout qu'à l'ACK
+      // serveur et peut pendre indéfiniment derrière un portail captif. Le
+      // TimeoutException tombe dans le `catch` ci-dessous → `false` → la partie
+      // reste dans la queue, ce qui est exactement la sémantique voulue.
+      await _firestore
+          .collection(_gamesCollection)
+          .doc(gameId)
+          .set(data)
+          .timeout(firestoreWriteTimeout);
 
       // Retirer de la liste pending
       await _removeFromPending(gameId);

@@ -19,8 +19,10 @@ class GameSettings {
     this.passPenalty = AppConstants.defaultPassPenalty,
     List<String>? selectedCategories,
     List<int>? selectedDifficultyLevels,
-  }) : selectedCategories = selectedCategories ?? List.from(AppConstants.defaultCategories),
-       selectedDifficultyLevels = selectedDifficultyLevels ?? List.from(AppConstants.defaultDifficultyLevels);
+  })  : selectedCategories =
+            selectedCategories ?? List.from(AppConstants.defaultCategories),
+        selectedDifficultyLevels = selectedDifficultyLevels ??
+            List.from(AppConstants.defaultDifficultyLevels);
 
   factory GameSettings.initial() {
     return GameSettings();
@@ -43,8 +45,10 @@ class GameSettings {
       totalWords: totalWords ?? this.totalWords,
       turnDuration: turnDuration ?? this.turnDuration,
       passPenalty: passPenalty ?? this.passPenalty,
-      selectedCategories: selectedCategories ?? List.from(this.selectedCategories),
-      selectedDifficultyLevels: selectedDifficultyLevels ?? List.from(this.selectedDifficultyLevels),
+      selectedCategories:
+          selectedCategories ?? List.from(this.selectedCategories),
+      selectedDifficultyLevels:
+          selectedDifficultyLevels ?? List.from(this.selectedDifficultyLevels),
     );
   }
 
@@ -63,16 +67,23 @@ class GameSettings {
 
   factory GameSettings.fromJson(Map<String, dynamic> json) {
     return GameSettings(
-      numberOfTeams: json['numberOfTeams'] as int? ?? AppConstants.defaultNumberOfTeams,
-      numberOfPlayers: json['numberOfPlayers'] as int? ?? AppConstants.defaultNumberOfPlayers,
-      wordChoice: json['wordChoice'] as String? ?? AppConstants.wordChoiceRandom,
+      numberOfTeams:
+          json['numberOfTeams'] as int? ?? AppConstants.defaultNumberOfTeams,
+      numberOfPlayers: json['numberOfPlayers'] as int? ??
+          AppConstants.defaultNumberOfPlayers,
+      wordChoice:
+          json['wordChoice'] as String? ?? AppConstants.wordChoiceRandom,
       totalWords: json['totalWords'] as int? ?? AppConstants.defaultTotalWords,
-      turnDuration: json['turnDuration'] as int? ?? AppConstants.defaultTurnDuration,
-      passPenalty: json['passPenalty'] as int? ?? AppConstants.defaultPassPenalty,
-      selectedCategories: (json['selectedCategories'] as List<dynamic>?)?.cast<String>() ??
-          List.from(AppConstants.defaultCategories),
-      selectedDifficultyLevels: (json['selectedDifficultyLevels'] as List<dynamic>?)?.cast<int>() ??
-          List.from(AppConstants.defaultDifficultyLevels),
+      turnDuration:
+          json['turnDuration'] as int? ?? AppConstants.defaultTurnDuration,
+      passPenalty:
+          json['passPenalty'] as int? ?? AppConstants.defaultPassPenalty,
+      selectedCategories:
+          (json['selectedCategories'] as List<dynamic>?)?.cast<String>() ??
+              List.from(AppConstants.defaultCategories),
+      selectedDifficultyLevels:
+          (json['selectedDifficultyLevels'] as List<dynamic>?)?.cast<int>() ??
+              List.from(AppConstants.defaultDifficultyLevels),
     );
   }
 }

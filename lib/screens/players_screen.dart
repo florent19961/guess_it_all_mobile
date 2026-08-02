@@ -79,11 +79,11 @@ class _PlayersScreenState extends State<PlayersScreen> {
     // 3. En mode aléatoire : générer/compléter les mots pour TOUS les joueurs
     if (settings.wordChoice == AppConstants.wordChoiceRandom) {
       // Vérifier si les settings ont changé (invalider le cache si nécessaire)
-      final settingsChanged = _wordPool != null && (
-        _cachedTotalWords != settings.totalWords ||
-        !_listEquals(_cachedCategories, settings.selectedCategories) ||
-        !_listEquals(_cachedDifficulties, settings.selectedDifficultyLevels)
-      );
+      final settingsChanged = _wordPool != null &&
+          (_cachedTotalWords != settings.totalWords ||
+              !_listEquals(_cachedCategories, settings.selectedCategories) ||
+              !_listEquals(
+                  _cachedDifficulties, settings.selectedDifficultyLevels));
 
       if (settingsChanged) {
         print('[WordPool] Settings changed, invalidating cache');
@@ -150,7 +150,8 @@ class _PlayersScreenState extends State<PlayersScreen> {
     final newWords = <String>[...player.words];
 
     while (newWords.length < wordsNeeded) {
-      final word = await _generateUniqueWord(provider, otherPlayersWords, newWords);
+      final word =
+          await _generateUniqueWord(provider, otherPlayersWords, newWords);
       if (word != null) {
         newWords.add(word);
       } else {
@@ -268,7 +269,9 @@ class _PlayersScreenState extends State<PlayersScreen> {
         final word = _availableWords![i];
         final wordLower = word.toLowerCase();
         if (!otherPlayersWords.contains(wordLower) &&
-            !currentModalWords.map((w) => w.toLowerCase()).contains(wordLower)) {
+            !currentModalWords
+                .map((w) => w.toLowerCase())
+                .contains(wordLower)) {
           _availableWords!.removeAt(i);
           return word;
         }
@@ -323,7 +326,8 @@ class _PlayersScreenState extends State<PlayersScreen> {
                           padding: EdgeInsets.only(
                             left: 24,
                             right: 24,
-                            bottom: MediaQuery.of(context).viewInsets.bottom + 100,
+                            bottom:
+                                MediaQuery.of(context).viewInsets.bottom + 100,
                           ),
                           itemCount: provider.players.length,
                           itemBuilder: (context, index) {
@@ -338,8 +342,11 @@ class _PlayersScreenState extends State<PlayersScreen> {
                                 _controllers[player.id]?.text.trim() ?? '';
                             final hasName = playerName.isNotEmpty;
 
-                            final isLastPlayer = index == provider.players.length - 1;
-                            final nextPlayerId = isLastPlayer ? null : provider.players[index + 1].id;
+                            final isLastPlayer =
+                                index == provider.players.length - 1;
+                            final nextPlayerId = isLastPlayer
+                                ? null
+                                : provider.players[index + 1].id;
 
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 16),
@@ -352,12 +359,16 @@ class _PlayersScreenState extends State<PlayersScreen> {
                                       focusNode: _focusNodes[player.id],
                                       placeholder: 'Joueur ${index + 1}',
                                       error: error,
-                                      textInputAction: isLastPlayer ? TextInputAction.done : TextInputAction.next,
+                                      textInputAction: isLastPlayer
+                                          ? TextInputAction.done
+                                          : TextInputAction.next,
                                       onSubmitted: isLastPlayer
-                                          ? () => FocusScope.of(context).unfocus()
+                                          ? () =>
+                                              FocusScope.of(context).unfocus()
                                           : () {
                                               if (nextPlayerId != null) {
-                                                _focusNodes[nextPlayerId]?.requestFocus();
+                                                _focusNodes[nextPlayerId]
+                                                    ?.requestFocus();
                                               }
                                             },
                                       onChanged: (value) {
@@ -373,8 +384,10 @@ class _PlayersScreenState extends State<PlayersScreen> {
                                   GestureDetector(
                                     onTap: hasName
                                         ? () {
-                                            provider.setCurrentEditingPlayer(player.id);
-                                            provider.goToScreen(AppConstants.screenWords);
+                                            provider.setCurrentEditingPlayer(
+                                                player.id);
+                                            provider.goToScreen(
+                                                AppConstants.screenWords);
                                           }
                                         : null,
                                     child: Opacity(

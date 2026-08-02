@@ -16,18 +16,18 @@ class DeviceInfo {
   });
 
   Map<String, dynamic> toJson() => {
-    'appVersion': appVersion,
-    'platform': platform,
-    'locale': locale,
-    'deviceModel': deviceModel,
-  };
+        'appVersion': appVersion,
+        'platform': platform,
+        'locale': locale,
+        'deviceModel': deviceModel,
+      };
 
   factory DeviceInfo.fromJson(Map<String, dynamic> json) => DeviceInfo(
-    appVersion: json['appVersion'] as String,
-    platform: json['platform'] as String,
-    locale: json['locale'] as String,
-    deviceModel: json['deviceModel'] as String?,
-  );
+        appVersion: json['appVersion'] as String,
+        platform: json['platform'] as String,
+        locale: json['locale'] as String,
+        deviceModel: json['deviceModel'] as String?,
+      );
 
   @override
   String toString() => 'DeviceInfo($platform, $appVersion, $locale)';
@@ -167,14 +167,12 @@ class GameAnalytics {
   int get totalEvents => events.length;
 
   /// Nombre de mots passés au total (toutes manches)
-  int get totalPasses => events
-      .where((e) => e.eventType == WordEventType.passed)
-      .length;
+  int get totalPasses =>
+      events.where((e) => e.eventType == WordEventType.passed).length;
 
   /// Nombre de mots devinés au total (toutes manches)
-  int get totalGuessed => events
-      .where((e) => e.eventType == WordEventType.guessed)
-      .length;
+  int get totalGuessed =>
+      events.where((e) => e.eventType == WordEventType.guessed).length;
 
   /// Mot le plus difficile (plus de temps total)
   WordStats? get hardestWord {
@@ -242,53 +240,54 @@ class GameAnalytics {
   }
 
   Map<String, dynamic> toJson() => {
-    'gameId': gameId,
-    'userId': userId,
-    'appVersion': appVersion,
-    'platform': platform,
-    'locale': locale,
-    'deviceModel': deviceModel,
-    'startedAt': startedAt.toIso8601String(),
-    'endedAt': endedAt?.toIso8601String(),
-    'numberOfPlayers': numberOfPlayers,
-    'numberOfTeams': numberOfTeams,
-    'totalWords': totalWords,
-    'turnDuration': turnDuration,
-    'selectedCategories': selectedCategories,
-    'selectedDifficultyLevels': selectedDifficultyLevels,
-    'events': events.map((e) => e.toJson()).toList(),
-    'wordMetadata': wordMetadata.map((k, v) => MapEntry(k, v.toJson())),
-    'wordStats': wordStats.map((k, v) => MapEntry(k, v.toJson())),
-  };
+        'gameId': gameId,
+        'userId': userId,
+        'appVersion': appVersion,
+        'platform': platform,
+        'locale': locale,
+        'deviceModel': deviceModel,
+        'startedAt': startedAt.toIso8601String(),
+        'endedAt': endedAt?.toIso8601String(),
+        'numberOfPlayers': numberOfPlayers,
+        'numberOfTeams': numberOfTeams,
+        'totalWords': totalWords,
+        'turnDuration': turnDuration,
+        'selectedCategories': selectedCategories,
+        'selectedDifficultyLevels': selectedDifficultyLevels,
+        'events': events.map((e) => e.toJson()).toList(),
+        'wordMetadata': wordMetadata.map((k, v) => MapEntry(k, v.toJson())),
+        'wordStats': wordStats.map((k, v) => MapEntry(k, v.toJson())),
+      };
 
   factory GameAnalytics.fromJson(Map<String, dynamic> json) => GameAnalytics(
-    gameId: json['gameId'] as String,
-    userId: json['userId'] as String,
-    appVersion: json['appVersion'] as String,
-    platform: json['platform'] as String,
-    locale: json['locale'] as String,
-    deviceModel: json['deviceModel'] as String?,
-    startedAt: DateTime.parse(json['startedAt'] as String),
-    endedAt: json['endedAt'] != null
-        ? DateTime.parse(json['endedAt'] as String)
-        : null,
-    numberOfPlayers: json['numberOfPlayers'] as int,
-    numberOfTeams: json['numberOfTeams'] as int,
-    totalWords: json['totalWords'] as int,
-    turnDuration: json['turnDuration'] as int,
-    selectedCategories: (json['selectedCategories'] as List).cast<String>(),
-    selectedDifficultyLevels:
-        (json['selectedDifficultyLevels'] as List).cast<int>(),
-    events: (json['events'] as List)
-        .map((e) => WordEvent.fromJson(e as Map<String, dynamic>))
-        .toList(),
-    wordMetadata: (json['wordMetadata'] as Map<String, dynamic>).map(
-      (k, v) => MapEntry(k, WordMetadata.fromJson(v as Map<String, dynamic>)),
-    ),
-    wordStats: (json['wordStats'] as Map<String, dynamic>).map(
-      (k, v) => MapEntry(k, WordStats.fromJson(v as Map<String, dynamic>)),
-    ),
-  );
+        gameId: json['gameId'] as String,
+        userId: json['userId'] as String,
+        appVersion: json['appVersion'] as String,
+        platform: json['platform'] as String,
+        locale: json['locale'] as String,
+        deviceModel: json['deviceModel'] as String?,
+        startedAt: DateTime.parse(json['startedAt'] as String),
+        endedAt: json['endedAt'] != null
+            ? DateTime.parse(json['endedAt'] as String)
+            : null,
+        numberOfPlayers: json['numberOfPlayers'] as int,
+        numberOfTeams: json['numberOfTeams'] as int,
+        totalWords: json['totalWords'] as int,
+        turnDuration: json['turnDuration'] as int,
+        selectedCategories: (json['selectedCategories'] as List).cast<String>(),
+        selectedDifficultyLevels:
+            (json['selectedDifficultyLevels'] as List).cast<int>(),
+        events: (json['events'] as List)
+            .map((e) => WordEvent.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        wordMetadata: (json['wordMetadata'] as Map<String, dynamic>).map(
+          (k, v) =>
+              MapEntry(k, WordMetadata.fromJson(v as Map<String, dynamic>)),
+        ),
+        wordStats: (json['wordStats'] as Map<String, dynamic>).map(
+          (k, v) => MapEntry(k, WordStats.fromJson(v as Map<String, dynamic>)),
+        ),
+      );
 
   @override
   String toString() =>

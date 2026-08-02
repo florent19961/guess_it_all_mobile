@@ -56,10 +56,12 @@ class Team {
       name: json['name'] as String,
       playerIds: (json['playerIds'] as List<dynamic>?)?.cast<String>() ?? [],
       score: json['score'] as int? ?? 0,
-      scoreByRound: (json['scoreByRound'] as List<dynamic>?)?.cast<int>() ?? [0, 0, 0],
+      scoreByRound:
+          (json['scoreByRound'] as List<dynamic>?)?.cast<int>() ?? [0, 0, 0],
     );
   }
 
   @override
-  String toString() => 'Team(id: $id, name: $name, players: ${playerIds.length}, score: $score)';
+  String toString() =>
+      'Team(id: $id, name: $name, players: ${playerIds.length}, score: $score)';
 }
