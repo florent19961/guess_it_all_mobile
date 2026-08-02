@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../theme/app_theme.dart';
+import '../models/stats_aggregation.dart';
 import '../providers/game_provider.dart';
 import '../utils/constants.dart';
 import '../widgets/common/app_back_button.dart';
@@ -37,7 +38,7 @@ class _StatsScreenState extends State<StatsScreen> {
                   const SizedBox(height: 32),
 
                   // Section 1: Top des joueurs (nombre de mots)
-                  _buildTopPlayersWords(provider),
+                  _topJoueurs(provider),
 
                   const SizedBox(height: 32),
 
@@ -92,26 +93,23 @@ class _StatsScreenState extends State<StatsScreen> {
                   // Section 3: Stats avancées (déroulable)
                   if (_showAdvancedStats) ...[
                     const SizedBox(height: 16),
-                    _buildPlayerRanking(
+                    _tempsMoyen(
                         provider), // Temps moyen par mot (partie entière)
                     const SizedBox(height: 16),
-                    _buildPlayerRankingByRound(
-                        provider, 1), // Temps moyen par mot (manche 1)
+                    _tempsMoyen(provider,
+                        round: 1), // Temps moyen par mot (manche 1)
                     const SizedBox(height: 16),
-                    _buildTopPlayersWordsByRound(
-                        provider, 1), // Top joueurs (manche 1)
+                    _topJoueurs(provider, round: 1), // Top joueurs (manche 1)
                     const SizedBox(height: 16),
-                    _buildPlayerRankingByRound(
-                        provider, 2), // Temps moyen par mot (manche 2)
+                    _tempsMoyen(provider,
+                        round: 2), // Temps moyen par mot (manche 2)
                     const SizedBox(height: 16),
-                    _buildTopPlayersWordsByRound(
-                        provider, 2), // Top joueurs (manche 2)
+                    _topJoueurs(provider, round: 2), // Top joueurs (manche 2)
                     const SizedBox(height: 16),
-                    _buildPlayerRankingByRound(
-                        provider, 3), // Temps moyen par mot (manche 3)
+                    _tempsMoyen(provider,
+                        round: 3), // Temps moyen par mot (manche 3)
                     const SizedBox(height: 16),
-                    _buildTopPlayersWordsByRound(
-                        provider, 3), // Top joueurs (manche 3)
+                    _topJoueurs(provider, round: 3), // Top joueurs (manche 3)
                   ],
 
                   const SizedBox(height: 32),
@@ -152,26 +150,40 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
-  Widget _buildTopPlayersWords(GameProvider provider) {
-    // Calculer le nombre total de mots devinés par joueur
-    final Map<String, int> playerTotalWords = {};
-
-    for (final entry in provider.game.history) {
-      final words = entry.wordsGuessed.length;
-      playerTotalWords[entry.playerId] =
-          (playerTotalWords[entry.playerId] ?? 0) + words;
+  /// Couleur d'équipe d'un joueur — la boucle était recopiée cinq fois.
+  Color _teamColorOf(GameProvider provider, String playerId) {
+    for (int i = 0; i < provider.teams.length; i++) {
+      if (provider.teams[i].playerIds.contains(playerId)) {
+        return AppColors.getTeamColor(i);
+      }
     }
+    return AppColors.gray400;
+  }
 
-    // Trier par nombre de mots décroissant
-    final sortedPlayers = playerTotalWords.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
+  /// Carte « classement en barres ».
+  ///
+  /// 🔴 Ce widget remplace QUATRE builders qui ne différaient que par le titre,
+  /// une largeur et deux tailles de police : les blocs « partie entière » et
+  /// « manche N » étaient identiques à l'octet près. Corriger un défaut de
+  /// rendu demandait quatre modifications cohérentes, et l'écran divergeait de
+  /// lui-même dès qu'on en oubliait une.
+  ///
+  /// [inverse] rend la barre la plus longue à la plus PETITE valeur : c'est le
+  /// cas du temps moyen par mot, où être rapide est être meilleur.
+  Widget _buildRankedBars(
+    GameProvider provider, {
+    required String title,
+    required List<StatRow> rows,
+    IconData? icon,
+    bool inverse = false,
+    double valueWidth = 50,
+    double valueFontSize = 18,
+  }) {
+    if (rows.isEmpty) return const SizedBox();
 
-    if (sortedPlayers.isEmpty) {
-      return const SizedBox();
-    }
-
-    // Le max pour l'échelle des barres
-    final maxWords = sortedPlayers.first.value;
+    // L'échelle : la plus grande valeur en direct, la plus grande aussi en
+    // inversé (c'est elle qui donne la barre la plus COURTE).
+    final echelle = inverse ? rows.last.value : rows.first.value;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -185,38 +197,32 @@ class _StatsScreenState extends State<StatsScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.emoji_events,
-                  color: AppColors.warning, size: 24),
-              const SizedBox(width: 8),
-              const Text(
-                'Top joueurs',
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
+              if (icon != null) ...[
+                Icon(icon, color: AppColors.warning, size: 24),
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          ...sortedPlayers.asMap().entries.map((entry) {
-            final index = entry.key;
-            final playerId = entry.value.key;
-            final wordsCount = entry.value.value;
-            final player = provider.getPlayerById(playerId);
-            final playerName = player?.name ?? 'Joueur inconnu';
+          ...rows.asMap().entries.map((e) {
+            final index = e.key;
+            final row = e.value;
+            final couleur = _teamColorOf(provider, row.playerId);
+            final nom =
+                provider.getPlayerById(row.playerId)?.name ?? 'Joueur inconnu';
 
-            // Trouver l'équipe du joueur pour la couleur
-            Color playerColor = AppColors.gray400;
-            for (int i = 0; i < provider.teams.length; i++) {
-              if (provider.teams[i].playerIds.contains(playerId)) {
-                playerColor = AppColors.getTeamColor(i);
-                break;
-              }
-            }
-
-            final medal = index == 0
+            final medaille = index == 0
                 ? '🥇'
                 : index == 1
                     ? '🥈'
@@ -224,22 +230,31 @@ class _StatsScreenState extends State<StatsScreen> {
                         ? '🥉'
                         : '';
 
+            final remplissage = echelle <= 0
+                ? 0.0
+                : inverse
+                    ? (row.value > 0
+                        ? (1 - (row.value / echelle)) * 0.8 + 0.2
+                        : 0.0)
+                    : row.value / echelle;
+
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Row(
                 children: [
-                  if (medal.isNotEmpty)
-                    Text(medal, style: const TextStyle(fontSize: 18)),
-                  if (medal.isNotEmpty) const SizedBox(width: 8),
-                  if (medal.isEmpty) const SizedBox(width: 26),
+                  if (medaille.isNotEmpty) ...[
+                    Text(medaille, style: const TextStyle(fontSize: 18)),
+                    const SizedBox(width: 8),
+                  ] else
+                    const SizedBox(width: 26),
                   Expanded(
                     flex: 2,
                     child: Text(
-                      playerName,
+                      nom,
                       style: TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 14,
-                        color: playerColor,
+                        color: couleur,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -257,11 +272,11 @@ class _StatsScreenState extends State<StatsScreen> {
                           ),
                         ),
                         FractionallySizedBox(
-                          widthFactor: maxWords > 0 ? wordsCount / maxWords : 0,
+                          widthFactor: remplissage,
                           child: Container(
                             height: 20,
                             decoration: BoxDecoration(
-                              color: playerColor,
+                              color: couleur,
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
@@ -271,160 +286,12 @@ class _StatsScreenState extends State<StatsScreen> {
                   ),
                   const SizedBox(width: 8),
                   SizedBox(
-                    width: 50,
+                    width: valueWidth,
                     child: Text(
-                      '$wordsCount',
-                      style: const TextStyle(
-                        fontFamily: 'Bangers',
-                        fontSize: 18,
-                        color: Colors.white,
-                      ),
-                      textAlign: TextAlign.right,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPlayerRanking(GameProvider provider) {
-    // Calculer le temps total et mots total par joueur
-    final Map<String, int> playerTotalTime = {};
-    final Map<String, int> playerTotalWords = {};
-
-    for (final entry in provider.game.history) {
-      final words = entry.wordsGuessed.length;
-      if (words > 0) {
-        playerTotalTime[entry.playerId] =
-            (playerTotalTime[entry.playerId] ?? 0) + entry.timeSpent;
-        playerTotalWords[entry.playerId] =
-            (playerTotalWords[entry.playerId] ?? 0) + words;
-      }
-    }
-
-    // Calculer le temps moyen par mot (plus bas = meilleur)
-    final Map<String, double> playerAvgTime = {};
-    for (final playerId in playerTotalWords.keys) {
-      final totalTime = playerTotalTime[playerId] ?? 0;
-      final totalWords = playerTotalWords[playerId] ?? 1;
-      playerAvgTime[playerId] = totalTime / totalWords;
-    }
-
-    // Trier par temps moyen croissant (le plus rapide en premier)
-    final sortedPlayers = playerAvgTime.entries.toList()
-      ..sort((a, b) => a.value.compareTo(b.value));
-
-    if (sortedPlayers.isEmpty) {
-      return const SizedBox();
-    }
-
-    // Le temps le plus long pour l'échelle de la barre (inversée)
-    final maxTime = sortedPlayers.last.value;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.gray600),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Temps moyen par mot (partie entière)',
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ...sortedPlayers.asMap().entries.map((entry) {
-            final index = entry.key;
-            final playerId = entry.value.key;
-            final avgTime = entry.value.value;
-            final player = provider.getPlayerById(playerId);
-            final playerName = player?.name ?? 'Joueur inconnu';
-
-            // Trouver l'équipe du joueur pour la couleur
-            Color playerColor = AppColors.gray400;
-            for (int i = 0; i < provider.teams.length; i++) {
-              if (provider.teams[i].playerIds.contains(playerId)) {
-                playerColor = AppColors.getTeamColor(i);
-                break;
-              }
-            }
-
-            final medal = index == 0
-                ? '🥇'
-                : index == 1
-                    ? '🥈'
-                    : index == 2
-                        ? '🥉'
-                        : '';
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                children: [
-                  if (medal.isNotEmpty)
-                    Text(medal, style: const TextStyle(fontSize: 18)),
-                  if (medal.isNotEmpty) const SizedBox(width: 8),
-                  if (medal.isEmpty) const SizedBox(width: 26),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      playerName,
+                      row.label,
                       style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 14,
-                        color: playerColor,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 3,
-                    child: Stack(
-                      children: [
-                        Container(
-                          height: 20,
-                          decoration: BoxDecoration(
-                            color: AppColors.gray700,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        FractionallySizedBox(
-                          // Barre inversée : plus le temps est court, plus la barre est longue
-                          widthFactor: maxTime > 0 && avgTime > 0
-                              ? (1 - (avgTime / maxTime)) * 0.8 + 0.2
-                              : 0,
-                          child: Container(
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: playerColor,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 45,
-                    child: Text(
-                      '${avgTime.toStringAsFixed(1)}s',
-                      style: const TextStyle(
                         fontFamily: 'Bangers',
-                        fontSize: 16,
+                        fontSize: valueFontSize,
                         color: Colors.white,
                       ),
                       textAlign: TextAlign.right,
@@ -439,300 +306,23 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
-  Widget _buildPlayerRankingByRound(GameProvider provider, int round) {
-    // Filtrer l'historique par round
-    final roundHistory =
-        provider.game.history.where((entry) => entry.round == round).toList();
+  Widget _topJoueurs(GameProvider provider, {int? round}) => _buildRankedBars(
+        provider,
+        title: round == null ? 'Top joueurs' : 'Top joueurs (manche $round)',
+        icon: Icons.emoji_events,
+        rows: guessedWordsRanking(provider.game.history, round: round),
+      );
 
-    // Calculer le temps total et mots total par joueur pour cette manche
-    final Map<String, int> playerTotalTime = {};
-    final Map<String, int> playerTotalWords = {};
-
-    for (final entry in roundHistory) {
-      final words = entry.wordsGuessed.length;
-      if (words > 0) {
-        playerTotalTime[entry.playerId] =
-            (playerTotalTime[entry.playerId] ?? 0) + entry.timeSpent;
-        playerTotalWords[entry.playerId] =
-            (playerTotalWords[entry.playerId] ?? 0) + words;
-      }
-    }
-
-    // Calculer le temps moyen par mot (plus bas = meilleur)
-    final Map<String, double> playerAvgTime = {};
-    for (final playerId in playerTotalWords.keys) {
-      final totalTime = playerTotalTime[playerId] ?? 0;
-      final totalWords = playerTotalWords[playerId] ?? 1;
-      playerAvgTime[playerId] = totalTime / totalWords;
-    }
-
-    // Trier par temps moyen croissant (le plus rapide en premier)
-    final sortedPlayers = playerAvgTime.entries.toList()
-      ..sort((a, b) => a.value.compareTo(b.value));
-
-    if (sortedPlayers.isEmpty) {
-      return const SizedBox();
-    }
-
-    // Le temps le plus long pour l'échelle de la barre (inversée)
-    final maxTime = sortedPlayers.last.value;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.gray600),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Temps moyen par mot (manche $round)',
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ...sortedPlayers.asMap().entries.map((entry) {
-            final index = entry.key;
-            final playerId = entry.value.key;
-            final avgTime = entry.value.value;
-            final player = provider.getPlayerById(playerId);
-            final playerName = player?.name ?? 'Joueur inconnu';
-
-            // Trouver l'équipe du joueur pour la couleur
-            Color playerColor = AppColors.gray400;
-            for (int i = 0; i < provider.teams.length; i++) {
-              if (provider.teams[i].playerIds.contains(playerId)) {
-                playerColor = AppColors.getTeamColor(i);
-                break;
-              }
-            }
-
-            final medal = index == 0
-                ? '🥇'
-                : index == 1
-                    ? '🥈'
-                    : index == 2
-                        ? '🥉'
-                        : '';
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                children: [
-                  if (medal.isNotEmpty)
-                    Text(medal, style: const TextStyle(fontSize: 18)),
-                  if (medal.isNotEmpty) const SizedBox(width: 8),
-                  if (medal.isEmpty) const SizedBox(width: 26),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      playerName,
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 14,
-                        color: playerColor,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 3,
-                    child: Stack(
-                      children: [
-                        Container(
-                          height: 20,
-                          decoration: BoxDecoration(
-                            color: AppColors.gray700,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        FractionallySizedBox(
-                          // Barre inversée : plus le temps est court, plus la barre est longue
-                          widthFactor: maxTime > 0 && avgTime > 0
-                              ? (1 - (avgTime / maxTime)) * 0.8 + 0.2
-                              : 0,
-                          child: Container(
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: playerColor,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 45,
-                    child: Text(
-                      '${avgTime.toStringAsFixed(1)}s',
-                      style: const TextStyle(
-                        fontFamily: 'Bangers',
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
-                      textAlign: TextAlign.right,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTopPlayersWordsByRound(GameProvider provider, int round) {
-    // Filtrer l'historique par round
-    final roundHistory =
-        provider.game.history.where((entry) => entry.round == round).toList();
-
-    // Calculer le nombre total de mots devinés par joueur pour cette manche
-    final Map<String, int> playerTotalWords = {};
-
-    for (final entry in roundHistory) {
-      final words = entry.wordsGuessed.length;
-      playerTotalWords[entry.playerId] =
-          (playerTotalWords[entry.playerId] ?? 0) + words;
-    }
-
-    // Trier par nombre de mots décroissant
-    final sortedPlayers = playerTotalWords.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-
-    if (sortedPlayers.isEmpty) {
-      return const SizedBox();
-    }
-
-    // Le max pour l'échelle des barres
-    final maxWords = sortedPlayers.first.value;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.gray600),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.emoji_events,
-                  color: AppColors.warning, size: 24),
-              const SizedBox(width: 8),
-              Text(
-                'Top joueurs (manche $round)',
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ...sortedPlayers.asMap().entries.map((entry) {
-            final index = entry.key;
-            final playerId = entry.value.key;
-            final wordsCount = entry.value.value;
-            final player = provider.getPlayerById(playerId);
-            final playerName = player?.name ?? 'Joueur inconnu';
-
-            // Trouver l'équipe du joueur pour la couleur
-            Color playerColor = AppColors.gray400;
-            for (int i = 0; i < provider.teams.length; i++) {
-              if (provider.teams[i].playerIds.contains(playerId)) {
-                playerColor = AppColors.getTeamColor(i);
-                break;
-              }
-            }
-
-            final medal = index == 0
-                ? '🥇'
-                : index == 1
-                    ? '🥈'
-                    : index == 2
-                        ? '🥉'
-                        : '';
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                children: [
-                  if (medal.isNotEmpty)
-                    Text(medal, style: const TextStyle(fontSize: 18)),
-                  if (medal.isNotEmpty) const SizedBox(width: 8),
-                  if (medal.isEmpty) const SizedBox(width: 26),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      playerName,
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 14,
-                        color: playerColor,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 3,
-                    child: Stack(
-                      children: [
-                        Container(
-                          height: 20,
-                          decoration: BoxDecoration(
-                            color: AppColors.gray700,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        FractionallySizedBox(
-                          widthFactor: maxWords > 0 ? wordsCount / maxWords : 0,
-                          child: Container(
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: playerColor,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 50,
-                    child: Text(
-                      '$wordsCount',
-                      style: const TextStyle(
-                        fontFamily: 'Bangers',
-                        fontSize: 18,
-                        color: Colors.white,
-                      ),
-                      textAlign: TextAlign.right,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
+  Widget _tempsMoyen(GameProvider provider, {int? round}) => _buildRankedBars(
+        provider,
+        title: round == null
+            ? 'Temps moyen par mot (partie entière)'
+            : 'Temps moyen par mot (manche $round)',
+        rows: averageTimePerWordRanking(provider.game.history, round: round),
+        inverse: true,
+        valueWidth: 45,
+        valueFontSize: 16,
+      );
 
   Widget _buildScoreEvolution(GameProvider provider) {
     if (provider.game.history.isEmpty) {
