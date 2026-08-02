@@ -4,6 +4,8 @@ import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
 import '../utils/constants.dart';
 import '../widgets/common/app_button.dart';
+import '../widgets/common/app_confirm_dialog.dart';
+import '../widgets/common/game_dialogs.dart';
 import '../widgets/common/home_button.dart';
 import '../widgets/common/back_button.dart';
 import '../widgets/effects/shooting_stars.dart';
@@ -237,7 +239,7 @@ class GameScreen extends StatelessWidget {
             )
           else if (provider.canGoBackToVerification)
             GameBackButton(
-              onPressed: () => _showBackToVerificationDialog(context, provider),
+              onPressed: () => showBackToVerificationDialog(context, provider),
             ),
         ],
       ),
@@ -245,94 +247,14 @@ class GameScreen extends StatelessWidget {
   }
 
   void _showBackToTeamsDialog(BuildContext context, GameProvider provider) {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withOpacity(0.7),
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.backgroundMain,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: AppColors.gray500, width: 2),
-        ),
-        title: Text(
-          'Retour aux équipes',
-          style: AppTextStyles.subtitle(fontSize: 24),
-          textAlign: TextAlign.center,
-        ),
-        content: const Text(
-          'Voulez-vous revenir à la composition des équipes ?',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            color: Colors.white,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        actionsAlignment: MainAxisAlignment.spaceEvenly,
-        actions: [
-          AppButton(
-            text: 'Annuler',
-            variant: AppButtonVariant.ghost,
-            size: AppButtonSize.small,
-            onPressed: () => Navigator.of(dialogContext).pop(),
-          ),
-          AppButton(
-            text: 'Retour',
-            variant: AppButtonVariant.secondary,
-            size: AppButtonSize.small,
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              provider.goBackToTeams();
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showBackToVerificationDialog(
-      BuildContext context, GameProvider provider) {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withOpacity(0.7),
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.backgroundMain,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: AppColors.gray500, width: 2),
-        ),
-        title: Text(
-          'Modifier la validation',
-          style: AppTextStyles.subtitle(fontSize: 24),
-          textAlign: TextAlign.center,
-        ),
-        content: const Text(
-          'Voulez-vous revenir à l\'écran de vérification pour corriger les mots validés ?',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            color: Colors.white,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        actionsAlignment: MainAxisAlignment.spaceEvenly,
-        actions: [
-          AppButton(
-            text: 'Annuler',
-            variant: AppButtonVariant.ghost,
-            size: AppButtonSize.small,
-            onPressed: () => Navigator.of(dialogContext).pop(),
-          ),
-          AppButton(
-            text: 'Retour',
-            variant: AppButtonVariant.secondary,
-            size: AppButtonSize.small,
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              provider.restorePreValidationState();
-            },
-          ),
-        ],
-      ),
-    );
+    AppConfirmDialog.show(
+      context,
+      title: 'Retour aux équipes',
+      message: 'Voulez-vous revenir à la composition des équipes ?',
+      confirmText: 'Retour',
+    ).then((confirme) {
+      if (confirme) provider.goBackToTeams();
+    });
   }
 
   void _showAllScoresDialog(BuildContext context, GameProvider provider) {

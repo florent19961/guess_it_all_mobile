@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
 import '../services/audio_service.dart';
-import '../widgets/common/app_button.dart';
+import '../widgets/common/app_confirm_dialog.dart';
 
 class TurnScreen extends StatefulWidget {
   const TurnScreen({super.key});
@@ -150,51 +150,12 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
     // recalculait ensuite depuis une deadline restée vivante.
     provider.pauseTurn();
 
-    // Afficher le dialog
-    showDialog<bool>(
-      context: context,
-      barrierColor: Colors.black.withOpacity(0.7),
-      barrierDismissible: true,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.backgroundMain,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: AppColors.secondaryCyan, width: 2),
-        ),
-        title: Text(
-          'Interrompre la partie',
-          style: AppTextStyles.subtitle(fontSize: 24),
-          textAlign: TextAlign.center,
-        ),
-        content: const Text(
-          'La partie sera mise en pause et sauvegardée automatiquement.',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            color: Colors.white,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        actionsAlignment: MainAxisAlignment.spaceEvenly,
-        actions: [
-          AppButton(
-            text: 'Annuler',
-            variant: AppButtonVariant.ghost,
-            size: AppButtonSize.small,
-            onPressed: () {
-              Navigator.of(dialogContext)
-                  .pop(false); // false = ne pas aller à l'accueil
-            },
-          ),
-          AppButton(
-            text: 'Accueil',
-            variant: AppButtonVariant.secondary,
-            size: AppButtonSize.small,
-            onPressed: () {
-              Navigator.of(dialogContext).pop(true); // true = aller à l'accueil
-            },
-          ),
-        ],
-      ),
+    AppConfirmDialog.show(
+      context,
+      title: 'Interrompre la partie',
+      message: 'La partie sera mise en pause et sauvegardée automatiquement.',
+      confirmText: 'Accueil',
+      accentColor: AppColors.secondaryCyan,
     ).then((goHome) {
       // Si on a cliqué sur "Accueil", suspendre le jeu
       if (goHome == true) {
@@ -210,52 +171,15 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
     // Geler le tour pendant la confirmation.
     provider.pauseTurn();
 
-    // Afficher le dialog de confirmation
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withOpacity(0.7),
-      barrierDismissible: true,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.backgroundMain,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: AppColors.warning, width: 2),
-        ),
-        title: Text(
-          'Terminer le tour ?',
-          style: AppTextStyles.subtitle(fontSize: 24),
-          textAlign: TextAlign.center,
-        ),
-        content: const Text(
-          'Les secondes restantes seront perdues.',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            color: Colors.white,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        actionsAlignment: MainAxisAlignment.spaceEvenly,
-        actions: [
-          AppButton(
-            text: 'Annuler',
-            variant: AppButtonVariant.ghost,
-            size: AppButtonSize.small,
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-            },
-          ),
-          AppButton(
-            text: 'Terminer',
-            variant: AppButtonVariant.secondary,
-            size: AppButtonSize.small,
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              provider.endTurn();
-            },
-          ),
-        ],
-      ),
-    ).then((_) {
+    AppConfirmDialog.show(
+      context,
+      title: 'Terminer le tour ?',
+      message: 'Les secondes restantes seront perdues.',
+      confirmText: 'Terminer',
+      accentColor: AppColors.warning,
+    ).then((confirme) {
+      if (confirme) provider.endTurn();
+
       // Reprendre le timer quand le dialog est fermé. Si « Terminer » a été
       // choisi, `endTurn` a ARRÊTÉ l'horloge : `resumeTurn` est alors un no-op
       // et ne peut donc pas ré-armer une deadline sur l'écran de vérification.
