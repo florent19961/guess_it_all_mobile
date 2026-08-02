@@ -39,15 +39,19 @@ class HistoryEntry {
 
   factory HistoryEntry.fromJson(Map<String, dynamic> json) {
     return HistoryEntry(
-      round: json['round'] as int,
-      turn: json['turn'] as int,
-      teamId: json['teamId'] as String,
-      playerId: json['playerId'] as String,
-      wordsGuessed: (json['wordsGuessed'] as List<dynamic>).cast<String>(),
+      // Chaque champ a un défaut : une entrée d'historique incomplète ne doit
+      // pas rendre illisible la partie en cours tout entière.
+      round: json['round'] as int? ?? 0,
+      turn: json['turn'] as int? ?? 0,
+      teamId: json['teamId'] as String? ?? '',
+      playerId: json['playerId'] as String? ?? '',
+      wordsGuessed:
+          (json['wordsGuessed'] as List<dynamic>?)?.cast<String>() ?? [],
       wordsInvalidated:
-          (json['wordsInvalidated'] as List<dynamic>).cast<String>(),
-      wordsPassed: (json['wordsPassed'] as List<dynamic>).cast<String>(),
-      timeSpent: json['timeSpent'] as int,
+          (json['wordsInvalidated'] as List<dynamic>?)?.cast<String>() ?? [],
+      wordsPassed:
+          (json['wordsPassed'] as List<dynamic>?)?.cast<String>() ?? [],
+      timeSpent: json['timeSpent'] as int? ?? 0,
       isBonusContinuation: json['isBonusContinuation'] as bool? ?? false,
     );
   }

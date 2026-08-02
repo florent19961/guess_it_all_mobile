@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Service de tracking de l'historique des mots joués.
@@ -19,6 +20,19 @@ class WordHistoryService {
   // Cache mémoire pour performance
   Map<String, int>? _historyCache;
   bool _isInitialized = false;
+
+  /// Vrai quand la lecture de l'historique a échoué pour une raison
+  /// TRANSITOIRE (stockage indisponible), par opposition à un contenu corrompu.
+  ///
+  /// 🔴 Tant que ce drapeau est levé, on refuse d'ÉCRIRE. Avant, une lecture
+  /// ratée rendait `{}`, et la première sauvegarde suivante écrasait
+  /// l'historique accumulé de l'utilisateur — des centaines de mots perdus
+  /// définitivement, sur un simple incident de lecture. Ne pas persister est
+  /// toujours préférable à écraser.
+  bool _degraded = false;
+
+  /// Exposé pour les tests et le diagnostic.
+  bool get isDegraded => _degraded;
 
   /// Indique si le service a été initialisé
   bool get isInitialized => _isInitialized;
@@ -143,20 +157,48 @@ class WordHistoryService {
       }
 
       final decoded = jsonDecode(jsonString) as Map<String, dynamic>;
-      return decoded.map((k, v) => MapEntry(k, v as int));
+      // Une entrée non entière est ignorée plutôt que de faire échouer tout le
+      // chargement.
+      final result = <String, int>{};
+      decoded.forEach((k, v) {
+        if (v is int) result[k] = v;
+      });
+      return result;
+    } on FormatException catch (e) {
+      // Contenu réellement illisible : la donnée est déjà perdue. On met en
+      // QUARANTAINE pour que l'échec ne se rejoue pas à chaque démarrage, et on
+      // repart d'un historique vide — qui pourra, lui, être sauvegardé.
+      debugPrint('[WordHistory] Historique corrompu, mise en quarantaine: $e');
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove(_historyKey);
+      } catch (_) {
+        // Si même la suppression échoue, on reste en mode dégradé.
+        _degraded = true;
+      }
+      return {};
     } catch (e) {
-      print('[WordHistory] Error loading history: $e');
+      // Panne TRANSITOIRE (stockage indisponible) : le contenu du disque est
+      // probablement intact. On refuse d'écrire par-dessus.
+      debugPrint('[WordHistory] Lecture impossible, mode dégradé: $e');
+      _degraded = true;
       return {};
     }
   }
 
   /// Sauvegarde l'historique dans SharedPreferences
   Future<void> _saveHistory() async {
+    if (_degraded) {
+      // Voir `_degraded` : écrire ici écraserait un historique intact par un
+      // cache vide né d'un incident de lecture.
+      debugPrint('[WordHistory] Mode dégradé : sauvegarde ignorée');
+      return;
+    }
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_historyKey, jsonEncode(_historyCache));
     } catch (e) {
-      print('[WordHistory] Error saving history: $e');
+      debugPrint('[WordHistory] Error saving history: $e');
     }
   }
 }

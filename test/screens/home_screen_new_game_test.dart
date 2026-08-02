@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
@@ -27,11 +25,6 @@ Future<GameProvider> pumpHome(WidgetTester tester) async {
   return provider;
 }
 
-Future<Map<String, dynamic>?> settingsOnDisk() async {
-  final raw = await rawString(AppConstants.settingsKey);
-  return raw == null ? null : jsonDecode(raw) as Map<String, dynamic>;
-}
-
 void main() {
   testWidgets(
       'appuyer sur « Jouer » depuis l\'accueil ne réinitialise pas les réglages',
@@ -55,7 +48,7 @@ void main() {
     expect(provider.settings.turnDuration, 45);
     expect(provider.settings.passPenalty, 2);
 
-    final disk = await settingsOnDisk();
+    final disk = await persistedData(AppConstants.settingsKey);
     expect(disk!['turnDuration'], 45,
         reason: 'c\'est le disque que relira la prochaine ouverture de l\'app');
     expect(disk['passPenalty'], 2);

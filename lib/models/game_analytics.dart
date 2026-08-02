@@ -277,8 +277,14 @@ class GameAnalytics {
         selectedCategories: (json['selectedCategories'] as List).cast<String>(),
         selectedDifficultyLevels:
             (json['selectedDifficultyLevels'] as List).cast<int>(),
-        events: (json['events'] as List)
-            .map((e) => WordEvent.fromJson(e as Map<String, dynamic>))
+        // Les events illisibles sont ABANDONNÉS un par un, jamais propagés en
+        // exception : un seul event d'un type inconnu rendait auparavant la
+        // partie archivée entière illisible — et, faute de quarantaine, l'échec
+        // se rejouait à chaque démarrage.
+        events: (json['events'] as List<dynamic>? ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .map(WordEvent.tryFromJson)
+            .whereType<WordEvent>()
             .toList(),
         wordMetadata: (json['wordMetadata'] as Map<String, dynamic>).map(
           (k, v) =>

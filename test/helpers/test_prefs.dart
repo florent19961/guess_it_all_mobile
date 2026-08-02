@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guess_it_all_mobile/services/persisted_schema.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Helpers de test pour la couche persistée.
@@ -31,4 +34,15 @@ Future<String?> rawString(String key) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.reload();
   return prefs.getString(key);
+}
+
+/// Lit une clé persistée en dénouant l'enveloppe de version.
+///
+/// À préférer à [rawString] dès qu'on veut asserter le CONTENU métier : les
+/// écritures passent par `wrapWithSchema`, donc le JSON sur disque est
+/// `{schemaVersion, data}` et non la charge utile directement.
+Future<Map<String, dynamic>?> persistedData(String key) async {
+  final raw = await rawString(key);
+  if (raw == null) return null;
+  return unwrapSchema(jsonDecode(raw)).data;
 }

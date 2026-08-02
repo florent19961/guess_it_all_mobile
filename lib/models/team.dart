@@ -52,8 +52,8 @@ class Team {
 
   factory Team.fromJson(Map<String, dynamic> json) {
     return Team(
-      id: json['id'] as String,
-      name: json['name'] as String,
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
       playerIds: (json['playerIds'] as List<dynamic>?)?.cast<String>() ?? [],
       score: json['score'] as int? ?? 0,
       scoreByRound:

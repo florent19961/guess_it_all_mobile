@@ -98,20 +98,53 @@ class WordEvent {
         'durationMs': durationMs,
       };
 
-  factory WordEvent.fromJson(Map<String, dynamic> json) => WordEvent(
-        eventId: json['eventId'] as String,
-        word: json['word'] as String,
-        eventType: WordEventType.values.firstWhere(
-          (e) => e.name == json['eventType'],
-        ),
-        timestamp: json['timestamp'] as int,
-        round: json['round'] as int,
-        turn: json['turn'] as int,
-        teamId: json['teamId'] as String,
-        playerId: json['playerId'] as String,
-        gameId: json['gameId'] as String,
-        durationMs: json['durationMs'] as int?,
-      );
+  factory WordEvent.fromJson(Map<String, dynamic> json) {
+    final event = tryFromJson(json);
+    if (event == null) {
+      throw FormatException('WordEvent illisible: $json');
+    }
+    return event;
+  }
+
+  /// Variante tolérante : rend `null` au lieu de lever.
+  ///
+  /// 🔴 **Aucune valeur d'enum par défaut sur `eventType`.** Un `orElse` qui
+  /// retomberait sur `shown` transformerait un event inconnu en event *faux* —
+  /// et ces compteurs alimentent la priorisation des mots. Une donnée fausse est
+  /// pire qu'une donnée manquante : elle est silencieuse et durable. Un event
+  /// illisible est donc ABANDONNÉ, et l'appelant l'ignore.
+  ///
+  /// L'ancien code faisait un `firstWhere` sans `orElse` : un type d'event
+  /// inconnu (écrit par une version plus récente, ou corrompu) levait un
+  /// StateError qui rendait TOUTE la partie illisible.
+  static WordEvent? tryFromJson(Map<String, dynamic> json) {
+    WordEventType? type;
+    for (final candidate in WordEventType.values) {
+      if (candidate.name == json['eventType']) {
+        type = candidate;
+        break;
+      }
+    }
+    if (type == null) return null;
+
+    final eventId = json['eventId'];
+    final word = json['word'];
+    final timestamp = json['timestamp'];
+    if (eventId is! String || word is! String || timestamp is! int) return null;
+
+    return WordEvent(
+      eventId: eventId,
+      word: word,
+      eventType: type,
+      timestamp: timestamp,
+      round: json['round'] as int? ?? 0,
+      turn: json['turn'] as int? ?? 0,
+      teamId: json['teamId'] as String? ?? '',
+      playerId: json['playerId'] as String? ?? '',
+      gameId: json['gameId'] as String? ?? '',
+      durationMs: json['durationMs'] as int?,
+    );
+  }
 
   @override
   String toString() =>

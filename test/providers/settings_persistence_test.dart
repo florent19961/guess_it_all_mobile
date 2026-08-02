@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
@@ -13,16 +11,6 @@ Future<GameProvider> givenProvider() async {
   return provider;
 }
 
-/// Relit les réglages tels qu'ils sont RÉELLEMENT écrits sur disque.
-///
-/// C'est la seule assertion qui compte ici : l'objet en mémoire peut être juste
-/// alors que le disque a déjà été écrasé — et c'est le disque que la prochaine
-/// ouverture de l'app relira.
-Future<Map<String, dynamic>?> settingsOnDisk() async {
-  final raw = await rawString(AppConstants.settingsKey);
-  return raw == null ? null : jsonDecode(raw) as Map<String, dynamic>;
-}
-
 void main() {
   group('Réglages — survie au démarrage d\'une partie', () {
     test('les réglages avancés modifiés sont écrits sur disque', () async {
@@ -31,7 +19,7 @@ void main() {
       provider.updateSettings(turnDuration: 45, passPenalty: 2, totalWords: 80);
       await pumpEventQueue();
 
-      final disk = await settingsOnDisk();
+      final disk = await persistedData(AppConstants.settingsKey);
       expect(disk, isNotNull);
       expect(disk!['turnDuration'], 45);
       expect(disk['passPenalty'], 2);
@@ -63,7 +51,7 @@ void main() {
       expect(provider.settings.selectedCategories, ['musique', 'marques']);
       expect(provider.settings.selectedDifficultyLevels, [3, 4]);
 
-      final disk = await settingsOnDisk();
+      final disk = await persistedData(AppConstants.settingsKey);
       expect(disk!['turnDuration'], 45,
           reason:
               'c\'est le disque que relira la prochaine ouverture de l\'app');
@@ -108,7 +96,7 @@ void main() {
       expect(provider.settings.turnDuration, AppConstants.defaultTurnDuration);
       expect(provider.settings.passPenalty, AppConstants.defaultPassPenalty);
 
-      final disk = await settingsOnDisk();
+      final disk = await persistedData(AppConstants.settingsKey);
       expect(disk!['turnDuration'], AppConstants.defaultTurnDuration);
     });
 
