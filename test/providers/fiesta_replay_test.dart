@@ -52,6 +52,20 @@ void main() {
     expect(provider.game.currentScreen, AppConstants.screenFiestaRecap);
     expect(provider.pendingFiesta!.symmetric, isFalse);
 
+    // App tuée en pleine partie Fiesta : la relance remet la config en attente,
+    // sinon « Retour aux équipes » puis « Lancer » repartirait en Classique.
+    givenWords(provider);
+    await provider.startGame(fiesta: provider.pendingFiesta);
+    await pumpEventQueue();
+    final reloaded = GameProvider();
+    await pumpEventQueue();
+    expect(reloaded.isFiesta, isTrue);
+    expect(reloaded.pendingFiesta?.symmetric, isFalse);
+
+    // « Nouvelle partie » repart d'un choix vide.
+    await reloaded.startNewGame();
+    expect(reloaded.pendingFiesta, isNull);
+
     // Partie Classique lancée alors qu'une config traîne en attente : Rejouer
     // suit la partie jouée, pas l'attente.
     givenWords(provider);

@@ -83,7 +83,6 @@ class FiestaRecapScreen extends StatelessWidget {
   }
 
   List<Widget> _autoLines(FiestaRules rules) {
-    const c = CatchUpRules.auto;
     return [
       FiestaLine(
         label: 'Symétrique',
@@ -92,8 +91,7 @@ class FiestaRecapScreen extends StatelessWidget {
       ),
       FiestaLine(
         label: 'Auto-calibrage',
-        detail: '+${c.b1} s / +${c.b2} s × écart (max +${c.cap} s) · '
-            'leader −${c.mal} s × écart (max −${c.malCap} s) · '
+        detail: '${catchUpSummary(CatchUpRules.auto)} · '
             'coup de pouce du catalogue',
         value: rules.autoCalibrate,
       ),
@@ -101,7 +99,8 @@ class FiestaRecapScreen extends StatelessWidget {
   }
 
   List<Widget> _customLines(FiestaRules rules) {
-    final c = rules.catchUp;
+    // Même contrat que l'éditeur de 2-3 : interrupteur ET au moins 1 tirage.
+    final draw = rules.symmetric && rules.drawCount > 0;
     final active = [
       for (final def in kModifierCatalog)
         if (rules.modifiers[def.id]?.active ?? false)
@@ -115,14 +114,12 @@ class FiestaRecapScreen extends StatelessWidget {
       ),
       FiestaLine(
         label: 'Rattrapage',
-        detail: '+${c.b1} s / +${c.b2} s × écart (max +${c.cap} s) · '
-            'leader −${c.mal} s × écart (max −${c.malCap} s)',
+        detail: catchUpSummary(rules.catchUp),
       ),
       FiestaLine(
         label: 'Tirage symétrique',
-        detail:
-            rules.drawCount > 0 ? '${rules.drawCount} par manche' : 'Désactivé',
-        value: rules.drawCount > 0,
+        detail: draw ? '${rules.drawCount} par manche' : 'Désactivé',
+        value: draw,
       ),
       FiestaLine(
         label: 'Modificateurs actifs (${active.length})',
@@ -130,11 +127,16 @@ class FiestaRecapScreen extends StatelessWidget {
             ? 'Aucun'
             : active
                 .map((e) => '${e.$1.name} · '
-                    '${e.$2.arrival == ModifierArrival.fixed ? 'manche ${e.$2.fixedRound ?? 3}' : _arrivalLabels[e.$2.arrival]}')
+                    '${e.$2.arrival == ModifierArrival.fixed ? _fixedLabel(e.$2.fixedRound) : _arrivalLabels[e.$2.arrival]}')
                 .join('\n'),
       ),
     ];
   }
+
+  // `fixedRound` peut être nul (le modèle 2-2 ne l'impose pas) : on n'invente
+  // pas de manche.
+  static String _fixedLabel(int? round) =>
+      round == null ? 'fixé' : 'fixé manche $round';
 
   Widget _value(String label, String value) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),

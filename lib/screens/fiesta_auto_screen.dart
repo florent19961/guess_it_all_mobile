@@ -42,7 +42,7 @@ class _FiestaAutoScreenState extends State<FiestaAutoScreen> {
           title: 'Symétrique',
           trailing: _switch(_symmetric, (v) => _symmetric = v),
           children: const [
-            _Hint(
+            FiestaHint(
               'Au début de chaque manche, l\'app tire 1 à 2 modificateurs qui '
               's\'appliquent à toutes les équipes. Pas de relance.',
             ),
@@ -52,13 +52,13 @@ class _FiestaAutoScreenState extends State<FiestaAutoScreen> {
           title: 'Auto-calibrage (rattrapage)',
           trailing: _switch(_autoCalibrate, (v) => _autoCalibrate = v),
           children: [
-            const _Hint(
+            const FiestaHint(
               'L\'app aide automatiquement l\'équipe qui est derrière. L\'écart '
               'se mesure par rapport à l\'équipe en tête.',
             ),
             if (_autoCalibrate) ...[
               const SizedBox(height: 8),
-              _Hint(
+              FiestaHint(
                 'Équipes menées : +${auto.b1} s × écart après M1, '
                 '+${auto.b2} s × écart après M2 (max +${auto.cap} s).\n'
                 'Équipe en tête : −${auto.mal} s × écart sur son 1ᵉʳ tour '
@@ -117,17 +117,5 @@ class _FiestaAutoScreenState extends State<FiestaAutoScreen> {
         value: value,
         onChanged: (v) => setState(() => set(v)),
         activeTrackColor: AppColors.secondaryCyan,
-      );
-}
-
-class _Hint extends StatelessWidget {
-  final String text;
-  const _Hint(this.text);
-
-  @override
-  Widget build(BuildContext context) => Text(
-        text,
-        style: AppTextStyles.bodySmall
-            .copyWith(fontSize: 12, color: AppColors.gray400),
       );
 }

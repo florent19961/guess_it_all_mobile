@@ -102,6 +102,10 @@ class GameProvider extends ChangeNotifier {
                 .toList() ??
             _teams;
         _game = GameState.fromJson(savedState['game'] ?? {});
+        // Partie Fiesta reprise après un kill : remettre sa config gelée en
+        // attente, sinon « Retour aux équipes » + « Lancer » la relancerait en
+        // Classique. Invariant : en partie, `pendingFiesta` = `fiesta?.rules`.
+        _pendingFiesta = _game.fiesta?.rules;
 
         // 🔴 Reprendre AUSSI le tracking, pas seulement l'état de jeu. Sans ça,
         // une partie rouverte après un kill terminait sans jamais incrémenter
@@ -1159,8 +1163,7 @@ class GameProvider extends ChangeNotifier {
     await _analytics.endGame();
 
     await _storage.clearGameState();
-    // Garde la config Fiesta en mémoire pour le « Rejouer » de l'accueil.
-    _pendingFiesta = _game.fiesta?.rules;
+    // `_pendingFiesta` n'est PAS effacé : le « Rejouer » de l'accueil le relit.
     _game = GameState.initial();
     notifyListeners();
   }

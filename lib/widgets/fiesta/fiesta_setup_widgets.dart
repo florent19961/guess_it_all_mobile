@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../models/fiesta/fiesta_rules.dart';
 import '../../theme/app_theme.dart';
 import '../common/app_back_button.dart';
 import '../effects/shooting_stars.dart';
@@ -302,3 +303,21 @@ class FiestaCommonRulesCard extends StatelessWidget {
     );
   }
 }
+
+/// Texte d'explication gris (maquette `.hint`).
+class FiestaHint extends StatelessWidget {
+  final String text;
+  const FiestaHint(this.text, {super.key});
+
+  @override
+  Widget build(BuildContext context) => Text(
+        text,
+        style: AppTextStyles.bodySmall
+            .copyWith(fontSize: 12, color: AppColors.gray400),
+      );
+}
+
+/// Résumé d'une ligne du rattrapage, pour le Récap (Auto et Personnalisé).
+String catchUpSummary(CatchUpRules c) =>
+    '+${c.b1} s / +${c.b2} s × écart (max +${c.cap} s) · '
+    'leader −${c.mal} s × écart (max −${c.malCap} s)';
