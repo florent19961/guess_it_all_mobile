@@ -156,7 +156,9 @@ List<ModifierInstance> _candidates({
     }
     out.add(ModifierInstance(
       catalogId: def.id,
-      scope: ModifierScope.round,
+      // « Bloquer un devineur » = un tour (fin de manche + continuation) ;
+      // les autres cartes durent la manche N+1.
+      scope: def.defaultScope,
       target: toPlayer ? ModifierTarget.player : ModifierTarget.team,
       teamId: targetTeam,
       charges: charges,

@@ -66,7 +66,10 @@ void main() {
       'après un retour arrière et après une app tuée, puis actif au '
       '« Manche suivante » à la place de celui de M1', () async {
     final provider = await givenReadyProvider();
-    await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
+    // Sans auto-calibrage : son coup de pouce (2-10) s'ajouterait au tirage
+    // selon la graine, ce test ne regarde que le tirage.
+    await provider.startGame(
+        fiesta: FiestaRules(mode: FiestaMode.auto, autoCalibrate: false));
     expect(provider.game.fiesta!.active, isNotEmpty);
     expect(provider.game.fiesta!.active.every((m) => m.round == 1), isTrue);
 

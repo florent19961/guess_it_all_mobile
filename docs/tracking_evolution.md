@@ -530,3 +530,26 @@ utilisés » au récap.
 - **Q8** : activation refusée si l'équipe a déjà 2 autres modificateurs en jeu.
 - **Analytics** : `double_points` n'apparaît dans les `modifiers` d'un mot que si le ×2
   s'applique à ce tour (une charge non activée n'est pas un modificateur en jeu).
+
+## 2026-11-03 — Fiesta 2-10 : 1 parmi 3 et coup de pouce de l'app (câblage)
+
+**Quoi.** Sur la transition après M1 et M2 : Personnalisé (`oneOfThree`) → carte « Choix 1 parmi
+3 », chaque équipe non en tête choisit à son tour derrière un écran « Passe le téléphone » ;
+Auto (auto-calibrage) → carte « Coup de pouce de l'app ». Les cartes choisies et les cadeaux
+entrent dans `fiesta.active` à `nextRound`, à côté du tirage de N+1. Récap : sections « Choix 1
+parmi 3 » et « Coup de pouce de l'app ».
+
+**Pourquoi ces choix.**
+- **Garde dans le provider** : `nextRound` sort tant que `nextChooserId` n'est pas nul ; le
+  bouton grisé n'est qu'un reflet (double tap, reprise d'app).
+- **Offres et cadeaux recalculés**, jamais stockés (scores + tirage de N+1 + graine
+  `(gameId, manche, équipe)`) ; seuls les **choix** sont persistés : `fiesta.offerChoices`
+  (`[{chooserId, modifier}]`), clé optionnelle du blob Fiesta, omise si vide (Classique
+  intact, pas de bump de schéma). La file = choix dont `modifier.round` = manche suivante ; un
+  kill garde les choix faits, un retour arrière les efface (postérieurs au snapshot, AC6).
+- **Qui a choisi** est gardé à côté de l'instance : un malus vise le leader, et c'est l'équipe
+  qui a choisi « Bloquer un devineur » qui désigne le devineur (`blockingTeam`).
+- **Coup de pouce du récap recalculé** sur les scores cumulés par manche, comme le rattrapage.
+
+**Conséquence.** Les malus reçus passent par la révélation de 2-5 et les tags analytics de 2-7
+sans code dédié : ils sont dans `active` comme le tirage.

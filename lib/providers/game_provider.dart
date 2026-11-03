@@ -9,6 +9,7 @@ import '../models/fiesta/fiesta_state.dart';
 import '../models/fiesta/modifier_catalog.dart';
 import '../models/fiesta/modifier_instance.dart';
 import '../models/fiesta/modifier_recap.dart';
+import '../models/fiesta/offers.dart';
 import '../models/fiesta/symmetric_draw.dart';
 import '../models/fiesta/turn_effects.dart';
 import '../models/fiesta/turn_time.dart';
@@ -1116,6 +1117,8 @@ class GameProvider extends ChangeNotifier {
     // rappelait `nextRound` depuis l'écran de jeu de la manche suivante et
     // sautait une manche (M1 → M3). Seul l'écran de transition fait avancer.
     if (_game.currentScreen != AppConstants.screenTransition) return;
+    // 1 parmi 3 : la garde est ICI, pas sur le bouton (double tap, reprise).
+    if (nextChooserId != null) return;
     final nextRoundNumber = _game.currentRound + 1;
 
     if (nextRoundNumber > 3) {
@@ -1145,8 +1148,9 @@ class GameProvider extends ChangeNotifier {
   }
 
   /// Fiesta à l'entrée de la manche [round] : les instances de portée manche
-  /// de la manche finie partent, celles de [round] (fixés + tirage) arrivent,
-  /// et le rattrapage dû est posé sur les scores de la manche finie.
+  /// de la manche finie partent, celles de [round] (fixés + tirage, puis
+  /// coup de pouce ou cartes choisies) arrivent, et le rattrapage dû est posé
+  /// sur les scores de la manche finie.
   /// Nul en Classique (et `copyWith(fiesta: null)` laisse alors `fiesta` nul).
   FiestaState? _fiestaForRound(int round) {
     final fiesta = _game.fiesta;
@@ -1157,6 +1161,9 @@ class GameProvider extends ChangeNotifier {
             .where((m) => !(m.scope == ModifierScope.round && m.round < round)),
         ...roundModifiers(fiesta.rules,
             gameId: _game.gameId ?? '', round: round),
+        // Lus AVANT que `nextRound` change de manche : ceux de la transition.
+        ...appBoostPreview,
+        ..._pendingChoices.values,
       ],
       catchUpDue: {for (final e in catchUpPreview) e.teamId: e.seconds},
     );
@@ -1360,6 +1367,111 @@ class GameProvider extends ChangeNotifier {
         .toList();
   }
 
+  // ========== 1 PARMI 3 / COUP DE POUCE (2-10) ==========
+  // Tout est RECALCULÉ depuis les scores, le tirage de N+1 et la graine
+  // `(gameId, manche, équipe)` : retour arrière et app tuée retrouvent les
+  // mêmes offres. Seuls les choix faits sont persistés (`offerChoices`).
+
+  /// Classement de fin de manche (scores actuels, dans l'ordre des équipes).
+  Standings get standings => Standings({for (final t in _teams) t.id: t.score});
+
+  /// Choix déjà faits sur la transition en cours, par équipe qui a choisi.
+  Map<String, ModifierInstance> get _pendingChoices => {
+        for (final c in _game.fiesta?.offerChoices ?? const <OfferChoice>[])
+          if (c.modifier.round == _game.currentRound + 1)
+            c.chooserId: c.modifier,
+      };
+
+  bool get _isPickThreeOn {
+    final fiesta = _game.fiesta;
+    return fiesta != null &&
+        _game.currentScreen == AppConstants.screenTransition &&
+        isPickThreeOn(fiesta.rules, _game.currentRound);
+  }
+
+  /// Offres de [teamId] sur la transition, compte tenu du tirage de N+1 et
+  /// des choix déjà faits. Vide hors 1 parmi 3.
+  List<ModifierInstance> offersFor(String teamId) {
+    if (!_isPickThreeOn) return const [];
+    return pickThreeOffers(
+      rules: _game.fiesta!.rules,
+      gameId: _game.gameId ?? '',
+      round: _game.currentRound,
+      standings: standings,
+      teamId: teamId,
+      roundDraw: nextRoundModifiers,
+      choices: _pendingChoices,
+      blockImmuneTeamIds: {
+        for (final t in _teams)
+          if (!canBlockGuesser(t.playerIds.length)) t.id,
+      },
+    );
+  }
+
+  /// Prochaine équipe de la file : la première de l'ordre de choix qui n'a
+  /// pas encore choisi et qui a des offres. `null` = file vide (ou pas de
+  /// 1 parmi 3) : « Manche suivante » est permis.
+  String? get nextChooserId {
+    if (!_isPickThreeOn) return null;
+    final made = _pendingChoices;
+    for (final id in standings.choosingOrder) {
+      if (!made.containsKey(id) && offersFor(id).isNotEmpty) return id;
+    }
+    return null;
+  }
+
+  /// La carte « 1 parmi 3 » a lieu sur cette transition (au moins un choix à
+  /// faire ou déjà fait).
+  bool get hasPickThree =>
+      nextChooserId != null || (_isPickThreeOn && _pendingChoices.isNotEmpty);
+
+  /// [teamId] choisit son offre n° [index]. Refusé si ce n'est pas son tour.
+  void chooseOffer(String teamId, int index) {
+    if (teamId != nextChooserId) return;
+    final offers = offersFor(teamId);
+    if (index < 0 || index >= offers.length) return;
+    final fiesta = _game.fiesta!;
+    _game = _game.copyWith(
+      fiesta: fiesta.copyWith(offerChoices: [
+        ...fiesta.offerChoices,
+        OfferChoice(chooserId: teamId, modifier: offers[index]),
+      ]),
+    );
+    notifyListeners();
+    _saveGameState();
+  }
+
+  /// Coup de pouce de l'app (Auto) pour la manche suivante : montré sur la
+  /// transition, posé par `nextRound`. Vide hors Auto + auto-calibrage, après
+  /// M3 ou à égalité.
+  List<ModifierInstance> get appBoostPreview {
+    final fiesta = _game.fiesta;
+    if (fiesta == null || !isAppBoostOn(fiesta.rules, _game.currentRound)) {
+      return const [];
+    }
+    return appBoost(
+      rules: fiesta.rules,
+      gameId: _game.gameId ?? '',
+      round: _game.currentRound,
+      standings: standings,
+      roundDraw: nextRoundModifiers,
+    );
+  }
+
+  /// Équipe qui désigne le devineur bloqué de l'équipe qui joue : celle qui a
+  /// choisi « Bloquer un devineur » contre elle. `null` = les adversaires.
+  Team? get blockingTeam {
+    final teamId = getCurrentTeam()?.id;
+    for (final c in _game.fiesta?.offerChoices ?? const <OfferChoice>[]) {
+      if (c.modifier.catalogId == 'block_guesser' &&
+          c.modifier.teamId == teamId &&
+          c.modifier.round == _game.currentRound) {
+        return getTeamById(c.chooserId);
+      }
+    }
+    return null;
+  }
+
   /// Récap « Modificateurs de la partie » (écran Résultats, archive). Vide en
   /// Classique.
   List<ModifierRecapLine> get modifierRecap {
@@ -1368,6 +1480,7 @@ class GameProvider extends ChangeNotifier {
     return buildModifierRecap(
       rules: fiesta.rules,
       chargesUsed: fiesta.chargesUsed,
+      offerChoices: fiesta.offerChoices,
       gameId: _game.gameId ?? '',
       teams: _teams,
       roundsPlayed: _game.currentRound,

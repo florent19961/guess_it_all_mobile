@@ -13,10 +13,14 @@ class BlockedGuesser {
 
   /// Sélecteur « Les adversaires choisissent ». Rend le joueur choisi, ou `null` si
   /// fermé sans choix : l'appelant reste alors sur l'écran d'avant-tour.
-  static Future<Player?> pick(BuildContext context, List<Player> guessers) {
+  /// [chooserName] : l'équipe qui a choisi la carte (1 parmi 3, 2-10).
+  static Future<Player?> pick(BuildContext context, List<Player> guessers,
+      {String? chooserName}) {
     return AppModal.show<Player>(
       context,
-      title: 'Les adversaires choisissent',
+      title: chooserName == null
+          ? 'Les adversaires choisissent'
+          : '$chooserName choisit',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -47,6 +51,7 @@ class BlockedGuesser {
     required Player player,
     required String teamName,
     required Color teamColor,
+    String? chooserName,
   }) {
     return Navigator.of(context).push(MaterialPageRoute<void>(
       fullscreenDialog: true,
@@ -60,7 +65,8 @@ class BlockedGuesser {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Choisi par les adversaires · annonce seulement',
+                  'Choisi par ${chooserName ?? 'les adversaires'} · '
+                  'annonce seulement',
                   textAlign: TextAlign.center,
                   style: AppTextStyles.bodySmall
                       .copyWith(color: AppColors.gray400),
