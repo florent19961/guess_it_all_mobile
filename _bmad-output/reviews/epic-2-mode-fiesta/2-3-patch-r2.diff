@@ -1,0 +1,1765 @@
+diff --git a/_bmad-output/specs/fiesta/2-3-ensembles-stockage-editeur.md b/_bmad-output/specs/fiesta/2-3-ensembles-stockage-editeur.md
+index 7a2d4aa..4b9c75e 100644
+--- a/_bmad-output/specs/fiesta/2-3-ensembles-stockage-editeur.md
++++ b/_bmad-output/specs/fiesta/2-3-ensembles-stockage-editeur.md
+@@ -115,3 +115,19 @@ tous les curseurs à chaque partie.
+ 4. Éditeur : vider le nom, mettre le tirage à 0 avec un modificateur « tiré pour tous » : le
+    bouton est grisé et le message s'affiche. Vérifier le clavier et la zone sûre (encoche iOS,
+    barre de gestes Android).
++
++## Notes d'implémentation (lane B, 2026-11-03)
++
++- **Point d'entrée pour 2-4** : `FiestaEnsemblesScreen(onBack: …, onUse: (FiestaEnsemble e) …)`
++  (`lib/screens/fiesta_ensembles_screen.dart`). `onUse` reçoit l'ensemble déjà marqué
++  `lastUsedId` ; `e.rules` (mode `custom`, `ensembleName` = nom) se passe tel quel à
++  `startGame(fiesta: …)`. En attendant 2-4, la route `AppConstants.screenFiestaEnsembles` existe
++  dans `app.dart` (aucun bouton n'y mène) et les deux callbacks renvoient à l'accueil.
++  Contrat détaillé : `lib/screens/CLAUDE.md`.
++- **Recette device** : faute de bouton avant 2-4, elle se joue après 2-4 (ou en appelant la
++  route à la main).
++- **Interprétations** : rattrapage avec un interrupteur d'interface (off = 5 curseurs à 0, on =
++  valeurs Auto ; rien de plus persisté) ; le tirage
++  pour tous d'un ensemble est actif si `symmetric` **et** `drawCount > 0` ; les modificateurs
++  « manche 3 seulement » ont leur manche verrouillée à 3 dans l'éditeur (comme la maquette) ;
++  un nouvel ensemble part du `mkSet` de la maquette (`defaultEnsembleRules`).
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index 44b3e51..4168396 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -341,3 +341,27 @@ nul. `GameProvider.startGame({FiestaRules? fiesta})` gèle la config ; sans argu
+   release Fiesta, une story qui ajoute un champ à `FiestaRules` ne doit pas faire retomber en
+   Classique les parties Fiesta en cours au moment de la mise à jour. Seule une valeur présente
+   et mal typée invalide le blob. Un `mode` inconnu reste bloquant : c'est la clé de structure.
++
++## 2026-11-03 — Fiesta 2-3 : ensembles sur une clé versionnée, validation pure, liste et éditeur
++
++**Quoi.** Nouvelle clé `guessItAll_fiestaEnsembles` (`FiestaEnsembleService`), enveloppe
++`persisted_schema` dès la première écriture, `kCurrentSchemaVersion` inchangé (clé neuve). Un
++ensemble = `{id, rules}` : le nom vit dans `rules.ensembleName` (une seule source), donc
++l'ensemble choisi se gèle tel quel. `validateEnsemble(FiestaRules)` (pure) bloque
++l'enregistrement. Écrans « Mes ensembles » et éditeur.
++
++**Pourquoi.**
++- **Borne de 10 dans le service, modifications sérialisées** : les écritures sont asynchrones ;
++  sans file, deux taps rapides liraient 9 et passeraient la borne, ou l'un écraserait l'autre.
++- **Une lecture en panne fait échouer la modification** au lieu de réécrire une liste vide par
++  dessus des ensembles qu'on n'a pas pu lire ; `load()` seul rend vide sans effacer.
++- **Interrupteur de rattrapage d'interface seulement** (revue r1, maquette) : `CatchUpRules` n'a
++  pas de champ « actif » ; off = les 5 curseurs à 0, on = `CatchUpRules.auto` ; « actif » =
++  un curseur > 0 (`catchUpOn`). **Tirage pour tous d'un ensemble = `symmetric` ET
++  `drawCount > 0`** (interrupteur + compteur de la maquette) : 2-5 doit lire les deux.
++- `copyWith` posés en **extensions** dans `fiesta_ensemble.dart` : les types de 2-2 ne changent
++  pas.
++- **Un ensemble illisible n'est jamais détruit** (revue r1) : ses entrées brutes sont réécrites
++  telles quelles à chaque modification d'un autre ; un **blob figé** en test garantit que le
++  format de cette version se relit en entier.
++
+diff --git a/lib/app.dart b/lib/app.dart
+index f251e8c..03479a4 100644
+--- a/lib/app.dart
++++ b/lib/app.dart
+@@ -20,6 +20,7 @@ import 'screens/results_screen.dart';
+ import 'screens/stats_screen.dart';
+ import 'screens/categories_screen.dart';
+ import 'screens/history_screen.dart';
++import 'screens/fiesta_ensembles_screen.dart';
+ 
+ class GuessItAllApp extends StatelessWidget {
+   const GuessItAllApp({super.key});
+@@ -85,6 +86,16 @@ class GuessItAllApp extends StatelessWidget {
+         return const CategoriesScreen();
+       case AppConstants.screenHistory:
+         return const HistoryScreen();
++      case AppConstants.screenFiestaEnsembles:
++        // Route d'attente (story 2-3) : aucun bouton n'y mène avant la story
++        // 2-4, qui branche « Utiliser » sur le récap.
++        return Builder(builder: (context) {
++          final provider = context.read<GameProvider>();
++          return FiestaEnsemblesScreen(
++            onBack: () => provider.goToScreen(AppConstants.screenHome),
++            onUse: (_) => provider.goToScreen(AppConstants.screenHome),
++          );
++        });
+       default:
+         return const HomeScreen();
+     }
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index 7560814..3b28613 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -18,6 +18,8 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `fiesta/modifier_instance.dart` | `ModifierInstance` | Modificateur actif dans une partie. `tryFromJson` tolérant (id inconnu → `null`, jamais de défaut inventé). `canAdd(active, candidate, {maxPerTurn: 2})` |
+ | `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, `CatchUpRules`, enums `FiestaMode`, `ModifierArrival` | Configuration Fiesta **immuable** (Auto / Personnalisé, réglage par modificateur, rattrapage, tirage, règles communes). `CatchUpRules.auto` = constantes du mode Auto. `tryFromJson` : structure illisible → `null`, réglage d'id inconnu ignoré seul |
+ | `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn}`. `turn` est vide pour l'instant (compteurs des stories d'effets) |
++| `fiesta/fiesta_ensemble.dart` | `FiestaEnsemble`, `defaultEnsembleRules`, extensions `copyWith`, `catchUpOn` | Ensemble Personnalisé `{id, rules}` (nom = `rules.ensembleName`, mode toujours `custom`), défauts de la maquette (`mkSet`). Persisté par `FiestaEnsembleService` |
++| `fiesta/ensemble_validation.dart` | `validateEnsemble` | Validation **pure** d'un ensemble (messages FR) : bloque l'enregistrement d'une config impossible |
+ 
+ ## Fiesta — invariants (epic-2)
+ 
+@@ -28,6 +30,10 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ - 🔴 **Champ ajouté après la 1ʳᵉ release Fiesta** : il se lit **clé absente = défaut documenté**
+   (`readOr`, `fiesta_rules.dart`) ; seule une valeur présente et mal typée invalide. Sinon une
+   mise à jour ferait retomber en Classique toute partie Fiesta en cours.
++  🔴 Même règle pour les **ensembles** (`guessItAll_fiestaEnsembles`) : tout champ ajouté à
++  `FiestaRules` / `ModifierSetting` / `CatchUpRules` est **optionnel à la lecture**, sinon les
++  ensembles des joueurs deviennent illisibles. Le test de format figé
++  (`test/services/fiesta_ensemble_service_test.dart`, `frozenBlob`) tombe le cas échéant.
+ - `ModifierInstance` : une cible `team` / `player` porte **toujours** son `teamId` (assert +
+   `tryFromJson`). `canAdd` plafonne **par équipe** : « pour tous » + les siennes.
+ - **Gel au lancement** : `GameProvider.startGame({FiestaRules? fiesta})` pose une `FiestaState`
+diff --git a/lib/models/fiesta/ensemble_validation.dart b/lib/models/fiesta/ensemble_validation.dart
+new file mode 100644
+index 0000000..86888ba
+--- /dev/null
++++ b/lib/models/fiesta/ensemble_validation.dart
+@@ -0,0 +1,74 @@
++import 'fiesta_rules.dart';
++import 'modifier_catalog.dart';
++
++/// Pourquoi un ensemble ne peut pas être enregistré (messages affichés tels
++/// quels sous le bouton de l'éditeur). Vide = enregistrable.
++///
++/// Fonction PURE : l'éditeur l'appelle à chaque frappe, le test la couvre
++/// sans écran. Seuls les modificateurs ACTIFS sont jugés : un réglage
++/// incohérent sur un modificateur coupé ne gêne personne.
++///
++/// Le tirage pour tous d'un ensemble a lieu si `symmetric` ET
++/// `drawCount > 0` (l'interrupteur et le compteur de l'éditeur).
++List<String> validateEnsemble(FiestaRules rules) {
++  final errors = <String>[];
++  if ((rules.ensembleName ?? '').trim().isEmpty) {
++    errors.add('Donne un nom à l\'ensemble.');
++  }
++
++  final drawOn = rules.symmetric && rules.drawCount > 0;
++  final fixedByRound = <int, List<String>>{};
++
++  for (final entry in rules.modifiers.entries) {
++    final setting = entry.value;
++    final def = modifierById(entry.key);
++    if (!setting.active || def == null) continue;
++    final name = def.name;
++
++    switch (setting.arrival) {
++      case ModifierArrival.draw:
++        if (!drawOn) {
++          errors.add('$name est tiré pour tous, mais le tirage symétrique '
++              'est coupé ou à 0.');
++        }
++      case ModifierArrival.offer:
++        if (!rules.oneOfThree) {
++          errors.add('$name est proposé à l\'équipe menée, mais le choix '
++              '1 parmi 3 est coupé.');
++        }
++        if (setting.startRound < 2) {
++          errors.add('$name est proposé dès la manche 1 : le choix a lieu '
++              'entre deux manches, M2 au plus tôt.');
++        }
++      case ModifierArrival.fixed:
++        final round = setting.fixedRound;
++        if (round == null) {
++          // L'éditeur pose toujours une manche, mais un blob relu peut ne pas
++          // en avoir : sans manche, le modificateur ne s'appliquerait jamais.
++          errors.add('$name est fixé, mais sur aucune manche.');
++        } else {
++          (fixedByRound[round] ??= []).add(def.id);
++        }
++    }
++
++    if (def.round3Only) {
++      final tooEarly = setting.arrival == ModifierArrival.fixed
++          ? setting.fixedRound != 3
++          : setting.startRound < 3;
++      if (tooEarly) errors.add('$name n\'existe qu\'en manche 3 (mime).');
++    }
++  }
++
++  for (final MapEntry(key: round, value: ids) in fixedByRound.entries) {
++    for (var i = 0; i < ids.length; i++) {
++      for (var j = i + 1; j < ids.length; j++) {
++        if (!areCompatible(ids[i], ids[j])) {
++          errors.add('${modifierById(ids[i])!.name} et '
++              '${modifierById(ids[j])!.name} sont incompatibles : pas sur '
++              'la même manche ($round).');
++        }
++      }
++    }
++  }
++  return errors;
++}
+diff --git a/lib/models/fiesta/fiesta_ensemble.dart b/lib/models/fiesta/fiesta_ensemble.dart
+new file mode 100644
+index 0000000..dc6d476
+--- /dev/null
++++ b/lib/models/fiesta/fiesta_ensemble.dart
+@@ -0,0 +1,110 @@
++import 'fiesta_rules.dart';
++import 'modifier_catalog.dart';
++
++/// Un ensemble du mode Personnalisé : des `FiestaRules` nommées, enregistrées
++/// sur le téléphone (`FiestaEnsembleService`).
++///
++/// Le nom vit dans `rules.ensembleName` (une seule source) : l'ensemble choisi
++/// peut ainsi être gelé tel quel dans la partie par `startGame`.
++class FiestaEnsemble {
++  /// Identifiant stable : il survit à « Modifier » (remplacement sur place).
++  final String id;
++  final FiestaRules rules;
++
++  const FiestaEnsemble({required this.id, required this.rules});
++
++  String get name => rules.ensembleName ?? '';
++
++  Map<String, dynamic> toJson() => {'id': id, 'rules': rules.toJson()};
++
++  /// `null` si l'ensemble est illisible : l'appelant l'ignore seul.
++  static FiestaEnsemble? tryFromJson(Map<String, dynamic> json) {
++    final id = json['id'];
++    final rawRules = json['rules'];
++    if (id is! String || rawRules is! Map) return null;
++    final rules = FiestaRules.tryFromJson(Map<String, dynamic>.from(rawRules));
++    // Un ensemble est toujours Personnalisé : des règles Auto ici ne
++    // viennent pas de l'éditeur, on ne les rend pas à `onUse`.
++    if (rules == null || rules.mode != FiestaMode.custom) return null;
++    return FiestaEnsemble(id: id, rules: rules);
++  }
++}
++
++/// Règles d'un nouvel ensemble : les valeurs par défaut de la maquette
++/// (`mkSet`). Tout le catalogue est actif ; les contraintes de mime arrivent en
++/// manche 3 (« Dessiner » fixé dessus, les autres tirées), les bonus sont
++/// proposés dès M2, les malus tirés dès M1.
++FiestaRules defaultEnsembleRules(String name) => FiestaRules(
++      mode: FiestaMode.custom,
++      ensembleName: name,
++      modifiers: {
++        for (final def in kModifierCatalog)
++          def.id: ModifierSetting(
++            active: true,
++            arrival: def.id == 'draw'
++                ? ModifierArrival.fixed
++                : def.nature == ModifierNature.bonus && !def.round3Only
++                    ? ModifierArrival.offer
++                    : ModifierArrival.draw,
++            startRound: def.round3Only
++                ? 3
++                : def.nature == ModifierNature.bonus
++                    ? 2
++                    : 1,
++            fixedRound: 3,
++            charges: def.defaultCharges,
++          ),
++      },
++      oneOfThree: true,
++    );
++
++/// Copie modifiée, pour l'éditeur et la duplication. Extension plutôt qu'un
++/// `copyWith` dans `FiestaRules` : le type appartient à la story 2-2.
++extension FiestaRulesCopy on FiestaRules {
++  FiestaRules copyWith({
++    String? ensembleName,
++    Map<String, ModifierSetting>? modifiers,
++    bool? oneOfThree,
++    CatchUpRules? catchUp,
++    bool? symmetric,
++    int? drawCount,
++    bool? oneAnswer,
++    bool? carryOver,
++  }) =>
++      FiestaRules(
++        mode: mode,
++        symmetric: symmetric ?? this.symmetric,
++        autoCalibrate: autoCalibrate,
++        ensembleName: ensembleName ?? this.ensembleName,
++        modifiers: modifiers ?? this.modifiers,
++        oneOfThree: oneOfThree ?? this.oneOfThree,
++        catchUp: catchUp ?? this.catchUp,
++        drawCount: drawCount ?? this.drawCount,
++        oneAnswer: oneAnswer ?? this.oneAnswer,
++        carryOver: carryOver ?? this.carryOver,
++      );
++}
++
++/// Le rattrapage d'un ensemble est « actif » dès qu'un de ses curseurs est
++/// au-dessus de 0 : l'interrupteur de l'éditeur n'est pas un champ persisté
++/// (`CatchUpRules` n'en a pas), il met tout à 0 ou rend `CatchUpRules.auto`.
++bool catchUpOn(CatchUpRules c) =>
++    c.b1 > 0 || c.b2 > 0 || c.cap > 0 || c.mal > 0 || c.malCap > 0;
++
++/// Copie modifiée d'un réglage, pour l'éditeur (même raison que ci-dessus).
++extension ModifierSettingCopy on ModifierSetting {
++  ModifierSetting copyWith({
++    bool? active,
++    ModifierArrival? arrival,
++    int? startRound,
++    int? fixedRound,
++    int? charges,
++  }) =>
++      ModifierSetting(
++        active: active ?? this.active,
++        arrival: arrival ?? this.arrival,
++        startRound: startRound ?? this.startRound,
++        fixedRound: fixedRound ?? this.fixedRound,
++        charges: charges ?? this.charges,
++      );
++}
+diff --git a/lib/screens/CLAUDE.md b/lib/screens/CLAUDE.md
+index 79d220a..ee4721e 100644
+--- a/lib/screens/CLAUDE.md
++++ b/lib/screens/CLAUDE.md
+@@ -28,3 +28,14 @@ HomeScreen → SettingsScreen → (CategoriesScreen) → PlayersScreen → (Word
+ | `results_screen.dart` | Podium anime, tableau scores par manche, boutons Rejouer/Stats |
+ | `stats_screen.dart` | Stats detaillees : graphique evolution scores (fl_chart), top joueurs, temps moyen |
+ | `rules_screen.dart` | Regles completes du jeu (3 manches) |
++| `fiesta_ensembles_screen.dart` | « Mes ensembles » (Fiesta Personnalise) : compteur n / 10, Creer, Utiliser / Modifier / Dupliquer / Supprimer (confirmation) |
++| `fiesta_ensemble_editor_screen.dart` | Editeur d'un ensemble, ouvert par `Navigator.push` depuis la liste (rend `true` si enregistre). Bouton grise + explications tant que `validateEnsemble` rend des erreurs |
++
++## Point d'entree des ensembles (contrat 2-3 → 2-4)
++
++`FiestaEnsemblesScreen({required VoidCallback onBack, required ValueChanged<FiestaEnsemble> onUse})`.
++L'ecran ne connait ni le provider ni la navigation : `onUse` recoit l'ensemble choisi, **deja
++marque `lastUsedId`** ; `ensemble.rules` est un `FiestaRules` (mode `custom`, `ensembleName` =
++nom) pret a etre gele par `startGame(fiesta: ...)`. Avant 2-4, seule la route
++`AppConstants.screenFiestaEnsembles` y mene (aucun bouton) et `onUse` / `onBack` ramenent a
++l'accueil : 2-4 remplace ces deux callbacks (ou pousse l'ecran par `Navigator.push`).
+diff --git a/lib/screens/fiesta_ensemble_editor_screen.dart b/lib/screens/fiesta_ensemble_editor_screen.dart
+new file mode 100644
+index 0000000..c0f74be
+--- /dev/null
++++ b/lib/screens/fiesta_ensemble_editor_screen.dart
+@@ -0,0 +1,609 @@
++import 'package:flutter/material.dart';
++
++import '../models/fiesta/ensemble_validation.dart';
++import '../models/fiesta/fiesta_ensemble.dart';
++import '../models/fiesta/fiesta_rules.dart';
++import '../models/fiesta/modifier_catalog.dart';
++import '../services/fiesta_ensemble_service.dart';
++import '../theme/app_theme.dart';
++import '../widgets/common/app_back_button.dart';
++import '../widgets/common/app_button.dart';
++import '../widgets/common/app_input.dart';
++import '../widgets/common/app_slider.dart';
++
++/// Éditeur d'un ensemble (maquette `edit`). Ouvert par `Navigator.push` depuis
++/// « Mes ensembles » ; rend `true` à l'appelant quand il a enregistré.
++///
++/// [initial] nul = création (valeurs par défaut de la maquette), sinon
++/// modification sur place. Le bouton reste grisé tant que
++/// `validateEnsemble` rend des erreurs, affichées sous lui.
++class FiestaEnsembleEditorScreen extends StatefulWidget {
++  final FiestaEnsemble? initial;
++
++  const FiestaEnsembleEditorScreen({this.initial, super.key});
++
++  @override
++  State<FiestaEnsembleEditorScreen> createState() =>
++      _FiestaEnsembleEditorScreenState();
++}
++
++class _FiestaEnsembleEditorScreenState
++    extends State<FiestaEnsembleEditorScreen> {
++  late FiestaRules _rules;
++  late final TextEditingController _name;
++  String? _openModifier;
++  bool _saving = false;
++
++  static const _arrivalLabels = {
++    ModifierArrival.draw: 'Tiré au sort pour tous',
++    ModifierArrival.offer: 'Proposé à l\'équipe menée',
++    ModifierArrival.fixed: 'Fixé sur la manche N',
++  };
++
++  @override
++  void initState() {
++    super.initState();
++    _rules = widget.initial?.rules ?? defaultEnsembleRules('');
++    _name = TextEditingController(text: _rules.ensembleName ?? '');
++  }
++
++  @override
++  void dispose() {
++    _name.dispose();
++    super.dispose();
++  }
++
++  /// Réglage affiché pour [def] : un id absent de l'ensemble est montré
++  /// désactivé, avec les valeurs par défaut.
++  ModifierSetting _settingFor(ModifierDef def) =>
++      _rules.modifiers[def.id] ??
++      defaultEnsembleRules('').modifiers[def.id]!.copyWith(active: false);
++
++  void _setModifier(ModifierDef def, ModifierSetting setting) => setState(() {
++        _rules = _rules.copyWith(
++          modifiers: {..._rules.modifiers, def.id: setting},
++        );
++      });
++
++  void _setCatchUp({int? b1, int? b2, int? cap, int? mal, int? malCap}) {
++    final c = _rules.catchUp;
++    setState(() {
++      _rules = _rules.copyWith(
++        catchUp: CatchUpRules(
++          b1: b1 ?? c.b1,
++          b2: b2 ?? c.b2,
++          cap: cap ?? c.cap,
++          mal: mal ?? c.mal,
++          malCap: malCap ?? c.malCap,
++        ),
++      );
++    });
++  }
++
++  Future<void> _save() async {
++    setState(() => _saving = true);
++    final service = FiestaEnsembleService();
++    final rules = _rules.copyWith(ensembleName: _name.text.trim());
++    final initial = widget.initial;
++    final ok = initial == null
++        ? await service.create(rules) != null
++        : await service.update(FiestaEnsemble(id: initial.id, rules: rules));
++    if (!mounted) return;
++    if (ok) {
++      Navigator.of(context).pop(true);
++      return;
++    }
++    // `create` rend aussi `null` sur une lecture en panne : on ne parle de la
++    // limite que si la liste relue est vraiment pleine.
++    final full = (await service.load()).ensembles.length >=
++        FiestaEnsembleService.maxEnsembles;
++    if (!mounted) return;
++    setState(() => _saving = false);
++    ScaffoldMessenger.of(context).showSnackBar(
++      SnackBar(
++        content: Text(initial == null && full
++            ? 'Limite de ${FiestaEnsembleService.maxEnsembles} ensembles '
++                'atteinte : rien n\'a été enregistré.'
++            : 'Enregistrement impossible, réessaie.'),
++      ),
++    );
++  }
++
++  @override
++  Widget build(BuildContext context) {
++    final errors = validateEnsemble(
++      _rules.copyWith(ensembleName: _name.text),
++    );
++
++    return Scaffold(
++      backgroundColor: AppColors.backgroundMain,
++      body: Stack(
++        children: [
++          SafeArea(
++            child: Column(
++              children: [
++                Expanded(
++                  child: ListView(
++                    padding: const EdgeInsets.fromLTRB(20, 72, 20, 24),
++                    children: [
++                      Text(
++                        widget.initial == null
++                            ? 'Nouvel ensemble'
++                            : 'Modifier l\'ensemble',
++                        style: AppTextStyles.subtitle(fontSize: 32),
++                        textAlign: TextAlign.center,
++                      ),
++                      const SizedBox(height: 20),
++                      _Card(
++                        title: 'Nom de l\'ensemble',
++                        child: AppInput(
++                          controller: _name,
++                          placeholder: 'ex. Soirée chez Max',
++                          maxLength: FiestaEnsembleService.maxNameLength,
++                          textCapitalization: TextCapitalization.sentences,
++                          onChanged: (_) => setState(() {}),
++                        ),
++                      ),
++                      _Card(
++                        title: 'Catalogue',
++                        child: Column(
++                          children: [
++                            for (final def in kModifierCatalog)
++                              _buildModifier(def),
++                          ],
++                        ),
++                      ),
++                      _Card(
++                        title: 'Choix 1 parmi 3',
++                        trailing: _switch(
++                          _rules.oneOfThree,
++                          (v) => setState(
++                            () => _rules = _rules.copyWith(oneOfThree: v),
++                          ),
++                        ),
++                        child: const _Hint(
++                          'À chaque fin de manche, chaque équipe non en tête '
++                          'choisit 1 carte parmi 3 : un bonus pour elle ou un '
++                          'malus pour l\'équipe en tête. Plus l\'écart est '
++                          'grand, plus l\'offre est forte.',
++                        ),
++                      ),
++                      _buildCatchUp(),
++                      _buildDraw(),
++                      _buildCommon(),
++                    ],
++                  ),
++                ),
++                _buildSaveBar(errors),
++              ],
++            ),
++          ),
++          AppBackButton(onPressed: () => Navigator.of(context).pop(false)),
++        ],
++      ),
++    );
++  }
++
++  Widget _buildModifier(ModifierDef def) {
++    final s = _settingFor(def);
++    final open = s.active && _openModifier == def.id;
++    final round3 = def.round3Only;
++    final summary = !s.active
++        ? 'Désactivé'
++        : [
++            s.arrival == ModifierArrival.fixed
++                ? 'Fixé manche ${s.fixedRound ?? 3}'
++                : '${_arrivalLabels[s.arrival]} · dès M${s.startRound}',
++            if (def.defaultCharges > 0) '${s.charges} charge(s)',
++          ].join(' · ');
++
++    return Container(
++      margin: const EdgeInsets.only(bottom: 8),
++      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
++      decoration: BoxDecoration(
++        color: AppColors.backgroundMain,
++        borderRadius: BorderRadius.circular(14),
++      ),
++      child: Column(
++        crossAxisAlignment: CrossAxisAlignment.stretch,
++        children: [
++          Row(
++            children: [
++              Expanded(
++                child: Column(
++                  crossAxisAlignment: CrossAxisAlignment.start,
++                  children: [
++                    Text(
++                      def.name,
++                      style: AppTextStyles.label.copyWith(
++                        color: s.active ? Colors.white : AppColors.gray500,
++                      ),
++                    ),
++                    Text(
++                      summary,
++                      style: AppTextStyles.bodySmall
++                          .copyWith(color: AppColors.gray400, fontSize: 11),
++                    ),
++                  ],
++                ),
++              ),
++              if (s.active)
++                TextButton(
++                  onPressed: () => setState(
++                    () => _openModifier = open ? null : def.id,
++                  ),
++                  child: Text(
++                    open ? 'Fermer' : 'Régler',
++                    style: const TextStyle(color: AppColors.secondaryCyan),
++                  ),
++                ),
++              _switch(s.active, (v) {
++                if (v) _openModifier = def.id;
++                _setModifier(def, s.copyWith(active: v));
++              }),
++            ],
++          ),
++          if (open) ...[
++            const SizedBox(height: 8),
++            _Choices<ModifierArrival>(
++              values: ModifierArrival.values,
++              selected: s.arrival,
++              label: (a) => _arrivalLabels[a]!,
++              onSelect: (a) => _setModifier(
++                def,
++                s.copyWith(
++                  arrival: a,
++                  // Le choix 1 parmi 3 a lieu entre deux manches : M2 au plus
++                  // tôt (maquette).
++                  startRound:
++                      a == ModifierArrival.offer && s.startRound < 2 ? 2 : null,
++                ),
++              ),
++            ),
++            if (s.arrival == ModifierArrival.fixed)
++              _line(
++                'Manche',
++                round3
++                    ? const _Fixed('3')
++                    : _Stepper(
++                        value: s.fixedRound ?? 3,
++                        min: 1,
++                        max: 3,
++                        onChanged: (v) =>
++                            _setModifier(def, s.copyWith(fixedRound: v)),
++                      ),
++              )
++            else
++              _line(
++                'À partir de la manche',
++                round3
++                    ? const _Fixed('3')
++                    : _Stepper(
++                        value: s.startRound,
++                        min: s.arrival == ModifierArrival.offer ? 2 : 1,
++                        max: 3,
++                        onChanged: (v) =>
++                            _setModifier(def, s.copyWith(startRound: v)),
++                      ),
++              ),
++            if (round3) const _Hint('Manche 3 seulement (mime).'),
++            if (def.defaultCharges > 0)
++              _line(
++                def.id == 'free_pass'
++                    ? 'Passes gratuites (N)'
++                    : 'Charges par équipe et par manche',
++                _Stepper(
++                  value: s.charges,
++                  min: 1,
++                  max: def.id == 'free_pass' ? 5 : 3,
++                  onChanged: (v) => _setModifier(def, s.copyWith(charges: v)),
++                ),
++              ),
++          ],
++        ],
++      ),
++    );
++  }
++
++  Widget _buildCatchUp() {
++    final c = _rules.catchUp;
++    Widget slider(String label, int value, int max, int step,
++            void Function(int) set) =>
++        AppSlider(
++          label: label,
++          min: 0,
++          max: max.toDouble(),
++          value: value.clamp(0, max).toDouble(),
++          unit: ' s',
++          onChanged: (v) => set((v / step).round() * step),
++        );
++    final on = catchUpOn(c);
++    return _Card(
++      title: 'Rattrapage',
++      // Interrupteur d'interface (maquette) : off = tout à 0, on = valeurs
++      // du mode Auto. Rien de plus n'est persisté.
++      trailing: _switch(
++        on,
++        (v) => setState(() => _rules = _rules.copyWith(
++              catchUp: v
++                  ? CatchUpRules.auto
++                  : const CatchUpRules(b1: 0, b2: 0, cap: 0, mal: 0, malCap: 0),
++            )),
++      ),
++      child: !on
++          ? const _Hint('Pas de temps en plus ni en moins selon le score.')
++          : Column(
++              crossAxisAlignment: CrossAxisAlignment.stretch,
++              children: [
++                slider('Bonus après M1 (par point d\'écart)', c.b1, 10, 1,
++                    (v) => _setCatchUp(b1: v)),
++                slider('Bonus après M2 (par point d\'écart)', c.b2, 10, 1,
++                    (v) => _setCatchUp(b2: v)),
++                slider('Plafond du bonus', c.cap, 60, 5,
++                    (v) => _setCatchUp(cap: v)),
++                slider('Malus du leader (par point d\'écart)', c.mal, 5, 1,
++                    (v) => _setCatchUp(mal: v)),
++                slider('Plafond du malus', c.malCap, 30, 5,
++                    (v) => _setCatchUp(malCap: v)),
++                const _Hint(
++                  'Le malus du leader s\'applique sur son 1er tour de la manche. '
++                  'Écart mesuré par rapport à l\'équipe en tête.',
++                ),
++              ],
++            ),
++    );
++  }
++
++  Widget _buildDraw() {
++    return _Card(
++      title: 'Tirage symétrique',
++      trailing: _switch(
++        _rules.symmetric,
++        (v) => setState(() => _rules = _rules.copyWith(symmetric: v)),
++      ),
++      child: _rules.symmetric
++          ? _line(
++              'Modificateurs tirés par manche',
++              _Stepper(
++                value: _rules.drawCount,
++                min: 0,
++                max: 2,
++                onChanged: (v) =>
++                    setState(() => _rules = _rules.copyWith(drawCount: v)),
++              ),
++            )
++          : const _Hint('Aucun tirage pour tous en début de manche.'),
++    );
++  }
++
++  Widget _buildCommon() {
++    return _Card(
++      title: 'Règles communes',
++      child: Column(
++        children: [
++          _line(
++            'Une seule réponse par mot',
++            _switch(
++              _rules.oneAnswer,
++              (v) => setState(() => _rules = _rules.copyWith(oneAnswer: v)),
++            ),
++          ),
++          _line(
++            'Temps reporté de fin de manche',
++            _switch(
++              _rules.carryOver,
++              (v) => setState(() => _rules = _rules.copyWith(carryOver: v)),
++            ),
++          ),
++        ],
++      ),
++    );
++  }
++
++  Widget _buildSaveBar(List<String> errors) {
++    return Container(
++      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
++      color: AppColors.backgroundMain,
++      child: Column(
++        mainAxisSize: MainAxisSize.min,
++        crossAxisAlignment: CrossAxisAlignment.stretch,
++        children: [
++          AppButton(
++            text: 'Enregistrer',
++            fullWidth: true,
++            disabled: errors.isNotEmpty || _saving,
++            onPressed: _save,
++          ),
++          if (errors.isNotEmpty)
++            ConstrainedBox(
++              constraints: const BoxConstraints(maxHeight: 96),
++              child: SingleChildScrollView(
++                padding: const EdgeInsets.only(top: 8),
++                child: Column(
++                  crossAxisAlignment: CrossAxisAlignment.start,
++                  children: [
++                    for (final error in errors)
++                      Text(
++                        error,
++                        style: AppTextStyles.bodySmall
++                            .copyWith(color: AppColors.warning, fontSize: 12),
++                      ),
++                  ],
++                ),
++              ),
++            ),
++        ],
++      ),
++    );
++  }
++
++  Widget _switch(bool value, ValueChanged<bool> onChanged) => Switch(
++        value: value,
++        onChanged: onChanged,
++        activeTrackColor: AppColors.secondaryCyan,
++      );
++
++  Widget _line(String label, Widget trailing) => Padding(
++        padding: const EdgeInsets.symmetric(vertical: 4),
++        child: Row(
++          children: [
++            Expanded(child: Text(label, style: AppTextStyles.bodySmall)),
++            trailing,
++          ],
++        ),
++      );
++}
++
++class _Card extends StatelessWidget {
++  final String title;
++  final Widget? trailing;
++  final Widget child;
++
++  const _Card({required this.title, required this.child, this.trailing});
++
++  @override
++  Widget build(BuildContext context) {
++    return Container(
++      margin: const EdgeInsets.only(bottom: 14),
++      padding: const EdgeInsets.all(14),
++      decoration: BoxDecoration(
++        color: AppColors.backgroundCard,
++        borderRadius: BorderRadius.circular(18),
++        border: Border.all(color: AppColors.gray700),
++      ),
++      child: Column(
++        crossAxisAlignment: CrossAxisAlignment.stretch,
++        children: [
++          Row(
++            children: [
++              Expanded(
++                child: Text(
++                  title.toUpperCase(),
++                  style: AppTextStyles.label
++                      .copyWith(color: AppColors.gray400, fontSize: 12),
++                ),
++              ),
++              if (trailing != null) trailing!,
++            ],
++          ),
++          const SizedBox(height: 8),
++          child,
++        ],
++      ),
++    );
++  }
++}
++
++class _Hint extends StatelessWidget {
++  final String text;
++  const _Hint(this.text);
++
++  @override
++  Widget build(BuildContext context) => Text(
++        text,
++        style: AppTextStyles.bodySmall
++            .copyWith(color: AppColors.gray400, fontSize: 12),
++      );
++}
++
++class _Fixed extends StatelessWidget {
++  final String text;
++  const _Fixed(this.text);
++
++  @override
++  Widget build(BuildContext context) => Padding(
++        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
++        child: Text(text, style: AppTextStyles.label),
++      );
++}
++
++/// Compteur compact −/+ (l'`AppCounter` du design system est taillé pour un
++/// écran de réglages plein, trop grand pour une ligne de liste).
++class _Stepper extends StatelessWidget {
++  final int value;
++  final int min;
++  final int max;
++  final ValueChanged<int> onChanged;
++
++  const _Stepper({
++    required this.value,
++    required this.min,
++    required this.max,
++    required this.onChanged,
++  });
++
++  @override
++  Widget build(BuildContext context) {
++    Widget button(IconData icon, int next, bool enabled) => IconButton(
++          onPressed: enabled ? () => onChanged(next) : null,
++          icon: Icon(icon, size: 18),
++          color: Colors.white,
++          disabledColor: AppColors.gray600,
++          style: IconButton.styleFrom(backgroundColor: AppColors.gray700),
++        );
++    return Row(
++      mainAxisSize: MainAxisSize.min,
++      children: [
++        button(Icons.remove, value - 1, value > min),
++        SizedBox(
++          width: 28,
++          child: Text(
++            '$value',
++            style: AppTextStyles.label,
++            textAlign: TextAlign.center,
++          ),
++        ),
++        button(Icons.add, value + 1, value < max),
++      ],
++    );
++  }
++}
++
++/// Choix exclusif entre quelques options (l'`AppToggle` n'en prend que deux).
++class _Choices<T> extends StatelessWidget {
++  final List<T> values;
++  final T selected;
++  final String Function(T) label;
++  final ValueChanged<T> onSelect;
++
++  const _Choices({
++    required this.values,
++    required this.selected,
++    required this.label,
++    required this.onSelect,
++  });
++
++  @override
++  Widget build(BuildContext context) {
++    return Row(
++      children: [
++        for (final value in values)
++          Expanded(
++            child: GestureDetector(
++              onTap: () => onSelect(value),
++              child: Container(
++                margin: const EdgeInsets.symmetric(horizontal: 2),
++                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
++                decoration: BoxDecoration(
++                  color: value == selected
++                      ? AppColors.secondaryCyan
++                      : AppColors.backgroundCard,
++                  borderRadius: BorderRadius.circular(12),
++                ),
++                child: Text(
++                  label(value),
++                  textAlign: TextAlign.center,
++                  style: AppTextStyles.bodySmall.copyWith(
++                    fontSize: 11,
++                    color: value == selected
++                        ? AppColors.backgroundMain
++                        : Colors.white,
++                  ),
++                ),
++              ),
++            ),
++          ),
++      ],
++    );
++  }
++}
+diff --git a/lib/screens/fiesta_ensembles_screen.dart b/lib/screens/fiesta_ensembles_screen.dart
+new file mode 100644
+index 0000000..39f6520
+--- /dev/null
++++ b/lib/screens/fiesta_ensembles_screen.dart
+@@ -0,0 +1,290 @@
++import 'package:flutter/material.dart';
++
++import '../models/fiesta/fiesta_ensemble.dart';
++import '../services/fiesta_ensemble_service.dart';
++import '../theme/app_theme.dart';
++import '../widgets/common/app_back_button.dart';
++import '../widgets/common/app_button.dart';
++import '../widgets/common/app_confirm_dialog.dart';
++import 'fiesta_ensemble_editor_screen.dart';
++
++/// « Mes ensembles » (maquette `perso`) : les ensembles du mode Personnalisé.
++///
++/// Point d'entrée de la story 2-4 : l'écran ne connaît ni le provider ni la
++/// navigation de l'app. [onUse] reçoit l'ensemble choisi (déjà marqué
++/// « dernier utilisé ») ; [onBack] ramène à l'écran précédent.
++class FiestaEnsemblesScreen extends StatefulWidget {
++  final VoidCallback onBack;
++  final ValueChanged<FiestaEnsemble> onUse;
++
++  const FiestaEnsemblesScreen({
++    required this.onBack,
++    required this.onUse,
++    super.key,
++  });
++
++  @override
++  State<FiestaEnsemblesScreen> createState() => _FiestaEnsemblesScreenState();
++}
++
++class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
++  final _service = FiestaEnsembleService();
++  EnsembleStore? _store;
++
++  /// Un double tap sur « Utiliser » ne doit pas naviguer deux fois.
++  bool _using = false;
++
++  @override
++  void initState() {
++    super.initState();
++    _reload();
++  }
++
++  Future<void> _reload() async {
++    final store = await _service.load();
++    if (mounted) setState(() => _store = store);
++  }
++
++  bool get _full =>
++      (_store?.ensembles.length ?? 0) >= FiestaEnsembleService.maxEnsembles;
++
++  Future<void> _openEditor([FiestaEnsemble? ensemble]) async {
++    final saved = await Navigator.of(context).push<bool>(
++      MaterialPageRoute(
++        builder: (_) => FiestaEnsembleEditorScreen(initial: ensemble),
++      ),
++    );
++    if (saved == true) await _reload();
++  }
++
++  Future<void> _use(FiestaEnsemble ensemble) async {
++    if (_using) return;
++    _using = true;
++    try {
++      await _service.markUsed(ensemble.id);
++      if (mounted) widget.onUse(ensemble);
++    } finally {
++      _using = false;
++    }
++  }
++
++  Future<void> _duplicate(FiestaEnsemble ensemble) async {
++    await _service.duplicate(ensemble.id);
++    await _reload();
++  }
++
++  Future<void> _delete(FiestaEnsemble ensemble) async {
++    final confirmed = await AppConfirmDialog.show(
++      context,
++      title: 'Supprimer ?',
++      message: '« ${ensemble.name} » sera supprimé définitivement.',
++      confirmText: 'Supprimer',
++      accentColor: AppColors.error,
++    );
++    if (!confirmed) return;
++    await _service.delete(ensemble.id);
++    await _reload();
++  }
++
++  @override
++  Widget build(BuildContext context) {
++    final store = _store;
++    return Material(
++      color: AppColors.backgroundMain,
++      child: Stack(
++        children: [
++          SafeArea(
++            child: store == null
++                ? const Center(
++                    child: CircularProgressIndicator(
++                      color: AppColors.secondaryCyan,
++                    ),
++                  )
++                : _buildList(store),
++          ),
++          AppBackButton(onPressed: widget.onBack),
++        ],
++      ),
++    );
++  }
++
++  Widget _buildList(EnsembleStore store) {
++    return ListView(
++      padding: const EdgeInsets.fromLTRB(24, 72, 24, 32),
++      children: [
++        Text(
++          'Mes ensembles',
++          style: AppTextStyles.subtitle(fontSize: 36),
++          textAlign: TextAlign.center,
++        ),
++        const SizedBox(height: 24),
++        AppButton(
++          text: '+ Créer un ensemble',
++          fullWidth: true,
++          disabled: _full,
++          onPressed: () => _openEditor(),
++        ),
++        if (_full) ...[
++          const SizedBox(height: 12),
++          _Alert(
++            'Limite de ${FiestaEnsembleService.maxEnsembles} ensembles '
++            'atteinte. Supprime un ensemble pour en créer un nouveau.',
++          ),
++        ],
++        const SizedBox(height: 12),
++        Text(
++          '${store.ensembles.length} / ${FiestaEnsembleService.maxEnsembles}',
++          style: AppTextStyles.bodySmall.copyWith(color: AppColors.gray400),
++          textAlign: TextAlign.right,
++        ),
++        const SizedBox(height: 8),
++        if (store.ensembles.isEmpty)
++          Padding(
++            padding: const EdgeInsets.only(top: 24),
++            child: Text(
++              'Aucun ensemble. Crée le premier !',
++              style: AppTextStyles.body.copyWith(color: AppColors.gray400),
++              textAlign: TextAlign.center,
++            ),
++          ),
++        for (final ensemble in store.ensembles)
++          _EnsembleCard(
++            ensemble: ensemble,
++            lastUsed: ensemble.id == store.lastUsedId,
++            canDuplicate: !_full,
++            onUse: () => _use(ensemble),
++            onEdit: () => _openEditor(ensemble),
++            onDuplicate: () => _duplicate(ensemble),
++            onDelete: () => _delete(ensemble),
++          ),
++      ],
++    );
++  }
++}
++
++class _EnsembleCard extends StatelessWidget {
++  final FiestaEnsemble ensemble;
++  final bool lastUsed;
++  final bool canDuplicate;
++  final VoidCallback onUse;
++  final VoidCallback onEdit;
++  final VoidCallback onDuplicate;
++  final VoidCallback onDelete;
++
++  const _EnsembleCard({
++    required this.ensemble,
++    required this.lastUsed,
++    required this.canDuplicate,
++    required this.onUse,
++    required this.onEdit,
++    required this.onDuplicate,
++    required this.onDelete,
++  });
++
++  String get _summary {
++    final rules = ensemble.rules;
++    final active = rules.modifiers.values.where((m) => m.active).length;
++    final draw = rules.symmetric && rules.drawCount > 0
++        ? 'tirage ${rules.drawCount}/manche'
++        : 'sans tirage';
++    return '$active modificateurs · '
++        '${rules.oneOfThree ? 'choix 1 parmi 3' : 'pas de choix'} · '
++        '${catchUpOn(rules.catchUp) ? 'rattrapage' : 'sans rattrapage'} · $draw';
++  }
++
++  @override
++  Widget build(BuildContext context) {
++    return Container(
++      margin: const EdgeInsets.only(bottom: 12),
++      padding: const EdgeInsets.all(12),
++      decoration: BoxDecoration(
++        color: AppColors.backgroundCard,
++        borderRadius: BorderRadius.circular(14),
++        border: Border.all(
++          color: lastUsed ? AppColors.secondaryCyan : AppColors.gray700,
++          width: 2,
++        ),
++      ),
++      child: Column(
++        crossAxisAlignment: CrossAxisAlignment.stretch,
++        children: [
++          Row(
++            children: [
++              Expanded(
++                child: Text(ensemble.name, style: AppTextStyles.label),
++              ),
++              if (lastUsed)
++                Text(
++                  'dernier utilisé',
++                  style: AppTextStyles.bodySmall.copyWith(
++                    color: AppColors.secondaryCyan,
++                    fontSize: 12,
++                  ),
++                ),
++            ],
++          ),
++          const SizedBox(height: 4),
++          Text(
++            _summary,
++            style: AppTextStyles.bodySmall
++                .copyWith(color: AppColors.gray400, fontSize: 12),
++          ),
++          const SizedBox(height: 10),
++          Wrap(
++            spacing: 8,
++            runSpacing: 8,
++            children: [
++              AppButton(
++                text: 'Utiliser',
++                size: AppButtonSize.small,
++                variant: AppButtonVariant.secondary,
++                onPressed: onUse,
++              ),
++              AppButton(
++                text: 'Modifier',
++                size: AppButtonSize.small,
++                variant: AppButtonVariant.ghost,
++                onPressed: onEdit,
++              ),
++              AppButton(
++                text: 'Dupliquer',
++                size: AppButtonSize.small,
++                variant: AppButtonVariant.ghost,
++                disabled: !canDuplicate,
++                onPressed: onDuplicate,
++              ),
++              AppButton(
++                text: 'Supprimer',
++                size: AppButtonSize.small,
++                variant: AppButtonVariant.danger,
++                onPressed: onDelete,
++              ),
++            ],
++          ),
++        ],
++      ),
++    );
++  }
++}
++
++class _Alert extends StatelessWidget {
++  final String text;
++  const _Alert(this.text);
++
++  @override
++  Widget build(BuildContext context) {
++    return Container(
++      padding: const EdgeInsets.all(12),
++      decoration: BoxDecoration(
++        color: AppColors.warning.withValues(alpha: 0.1),
++        borderRadius: BorderRadius.circular(14),
++        border: Border.all(color: AppColors.warning.withValues(alpha: 0.35)),
++      ),
++      child: Text(
++        text,
++        style: AppTextStyles.bodySmall
++            .copyWith(color: AppColors.warning, fontSize: 13),
++      ),
++    );
++  }
++}
+diff --git a/lib/services/CLAUDE.md b/lib/services/CLAUDE.md
+index babe51c..934534a 100644
+--- a/lib/services/CLAUDE.md
++++ b/lib/services/CLAUDE.md
+@@ -14,6 +14,7 @@
+ | `connectivity_service.dart` | `ConnectivityService` | Detection reseau (wifi/mobile/ethernet) via connectivity_plus |
+ | `firebase_sync_service.dart` | `FirebaseSyncService` | Sync offline-first vers Firestore. Queue de games en attente, sync auto quand online |
+ | `audio_service.dart` | `AudioService` | Sons : ding (mot devine), whoosh (mot passe), klaxon (fin de tour) via audioplayers |
++| `fiesta_ensemble_service.dart` | `FiestaEnsembleService` | Ensembles Fiesta (mode Personnalise) : `load` / `create` / `update` (sur place) / `duplicate` / `delete` / `markUsed`. **Borne 10 tenue par le service**, modifications serialisees (file interne), quarantaine du blob illisible ou venu du futur, ensemble illisible ignore seul a la lecture et **reecrit tel quel** a chaque modification (jamais detruit) |
+ 
+ ## Cles SharedPreferences
+ 
+@@ -27,3 +28,4 @@
+ | `guessItAll_analytics_{gameId}` | Analytics | JSON GameAnalytics |
+ | `guessItAll_pending_sync` | FirebaseSync | Liste gameIds en attente |
+ | `guessItAll_word_history` | WordHistory | Map mot→seenCount |
++| `guessItAll_fiestaEnsembles` | FiestaEnsemble | Enveloppe versionnee `{ensembles: [{id, rules}], lastUsedId}` (story 2-3) |
+diff --git a/lib/services/fiesta_ensemble_service.dart b/lib/services/fiesta_ensemble_service.dart
+new file mode 100644
+index 0000000..1ecd99f
+--- /dev/null
++++ b/lib/services/fiesta_ensemble_service.dart
+@@ -0,0 +1,193 @@
++import 'dart:convert';
++
++import 'package:flutter/foundation.dart';
++import 'package:flutter/widgets.dart' show StringCharacters;
++import 'package:shared_preferences/shared_preferences.dart';
++import 'package:uuid/uuid.dart';
++
++import '../models/fiesta/fiesta_ensemble.dart';
++import '../models/fiesta/fiesta_rules.dart';
++import 'persisted_schema.dart';
++
++/// Ce que contient la clé des ensembles.
++class EnsembleStore {
++  final List<FiestaEnsemble> ensembles;
++
++  /// Dernier ensemble « Utilisé » (Q10 : il vit dans cette clé, pas ailleurs).
++  final String? lastUsedId;
++
++  const EnsembleStore(this.ensembles, this.lastUsedId);
++
++  static const empty = EnsembleStore([], null);
++}
++
++/// Les ensembles du mode Personnalisé, enregistrés sur le téléphone.
++///
++/// Sur le modèle de `GameHistoryService` : écriture enveloppée
++/// (`wrapWithSchema`), quarantaine d'un blob illisible ou venu du futur,
++/// tolérance par ensemble. Clé NOUVELLE : rien à migrer aujourd'hui.
++class FiestaEnsembleService {
++  static final FiestaEnsembleService _instance =
++      FiestaEnsembleService._internal();
++  factory FiestaEnsembleService() => _instance;
++  FiestaEnsembleService._internal();
++
++  static const String storageKey = 'guessItAll_fiestaEnsembles';
++
++  /// Borne DURE, tenue ici et pas seulement à l'écran.
++  static const int maxEnsembles = 10;
++  static const int maxNameLength = 30;
++
++  /// Sérialise les modifications : chacune relit la liste puis la réécrit.
++  /// Sans file, deux taps rapides liraient tous deux 9 ensembles et
++  /// passeraient la borne (ou l'un écraserait l'autre).
++  Future<void> _queue = Future.value();
++
++  Future<T> _serialized<T>(Future<T> Function() action) {
++    final result = _queue.then((_) => action());
++    _queue = result.then((_) {}, onError: (_) {});
++    return result;
++  }
++
++  /// Les ensembles, dans l'ordre d'affichage. Ne lève jamais.
++  Future<EnsembleStore> load() async {
++    try {
++      return (await _read()).$1;
++    } catch (e) {
++      // Panne transitoire : on n'efface rien, on rend simplement vide.
++      debugPrint('[FiestaEnsembles] Lecture impossible: $e');
++      return EnsembleStore.empty;
++    }
++  }
++
++  /// Nouvel ensemble en fin de liste. `null` si la borne est atteinte.
++  Future<FiestaEnsemble?> create(FiestaRules rules) => _mutate((store) {
++        if (store.ensembles.length >= maxEnsembles) return null;
++        final created = FiestaEnsemble(id: const Uuid().v4(), rules: rules);
++        return (
++          EnsembleStore([...store.ensembles, created], store.lastUsedId),
++          created
++        );
++      });
++
++  /// Remplace SUR PLACE (même id, même position). `false` si l'id a disparu.
++  Future<bool> update(FiestaEnsemble ensemble) async =>
++      await _mutate((store) {
++        final index = store.ensembles.indexWhere((e) => e.id == ensemble.id);
++        if (index < 0) return null;
++        final list = [...store.ensembles]..[index] = ensemble;
++        return (EnsembleStore(list, store.lastUsedId), true);
++      }) ??
++      false;
++
++  /// Copie « <nom> (copie) » juste après l'original. `null` si la borne est
++  /// atteinte ou l'original introuvable.
++  Future<FiestaEnsemble?> duplicate(String id) => _mutate((store) {
++        if (store.ensembles.length >= maxEnsembles) return null;
++        final index = store.ensembles.indexWhere((e) => e.id == id);
++        if (index < 0) return null;
++        final source = store.ensembles[index];
++        final copy = FiestaEnsemble(
++          id: const Uuid().v4(),
++          rules: source.rules.copyWith(ensembleName: copyName(source.name)),
++        );
++        final list = [...store.ensembles]..insert(index + 1, copy);
++        return (EnsembleStore(list, store.lastUsedId), copy);
++      });
++
++  /// Supprime, et oublie le « dernier utilisé » s'il s'agissait de lui.
++  Future<void> delete(String id) => _mutate((store) {
++        final list = store.ensembles.where((e) => e.id != id).toList();
++        final lastUsed = store.lastUsedId == id ? null : store.lastUsedId;
++        return (EnsembleStore(list, lastUsed), null);
++      });
++
++  Future<void> markUsed(String id) =>
++      _mutate((store) => (EnsembleStore(store.ensembles, id), null));
++
++  /// Q13 : pas d'unicité imposée, 30 caractères au plus. C'est le nom de
++  /// BASE qu'on raccourcit, pas le suffixe : sinon la copie d'un nom de 30
++  /// caractères porterait exactement le nom de l'original. Coupe en
++  /// caractères visibles (comme le `maxLength` du champ), jamais au milieu
++  /// d'un emoji.
++  static String copyName(String name) {
++    const suffix = ' (copie)';
++    final base = name.characters.take(maxNameLength - suffix.length);
++    return '$base$suffix';
++  }
++
++  /// Relit, applique [change], réécrit. [change] rend `null` pour ne rien
++  /// écrire. Une lecture en panne fait échouer la modification au lieu
++  /// d'écraser des ensembles qu'on n'a pas pu lire.
++  Future<T?> _mutate<T>(
++    (EnsembleStore, T)? Function(EnsembleStore store) change,
++  ) =>
++      _serialized(() async {
++        try {
++          final (store, unreadable) = await _read();
++          final result = change(store);
++          if (result == null) return null;
++          await _write(result.$1, unreadable);
++          return result.$2;
++        } catch (e) {
++          debugPrint('[FiestaEnsembles] Échec de modification: $e');
++          return null;
++        }
++      });
++
++  /// Rend aussi les entrées brutes illisibles : `_write` les réécrit telles
++  /// quelles. Un ensemble qu'une version donnée ne sait pas relire n'est
++  /// jamais détruit par la modification d'un autre (règle 7).
++  Future<(EnsembleStore, List<Object?>)> _read() async {
++    const nothing = (EnsembleStore.empty, <Object?>[]);
++    final prefs = await SharedPreferences.getInstance();
++    final raw = prefs.getString(storageKey);
++    if (raw == null) return nothing;
++
++    PersistedRead read;
++    try {
++      read = unwrapSchema(jsonDecode(raw));
++    } on FormatException {
++      read = unwrapSchema(null, decodeFailed: true);
++    }
++    if (read.shouldQuarantine) {
++      debugPrint('[FiestaEnsembles] Blob illisible (${read.status}), '
++          'quarantaine');
++      await prefs.remove(storageKey);
++      return nothing;
++    }
++    if (!read.isUsable) return nothing;
++
++    final data = read.data!;
++    final entries = data['ensembles'];
++    final lastUsedId = data['lastUsedId'];
++    // Un ensemble illisible est ignoré seul : un seul abîmé ne doit pas
++    // effacer tous ceux de l'utilisateur.
++    final ensembles = <FiestaEnsemble>[];
++    final unreadable = <Object?>[];
++    for (final entry in entries is List ? entries : const []) {
++      final ensemble = entry is Map
++          ? FiestaEnsemble.tryFromJson(Map<String, dynamic>.from(entry))
++          : null;
++      ensemble == null ? unreadable.add(entry) : ensembles.add(ensemble);
++    }
++    return (
++      EnsembleStore(ensembles, lastUsedId is String ? lastUsedId : null),
++      unreadable,
++    );
++  }
++
++  Future<void> _write(EnsembleStore store, List<Object?> unreadable) async {
++    final prefs = await SharedPreferences.getInstance();
++    await prefs.setString(
++      storageKey,
++      jsonEncode(wrapWithSchema({
++        'ensembles': [
++          ...store.ensembles.map((e) => e.toJson()),
++          ...unreadable,
++        ],
++        'lastUsedId': store.lastUsedId,
++      })),
++    );
++  }
++}
+diff --git a/lib/utils/constants.dart b/lib/utils/constants.dart
+index da9b466..b9928ff 100644
+--- a/lib/utils/constants.dart
++++ b/lib/utils/constants.dart
+@@ -45,6 +45,7 @@ class AppConstants {
+   static const String screenStats = 'stats';
+   static const String screenCategories = 'categories';
+   static const String screenHistory = 'history';
++  static const String screenFiestaEnsembles = 'fiestaEnsembles';
+ 
+   // Word choice modes
+   static const String wordChoiceCustom = 'Personnalisé';
+diff --git a/test/models/fiesta/ensemble_validation_test.dart b/test/models/fiesta/ensemble_validation_test.dart
+new file mode 100644
+index 0000000..1a7980a
+--- /dev/null
++++ b/test/models/fiesta/ensemble_validation_test.dart
+@@ -0,0 +1,136 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/ensemble_validation.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++
++/// Ensemble par défaut (maquette `mkSet`) où l'on remplace des réglages.
++FiestaRules rulesWith({
++  String name = 'Soirée',
++  Map<String, ModifierSetting> overrides = const {},
++  bool? oneOfThree,
++  bool? symmetric,
++  int? drawCount,
++}) {
++  final base = defaultEnsembleRules(name);
++  return base.copyWith(
++    modifiers: {...base.modifiers, ...overrides},
++    oneOfThree: oneOfThree,
++    symmetric: symmetric,
++    drawCount: drawCount,
++  );
++}
++
++ModifierSetting setting(
++  ModifierArrival arrival, {
++  int startRound = 1,
++  int? fixedRound,
++  bool active = true,
++}) =>
++    ModifierSetting(
++      active: active,
++      arrival: arrival,
++      startRound: startRound,
++      fixedRound: fixedRound,
++      charges: 0,
++    );
++
++void main() {
++  test('l\'ensemble par défaut est valide (cas nominal)', () {
++    // Sans ce cas, une garde qui refuse TOUT passerait les tests ci-dessous.
++    expect(validateEnsemble(rulesWith()), isEmpty);
++  });
++
++  test('nom vide après trim → refusé', () {
++    expect(validateEnsemble(rulesWith(name: '   ')), hasLength(1));
++  });
++
++  group('« tiré pour tous » sans tirage', () {
++    final drawn = {'no_pass': setting(ModifierArrival.draw)};
++
++    test('tirage coupé → refusé', () {
++      expect(
++        validateEnsemble(rulesWith(overrides: drawn, symmetric: false)),
++        contains(startsWith('Interdit de passer est tiré pour tous')),
++      );
++    });
++
++    test('tirage à 0 → refusé', () {
++      expect(
++        validateEnsemble(rulesWith(overrides: drawn, drawCount: 0)),
++        contains(startsWith('Interdit de passer est tiré pour tous')),
++      );
++    });
++
++    test('modificateur désactivé → ignoré', () {
++      // Le défaut a d'autres modificateurs tirés : on les coupe tous.
++      final off = {
++        for (final e in defaultEnsembleRules('x').modifiers.entries)
++          if (e.value.arrival == ModifierArrival.draw)
++            e.key: setting(ModifierArrival.draw, active: false),
++      };
++      expect(
++        validateEnsemble(rulesWith(overrides: off, drawCount: 0)),
++        isEmpty,
++      );
++    });
++  });
++
++  test('« proposé » avec le 1 parmi 3 coupé → refusé', () {
++    // Le défaut propose déjà les bonus : un message par modificateur proposé.
++    expect(validateEnsemble(rulesWith(oneOfThree: false)), isNotEmpty);
++  });
++
++  test('« proposé » dès la manche 1 → refusé', () {
++    expect(
++      validateEnsemble(rulesWith(overrides: {
++        'free_pass': setting(ModifierArrival.offer, startRound: 1),
++      })),
++      hasLength(1),
++    );
++  });
++
++  test('« fixé » sans manche → refusé', () {
++    // Impossible par l'éditeur, possible dans un blob relu.
++    expect(
++      validateEnsemble(rulesWith(overrides: {
++        'no_pass': setting(ModifierArrival.fixed),
++      })),
++      hasLength(1),
++    );
++  });
++
++  group('manche 3 seulement', () {
++    test('fixé sur une autre manche → refusé', () {
++      expect(
++        validateEnsemble(rulesWith(overrides: {
++          'draw': setting(ModifierArrival.fixed, fixedRound: 2),
++        })),
++        hasLength(1),
++      );
++    });
++
++    test('tiré dès la manche 2 → refusé', () {
++      expect(
++        validateEnsemble(rulesWith(overrides: {
++          'mime_no_fists': setting(ModifierArrival.draw, startRound: 2),
++        })),
++        hasLength(1),
++      );
++    });
++  });
++
++  test('deux incompatibles fixés sur la même manche → refusé', () {
++    final fixed = rulesWith(overrides: {
++      'no_pass': setting(ModifierArrival.fixed, fixedRound: 2),
++      'two_words': setting(ModifierArrival.fixed, fixedRound: 2),
++    });
++    expect(validateEnsemble(fixed), hasLength(1));
++
++    final apart = rulesWith(overrides: {
++      'no_pass': setting(ModifierArrival.fixed, fixedRound: 1),
++      'two_words': setting(ModifierArrival.fixed, fixedRound: 2),
++    });
++    expect(validateEnsemble(apart), isEmpty,
++        reason: 'sur deux manches différentes, ils ne se croisent pas');
++  });
++}
+diff --git a/test/services/fiesta_ensemble_service_test.dart b/test/services/fiesta_ensemble_service_test.dart
+new file mode 100644
+index 0000000..f8ccb68
+--- /dev/null
++++ b/test/services/fiesta_ensemble_service_test.dart
+@@ -0,0 +1,154 @@
++import 'dart:convert';
++
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/services/fiesta_ensemble_service.dart';
++import 'package:guess_it_all_mobile/services/persisted_schema.dart';
++
++import '../helpers/test_prefs.dart';
++
++const key = FiestaEnsembleService.storageKey;
++
++/// Blob FIGÉ, tel qu'écrit par la version qui introduit les ensembles (2-3).
++/// 🔴 Ne jamais le régénérer : s'il ne se relit plus en entier, c'est qu'un
++/// changement de `FiestaRules` effacerait les ensembles des joueurs.
++const frozenBlob = '{"schemaVersion":1,"data":{"ensembles":[{"id":"e1",'
++    '"rules":{"mode":"custom","symmetric":true,"autoCalibrate":true,'
++    '"ensembleName":"Soirée chez Max","modifiers":{"no_pass":{"active":true,'
++    '"arrival":"draw","startRound":1,"fixedRound":3,"charges":0},'
++    '"free_pass":{"active":false,"arrival":"offer","startRound":2,'
++    '"fixedRound":3,"charges":2}},"oneOfThree":true,"catchUp":{"b1":3,'
++    '"b2":5,"cap":30,"mal":1,"malCap":15},"drawCount":2,"oneAnswer":false,'
++    '"carryOver":true}}],"lastUsedId":"e1"}}';
++
++void main() {
++  final service = FiestaEnsembleService();
++
++  test('aller-retour : enveloppe versionnée, réglages et dernier utilisé',
++      () async {
++    await givenPrefs();
++    final rules = defaultEnsembleRules('Soirée chez Max').copyWith(
++      drawCount: 2,
++      oneAnswer: false,
++      catchUp: const CatchUpRules(b1: 1, b2: 2, cap: 10, mal: 0, malCap: 0),
++    );
++
++    final created = (await service.create(rules))!;
++    await service.markUsed(created.id);
++
++    final decoded = jsonDecode((await rawString(key))!);
++    expect(decoded['schemaVersion'], kCurrentSchemaVersion,
++        reason: 'versionnée dès la première écriture (règle 7)');
++
++    final store = await service.load();
++    expect(store.lastUsedId, created.id);
++    final restored = store.ensembles.single;
++    expect(restored.id, created.id);
++    expect(jsonEncode(restored.rules.toJson()), jsonEncode(rules.toJson()));
++  });
++
++  test('format figé de la 1re version : relu en entier', () async {
++    await givenPrefs({key: frozenBlob});
++
++    final store = await service.load();
++    expect(store.lastUsedId, 'e1');
++    final rules = store.ensembles.single.rules;
++    expect(rules.ensembleName, 'Soirée chez Max');
++    expect(rules.modifiers.keys, ['no_pass', 'free_pass']);
++    expect(rules.modifiers['free_pass']!.charges, 2);
++    expect(rules.drawCount, 2);
++    expect(rules.oneAnswer, isFalse);
++    expect(rules.catchUp.b2, 5);
++  });
++
++  test('supprimer le dernier utilisé efface lastUsedId (AC6)', () async {
++    await givenPrefs();
++    final a = (await service.create(defaultEnsembleRules('A')))!;
++    final b = (await service.create(defaultEnsembleRules('B')))!;
++    await service.markUsed(a.id);
++
++    await service.delete(a.id);
++
++    final store = await service.load();
++    expect(store.ensembles.map((e) => e.id), [b.id]);
++    expect(store.lastUsedId, isNull, reason: 'sinon il pointe dans le vide');
++  });
++
++  test('la copie d\'un nom de 30 caractères reste distincte', () {
++    final name = 'x' * FiestaEnsembleService.maxNameLength;
++    final copy = FiestaEnsembleService.copyName(name);
++    expect(copy, isNot(name));
++    expect(copy, endsWith(' (copie)'));
++    expect(copy.length, FiestaEnsembleService.maxNameLength);
++  });
++
++  group('lecture tolérante', () {
++    test('blob illisible → quarantaine, liste vide, pas de crash', () async {
++      await givenPrefs({key: '{pas du json'});
++
++      expect((await service.load()).ensembles, isEmpty);
++      expect(await rawString(key), isNull, reason: 'blob supprimé');
++    });
++
++    test('blob venu du futur → quarantaine', () async {
++      await givenPrefs({
++        key: jsonEncode(
++            {'schemaVersion': kCurrentSchemaVersion + 1, 'data': {}}),
++      });
++
++      expect((await service.load()).ensembles, isEmpty);
++      expect(await rawString(key), isNull);
++    });
++
++    test('ensemble illisible ignoré seul, modificateur inconnu ignoré seul',
++        () async {
++      final good =
++          FiestaEnsemble(id: 'a', rules: defaultEnsembleRules('A')).toJson();
++      (good['rules'] as Map)['modifiers']['from_the_future'] =
++          (good['rules'] as Map)['modifiers']['no_pass'];
++      await givenPrefs({
++        key: jsonEncode(wrapWithSchema({
++          'ensembles': [
++            good,
++            {'id': 'b', 'rules': 'cassé'},
++          ],
++          'lastUsedId': null,
++        })),
++      });
++
++      final ensembles = (await service.load()).ensembles;
++      expect(ensembles.map((e) => e.id), ['a']);
++      expect(ensembles.single.rules.modifiers.containsKey('from_the_future'),
++          isFalse);
++      expect(ensembles.single.rules.modifiers.containsKey('no_pass'), isTrue);
++      expect(await rawString(key), isNotNull, reason: 'pas de quarantaine');
++
++      // Modifier un AUTRE ensemble ne détruit pas celui qu'on ne sait pas lire.
++      await service.create(defaultEnsembleRules('C'));
++      final stored = (await persistedData(key))!['ensembles'] as List;
++      expect(stored, anyElement(equals({'id': 'b', 'rules': 'cassé'})));
++    });
++  });
++
++  test('la borne de 10 est tenue par le service (créer et dupliquer)',
++      () async {
++    await givenPrefs();
++    for (var i = 0; i < FiestaEnsembleService.maxEnsembles - 1; i++) {
++      expect(await service.create(defaultEnsembleRules('E$i')), isNotNull);
++    }
++    final first = (await service.load()).ensembles.first;
++
++    // Deux taps rapides à 9 : les écritures sont asynchrones, une seule passe.
++    final racing = await Future.wait([
++      service.create(defaultEnsembleRules('E9')),
++      service.duplicate(first.id),
++    ]);
++    expect(racing.whereType<FiestaEnsemble>(), hasLength(1));
++
++    expect(await service.create(defaultEnsembleRules('trop')), isNull);
++    expect(await service.duplicate(first.id), isNull);
++    expect((await service.load()).ensembles,
++        hasLength(FiestaEnsembleService.maxEnsembles));
++  });
++}

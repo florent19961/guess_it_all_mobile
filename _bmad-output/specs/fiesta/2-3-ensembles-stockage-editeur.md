@@ -115,3 +115,24 @@ tous les curseurs à chaque partie.
 4. Éditeur : vider le nom, mettre le tirage à 0 avec un modificateur « tiré pour tous » : le
    bouton est grisé et le message s'affiche. Vérifier le clavier et la zone sûre (encoche iOS,
    barre de gestes Android).
+5. Rattrapage (revue r2, MINOR 3) : l'interrupteur se lit « un curseur > 0 ». Juger si c'est
+   gênant : seul le plafond > 0 affiche « on » sans effet réel ; ramener le dernier curseur
+   non nul à 0 bascule l'interrupteur sur off et masque les curseurs pendant le glissement.
+6. Couper le tirage sur l'ensemble par défaut affiche un message par modificateur tiré (r1,
+   MINOR 7) : lisible ou à regrouper ?
+
+## Notes d'implémentation (lane B, 2026-11-03)
+
+- **Point d'entrée pour 2-4** : `FiestaEnsemblesScreen(onBack: …, onUse: (FiestaEnsemble e) …)`
+  (`lib/screens/fiesta_ensembles_screen.dart`). `onUse` reçoit l'ensemble déjà marqué
+  `lastUsedId` ; `e.rules` (mode `custom`, `ensembleName` = nom) se passe tel quel à
+  `startGame(fiesta: …)`. En attendant 2-4, la route `AppConstants.screenFiestaEnsembles` existe
+  dans `app.dart` (aucun bouton n'y mène) et les deux callbacks renvoient à l'accueil.
+  Contrat détaillé : `lib/screens/CLAUDE.md`.
+- **Recette device** : faute de bouton avant 2-4, elle se joue après 2-4 (ou en appelant la
+  route à la main).
+- **Interprétations** : rattrapage avec un interrupteur d'interface (off = 5 curseurs à 0, on =
+  valeurs Auto ; rien de plus persisté) ; le tirage
+  pour tous d'un ensemble est actif si `symmetric` **et** `drawCount > 0` ; les modificateurs
+  « manche 3 seulement » ont leur manche verrouillée à 3 dans l'éditeur (comme la maquette) ;
+  un nouvel ensemble part du `mkSet` de la maquette (`defaultEnsembleRules`).

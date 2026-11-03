@@ -34,8 +34,19 @@ SettingsScreen → (CategoriesScreen) → PlayersScreen → (WordsScreen) → Te
 | `fiesta_choice_screen.dart` | Fiesta : Mode Auto ou Personnalise |
 | `fiesta_auto_screen.dart` | Mode Auto : 2 interrupteurs (au moins un) + regles communes |
 | `fiesta_recap_screen.dart` | Recap Fiesta avant les Parametres ; cible de « Rejouer » apres une partie Fiesta |
-| `fiesta_ensembles_stub_screen.dart` | 🔴 Bouchon de 2-4, remplace par la liste d'ensembles de 2-3 au merge |
+| `fiesta_ensembles_screen.dart` | « Mes ensembles » (Fiesta Personnalise) : compteur n / 10, Creer, Utiliser / Modifier / Dupliquer / Supprimer (confirmation) |
+| `fiesta_ensemble_editor_screen.dart` | Editeur d'un ensemble, ouvert par `Navigator.push` depuis la liste (rend `true` si enregistre). Bouton grise + explications tant que `validateEnsemble` rend des erreurs |
 
 Invariant Fiesta : le choix du mode vit dans `GameProvider.pendingFiesta`, **en memoire
 seulement** (Q10), et `TeamsScreen` le passe a `startGame`. Le chemin « Reprendre » de l'accueil
 ne traverse jamais les ecrans de mode.
+
+## Point d'entree des ensembles (contrat 2-3 → 2-4)
+
+`FiestaEnsemblesScreen({required VoidCallback onBack, required ValueChanged<FiestaEnsemble> onUse})`.
+L'ecran ne connait ni le provider ni la navigation : `onUse` recoit l'ensemble choisi, **deja
+marque `lastUsedId`** ; `ensemble.rules` est un `FiestaRules` (mode `custom`, `ensembleName` =
+nom) pret a etre gele par `startGame(fiesta: ...)`. Branchement (`app.dart`, route
+`AppConstants.screenFiestaEnsembles`) : `onBack` → `screenFiestaChoice` ; `onUse` →
+`setPendingFiesta(ensemble.rules)` puis `screenFiestaRecap`. Le « Modifier » du recap en
+Personnalise revient a cette liste.
