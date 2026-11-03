@@ -50,6 +50,15 @@ affiche : apres un kill, le mot suivant est de nouveau etiquete. `guessed`/`pass
 `round`/`turn`). Rien n'est exclu des stats : `computeStats` et la difficulte initiale du mot
 sont inchanges.
 
+- **Actifs, pas forcement appliques** : un tour de continuation (temps reporte en debut de
+  manche) est etiquete avec la liste active de l'equipe dans la nouvelle manche, alors qu'il
+  ignore les effets de duree (`minus_10s`...). Croiser avec `HistoryEntry.isBonusContinuation`
+  pour recalibrer.
+- **Cle absente dans une partie Fiesta = inconnu, pas Classique** : une verification faite juste
+  apres un kill, sans nouveau `shown`, ecrit `invalidated` / `guessed` sans `modifiers` (et avec
+  les defauts `round` 1, `teamId` '' deja presents avant 2-7). Le mode de la partie se lit sur
+  `GameAnalytics.gameMode`, jamais sur l'evenement.
+
 ⚠️ **Contrat « un seul mot a l'ecran »** (`AnalyticsService._recordEventWithDuration`) : un
 evenement sur un mot qui n'est pas le dernier `shown` est abandonne en silence. La story 2-11
 (deux mots) remplace le bloc « mot affiche » du service ; le contexte du tour ne bouge pas.

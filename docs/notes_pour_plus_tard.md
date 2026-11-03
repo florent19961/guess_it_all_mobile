@@ -178,3 +178,25 @@ pour les parties en cours (règle 7).
 
 **Esquisse.** Soit stocker l'aperçu dans `FiestaState` en fin de manche (champ optionnel,
 absent = recalcul), soit versionner l'algorithme dans `FiestaState` et garder l'ancien.
+
+---
+
+## 2026-11-03 — Analytics : le contexte du tour n'est pas restauré après un kill
+
+**Contexte.** Story 2-7, revue r1 (MINOR-4). `AnalyticsService.resumeGame` relit la partie mais
+remet à zéro le contexte du tour (`_lastRound`, `_lastTurn`, `_lastTeamId`, `_lastPlayerId`,
+`_lastModifiers`). Une vérification faite juste après un kill, sans nouveau `shown`, écrit donc
+ses événements avec `round` 1, `teamId` '' et sans `modifiers`.
+
+**Décision reportée.** Ne pas restaurer ce contexte dans 2-7 (défaut antérieur pour
+`round`/`turn`/`teamId`, documenté dans `docs/ANALYTICS.md`).
+
+**Raison.** Scénario rare (kill entre la fin du tour et la validation), sans effet sur le jeu ni
+sur `WordHistoryService` ; seule la ventilation par manche/équipe/modificateur de ces quelques
+événements est fausse ou absente.
+
+**Signal déclencheur.** Une analyse par manche ou par modificateur qui montre des événements
+`invalidated` en manche 1 / équipe vide, ou 2-11 qui retouche `resumeGame`.
+
+**Esquisse.** Dans `resumeGame`, reprendre le contexte du dernier événement relu
+(`round`, `turn`, `teamId`, `playerId`, `modifiers`), sans toucher au bloc « mot affiché ».
