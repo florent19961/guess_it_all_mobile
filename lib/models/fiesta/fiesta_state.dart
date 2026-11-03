@@ -13,8 +13,8 @@ class FiestaState {
   /// Instances actives.
   final List<ModifierInstance> active;
 
-  /// Compteurs propres au tour en cours. Vide pour l'instant : les stories
-  /// d'effets y ajoutent les leurs.
+  /// Compteurs propres au tour en cours (clés dans `turn_effects.dart` :
+  /// passes gratuites utilisées, devineur bloqué). Vidés à la fin du tour.
   final Map<String, dynamic> turn;
 
   /// Rattrapage DÛ par équipe (id → secondes, négatives pour le malus du
@@ -33,12 +33,13 @@ class FiestaState {
 
   FiestaState copyWith({
     List<ModifierInstance>? active,
+    Map<String, dynamic>? turn,
     Map<String, int>? catchUpDue,
   }) =>
       FiestaState(
         rules: rules,
         active: active ?? this.active,
-        turn: turn,
+        turn: turn ?? this.turn,
         catchUpDue: catchUpDue ?? this.catchUpDue,
       );
 

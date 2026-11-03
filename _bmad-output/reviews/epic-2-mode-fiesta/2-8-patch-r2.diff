@@ -1,0 +1,790 @@
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index d3bc2dc..64a92af 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -474,3 +474,37 @@ stories.
+   rattrapage **accordé**, même si l'équipe n'a pas joué dans la manche suivante.
+ - **Archivé tel qu'affiché** (`ModifierRecapLine` = titre + détail formés), comme les scores de
+   `GameResult`.
++
++---
++
++## 2026-11-03 — Fiesta 2-8 : effets de tour (passe bloquée ou gratuite, devineur bloqué, à l'envers)
++
++**Quoi.** `no_pass` (Passer désactivé, `passWord` refuse), `free_pass` ×N (N premières passes
++du tour à 0 s, compteur « Passes gratuites : k / N »), `block_guesser` (les adversaires
++choisissent un devineur avant le tour, annonce « X ne répond pas »), `reversed` (mot en
++MAJUSCULES inversé sur l'écran de tour seulement), contraintes de mime / dessin et texte Q6
++annoncés avant le tour. Règles pures dans `models/fiesta/turn_effects.dart`.
++
++**Pourquoi ces choix.**
++- **Une seule garde** (`GameProvider.canPassWith`) sur la pénalité **effective**, lue par
++  `passWord` et par le bouton : sinon le bouton s'affiche actif et le provider refuse. Sous
++  `no_pass`, sortie **avant** `onWordPassed` : aucune passe fantôme dans les analytics.
++- **Compteurs dans `FiestaState.turn`** (`freePassesUsed`, `blockedPlayerId`) : la clé existait
++  déjà (map vide, relue tolérante), donc **aucun changement de forme** de `guessItAll_*`. Persistés
++  (survivent à un kill) et restaurés par le retour arrière (snapshot `GameState`).
++- **Une seule définition du tour** (revue r1, m1) : le tour de fin de manche ET sa continuation
++  en N+1 forment UN tour. Compteurs et instances de portée tour vivent jusqu'à sa vraie fin, où
++  `validateWords` vide les uns et consomme les autres (invariant noté par 2-5). Sinon un
++  `block_guesser` rouvrait le sélecteur en continuation et une `free_pass` de portée tour
++  rendait ses passes. Contrepartie acceptée : une `free_pass` de **manche** N+1 hérite du
++  compteur de N. Personne ne pose encore d'instance de portée tour (2-10) : testé avec une
++  instance injectée.
++- **Devineur bloqué choisi au début du tour**, pas au tirage : celui qui fait deviner tourne.
++  Sélecteur fermé sans choix → on reste sur l'avant-tour, le tour ne démarre pas. Le choix est
++  persisté APRÈS l'annonce : une app tuée pendant l'annonce redemande le choix (r1, m2).
++  Décision : `block_guesser` n'arrive QUE par offre (1 parmi 3 et coup de pouce Auto, 2-10),
++  jamais tiré ni fixé pour tous (`isForAllTeams`, 2-5) ; Q15 ne s'applique pas. L'effet se
++  déclenche sur toute instance qui vise l'équipe qui joue : c'est la couture que 2-10 utilisera.
++
++**Conséquence.** Une partie Classique ne voit aucune différence : sans modificateur, pénalité
++effective = pénalité réglée, garde identique.
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index 83de793..7e35338 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -19,8 +19,9 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `fiesta/modifier_instance.dart` | `ModifierInstance` | Modificateur actif dans une partie. `tryFromJson` tolérant (id inconnu → `null`, jamais de défaut inventé). `canAdd(active, candidate, {maxPerTurn: 2})` |
+ | `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, `CatchUpRules`, enums `FiestaMode`, `ModifierArrival` | Configuration Fiesta **immuable** (Auto / Personnalisé, réglage par modificateur, rattrapage, tirage, règles communes). `CatchUpRules.auto` = constantes du mode Auto. `tryFromJson` : structure illisible → `null`, réglage d'id inconnu ignoré seul |
+ | `fiesta/symmetric_draw.dart` | fonctions pures | Modificateurs d'une manche pour toutes les équipes : `fixedForRound` puis `drawSymmetric`, réunis par `roundModifiers(rules, gameId:, round:)`. Graine `drawSeed(gameId, round)` (FNV-1a, stable entre exécutions) |
+-| `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn, catchUpDue}`. `turn` est vide pour l'instant (compteurs des stories d'effets). `catchUpDue` : id d'équipe → secondes dues (négatives = malus du leader), posé par `nextRound`, consommé au premier tour non-continuation |
++| `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn, catchUpDue}`. `turn` : compteurs du tour (2-8 : `freePassesUsed`, `blockedPlayerId`, clés dans `turn_effects.dart`), vidés à la vraie fin du tour (continuation de fin de manche comprise dans le tour). `catchUpDue` : id d'équipe → secondes dues (négatives = malus du leader), posé par `nextRound`, consommé au premier tour non-continuation |
+ | `fiesta/modifier_recap.dart` | fonctions pures | `fiestaModeId` (`fiesta_auto`/`fiesta_custom`), `fiestaModeLabel`, `buildModifierRecap` : récap « Modificateurs de la partie » **recalculé** (tirage par graine, rattrapage sur les scores cumulés par manche), rien de persisté pendant la partie |
++| `fiesta/turn_effects.dart` | fonctions pures | Effets de tour (2-8) : clés des compteurs du tour, `freePassAllowance` (charges de `free_pass`), `canBlockGuesser` (équipe de 3+) |
+ | `fiesta/turn_time.dart` | fonctions pures | `composeTurnSeconds` (base + rattrapage − malus du leader − 10 s × `minus_10s`, plancher `kTurnFloorSeconds` = 10 ; continuation = ses secondes, sans modificateur) ; `computeCatchUp` (k × écart avec la tête, plafonds, co-leaders tous en tête, égalité = rien) ; `effectiveCatchUp` (Auto → auto-calibrage, Personnalisé → curseurs) |
+ | `fiesta/fiesta_ensemble.dart` | `FiestaEnsemble`, `defaultEnsembleRules`, extensions `copyWith`, `catchUpOn` | Ensemble Personnalisé `{id, rules}` (nom = `rules.ensembleName`, mode toujours `custom`), défauts de la maquette (`mkSet`). Persisté par `FiestaEnsembleService` |
+ | `fiesta/ensemble_validation.dart` | `validateEnsemble` | Validation **pure** d'un ensemble (messages FR) : bloque l'enregistrement d'une config impossible |
+diff --git a/lib/models/fiesta/fiesta_state.dart b/lib/models/fiesta/fiesta_state.dart
+index a00aab4..66838fd 100644
+--- a/lib/models/fiesta/fiesta_state.dart
++++ b/lib/models/fiesta/fiesta_state.dart
+@@ -13,8 +13,8 @@ class FiestaState {
+   /// Instances actives.
+   final List<ModifierInstance> active;
+ 
+-  /// Compteurs propres au tour en cours. Vide pour l'instant : les stories
+-  /// d'effets y ajoutent les leurs.
++  /// Compteurs propres au tour en cours (clés dans `turn_effects.dart` :
++  /// passes gratuites utilisées, devineur bloqué). Vidés à la fin du tour.
+   final Map<String, dynamic> turn;
+ 
+   /// Rattrapage DÛ par équipe (id → secondes, négatives pour le malus du
+@@ -33,12 +33,13 @@ class FiestaState {
+ 
+   FiestaState copyWith({
+     List<ModifierInstance>? active,
++    Map<String, dynamic>? turn,
+     Map<String, int>? catchUpDue,
+   }) =>
+       FiestaState(
+         rules: rules,
+         active: active ?? this.active,
+-        turn: turn,
++        turn: turn ?? this.turn,
+         catchUpDue: catchUpDue ?? this.catchUpDue,
+       );
+ 
+diff --git a/lib/models/fiesta/turn_effects.dart b/lib/models/fiesta/turn_effects.dart
+new file mode 100644
+index 0000000..aea25a5
+--- /dev/null
++++ b/lib/models/fiesta/turn_effects.dart
+@@ -0,0 +1,18 @@
++import 'modifier_instance.dart';
++
++/// Effets de tour (story 2-8) : règles pures sur les modificateurs qui pèsent
++/// sur l'équipe qui joue. Le provider ne fait que brancher.
++
++/// Clés des compteurs du tour dans `FiestaState.turn`. Absentes = valeur
++/// initiale (0 passe gratuite utilisée, aucun devineur bloqué).
++const String kFreePassesUsedKey = 'freePassesUsed';
++const String kBlockedPlayerIdKey = 'blockedPlayerId';
++
++/// Nombre de passes gratuites du tour : les charges de `free_pass`.
++int freePassAllowance(List<ModifierInstance> modifiers) => modifiers
++    .where((m) => m.catalogId == 'free_pass')
++    .fold(0, (sum, m) => sum + m.charges);
++
++/// `block_guesser` n'a d'effet que si l'équipe a au moins 3 joueurs : il faut
++/// un devineur à bloquer ET un autre qui puisse encore répondre.
++bool canBlockGuesser(int teamSize) => teamSize > 2;
+diff --git a/lib/providers/CLAUDE.md b/lib/providers/CLAUDE.md
+index 7a2c952..b8b7eff 100644
+--- a/lib/providers/CLAUDE.md
++++ b/lib/providers/CLAUDE.md
+@@ -23,6 +23,7 @@ Gestion d'etat centralisee via Provider.
+ - La navigation arriere est complexe : depend de l'ecran courant, du tour, et de l'existence de snapshots de validation.
+ - `_ensureWordsForPlayer()` conserve les mots existants d'un joueur si le compte est suffisant (meme apres changement de categories).
+ - **Durée du tour** : `turnTime` (composée par `composeTurnSeconds`) est lue par `startTurn` ET `startTurnTimer`. Ne jamais recalculer la durée ailleurs : l'avant-tour et le chrono divergeraient. `timeSpent` se mesure sur `turnAllottedSeconds`, pas sur le réglage.
++- **Effets de tour Fiesta (2-8)** : `canPassWith(secondesAffichées)` est la **seule** garde de la passe (`passWord` ET le bouton de `turn_screen`), sur la pénalité **effective** (`currentPassPenalty`, 0 si `hasFreePass`) ; sous `no_pass`, `passWord` sort avant `onWordPassed`. **Un seul tour** : fin de manche + continuation en N+1. `validateWords` vide `fiesta.turn` et consomme les instances de portée **tour** de l'équipe à la vraie fin seulement (pas dans la branche fin de manche).
+ - **Rattrapage Fiesta** : `catchUpPreview` (transition, calculé sur les scores) → `nextRound` le pose dans `fiesta.catchUpDue` → `startTurnTimer` le consomme au premier tour non-continuation de l'équipe.
+ 
+ ### Dependances
+diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
+index da8f6ef..ac5beea 100644
+--- a/lib/providers/game_provider.dart
++++ b/lib/providers/game_provider.dart
+@@ -10,6 +10,7 @@ import '../models/fiesta/modifier_catalog.dart';
+ import '../models/fiesta/modifier_instance.dart';
+ import '../models/fiesta/modifier_recap.dart';
+ import '../models/fiesta/symmetric_draw.dart';
++import '../models/fiesta/turn_effects.dart';
+ import '../models/fiesta/turn_time.dart';
+ import '../models/game_settings.dart';
+ import '../models/game_state.dart';
+@@ -719,7 +720,6 @@ class GameProvider extends ChangeNotifier {
+   }
+ 
+   void passWord() {
+-    final passPenalty = _settings.passPenalty;
+     final currentWord = _game.currentWord;
+     final clock = turnClock;
+ 
+@@ -731,7 +731,13 @@ class GameProvider extends ChangeNotifier {
+     // C'est délibéré — passer avec « 5 » à l'écran et une pénalité de 5 reste
+     // autorisé et met le chrono à zéro, comme avant. Comparer les ms refuserait
+     // ce cas et changerait la règle du jeu en douce.
+-    if (clock.displayedSecondsAt(now) < passPenalty) return;
++    // 🔴 Sortie AVANT `onWordPassed` : sous `no_pass`, aucune passe n'a lieu.
++    if (!canPassWith(clock.displayedSecondsAt(now))) return;
++
++    // Pénalité EFFECTIVE : 0 tant qu'il reste une passe gratuite (2-8).
++    final passPenalty = currentPassPenalty;
++    final fiesta = _game.fiesta;
++    final usesFreePass = fiesta != null && hasFreePass;
+ 
+     // Tracker le pass AVANT de changer l'état
+     _analytics.onWordPassed(currentWord);
+@@ -762,6 +768,10 @@ class GameProvider extends ChangeNotifier {
+         currentWord: newCurrentWord,
+         passedWordsThisTurn: newPassedWords,
+         remainingWords: newRemainingWords,
++        fiesta: usesFreePass
++            ? fiesta.copyWith(
++                turn: {...fiesta.turn, kFreePassesUsedKey: freePassesUsed + 1})
++            : null,
+       ),
+       newClock,
+       nowMs: now,
+@@ -1006,6 +1016,9 @@ class GameProvider extends ChangeNotifier {
+             : AppConstants.screenTransition,
+         turnBonusTime: _game.timeRemaining,
+         clearExpiredWord: true,
++        // Pas de `_fiestaAfterTurn` ici : la même équipe poursuit CE tour en
++        // manche suivante (continuation). Compteurs et instances de portée
++        // tour vivent jusqu'à sa vraie fin.
+         pendingBonusTurnId: shouldPrepareBonusFusion ? _game.currentTurn : null,
+         clearPendingBonusTurnId: !shouldPrepareBonusFusion,
+       );
+@@ -1036,6 +1049,7 @@ class GameProvider extends ChangeNotifier {
+         clearTurnBonusTime: nextTurnBonusTime == null,
+         clearExpiredWord: true,
+         clearPendingBonusTurnId: true, // Réinitialiser après usage
++        fiesta: _fiestaAfterTurn(),
+       );
+     }
+ 
+@@ -1166,6 +1180,95 @@ class GameProvider extends ChangeNotifier {
+         .toList();
+   }
+ 
++  // ========== EFFETS DE TOUR (2-8) ==========
++
++  Map<String, dynamic> get _turnCounters => _game.fiesta?.turn ?? const {};
++
++  bool _has(String catalogId) =>
++      currentTeamModifiers.any((m) => m.catalogId == catalogId);
++
++  /// `no_pass` pèse sur l'équipe qui joue.
++  bool get passBlocked => _has('no_pass');
++
++  /// Passes gratuites du tour (`free_pass` ×N), et celles déjà utilisées.
++  int get freePasses => freePassAllowance(currentTeamModifiers);
++  int get freePassesUsed {
++    final used = _turnCounters[kFreePassesUsedKey];
++    return used is int ? used : 0;
++  }
++
++  /// Il reste une passe gratuite ce tour. Toujours faux en Classique.
++  bool get hasFreePass => freePassesUsed < freePasses;
++
++  /// Pénalité EFFECTIVE de la prochaine passe. Classique : la pénalité réglée.
++  int get currentPassPenalty => hasFreePass ? 0 : _settings.passPenalty;
++
++  /// 🔴 SEULE garde de la passe, sur la seconde affichée : `passWord` et le
++  /// bouton de `turn_screen` la lisent tous deux, sinon le bouton s'affiche
++  /// actif et le provider refuse (ou l'inverse).
++  bool canPassWith(int displayedSeconds) =>
++      !passBlocked && displayedSeconds >= currentPassPenalty;
++
++  /// `reversed` : le mot du tour s'affiche à l'envers (tour seulement).
++  bool get isWordReversed => _has('reversed');
++
++  /// Devineurs que les adversaires peuvent bloquer : l'équipe qui joue, sauf
++  /// celui qui fait deviner. Vide si `block_guesser` ne la vise pas ou si elle
++  /// a 2 joueurs ou moins.
++  List<Player> get blockableGuessers {
++    final team = getCurrentTeam();
++    if (team == null ||
++        !_has('block_guesser') ||
++        !canBlockGuesser(team.playerIds.length)) {
++      return const [];
++    }
++    final guesserId = getCurrentPlayer()?.id;
++    return [
++      for (final id in team.playerIds)
++        if (id != guesserId) getPlayerById(id),
++    ].whereType<Player>().toList();
++  }
++
++  /// Devineur bloqué pour ce tour, choisi par les adversaires (annonce seule).
++  Player? get blockedGuesser {
++    final id = _turnCounters[kBlockedPlayerIdKey];
++    return id is String ? getPlayerById(id) : null;
++  }
++
++  /// Le sélecteur doit s'ouvrir avant ce tour.
++  bool get needsBlockedGuesser =>
++      blockableGuessers.isNotEmpty && blockedGuesser == null;
++
++  void setBlockedGuesser(String playerId) {
++    final fiesta = _game.fiesta;
++    if (fiesta == null || !blockableGuessers.any((p) => p.id == playerId)) {
++      return;
++    }
++    _game = _game.copyWith(
++      fiesta: fiesta
++          .copyWith(turn: {...fiesta.turn, kBlockedPlayerIdKey: playerId}),
++    );
++    notifyListeners();
++    _saveGameState();
++  }
++
++  /// Fiesta à la VRAIE fin d'un tour : compteurs du tour vidés, instances
++  /// de portée tour de l'équipe consommées. 🔴 Un seul « tour » : une fin de
++  /// manche n'en est pas une, la continuation en N+1 est le même tour (elle
++  /// hérite donc aussi du compteur de passes gratuites). Nul en Classique.
++  FiestaState? _fiestaAfterTurn() {
++    final fiesta = _game.fiesta;
++    if (fiesta == null || _teams.isEmpty) return null;
++    final teamId = _teams[_game.currentTeamIndex].id;
++    return fiesta.copyWith(
++      turn: const {},
++      active: fiesta.active
++          .where((m) => !(m.scope == ModifierScope.turn &&
++              (m.target == ModifierTarget.both || m.teamId == teamId)))
++          .toList(),
++    );
++  }
++
+   /// Malus à révéler en plein écran avant le tour : ceux de l'équipe qui joue,
+   /// à son PREMIER tour de la manche (aucune entrée d'historique à son nom
+   /// dans cette manche). Le malus de 10 s, qui ne touche pas une continuation
+diff --git a/lib/screens/game_screen.dart b/lib/screens/game_screen.dart
+index 001d2c4..c8dbc0c 100644
+--- a/lib/screens/game_screen.dart
++++ b/lib/screens/game_screen.dart
+@@ -9,12 +9,15 @@ import '../widgets/common/game_dialogs.dart';
+ import '../widgets/common/home_button.dart';
+ import '../widgets/common/back_button.dart';
+ import '../widgets/effects/shooting_stars.dart';
++import '../widgets/fiesta/blocked_guesser.dart';
+ import '../widgets/fiesta/fiesta_setup_widgets.dart';
++import '../widgets/fiesta/fiesta_turn_widgets.dart';
+ import '../widgets/fiesta/malus_reveal.dart';
+ import '../widgets/fiesta/modifier_badge.dart';
+ import '../widgets/fiesta/modifier_card.dart';
+ import '../widgets/fiesta/turn_time_cards.dart';
+ import '../models/fiesta/modifier_catalog.dart';
++import '../models/fiesta/modifier_instance.dart';
+ 
+ class GameScreen extends StatelessWidget {
+   const GameScreen({super.key});
+@@ -270,7 +273,8 @@ class GameScreen extends StatelessWidget {
+   }
+ 
+   /// Fiesta : révèle d'abord les malus de l'équipe à son premier tour de la
+-  /// manche, puis lance le compte à rebours.
++  /// manche, puis fait choisir le devineur bloqué (`block_guesser`), puis
++  /// lance le compte à rebours. Sélecteur fermé sans choix : on reste ici.
+   ///
+   /// 🔴 Les révélations sont des routes poussées AU-DESSUS de `home` : elles
+   /// survivent au changement d'écran. Sans les deux gardes, un double tap
+@@ -293,6 +297,25 @@ class GameScreen extends StatelessWidget {
+         return;
+       }
+     }
++    if (provider.needsBlockedGuesser) {
++      if (!context.mounted) return;
++      final blocked =
++          await BlockedGuesser.pick(context, provider.blockableGuessers);
++      if (blocked == null || !context.mounted) return;
++      await BlockedGuesser.announce(
++        context,
++        player: blocked,
++        teamName: provider.getCurrentTeam()?.name ?? '',
++        teamColor: teamColor,
++      );
++      if (!context.mounted ||
++          provider.game.currentScreen != AppConstants.screenGame) {
++        return;
++      }
++      // Persisté APRÈS l'annonce : une app tuée pendant l'annonce redemande
++      // le choix au lieu de démarrer sans l'avoir montrée.
++      provider.setBlockedGuesser(blocked.id);
++    }
+     provider.startTurn();
+   }
+ 
+@@ -653,6 +676,7 @@ class _FiestaAnnouncements extends StatelessWidget {
+               ),
+             ),
+           RoundDrawCard(round: 1, modifiers: modifiers),
++          ..._constraints(rules.oneAnswer, modifiers),
+         ],
+       );
+     }
+@@ -660,6 +684,7 @@ class _FiestaAnnouncements extends StatelessWidget {
+     return FiestaCard(
+       title: 'Actif ce tour',
+       children: [
++        ..._constraints(rules.oneAnswer, modifiers),
+         if (modifiers.isEmpty && !rules.oneAnswer)
+           const FiestaHint('Aucun modificateur')
+         else
+@@ -678,4 +703,22 @@ class _FiestaAnnouncements extends StatelessWidget {
+       ],
+     );
+   }
++
++  /// Contraintes annoncées (2-8) : bandeaux de mime / dessin, et Q6 « Une
++  /// seule réponse » + « Interdit de passer ».
++  List<Widget> _constraints(bool oneAnswer, List<ModifierInstance> modifiers) {
++    final ids = modifiers.map((m) => m.catalogId).toSet();
++    return [
++      for (final id in MimeConstraintBanner.icons.keys)
++        if (ids.contains(id)) ...[
++          MimeConstraintBanner(modifierId: id),
++          const SizedBox(height: 12),
++        ],
++      if (oneAnswer && ids.contains('no_pass')) ...[
++        const FiestaHint(
++            'Mauvaise réponse : le mot est grillé jusqu\'à la fin du tour.'),
++        const SizedBox(height: 12),
++      ],
++    ];
++  }
+ }
+diff --git a/lib/screens/turn_screen.dart b/lib/screens/turn_screen.dart
+index 93c55ee..3e3a0f2 100644
+--- a/lib/screens/turn_screen.dart
++++ b/lib/screens/turn_screen.dart
+@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
+ import '../theme/app_theme.dart';
+ import '../providers/game_provider.dart';
+ import '../services/audio_service.dart';
++import '../utils/reversed_word.dart';
+ import '../widgets/common/app_confirm_dialog.dart';
+ import '../widgets/fiesta/modifier_badge.dart';
+ 
+@@ -254,9 +255,12 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+     final timeRemaining = provider.game.timeRemaining;
+     final isPaused = _isPausedOf(provider);
+     final isLowTime = timeRemaining <= 10;
+-    final passPenalty = provider.settings.passPenalty;
++    // Pénalité EFFECTIVE et garde partagée avec `passWord` (Fiesta 2-8) ; en
++    // Classique, la pénalité réglée et la garde d'avant.
++    final passPenalty = provider.currentPassPenalty;
++    final hasFreePass = provider.hasFreePass;
+     final hasWordsToPassTo = provider.effectiveRemainingWordsCount > 0;
+-    final canPass = timeRemaining >= passPenalty && hasWordsToPassTo;
++    final canPass = provider.canPassWith(timeRemaining) && hasWordsToPassTo;
+ 
+     return Material(
+       color: AppColors.backgroundMain,
+@@ -326,6 +330,17 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+                           const SizedBox(height: 8),
+                           ModifierBadges(
+                               modifiers: provider.currentTeamModifiers),
++                          if (provider.freePasses > 0) ...[
++                            const SizedBox(height: 8),
++                            Text(
++                              'Passes gratuites : ${provider.freePassesUsed} / ${provider.freePasses}',
++                              style: const TextStyle(
++                                fontFamily: 'Poppins',
++                                fontSize: 13,
++                                color: AppColors.secondaryCyan,
++                              ),
++                            ),
++                          ],
+                           const SizedBox(height: 16),
+                         ] else
+                           const SizedBox(height: 32),
+@@ -335,7 +350,11 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+                           child: Padding(
+                             padding: const EdgeInsets.symmetric(horizontal: 16),
+                             child: AutoSizeText(
+-                              currentWord ?? '',
++                              // À l'envers : affichage du tour SEULEMENT, le
++                              // mot du jeu reste en clair.
++                              provider.isWordReversed
++                                  ? reversedWordDisplay(currentWord ?? '')
++                                  : currentWord ?? '',
+                               style: const TextStyle(
+                                 fontFamily: 'Bangers',
+                                 fontSize: 72,
+@@ -413,7 +432,9 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+                                 ),
+                                 const SizedBox(height: 4),
+                                 Text(
+-                                  'Passer',
++                                  provider.passBlocked
++                                      ? 'Passer (bloqué)'
++                                      : 'Passer',
+                                   style: TextStyle(
+                                     fontFamily: 'Poppins',
+                                     fontSize: 14,
+@@ -423,9 +444,11 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+                                         : AppColors.gray500,
+                                   ),
+                                 ),
+-                                if (passPenalty > 0)
++                                if (passPenalty > 0 || hasFreePass)
+                                   Text(
+-                                    '-${passPenalty}s',
++                                    hasFreePass
++                                        ? 'gratuit'
++                                        : '-${passPenalty}s',
+                                     style: TextStyle(
+                                       fontFamily: 'Poppins',
+                                       fontSize: 12,
+diff --git a/lib/widgets/CLAUDE.md b/lib/widgets/CLAUDE.md
+index 00e3edd..4f70c1b 100644
+--- a/lib/widgets/CLAUDE.md
++++ b/lib/widgets/CLAUDE.md
+@@ -8,7 +8,7 @@ Widgets reutilisables organises en deux sous-repertoires.
+ |------------|------|
+ | `common/` | Composants UI reutilisables (boutons, inputs, modals, sliders, toggles) |
+ | `effects/` | Effets visuels et animations de fond |
+-| `fiesta/` | Squelette et cartes des ecrans de choix du mode Fiesta (retour systeme Android gere) ; kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawCard` (« Tirage de la manche N »), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `TurnTimeCard` (« Temps du tour », detail + total, avant-tour) et `CatchUpCard` (« Rattrapage », transition) |
++| `fiesta/` | Squelette et cartes des ecrans de choix du mode Fiesta (retour systeme Android gere) ; kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawCard` (« Tirage de la manche N »), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `TurnTimeCard` (« Temps du tour », detail + total, avant-tour) `CatchUpCard` (« Rattrapage », transition) et `BlockedGuesser` (selecteur « Les adversaires choisissent » + annonce « X ne repond pas », 2-8) |
+ 
+ ## Kit visuel du tour Fiesta (`fiesta/fiesta_turn_widgets.dart`)
+ 
+diff --git a/lib/widgets/fiesta/blocked_guesser.dart b/lib/widgets/fiesta/blocked_guesser.dart
+new file mode 100644
+index 0000000..7e0fbb8
+--- /dev/null
++++ b/lib/widgets/fiesta/blocked_guesser.dart
+@@ -0,0 +1,117 @@
++import 'package:flutter/material.dart';
++
++import '../../models/player.dart';
++import '../../theme/app_theme.dart';
++import '../common/app_button.dart';
++import '../common/app_modal.dart';
++
++/// « Bloquer un devineur » (2-8) : les adversaires choisissent un devineur de
++/// l'équipe qui joue, puis l'annonce plein écran (maquette `block`). Simple
++/// annonce : l'app ne contrôle rien, la rotation ne change pas.
++class BlockedGuesser {
++  BlockedGuesser._();
++
++  /// Sélecteur « Les adversaires choisissent ». Rend le joueur choisi, ou `null` si
++  /// fermé sans choix : l'appelant reste alors sur l'écran d'avant-tour.
++  static Future<Player?> pick(BuildContext context, List<Player> guessers) {
++    return AppModal.show<Player>(
++      context,
++      title: 'Les adversaires choisissent',
++      child: Column(
++        crossAxisAlignment: CrossAxisAlignment.stretch,
++        children: [
++          Text(
++            'Quel devineur ne répond pas pendant ce tour ?',
++            textAlign: TextAlign.center,
++            style: AppTextStyles.bodySmall.copyWith(color: AppColors.gray400),
++          ),
++          for (final player in guessers) ...[
++            const SizedBox(height: 12),
++            Builder(
++              builder: (context) => AppButton(
++                text: player.name,
++                variant: AppButtonVariant.secondary,
++                fullWidth: true,
++                onPressed: () => Navigator.of(context).pop(player),
++              ),
++            ),
++          ],
++        ],
++      ),
++    );
++  }
++
++  /// Annonce plein écran « X ne répond pas ».
++  static Future<void> announce(
++    BuildContext context, {
++    required Player player,
++    required String teamName,
++    required Color teamColor,
++  }) {
++    return Navigator.of(context).push(MaterialPageRoute<void>(
++      fullscreenDialog: true,
++      builder: (context) => Material(
++        color: AppColors.backgroundMain,
++        child: SafeArea(
++          child: Padding(
++            padding: const EdgeInsets.all(24),
++            child: Column(
++              mainAxisAlignment: MainAxisAlignment.center,
++              crossAxisAlignment: CrossAxisAlignment.stretch,
++              children: [
++                Text(
++                  'Choisi par les adversaires · annonce seulement',
++                  textAlign: TextAlign.center,
++                  style: AppTextStyles.bodySmall
++                      .copyWith(color: AppColors.gray400),
++                ),
++                const SizedBox(height: 16),
++                Center(
++                  child: Container(
++                    width: 96,
++                    height: 96,
++                    alignment: Alignment.center,
++                    decoration: BoxDecoration(
++                      color: AppColors.primaryPink.withValues(alpha: 0.18),
++                      borderRadius: BorderRadius.circular(28),
++                    ),
++                    child: const Icon(Icons.volume_off,
++                        size: 48, color: AppColors.primaryPink),
++                  ),
++                ),
++                const SizedBox(height: 16),
++                Text(
++                  '${player.name} ne répond pas',
++                  textAlign: TextAlign.center,
++                  style: AppTextStyles.subtitle(fontSize: 34),
++                ),
++                const SizedBox(height: 8),
++                Text.rich(
++                  TextSpan(children: [
++                    const TextSpan(text: 'Pendant ce tour de '),
++                    TextSpan(
++                        text: teamName, style: TextStyle(color: teamColor)),
++                    TextSpan(
++                        text: ', ${player.name} n\'a pas le droit de proposer '
++                            'de réponse. Les autres joueurs veillent.'),
++                  ]),
++                  textAlign: TextAlign.center,
++                  style: AppTextStyles.bodySmall
++                      .copyWith(color: AppColors.gray400),
++                ),
++                const SizedBox(height: 24),
++                AppButton(
++                  text: 'Compris',
++                  variant: AppButtonVariant.primary,
++                  size: AppButtonSize.large,
++                  fullWidth: true,
++                  onPressed: () => Navigator.of(context).pop(),
++                ),
++              ],
++            ),
++          ),
++        ),
++      ),
++    ));
++  }
++}
+diff --git a/test/providers/fiesta_turn_effects_test.dart b/test/providers/fiesta_turn_effects_test.dart
+new file mode 100644
+index 0000000..b5c4df8
+--- /dev/null
++++ b/test/providers/fiesta_turn_effects_test.dart
+@@ -0,0 +1,187 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
++import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
++import 'package:guess_it_all_mobile/providers/game_provider.dart';
++import 'package:guess_it_all_mobile/services/storage_service.dart';
++
++import '../helpers/test_prefs.dart';
++
++/// Un provider prêt à lancer : [names] joueurs en 2 équipes, 1 mot chacun,
++/// réglages par défaut (30 s, pénalité de passe 5 s).
++Future<GameProvider> givenReadyProvider(
++    [List<String> names = const ['Ana', 'Bob']]) async {
++  await givenPrefs();
++  givenFakePlatformPlugins();
++  final provider = GameProvider();
++  await pumpEventQueue();
++  for (final name in names) {
++    final id = (provider.addPlayer(name)['player'] as dynamic).id as String;
++    provider.updatePlayerWords(id, ['mot-$name']);
++  }
++  provider.createTeams();
++  provider.randomizeTeams();
++  return provider;
++}
++
++/// Personnalisé, sans tirage : [fixed] (id → charges) fixés sur la manche 1.
++FiestaRules fixedOnRound1(Map<String, int> fixed) => FiestaRules(
++      mode: FiestaMode.custom,
++      drawCount: 0,
++      modifiers: {
++        for (final e in fixed.entries)
++          e.key: ModifierSetting(
++            active: true,
++            arrival: ModifierArrival.fixed,
++            startRound: 1,
++            fixedRound: 1,
++            charges: e.value,
++          ),
++      },
++    );
++
++/// Pose [catalogId] (portée tour, sur l'équipe qui joue) dans l'état
++/// persisté, puis relit la partie. Aucun écrivain ne pose encore d'instance de
++/// portée tour ni de `block_guesser` (2-10) : `fixed` et le tirage les excluent.
++Future<GameProvider> withTurnInstance(
++    GameProvider provider, String catalogId) async {
++  await pumpEventQueue();
++  final saved = (await StorageService().loadGameState())!;
++  (saved['game']['fiesta']['active'] as List).add(ModifierInstance(
++    catalogId: catalogId,
++    scope: ModifierScope.turn,
++    target: ModifierTarget.team,
++    teamId: provider.getCurrentTeam()!.id,
++    charges: 1,
++    nature: modifierById(catalogId)!.nature,
++    round: provider.game.currentRound,
++  ).toJson());
++  await StorageService().saveGameState(saved);
++  final reloaded = GameProvider();
++  await pumpEventQueue();
++  return reloaded;
++}
++
++int allotted(GameProvider p) =>
++    (p.game.turnEndTimestamp! - p.game.turnStartTimestamp!) ~/ 1000;
++
++void main() {
++  test(
++      'free_pass ×2 : 0, 0, puis 5 s ; compteur relu après un kill, remis à '
++      '0 au tour suivant, rendu par le retour arrière (AC2, AC3, AC4, AC8)',
++      () async {
++    var provider = await givenReadyProvider();
++    await provider.startGame(fiesta: fixedOnRound1({'free_pass': 2}));
++    provider.startTurn();
++    provider.startTurnTimer();
++    // AC3 : la garde porte sur la pénalité EFFECTIVE (2 s affichées suffisent).
++    expect(provider.canPassWith(2), isTrue);
++
++    provider.passWord();
++    provider.passWord();
++    expect(allotted(provider), 30);
++    expect(provider.freePassesUsed, 2);
++    expect(provider.canPassWith(2), isFalse);
++
++    // App tuée puis rouverte : le compteur est relu de l'état persisté.
++    await pumpEventQueue();
++    provider = GameProvider();
++    await pumpEventQueue();
++    expect(provider.freePassesUsed, 2);
++
++    provider.passWord();
++    expect(allotted(provider), 25);
++    expect(provider.freePassesUsed, 2);
++
++    provider.endTurn();
++    provider.savePreValidationState(const []);
++    provider.validateWords(const []);
++    expect(provider.freePassesUsed, 0);
++
++    provider.restorePreValidationState();
++    expect(provider.freePassesUsed, 2);
++  });
++
++  test(
++      'no_pass : passWord refusé au niveau du provider, rien ne bouge ; '
++      'reversed n\'altère pas le mot du jeu (AC1, AC6)', () async {
++    final provider = await givenReadyProvider();
++    await provider.startGame(
++        fiesta: fixedOnRound1({'no_pass': 0, 'reversed': 0}));
++    provider.startTurn();
++    provider.startTurnTimer();
++    final before = provider.game.toJson();
++
++    expect(provider.canPassWith(30), isFalse);
++    provider.passWord();
++
++    expect(provider.game.toJson(), before);
++    expect(provider.isWordReversed, isTrue);
++  });
++
++  test(
++      'block_guesser : sans effet à 2 joueurs, sinon jamais celui qui fait '
++      'deviner (AC5)', () async {
++    var provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
++    await provider.startGame(fiesta: fixedOnRound1({}));
++    provider = await withTurnInstance(provider, 'block_guesser');
++    expect(provider.blockableGuessers, isEmpty);
++    expect(provider.needsBlockedGuesser, isFalse);
++
++    provider = await givenReadyProvider(['A', 'B', 'C', 'D', 'E', 'F']);
++    await provider.startGame(fiesta: fixedOnRound1({}));
++    provider = await withTurnInstance(provider, 'block_guesser');
++    final guesser = provider.getCurrentPlayer()!;
++    expect(provider.blockableGuessers.map((p) => p.id),
++        isNot(contains(guesser.id)));
++    expect(provider.blockableGuessers, hasLength(2));
++
++    provider.setBlockedGuesser(guesser.id); // refusé
++    expect(provider.needsBlockedGuesser, isTrue);
++    provider.setBlockedGuesser(provider.blockableGuessers.first.id);
++    expect(provider.needsBlockedGuesser, isFalse);
++  });
++
++  test(
++      'Un seul tour : la continuation de fin de manche garde instances de '
++      'portée tour, passes gratuites utilisées et devineur bloqué, puis tout '
++      'tombe à la fin de CE tour', () async {
++    var provider = await givenReadyProvider(['A', 'B', 'C', 'D', 'E', 'F']);
++    await provider.startGame(fiesta: fixedOnRound1({}));
++    final teamId = provider.getCurrentTeam()!.id;
++    provider = await withTurnInstance(provider, 'free_pass');
++    provider = await withTurnInstance(provider, 'block_guesser');
++    bool held() =>
++        provider.game.fiesta!.active.any((m) => m.scope == ModifierScope.turn);
++    final blocked = provider.blockableGuessers.first;
++    provider.setBlockedGuesser(blocked.id);
++
++    // Une passe gratuite, puis l'équipe fait deviner les 6 mots : fin de
++    // manche, elle poursuivra en M2.
++    provider.startTurn();
++    provider.startTurnTimer();
++    provider.passWord();
++    while (provider.game.currentWord != null) {
++      provider.markWordAsGuessed();
++    }
++    final guessed = List<String>.from(provider.game.wordsGuessedThisTurn);
++    provider.savePreValidationState(guessed);
++    provider.validateWords(guessed);
++    provider.nextRound();
++    expect(provider.getCurrentTeam()!.id, teamId);
++    expect(held(), isTrue);
++    expect(provider.freePassesUsed, 1);
++    expect(provider.blockedGuesser?.id, blocked.id);
++    expect(provider.needsBlockedGuesser, isFalse);
++
++    // Fin du tour de continuation : tout tombe.
++    provider.startTurn();
++    provider.startTurnTimer();
++    provider.endTurn();
++    provider.savePreValidationState(const []);
++    provider.validateWords(const []);
++    expect(held(), isFalse);
++    expect(provider.freePassesUsed, 0);
++    expect(provider.blockedGuesser, isNull);
++  });
++}

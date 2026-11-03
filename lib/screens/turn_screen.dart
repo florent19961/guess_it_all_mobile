@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
 import '../services/audio_service.dart';
+import '../utils/reversed_word.dart';
 import '../widgets/common/app_confirm_dialog.dart';
 import '../widgets/fiesta/modifier_badge.dart';
 
@@ -254,9 +255,12 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
     final timeRemaining = provider.game.timeRemaining;
     final isPaused = _isPausedOf(provider);
     final isLowTime = timeRemaining <= 10;
-    final passPenalty = provider.settings.passPenalty;
+    // Pénalité EFFECTIVE et garde partagée avec `passWord` (Fiesta 2-8) ; en
+    // Classique, la pénalité réglée et la garde d'avant.
+    final passPenalty = provider.currentPassPenalty;
+    final hasFreePass = provider.hasFreePass;
     final hasWordsToPassTo = provider.effectiveRemainingWordsCount > 0;
-    final canPass = timeRemaining >= passPenalty && hasWordsToPassTo;
+    final canPass = provider.canPassWith(timeRemaining) && hasWordsToPassTo;
 
     return Material(
       color: AppColors.backgroundMain,
@@ -326,6 +330,17 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                           const SizedBox(height: 8),
                           ModifierBadges(
                               modifiers: provider.currentTeamModifiers),
+                          if (provider.freePasses > 0) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              'Passes gratuites : ${provider.freePassesUsed} / ${provider.freePasses}',
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 13,
+                                color: AppColors.secondaryCyan,
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 16),
                         ] else
                           const SizedBox(height: 32),
@@ -335,7 +350,11 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: AutoSizeText(
-                              currentWord ?? '',
+                              // À l'envers : affichage du tour SEULEMENT, le
+                              // mot du jeu reste en clair.
+                              provider.isWordReversed
+                                  ? reversedWordDisplay(currentWord ?? '')
+                                  : currentWord ?? '',
                               style: const TextStyle(
                                 fontFamily: 'Bangers',
                                 fontSize: 72,
@@ -413,7 +432,9 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Passer',
+                                  provider.passBlocked
+                                      ? 'Passer (bloqué)'
+                                      : 'Passer',
                                   style: TextStyle(
                                     fontFamily: 'Poppins',
                                     fontSize: 14,
@@ -423,9 +444,11 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                                         : AppColors.gray500,
                                   ),
                                 ),
-                                if (passPenalty > 0)
+                                if (passPenalty > 0 || hasFreePass)
                                   Text(
-                                    '-${passPenalty}s',
+                                    hasFreePass
+                                        ? 'gratuit'
+                                        : '-${passPenalty}s',
                                     style: TextStyle(
                                       fontFamily: 'Poppins',
                                       fontSize: 12,

@@ -9,12 +9,15 @@ import '../widgets/common/game_dialogs.dart';
 import '../widgets/common/home_button.dart';
 import '../widgets/common/back_button.dart';
 import '../widgets/effects/shooting_stars.dart';
+import '../widgets/fiesta/blocked_guesser.dart';
 import '../widgets/fiesta/fiesta_setup_widgets.dart';
+import '../widgets/fiesta/fiesta_turn_widgets.dart';
 import '../widgets/fiesta/malus_reveal.dart';
 import '../widgets/fiesta/modifier_badge.dart';
 import '../widgets/fiesta/modifier_card.dart';
 import '../widgets/fiesta/turn_time_cards.dart';
 import '../models/fiesta/modifier_catalog.dart';
+import '../models/fiesta/modifier_instance.dart';
 
 class GameScreen extends StatelessWidget {
   const GameScreen({super.key});
@@ -270,7 +273,8 @@ class GameScreen extends StatelessWidget {
   }
 
   /// Fiesta : révèle d'abord les malus de l'équipe à son premier tour de la
-  /// manche, puis lance le compte à rebours.
+  /// manche, puis fait choisir le devineur bloqué (`block_guesser`), puis
+  /// lance le compte à rebours. Sélecteur fermé sans choix : on reste ici.
   ///
   /// 🔴 Les révélations sont des routes poussées AU-DESSUS de `home` : elles
   /// survivent au changement d'écran. Sans les deux gardes, un double tap
@@ -292,6 +296,25 @@ class GameScreen extends StatelessWidget {
           provider.game.currentScreen != AppConstants.screenGame) {
         return;
       }
+    }
+    if (provider.needsBlockedGuesser) {
+      if (!context.mounted) return;
+      final blocked =
+          await BlockedGuesser.pick(context, provider.blockableGuessers);
+      if (blocked == null || !context.mounted) return;
+      await BlockedGuesser.announce(
+        context,
+        player: blocked,
+        teamName: provider.getCurrentTeam()?.name ?? '',
+        teamColor: teamColor,
+      );
+      if (!context.mounted ||
+          provider.game.currentScreen != AppConstants.screenGame) {
+        return;
+      }
+      // Persisté APRÈS l'annonce : une app tuée pendant l'annonce redemande
+      // le choix au lieu de démarrer sans l'avoir montrée.
+      provider.setBlockedGuesser(blocked.id);
     }
     provider.startTurn();
   }
@@ -653,6 +676,7 @@ class _FiestaAnnouncements extends StatelessWidget {
               ),
             ),
           RoundDrawCard(round: 1, modifiers: modifiers),
+          ..._constraints(rules.oneAnswer, modifiers),
         ],
       );
     }
@@ -660,6 +684,7 @@ class _FiestaAnnouncements extends StatelessWidget {
     return FiestaCard(
       title: 'Actif ce tour',
       children: [
+        ..._constraints(rules.oneAnswer, modifiers),
         if (modifiers.isEmpty && !rules.oneAnswer)
           const FiestaHint('Aucun modificateur')
         else
@@ -677,5 +702,23 @@ class _FiestaAnnouncements extends StatelessWidget {
           ),
       ],
     );
+  }
+
+  /// Contraintes annoncées (2-8) : bandeaux de mime / dessin, et Q6 « Une
+  /// seule réponse » + « Interdit de passer ».
+  List<Widget> _constraints(bool oneAnswer, List<ModifierInstance> modifiers) {
+    final ids = modifiers.map((m) => m.catalogId).toSet();
+    return [
+      for (final id in MimeConstraintBanner.icons.keys)
+        if (ids.contains(id)) ...[
+          MimeConstraintBanner(modifierId: id),
+          const SizedBox(height: 12),
+        ],
+      if (oneAnswer && ids.contains('no_pass')) ...[
+        const FiestaHint(
+            'Mauvaise réponse : le mot est grillé jusqu\'à la fin du tour.'),
+        const SizedBox(height: 12),
+      ],
+    ];
   }
 }
