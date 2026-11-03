@@ -130,6 +130,26 @@ void main() {
     expect(ids(provider.currentTeamModifiers), ['minus_10s@1']);
   });
 
+  test('révélation dès M2 aussi : jouer en M1 ne compte pas pour M2', () async {
+    final provider = await givenReadyProvider();
+    await provider.startGame(
+      fiesta: FiestaRules(mode: FiestaMode.custom, modifiers: {
+        'minus_10s': const ModifierSetting(
+          active: true,
+          arrival: ModifierArrival.draw,
+          startRound: 1,
+          charges: 0,
+        ),
+      }),
+    );
+    final first = provider.getCurrentTeam()!.id;
+    playWholeRound(provider);
+    provider.nextRound();
+    // La continuation garde l'équipe qui a joué toute la M1.
+    expect(provider.getCurrentTeam()!.id, first);
+    expect(ids(provider.malusToReveal), ['minus_10s@2']);
+  });
+
   test(
       'double tap sur « Manche suivante » : un seul passage de manche '
       '(bug antérieur à Fiesta, M1 → M3)', () async {

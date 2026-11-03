@@ -151,7 +151,10 @@ fonction de `(rules, gameId, manche)` seule. C'est donc à l'écrivain suivant d
 manche (charge non consommée, offre de 1 parmi 3 posée avant `nextRound`).
 
 **Esquisse.** Invariant à tenir par 2-8 / 2-10 : une instance de portée tour est consommée à la
-fin de son tour. Une offre de fin de manche est posée **après** le tirage (dans `nextRound`, ou
+fin de son tour. ⚠️ Cas piège : la **continuation de fin de manche**
+(`pendingBonusTurnId`) — le tour commencé en manche N se poursuit en N+1 avec la même équipe, donc
+une instance de portée tour posée sur ce tour franchit le passage de manche. 2-8 doit la
+consommer à la fin du tour de continuation, pas à la fin de la manche. Une offre de fin de manche est posée **après** le tirage (dans `nextRound`, ou
 avec `canAdd` contre `nextRoundModifiers`). Sinon, filtrer les survivantes par `canAdd` contre le
 tirage (jamais l'inverse).
 
