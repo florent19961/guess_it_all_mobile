@@ -72,7 +72,7 @@ Dans le doute, prendre le plus haut. Jamais de PRD ni de party-mode pour un fix 
 La lane prépare `_bmad-output/reviews/<epic>/<story>-patch-rN.diff`, calculé sur la merge-base
 (`git diff $(git merge-base origin/main HEAD)`), et `<story>-prompt-rN.md` (objectif, décisions
 de l'epic, questions précises, format attendu). La session principale lance **un reviewer Codex**
-(`general-purpose` + rubrique inline), qui lit le patch (jamais `git diff` lui-même) et écrit son
+(agent `codex:codex-rescue` + rubrique inline, consigne lecture seule), qui lit le patch (jamais `git diff` lui-même) et écrit son
 rapport dans un fichier :
 - conformité aux AC, **sur les deux plateformes** ;
 - correctness sur **tous les chemins de mutation d'état**, code lu avant la spec ;
