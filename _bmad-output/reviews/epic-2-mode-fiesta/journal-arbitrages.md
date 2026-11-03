@@ -21,3 +21,4 @@ Délégation explicite de Florent le 2026-11-03 : « avance tout droit jusqu'à 
 | 2026-11-03 | 2-7 | Revue r2 après un fix test+doc seul ? | Clôture vérifiée par l'orchestrateur, pas de 2ᵉ reviewer | Aucun code de prod changé, mutants M10/M11 tués | appliqué |
 | 2026-11-03 | 2-7 | HistoryEntry.modifiers (listé dans la story) | Non ajouté | Aucun AC ne l'exige ; changerait la forme de la partie en cours | à valider |
 | 2026-11-03 | 2-7 | Récap : rattrapage accordé même si non consommé | Accepté | Jugé acceptable en revue | à valider |
+| 2026-11-03 | 2-8 | block_guesser « tiré pour tous » (Q15) alors que 2-5 l'exclut du tirage symétrique | Reste offre seule (via 2-10 : 1 parmi 3 / coup de pouce), jamais tiré ni fixé pour tous ; Q15 sans objet | Un blocage de joueur n'a pas de sens symétrique ; aucun code à changer | à valider |
