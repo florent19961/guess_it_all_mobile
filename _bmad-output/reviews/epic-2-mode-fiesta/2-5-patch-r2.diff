@@ -1,8 +1,8 @@
 diff --git a/docs/notes_pour_plus_tard.md b/docs/notes_pour_plus_tard.md
-index b2c94f5..968010a 100644
+index b2c94f5..80ffc41 100644
 --- a/docs/notes_pour_plus_tard.md
 +++ b/docs/notes_pour_plus_tard.md
-@@ -132,3 +132,61 @@ persiste déjà quelque chose de voisin (le `lastUsedId` des ensembles de 2-3).
+@@ -132,3 +132,46 @@ persiste déjà quelque chose de voisin (le `lastUsedId` des ensembles de 2-3).
  **Esquisse.** En Personnalisé, retrouver l'ensemble via `lastUsedId` (clé des ensembles, déjà
  persistée) ; en Auto, les deux interrupteurs dans cette même clé ou dans la session.
  
@@ -49,21 +49,6 @@ index b2c94f5..968010a 100644
 +
 +**Esquisse.** Soit stocker l'aperçu dans `FiestaState` en fin de manche (champ optionnel,
 +absent = recalcul), soit versionner l'algorithme dans `FiestaState` et garder l'ancien.
-+
-+---
-+
-+## 2026-11-03 — Double tap sur « Manche suivante » : la manche N+1 est sautée
-+
-+**Contexte.** Revue 2-5 r1, hors périmètre (déjà présent avant Fiesta). `nextRound()` n'a pas de
-+garde : deux taps rapides font M1 → M3. Avec Fiesta, le tirage de M2 est sauté aussi.
-+
-+**Décision reportée.** Pas de correction dans 2-5.
-+
-+**Raison.** Bug préexistant, hors du périmètre de la story ; rien de remonté par les joueurs.
-+
-+**Signal déclencheur.** Un retour joueur, ou une story qui touche la transition (2-6, 2-10).
-+
-+**Esquisse.** Dans `nextRound`, ne rien faire si `currentScreen != screenTransition`.
 diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
 index da81704..4c47eab 100644
 --- a/docs/tracking_evolution.md
@@ -265,7 +250,7 @@ index 0000000..df64b5d
 +  ];
 +}
 diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
-index 8c96680..ff69741 100644
+index 8c96680..4637f9c 100644
 --- a/lib/providers/game_provider.dart
 +++ b/lib/providers/game_provider.dart
 @@ -6,6 +6,9 @@ import '../models/player.dart';
@@ -292,7 +277,18 @@ index 8c96680..ff69741 100644
        clearFiesta: fiesta == null,
      );
  
-@@ -1041,6 +1049,7 @@ class GameProvider extends ChangeNotifier {
+@@ -1021,6 +1029,10 @@ class GameProvider extends ChangeNotifier {
+   }
+ 
+   void nextRound() {
++    // Idempotent par transition : un double tap sur « Manche suivante »
++    // rappelait `nextRound` depuis l'écran de jeu de la manche suivante et
++    // sautait une manche (M1 → M3). Seul l'écran de transition fait avancer.
++    if (_game.currentScreen != AppConstants.screenTransition) return;
+     final nextRoundNumber = _game.currentRound + 1;
+ 
+     if (nextRoundNumber > 3) {
+@@ -1041,6 +1053,7 @@ class GameProvider extends ChangeNotifier {
          wordsGuessedThisTurn: [],
          passedWordsThisTurn: [],
          currentScreen: AppConstants.screenGame,
@@ -300,7 +296,7 @@ index 8c96680..ff69741 100644
        );
      }
  
-@@ -1048,6 +1057,59 @@ class GameProvider extends ChangeNotifier {
+@@ -1048,6 +1061,59 @@ class GameProvider extends ChangeNotifier {
      _saveGameState();
    }
  
@@ -1086,10 +1082,10 @@ index 89ba49f..cb3905a 100644
      test('startGame() sans argument efface la Fiesta de la partie précédente',
 diff --git a/test/providers/fiesta_round_draw_test.dart b/test/providers/fiesta_round_draw_test.dart
 new file mode 100644
-index 0000000..f3fc6cb
+index 0000000..ad880e0
 --- /dev/null
 +++ b/test/providers/fiesta_round_draw_test.dart
-@@ -0,0 +1,132 @@
+@@ -0,0 +1,147 @@
 +import 'package:flutter_test/flutter_test.dart';
 +import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 +import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
@@ -1220,5 +1216,20 @@ index 0000000..f3fc6cb
 +    expect(provider.malusToReveal, isEmpty);
 +    // Toujours actif, juste plus révélé.
 +    expect(ids(provider.currentTeamModifiers), ['minus_10s@1']);
++  });
++
++  test(
++      'double tap sur « Manche suivante » : un seul passage de manche '
++      '(bug antérieur à Fiesta, M1 → M3)', () async {
++    final provider = await givenReadyProvider();
++    await provider.startGame();
++    playWholeRound(provider);
++    expect(provider.game.currentScreen, AppConstants.screenTransition);
++
++    provider.nextRound();
++    provider.nextRound();
++
++    expect(provider.game.currentRound, 2);
++    expect(provider.game.currentScreen, AppConstants.screenGame);
 +  });
 +}
