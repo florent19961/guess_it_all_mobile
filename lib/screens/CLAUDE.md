@@ -5,7 +5,9 @@
 ## Flux de navigation
 
 ```
-HomeScreen → SettingsScreen → (CategoriesScreen) → PlayersScreen → (WordsScreen) → TeamsScreen
+HomeScreen → GameModeScreen ─ Classique ─────────────────────────────────────► SettingsScreen
+                            └ Fiesta → FiestaChoiceScreen → Auto | Ensembles → FiestaRecapScreen ─┘
+SettingsScreen → (CategoriesScreen) → PlayersScreen → (WordsScreen) → TeamsScreen
   → GameScreen → CountdownScreen → TurnScreen → VerificationScreen
   → TransitionScreen (entre manches) → ResultsScreen → StatsScreen
 ```
@@ -28,3 +30,12 @@ HomeScreen → SettingsScreen → (CategoriesScreen) → PlayersScreen → (Word
 | `results_screen.dart` | Podium anime, tableau scores par manche, boutons Rejouer/Stats |
 | `stats_screen.dart` | Stats detaillees : graphique evolution scores (fl_chart), top joueurs, temps moyen |
 | `rules_screen.dart` | Regles completes du jeu (3 manches) |
+| `game_mode_screen.dart` | Nouvelle partie : Classique ou Fiesta |
+| `fiesta_choice_screen.dart` | Fiesta : Mode Auto ou Personnalise |
+| `fiesta_auto_screen.dart` | Mode Auto : 2 interrupteurs (au moins un) + regles communes |
+| `fiesta_recap_screen.dart` | Recap Fiesta avant les Parametres ; cible de « Rejouer » apres une partie Fiesta |
+| `fiesta_ensembles_stub_screen.dart` | 🔴 Bouchon de 2-4, remplace par la liste d'ensembles de 2-3 au merge |
+
+Invariant Fiesta : le choix du mode vit dans `GameProvider.pendingFiesta`, **en memoire
+seulement** (Q10), et `TeamsScreen` le passe a `startGame`. Le chemin « Reprendre » de l'accueil
+ne traverse jamais les ecrans de mode.
