@@ -135,7 +135,8 @@ void main() {
         'Mot compte double, ${provider.getTeamById(teamId)!.name} en M1');
   });
 
-  test('Classique : l\'interrupteur est sans effet, 1 mot = 1 point, aucune '
+  test(
+      'Classique : l\'interrupteur est sans effet, 1 mot = 1 point, aucune '
       'clé Fiesta écrite', () async {
     final provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
     await provider.startGame();
