@@ -1,8 +1,8 @@
 diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
-index b2494a4..64ff722 100644
+index b2494a4..b4b560a 100644
 --- a/docs/tracking_evolution.md
 +++ b/docs/tracking_evolution.md
-@@ -645,3 +645,20 @@ texte à l'affichage (carte des Résultats). Le récap recalcule rattrapage et c
+@@ -645,3 +645,25 @@ texte à l'affichage (carte des Résultats). Le récap recalcule rattrapage et c
  prévue, epic-4). Le format Fiesta de `guessItAll_gameHistory` n'a jamais été publié, donc la
  forme change sans migration. Une ligne `{title, detail}` écrite par une build de dev se relit
  comme un fait illisible : elle est ignorée seule, sans crash.
@@ -23,6 +23,11 @@ index b2494a4..64ff722 100644
 +Classique. Le nombre d'équipes et de joueurs suit toujours les joueurs recréés, et pas un réglage
 +archivé qui pourrait les contredire. Des règles Fiesta illisibles invalident tout le snapshot,
 +pour ne pas rejouer en Classique une partie qui était Fiesta.
++
++**Noms d'équipe.** `createTeams` tire maintenant des noms drôles et distincts dans
++`kFunnyTeamNames`, à la place de « Équipe N ». Il n'y a pas de bouton pour retirer d'autres noms :
++le renommage manuel suffit. Le nom est déjà une chaîne persistée, donc la forme ne change pas
++(règle 7). Les sessions existantes gardent « Équipe N ».
 diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
 index 7b51a7f..6a58b61 100644
 --- a/lib/models/CLAUDE.md
@@ -149,7 +154,7 @@ index 0000000..40be129
 +  }
 +}
 diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
-index c7addd1..c4bd1eb 100644
+index c7addd1..c3f939f 100644
 --- a/lib/providers/game_provider.dart
 +++ b/lib/providers/game_provider.dart
 @@ -15,6 +15,7 @@ import '../models/fiesta/symmetric_draw.dart';
@@ -160,7 +165,27 @@ index c7addd1..c4bd1eb 100644
  import '../models/game_state.dart';
  import '../models/turn_clock.dart';
  import '../models/game_result.dart';
-@@ -1673,6 +1674,10 @@ class GameProvider extends ChangeNotifier {
+@@ -26,6 +27,7 @@ import '../services/storage_service.dart';
+ import '../services/analytics_service.dart';
+ import '../services/user_service.dart';
+ import '../utils/constants.dart';
++import '../utils/team_names.dart';
+ import '../utils/word_categories/utils.dart' show lookupWordsMetadata;
+ 
+ class GameProvider extends ChangeNotifier {
+@@ -296,9 +298,10 @@ class GameProvider extends ChangeNotifier {
+   // ========== ACTIONS - TEAMS ==========
+ 
+   void createTeams() {
++    final names = drawTeamNames(_settings.numberOfTeams);
+     _teams = List.generate(
+       _settings.numberOfTeams,
+-      (i) => Team.create(i),
++      (i) => Team.create(i).copyWith(name: names[i]),
+     );
+     notifyListeners();
+     _saveGameSession();
+@@ -1673,6 +1676,10 @@ class GameProvider extends ChangeNotifier {
        roundsPlayed: _game.currentRound,
        mode: _game.fiesta == null ? null : fiestaModeId(_game.fiesta!.rules),
        modifierRecap: _game.fiesta == null ? null : _modifierRecapItems,
@@ -171,7 +196,7 @@ index c7addd1..c4bd1eb 100644
      );
  
      unawaited(_history.record(result));
-@@ -1814,6 +1819,49 @@ class GameProvider extends ChangeNotifier {
+@@ -1814,6 +1821,49 @@ class GameProvider extends ChangeNotifier {
      notifyListeners();
    }
  
@@ -410,6 +435,66 @@ index 779b820..e70c39a 100644
                                            ],
                                          ),
                                        ),
+diff --git a/lib/utils/CLAUDE.md b/lib/utils/CLAUDE.md
+index 8a7dce5..3e71611 100644
+--- a/lib/utils/CLAUDE.md
++++ b/lib/utils/CLAUDE.md
+@@ -8,6 +8,7 @@ Constantes et utilitaires.
+ |---------|------|
+ | `reversed_word.dart` | `reversedWordDisplay` : malus « Mot a l'envers » (2-8), MAJUSCULES inversees par graphemes |
+ | `constants.dart` | `AppConstants` : toutes les constantes du jeu (defauts, limites, cles stockage, noms d'ecrans, modes, niveaux difficulte avec emojis) |
++| `team_names.dart` | `kFunnyTeamNames`, `drawTeamNames` : ~30 noms d'équipe drôles, tirés distincts par `createTeams` (renommage manuel toujours possible ; le « Rejouer » de l'historique garde les noms archivés) |
+ 
+ ## Sous-repertoire
+ 
+diff --git a/lib/utils/team_names.dart b/lib/utils/team_names.dart
+new file mode 100644
+index 0000000..024a55f
+--- /dev/null
++++ b/lib/utils/team_names.dart
+@@ -0,0 +1,42 @@
++import 'dart:math';
++
++/// Noms d'équipe drôles, tirés à la création des équipes. Le joueur peut
++/// toujours renommer à la main. Tout public, sans nom de marque.
++const List<String> kFunnyTeamNames = [
++  'Les Mimes Fous',
++  'Les Devins du Dimanche',
++  'Les Tchatcheurs',
++  'Les Muets Sauvages',
++  'Les Langues Pendues',
++  'Les Cerveaux en Folie',
++  'Les Mots Croisés',
++  'Les Bavards Masqués',
++  'Les Devineurs Fous',
++  'Les Pros du Charabia',
++  'Les Rois du Mime',
++  'Les Moulins à Paroles',
++  'Les Têtes en l\'Air',
++  'Les Sabliers Pressés',
++  'Les Indices Foireux',
++  'Les Génies du Salon',
++  'Les Fous du Chrono',
++  'Les Gestes Barrés',
++  'Les Mains Baladeuses',
++  'Les Pipelettes',
++  'Les Supers Souffleurs',
++  'Les Lapins Pressés',
++  'Les Perroquets Malins',
++  'Les Chouettes Futées',
++  'Les Pingouins Bavards',
++  'Les Ninjas du Mot',
++  'Les Mystères Ambulants',
++  'Les Charades Vivantes',
++  'Les Écureuils Agités',
++  'Les Zèbres Rigolos',
++];
++
++/// [count] noms distincts, au hasard.
++List<String> drawTeamNames(int count, [Random? random]) {
++  assert(count <= kFunnyTeamNames.length);
++  return (List.of(kFunnyTeamNames)..shuffle(random)).take(count).toList();
++}
 diff --git a/test/models/game_setup_snapshot_test.dart b/test/models/game_setup_snapshot_test.dart
 new file mode 100644
 index 0000000..51a35ef
@@ -670,5 +755,27 @@ index 0000000..b392f9b
 +    expect(provider.pendingFiesta!.toJson(), rules.toJson());
 +    expect(provider.game.isGameSuspended, isFalse);
 +    expect(provider.game.currentScreen, AppConstants.screenFiestaRecap);
++  });
++}
+diff --git a/test/utils/team_names_test.dart b/test/utils/team_names_test.dart
+new file mode 100644
+index 0000000..77a4c3c
+--- /dev/null
++++ b/test/utils/team_names_test.dart
+@@ -0,0 +1,16 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/utils/constants.dart';
++import 'package:guess_it_all_mobile/utils/team_names.dart';
++
++void main() {
++  test('noms d\'équipe : le bon nombre, distincts, jamais vides', () {
++    expect(kFunnyTeamNames.toSet(), hasLength(kFunnyTeamNames.length));
++    expect(kFunnyTeamNames.length, greaterThanOrEqualTo(AppConstants.maxTeams));
++    for (var i = 0; i < 50; i++) {
++      final names = drawTeamNames(AppConstants.maxTeams);
++      expect(names, hasLength(AppConstants.maxTeams));
++      expect(names.toSet(), hasLength(names.length));
++      expect(names.every((n) => n.trim().isNotEmpty), isTrue);
++    }
 +  });
 +}

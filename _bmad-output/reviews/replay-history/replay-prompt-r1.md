@@ -16,6 +16,9 @@ Read `replay-patch-r1.diff` (diff against the merge-base with `origin/main`). Do
 7. **Confirmation** only when `game.isGameSuspended`, using home's Annuler/Valider modal. The button is hidden if the archive has no teams.
 8. **Random badge:** `wordsCount` is the number of words already drawn. No chevron, and no dimming when there is no name.
 
+9. **Flow (confirmed by Florent).** « Rejouer » lands on the first screen of the normal flow, Paramètres or the Fiesta Récap. From there it goes Paramètres → Joueurs → Équipes, every screen pre-filled, with no screen skipped and no direct launch. On Joueurs, `syncTeamsWithPlayers` keeps the composition because the teams already exist.
+10. **Funny team names** (added item). `createTeams` draws distinct names from `lib/utils/team_names.dart` (30 names). No re-roll. Replay keeps the archived names, because `replayFromHistory` does not go through `createTeams`. Note: changing the number of teams in Paramètres calls `createTeams`, which re-draws names. That is the existing behaviour (teams are recreated).
+
 ## Specific questions
 - Are there any state mutation paths (provider) where a replay leaves an inconsistent state? Examples: `_wordMetadataCache` kept from the previous game, `_currentEditingPlayerId`, a teams screen that recreates teams.
 - Rule 7: is an old archive (frozen blob in the test) read and replayed without a crash on every path? Could a `setup` with in-range but obsolete values (a category that no longer exists, an unknown `wordChoice`) break the settings, players or teams screens?
