@@ -1,5 +1,5 @@
 diff --git a/lib/screens/transition_screen.dart b/lib/screens/transition_screen.dart
-index e197581..b91c806 100644
+index e197581..b689f0e 100644
 --- a/lib/screens/transition_screen.dart
 +++ b/lib/screens/transition_screen.dart
 @@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
@@ -50,15 +50,16 @@ index e197581..b91c806 100644
      ]);
    }
  
-@@ -52,6 +59,7 @@ class _TransitionScreenState extends State<TransitionScreen> {
+@@ -51,7 +58,7 @@ class _TransitionScreenState extends State<TransitionScreen> {
+   Widget build(BuildContext context) {
      final provider = context.watch<GameProvider>();
      final currentRound = provider.game.currentRound;
-     final isLastRound = currentRound >= 3;
+-    final isLastRound = currentRound >= 3;
 +    final nextRound = currentRound + 1;
      final fiestaRules = provider.game.fiesta?.rules;
      final catchUpRules =
          fiestaRules == null ? null : effectiveCatchUp(fiestaRules);
-@@ -59,6 +67,13 @@ class _TransitionScreenState extends State<TransitionScreen> {
+@@ -59,6 +66,13 @@ class _TransitionScreenState extends State<TransitionScreen> {
      // refuse aussi, cf. `nextRound`).
      final chooserId = provider.nextChooserId;
      final chooser = chooserId == null ? null : provider.getTeamById(chooserId);
@@ -72,7 +73,7 @@ index e197581..b91c806 100644
  
      return Material(
        color: AppColors.backgroundMain,
-@@ -66,54 +81,122 @@ class _TransitionScreenState extends State<TransitionScreen> {
+@@ -66,55 +80,102 @@ class _TransitionScreenState extends State<TransitionScreen> {
          children: [
            SafeArea(
              child: Padding(
@@ -120,6 +121,10 @@ index e197581..b91c806 100644
                          children: [
 -                          // Fiesta : tirage de la manche suivante, visible
 -                          // AVANT « Manche suivante ». Vide en Classique.
+-                          if (!isLastRound)
+-                            RoundDrawCard(
+-                              round: currentRound + 1,
+-                              modifiers: provider.nextRoundModifiers,
 +                          _RoundTrack(done: currentRound),
 +                          const SizedBox(height: 10),
 +                          Text(
@@ -131,60 +136,42 @@ index e197581..b91c806 100644
 +                              fontWeight: FontWeight.w700,
 +                              letterSpacing: 1.6,
 +                              color: AppColors.success,
-+                            ),
+                             ),
+-                          // Fiesta : rattrapage de la manche suivante.
+-                          if (catchUpRules != null && !isLastRound)
 +                          ),
 +                          const SizedBox(height: 14),
 +                          // Pas de score ici : il reste caché jusqu'aux
 +                          // résultats.
-+                          if (isLastRound) ...[
-+                            _Hero(
-+                              key: _nextRoundKey,
-+                              decoration: '🏆',
-+                              children: [
-+                                _HeroTitle('C\'est fini !'),
-+                                _HeroBig('Qui a gagné ?', fontSize: 52),
-+                                _HeroText('Les 3 manches sont jouées. Le '
-+                                    'score n\'a jamais été affiché… place au '
-+                                    'verdict.'),
-+                              ],
-+                            ),
-+                            const SizedBox(height: 12),
-+                            _FactTiles(tiles: [
-+                              _Fact('$totalWords', 'mots, devinés 3 fois'),
-+                              _Fact('${provider.game.history.length}',
-+                                  'tours joués'),
-+                            ]),
-+                          ] else ...[
-+                            _Hero(
-+                              key: _nextRoundKey,
-+                              decoration: _roundEmoji[nextRound] ?? '✦',
-+                              children: [
-+                                const _HeroEyebrow('Et maintenant'),
-+                                _HeroBig('$nextRound'),
-+                                _HeroTitle(
-+                                    AppConstants.roundModes[nextRound] ?? ''),
-+                                _HeroText(_roundRule[nextRound] ?? ''),
-+                              ],
-+                            ),
-+                            const SizedBox(height: 12),
-+                            _FactTiles(tiles: [
-+                              _Fact('$totalWords',
-+                                  'mots reviennent dans le chapeau'),
-+                              if (bonus > 0)
-+                                _Fact('+$bonus s',
-+                                    'reportées pour ${starterTeam?.name ?? ''}'),
-+                            ]),
-+                            if (starterTeam != null) ...[
-+                              const SizedBox(height: 14),
-+                              _Starter(
-+                                team: starterTeam.name,
-+                                player: starterPlayer?.name,
-+                                color: starterColor,
-+                              ),
++                          _Hero(
++                            key: _nextRoundKey,
++                            decoration: _roundEmoji[nextRound] ?? '✦',
++                            children: [
++                              const _HeroEyebrow('Et maintenant'),
++                              _HeroBig('$nextRound'),
++                              _HeroTitle(
++                                  AppConstants.roundModes[nextRound] ?? ''),
++                              _HeroText(_roundRule[nextRound] ?? ''),
 +                            ],
++                          ),
++                          const SizedBox(height: 12),
++                          _FactTiles(tiles: [
++                            _Fact('$totalWords',
++                                'mots reviennent dans le chapeau'),
++                            if (bonus > 0)
++                              _Fact('+$bonus s',
++                                  'reportées pour ${starterTeam?.name ?? ''}'),
++                          ]),
++                          if (starterTeam != null) ...[
 +                            const SizedBox(height: 14),
-+                            _MemoryTip(round: currentRound),
++                            _Starter(
++                              team: starterTeam.name,
++                              player: starterPlayer?.name,
++                              color: starterColor,
++                            ),
 +                          ],
++                          const SizedBox(height: 14),
++                          _MemoryTip(round: currentRound),
 +                          // Bouton pour consulter les mots devinés du tour
 +                          // précédent.
 +                          if (provider.game.history.isNotEmpty) ...[
@@ -223,17 +210,15 @@ index e197581..b91c806 100644
 +                          ],
 +                          const SizedBox(height: 16),
 +                          // Fiesta : sous le héros. Vides en Classique.
-                           if (!isLastRound)
-                             RoundDrawCard(
--                              round: currentRound + 1,
-+                              round: nextRound,
-                               modifiers: provider.nextRoundModifiers,
-                             ),
--                          // Fiesta : rattrapage de la manche suivante.
-                           if (catchUpRules != null && !isLastRound)
++                          RoundDrawCard(
++                            round: nextRound,
++                            modifiers: provider.nextRoundModifiers,
++                          ),
++                          if (catchUpRules != null)
                              CatchUpCard(
                                // Carte vide (aucun rattrapage) : pas d'aide.
-@@ -145,82 +228,14 @@ class _TransitionScreenState extends State<TransitionScreen> {
+                               key: provider.catchUpPreview.isEmpty
+@@ -145,82 +206,12 @@ class _TransitionScreenState extends State<TransitionScreen> {
                        ),
                      ),
                    ),
@@ -310,15 +295,14 @@ index e197581..b91c806 100644
                      key: _nextKey,
                      text: chooser != null
                          ? 'En attente du choix de ${chooser.name}'
-                         : isLastRound
+-                        : isLastRound
 -                            ? 'Voir les résultats'
 -                            : 'Manche suivante',
-+                            ? 'Découvrir le podium'
-+                            : 'Manche $nextRound',
++                        : 'Manche $nextRound',
                      variant: AppButtonVariant.primary,
                      size: AppButtonSize.large,
                      fullWidth: true,
-@@ -228,8 +243,6 @@ class _TransitionScreenState extends State<TransitionScreen> {
+@@ -228,8 +219,6 @@ class _TransitionScreenState extends State<TransitionScreen> {
                      onPressed:
                          chooser != null ? null : () => provider.nextRound(),
                    ),
@@ -327,7 +311,7 @@ index e197581..b91c806 100644
                  ],
                ),
              ),
-@@ -415,3 +428,371 @@ class _PickThreeFlowState extends State<_PickThreeFlow> {
+@@ -415,3 +404,370 @@ class _PickThreeFlowState extends State<_PickThreeFlow> {
      );
    }
  }
@@ -500,9 +484,8 @@ index e197581..b91c806 100644
 +
 +class _HeroBig extends StatelessWidget {
 +  final String text;
-+  final double fontSize;
 +
-+  const _HeroBig(this.text, {this.fontSize = 84});
++  const _HeroBig(this.text);
 +
 +  @override
 +  Widget build(BuildContext context) => Text(
@@ -510,7 +493,7 @@ index e197581..b91c806 100644
 +        textAlign: TextAlign.center,
 +        style: TextStyle(
 +          fontFamily: 'Bangers',
-+          fontSize: fontSize,
++          fontSize: 84,
 +          height: 1,
 +          color: AppColors.primaryPink,
 +          shadows: const [
@@ -700,7 +683,7 @@ index e197581..b91c806 100644
 +  }
 +}
 diff --git a/lib/widgets/help/help_content.dart b/lib/widgets/help/help_content.dart
-index 94ca5ff..5e23125 100644
+index 94ca5ff..c354d61 100644
 --- a/lib/widgets/help/help_content.dart
 +++ b/lib/widgets/help/help_content.dart
 @@ -283,12 +283,20 @@ List<CoachStep> verificationHelp({
@@ -724,7 +707,7 @@ index 94ca5ff..5e23125 100644
        CoachStep(
          target: previousTurn,
          title: 'Mots du dernier tour',
-@@ -296,11 +304,11 @@ List<CoachStep> transitionHelp({
+@@ -296,11 +304,9 @@ List<CoachStep> transitionHelp({
        ),
        CoachStep(
          target: next,
@@ -734,9 +717,7 @@ index 94ca5ff..5e23125 100644
 -            'bouton devient « Voir les résultats ». En Fiesta, il attend que '
 -            'chaque équipe menée ait choisi sa carte.',
 +        title: 'Lancer la manche',
-+        text: 'Lance la manche suivante. Après la dernière manche, ce bouton '
-+            'devient « Découvrir le podium » : les scores, cachés pendant la '
-+            'partie, s\'affichent enfin. En Fiesta, il attend que chaque '
++        text: 'Lance la manche suivante. En Fiesta, il attend que chaque '
 +            'équipe menée ait choisi sa carte.',
        ),
        CoachStep(
