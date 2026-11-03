@@ -446,3 +446,31 @@ Cartes « Temps du tour » (avant-tour, Fiesta) et « Rattrapage » (transition)
   base est ≥ 20 s (`minTurnDuration`), donc la durée Classique est la base, seconde pour seconde.
 - **Co-leaders sans départage par l'ordre de jeu** (Q3) : `getTeamsSortedByScore` départage
   pour l'affichage, pas pour le rattrapage — à égalité en tête, personne n'est « menée ».
+
+## 2026-11-03 — Fiesta 2-7 : modificateurs dans les analytics, l'archive et les résultats
+
+**Quoi.** `WordEvent.modifiers` (ids actifs pour l'équipe qui joue), `GameAnalytics.gameMode` /
+`fiestaRules`, `GameResult.mode` / `modifierRecap` : champs **additifs**, clé absente en Classique.
+Carte « Modificateurs de la partie » sur l'écran Résultats (Fiesta) : tirage par manche,
+rattrapages. Les sections 1 parmi 3, bonus utilisés et joueurs bloqués arrivent avec leurs
+stories.
+
+**Pourquoi ces choix.**
+- **Clé absente, pas `null`, en Classique** : le blob `guessItAll_analytics_*` (non enveloppé),
+  l'historique et le document Firestore d'une partie Classique sont ceux d'avant. Lecture
+  tolérante (`is List` / `is String` / `is Map`), aucun cast dur ajouté. `kCurrentSchemaVersion`
+  inchangé.
+- **Modificateurs = contexte du TOUR, pas du mot** : mémorisés à côté de `_lastRound`, jamais
+  remis à zéro par `_recordEventWithDuration`, donc `invalidated` (vérification, après le tour)
+  garde l'étiquette. Le provider les relit de l'état persisté à chaque mot : après un kill, le mot
+  suivant est ré-étiqueté. Le bloc « mot affiché » du service est isolé et son contrat (un seul mot
+  à l'écran) écrit : 2-11 le remplace sans toucher au reste.
+- **Liste vide ≠ absente** : `[]` = Fiesta sans modificateur ce tour, distinguable du Classique
+  pour le recalibrage.
+- **Récap recalculé, pas journalisé** : le tirage vient de la graine `(gameId, manche)` (comme
+  `nextRoundModifiers`), le rattrapage des scores cumulés en fin de manche (= ce que la transition
+  a montré). Pas de `HistoryEntry.modifiers` ni d'autre champ dans `GameState` : rien à persister,
+  aucune nouvelle forme sur la clé de partie en cours. Limite assumée : le récap montre le
+  rattrapage **accordé**, même si l'équipe n'a pas joué dans la manche suivante.
+- **Archivé tel qu'affiché** (`ModifierRecapLine` = titre + détail formés), comme les scores de
+  `GameResult`.

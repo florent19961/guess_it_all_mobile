@@ -27,7 +27,7 @@ SettingsScreen → (CategoriesScreen) → PlayersScreen → (WordsScreen) → Te
 | `turn_screen.dart` | Jeu actif : timer, mot courant (auto-size), boutons Passer/Valider, pause, sons, haptic |
 | `verification_screen.dart` | Validation post-tour : toggle valid/invalide par mot, sauvegarde snapshot |
 | `transition_screen.dart` | Entre manches : scores, medailles, indicateur bonus |
-| `results_screen.dart` | Podium anime, tableau scores par manche, boutons Rejouer/Stats |
+| `results_screen.dart` | Podium anime, tableau scores par manche, carte « Modificateurs de la partie » (Fiesta seulement), boutons Rejouer/Stats |
 | `stats_screen.dart` | Stats detaillees : graphique evolution scores (fl_chart), top joueurs, temps moyen |
 | `rules_screen.dart` | Regles completes du jeu (3 manches) |
 | `game_mode_screen.dart` | Nouvelle partie : Classique ou Fiesta |
