@@ -7,6 +7,7 @@ import 'providers/game_provider.dart';
 import 'services/analytics_service.dart';
 import 'services/word_loader_service.dart';
 import 'services/word_history_service.dart';
+import 'services/storage_service.dart';
 import 'services/connectivity_service.dart';
 import 'services/firebase_sync_service.dart';
 import 'app.dart';
@@ -35,6 +36,7 @@ void main() async {
     localTasks: [
       () => WordLoaderService().initialize(locale: 'fr'),
       () => WordHistoryService().initialize(),
+      () => StorageService().inferHelpFlagsFromPastGames(),
       () async {
         await AnalyticsService().finalizeOrphanedGames();
       },

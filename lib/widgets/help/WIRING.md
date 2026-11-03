@@ -75,6 +75,8 @@ chaque joueur).
 | `guessItAll_fiestaTutorialSeen` | `hasSeenFiestaTutorial` / `markFiestaTutorialSeen` | tuto Fiesta déjà vu |
 | `guessItAll_firstGameDone` | `isFirstGameDone` / `markFirstGameDone` / `resetFirstGameDone` | première partie terminée |
 
-Booléens autonomes, absents = `false` : clés neuves, aucune migration (règle 7). Exception :
-`tutorialSeen` et `firstGameDone` absents **et** historique `guessItAll_game_results` non vide
-= joueur déjà venu → lus `true` et écrits une fois. Un `false` écrit (« Revoir les aides ») prime.
+Booléens autonomes, absents = `false` : clés neuves, aucune migration (règle 7). Joueurs déjà
+venus : au démarrage (`main.dart`, tâche locale), `inferHelpFlagsFromPastGames` écrit à `true`
+chaque flag tuto / première partie **absent** si `guessItAll_word_history` (présent depuis la
+version en store, écrit en fin de partie seulement) ou `guessItAll_game_results` est non vide.
+Un `false` écrit (« Revoir les aides ») prime.

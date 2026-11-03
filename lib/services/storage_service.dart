@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/constants.dart';
 import 'game_history_service.dart';
 import 'persisted_schema.dart';
+import 'word_history_service.dart';
 
 /// Accès à la persistance locale (`SharedPreferences`).
 ///
@@ -127,11 +128,10 @@ class StorageService {
   }
 
   // Aides de prise en main : booléens autonomes, absents = false (clés neuves,
-  // rien à migrer). Exception : tuto et première partie, absents chez un joueur
-  // qui a déjà un historique de parties = déjà vus (voir [_readFlagOrInfer]).
+  // rien à migrer). Les joueurs déjà venus sont rattrapés au démarrage par
+  // [inferHelpFlagsFromPastGames].
 
-  Future<bool> hasSeenTutorial() =>
-      _readFlagOrInfer(AppConstants.tutorialSeenKey);
+  Future<bool> hasSeenTutorial() => _readFlag(AppConstants.tutorialSeenKey);
   Future<void> markTutorialSeen() =>
       _writeFlag(AppConstants.tutorialSeenKey, true);
 
@@ -142,8 +142,7 @@ class StorageService {
 
   /// Vrai après la première partie terminée sur ce téléphone. Tant qu'il est
   /// faux, chaque joueur voit les aides à son premier tour.
-  Future<bool> isFirstGameDone() =>
-      _readFlagOrInfer(AppConstants.firstGameDoneKey);
+  Future<bool> isFirstGameDone() => _readFlag(AppConstants.firstGameDoneKey);
   Future<void> markFirstGameDone() =>
       _writeFlag(AppConstants.firstGameDoneKey, true);
 
@@ -151,20 +150,37 @@ class StorageService {
   Future<void> resetFirstGameDone() =>
       _writeFlag(AppConstants.firstGameDoneKey, false);
 
-  /// Clé absente + historique de parties non vide = joueur déjà venu : on
-  /// rend vrai et on l'écrit une fois. Une valeur écrite (même `false`, posé
-  /// par « Revoir les aides ») prime toujours.
-  Future<bool> _readFlagOrInfer(String key) async {
+  /// Au démarrage, avant toute partie : un joueur qui a déjà fini une partie
+  /// (historique des mots — présent depuis la version en store — ou historique
+  /// des parties non vide) ne doit revoir ni le prompt « Première partie ? » ni
+  /// les aides du premier tour. Chaque flag ABSENT est alors écrit à `true`,
+  /// une fois ; un `false` écrit (« Revoir les aides ») prime.
+  ///
+  /// L'historique des mots n'est écrit qu'en fin de partie (`endGame`) : la
+  /// première partie d'un nouveau joueur ne peut pas le déclencher en avance.
+  Future<void> inferHelpFlagsFromPastGames() async {
+    const keys = [AppConstants.tutorialSeenKey, AppConstants.firstGameDoneKey];
     try {
       final prefs = await SharedPreferences.getInstance();
-      final stored = prefs.getBool(key);
-      if (stored != null) return stored;
-      if ((await GameHistoryService().load()).isEmpty) return false;
-      await prefs.setBool(key, true);
-      return true;
+      final missing = keys.where((k) => !prefs.containsKey(k)).toList();
+      if (missing.isEmpty || !await _hasPlayedBefore(prefs)) return;
+      for (final key in missing) {
+        await prefs.setBool(key, true);
+      }
     } catch (e) {
-      return false;
+      debugPrint('[Storage] Déduction des flags d\'aide impossible: $e');
     }
+  }
+
+  Future<bool> _hasPlayedBefore(SharedPreferences prefs) async {
+    final words = prefs.getString(WordHistoryService.storageKey);
+    if (words != null) {
+      try {
+        final decoded = jsonDecode(words);
+        if (decoded is Map && decoded.isNotEmpty) return true;
+      } catch (_) {}
+    }
+    return (await GameHistoryService().load()).isNotEmpty;
   }
 
   Future<bool> _readFlag(String key) async {

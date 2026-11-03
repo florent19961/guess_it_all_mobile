@@ -15,7 +15,8 @@ class WordHistoryService {
   WordHistoryService._internal();
 
   // Clé de stockage
-  static const String _historyKey = 'guessItAll_word_history';
+  static const String storageKey = 'guessItAll_word_history';
+  static const String _historyKey = storageKey;
 
   // Cache mémoire pour performance
   Map<String, int>? _historyCache;
