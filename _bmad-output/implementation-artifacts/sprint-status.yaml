@@ -265,10 +265,12 @@ stories:
   2-10-un-parmi-trois-coup-de-pouce:
     epic: epic-2-mode-fiesta
     title: "1 parmi 3 (Personnalisé) et coup de pouce du catalogue (Auto)"
-    status: in-progress
+    status: done
     depends: [2-6-temps-rattrapage-duree-reelle, 2-9-mot-compte-double]
     spec: _bmad-output/specs/fiesta/2-10-un-parmi-trois-coup-de-pouce.md
     note: >-
+      ✅ CŒUR MERGÉ PR #18 (squash 9ea3d80, mode délégué). Revue Codex statique r1 NOT READY (1 BLOCKER :
+      portée de block_guesser forcée à « manche ») → corrigé (defaultScope) + test, vérifié orchestrateur.
       🧩 KIT MERGÉ PR #16 (squash 0f0bc27) : offers.dart pur + offer_widgets.dart (revue Opus r2 + fix test).
       Reste la lane cœur (provider, transition, persistance des choix), après 2-9.
       R ① · GP + GS + transition_screen. Table de force « au doigt mouillé » (Q7).
