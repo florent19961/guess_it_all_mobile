@@ -585,10 +585,29 @@ class GameProvider extends ChangeNotifier {
     // une continuation, donc si le rattrapage s'applique et se consomme.
     final durationSeconds = turnTime.total;
     final durationMs = durationSeconds * 1000;
-    final fiesta = _game.fiesta;
-    final consumesCatchUp = fiesta != null &&
+    var fiesta = _game.fiesta;
+    final teamId = _teams[_game.currentTeamIndex].id;
+    if (fiesta != null &&
         _game.turnBonusTime == null &&
-        fiesta.catchUpDue.containsKey(_teams[_game.currentTeamIndex].id);
+        fiesta.catchUpDue.containsKey(teamId)) {
+      // Consommé une fois, effacé : même principe que `turnBonusTime`.
+      fiesta = fiesta.copyWith(
+          catchUpDue: Map.of(fiesta.catchUpDue)..remove(teamId));
+    }
+    // Mot compte double : la charge se dépense ICI, pas à l'interrupteur.
+    // Éteindre avant le départ ou revenir en arrière n'a donc rien à rendre.
+    if (fiesta != null && fiesta.turn[kDoublePointsKey] == kDoubleArmed) {
+      fiesta = fiesta.copyWith(
+        turn: {...fiesta.turn, kDoublePointsKey: kDoubleSpent},
+        chargesUsed: [
+          ...fiesta.chargesUsed,
+          ChargeUse(
+              catalogId: 'double_points',
+              teamId: teamId,
+              round: _game.currentRound),
+        ],
+      );
+    }
 
     _game = _game.copyWith(
       currentScreen: AppConstants.screenTurn,
@@ -599,12 +618,8 @@ class GameProvider extends ChangeNotifier {
       timeRemaining: durationSeconds,
       turnAllottedSeconds: durationSeconds,
       clearTurnBonusTime: true,
-      // Consommé une fois, effacé : même principe que `turnBonusTime`.
-      fiesta: consumesCatchUp
-          ? fiesta.copyWith(
-              catchUpDue: Map.of(fiesta.catchUpDue)
-                ..remove(_teams[_game.currentTeamIndex].id))
-          : null,
+      // Nul en Classique : `copyWith(fiesta: null)` le laisse nul.
+      fiesta: fiesta,
     );
 
     // Tracker l'affichage du premier mot
@@ -631,7 +646,10 @@ class GameProvider extends ChangeNotifier {
       // Relus de l'état PERSISTÉ à chaque mot (survit à un kill). Nul en
       // Classique : l'événement garde alors exactement l'ancienne forme.
       modifiers: isFiesta
-          ? currentTeamModifiers.map((m) => m.catalogId).toList()
+          ? [
+              ...turnModifiers.map((m) => m.catalogId),
+              if (isDoublePointsOn) 'double_points',
+            ]
           : null,
     );
   }
@@ -917,6 +935,7 @@ class GameProvider extends ChangeNotifier {
       passedThisTurn: passedWordsThisTurn,
       expiredWord: _game.expiredWord,
       currentPool: _game.remainingWords,
+      pointsMultiplier: isDoublePointsOn ? 2 : 1,
     );
 
     final allInvalidatedWords = resolution.allInvalidated;
@@ -1252,6 +1271,57 @@ class GameProvider extends ChangeNotifier {
     _saveGameState();
   }
 
+  // ========== MOT COMPTE DOUBLE (2-9) ==========
+
+  /// Modificateurs EN JEU pendant le tour (badges du tour, tags analytics) :
+  /// une charge de « Mot compte double » non activée n'en est pas un.
+  List<ModifierInstance> get turnModifiers => currentTeamModifiers
+      .where((m) => m.catalogId != 'double_points')
+      .toList();
+
+  String? get _doublePoints {
+    final value = _turnCounters[kDoublePointsKey];
+    return value is String ? value : null;
+  }
+
+  /// Interrupteur de l'avant-tour allumé (ou charge déjà dépensée).
+  bool get isDoublePointsArmed => _doublePoints != null;
+
+  /// Les points de CE tour comptent ×2 : charge dépensée au départ. Vaut aussi
+  /// pour la continuation de fin de manche, qui est le même tour (2-8).
+  bool get isDoublePointsOn => _doublePoints == kDoubleSpent;
+
+  /// Charges restantes de l'équipe qui joue pour la manche en cours. Celles
+  /// des manches finies sont perdues : le décompte ne regarde que celle-ci.
+  int get doublePointsLeft {
+    final teamId = getCurrentTeam()?.id;
+    final used = (_game.fiesta?.chargesUsed ?? const <ChargeUse>[])
+        .where((u) =>
+            u.catalogId == 'double_points' &&
+            u.teamId == teamId &&
+            u.round == _game.currentRound)
+        .length;
+    return doublePointsAllowance(currentTeamModifiers) - used;
+  }
+
+  /// Q8 : activer est refusé si l'équipe a déjà 2 modificateurs en jeu.
+  bool get doublePointsCapped => turnModifiers.length >= 2;
+
+  /// Allumer / éteindre le ×2 avant le départ. Rien n'est dépensé ici.
+  void setDoublePoints(bool on) {
+    final fiesta = _game.fiesta;
+    if (fiesta == null ||
+        isDoublePointsOn ||
+        (on && (doublePointsLeft <= 0 || doublePointsCapped))) {
+      return;
+    }
+    final turn = Map<String, dynamic>.of(fiesta.turn)..remove(kDoublePointsKey);
+    if (on) turn[kDoublePointsKey] = kDoubleArmed;
+    _game = _game.copyWith(fiesta: fiesta.copyWith(turn: turn));
+    notifyListeners();
+    _saveGameState();
+  }
+
   /// Fiesta à la VRAIE fin d'un tour : compteurs du tour vidés, instances
   /// de portée tour de l'équipe consommées. 🔴 Un seul « tour » : une fin de
   /// manche n'en est pas une, la continuation en N+1 est le même tour (elle
@@ -1296,6 +1366,7 @@ class GameProvider extends ChangeNotifier {
     if (fiesta == null) return const [];
     return buildModifierRecap(
       rules: fiesta.rules,
+      chargesUsed: fiesta.chargesUsed,
       gameId: _game.gameId ?? '',
       teams: _teams,
       roundsPlayed: _game.currentRound,

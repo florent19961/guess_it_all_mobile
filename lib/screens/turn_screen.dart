@@ -8,6 +8,7 @@ import '../providers/game_provider.dart';
 import '../services/audio_service.dart';
 import '../utils/reversed_word.dart';
 import '../widgets/common/app_confirm_dialog.dart';
+import '../models/fiesta/modifier_catalog.dart';
 import '../widgets/fiesta/modifier_badge.dart';
 
 class TurnScreen extends StatefulWidget {
@@ -326,10 +327,20 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                         ),
 
                         // Fiesta : modificateurs du tour, sous le chrono.
-                        if (provider.currentTeamModifiers.isNotEmpty) ...[
+                        if (provider.turnModifiers.isNotEmpty ||
+                            provider.isDoublePointsOn) ...[
                           const SizedBox(height: 8),
                           ModifierBadges(
-                              modifiers: provider.currentTeamModifiers),
+                            modifiers: provider.turnModifiers,
+                            extra: [
+                              if (provider.isDoublePointsOn)
+                                const ModifierBadge(
+                                  icon: '×2',
+                                  label: 'Mot compte double',
+                                  nature: ModifierNature.bonus,
+                                ),
+                            ],
+                          ),
                           if (provider.freePasses > 0) ...[
                             const SizedBox(height: 8),
                             Text(
