@@ -101,4 +101,4 @@ Incrémentation à la fin de chaque partie, via `AnalyticsService.endGame()`.
 
 ⚠️ **Couplage à connaître** : la priorisation dépend d'un compteur écrit par le chemin analytics.
 Toute story qui touche `AnalyticsService.endGame()` touche donc *aussi* la sélection des mots —
-c'est un des points de collision listés dans `guessitall-epic-intake`.
+c'est un des points de collision listés dans `guessitall-orchestration` §2.

@@ -64,5 +64,5 @@ lib/utils/word_categories/backup/
 !.claude/skills/
 !.claude/skills/**
 
-# Scratchpad de session (prompt-packs d'epic-intake, sorties temporaires)
+# Scratchpad de session (prompt-packs de guessitall-orchestration, sorties temporaires)
 /scratchpad/
