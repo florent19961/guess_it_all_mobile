@@ -194,13 +194,18 @@ class GameScreen extends StatelessWidget {
 
                   const Spacer(),
 
-                  // Fiesta : annonces avant le tour. Défile si l'écran est
-                  // petit plutôt que de déborder.
+                  // Fiesta : annonces avant le tour, posées juste au-dessus du
+                  // bouton. Défile si l'écran est petit plutôt que de déborder.
+                  // `Expanded` (et non `Flexible`) : l'espace non utilisé reste
+                  // au-dessus du bloc, pas sous le bouton.
                   if (provider.isFiesta)
-                    Flexible(
+                    Expanded(
                       flex: 3,
-                      child: SingleChildScrollView(
-                        child: _FiestaAnnouncements(provider: provider),
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: SingleChildScrollView(
+                          child: _FiestaAnnouncements(provider: provider),
+                        ),
                       ),
                     ),
 
@@ -263,8 +268,15 @@ class GameScreen extends StatelessWidget {
 
   /// Fiesta : révèle d'abord les malus de l'équipe à son premier tour de la
   /// manche, puis lance le compte à rebours.
+  ///
+  /// 🔴 Les révélations sont des routes poussées AU-DESSUS de `home` : elles
+  /// survivent au changement d'écran. Sans les deux gardes, un double tap
+  /// empile deux révélations et la seconde chaîne rappelle `startTurn()` en
+  /// plein tour (revue 2-5 r1, MAJOR-1).
   Future<void> _startTurn(
       BuildContext context, GameProvider provider, Color teamColor) async {
+    // Une révélation déjà poussée : la route du jeu n'est plus au sommet.
+    if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
     final maluses = provider.malusToReveal;
     if (maluses.isNotEmpty) {
       await MalusReveal.showAll(
@@ -273,6 +285,10 @@ class GameScreen extends StatelessWidget {
         teamName: provider.getCurrentTeam()?.name ?? '',
         teamColor: teamColor,
       );
+      if (!context.mounted ||
+          provider.game.currentScreen != AppConstants.screenGame) {
+        return;
+      }
     }
     provider.startTurn();
   }

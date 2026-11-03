@@ -21,7 +21,9 @@ FiestaRules customAllDraw({int drawCount = 2, int? fixedNoPassRound}) =>
       drawCount: drawCount,
       modifiers: {
         for (final def in kModifierCatalog)
-          def.id: def.id == 'no_pass' && fixedNoPassRound != null
+          // `block_guesser` (cible joueur) fixé lui aussi : ne doit jamais sortir.
+          def.id: (def.id == 'no_pass' || def.id == 'block_guesser') &&
+                  fixedNoPassRound != null
               ? setting(ModifierArrival.fixed, fixedRound: fixedNoPassRound)
               : setting(ModifierArrival.draw),
       },
@@ -49,6 +51,7 @@ void main() {
           final why = '$label, M$round, $gameId : $ids';
 
           expect(ids.length, lessThanOrEqualTo(2), reason: why);
+          expect(ids, isNot(contains('block_guesser')), reason: why);
           expect(ids.toSet().length, ids.length, reason: why);
           for (var i = 0; i < ids.length; i++) {
             for (var j = i + 1; j < ids.length; j++) {

@@ -25,6 +25,10 @@ int drawSeed(String gameId, int round) {
 bool isEligibleForRound(ModifierDef def, int round) =>
     !def.round3Only || round == 3;
 
+/// Un modificateur qui vise un joueur (`block_guesser`, choisi par les
+/// adversaires) n'a pas de sens « pour toutes les équipes » : ni tiré, ni fixé.
+bool isForAllTeams(ModifierDef def) => def.defaultTarget == ModifierTarget.both;
+
 /// Le tirage pour toutes les équipes est-il allumé ? (définition partagée
 /// avec 2-3 / le Récap : les DEUX drapeaux comptent).
 bool isSymmetricDrawOn(FiestaRules rules) =>
@@ -42,7 +46,9 @@ ModifierInstance _forAll(ModifierDef def, int round, int charges) =>
 
 /// Modificateurs « fixés sur la manche N » (Personnalisé, Q16) : toutes les
 /// équipes, toute la manche. Ils passent avant le tirage, qui doit leur être
-/// compatible ; le plafond de 2 s'applique à eux aussi.
+/// compatible ; le plafond de 2 s'applique à eux aussi. Un fixé à cible joueur
+/// ou « manche 3 seulement » hors M3 est ignoré (l'éditeur de 2-3 devrait
+/// l'interdire).
 List<ModifierInstance> fixedForRound(FiestaRules rules, int round) {
   final fixed = <ModifierInstance>[];
   if (rules.mode != FiestaMode.custom) return fixed;
@@ -52,6 +58,7 @@ List<ModifierInstance> fixedForRound(FiestaRules rules, int round) {
         !setting.active ||
         setting.arrival != ModifierArrival.fixed ||
         setting.fixedRound != round ||
+        !isForAllTeams(def) ||
         !isEligibleForRound(def, round)) {
       continue;
     }
@@ -69,8 +76,7 @@ List<ModifierInstance> fixedForRound(FiestaRules rules, int round) {
 /// - Personnalisé : `drawCount` parmi les modificateurs actifs réglés sur
 ///   « tiré pour tous » et dont la manche de départ est atteinte.
 ///
-/// Un modificateur qui vise un joueur (`block_guesser`) n'est jamais tiré pour
-/// tous : sa cible n'a pas de sens « toutes les équipes ».
+/// Jamais de modificateur à cible joueur ([isForAllTeams]).
 List<ModifierInstance> drawSymmetric({
   required FiestaRules rules,
   required int round,
@@ -87,8 +93,7 @@ List<ModifierInstance> drawSymmetric({
   // de la même liste pour donner le même tirage.
   final candidates = <ModifierInstance>[];
   for (final def in kModifierCatalog) {
-    if (def.defaultTarget != ModifierTarget.both ||
-        !isEligibleForRound(def, round)) {
+    if (!isForAllTeams(def) || !isEligibleForRound(def, round)) {
       continue;
     }
     if (auto) {

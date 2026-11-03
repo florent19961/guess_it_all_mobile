@@ -132,3 +132,61 @@ persiste déjà quelque chose de voisin (le `lastUsedId` des ensembles de 2-3).
 **Esquisse.** En Personnalisé, retrouver l'ensemble via `lastUsedId` (clé des ensembles, déjà
 persistée) ; en Auto, les deux interrupteurs dans cette même clé ou dans la session.
 
+
+---
+
+## 2026-11-03 — Fiesta : le tirage d'une manche ignore les instances qui survivent au passage de manche
+
+**Contexte.** Story 2-5, revue r1 (MINOR-3). `nextRound` garde les instances de portée **tour**
+et ajoute les modificateurs de la nouvelle manche (fixés + tirage) sans `canAdd` contre ces
+survivantes. Aujourd'hui rien d'autre n'écrit dans `active`, donc aucune n'existe.
+
+**Décision reportée.** Pas de `canAdd` entre survivantes et tirage dans 2-5.
+
+**Raison.** Q8 : le tirage symétrique passe **d'abord** dans le plafond. Le faire dépendre des
+survivantes casserait aussi l'aperçu de la transition (`nextRoundModifiers`), qui doit rester une
+fonction de `(rules, gameId, manche)` seule. C'est donc à l'écrivain suivant de s'adapter.
+
+**Signal déclencheur.** 2-8 ou 2-10 pose une instance dans `active` qui peut franchir une fin de
+manche (charge non consommée, offre de 1 parmi 3 posée avant `nextRound`).
+
+**Esquisse.** Invariant à tenir par 2-8 / 2-10 : une instance de portée tour est consommée à la
+fin de son tour. Une offre de fin de manche est posée **après** le tirage (dans `nextRound`, ou
+avec `canAdd` contre `nextRoundModifiers`). Sinon, filtrer les survivantes par `canAdd` contre le
+tirage (jamais l'inverse).
+
+---
+
+## 2026-11-03 — Fiesta : l'aperçu du tirage est recalculé par le code de l'app
+
+**Contexte.** Story 2-5, revue r1 (MINOR-4). Le tirage de la manche suivante n'est pas stocké :
+la transition le recalcule depuis `(rules, gameId, manche)`, et `nextRound` le pose dans
+`fiesta.active` (qui reste ensuite la seule source de vérité).
+
+**Décision reportée.** Ne pas stocker l'aperçu.
+
+**Raison.** Le seul écart possible est une mise à jour de l'app (forcée par `upgrader`) entre la
+transition et « Manche suivante », avec un catalogue ou un `drawSymmetric` modifié : l'aperçu et
+le tirage posé différeraient. C'est rare (app tuée + mise à jour sur la transition) et sans crash.
+
+**Signal déclencheur.** Tout changement de `kModifierCatalog` (ordre, ajout, retrait), de
+`drawSymmetric` / `fixedForRound` ou de `drawSeed` : c'est un changement de forme « logique »
+pour les parties en cours (règle 7).
+
+**Esquisse.** Soit stocker l'aperçu dans `FiestaState` en fin de manche (champ optionnel,
+absent = recalcul), soit versionner l'algorithme dans `FiestaState` et garder l'ancien.
+
+---
+
+## 2026-11-03 — Double tap sur « Manche suivante » : la manche N+1 est sautée
+
+**Contexte.** Revue 2-5 r1, hors périmètre (déjà présent avant Fiesta). `nextRound()` n'a pas de
+garde : deux taps rapides font M1 → M3. Avec Fiesta, le tirage de M2 est sauté aussi.
+
+**Décision reportée.** Pas de correction dans 2-5.
+
+**Raison.** Bug préexistant, hors du périmètre de la story ; rien de remonté par les joueurs.
+
+**Signal déclencheur.** Un retour joueur, ou une story qui touche la transition (2-6, 2-10).
+
+**Esquisse.** Dans `nextRound`, ne rien faire si `currentScreen != screenTransition`.

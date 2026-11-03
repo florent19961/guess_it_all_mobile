@@ -1,19 +1,22 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
 
 import '../helpers/test_prefs.dart';
 
-/// Un provider prêt à lancer une partie : 2 joueurs, 2 équipes, 1 mot chacun.
-Future<GameProvider> givenReadyProvider() async {
+/// Un provider prêt à lancer une partie : 2 joueurs, 2 équipes,
+/// [wordsEach] mots chacun.
+Future<GameProvider> givenReadyProvider({int wordsEach = 1}) async {
   await givenPrefs();
   givenFakePlatformPlugins();
   final provider = GameProvider();
   await pumpEventQueue();
   for (final name in ['Ana', 'Bob']) {
     final id = (provider.addPlayer(name)['player'] as dynamic).id as String;
-    provider.updatePlayerWords(id, ['mot-$name']);
+    provider.updatePlayerWords(
+        id, [for (var i = 0; i < wordsEach; i++) 'mot-$name-$i']);
   }
   provider.createTeams();
   provider.randomizeTeams();
@@ -32,7 +35,18 @@ void playWholeRound(GameProvider provider) {
   provider.validateWords(guessed);
 }
 
-List<String> ids(Iterable<dynamic> mods) =>
+/// Un tour qui fait deviner 1 mot sans finir la manche, validé.
+void playOneWordTurn(GameProvider provider) {
+  provider.startTurn();
+  provider.startTurnTimer();
+  provider.markWordAsGuessed();
+  provider.endTurn();
+  final guessed = List<String>.from(provider.game.wordsGuessedThisTurn);
+  provider.savePreValidationState(guessed);
+  provider.validateWords(guessed);
+}
+
+List<String> ids(Iterable<ModifierInstance> mods) =>
     mods.map((m) => '${m.catalogId}@${m.round}').toList();
 
 void main() {
@@ -80,5 +94,39 @@ void main() {
     expect(provider.game.fiesta, isNull);
     expect(provider.currentTeamModifiers, isEmpty);
     expect(provider.malusToReveal, isEmpty);
+  });
+
+  test(
+      'révélation des malus : au premier tour de chaque équipe dans la '
+      'manche, plus ensuite', () async {
+    final provider = await givenReadyProvider(wordsEach: 2);
+    await provider.startGame(
+      fiesta: FiestaRules(
+        mode: FiestaMode.custom,
+        drawCount: 0,
+        modifiers: {
+          'minus_10s': const ModifierSetting(
+            active: true,
+            arrival: ModifierArrival.fixed,
+            startRound: 1,
+            fixedRound: 1,
+            charges: 0,
+          ),
+        },
+      ),
+    );
+    final first = provider.getCurrentTeam()!.id;
+    expect(ids(provider.malusToReveal), ['minus_10s@1']);
+
+    playOneWordTurn(provider);
+    expect(provider.getCurrentTeam()!.id, isNot(first));
+    expect(ids(provider.malusToReveal), ['minus_10s@1']);
+
+    playOneWordTurn(provider);
+    expect(provider.getCurrentTeam()!.id, first);
+    expect(provider.game.currentRound, 1);
+    expect(provider.malusToReveal, isEmpty);
+    // Toujours actif, juste plus révélé.
+    expect(ids(provider.currentTeamModifiers), ['minus_10s@1']);
   });
 }
