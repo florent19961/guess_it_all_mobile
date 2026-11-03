@@ -230,3 +230,29 @@ getters au provider, ou le provider qui dépasse ~2 100 lignes.
 `(GameState, teams, settings)`, qui porte `isContinuation`, `currentTeamModifiers`, passes,
 charges, devineur bloqué, offres, file de choix, récap. Le provider garde les mutations et
 délègue ses getters ; tests purs sans provider.
+
+---
+
+## 2026-11-03 — Analytics : ignorer les durées nulles dans le plus dur, le plus rapide et les classements
+
+**Contexte.** Depuis l'epic fix (A5), un mot déjà à l'écran au moment d'un kill a un événement
+terminal avec `durationMs` nul : la durée est inconnue, jamais inventée. Plusieurs calculs
+comptent cette durée nulle comme 0 ms :
+- `WordRoundStats.totalTimeMs` et `PassEvent` ;
+- `GameAnalytics.hardestWord` / `fastestWord` ;
+- `AnalyticsService.getHardestWords` / `getFastestWords` / `getStatsByCategory` /
+  `getStatsByDifficulty`.
+
+Un mot sans durée peut donc sortir « le plus rapide ». Aucune moyenne ne lit ces durées : le
+« Temps moyen par mot » de l'écran Stats repose sur `HistoryEntry.timeSpent`.
+
+**Décision reportée.** Pas de changement maintenant (arbitrage orchestrateur, B6).
+
+**Raison.** Aucun de ces calculs n'est lu par l'interface aujourd'hui. Firestore reçoit les
+événements bruts, avec la durée nulle conservée.
+
+**Signal déclencheur.** Un écran qui affiche l'un de ces classements, ou qui calcule une moyenne
+sur `durationMs`.
+
+**Esquisse.** Ignorer les événements à `durationMs` nul dans le plus dur / le plus rapide, les
+classements et toute moyenne. Garder les totaux tels quels, ou les marquer « partiels ».
