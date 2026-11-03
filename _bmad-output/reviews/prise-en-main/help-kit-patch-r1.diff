@@ -26,22 +26,22 @@ index b2494a4..c937671 100644
 +
 +**Conséquence.** Le branchement des autres écrans suit `lib/widgets/help/WIRING.md`.
 diff --git a/lib/main.dart b/lib/main.dart
-index 9696313..a4b8e6a 100644
+index 9696313..4c0b7c3 100644
 --- a/lib/main.dart
 +++ b/lib/main.dart
-@@ -7,6 +7,7 @@ import 'providers/game_provider.dart';
- import 'services/analytics_service.dart';
- import 'services/word_loader_service.dart';
- import 'services/word_history_service.dart';
-+import 'services/storage_service.dart';
- import 'services/connectivity_service.dart';
+@@ -11,6 +11,7 @@ import 'services/connectivity_service.dart';
  import 'services/firebase_sync_service.dart';
  import 'app.dart';
+ import 'app_bootstrap.dart';
++import 'widgets/help/first_game_help.dart';
+ 
+ void main() async {
+   WidgetsFlutterBinding.ensureInitialized();
 @@ -35,6 +36,7 @@ void main() async {
      localTasks: [
        () => WordLoaderService().initialize(locale: 'fr'),
        () => WordHistoryService().initialize(),
-+      () => StorageService().inferHelpFlagsFromPastGames(),
++      () => FirstGameHelp.initAtStartup(),
        () async {
          await AnalyticsService().finalizeOrphanedGames();
        },
@@ -62,10 +62,10 @@ index 17d1a8b..4fe6eb9 100644
  | `fiesta_auto_screen.dart` | Mode Auto : 2 interrupteurs (au moins un) + regles communes |
 diff --git a/lib/screens/fiesta_tutorial_screen.dart b/lib/screens/fiesta_tutorial_screen.dart
 new file mode 100644
-index 0000000..fb466a3
+index 0000000..b6dfbeb
 --- /dev/null
 +++ b/lib/screens/fiesta_tutorial_screen.dart
-@@ -0,0 +1,56 @@
+@@ -0,0 +1,59 @@
 +import 'package:flutter/material.dart';
 +import '../services/storage_service.dart';
 +import '../theme/app_theme.dart';
@@ -105,8 +105,11 @@ index 0000000..fb466a3
 +          rows: [
 +            TutorialRow('1', 'Tirés au sort pour tous',
 +                'En début de manche, pour toutes les équipes.'),
-+            TutorialRow('2', 'Choix 1 parmi 3',
-+                'Entre deux manches, l\'équipe menée choisit une carte.'),
++            TutorialRow(
++                '2',
++                'Entre deux manches',
++                'Personnalisé : les équipes menées choisissent 1 carte parmi 3. '
++                    'Auto : l\'app leur donne un coup de pouce.'),
 +            TutorialRow(
 +                '3', 'Rattrapage', 'Du temps en plus pour l\'équipe menée.'),
 +          ],
@@ -115,8 +118,8 @@ index 0000000..fb466a3
 +          symbol: 'A',
 +          title: 'Auto ou Personnalisé',
 +          text: 'Auto : l\'app décide de tout, personne ne choisit. '
-+              'Personnalisé : vous réglez chaque modificateur et vous '
-+              'enregistrez vos réglages sous un nom, pour les réutiliser.',
++              'Personnalisé : tu règles chaque modificateur et tu '
++              'enregistres tes réglages sous un nom, pour les réutiliser.',
 +        ),
 +      ],
 +    );
@@ -215,7 +218,7 @@ index 16bb6cf..83023ac 100644
      required String content,
 diff --git a/lib/screens/rules_tutorial_screen.dart b/lib/screens/rules_tutorial_screen.dart
 new file mode 100644
-index 0000000..bd06875
+index 0000000..6064553
 --- /dev/null
 +++ b/lib/screens/rules_tutorial_screen.dart
 @@ -0,0 +1,60 @@
@@ -273,34 +276,23 @@ index 0000000..bd06875
 +        symbol: '★',
 +        title: 'Le score',
 +        text: 'Les points des 3 manches s\'additionnent, et on découvre les '
-+            'scores à la fin de la partie. Astuce : retenez bien les mots de '
++            'scores à la fin de la partie. Astuce : retiens bien les mots de '
 +            'la manche 1, ils reviennent.',
 +      ),
 +    ]);
 +  }
 +}
 diff --git a/lib/services/storage_service.dart b/lib/services/storage_service.dart
-index 6c2e016..0ef3f75 100644
+index 6c2e016..1916b6b 100644
 --- a/lib/services/storage_service.dart
 +++ b/lib/services/storage_service.dart
-@@ -2,7 +2,9 @@ import 'dart:convert';
- import 'package:flutter/foundation.dart';
- import 'package:shared_preferences/shared_preferences.dart';
- import '../utils/constants.dart';
-+import 'game_history_service.dart';
- import 'persisted_schema.dart';
-+import 'word_history_service.dart';
- 
- /// Accès à la persistance locale (`SharedPreferences`).
- ///
-@@ -124,4 +126,78 @@ class StorageService {
+@@ -124,4 +124,63 @@ class StorageService {
        debugPrint('[Storage] Échec du marquage des paramètres avancés: $e');
      }
    }
 +
 +  // Aides de prise en main : booléens autonomes, absents = false (clés neuves,
-+  // rien à migrer). Les joueurs déjà venus sont rattrapés au démarrage par
-+  // [inferHelpFlagsFromPastGames].
++  // rien à migrer). Posés une fois au démarrage par [initHelpFlags].
 +
 +  Future<bool> hasSeenTutorial() => _readFlag(AppConstants.tutorialSeenKey);
 +  Future<void> markTutorialSeen() =>
@@ -321,37 +313,23 @@ index 6c2e016..0ef3f75 100644
 +  Future<void> resetFirstGameDone() =>
 +      _writeFlag(AppConstants.firstGameDoneKey, false);
 +
-+  /// Au démarrage, avant toute partie : un joueur qui a déjà fini une partie
-+  /// (historique des mots — présent depuis la version en store — ou historique
-+  /// des parties non vide) ne doit revoir ni le prompt « Première partie ? » ni
-+  /// les aides du premier tour. Chaque flag ABSENT est alors écrit à `true`,
-+  /// une fois ; un `false` écrit (« Revoir les aides ») prime.
-+  ///
-+  /// L'historique des mots n'est écrit qu'en fin de partie (`endGame`) : la
-+  /// première partie d'un nouveau joueur ne peut pas le déclencher en avance.
-+  Future<void> inferHelpFlagsFromPastGames() async {
-+    const keys = [AppConstants.tutorialSeenKey, AppConstants.firstGameDoneKey];
++  /// Au démarrage, une seule fois dans la vie de l'app : chaque flag tuto /
++  /// première partie ABSENT est écrit à [playedBefore]. Ensuite il est présent
++  /// et plus jamais recalculé : une première partie abandonnée (qui écrit
++  /// aussi l'historique des mots) ne peut pas faire basculer une install neuve.
++  /// Un `false` écrit (« Revoir les aides ») prime donc toujours.
++  Future<void> initHelpFlags({required bool playedBefore}) async {
 +    try {
 +      final prefs = await SharedPreferences.getInstance();
-+      final missing = keys.where((k) => !prefs.containsKey(k)).toList();
-+      if (missing.isEmpty || !await _hasPlayedBefore(prefs)) return;
-+      for (final key in missing) {
-+        await prefs.setBool(key, true);
++      for (final key in const [
++        AppConstants.tutorialSeenKey,
++        AppConstants.firstGameDoneKey,
++      ]) {
++        if (!prefs.containsKey(key)) await prefs.setBool(key, playedBefore);
 +      }
 +    } catch (e) {
-+      debugPrint('[Storage] Déduction des flags d\'aide impossible: $e');
++      debugPrint('[Storage] Initialisation des flags d\'aide impossible: $e');
 +    }
-+  }
-+
-+  Future<bool> _hasPlayedBefore(SharedPreferences prefs) async {
-+    final words = prefs.getString(WordHistoryService.storageKey);
-+    if (words != null) {
-+      try {
-+        final decoded = jsonDecode(words);
-+        if (decoded is Map && decoded.isNotEmpty) return true;
-+      } catch (_) {}
-+    }
-+    return (await GameHistoryService().load()).isNotEmpty;
 +  }
 +
 +  Future<bool> _readFlag(String key) async {
@@ -373,19 +351,19 @@ index 6c2e016..0ef3f75 100644
 +  }
  }
 diff --git a/lib/services/word_history_service.dart b/lib/services/word_history_service.dart
-index e547200..b283651 100644
+index e547200..8f0b2f3 100644
 --- a/lib/services/word_history_service.dart
 +++ b/lib/services/word_history_service.dart
-@@ -15,7 +15,8 @@ class WordHistoryService {
-   WordHistoryService._internal();
+@@ -34,6 +34,9 @@ class WordHistoryService {
+   /// Exposé pour les tests et le diagnostic.
+   bool get isDegraded => _degraded;
  
-   // Clé de stockage
--  static const String _historyKey = 'guessItAll_word_history';
-+  static const String storageKey = 'guessItAll_word_history';
-+  static const String _historyKey = storageKey;
++  /// Au moins une partie a déjà alimenté l'historique (après [initialize]).
++  bool get hasHistory => _historyCache?.isNotEmpty ?? false;
++
+   /// Indique si le service a été initialisé
+   bool get isInitialized => _isInitialized;
  
-   // Cache mémoire pour performance
-   Map<String, int>? _historyCache;
 diff --git a/lib/utils/constants.dart b/lib/utils/constants.dart
 index 7777848..f7a1226 100644
 --- a/lib/utils/constants.dart
@@ -414,10 +392,10 @@ index a1f7308..bb74642 100644
  
 diff --git a/lib/widgets/help/WIRING.md b/lib/widgets/help/WIRING.md
 new file mode 100644
-index 0000000..5062473
+index 0000000..635af90
 --- /dev/null
 +++ b/lib/widgets/help/WIRING.md
-@@ -0,0 +1,82 @@
+@@ -0,0 +1,91 @@
 +# Brancher les aides sur un écran
 +
 +Le kit est prêt mais n'est branché que sur **Règles** (3 boutons) et **Accueil** (prompt
@@ -453,7 +431,7 @@ index 0000000..5062473
 +| `teams_screen` | `teamsHelp` | `firstTeam` (carte de la 1re équipe), `shuffle`, `start` (« Commencer ») | `right: 16` |
 +| `game_screen` (avant-tour) | `preTurnHelp(playerName: …)` | `team` (nom d'équipe + joueur), `roundRules` (icône info de la manche), `previousTurn` (« Tour précédent »), `start` | `right: besideCornerButton` |
 +| `game_screen` Fiesta | `fiestaPreTurnHelp` | `badges` (Actif ce tour), `doublePoints` (interrupteur Mot compte double), `turnTime` (`TurnTimeCard`) | même bouton : concaténer `preTurnHelp(...) + fiestaPreTurnHelp(...)` en Fiesta |
-+| `turn_screen` | `turnHelp(passPenalty: …)` | `timer`, `word`, `guessed`, `pass`, `pause` | `right: besideCornerButton` (pause à droite). 🔴 `provider.pauseTurn()` **avant** `CoachMarks.show`, reprise **après** : le chrono ne doit jamais tourner sous l'aide |
++| `turn_screen` | `turnHelp(passPenalty: provider.currentPassPenalty)` — pas `settings.passPenalty` : la Passe gratuite Fiesta la met à 0. Malus « Interdit de passer » : ne pas poser la clé `pass` (bouton désactivé, le texte « Passe-le » serait faux) | `timer`, `word`, `guessed`, `pass`, `pause` | `right: besideCornerButton` (pause à droite). 🔴 `provider.pauseTurn()` **avant** `CoachMarks.show`, reprise **après** : le chrono ne doit jamais tourner sous l'aide |
 +| `verification_screen` | `verificationHelp` | `wordList` (la liste défilante entière), `validate` | `right: 16` (HomeButton à gauche) |
 +| `transition_screen` | `transitionHelp` | `previousTurn` (« Voir les N mots devinés »), `next` (« Manche suivante » / « Voir les résultats »), `back` (`GameBackButton`), `home` (`HomeButton`) | `right: besideCornerButton` |
 +| `transition_screen` Fiesta | `fiestaTransitionHelp` | `catchUp` (`CatchUpCard`), `pickThree` (`PickThreeCard` / `PassPhonePanel`), `appBoost` (`AppBoostCard`) | même bouton : concaténer `fiestaTransitionHelp(...) + transitionHelp(...)` en Fiesta |
@@ -495,17 +473,26 @@ index 0000000..5062473
 +| `guessItAll_fiestaTutorialSeen` | `hasSeenFiestaTutorial` / `markFiestaTutorialSeen` | tuto Fiesta déjà vu |
 +| `guessItAll_firstGameDone` | `isFirstGameDone` / `markFirstGameDone` / `resetFirstGameDone` | première partie terminée |
 +
-+Booléens autonomes, absents = `false` : clés neuves, aucune migration (règle 7). Joueurs déjà
-+venus : au démarrage (`main.dart`, tâche locale), `inferHelpFlagsFromPastGames` écrit à `true`
-+chaque flag tuto / première partie **absent** si `guessItAll_word_history` (présent depuis la
-+version en store, écrit en fin de partie seulement) ou `guessItAll_game_results` est non vide.
-+Un `false` écrit (« Revoir les aides ») prime.
++Booléens autonomes, aucune migration (règle 7). Au démarrage (`main.dart`, tâche locale),
++`FirstGameHelp.initAtStartup()` écrit **une seule fois** chaque flag tuto / première partie
++absent : `true` si `guessItAll_word_history` (présent dans la version en store) ou
++`guessItAll_game_results` est non vide, `false` sinon. Ensuite le flag est présent et n'est plus
++jamais recalculé : une première partie abandonnée (qui écrit aussi l'historique des mots) ne
++peut pas faire basculer une install neuve. Un `false` écrit (« Revoir les aides ») prime.
++
++## Limites connues
++
++- `CoachMarks` mesure la cible une fois par étape : pas de nouvelle mesure si la taille de
++  l'écran change pendant l'aide (écran partagé, pliable, clavier). L'app est bloquée en
++  portrait, c'est accepté.
++- Après un kill en pleine première partie, `FirstGameHelp` a oublié qui a déjà vu l'aide : ces
++  joueurs la revoient une fois.
 diff --git a/lib/widgets/help/coach_marks.dart b/lib/widgets/help/coach_marks.dart
 new file mode 100644
-index 0000000..cfc67bd
+index 0000000..d423330
 --- /dev/null
 +++ b/lib/widgets/help/coach_marks.dart
-@@ -0,0 +1,260 @@
+@@ -0,0 +1,272 @@
 +import 'package:flutter/material.dart';
 +import '../../theme/app_theme.dart';
 +
@@ -578,9 +565,12 @@ index 0000000..cfc67bd
 +      alignment: 0.3,
 +      duration: const Duration(milliseconds: 250),
 +    );
-+    if (!mounted || !targetContext.mounted) return;
++    if (!mounted) return;
++    // Cible démontée pendant le défilement : on passe à la suite plutôt que de
++    // laisser un voile sans bulle (sur iOS, aucune autre issue).
++    if (!targetContext.mounted) return _next();
 +    final box = targetContext.findRenderObject() as RenderBox?;
-+    if (box == null || !box.hasSize) return;
++    if (box == null || !box.hasSize) return _next();
 +    setState(() => _hole = box.localToGlobal(Offset.zero) & box.size);
 +  }
 +
@@ -627,106 +617,115 @@ index 0000000..cfc67bd
 +    final above = hole.top - media.padding.top;
 +    const minSpace = 180.0;
 +
-+    double? top;
-+    double? bottom;
++    // Les deux bords sont toujours bornés et le texte défile : grand texte
++    // système ou petit écran, les boutons restent visibles.
++    var top = media.padding.top + 16;
++    var bottom = media.padding.bottom + 16;
++    var alignment = Alignment.bottomCenter;
 +    if (below >= minSpace && below >= above) {
 +      top = hole.bottom + 14;
++      alignment = Alignment.topCenter;
 +    } else if (above >= minSpace) {
 +      bottom = height - hole.top + 14;
-+    } else {
-+      // Cible trop grande (ex. une longue liste) : bulle posée en bas.
-+      bottom = media.padding.bottom + 16;
 +    }
++    // Sinon : cible trop grande (ex. une longue liste), bulle posée en bas.
 +
 +    return Positioned(
 +      left: 16,
 +      right: 16,
 +      top: top,
 +      bottom: bottom,
-+      child: Container(
-+        padding: const EdgeInsets.all(16),
-+        decoration: BoxDecoration(
-+          color: const Color(0xFFFFFBEB),
-+          borderRadius: BorderRadius.circular(18),
-+          boxShadow: const [
-+            BoxShadow(
-+                color: Colors.black45, blurRadius: 24, offset: Offset(0, 8)),
-+          ],
-+        ),
-+        child: Column(
-+          mainAxisSize: MainAxisSize.min,
-+          crossAxisAlignment: CrossAxisAlignment.stretch,
-+          children: [
-+            Row(
-+              children: [
-+                Expanded(
-+                  child: Text(
-+                    step.title.toUpperCase(),
++      child: Align(
++        alignment: alignment,
++        child: Container(
++          padding: const EdgeInsets.all(16),
++          decoration: BoxDecoration(
++            color: const Color(0xFFFFFBEB),
++            borderRadius: BorderRadius.circular(18),
++            boxShadow: const [
++              BoxShadow(
++                  color: Colors.black45, blurRadius: 24, offset: Offset(0, 8)),
++            ],
++          ),
++          child: Column(
++            mainAxisSize: MainAxisSize.min,
++            crossAxisAlignment: CrossAxisAlignment.stretch,
++            children: [
++              Row(
++                children: [
++                  Expanded(
++                    child: Text(
++                      step.title.toUpperCase(),
++                      style: const TextStyle(
++                        fontFamily: 'Poppins',
++                        fontSize: 12,
++                        fontWeight: FontWeight.w700,
++                        letterSpacing: 0.8,
++                        color: Color(0xFF92400E),
++                      ),
++                    ),
++                  ),
++                  Text(
++                    '${_index + 1} / ${widget.steps.length}',
 +                    style: const TextStyle(
 +                      fontFamily: 'Poppins',
 +                      fontSize: 12,
-+                      fontWeight: FontWeight.w700,
-+                      letterSpacing: 0.8,
++                      fontWeight: FontWeight.w600,
 +                      color: Color(0xFF92400E),
 +                    ),
 +                  ),
-+                ),
-+                Text(
-+                  '${_index + 1} / ${widget.steps.length}',
-+                  style: const TextStyle(
-+                    fontFamily: 'Poppins',
-+                    fontSize: 12,
-+                    fontWeight: FontWeight.w600,
-+                    color: Color(0xFF92400E),
-+                  ),
-+                ),
-+              ],
-+            ),
-+            const SizedBox(height: 8),
-+            Text(
-+              step.text,
-+              style: const TextStyle(
-+                fontFamily: 'Poppins',
-+                fontSize: 15,
-+                height: 1.4,
-+                color: Color(0xFF1C1917),
++                ],
 +              ),
-+            ),
-+            const SizedBox(height: 12),
-+            Row(
-+              children: [
-+                if (!isLast)
-+                  TextButton(
-+                    onPressed: () => Navigator.of(context).pop(),
-+                    style: TextButton.styleFrom(
-+                      foregroundColor: const Color(0xFF78716C),
-+                    ),
-+                    child: const Text(
-+                      'Passer',
-+                      style: TextStyle(fontFamily: 'Poppins', fontSize: 14),
-+                    ),
-+                  ),
-+                const Spacer(),
-+                FilledButton(
-+                  onPressed: _next,
-+                  style: FilledButton.styleFrom(
-+                    backgroundColor: const Color(0xFF1C1917),
-+                    foregroundColor: const Color(0xFFFFFBEB),
-+                    padding: const EdgeInsets.symmetric(
-+                        horizontal: 20, vertical: 12),
-+                  ),
++              const SizedBox(height: 8),
++              Flexible(
++                child: SingleChildScrollView(
 +                  child: Text(
-+                    isLast ? 'Compris' : 'Suivant',
++                    step.text,
 +                    style: const TextStyle(
 +                      fontFamily: 'Poppins',
-+                      fontSize: 14,
-+                      fontWeight: FontWeight.w600,
++                      fontSize: 15,
++                      height: 1.4,
++                      color: Color(0xFF1C1917),
 +                    ),
 +                  ),
 +                ),
-+              ],
-+            ),
-+          ],
++              ),
++              const SizedBox(height: 12),
++              Row(
++                children: [
++                  if (!isLast)
++                    TextButton(
++                      onPressed: () => Navigator.of(context).pop(),
++                      style: TextButton.styleFrom(
++                        foregroundColor: const Color(0xFF78716C),
++                      ),
++                      child: const Text(
++                        'Passer',
++                        style: TextStyle(fontFamily: 'Poppins', fontSize: 14),
++                      ),
++                    ),
++                  const Spacer(),
++                  FilledButton(
++                    onPressed: _next,
++                    style: FilledButton.styleFrom(
++                      backgroundColor: const Color(0xFF1C1917),
++                      foregroundColor: const Color(0xFFFFFBEB),
++                      padding: const EdgeInsets.symmetric(
++                          horizontal: 20, vertical: 12),
++                    ),
++                    child: Text(
++                      isLast ? 'Compris' : 'Suivant',
++                      style: const TextStyle(
++                        fontFamily: 'Poppins',
++                        fontSize: 14,
++                        fontWeight: FontWeight.w600,
++                      ),
++                    ),
++                  ),
++                ],
++              ),
++            ],
++          ),
 +        ),
 +      ),
 +    );
@@ -768,11 +767,13 @@ index 0000000..cfc67bd
 +}
 diff --git a/lib/widgets/help/first_game_help.dart b/lib/widgets/help/first_game_help.dart
 new file mode 100644
-index 0000000..1ac945d
+index 0000000..86b1713
 --- /dev/null
 +++ b/lib/widgets/help/first_game_help.dart
-@@ -0,0 +1,35 @@
+@@ -0,0 +1,47 @@
++import '../../services/game_history_service.dart';
 +import '../../services/storage_service.dart';
++import '../../services/word_history_service.dart';
 +
 +/// Aides automatiques de la première partie sur ce téléphone : chaque joueur
 +/// les voit à SON premier tour, sur l'avant-tour et sur la vérification.
@@ -787,6 +788,16 @@ index 0000000..1ac945d
 +  static const String verification = 'verification';
 +
 +  static final Set<String> _shown = {};
++
++  /// Au démarrage (tâche locale de `main.dart`, après l'init de
++  /// `WordHistoryService`) : un joueur déjà venu — historique des mots,
++  /// présent depuis la version en store, ou historique des parties — ne revoit
++  /// ni le prompt ni les aides du premier tour. Décidé une seule fois.
++  static Future<void> initAtStartup() async {
++    final playedBefore = WordHistoryService().hasHistory ||
++        (await GameHistoryService().load()).isNotEmpty;
++    await StorageService().initHelpFlags(playedBefore: playedBefore);
++  }
 +
 +  /// Vrai une seule fois par joueur et par écran ([preTurn] ou
 +  /// [verification]), et seulement tant que la première partie n'est pas finie.
@@ -930,7 +941,7 @@ index 0000000..581b764
 +}
 diff --git a/lib/widgets/help/help_content.dart b/lib/widgets/help/help_content.dart
 new file mode 100644
-index 0000000..bec7e75
+index 0000000..d8c6ff7
 --- /dev/null
 +++ b/lib/widgets/help/help_content.dart
 @@ -0,0 +1,375 @@
@@ -964,8 +975,8 @@ index 0000000..bec7e75
 +      CoachStep(
 +        target: resume,
 +        title: 'Reprendre',
-+        text: 'Une partie a été interrompue : reprends-la là où vous en '
-+            'étiez.',
++        text: 'Une partie a été interrompue : reprends-la là où elle '
++            's\'était arrêtée.',
 +      ),
 +      CoachStep(
 +        target: replay,
@@ -1005,7 +1016,7 @@ index 0000000..bec7e75
 +      CoachStep(
 +        target: counts,
 +        title: 'Joueurs et équipes',
-+        text: 'Combien vous êtes, et en combien d\'équipes. Il faut au moins '
++        text: 'Le nombre de joueurs, et d\'équipes. Il faut au moins '
 +            '2 joueurs par équipe.',
 +      ),
 +      CoachStep(
@@ -1173,8 +1184,8 @@ index 0000000..bec7e75
 +      CoachStep(
 +        target: wordList,
 +        title: 'Vérifie les mots',
-+        text: 'Les mots que vous avez trouvés doivent être en VERT. Ceux que '
-+            'vous n\'avez pas trouvés doivent être en ROUGE. Une erreur ? '
++        text: 'Les mots que ton équipe a trouvés doivent être en VERT. Ceux '
++            'qu\'elle n\'a pas trouvés doivent être en ROUGE. Une erreur ? '
 +            'Touche le mot pour le corriger : il passe du vert au rouge, ou '
 +            'du rouge au vert. S\'il y a beaucoup de mots, fais défiler la '
 +            'liste pour tous les vérifier.',
@@ -1234,7 +1245,7 @@ index 0000000..bec7e75
 +        target: podium,
 +        title: 'Le podium',
 +        text: 'Touche une marche pour voir les joueurs de cette équipe. '
-+            'Pratique si vous avez oublié le nom de votre équipe.',
++            'Pratique si tu as oublié le nom de ton équipe.',
 +      ),
 +      CoachStep(
 +        target: details,
@@ -1311,10 +1322,10 @@ index 0000000..bec7e75
 +    ];
 diff --git a/lib/widgets/help/tutorial_pager.dart b/lib/widgets/help/tutorial_pager.dart
 new file mode 100644
-index 0000000..905e06b
+index 0000000..89f559b
 --- /dev/null
 +++ b/lib/widgets/help/tutorial_pager.dart
-@@ -0,0 +1,247 @@
+@@ -0,0 +1,245 @@
 +import 'package:flutter/material.dart';
 +import '../../theme/app_theme.dart';
 +import '../common/app_button.dart';
@@ -1420,9 +1431,7 @@ index 0000000..905e06b
 +                      width: i == _index ? 18 : 7,
 +                      height: 7,
 +                      decoration: BoxDecoration(
-+                        color: i == _index
-+                            ? AppColors.primaryPink
-+                            : AppColors.gray600,
++                        color: i == _index ? widget.accent : AppColors.gray600,
 +                        borderRadius: BorderRadius.circular(99),
 +                      ),
 +                    ),
@@ -1578,14 +1587,12 @@ index 4edbed1..8220afd 100644
  
 diff --git a/test/services/help_flags_test.dart b/test/services/help_flags_test.dart
 new file mode 100644
-index 0000000..9ab9543
+index 0000000..44778e6
 --- /dev/null
 +++ b/test/services/help_flags_test.dart
-@@ -0,0 +1,42 @@
+@@ -0,0 +1,41 @@
 +import 'package:flutter_test/flutter_test.dart';
 +import 'package:guess_it_all_mobile/services/storage_service.dart';
-+import 'package:guess_it_all_mobile/services/word_history_service.dart';
-+import 'package:guess_it_all_mobile/utils/constants.dart';
 +import 'package:shared_preferences/shared_preferences.dart';
 +
 +import '../helpers/test_prefs.dart';
@@ -1610,18 +1617,19 @@ index 0000000..9ab9543
 +    await storage.resetFirstGameDone();
 +    expect(await storage.isFirstGameDone(), isFalse);
 +
-+    // Joueur de la version en store (historique des mots, flags absents) :
-+    // rattrapé au démarrage ; un false écrit (« Revoir les aides ») prime.
-+    await givenPrefs({WordHistoryService.storageKey: '{"chat":1}'});
-+    await storage.inferHelpFlagsFromPastGames();
++    // Décidé une fois au démarrage : install neuve → false, et une première
++    // partie abandonnée (historique écrit) ne fait rien basculer au
++    // redémarrage suivant.
++    await givenPrefs();
++    await storage.initHelpFlags(playedBefore: false);
++    await storage.initHelpFlags(playedBefore: true);
++    expect(await storage.hasSeenTutorial(), isFalse);
++    expect(await storage.isFirstGameDone(), isFalse);
++    // Joueur déjà venu (flags absents) → true.
++    await givenPrefs();
++    await storage.initHelpFlags(playedBefore: true);
 +    expect(await storage.hasSeenTutorial(), isTrue);
 +    expect(await storage.isFirstGameDone(), isTrue);
-+    await givenPrefs({
-+      WordHistoryService.storageKey: '{"chat":1}',
-+      AppConstants.firstGameDoneKey: false,
-+    });
-+    await storage.inferHelpFlagsFromPastGames();
-+    expect(await storage.isFirstGameDone(), isFalse);
 +  });
 +}
 diff --git a/test/widgets/help_content_test.dart b/test/widgets/help_content_test.dart
