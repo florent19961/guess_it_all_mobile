@@ -29,12 +29,21 @@ class AnalyticsService {
 
   // État du tracking
   GameAnalytics? _currentGame;
+
+  // Mot affiché : vit le temps d'UN mot, remis à zéro par
+  // `_recordEventWithDuration`. 🔴 Contrat « un seul mot à l'écran » : voir
+  // `_recordEventWithDuration`. Story 2-11 (deux mots) remplace CE bloc seul.
   int? _lastShownTimestamp;
   String? _lastShownWord;
+
+  // Contexte du tour : survit aux mots, relu par `onWordInvalidated` et
+  // `onWordValidatedAsGuessed` (vérification, après le tour). Ne dépend pas du
+  // nombre de mots à l'écran.
   int? _lastRound;
   int? _lastTurn;
   String? _lastTeamId;
   String? _lastPlayerId;
+  List<String>? _lastModifiers;
 
   /// Vérifie si une partie est en cours de tracking
   bool get isTracking => _currentGame != null;
@@ -54,6 +63,8 @@ class AnalyticsService {
     required List<String> selectedCategories,
     required List<int> selectedDifficultyLevels,
     required Map<String, WordMetadata> wordMetadata,
+    String? gameMode,
+    Map<String, dynamic>? fiestaRules,
   }) async {
     final userService = UserService();
     final userId = await userService.getUserId();
@@ -70,6 +81,8 @@ class AnalyticsService {
       selectedCategories: selectedCategories,
       selectedDifficultyLevels: selectedDifficultyLevels,
       wordMetadata: wordMetadata,
+      gameMode: gameMode,
+      fiestaRules: fiestaRules,
     );
 
     _clearTrackingState();
@@ -142,17 +155,23 @@ class AnalyticsService {
     _lastTurn = null;
     _lastTeamId = null;
     _lastPlayerId = null;
+    _lastModifiers = null;
   }
 
   // ========== TRACKING EN TEMPS RÉEL ==========
 
-  /// Appelé quand un nouveau mot est affiché à un joueur
+  /// Appelé quand un nouveau mot est affiché à un joueur.
+  ///
+  /// [modifiers] : ids Fiesta actifs pour l'équipe qui joue, `null` en
+  /// Classique. L'appelant les relit à CHAQUE mot depuis l'état persisté de la
+  /// partie : après un kill, le mot suivant est donc de nouveau étiqueté.
   void onWordShown({
     required String word,
     required int round,
     required int turn,
     required String teamId,
     required String playerId,
+    List<String>? modifiers,
   }) {
     if (_currentGame == null) return;
 
@@ -163,6 +182,7 @@ class AnalyticsService {
     _lastTurn = turn;
     _lastTeamId = teamId;
     _lastPlayerId = playerId;
+    _lastModifiers = modifiers;
 
     // Enregistrer l'événement 'shown'
     final event = WordEvent.shown(
@@ -172,6 +192,7 @@ class AnalyticsService {
       teamId: teamId,
       playerId: playerId,
       gameId: _currentGame!.gameId,
+      modifiers: modifiers,
     );
 
     _currentGame = _currentGame!.addEvent(event);
@@ -207,6 +228,7 @@ class AnalyticsService {
       playerId: _lastPlayerId ?? '',
       gameId: _currentGame!.gameId,
       durationMs: null,
+      modifiers: _lastModifiers,
     );
 
     _currentGame = _currentGame!.addEvent(event);
@@ -227,12 +249,19 @@ class AnalyticsService {
       playerId: _lastPlayerId ?? '',
       gameId: _currentGame!.gameId,
       durationMs: null, // Pas de durée car validation a posteriori
+      modifiers: _lastModifiers,
     );
 
     _currentGame = _currentGame!.addEvent(event);
   }
 
-  /// Enregistre un événement avec calcul de durée
+  /// Enregistre un événement avec calcul de durée.
+  ///
+  /// 🔴 Contrat « un seul mot à l'écran » : un événement sur un mot qui n'est
+  /// PAS le dernier affiché est abandonné en silence (pas de `shown`, donc pas
+  /// de durée). Vrai tant qu'un seul mot est affiché ; la story 2-11 (deux
+  /// mots) doit remplacer le bloc « mot affiché » par un suivi par mot. Le
+  /// contexte du tour (dont `_lastModifiers`) n'a pas à bouger.
   void _recordEventWithDuration(String word, WordEventType eventType) {
     if (_currentGame == null) return;
     if (_lastShownTimestamp == null || word != _lastShownWord) return;
@@ -246,11 +275,13 @@ class AnalyticsService {
       playerId: _lastPlayerId ?? '',
       gameId: _currentGame!.gameId,
       shownTimestamp: _lastShownTimestamp!,
+      modifiers: _lastModifiers,
     );
 
     _currentGame = _currentGame!.addEvent(event);
 
-    // Reset après l'événement (sauf pour 'shown' qui reste en mémoire)
+    // Reset du mot seulement : le contexte du tour sert encore à la
+    // vérification (`onWordInvalidated`).
     _lastShownTimestamp = null;
     _lastShownWord = null;
   }

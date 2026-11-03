@@ -37,8 +37,31 @@ class WordEvent {
   final String playerId;      // Joueur qui jouait
   final String gameId;        // ID de la partie
   final int? durationMs;      // Temps depuis affichage (null pour 'shown')
+  final List<String>? modifiers; // Fiesta (2-7) : ids actifs pour l'equipe qui joue
 }
 ```
+
+**`modifiers` (Fiesta, story 2-7)** : ids du catalogue (`minus_10s`, `no_pass`...) actifs pour
+l'equipe qui joue quand l'evenement a lieu. Cle **absente** (pas `null`) en Classique et sur les
+evenements ecrits avant 2-7 ; `[]` = Fiesta sans modificateur ce tour. Un id peut apparaitre deux
+fois (deux instances cumulees). Le provider les relit de l'etat **persiste** a chaque mot
+affiche : apres un kill, le mot suivant est de nouveau etiquete. `guessed`/`passed`/`expired` et
+`invalidated`/validation a posteriori reprennent ceux du dernier `shown` (contexte du tour, comme
+`round`/`turn`). Rien n'est exclu des stats : `computeStats` et la difficulte initiale du mot
+sont inchanges.
+
+- **Actifs, pas forcement appliques** : un tour de continuation (temps reporte en debut de
+  manche) est etiquete avec la liste active de l'equipe dans la nouvelle manche, alors qu'il
+  ignore les effets de duree (`minus_10s`...). Croiser avec `HistoryEntry.isBonusContinuation`
+  pour recalibrer.
+- **Cle absente dans une partie Fiesta = inconnu, pas Classique** : une verification faite juste
+  apres un kill, sans nouveau `shown`, ecrit `invalidated` / `guessed` sans `modifiers` (et avec
+  les defauts `round` 1, `teamId` '' deja presents avant 2-7). Le mode de la partie se lit sur
+  `GameAnalytics.gameMode`, jamais sur l'evenement.
+
+⚠️ **Contrat « un seul mot a l'ecran »** (`AnalyticsService._recordEventWithDuration`) : un
+evenement sur un mot qui n'est pas le dernier `shown` est abandonne en silence. La story 2-11
+(deux mots) remplace le bloc « mot affiche » du service ; le contexte du tour ne bouge pas.
 
 **Types d'evenements :**
 
@@ -142,8 +165,17 @@ class GameAnalytics {
 
   // Stats agregees (calculees a la fin)
   final Map<String, WordStats> wordStats;
+
+  // Fiesta (story 2-7) : cles ABSENTES en Classique
+  final String? gameMode;                 // 'fiesta_auto' | 'fiesta_custom'
+  final Map<String, dynamic>? fiestaRules; // FiestaRules.toJson() gelees au lancement
 }
 ```
+
+**Firestore** : le document `games/<gameId>` est `GameAnalytics.toJson()` + `syncedAt`. Les champs
+Fiesta sont **additifs** : une partie Classique envoie exactement le document d'avant 2-7 ; les
+regles Firestore (`FIREBASE.md`) ne valident que `userId` et `gameId`. Absence de `gameMode` =
+Classique (ou partie d'une version anterieure).
 
 ---
 

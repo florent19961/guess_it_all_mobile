@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
+import 'package:guess_it_all_mobile/models/word_event.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
+import 'package:guess_it_all_mobile/services/analytics_service.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
 
 import '../helpers/test_prefs.dart';
@@ -179,5 +181,34 @@ void main() {
 
     expect(provider.game.currentRound, 2);
     expect(provider.game.currentScreen, AppConstants.screenGame);
+  });
+
+  test(
+      'analytics (2-7) : la partie porte son mode, le mot affiché porte les '
+      'modificateurs relus de l\'état de la partie', () async {
+    final provider = await givenReadyProvider();
+    await provider.startGame(
+      fiesta: FiestaRules(
+        mode: FiestaMode.custom,
+        drawCount: 0,
+        modifiers: {
+          'minus_10s': const ModifierSetting(
+            active: true,
+            arrival: ModifierArrival.fixed,
+            startRound: 1,
+            fixedRound: 1,
+            charges: 0,
+          ),
+        },
+      ),
+    );
+    provider.startTurn();
+    provider.startTurnTimer();
+
+    final game = AnalyticsService().currentGame!;
+    expect(game.gameMode, 'fiesta_custom');
+    final shown =
+        game.events.lastWhere((e) => e.eventType == WordEventType.shown);
+    expect(shown.modifiers, ['minus_10s']);
   });
 }

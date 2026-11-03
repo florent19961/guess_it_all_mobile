@@ -25,6 +25,12 @@ class WordEvent {
   final String gameId;
   final int? durationMs; // Temps depuis 'shown' (null pour 'shown')
 
+  /// Ids du catalogue Fiesta actifs pour l'équipe qui joue, au moment de
+  /// l'événement (story 2-7). `null` = partie Classique, ou événement écrit
+  /// par une version antérieure : la clé est alors ABSENTE du JSON, pas
+  /// `null`. Une liste vide = Fiesta sans modificateur actif ce tour.
+  final List<String>? modifiers;
+
   WordEvent({
     String? eventId,
     required this.word,
@@ -36,6 +42,7 @@ class WordEvent {
     required this.playerId,
     required this.gameId,
     this.durationMs,
+    this.modifiers,
   }) : eventId = eventId ?? const Uuid().v4();
 
   /// Factory pour créer un événement 'shown'
@@ -46,6 +53,7 @@ class WordEvent {
     required String teamId,
     required String playerId,
     required String gameId,
+    List<String>? modifiers,
   }) {
     return WordEvent(
       word: word,
@@ -57,6 +65,7 @@ class WordEvent {
       playerId: playerId,
       gameId: gameId,
       durationMs: null,
+      modifiers: modifiers,
     );
   }
 
@@ -70,6 +79,7 @@ class WordEvent {
     required String playerId,
     required String gameId,
     required int shownTimestamp,
+    List<String>? modifiers,
   }) {
     final now = DateTime.now().millisecondsSinceEpoch;
     return WordEvent(
@@ -82,6 +92,7 @@ class WordEvent {
       playerId: playerId,
       gameId: gameId,
       durationMs: now - shownTimestamp,
+      modifiers: modifiers,
     );
   }
 
@@ -96,6 +107,8 @@ class WordEvent {
         'playerId': playerId,
         'gameId': gameId,
         'durationMs': durationMs,
+        // Additif : une partie Classique écrit exactement l'ancienne forme.
+        if (modifiers != null) 'modifiers': modifiers,
       };
 
   factory WordEvent.fromJson(Map<String, dynamic> json) {
@@ -143,6 +156,11 @@ class WordEvent {
       playerId: json['playerId'] as String? ?? '',
       gameId: json['gameId'] as String? ?? '',
       durationMs: json['durationMs'] as int?,
+      // `whereType` et non `cast` : un cast est paresseux et lèverait à la
+      // lecture, pas ici. Autre chose qu'une liste = absent.
+      modifiers: json['modifiers'] is List
+          ? (json['modifiers'] as List).whereType<String>().toList()
+          : null,
     );
   }
 

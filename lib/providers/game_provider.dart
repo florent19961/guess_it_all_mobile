@@ -8,6 +8,7 @@ import '../models/fiesta/fiesta_rules.dart';
 import '../models/fiesta/fiesta_state.dart';
 import '../models/fiesta/modifier_catalog.dart';
 import '../models/fiesta/modifier_instance.dart';
+import '../models/fiesta/modifier_recap.dart';
 import '../models/fiesta/symmetric_draw.dart';
 import '../models/fiesta/turn_time.dart';
 import '../models/game_settings.dart';
@@ -515,6 +516,9 @@ class GameProvider extends ChangeNotifier {
       selectedCategories: _settings.selectedCategories,
       selectedDifficultyLevels: _settings.selectedDifficultyLevels,
       wordMetadata: wordMetadata,
+      // `_game.fiesta` est déjà gelé par `startGame` ; nul en Classique.
+      gameMode: _game.fiesta == null ? null : fiestaModeId(_game.fiesta!.rules),
+      fiestaRules: _game.fiesta?.rules.toJson(),
     );
   }
 
@@ -623,6 +627,11 @@ class GameProvider extends ChangeNotifier {
       turn: _game.currentTurn,
       teamId: currentTeam?.id ?? '',
       playerId: currentPlayer?.id ?? '',
+      // Relus de l'état PERSISTÉ à chaque mot (survit à un kill). Nul en
+      // Classique : l'événement garde alors exactement l'ancienne forme.
+      modifiers: isFiesta
+          ? currentTeamModifiers.map((m) => m.catalogId).toList()
+          : null,
     );
   }
 
@@ -1177,6 +1186,19 @@ class GameProvider extends ChangeNotifier {
         .toList();
   }
 
+  /// Récap « Modificateurs de la partie » (écran Résultats, archive). Vide en
+  /// Classique.
+  List<ModifierRecapLine> get modifierRecap {
+    final fiesta = _game.fiesta;
+    if (fiesta == null) return const [];
+    return buildModifierRecap(
+      rules: fiesta.rules,
+      gameId: _game.gameId ?? '',
+      teams: _teams,
+      roundsPlayed: _game.currentRound,
+    );
+  }
+
   /// Archive la partie terminée pour l'écran d'historique.
   ///
   /// On enregistre le résultat **tel qu'il a été montré aux joueurs**, pas une
@@ -1209,6 +1231,8 @@ class GameProvider extends ChangeNotifier {
       totalWords: _game.allWords.length,
       turnDuration: _settings.turnDuration,
       roundsPlayed: _game.currentRound,
+      mode: _game.fiesta == null ? null : fiestaModeId(_game.fiesta!.rules),
+      modifierRecap: _game.fiesta == null ? null : modifierRecap,
     );
 
     unawaited(_history.record(result));

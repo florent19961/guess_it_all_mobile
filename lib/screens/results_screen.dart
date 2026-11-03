@@ -8,6 +8,8 @@ import '../widgets/common/game_dialogs.dart';
 import '../widgets/common/home_button.dart';
 import '../widgets/common/back_button.dart';
 import '../widgets/effects/shooting_stars.dart';
+import '../widgets/fiesta/fiesta_setup_widgets.dart';
+import '../models/fiesta/modifier_recap.dart';
 
 class ResultsScreen extends StatelessWidget {
   const ResultsScreen({super.key});
@@ -39,6 +41,12 @@ class ResultsScreen extends StatelessWidget {
 
                   // Detailed scores
                   _buildDetailedScores(context, provider, sortedTeams),
+
+                  // Fiesta seulement (maquette `results`).
+                  if (provider.isFiesta) ...[
+                    const SizedBox(height: 16),
+                    _buildModifierRecap(provider),
+                  ],
 
                   const SizedBox(height: 32),
 
@@ -338,6 +346,29 @@ class ResultsScreen extends StatelessWidget {
           }),
         ],
       ),
+    );
+  }
+
+  Widget _buildModifierRecap(GameProvider provider) {
+    final rules = provider.pendingFiesta;
+    final lines = provider.modifierRecap;
+    return FiestaCard(
+      title: 'Modificateurs de la partie',
+      trailing: rules == null
+          ? null
+          : Text(
+              fiestaModeLabel(rules),
+              style: AppTextStyles.bodySmall.copyWith(
+                fontSize: 11,
+                color: AppColors.gray400,
+              ),
+            ),
+      children: [
+        if (lines.isEmpty)
+          const FiestaHint('Aucun modificateur pendant cette partie.'),
+        for (final line in lines)
+          FiestaLine(label: line.title, detail: line.detail),
+      ],
     );
   }
 
