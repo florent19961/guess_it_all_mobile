@@ -25,6 +25,26 @@ index b2494a4..c937671 100644
 +la machine d'écrans. Clés neuves, absentes = `false` : aucune migration (règle 7).
 +
 +**Conséquence.** Le branchement des autres écrans suit `lib/widgets/help/WIRING.md`.
+diff --git a/lib/main.dart b/lib/main.dart
+index 9696313..a4b8e6a 100644
+--- a/lib/main.dart
++++ b/lib/main.dart
+@@ -7,6 +7,7 @@ import 'providers/game_provider.dart';
+ import 'services/analytics_service.dart';
+ import 'services/word_loader_service.dart';
+ import 'services/word_history_service.dart';
++import 'services/storage_service.dart';
+ import 'services/connectivity_service.dart';
+ import 'services/firebase_sync_service.dart';
+ import 'app.dart';
+@@ -35,6 +36,7 @@ void main() async {
+     localTasks: [
+       () => WordLoaderService().initialize(locale: 'fr'),
+       () => WordHistoryService().initialize(),
++      () => StorageService().inferHelpFlagsFromPastGames(),
+       () async {
+         await AnalyticsService().finalizeOrphanedGames();
+       },
 diff --git a/lib/screens/CLAUDE.md b/lib/screens/CLAUDE.md
 index 17d1a8b..4fe6eb9 100644
 --- a/lib/screens/CLAUDE.md
@@ -260,28 +280,29 @@ index 0000000..bd06875
 +  }
 +}
 diff --git a/lib/services/storage_service.dart b/lib/services/storage_service.dart
-index 6c2e016..f2a555d 100644
+index 6c2e016..0ef3f75 100644
 --- a/lib/services/storage_service.dart
 +++ b/lib/services/storage_service.dart
-@@ -2,6 +2,7 @@ import 'dart:convert';
+@@ -2,7 +2,9 @@ import 'dart:convert';
  import 'package:flutter/foundation.dart';
  import 'package:shared_preferences/shared_preferences.dart';
  import '../utils/constants.dart';
 +import 'game_history_service.dart';
  import 'persisted_schema.dart';
++import 'word_history_service.dart';
  
  /// Accès à la persistance locale (`SharedPreferences`).
-@@ -124,4 +125,63 @@ class StorageService {
+ ///
+@@ -124,4 +126,78 @@ class StorageService {
        debugPrint('[Storage] Échec du marquage des paramètres avancés: $e');
      }
    }
 +
 +  // Aides de prise en main : booléens autonomes, absents = false (clés neuves,
-+  // rien à migrer). Exception : tuto et première partie, absents chez un joueur
-+  // qui a déjà un historique de parties = déjà vus (voir [_readFlagOrInfer]).
++  // rien à migrer). Les joueurs déjà venus sont rattrapés au démarrage par
++  // [inferHelpFlagsFromPastGames].
 +
-+  Future<bool> hasSeenTutorial() =>
-+      _readFlagOrInfer(AppConstants.tutorialSeenKey);
++  Future<bool> hasSeenTutorial() => _readFlag(AppConstants.tutorialSeenKey);
 +  Future<void> markTutorialSeen() =>
 +      _writeFlag(AppConstants.tutorialSeenKey, true);
 +
@@ -292,8 +313,7 @@ index 6c2e016..f2a555d 100644
 +
 +  /// Vrai après la première partie terminée sur ce téléphone. Tant qu'il est
 +  /// faux, chaque joueur voit les aides à son premier tour.
-+  Future<bool> isFirstGameDone() =>
-+      _readFlagOrInfer(AppConstants.firstGameDoneKey);
++  Future<bool> isFirstGameDone() => _readFlag(AppConstants.firstGameDoneKey);
 +  Future<void> markFirstGameDone() =>
 +      _writeFlag(AppConstants.firstGameDoneKey, true);
 +
@@ -301,20 +321,37 @@ index 6c2e016..f2a555d 100644
 +  Future<void> resetFirstGameDone() =>
 +      _writeFlag(AppConstants.firstGameDoneKey, false);
 +
-+  /// Clé absente + historique de parties non vide = joueur déjà venu : on
-+  /// rend vrai et on l'écrit une fois. Une valeur écrite (même `false`, posé
-+  /// par « Revoir les aides ») prime toujours.
-+  Future<bool> _readFlagOrInfer(String key) async {
++  /// Au démarrage, avant toute partie : un joueur qui a déjà fini une partie
++  /// (historique des mots — présent depuis la version en store — ou historique
++  /// des parties non vide) ne doit revoir ni le prompt « Première partie ? » ni
++  /// les aides du premier tour. Chaque flag ABSENT est alors écrit à `true`,
++  /// une fois ; un `false` écrit (« Revoir les aides ») prime.
++  ///
++  /// L'historique des mots n'est écrit qu'en fin de partie (`endGame`) : la
++  /// première partie d'un nouveau joueur ne peut pas le déclencher en avance.
++  Future<void> inferHelpFlagsFromPastGames() async {
++    const keys = [AppConstants.tutorialSeenKey, AppConstants.firstGameDoneKey];
 +    try {
 +      final prefs = await SharedPreferences.getInstance();
-+      final stored = prefs.getBool(key);
-+      if (stored != null) return stored;
-+      if ((await GameHistoryService().load()).isEmpty) return false;
-+      await prefs.setBool(key, true);
-+      return true;
++      final missing = keys.where((k) => !prefs.containsKey(k)).toList();
++      if (missing.isEmpty || !await _hasPlayedBefore(prefs)) return;
++      for (final key in missing) {
++        await prefs.setBool(key, true);
++      }
 +    } catch (e) {
-+      return false;
++      debugPrint('[Storage] Déduction des flags d\'aide impossible: $e');
 +    }
++  }
++
++  Future<bool> _hasPlayedBefore(SharedPreferences prefs) async {
++    final words = prefs.getString(WordHistoryService.storageKey);
++    if (words != null) {
++      try {
++        final decoded = jsonDecode(words);
++        if (decoded is Map && decoded.isNotEmpty) return true;
++      } catch (_) {}
++    }
++    return (await GameHistoryService().load()).isNotEmpty;
 +  }
 +
 +  Future<bool> _readFlag(String key) async {
@@ -335,6 +372,20 @@ index 6c2e016..f2a555d 100644
 +    }
 +  }
  }
+diff --git a/lib/services/word_history_service.dart b/lib/services/word_history_service.dart
+index e547200..b283651 100644
+--- a/lib/services/word_history_service.dart
++++ b/lib/services/word_history_service.dart
+@@ -15,7 +15,8 @@ class WordHistoryService {
+   WordHistoryService._internal();
+ 
+   // Clé de stockage
+-  static const String _historyKey = 'guessItAll_word_history';
++  static const String storageKey = 'guessItAll_word_history';
++  static const String _historyKey = storageKey;
+ 
+   // Cache mémoire pour performance
+   Map<String, int>? _historyCache;
 diff --git a/lib/utils/constants.dart b/lib/utils/constants.dart
 index 7777848..f7a1226 100644
 --- a/lib/utils/constants.dart
@@ -363,10 +414,10 @@ index a1f7308..bb74642 100644
  
 diff --git a/lib/widgets/help/WIRING.md b/lib/widgets/help/WIRING.md
 new file mode 100644
-index 0000000..6f3d390
+index 0000000..5062473
 --- /dev/null
 +++ b/lib/widgets/help/WIRING.md
-@@ -0,0 +1,80 @@
+@@ -0,0 +1,82 @@
 +# Brancher les aides sur un écran
 +
 +Le kit est prêt mais n'est branché que sur **Règles** (3 boutons) et **Accueil** (prompt
@@ -444,9 +495,11 @@ index 0000000..6f3d390
 +| `guessItAll_fiestaTutorialSeen` | `hasSeenFiestaTutorial` / `markFiestaTutorialSeen` | tuto Fiesta déjà vu |
 +| `guessItAll_firstGameDone` | `isFirstGameDone` / `markFirstGameDone` / `resetFirstGameDone` | première partie terminée |
 +
-+Booléens autonomes, absents = `false` : clés neuves, aucune migration (règle 7). Exception :
-+`tutorialSeen` et `firstGameDone` absents **et** historique `guessItAll_game_results` non vide
-+= joueur déjà venu → lus `true` et écrits une fois. Un `false` écrit (« Revoir les aides ») prime.
++Booléens autonomes, absents = `false` : clés neuves, aucune migration (règle 7). Joueurs déjà
++venus : au démarrage (`main.dart`, tâche locale), `inferHelpFlagsFromPastGames` écrit à `true`
++chaque flag tuto / première partie **absent** si `guessItAll_word_history` (présent depuis la
++version en store, écrit en fin de partie seulement) ou `guessItAll_game_results` est non vide.
++Un `false` écrit (« Revoir les aides ») prime.
 diff --git a/lib/widgets/help/coach_marks.dart b/lib/widgets/help/coach_marks.dart
 new file mode 100644
 index 0000000..cfc67bd
@@ -1525,18 +1578,17 @@ index 4edbed1..8220afd 100644
  
 diff --git a/test/services/help_flags_test.dart b/test/services/help_flags_test.dart
 new file mode 100644
-index 0000000..385cf81
+index 0000000..9ab9543
 --- /dev/null
 +++ b/test/services/help_flags_test.dart
-@@ -0,0 +1,43 @@
+@@ -0,0 +1,42 @@
 +import 'package:flutter_test/flutter_test.dart';
-+import 'package:guess_it_all_mobile/services/game_history_service.dart';
 +import 'package:guess_it_all_mobile/services/storage_service.dart';
++import 'package:guess_it_all_mobile/services/word_history_service.dart';
 +import 'package:guess_it_all_mobile/utils/constants.dart';
 +import 'package:shared_preferences/shared_preferences.dart';
 +
 +import '../helpers/test_prefs.dart';
-+import 'game_history_test.dart' show game;
 +
 +void main() {
 +  final storage = StorageService();
@@ -1558,17 +1610,17 @@ index 0000000..385cf81
 +    await storage.resetFirstGameDone();
 +    expect(await storage.isFirstGameDone(), isFalse);
 +
-+    // Joueur déjà venu (historique non vide, clés absentes) : déjà vu, écrit
-+    // une fois ; « Revoir les aides » (false explicite) prime ensuite.
-+    await givenPrefs();
-+    await GameHistoryService().record(game(id: 'old'));
++    // Joueur de la version en store (historique des mots, flags absents) :
++    // rattrapé au démarrage ; un false écrit (« Revoir les aides ») prime.
++    await givenPrefs({WordHistoryService.storageKey: '{"chat":1}'});
++    await storage.inferHelpFlagsFromPastGames();
 +    expect(await storage.hasSeenTutorial(), isTrue);
 +    expect(await storage.isFirstGameDone(), isTrue);
-+    expect(
-+        (await SharedPreferences.getInstance())
-+            .getBool(AppConstants.firstGameDoneKey),
-+        isTrue);
-+    await storage.resetFirstGameDone();
++    await givenPrefs({
++      WordHistoryService.storageKey: '{"chat":1}',
++      AppConstants.firstGameDoneKey: false,
++    });
++    await storage.inferHelpFlagsFromPastGames();
 +    expect(await storage.isFirstGameDone(), isFalse);
 +  });
 +}
