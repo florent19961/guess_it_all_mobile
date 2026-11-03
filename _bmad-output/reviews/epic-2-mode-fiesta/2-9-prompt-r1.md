@@ -56,6 +56,11 @@ Maquette : écrans `cd`, `turn`, `verif`, `results`.
   ×2) ou depuis l'avant-tour suivant, `chargesUsed` et les scores valent-ils ceux du snapshot ?
   Une charge peut-elle être dépensée deux fois (double `startTurnTimer`, reprise après kill
   pendant le compte à rebours) ?
+- **`chargesUsed` (demande du lead)** : relecture tolérante quand la clé est absente (partie
+  Fiesta écrite avant 2-9) ou corrompue (pas une liste, entrée illisible, types faux) : jamais
+  de throw, entrée illisible ignorée seule ? Le retour arrière (`restorePreValidationState`)
+  restaure-t-il exactement la liste du snapshot (dépense annulée si le tour est rejoué, conservée
+  sinon) ? Note : le blob `fiesta` n'a jamais été publié en store (lead), le risque règle 7 est nul.
 - **Charges** : peut-on armer sans charge (UI vs provider), ou désarmer après dépense ?
 - **Continuation** : `turn` est-il bien conservé dans la branche fin de manche et vidé à la vraie
   fin ? Retour arrière depuis la continuation ?
