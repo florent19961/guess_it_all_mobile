@@ -6,6 +6,9 @@ import '../models/player.dart';
 import '../models/team.dart';
 import '../models/fiesta/fiesta_rules.dart';
 import '../models/fiesta/fiesta_state.dart';
+import '../models/fiesta/modifier_catalog.dart';
+import '../models/fiesta/modifier_instance.dart';
+import '../models/fiesta/symmetric_draw.dart';
 import '../models/game_settings.dart';
 import '../models/game_state.dart';
 import '../models/turn_clock.dart';
@@ -443,7 +446,12 @@ class GameProvider extends ChangeNotifier {
       timeRemaining: _settings.turnDuration,
       clearTurnBonusTime: true,
       history: [],
-      fiesta: fiesta == null ? null : FiestaState(rules: fiesta),
+      fiesta: fiesta == null
+          ? null
+          : FiestaState(
+              rules: fiesta,
+              active: roundModifiers(fiesta, gameId: gameId, round: 1),
+            ),
       clearFiesta: fiesta == null,
     );
 
@@ -1021,6 +1029,10 @@ class GameProvider extends ChangeNotifier {
   }
 
   void nextRound() {
+    // Idempotent par transition : un double tap sur « Manche suivante »
+    // rappelait `nextRound` depuis l'écran de jeu de la manche suivante et
+    // sautait une manche (M1 → M3). Seul l'écran de transition fait avancer.
+    if (_game.currentScreen != AppConstants.screenTransition) return;
     final nextRoundNumber = _game.currentRound + 1;
 
     if (nextRoundNumber > 3) {
@@ -1041,11 +1053,65 @@ class GameProvider extends ChangeNotifier {
         wordsGuessedThisTurn: [],
         passedWordsThisTurn: [],
         currentScreen: AppConstants.screenGame,
+        fiesta: _fiestaForRound(nextRoundNumber),
       );
     }
 
     notifyListeners();
     _saveGameState();
+  }
+
+  /// Fiesta à l'entrée de la manche [round] : les instances de portée manche
+  /// de la manche finie partent, celles de [round] (fixés + tirage) arrivent.
+  /// Nul en Classique (et `copyWith(fiesta: null)` laisse alors `fiesta` nul).
+  FiestaState? _fiestaForRound(int round) {
+    final fiesta = _game.fiesta;
+    if (fiesta == null) return null;
+    return FiestaState(
+      rules: fiesta.rules,
+      active: [
+        ...fiesta.active
+            .where((m) => !(m.scope == ModifierScope.round && m.round < round)),
+        ...roundModifiers(fiesta.rules,
+            gameId: _game.gameId ?? '', round: round),
+      ],
+      turn: fiesta.turn,
+    );
+  }
+
+  /// Ce qui s'appliquera à toutes les équipes à la manche suivante, montré
+  /// sur la transition AVANT « Manche suivante ». Calculé, jamais stocké : la
+  /// graine `(gameId, manche)` rend le même tirage après un retour arrière ou
+  /// une app tuée. Vide en Classique et après M3.
+  List<ModifierInstance> get nextRoundModifiers {
+    final fiesta = _game.fiesta;
+    if (fiesta == null || _game.currentRound >= 3) return const [];
+    return roundModifiers(fiesta.rules,
+        gameId: _game.gameId ?? '', round: _game.currentRound + 1);
+  }
+
+  /// Modificateurs actifs qui pèsent sur l'équipe qui joue (badges).
+  List<ModifierInstance> get currentTeamModifiers {
+    final fiesta = _game.fiesta;
+    if (fiesta == null || _teams.isEmpty) return const [];
+    final teamId = _teams[_game.currentTeamIndex].id;
+    return fiesta.active
+        .where((m) => m.target == ModifierTarget.both || m.teamId == teamId)
+        .toList();
+  }
+
+  /// Malus à révéler en plein écran avant le tour : ceux de l'équipe qui joue,
+  /// à son PREMIER tour de la manche (aucune entrée d'historique à son nom
+  /// dans cette manche). Dérivé de l'historique : rien à persister.
+  List<ModifierInstance> get malusToReveal {
+    if (_game.fiesta == null || _teams.isEmpty) return const [];
+    final teamId = _teams[_game.currentTeamIndex].id;
+    final alreadyPlayed = _game.history
+        .any((h) => h.round == _game.currentRound && h.teamId == teamId);
+    if (alreadyPlayed) return const [];
+    return currentTeamModifiers
+        .where((m) => m.nature == ModifierNature.malus)
+        .toList();
   }
 
   /// Archive la partie terminée pour l'écran d'historique.

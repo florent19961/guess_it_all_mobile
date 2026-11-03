@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
 import '../services/audio_service.dart';
 import '../widgets/common/app_confirm_dialog.dart';
+import '../widgets/fiesta/modifier_badge.dart';
 
 class TurnScreen extends StatefulWidget {
   const TurnScreen({super.key});
@@ -320,7 +321,14 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                           },
                         ),
 
-                        const SizedBox(height: 32),
+                        // Fiesta : modificateurs du tour, sous le chrono.
+                        if (provider.currentTeamModifiers.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          ModifierBadges(
+                              modifiers: provider.currentTeamModifiers),
+                          const SizedBox(height: 16),
+                        ] else
+                          const SizedBox(height: 32),
 
                         // Current word
                         Flexible(

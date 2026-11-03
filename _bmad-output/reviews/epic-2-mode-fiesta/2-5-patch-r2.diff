@@ -1,0 +1,1235 @@
+diff --git a/docs/notes_pour_plus_tard.md b/docs/notes_pour_plus_tard.md
+index b2c94f5..80ffc41 100644
+--- a/docs/notes_pour_plus_tard.md
++++ b/docs/notes_pour_plus_tard.md
+@@ -132,3 +132,46 @@ persiste déjà quelque chose de voisin (le `lastUsedId` des ensembles de 2-3).
+ **Esquisse.** En Personnalisé, retrouver l'ensemble via `lastUsedId` (clé des ensembles, déjà
+ persistée) ; en Auto, les deux interrupteurs dans cette même clé ou dans la session.
+ 
++
++---
++
++## 2026-11-03 — Fiesta : le tirage d'une manche ignore les instances qui survivent au passage de manche
++
++**Contexte.** Story 2-5, revue r1 (MINOR-3). `nextRound` garde les instances de portée **tour**
++et ajoute les modificateurs de la nouvelle manche (fixés + tirage) sans `canAdd` contre ces
++survivantes. Aujourd'hui rien d'autre n'écrit dans `active`, donc aucune n'existe.
++
++**Décision reportée.** Pas de `canAdd` entre survivantes et tirage dans 2-5.
++
++**Raison.** Q8 : le tirage symétrique passe **d'abord** dans le plafond. Le faire dépendre des
++survivantes casserait aussi l'aperçu de la transition (`nextRoundModifiers`), qui doit rester une
++fonction de `(rules, gameId, manche)` seule. C'est donc à l'écrivain suivant de s'adapter.
++
++**Signal déclencheur.** 2-8 ou 2-10 pose une instance dans `active` qui peut franchir une fin de
++manche (charge non consommée, offre de 1 parmi 3 posée avant `nextRound`).
++
++**Esquisse.** Invariant à tenir par 2-8 / 2-10 : une instance de portée tour est consommée à la
++fin de son tour. Une offre de fin de manche est posée **après** le tirage (dans `nextRound`, ou
++avec `canAdd` contre `nextRoundModifiers`). Sinon, filtrer les survivantes par `canAdd` contre le
++tirage (jamais l'inverse).
++
++---
++
++## 2026-11-03 — Fiesta : l'aperçu du tirage est recalculé par le code de l'app
++
++**Contexte.** Story 2-5, revue r1 (MINOR-4). Le tirage de la manche suivante n'est pas stocké :
++la transition le recalcule depuis `(rules, gameId, manche)`, et `nextRound` le pose dans
++`fiesta.active` (qui reste ensuite la seule source de vérité).
++
++**Décision reportée.** Ne pas stocker l'aperçu.
++
++**Raison.** Le seul écart possible est une mise à jour de l'app (forcée par `upgrader`) entre la
++transition et « Manche suivante », avec un catalogue ou un `drawSymmetric` modifié : l'aperçu et
++le tirage posé différeraient. C'est rare (app tuée + mise à jour sur la transition) et sans crash.
++
++**Signal déclencheur.** Tout changement de `kModifierCatalog` (ordre, ajout, retrait), de
++`drawSymmetric` / `fixedForRound` ou de `drawSeed` : c'est un changement de forme « logique »
++pour les parties en cours (règle 7).
++
++**Esquisse.** Soit stocker l'aperçu dans `FiestaState` en fin de manche (champ optionnel,
++absent = recalcul), soit versionner l'algorithme dans `FiestaState` et garder l'ancien.
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index da81704..4c47eab 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -360,3 +360,26 @@ dans `GameProvider` (`pendingFiesta`), passé par `TeamsScreen` à `startGame`.
+ - **Retour système Android** géré par `PopScope` sur les nouveaux écrans seulement : les écrans
+   existants gardent leur comportement.
+ 
++## 2026-11-03 — Fiesta 2-5 : tirage symétrique recalculé, jamais stocké
++
++**Quoi.** `lib/models/fiesta/symmetric_draw.dart` calcule les modificateurs « pour toutes les
++équipes » d'une manche : les **fixés** sur cette manche (Personnalisé, Q16), puis le **tirage**
++(Auto : 1 ou 2, Q9 ; Personnalisé : `drawCount` parmi les « tiré pour tous » éligibles), avec
++`canAdd` pour le plafond de 2 et les incompatibilités. Graine `drawSeed(gameId, manche)`.
++`startGame` pose ceux de M1 dans `fiesta.active` ; `nextRound` retire ceux de la manche finie et
++pose ceux de la nouvelle. La transition montre `nextRoundModifiers`, le jeu « Actif ce tour »,
++le tour des badges sous le chrono, et `MalusReveal` révèle les malus au premier tour de chaque
++équipe dans la manche (dérivé de l'historique).
++
++**Pourquoi ces choix.**
++- **Recalculer plutôt que stocker la « manche suivante »** : la story proposait de ranger le
++  tirage dans `fiesta` dès la fin de manche. Mais le snapshot du retour arrière est pris avant
++  la validation, et la graine rend le résultat identique de toute façon : stocker n'apportait
++  rien et aurait exigé un champ de plus dans `FiestaState` (type public de 2-2). Aucune forme
++  persistée ne change.
++- **FNV-1a et pas `String.hashCode`** : `hashCode` n'est pas garanti stable d'une exécution à
++  l'autre ; une app tuée doit retrouver le même tirage.
++- **Fixés avant le tirage** dans le plafond : la story demande un tirage compatible avec les
++  fixés. Q8 (« le tirage d'abord ») vise les offres et cadeaux, qui viennent après.
++- **`block_guesser` jamais tiré pour tous** : il vise un joueur choisi par les adversaires, une
++  cible « toutes les équipes » n'a pas de sens.
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index 9ca6936..2abcedd 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -17,6 +17,7 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `fiesta/modifier_catalog.dart` | `ModifierDef`, `kModifierCatalog`, `kModifierIncompatibilities`, enums `ModifierNature/Scope/Target` | Catalogue Fiesta V1 (11 ids **figés**, du code, jamais persisté), `modifierById`, `areCompatible` |
+ | `fiesta/modifier_instance.dart` | `ModifierInstance` | Modificateur actif dans une partie. `tryFromJson` tolérant (id inconnu → `null`, jamais de défaut inventé). `canAdd(active, candidate, {maxPerTurn: 2})` |
+ | `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, `CatchUpRules`, enums `FiestaMode`, `ModifierArrival` | Configuration Fiesta **immuable** (Auto / Personnalisé, réglage par modificateur, rattrapage, tirage, règles communes). `CatchUpRules.auto` = constantes du mode Auto. `tryFromJson` : structure illisible → `null`, réglage d'id inconnu ignoré seul |
++| `fiesta/symmetric_draw.dart` | fonctions pures | Modificateurs d'une manche pour toutes les équipes : `fixedForRound` puis `drawSymmetric`, réunis par `roundModifiers(rules, gameId:, round:)`. Graine `drawSeed(gameId, round)` (FNV-1a, stable entre exécutions) |
+ | `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn}`. `turn` est vide pour l'instant (compteurs des stories d'effets) |
+ 
+ ## Fiesta — invariants (epic-2)
+@@ -29,6 +30,11 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+   neuve ; `FiestaRules` copie ses collections en lecture seule. Sans argument, `clearFiesta`.
+ - Tout l'état Fiesta vit ici, jamais dans le provider : persisté par `_saveGameState` et
+   restauré par le retour arrière (`savePreValidationState` = `GameState.toJson()`).
++- **Tirage déterministe par `(gameId, manche)`** : le tirage de la manche suivante n'est **pas**
++  stocké, il est recalculé (`GameProvider.nextRoundModifiers`) ; retour arrière et app tuée
++  retrouvent donc le même. Il entre dans `active` au lancement (M1) et à `nextRound` (M2, M3),
++  qui retire les instances de portée manche de la manche finie. Jamais de `Random()` non graine
++  pour un tirage Fiesta.
+ - Forme JSON : `fiesta: {rules: {mode, symmetric, autoCalibrate, ensembleName?, modifiers:
+   {id: {active, arrival, startRound, fixedRound?, charges}}, oneOfThree, catchUp: {b1, b2, cap,
+   mal, malCap}, drawCount, oneAnswer, carryOver}, active: [{catalogId, scope, target, teamId?,
+diff --git a/lib/models/fiesta/symmetric_draw.dart b/lib/models/fiesta/symmetric_draw.dart
+new file mode 100644
+index 0000000..df64b5d
+--- /dev/null
++++ b/lib/models/fiesta/symmetric_draw.dart
+@@ -0,0 +1,139 @@
++import 'dart:convert';
++import 'dart:math';
++
++import 'fiesta_rules.dart';
++import 'modifier_catalog.dart';
++import 'modifier_instance.dart';
++
++/// Tirage symétrique et modificateurs fixés d'une manche (story 2-5).
++///
++/// 🔴 Tout est DÉTERMINISTE par `(gameId, manche)` : le retour arrière depuis
++/// la transition rejoue la branche « fin de manche », et une app tuée relit la
++/// partie. Les deux doivent retrouver le même tirage, sans rien stocker de plus.
++/// D'où une graine calculée ici, et non `String.hashCode` (non garanti stable
++/// d'une exécution à l'autre).
++int drawSeed(String gameId, int round) {
++  // FNV-1a 32 bits.
++  var hash = 0x811c9dc5;
++  for (final byte in utf8.encode('$gameId#$round')) {
++    hash = ((hash ^ byte) * 0x01000193) & 0xffffffff;
++  }
++  return hash;
++}
++
++/// Un modificateur peut-il sortir en manche [round] ?
++bool isEligibleForRound(ModifierDef def, int round) =>
++    !def.round3Only || round == 3;
++
++/// Un modificateur qui vise un joueur (`block_guesser`, choisi par les
++/// adversaires) n'a pas de sens « pour toutes les équipes » : ni tiré, ni fixé.
++bool isForAllTeams(ModifierDef def) => def.defaultTarget == ModifierTarget.both;
++
++/// Le tirage pour toutes les équipes est-il allumé ? (définition partagée
++/// avec 2-3 / le Récap : les DEUX drapeaux comptent).
++bool isSymmetricDrawOn(FiestaRules rules) =>
++    rules.symmetric && rules.drawCount > 0;
++
++ModifierInstance _forAll(ModifierDef def, int round, int charges) =>
++    ModifierInstance(
++      catalogId: def.id,
++      scope: ModifierScope.round,
++      target: ModifierTarget.both,
++      charges: charges,
++      nature: def.nature,
++      round: round,
++    );
++
++/// Modificateurs « fixés sur la manche N » (Personnalisé, Q16) : toutes les
++/// équipes, toute la manche. Ils passent avant le tirage, qui doit leur être
++/// compatible ; le plafond de 2 s'applique à eux aussi. Un fixé à cible joueur
++/// ou « manche 3 seulement » hors M3 est ignoré (l'éditeur de 2-3 devrait
++/// l'interdire).
++List<ModifierInstance> fixedForRound(FiestaRules rules, int round) {
++  final fixed = <ModifierInstance>[];
++  if (rules.mode != FiestaMode.custom) return fixed;
++  for (final def in kModifierCatalog) {
++    final setting = rules.modifiers[def.id];
++    if (setting == null ||
++        !setting.active ||
++        setting.arrival != ModifierArrival.fixed ||
++        setting.fixedRound != round ||
++        !isForAllTeams(def) ||
++        !isEligibleForRound(def, round)) {
++      continue;
++    }
++    final instance = _forAll(def, round, setting.charges);
++    if (canAdd(fixed, instance)) fixed.add(instance);
++  }
++  return fixed;
++}
++
++/// Tirage symétrique de la manche [round], compatible avec [alreadyFixed] et
++/// avec lui-même, plafond de 2 compris (Q8). Moins de candidats que demandé :
++/// on en tire moins, sans erreur.
++///
++/// - Auto : 1 ou 2 (50/50, Q9) dans tout le catalogue ;
++/// - Personnalisé : `drawCount` parmi les modificateurs actifs réglés sur
++///   « tiré pour tous » et dont la manche de départ est atteinte.
++///
++/// Jamais de modificateur à cible joueur ([isForAllTeams]).
++List<ModifierInstance> drawSymmetric({
++  required FiestaRules rules,
++  required int round,
++  required List<ModifierInstance> alreadyFixed,
++  required Random random,
++}) {
++  if (!isSymmetricDrawOn(rules)) return const [];
++
++  final auto = rules.mode == FiestaMode.auto;
++  final count =
++      auto ? (random.nextBool() ? 2 : 1) : rules.drawCount.clamp(0, 2);
++
++  // Ordre du catalogue, jamais celui d'une Map relue : le mélange doit partir
++  // de la même liste pour donner le même tirage.
++  final candidates = <ModifierInstance>[];
++  for (final def in kModifierCatalog) {
++    if (!isForAllTeams(def) || !isEligibleForRound(def, round)) {
++      continue;
++    }
++    if (auto) {
++      candidates.add(_forAll(def, round, def.defaultCharges));
++      continue;
++    }
++    final setting = rules.modifiers[def.id];
++    if (setting == null ||
++        !setting.active ||
++        setting.arrival != ModifierArrival.draw ||
++        setting.startRound > round) {
++      continue;
++    }
++    candidates.add(_forAll(def, round, setting.charges));
++  }
++  candidates.shuffle(random);
++
++  final drawn = <ModifierInstance>[];
++  for (final candidate in candidates) {
++    if (drawn.length >= count) break;
++    if (canAdd([...alreadyFixed, ...drawn], candidate)) drawn.add(candidate);
++  }
++  return drawn;
++}
++
++/// Tout ce qui s'applique à toutes les équipes pendant la manche [round] :
++/// les fixés, puis le tirage. Point d'entrée unique du provider.
++List<ModifierInstance> roundModifiers(
++  FiestaRules rules, {
++  required String gameId,
++  required int round,
++}) {
++  final fixed = fixedForRound(rules, round);
++  return [
++    ...fixed,
++    ...drawSymmetric(
++      rules: rules,
++      round: round,
++      alreadyFixed: fixed,
++      random: Random(drawSeed(gameId, round)),
++    ),
++  ];
++}
+diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
+index 8c96680..4637f9c 100644
+--- a/lib/providers/game_provider.dart
++++ b/lib/providers/game_provider.dart
+@@ -6,6 +6,9 @@ import '../models/player.dart';
+ import '../models/team.dart';
+ import '../models/fiesta/fiesta_rules.dart';
+ import '../models/fiesta/fiesta_state.dart';
++import '../models/fiesta/modifier_catalog.dart';
++import '../models/fiesta/modifier_instance.dart';
++import '../models/fiesta/symmetric_draw.dart';
+ import '../models/game_settings.dart';
+ import '../models/game_state.dart';
+ import '../models/turn_clock.dart';
+@@ -443,7 +446,12 @@ class GameProvider extends ChangeNotifier {
+       timeRemaining: _settings.turnDuration,
+       clearTurnBonusTime: true,
+       history: [],
+-      fiesta: fiesta == null ? null : FiestaState(rules: fiesta),
++      fiesta: fiesta == null
++          ? null
++          : FiestaState(
++              rules: fiesta,
++              active: roundModifiers(fiesta, gameId: gameId, round: 1),
++            ),
+       clearFiesta: fiesta == null,
+     );
+ 
+@@ -1021,6 +1029,10 @@ class GameProvider extends ChangeNotifier {
+   }
+ 
+   void nextRound() {
++    // Idempotent par transition : un double tap sur « Manche suivante »
++    // rappelait `nextRound` depuis l'écran de jeu de la manche suivante et
++    // sautait une manche (M1 → M3). Seul l'écran de transition fait avancer.
++    if (_game.currentScreen != AppConstants.screenTransition) return;
+     final nextRoundNumber = _game.currentRound + 1;
+ 
+     if (nextRoundNumber > 3) {
+@@ -1041,6 +1053,7 @@ class GameProvider extends ChangeNotifier {
+         wordsGuessedThisTurn: [],
+         passedWordsThisTurn: [],
+         currentScreen: AppConstants.screenGame,
++        fiesta: _fiestaForRound(nextRoundNumber),
+       );
+     }
+ 
+@@ -1048,6 +1061,59 @@ class GameProvider extends ChangeNotifier {
+     _saveGameState();
+   }
+ 
++  /// Fiesta à l'entrée de la manche [round] : les instances de portée manche
++  /// de la manche finie partent, celles de [round] (fixés + tirage) arrivent.
++  /// Nul en Classique (et `copyWith(fiesta: null)` laisse alors `fiesta` nul).
++  FiestaState? _fiestaForRound(int round) {
++    final fiesta = _game.fiesta;
++    if (fiesta == null) return null;
++    return FiestaState(
++      rules: fiesta.rules,
++      active: [
++        ...fiesta.active
++            .where((m) => !(m.scope == ModifierScope.round && m.round < round)),
++        ...roundModifiers(fiesta.rules,
++            gameId: _game.gameId ?? '', round: round),
++      ],
++      turn: fiesta.turn,
++    );
++  }
++
++  /// Ce qui s'appliquera à toutes les équipes à la manche suivante, montré
++  /// sur la transition AVANT « Manche suivante ». Calculé, jamais stocké : la
++  /// graine `(gameId, manche)` rend le même tirage après un retour arrière ou
++  /// une app tuée. Vide en Classique et après M3.
++  List<ModifierInstance> get nextRoundModifiers {
++    final fiesta = _game.fiesta;
++    if (fiesta == null || _game.currentRound >= 3) return const [];
++    return roundModifiers(fiesta.rules,
++        gameId: _game.gameId ?? '', round: _game.currentRound + 1);
++  }
++
++  /// Modificateurs actifs qui pèsent sur l'équipe qui joue (badges).
++  List<ModifierInstance> get currentTeamModifiers {
++    final fiesta = _game.fiesta;
++    if (fiesta == null || _teams.isEmpty) return const [];
++    final teamId = _teams[_game.currentTeamIndex].id;
++    return fiesta.active
++        .where((m) => m.target == ModifierTarget.both || m.teamId == teamId)
++        .toList();
++  }
++
++  /// Malus à révéler en plein écran avant le tour : ceux de l'équipe qui joue,
++  /// à son PREMIER tour de la manche (aucune entrée d'historique à son nom
++  /// dans cette manche). Dérivé de l'historique : rien à persister.
++  List<ModifierInstance> get malusToReveal {
++    if (_game.fiesta == null || _teams.isEmpty) return const [];
++    final teamId = _teams[_game.currentTeamIndex].id;
++    final alreadyPlayed = _game.history
++        .any((h) => h.round == _game.currentRound && h.teamId == teamId);
++    if (alreadyPlayed) return const [];
++    return currentTeamModifiers
++        .where((m) => m.nature == ModifierNature.malus)
++        .toList();
++  }
++
+   /// Archive la partie terminée pour l'écran d'historique.
+   ///
+   /// On enregistre le résultat **tel qu'il a été montré aux joueurs**, pas une
+diff --git a/lib/screens/game_screen.dart b/lib/screens/game_screen.dart
+index 4133c79..c5a2571 100644
+--- a/lib/screens/game_screen.dart
++++ b/lib/screens/game_screen.dart
+@@ -9,6 +9,11 @@ import '../widgets/common/game_dialogs.dart';
+ import '../widgets/common/home_button.dart';
+ import '../widgets/common/back_button.dart';
+ import '../widgets/effects/shooting_stars.dart';
++import '../widgets/fiesta/fiesta_setup_widgets.dart';
++import '../widgets/fiesta/malus_reveal.dart';
++import '../widgets/fiesta/modifier_badge.dart';
++import '../widgets/fiesta/modifier_card.dart';
++import '../models/fiesta/modifier_catalog.dart';
+ 
+ class GameScreen extends StatelessWidget {
+   const GameScreen({super.key});
+@@ -189,6 +194,21 @@ class GameScreen extends StatelessWidget {
+ 
+                   const Spacer(),
+ 
++                  // Fiesta : annonces avant le tour, posées juste au-dessus du
++                  // bouton. Défile si l'écran est petit plutôt que de déborder.
++                  // `Expanded` (et non `Flexible`) : l'espace non utilisé reste
++                  // au-dessus du bloc, pas sous le bouton.
++                  if (provider.isFiesta)
++                    Expanded(
++                      flex: 3,
++                      child: Align(
++                        alignment: Alignment.bottomCenter,
++                        child: SingleChildScrollView(
++                          child: _FiestaAnnouncements(provider: provider),
++                        ),
++                      ),
++                    ),
++
+                   // Time bonus indicator
+                   if (provider.game.turnBonusTime != null) ...[
+                     Container(
+@@ -223,7 +243,7 @@ class GameScreen extends StatelessWidget {
+                     variant: AppButtonVariant.primary,
+                     size: AppButtonSize.large,
+                     fullWidth: true,
+-                    onPressed: () => provider.startTurn(),
++                    onPressed: () => _startTurn(context, provider, teamColor),
+                   ),
+ 
+                   const SizedBox(height: 24),
+@@ -246,6 +266,33 @@ class GameScreen extends StatelessWidget {
+     );
+   }
+ 
++  /// Fiesta : révèle d'abord les malus de l'équipe à son premier tour de la
++  /// manche, puis lance le compte à rebours.
++  ///
++  /// 🔴 Les révélations sont des routes poussées AU-DESSUS de `home` : elles
++  /// survivent au changement d'écran. Sans les deux gardes, un double tap
++  /// empile deux révélations et la seconde chaîne rappelle `startTurn()` en
++  /// plein tour (revue 2-5 r1, MAJOR-1).
++  Future<void> _startTurn(
++      BuildContext context, GameProvider provider, Color teamColor) async {
++    // Une révélation déjà poussée : la route du jeu n'est plus au sommet.
++    if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
++    final maluses = provider.malusToReveal;
++    if (maluses.isNotEmpty) {
++      await MalusReveal.showAll(
++        context,
++        maluses: maluses,
++        teamName: provider.getCurrentTeam()?.name ?? '',
++        teamColor: teamColor,
++      );
++      if (!context.mounted ||
++          provider.game.currentScreen != AppConstants.screenGame) {
++        return;
++      }
++    }
++    provider.startTurn();
++  }
++
+   void _showBackToTeamsDialog(BuildContext context, GameProvider provider) {
+     AppConfirmDialog.show(
+       context,
+@@ -557,3 +604,64 @@ class GameScreen extends StatelessWidget {
+     );
+   }
+ }
++
++/// Avant le tout premier tour : tirage de la manche 1 et annonce « Une seule
++/// réponse » (maquette `r1`). Ensuite : « Actif ce tour » (maquette `cd`).
++class _FiestaAnnouncements extends StatelessWidget {
++  final GameProvider provider;
++
++  const _FiestaAnnouncements({required this.provider});
++
++  @override
++  Widget build(BuildContext context) {
++    final rules = provider.game.fiesta!.rules;
++    final modifiers = provider.currentTeamModifiers;
++
++    if (provider.isFirstTurnOfGame) {
++      return Column(
++        crossAxisAlignment: CrossAxisAlignment.stretch,
++        children: [
++          if (rules.oneAnswer)
++            Container(
++              margin: const EdgeInsets.only(bottom: 12),
++              padding: const EdgeInsets.all(12),
++              decoration: BoxDecoration(
++                color: AppColors.warning.withValues(alpha: 0.1),
++                borderRadius: BorderRadius.circular(14),
++                border: Border.all(
++                    color: AppColors.warning.withValues(alpha: 0.35)),
++              ),
++              child: Text(
++                'Une seule réponse par mot. Une mauvaise réponse → il faut '
++                'passer (pénalité de passe).',
++                style: AppTextStyles.bodySmall
++                    .copyWith(fontSize: 12.5, color: AppColors.warning),
++              ),
++            ),
++          RoundDrawCard(round: 1, modifiers: modifiers),
++        ],
++      );
++    }
++
++    return FiestaCard(
++      title: 'Actif ce tour',
++      children: [
++        if (modifiers.isEmpty && !rules.oneAnswer)
++          const FiestaHint('Aucun modificateur')
++        else
++          ModifierBadges(
++            modifiers: modifiers,
++            alignment: WrapAlignment.start,
++            extra: [
++              if (rules.oneAnswer)
++                const ModifierBadge(
++                  icon: '☝',
++                  label: 'Une seule réponse',
++                  nature: ModifierNature.bonus,
++                ),
++            ],
++          ),
++      ],
++    );
++  }
++}
+diff --git a/lib/screens/transition_screen.dart b/lib/screens/transition_screen.dart
+index 7adc418..135ac80 100644
+--- a/lib/screens/transition_screen.dart
++++ b/lib/screens/transition_screen.dart
+@@ -6,6 +6,7 @@ import '../widgets/common/app_button.dart';
+ import '../widgets/common/game_dialogs.dart';
+ import '../widgets/common/home_button.dart';
+ import '../widgets/common/back_button.dart';
++import '../widgets/fiesta/modifier_card.dart';
+ 
+ class TransitionScreen extends StatelessWidget {
+   const TransitionScreen({super.key});
+@@ -68,7 +69,8 @@ class TransitionScreen extends StatelessWidget {
+                   Expanded(
+                     child: SingleChildScrollView(
+                       child: Column(
+-                        children: sortedTeams.asMap().entries.map((entry) {
++                        children:
++                            sortedTeams.asMap().entries.map<Widget>((entry) {
+                           final index = entry.key;
+                           final team = entry.value;
+                           final originalIndex = provider.teams.indexOf(team);
+@@ -144,7 +146,15 @@ class TransitionScreen extends StatelessWidget {
+                               ),
+                             ),
+                           );
+-                        }).toList(),
++                        }).followedBy([
++                          // Fiesta : tirage de la manche suivante, visible
++                          // AVANT « Manche suivante ». Vide en Classique.
++                          if (!isLastRound)
++                            RoundDrawCard(
++                              round: currentRound + 1,
++                              modifiers: provider.nextRoundModifiers,
++                            ),
++                        ]).toList(),
+                       ),
+                     ),
+                   ),
+diff --git a/lib/screens/turn_screen.dart b/lib/screens/turn_screen.dart
+index 67fc59a..93c55ee 100644
+--- a/lib/screens/turn_screen.dart
++++ b/lib/screens/turn_screen.dart
+@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
+ import '../providers/game_provider.dart';
+ import '../services/audio_service.dart';
+ import '../widgets/common/app_confirm_dialog.dart';
++import '../widgets/fiesta/modifier_badge.dart';
+ 
+ class TurnScreen extends StatefulWidget {
+   const TurnScreen({super.key});
+@@ -320,7 +321,14 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+                           },
+                         ),
+ 
+-                        const SizedBox(height: 32),
++                        // Fiesta : modificateurs du tour, sous le chrono.
++                        if (provider.currentTeamModifiers.isNotEmpty) ...[
++                          const SizedBox(height: 8),
++                          ModifierBadges(
++                              modifiers: provider.currentTeamModifiers),
++                          const SizedBox(height: 16),
++                        ] else
++                          const SizedBox(height: 32),
+ 
+                         // Current word
+                         Flexible(
+diff --git a/lib/widgets/CLAUDE.md b/lib/widgets/CLAUDE.md
+index fabe6de..c3e0e54 100644
+--- a/lib/widgets/CLAUDE.md
++++ b/lib/widgets/CLAUDE.md
+@@ -8,4 +8,4 @@ Widgets reutilisables organises en deux sous-repertoires.
+ |------------|------|
+ | `common/` | Composants UI reutilisables (boutons, inputs, modals, sliders, toggles) |
+ | `effects/` | Effets visuels et animations de fond |
+-| `fiesta/` | Squelette et cartes des ecrans de choix du mode Fiesta (retour systeme Android gere) |
++| `fiesta/` | Squelette et cartes des ecrans de choix du mode Fiesta (retour systeme Android gere) ; en partie : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawCard` (« Tirage de la manche N »), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10) |
+diff --git a/lib/widgets/fiesta/malus_reveal.dart b/lib/widgets/fiesta/malus_reveal.dart
+new file mode 100644
+index 0000000..7e3e5b1
+--- /dev/null
++++ b/lib/widgets/fiesta/malus_reveal.dart
+@@ -0,0 +1,136 @@
++import 'package:flutter/material.dart';
++
++import '../../models/fiesta/modifier_catalog.dart';
++import '../../models/fiesta/modifier_instance.dart';
++import '../../theme/app_theme.dart';
++import '../common/app_button.dart';
++import 'modifier_badge.dart';
++
++/// Révélation plein écran d'un malus (maquette `malus`), au début du tour de
++/// l'équipe visée, avant le compte à rebours. Réutilisable par 2-8 et 2-10.
++class MalusReveal extends StatelessWidget {
++  final ModifierInstance malus;
++  final String teamName;
++  final Color teamColor;
++
++  const MalusReveal({
++    required this.malus,
++    required this.teamName,
++    required this.teamColor,
++    super.key,
++  });
++
++  /// Montre chaque malus de [maluses] l'un après l'autre ; rend la main quand
++  /// le dernier est fermé (« Compris » ou retour système).
++  static Future<void> showAll(
++    BuildContext context, {
++    required List<ModifierInstance> maluses,
++    required String teamName,
++    required Color teamColor,
++  }) async {
++    for (final malus in maluses) {
++      if (!context.mounted) return;
++      await Navigator.of(context).push(MaterialPageRoute<void>(
++        fullscreenDialog: true,
++        builder: (_) => MalusReveal(
++          malus: malus,
++          teamName: teamName,
++          teamColor: teamColor,
++        ),
++      ));
++    }
++  }
++
++  @override
++  Widget build(BuildContext context) {
++    final def = modifierById(malus.catalogId);
++    return Material(
++      color: AppColors.backgroundMain,
++      child: SafeArea(
++        // Défile sur petit écran / grande police plutôt que de pousser
++        // « Compris » hors de l'écran.
++        child: Center(
++          child: SingleChildScrollView(
++            padding: const EdgeInsets.all(24),
++            child: Column(
++              mainAxisSize: MainAxisSize.min,
++              crossAxisAlignment: CrossAxisAlignment.stretch,
++              children: [
++                Text.rich(
++                  TextSpan(children: [
++                    const TextSpan(text: 'Au tour de '),
++                    TextSpan(
++                        text: teamName, style: TextStyle(color: teamColor)),
++                  ]),
++                  textAlign: TextAlign.center,
++                  style: AppTextStyles.bodySmall
++                      .copyWith(color: AppColors.gray400),
++                ),
++                const SizedBox(height: 16),
++                Center(
++                  child: Container(
++                    width: 96,
++                    height: 96,
++                    alignment: Alignment.center,
++                    decoration: BoxDecoration(
++                      color: AppColors.primaryPink.withValues(alpha: 0.18),
++                      borderRadius: BorderRadius.circular(28),
++                    ),
++                    child: Text(
++                      modifierIcon(malus.catalogId),
++                      style: const TextStyle(
++                        fontFamily: 'Bangers',
++                        fontSize: 44,
++                        color: AppColors.primaryPink,
++                      ),
++                    ),
++                  ),
++                ),
++                const SizedBox(height: 16),
++                Text(
++                  def?.name ?? malus.catalogId,
++                  textAlign: TextAlign.center,
++                  style: AppTextStyles.subtitle(fontSize: 34),
++                ),
++                if (def != null) ...[
++                  const SizedBox(height: 8),
++                  Text(
++                    def.description,
++                    textAlign: TextAlign.center,
++                    style: AppTextStyles.bodySmall
++                        .copyWith(color: AppColors.gray400),
++                  ),
++                ],
++                if (malus.target == ModifierTarget.both) ...[
++                  const SizedBox(height: 16),
++                  Container(
++                    padding: const EdgeInsets.all(12),
++                    decoration: BoxDecoration(
++                      color: AppColors.warning.withValues(alpha: 0.1),
++                      borderRadius: BorderRadius.circular(14),
++                      border: Border.all(
++                          color: AppColors.warning.withValues(alpha: 0.35)),
++                    ),
++                    child: Text(
++                      'Tiré pour la manche : toutes les équipes le subissent.',
++                      style: AppTextStyles.bodySmall
++                          .copyWith(fontSize: 12.5, color: AppColors.warning),
++                    ),
++                  ),
++                ],
++                const SizedBox(height: 24),
++                AppButton(
++                  text: 'Compris',
++                  variant: AppButtonVariant.primary,
++                  size: AppButtonSize.large,
++                  fullWidth: true,
++                  onPressed: () => Navigator.of(context).pop(),
++                ),
++              ],
++            ),
++          ),
++        ),
++      ),
++    );
++  }
++}
+diff --git a/lib/widgets/fiesta/modifier_badge.dart b/lib/widgets/fiesta/modifier_badge.dart
+new file mode 100644
+index 0000000..c64adbc
+--- /dev/null
++++ b/lib/widgets/fiesta/modifier_badge.dart
+@@ -0,0 +1,95 @@
++import 'package:flutter/material.dart';
++
++import '../../models/fiesta/modifier_catalog.dart';
++import '../../models/fiesta/modifier_instance.dart';
++import '../../theme/app_theme.dart';
++
++/// Pictogramme court d'un modificateur (maquette `CAT[].ic`). Affichage
++/// seulement : un id absent retombe sur « ✦ ».
++const Map<String, String> kModifierIcons = {
++  'mime_no_arms': '✋',
++  'mime_no_fists': '🖐',
++  'mime_eyes_closed': '◉',
++  'draw': '✎',
++  'no_pass': '⊘',
++  'free_pass': '↷',
++  'minus_10s': '−10',
++  'double_points': '×2',
++  'two_words': '⧉',
++  'reversed': '⇄',
++  'block_guesser': '🔇',
++};
++
++String modifierIcon(String id) => kModifierIcons[id] ?? '✦';
++
++/// Couleur d'un modificateur : cyan pour un bonus, rose pour un malus.
++Color modifierColor(ModifierNature nature) => nature == ModifierNature.bonus
++    ? AppColors.secondaryCyan
++    : AppColors.primaryPink;
++
++/// Pastille « icône + nom » (maquette `.badge`). [label] remplace le nom du
++/// catalogue (ex. « Une seule réponse », qui n'est pas un modificateur).
++class ModifierBadge extends StatelessWidget {
++  final String icon;
++  final String label;
++  final ModifierNature nature;
++
++  const ModifierBadge({
++    required this.icon,
++    required this.label,
++    required this.nature,
++    super.key,
++  });
++
++  factory ModifierBadge.of(ModifierInstance instance, {Key? key}) =>
++      ModifierBadge(
++        key: key,
++        icon: modifierIcon(instance.catalogId),
++        label: modifierById(instance.catalogId)?.name ?? instance.catalogId,
++        nature: instance.nature,
++      );
++
++  @override
++  Widget build(BuildContext context) {
++    final color = modifierColor(nature);
++    return Container(
++      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
++      decoration: BoxDecoration(
++        color: color.withValues(alpha: 0.15),
++        borderRadius: BorderRadius.circular(99),
++        border: Border.all(color: color.withValues(alpha: 0.4)),
++      ),
++      child: Text(
++        '$icon $label',
++        style: TextStyle(
++          fontFamily: 'Poppins',
++          fontSize: 12,
++          fontWeight: FontWeight.w600,
++          color: color,
++        ),
++      ),
++    );
++  }
++}
++
++/// Les badges des [modifiers], centrés et repliés sur plusieurs lignes.
++class ModifierBadges extends StatelessWidget {
++  final List<ModifierInstance> modifiers;
++  final List<Widget> extra;
++  final WrapAlignment alignment;
++
++  const ModifierBadges({
++    required this.modifiers,
++    this.extra = const [],
++    this.alignment = WrapAlignment.center,
++    super.key,
++  });
++
++  @override
++  Widget build(BuildContext context) => Wrap(
++        alignment: alignment,
++        spacing: 6,
++        runSpacing: 6,
++        children: [...modifiers.map(ModifierBadge.of), ...extra],
++      );
++}
+diff --git a/lib/widgets/fiesta/modifier_card.dart b/lib/widgets/fiesta/modifier_card.dart
+new file mode 100644
+index 0000000..bc06f9d
+--- /dev/null
++++ b/lib/widgets/fiesta/modifier_card.dart
+@@ -0,0 +1,110 @@
++import 'package:flutter/material.dart';
++
++import '../../models/fiesta/modifier_catalog.dart';
++import '../../models/fiesta/modifier_instance.dart';
++import '../../theme/app_theme.dart';
++import 'fiesta_setup_widgets.dart';
++import 'modifier_badge.dart';
++
++/// Un modificateur en détail : icône, nom, description, pastilles
++/// (maquette `modCard`).
++class ModifierCard extends StatelessWidget {
++  final ModifierInstance instance;
++
++  const ModifierCard(this.instance, {super.key});
++
++  @override
++  Widget build(BuildContext context) {
++    final def = modifierById(instance.catalogId);
++    final color = modifierColor(instance.nature);
++    final pills = [
++      instance.nature == ModifierNature.bonus ? 'Bonus' : 'Malus',
++      if (def?.round3Only ?? false) 'Manche 3 seulement',
++    ];
++    return Container(
++      margin: const EdgeInsets.only(top: 8),
++      padding: const EdgeInsets.all(12),
++      decoration: BoxDecoration(
++        color: AppColors.backgroundMain,
++        borderRadius: BorderRadius.circular(14),
++      ),
++      child: Row(
++        crossAxisAlignment: CrossAxisAlignment.start,
++        children: [
++          Container(
++            width: 38,
++            height: 38,
++            alignment: Alignment.center,
++            decoration: BoxDecoration(
++              color: color.withValues(alpha: 0.18),
++              borderRadius: BorderRadius.circular(12),
++            ),
++            child: Text(
++              modifierIcon(instance.catalogId),
++              style:
++                  TextStyle(fontFamily: 'Bangers', fontSize: 18, color: color),
++            ),
++          ),
++          const SizedBox(width: 12),
++          Expanded(
++            child: Column(
++              crossAxisAlignment: CrossAxisAlignment.start,
++              children: [
++                Text(def?.name ?? instance.catalogId,
++                    style: AppTextStyles.bodySmall
++                        .copyWith(fontWeight: FontWeight.w600)),
++                if (def != null) FiestaHint(def.description),
++                const SizedBox(height: 6),
++                Wrap(
++                  spacing: 6,
++                  runSpacing: 4,
++                  children: pills
++                      .map((p) => Container(
++                            padding: const EdgeInsets.symmetric(
++                                horizontal: 8, vertical: 2),
++                            decoration: BoxDecoration(
++                              borderRadius: BorderRadius.circular(99),
++                              border: Border.all(color: AppColors.gray600),
++                            ),
++                            child: Text(p,
++                                style: const TextStyle(
++                                    fontFamily: 'Poppins',
++                                    fontSize: 10.5,
++                                    color: AppColors.gray400)),
++                          ))
++                      .toList(),
++                ),
++              ],
++            ),
++          ),
++        ],
++      ),
++    );
++  }
++}
++
++/// « Tirage de la manche N » (maquette `drawCard`) : fixés et tirage de la
++/// manche, pour toutes les équipes. Rien si la liste est vide.
++class RoundDrawCard extends StatelessWidget {
++  final int round;
++  final List<ModifierInstance> modifiers;
++
++  const RoundDrawCard({
++    required this.round,
++    required this.modifiers,
++    super.key,
++  });
++
++  @override
++  Widget build(BuildContext context) {
++    if (modifiers.isEmpty) return const SizedBox.shrink();
++    return FiestaCard(
++      title: 'Tirage de la manche $round',
++      children: [
++        const FiestaHint('S\'applique à toutes les équipes, à chacun de leurs '
++            'tours. Pas de relance : le tirage est définitif.'),
++        ...modifiers.map(ModifierCard.new),
++      ],
++    );
++  }
++}
+diff --git a/test/models/fiesta/symmetric_draw_test.dart b/test/models/fiesta/symmetric_draw_test.dart
+new file mode 100644
+index 0000000..ccb4d6e
+--- /dev/null
++++ b/test/models/fiesta/symmetric_draw_test.dart
+@@ -0,0 +1,122 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
++import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
++
++ModifierSetting setting(ModifierArrival arrival,
++        {int startRound = 1, int? fixedRound}) =>
++    ModifierSetting(
++      active: true,
++      arrival: arrival,
++      startRound: startRound,
++      fixedRound: fixedRound,
++      charges: 0,
++    );
++
++/// Personnalisé : tout le catalogue en « tiré pour tous » dès M1, sauf
++/// `no_pass` fixé sur [fixedNoPassRound] s'il est donné.
++FiestaRules customAllDraw({int drawCount = 2, int? fixedNoPassRound}) =>
++    FiestaRules(
++      mode: FiestaMode.custom,
++      drawCount: drawCount,
++      modifiers: {
++        for (final def in kModifierCatalog)
++          // `block_guesser` (cible joueur) fixé lui aussi : ne doit jamais sortir.
++          def.id: (def.id == 'no_pass' || def.id == 'block_guesser') &&
++                  fixedNoPassRound != null
++              ? setting(ModifierArrival.fixed, fixedRound: fixedNoPassRound)
++              : setting(ModifierArrival.draw),
++      },
++    );
++
++final gameIds = List.generate(200, (i) => 'game-$i');
++
++void main() {
++  final configs = <String, FiestaRules Function(int round)>{
++    'Auto': (_) => FiestaRules(mode: FiestaMode.auto),
++    'Personnalisé, tirage 2': (_) => customAllDraw(),
++    'Personnalisé, tirage 2 + fixé': (round) =>
++        customAllDraw(fixedNoPassRound: round),
++  };
++
++  test(
++      'pour toute config, manche et graine : plafond de 2, aucune paire '
++      'incompatible, rien de « manche 3 » avant M3, résultat déterministe', () {
++    configs.forEach((label, rulesFor) {
++      for (final round in [1, 2, 3]) {
++        for (final gameId in gameIds) {
++          final rules = rulesFor(round);
++          final mods = roundModifiers(rules, gameId: gameId, round: round);
++          final ids = mods.map((m) => m.catalogId).toList();
++          final why = '$label, M$round, $gameId : $ids';
++
++          expect(ids.length, lessThanOrEqualTo(2), reason: why);
++          expect(ids, isNot(contains('block_guesser')), reason: why);
++          expect(ids.toSet().length, ids.length, reason: why);
++          for (var i = 0; i < ids.length; i++) {
++            for (var j = i + 1; j < ids.length; j++) {
++              expect(areCompatible(ids[i], ids[j]), isTrue, reason: why);
++            }
++          }
++          if (label.endsWith('fixé')) {
++            expect(ids.first, 'no_pass', reason: why);
++          }
++          if (round < 3) {
++            expect(ids.where((id) => modifierById(id)!.round3Only), isEmpty,
++                reason: why);
++          }
++          // Même graine (retour arrière, app tuée) = même tirage.
++          final again = roundModifiers(rules, gameId: gameId, round: round)
++              .map((m) => m.catalogId)
++              .toList();
++          expect(again, ids, reason: why);
++        }
++      }
++    });
++  });
++
++  test('Auto : 1 ou 2 tirés, les deux cas arrivent', () {
++    final counts = gameIds
++        .map((id) => roundModifiers(FiestaRules(mode: FiestaMode.auto),
++                gameId: id, round: 1)
++            .length)
++        .toSet();
++    expect(counts, {1, 2});
++  });
++
++  test(
++      'Personnalisé : tirage à 0 = rien ; seuls les « tiré pour tous » '
++      'dont la manche de départ est atteinte sortent', () {
++    expect(
++      roundModifiers(customAllDraw(drawCount: 0), gameId: 'g', round: 1),
++      isEmpty,
++    );
++    expect(
++      roundModifiers(FiestaRules(mode: FiestaMode.auto, symmetric: false),
++          gameId: 'g', round: 1),
++      isEmpty,
++    );
++
++    final rules = FiestaRules(
++      mode: FiestaMode.custom,
++      drawCount: 2,
++      modifiers: {
++        'reversed': setting(ModifierArrival.draw, startRound: 2),
++        'minus_10s': setting(ModifierArrival.draw),
++        'free_pass': setting(ModifierArrival.offer),
++      },
++    );
++    for (final gameId in gameIds) {
++      expect(
++        roundModifiers(rules, gameId: gameId, round: 1).map((m) => m.catalogId),
++        ['minus_10s'],
++      );
++      expect(
++        roundModifiers(rules, gameId: gameId, round: 2)
++            .map((m) => m.catalogId)
++            .toSet(),
++        {'minus_10s', 'reversed'},
++      );
++    }
++  });
++}
+diff --git a/test/providers/fiesta_freeze_test.dart b/test/providers/fiesta_freeze_test.dart
+index 89ba49f..cb3905a 100644
+--- a/test/providers/fiesta_freeze_test.dart
++++ b/test/providers/fiesta_freeze_test.dart
+@@ -46,7 +46,8 @@ void main() {
+ 
+       expect(provider.isFiesta, isTrue);
+       expect(provider.game.fiesta!.rules.modifiers.keys, ['no_pass']);
+-      expect(provider.game.fiesta!.active, isEmpty);
++      // Tirage de M1 (2-5) : pris dans la config gelée, seul `no_pass` y est.
++      expect(provider.game.fiesta!.active.map((m) => m.catalogId), ['no_pass']);
+     });
+ 
+     test('startGame() sans argument efface la Fiesta de la partie précédente',
+diff --git a/test/providers/fiesta_round_draw_test.dart b/test/providers/fiesta_round_draw_test.dart
+new file mode 100644
+index 0000000..ad880e0
+--- /dev/null
++++ b/test/providers/fiesta_round_draw_test.dart
+@@ -0,0 +1,147 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
++import 'package:guess_it_all_mobile/providers/game_provider.dart';
++import 'package:guess_it_all_mobile/utils/constants.dart';
++
++import '../helpers/test_prefs.dart';
++
++/// Un provider prêt à lancer une partie : 2 joueurs, 2 équipes,
++/// [wordsEach] mots chacun.
++Future<GameProvider> givenReadyProvider({int wordsEach = 1}) async {
++  await givenPrefs();
++  givenFakePlatformPlugins();
++  final provider = GameProvider();
++  await pumpEventQueue();
++  for (final name in ['Ana', 'Bob']) {
++    final id = (provider.addPlayer(name)['player'] as dynamic).id as String;
++    provider.updatePlayerWords(
++        id, [for (var i = 0; i < wordsEach; i++) 'mot-$name-$i']);
++  }
++  provider.createTeams();
++  provider.randomizeTeams();
++  return provider;
++}
++
++/// Un seul tour fait deviner les 2 mots, puis passe par la vérification :
++/// fin de la manche, écran de transition.
++void playWholeRound(GameProvider provider) {
++  provider.startTurn();
++  provider.startTurnTimer();
++  provider.markWordAsGuessed();
++  provider.markWordAsGuessed();
++  final guessed = List<String>.from(provider.game.wordsGuessedThisTurn);
++  provider.savePreValidationState(guessed);
++  provider.validateWords(guessed);
++}
++
++/// Un tour qui fait deviner 1 mot sans finir la manche, validé.
++void playOneWordTurn(GameProvider provider) {
++  provider.startTurn();
++  provider.startTurnTimer();
++  provider.markWordAsGuessed();
++  provider.endTurn();
++  final guessed = List<String>.from(provider.game.wordsGuessedThisTurn);
++  provider.savePreValidationState(guessed);
++  provider.validateWords(guessed);
++}
++
++List<String> ids(Iterable<ModifierInstance> mods) =>
++    mods.map((m) => '${m.catalogId}@${m.round}').toList();
++
++void main() {
++  test(
++      'Fiesta Auto : le tirage de M2 est visible dès la transition, identique '
++      'après un retour arrière et après une app tuée, puis actif au '
++      '« Manche suivante » à la place de celui de M1', () async {
++    final provider = await givenReadyProvider();
++    await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
++    expect(provider.game.fiesta!.active, isNotEmpty);
++    expect(provider.game.fiesta!.active.every((m) => m.round == 1), isTrue);
++
++    playWholeRound(provider);
++    expect(provider.game.currentScreen, AppConstants.screenTransition);
++    final preview = ids(provider.nextRoundModifiers);
++    expect(preview, isNotEmpty);
++
++    // Retour arrière depuis la transition, puis revalidation : pas de relance.
++    provider.restorePreValidationState();
++    final guessed = List<String>.from(provider.game.wordsGuessedThisTurn);
++    provider.savePreValidationState(guessed);
++    provider.validateWords(guessed);
++    expect(ids(provider.nextRoundModifiers), preview);
++
++    // App tuée sur la transition : même tirage à la réouverture.
++    await pumpEventQueue();
++    final reloaded = GameProvider();
++    await pumpEventQueue();
++    expect(reloaded.game.currentScreen, AppConstants.screenTransition);
++    expect(ids(reloaded.nextRoundModifiers), preview);
++    expect(
++        ids(reloaded.game.fiesta!.active), ids(provider.game.fiesta!.active));
++
++    reloaded.nextRound();
++    expect(ids(reloaded.game.fiesta!.active), preview);
++    expect(ids(reloaded.currentTeamModifiers), preview);
++  });
++
++  test('Classique : ni fiesta, ni tirage, ni badge, à aucune étape', () async {
++    final provider = await givenReadyProvider();
++    await provider.startGame();
++    playWholeRound(provider);
++    expect(provider.nextRoundModifiers, isEmpty);
++    provider.nextRound();
++    expect(provider.game.fiesta, isNull);
++    expect(provider.currentTeamModifiers, isEmpty);
++    expect(provider.malusToReveal, isEmpty);
++  });
++
++  test(
++      'révélation des malus : au premier tour de chaque équipe dans la '
++      'manche, plus ensuite', () async {
++    final provider = await givenReadyProvider(wordsEach: 2);
++    await provider.startGame(
++      fiesta: FiestaRules(
++        mode: FiestaMode.custom,
++        drawCount: 0,
++        modifiers: {
++          'minus_10s': const ModifierSetting(
++            active: true,
++            arrival: ModifierArrival.fixed,
++            startRound: 1,
++            fixedRound: 1,
++            charges: 0,
++          ),
++        },
++      ),
++    );
++    final first = provider.getCurrentTeam()!.id;
++    expect(ids(provider.malusToReveal), ['minus_10s@1']);
++
++    playOneWordTurn(provider);
++    expect(provider.getCurrentTeam()!.id, isNot(first));
++    expect(ids(provider.malusToReveal), ['minus_10s@1']);
++
++    playOneWordTurn(provider);
++    expect(provider.getCurrentTeam()!.id, first);
++    expect(provider.game.currentRound, 1);
++    expect(provider.malusToReveal, isEmpty);
++    // Toujours actif, juste plus révélé.
++    expect(ids(provider.currentTeamModifiers), ['minus_10s@1']);
++  });
++
++  test(
++      'double tap sur « Manche suivante » : un seul passage de manche '
++      '(bug antérieur à Fiesta, M1 → M3)', () async {
++    final provider = await givenReadyProvider();
++    await provider.startGame();
++    playWholeRound(provider);
++    expect(provider.game.currentScreen, AppConstants.screenTransition);
++
++    provider.nextRound();
++    provider.nextRound();
++
++    expect(provider.game.currentRound, 2);
++    expect(provider.game.currentScreen, AppConstants.screenGame);
++  });
++}

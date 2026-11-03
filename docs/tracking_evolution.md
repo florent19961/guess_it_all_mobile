@@ -387,3 +387,26 @@ l'enregistrement. Écrans « Mes ensembles » et éditeur.
   telles quelles à chaque modification d'un autre ; un **blob figé** en test garantit que le
   format de cette version se relit en entier.
 
+## 2026-11-03 — Fiesta 2-5 : tirage symétrique recalculé, jamais stocké
+
+**Quoi.** `lib/models/fiesta/symmetric_draw.dart` calcule les modificateurs « pour toutes les
+équipes » d'une manche : les **fixés** sur cette manche (Personnalisé, Q16), puis le **tirage**
+(Auto : 1 ou 2, Q9 ; Personnalisé : `drawCount` parmi les « tiré pour tous » éligibles), avec
+`canAdd` pour le plafond de 2 et les incompatibilités. Graine `drawSeed(gameId, manche)`.
+`startGame` pose ceux de M1 dans `fiesta.active` ; `nextRound` retire ceux de la manche finie et
+pose ceux de la nouvelle. La transition montre `nextRoundModifiers`, le jeu « Actif ce tour »,
+le tour des badges sous le chrono, et `MalusReveal` révèle les malus au premier tour de chaque
+équipe dans la manche (dérivé de l'historique).
+
+**Pourquoi ces choix.**
+- **Recalculer plutôt que stocker la « manche suivante »** : la story proposait de ranger le
+  tirage dans `fiesta` dès la fin de manche. Mais le snapshot du retour arrière est pris avant
+  la validation, et la graine rend le résultat identique de toute façon : stocker n'apportait
+  rien et aurait exigé un champ de plus dans `FiestaState` (type public de 2-2). Aucune forme
+  persistée ne change.
+- **FNV-1a et pas `String.hashCode`** : `hashCode` n'est pas garanti stable d'une exécution à
+  l'autre ; une app tuée doit retrouver le même tirage.
+- **Fixés avant le tirage** dans le plafond : la story demande un tirage compatible avec les
+  fixés. Q8 (« le tirage d'abord ») vise les offres et cadeaux, qui viennent après.
+- **`block_guesser` jamais tiré pour tous** : il vise un joueur choisi par les adversaires, une
+  cible « toutes les équipes » n'a pas de sens.

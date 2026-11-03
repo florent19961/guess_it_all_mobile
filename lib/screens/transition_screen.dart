@@ -6,6 +6,7 @@ import '../widgets/common/app_button.dart';
 import '../widgets/common/game_dialogs.dart';
 import '../widgets/common/home_button.dart';
 import '../widgets/common/back_button.dart';
+import '../widgets/fiesta/modifier_card.dart';
 
 class TransitionScreen extends StatelessWidget {
   const TransitionScreen({super.key});
@@ -68,7 +69,8 @@ class TransitionScreen extends StatelessWidget {
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(
-                        children: sortedTeams.asMap().entries.map((entry) {
+                        children:
+                            sortedTeams.asMap().entries.map<Widget>((entry) {
                           final index = entry.key;
                           final team = entry.value;
                           final originalIndex = provider.teams.indexOf(team);
@@ -144,7 +146,15 @@ class TransitionScreen extends StatelessWidget {
                               ),
                             ),
                           );
-                        }).toList(),
+                        }).followedBy([
+                          // Fiesta : tirage de la manche suivante, visible
+                          // AVANT « Manche suivante ». Vide en Classique.
+                          if (!isLastRound)
+                            RoundDrawCard(
+                              round: currentRound + 1,
+                              modifiers: provider.nextRoundModifiers,
+                            ),
+                        ]).toList(),
                       ),
                     ),
                   ),
