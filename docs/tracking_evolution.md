@@ -259,3 +259,37 @@ une seule release après le mode Fiesta.
 un 1er `dry-run`, commite le `Podfile.lock` produit. Points incertains jusque-là : `xcode: latest`
 vs Flutter 3.44, chemin de l'export plist iOS, et le build Gradle lui-même (non compilable depuis
 WSL).
+
+## 2026-11-03 — Mode Fiesta : epic et 10 stories écrites, cadrage figé
+
+**Quoi.** Le cadrage du mode Fiesta (grilling 2026-08-02 puis 2026-11-03) est transformé en un
+epic et 10 stories prêtes au dev : `_bmad-output/specs/fiesta/epic-fiesta.md` et
+`_bmad-output/specs/fiesta/2-2-…` à `2-11-…`. Le jeu d'aujourd'hui devient **Classique** ;
+Fiesta a deux modes, **Auto** (tirage symétrique et/ou auto-calibrage) et **Personnalisé**
+(ensembles de règles enregistrés, 10 max par téléphone). Board : `epic-2-mode-fiesta` passe à
+`ready-for-dev`, `2-1-fiesta-cadrage` à `done`. Ajout de `epic-4-i18n` et `epic-5-pubs`
+(`deferred`) et de `epic-6-release-cloud` (`review`, PR #4).
+
+**Pourquoi ces choix de structure.**
+
+1. **Tout l'état Fiesta vit dans `GameState`, en champs optionnels, sans incrémenter
+   `kCurrentSchemaVersion`.** Absent = Classique : une partie en cours écrite par la version en
+   store se relit telle quelle (`CLAUDE.md` règle 7). Et le snapshot de retour arrière réutilise
+   déjà `GameState.toJson()` : un état rangé là est restauré gratuitement, y compris une charge
+   dépensée sur un tour annulé.
+2. **Une seule nouvelle clé, `guessItAll_fiestaEnsembles`**, sur le modèle de
+   `GameHistoryService` (enveloppe versionnée + quarantaine). `GameSettings` ne change pas : un
+   ensemble ne contient que des règles Fiesta.
+3. **Une lane séquentielle** sur `game_provider.dart` / `game_state.dart` : 9 stories sur 10 y
+   passent. Seuls les ensembles (2-3) courent en parallèle.
+4. **Analytics avant les effets** (2-7 avant 2-8 à 2-11) : le champ « modificateurs actifs » des
+   événements est posé une fois, et 2-11 n'a plus qu'à rendre le suivi « par mot ».
+5. **Tirages et offres à graine `(gameId, manche)`** : un retour arrière depuis la transition
+   rejoue la fin de manche ; sans graine, il relancerait le tirage, ce que la décision interdit.
+6. **Correctif inclus** : `timeSpent` (`game_provider.dart:869`) se calcule sur la durée réglée,
+   donc faux pour les continuations ; 2-6 stocke la durée réellement allouée au tour.
+
+**Conséquence.** 16 questions ouvertes, chacune avec une recommandation appliquée par défaut,
+sont listées dans l'epic pour arbitrage par Florent ; les plus structurantes : Q1 (report de temps
+= tour de continuation, la maquette `cd2` est à corriger), Q3 (définition de l'égalité à 3-4
+équipes), Q4 (plancher de 10 s), Q11 (place de l'écran Paramètres dans le parcours).

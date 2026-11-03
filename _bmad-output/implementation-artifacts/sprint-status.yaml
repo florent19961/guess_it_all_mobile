@@ -31,8 +31,37 @@ epics:
     title: "Solder la baseline rouge (aucun test qui tourne)"
     status: done   # ✅ PR #2 (squash 8f689b2) — 123 tests verts
   epic-2-mode-fiesta:
-    title: "Mode Fiesta — modificateurs de jeu par-dessus le mode libre"
-    status: needs-design   # → grilling AVANT d'écrire quoi que ce soit
+    title: "Mode Fiesta (Auto + Personnalisé) par-dessus le mode Classique"
+    status: ready-for-dev   # cadrage clos (grilling 2026-08-02 + 2026-11-03), 10 stories écrites
+    note: >-
+      Epic : _bmad-output/specs/fiesta/epic-fiesta.md (cadrage figé, stories,
+      lanes, 16 questions ouvertes avec recommandation). Maquette UX :
+      https://claude.ai/artifact/N9w6ATfeJnXTkfq74AfAdj . Lanes : A séquentielle
+      sur game_provider/game_state (2-2 → 2-5 → 2-6 → 2-7 → 2-8 → 2-9 → 2-10 →
+      2-11, 2-4 s'y insère après 2-5) ; B parallèle = 2-3 dès 2-2 mergée. Gate ③
+      dû en fin d'epic. Un seul build store après Fiesta. i18n reportée (epic-4).
+  epic-4-i18n:
+    title: "Internationalisation (anglais)"
+    status: deferred
+    note: >-
+      Signal déclencheur : audience ou fiche store en anglais. Première étape :
+      extraire les ~220 chaînes FR avec gen-l10n. Les textes Fiesta s'écrivent en
+      français en attendant.
+  epic-5-pubs:
+    title: "Publicité / monétisation"
+    status: deferred
+    note: >-
+      Signal déclencheur : > 500 parties / mois. Revenu estimé à ce jour : ~0,45 €.
+      Monétisation en pause (le « Pass fêtard » payant est écarté de Fiesta).
+  epic-6-release-cloud:
+    title: "Release cloud (builds iOS/Android hors poste local)"
+    status: done   # ✅ PR #4 (squash a282bde)
+    note: >-
+      PR #4 mergée (squash a282bde). Publication désactivée jusqu'au build unique
+      post-Fiesta. Reste : 1er dry-run Codemagic (signature iOS), un build Windows
+      pour valider Gradle, commit de Podfile.lock. Team ID Apple P86JMJ3R72, clé
+      ASC 5S5JV42UPB. Derniers builds en store : iOS 1.1.3 (10) du 2026-02-13,
+      Android versionCode 8 (1.1.3) → prochain build ≥ +11 sur les deux.
   epic-3-audit-remediation:
     title: "Remédiation de l'audit du 2026-08-02 (3 blockers, 20 majors)"
     status: done   # ✅ MERGÉ PR #2 (squash 8f689b2, 2026-11-03, sur instruction Florent). Gate ② clos.
@@ -151,7 +180,7 @@ stories:
   2-1-fiesta-cadrage:
     epic: epic-2-mode-fiesta
     title: "Cadrage grill-me du mode Fiesta (liste de modificateurs → arbitrages)"
-    status: needs-design
+    status: done   # ✅ grilling 2026-08-02 + 2026-11-03 → _bmad-output/specs/fiesta/epic-fiesta.md
     note: >-
       Ébauche fournie par Florent 2026-08-01 (~25 pistes de modificateurs :
       contraintes de mime, blocage de joueurs, malus/bonus de temps, règles par
@@ -159,3 +188,86 @@ stories:
       AVANT bmad-create-epics-and-stories : la question structurante est le MODÈLE
       (un modificateur = quoi exactement ? portée tour/manche/partie, cumulabilité,
       effet sur le scoring et sur les analytics existantes).
+
+  # ── epic-2 : mode Fiesta ───────────────────────────────────────────────────
+  # Epic + stories : _bmad-output/specs/fiesta/
+  2-2-fondation-modele-fiesta:
+    epic: epic-2-mode-fiesta
+    title: "Fondation : catalogue, modèle, champs optionnels de GameState, gel au lancement"
+    status: ready-for-dev
+    depends: []
+    spec: _bmad-output/specs/fiesta/2-2-fondation-modele-fiesta.md
+    note: >-
+      R ①③ · GP + GS · Fable. Seule au départ : pose les types de tout l'epic. kCurrentSchemaVersion inchangé.
+  2-3-ensembles-stockage-editeur:
+    epic: epic-2-mode-fiesta
+    title: "Ensembles : clé guessItAll_fiestaEnsembles versionnée, validation, liste et éditeur"
+    status: ready-for-dev
+    depends: [2-2-fondation-modele-fiesta]
+    spec: _bmad-output/specs/fiesta/2-3-ensembles-stockage-editeur.md
+    note: >-
+      R ③ (nouvelle clé) + écrans · lane B, parallèle de 2-5 : ne touche ni GP ni GS. Conflit textuel seulement sur app.dart / constants.dart (routes) avec 2-4.
+  2-4-selection-mode-auto-recap:
+    epic: epic-2-mode-fiesta
+    title: "Choix du mode (Classique / Fiesta Auto / Personnalisé), écran Auto, récap, lancement et Rejouer"
+    status: ready-for-dev
+    depends: [2-2-fondation-modele-fiesta, 2-3-ensembles-stockage-editeur]
+    spec: _bmad-output/specs/fiesta/2-4-selection-mode-auto-recap.md
+    note: >-
+      Léger + GP (startGame, restartWithSamePlayers) · entre dans la lane A après 2-5. Recettes device à partir d'ici.
+  2-5-tirage-symetrique-transition:
+    epic: epic-2-mode-fiesta
+    title: "Tirage symétrique, transition de manche et annonces avant le tour"
+    status: ready-for-dev
+    depends: [2-2-fondation-modele-fiesta]
+    spec: _bmad-output/specs/fiesta/2-5-tirage-symetrique-transition.md
+    note: >-
+      R ① · GP + GS. Tirage à graine (gameId, manche) : le retour arrière ne relance pas.
+  2-6-temps-rattrapage-duree-reelle:
+    epic: epic-2-mode-fiesta
+    title: "Temps du tour : rattrapage, malus de temps, durée réelle (corrige timeSpent, game_provider.dart:869)"
+    status: ready-for-dev
+    depends: [2-5-tirage-symetrique-transition]
+    spec: _bmad-output/specs/fiesta/2-6-temps-rattrapage-duree-reelle.md
+    note: >-
+      R ⑥① · GP + GS · Fable. Q1-Q5 de l'epic appliquées par défaut.
+  2-7-analytics-archive-recap:
+    epic: epic-2-mode-fiesta
+    title: "Analytics (modificateurs par événement, mode de partie), archive GameResult, récap des résultats"
+    status: ready-for-dev
+    depends: [2-5-tirage-symetrique-transition, 2-6-temps-rattrapage-duree-reelle]
+    spec: _bmad-output/specs/fiesta/2-7-analytics-archive-recap.md
+    note: >-
+      R ⑤ · AN + GP + GS. Avant les effets de tour pour ne poser le contrat d'événements qu'une fois.
+  2-8-effets-de-tour-catalogue:
+    epic: epic-2-mode-fiesta
+    title: "Effets de tour : interdit de passer, passe gratuite, bloquer un devineur, contraintes annoncées, mot à l'envers"
+    status: ready-for-dev
+    depends: [2-5-tirage-symetrique-transition, 2-7-analytics-archive-recap]
+    spec: _bmad-output/specs/fiesta/2-8-effets-de-tour-catalogue.md
+    note: >-
+      R ⑥② · GP + GS + turn_screen.
+  2-9-mot-compte-double:
+    epic: epic-2-mode-fiesta
+    title: "Mot compte double : charges, activation avant le tour, score ×2 via resolveTurn pur, retour arrière"
+    status: ready-for-dev
+    depends: [2-8-effets-de-tour-catalogue]
+    spec: _bmad-output/specs/fiesta/2-9-mot-compte-double.md
+    note: >-
+      R ②① · GP + GS + turn_resolution · Fable.
+  2-10-un-parmi-trois-coup-de-pouce:
+    epic: epic-2-mode-fiesta
+    title: "1 parmi 3 (Personnalisé) et coup de pouce du catalogue (Auto)"
+    status: ready-for-dev
+    depends: [2-6-temps-rattrapage-duree-reelle, 2-9-mot-compte-double]
+    spec: _bmad-output/specs/fiesta/2-10-un-parmi-trois-coup-de-pouce.md
+    note: >-
+      R ① · GP + GS + transition_screen. Table de force « au doigt mouillé » (Q7).
+  2-11-deux-mots-a-la-fois:
+    epic: epic-2-mode-fiesta
+    title: "Deux mots à la fois (deux cartes, N mots expirés, analytics par carte)"
+    status: ready-for-dev
+    depends: [2-7-analytics-archive-recap, 2-9-mot-compte-double]
+    spec: _bmad-output/specs/fiesta/2-11-deux-mots-a-la-fois.md
+    note: >-
+      R ①②⑤⑥ · GP + GS + AN + turn_resolution · Fable. Dernière : casse le modèle un mot courant / un mot expiré.
