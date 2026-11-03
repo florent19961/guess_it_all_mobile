@@ -1,0 +1,3058 @@
+diff --git a/docs/ANALYTICS.md b/docs/ANALYTICS.md
+index be8000c..6cb75b6 100644
+--- a/docs/ANALYTICS.md
++++ b/docs/ANALYTICS.md
+@@ -44,26 +44,34 @@ class WordEvent {
+ **`modifiers` (Fiesta, story 2-7)** : ids du catalogue (`minus_10s`, `no_pass`...) actifs pour
+ l'equipe qui joue quand l'evenement a lieu. Cle **absente** (pas `null`) en Classique et sur les
+ evenements ecrits avant 2-7 ; `[]` = Fiesta sans modificateur ce tour. Un id peut apparaitre deux
+-fois (deux instances cumulees). Le provider les relit de l'etat **persiste** a chaque mot
+-affiche : apres un kill, le mot suivant est de nouveau etiquete. `guessed`/`passed`/`expired` et
+-`invalidated`/validation a posteriori reprennent ceux du dernier `shown` (contexte du tour, comme
+-`round`/`turn`). Rien n'est exclu des stats : `computeStats` et la difficulte initiale du mot
+-sont inchanges.
+-
+-- **Actifs, pas forcement appliques** : un tour de continuation (temps reporte en debut de
+-  manche) est etiquete avec la liste active de l'equipe dans la nouvelle manche, alors qu'il
+-  ignore les effets de duree (`minus_10s`...). Croiser avec `HistoryEntry.isBonusContinuation`
+-  pour recalibrer.
+-- **Cle absente dans une partie Fiesta = inconnu, pas Classique** : une verification faite juste
+-  apres un kill, sans nouveau `shown`, ecrit `invalidated` / `guessed` sans `modifiers` (et avec
+-  les defauts `round` 1, `teamId` '' deja presents avant 2-7). Le mode de la partie se lit sur
+-  `GameAnalytics.gameMode`, jamais sur l'evenement.
++fois (deux instances cumulees). Rien n'est exclu des stats : `computeStats` et la difficulte
++initiale du mot sont inchanges.
++
++**Contexte de l'evenement** (`round`, `turn`, `teamId`, `playerId`, `modifiers`) : le provider le
++relit de l'etat **persiste** de la partie (`GameState`) a **chaque** evenement et le passe
++explicitement au service (`WordEventContext`). Le service ne garde aucun contexte en memoire et
++n'invente aucun defaut : apres un kill, en plein tour comme sur l'ecran de verification, les
++evenements portent la vraie manche, la vraie equipe et les vrais tags. Sur la verification, le
++tour verifie est encore le tour courant (le contexte est lu avant la mutation de `validateWords`).
++
++- **Continuation** (temps reporte en debut de manche) : meme tour que la fin de la manche N, elle
++  est etiquetee avec les effets de N (et ×2 / deux mots s'ils etaient depenses), jamais ceux de
++  N+1, qui commencent au premier vrai tour. Les events de la continuation portent `round` N+1.
++- **Evenements anterieurs a ce correctif** : une verification faite juste apres un kill a pu
++  ecrire `invalidated` / `guessed` sans `modifiers`, avec `round` 1 et `teamId` ''. Le mode de la
++  partie se lit sur `GameAnalytics.gameMode`, jamais sur l'evenement.
+ 
+ **Duree par mot** (`AnalyticsService._recordEventWithDuration`, story 2-11) : chaque mot a
+-l'ecran garde l'horodatage de son `shown` ; `guessed` / `passed` / `expired` mesurent leur duree
+-depuis le `shown` de CE mot. Avec « Deux mots a la fois », les deux cartes ont donc chacune leur
+-paire d'evenements, et le tour porte `two_words` dans `modifiers`. Un mot sans `shown` en cours
+-(app tuee depuis) est abandonne, comme avant : pas de duree inventee.
++l'ecran garde en memoire l'horodatage de son `shown` ; `guessed` / `passed` / `expired` mesurent
++leur duree depuis le `shown` de CE mot. Avec « Deux mots a la fois », les deux cartes ont donc
++chacune leur paire d'evenements, et le tour porte `two_words` dans `modifiers`.
++
++**Mot affiche avant un kill** : l'horodatage du `shown` est perdu avec la memoire. L'evenement
++terminal (`guessed` / `passed` / `expired`, une ou deux cartes) est **quand meme enregistre**, avec
++`durationMs` **nul** (duree inconnue) : jamais de duree inventee, jamais d'evenement perdu. Le
++`shown` lui-meme peut manquer (les evenements ne sont sauvegardes qu'en fin de tour et a la mise
++en arriere-plan). Agregats : `WordRoundStats` compte une duree nulle comme 0 ms, comme deja pour
++la validation a posteriori ; filtrer `durationMs != null` pour un temps moyen.
+ 
+ **Types d'evenements :**
+ 
+@@ -214,11 +222,14 @@ class AnalyticsService {
+   Future<void> endGame();          // Termine et sauvegarde
+ 
+   // Tracking en temps reel
+-  void onWordShown(String word, int round, int turn, String teamId, String playerId);
+-  void onWordGuessed(String word);
+-  void onWordPassed(String word);
+-  void onWordExpired(String word);
+-  void onWordInvalidated(String word);
++  // `context` = (round, turn, teamId, playerId, modifiers), relu par le
++  // provider de l'etat persiste a chaque appel (WordEventContext).
++  void onWordShown(String word, WordEventContext context);
++  void onWordGuessed(String word, WordEventContext context);
++  void onWordPassed(String word, WordEventContext context);
++  void onWordExpired(String word, WordEventContext context);
++  void onWordInvalidated(String word, WordEventContext context);
++  void onWordValidatedAsGuessed(String word, WordEventContext context);
+ 
+   // Persistance
+   Future<void> saveCurrentGame();
+diff --git a/docs/notes_pour_plus_tard.md b/docs/notes_pour_plus_tard.md
+index b8aace9..72d52c0 100644
+--- a/docs/notes_pour_plus_tard.md
++++ b/docs/notes_pour_plus_tard.md
+@@ -137,6 +137,10 @@ persistée) ; en Auto, les deux interrupteurs dans cette même clé ou dans la s
+ 
+ ## 2026-11-03 — Fiesta : le tirage d'une manche ignore les instances qui survivent au passage de manche
+ 
++> ✅ **Résolu (epic fix, B1).** Les survivantes (instances de N) ne pèsent que sur la
++> continuation, les instances de N+1 que sur les vrais tours (`modifiersForTurn`) : elles ne se
++> croisent jamais sur un tour, le plafond n'a plus à les comparer.
++
+ **Contexte.** Story 2-5, revue r1 (MINOR-3). `nextRound` garde les instances de portée **tour**
+ et ajoute les modificateurs de la nouvelle manche (fixés + tirage) sans `canAdd` contre ces
+ survivantes. Aujourd'hui rien d'autre n'écrit dans `active`, donc aucune n'existe.
+@@ -183,6 +187,9 @@ absent = recalcul), soit versionner l'algorithme dans `FiestaState` et garder l'
+ 
+ ## 2026-11-03 — Analytics : le contexte du tour n'est pas restauré après un kill
+ 
++> ✅ **Résolu (epic fix, A5).** Le provider passe un `WordEventContext` relu de `GameState` à
++> chaque événement ; le service ne garde plus de contexte en mémoire.
++
+ **Contexte.** Story 2-7, revue r1 (MINOR-4). `AnalyticsService.resumeGame` relit la partie mais
+ remet à zéro le contexte du tour (`_lastRound`, `_lastTurn`, `_lastTeamId`, `_lastPlayerId`,
+ `_lastModifiers`). Une vérification faite juste après un kill, sans nouveau `shown`, écrit donc
+@@ -200,3 +207,26 @@ sur `WordHistoryService` ; seule la ventilation par manche/équipe/modificateur
+ 
+ **Esquisse.** Dans `resumeGame`, reprendre le contexte du dernier événement relu
+ (`round`, `turn`, `teamId`, `playerId`, `modifiers`), sans toucher au bloc « mot affiché ».
++
++---
++
++## 2026-11-03 — `GameProvider` : extraction du modèle de lecture Fiesta (`FiestaView`)
++
++**Contexte.** Revues de fin d'epic Fiesta (Opus M5, Codex MAJOR-5). `game_provider.dart` est à
++~2 020 lignes ; ~400 sont des getters Fiesta dérivés de `(fiesta, teams, currentTeamIndex,
++currentRound, history, currentScreen, gameId)`, mêlés aux mutations. L'epic fix a déjà sorti
++l'état du tour typé (`FiestaTurnState`), le plan de passage de manche (`planRoundTransition`) et
++les effets d'un tour (`modifiersForTurn`), et factorisé ×2 / deux mots.
++
++**Décision reportée.** Pas d'extraction `FiestaView` avant la release Fiesta.
++
++**Raison.** Refactor à comportement constant, rien de persisté ; le risque (≈400 lignes
++déplacées juste avant le build store) dépasse le gain immédiat.
++
++**Signal déclencheur.** Un nouveau modificateur ou une nouvelle règle Fiesta qui ajoute des
++getters au provider, ou le provider qui dépasse ~2 100 lignes.
++
++**Esquisse.** `lib/models/fiesta/fiesta_view.dart` : classe pure construite sur
++`(GameState, teams, settings)`, qui porte `isContinuation`, `currentTeamModifiers`, passes,
++charges, devineur bloqué, offres, file de choix, récap. Le provider garde les mutations et
++délègue ses getters ; tests purs sans provider.
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index af91cc6..f805dbb 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -321,8 +321,8 @@ nul. `GameProvider.startGame({FiestaRules? fiesta})` gèle la config ; sans argu
+ 
+ **Pourquoi ces choix.**
+ - **Un seul champ optionnel, pas de bump de `kCurrentSchemaVersion`** : absent = Classique, donc
+-  une partie écrite par la version en store se relit sans migration, et le blob Classique ne
+-  change pas d'un octet (règle 7). Les stories suivantes ajoutent leurs compteurs *dans* `fiesta`
++  une partie écrite par la version en store se relit sans migration, et `fiesta` n'est jamais
++  écrit en Classique (règle 7 ; seul ajout Classique de l'epic : `turnAllottedSeconds`, 2-6). Les stories suivantes ajoutent leurs compteurs *dans* `fiesta`
+   (`turn`), jamais à la racine de `GameState`.
+ - **Relecture tolérante à deux niveaux** : `fiesta` structurellement illisible → Classique (la
+   partie reste jouable) ; une instance ou un réglage illisible → ignoré seul, jamais de valeur
+@@ -564,7 +564,7 @@ choix.
+ 
+ **Pourquoi ces choix.**
+ - **Carte B dans `fiesta.turn`** (`secondWord`, puis `secondExpiredWord`), pas dans `GameState` :
+-  le blob Classique ne change pas d'un octet, clés absentes = un seul mot, pas de bump de schéma.
++  rien de neuf dans le blob Classique, clés absentes = un seul mot, pas de bump de schéma.
+   Le retour arrière et l'app tuée les retrouvent sans code dédié (snapshot = `toJson`).
+ - **Le mot visé est un argument** de `markWordAsGuessed` / `passWord` : un tap sur une carte
+   déjà remplacée est ignoré par le provider (en plus du verrou visuel de 0,3 s).
+@@ -575,3 +575,65 @@ choix.
+ 
+ **Conséquence.** Pas d'indicateur sur `HistoryEntry` (forme d'une clé `guessItAll_*` de premier
+ niveau) : le tag analytics porte l'information.
++
++## 2026-11-03 — Fiesta, fin d'epic : règle de la continuation, état du tour typé, plan de passage de manche
++
++**Ce qui change.**
++- **Continuation** (temps reporté en début de N+1) = même tour que la fin de N : elle joue avec
++  les effets de N pour cette équipe (modificateurs de N, ×2 / deux mots dépensés, passes
++  gratuites utilisées, `block_guesser` de N et devineur bloqué), **jamais** ceux de N+1 (tirage,
++  cadeaux, choix — `block_guesser` choisi pour N+1 compris — et charges), qui commencent au
++  premier vrai tour de chaque équipe. Aucune charge ne s'allume sur une continuation. Les
++  instances de N partent à la fin de la continuation. Tous les malus de N+1 se révèlent au
++  premier vrai tour (plus de cas particulier `minus_10s`).
++- `isContinuation` est **dérivé de l'historique** (l'équipe a joué la dernière entrée de N et
++  n'a encore rien joué en N+1), pas de `turnBonusTime`, effacé au départ du chrono : il tient
++  pendant le tour, sur la vérification, après un kill et un retour arrière. Rien de persisté.
++- `FiestaState.turn` : `Map<String, dynamic>` → `FiestaTurnState` typé, **mêmes clés JSON**,
++  écriture conditionnelle, lecture tolérante clé par clé. Il décide ce qui survit
++  (`afterRoundEnd`, `empty`).
++- `planRoundTransition` (pur) : tirage + cadeaux + choix + rattrapage + ce qui survit. L'aperçu
++  de la transition et `nextRound` lisent le même plan.
++- ×2 et deux mots : une table `kChargeBonusKeys`, une implémentation dans le provider.
++
++**Pourquoi.** Revues de fin d'epic : une continuation pouvait cumuler ×2 / blocage de N et deux
++tirages de N+1 (4 effets, Codex MAJOR-1), et un `block_guesser` choisi pour N+1 contre l'équipe
++qui avait fini N était brûlé par sa continuation, parfois de 0 s (Opus M3). Une seule règle
++(« la manche logique du tour ») supprime toute la famille de cas particuliers (m1, m2, m3, m8).
++Le blob Fiesta n'a jamais été publié : aucune migration.
++
++## 2026-11-03 — Fiesta, fin d'epic : « Évolution des scores » compte les points, pas les mots
++
++**Ce qui change.** `HistoryEntry.pointsScored`, optionnel, écrit **seulement** quand il diffère du
++nombre de mots validés (×2). Absent = un point par mot (`HistoryEntry.points`). Le graphe
++« Évolution des scores » cumule `points` : son dernier point égale `Team.score`.
++
++**Pourquoi.** Le graphe ajoutait le nombre de mots : un tour à ×2 y valait moitié moins que dans
++le score affiché (Codex MAJOR-3). Ajout dans `guessItAll_gameState` approuvé par Florent
++(règle 7) : additif, optionnel, lecture tolérante. Une partie Classique n'écrit jamais la clé
++(points = mots), et un blob antérieur se relit à l'identique. Pas de migration ni de bump de
++schéma.
++
++## 2026-11-03 — Fiesta, fin d'epic : contrat Classique = règle 7, plus l'identité à l'octet
++
++**Ce qui change.** Rien dans le code. La promesse « blob Classique octet pour octet celui
++d'avant » est remplacée par la règle 7 telle qu'écrite : ajouts optionnels, absents = défaut,
++lecture tolérante, migration explicite seulement si une forme change. `turnAllottedSeconds`,
++écrit par toute partie Classique jouée depuis 2-6, est gardé.
++
++**Pourquoi.** Codex (BLOCKER-1) l'a relevé : la promesse ne tenait plus depuis 2-6. Florent
++garde le champ : il est additif et optionnel, l'ancien lecteur l'ignore, et il corrige le temps
++passé par joueur (`timeSpent` mesuré sur la durée réelle du tour). Les mentions « à l'octet »
++sont corrigées dans `game_state.dart`, `lib/models/CLAUDE.md`, ce journal et le test du blob figé.
++
++## 2026-11-03 — Fiesta, fin d'epic : récap des modificateurs archivé en faits
++
++**Ce qui change.** `GameResult.modifierRecap` archive des `ModifierRecapItem` (`kind`, manche,
++id de catalogue, équipes, secondes), plus des phrases françaises. `formatModifierRecap` forme le
++texte à l'affichage (carte des Résultats). Le récap recalcule rattrapage et coup de pouce par
++`planRoundTransition`, le même plan que la transition.
++
++**Pourquoi.** Opus m6 : des phrases archivées seraient restées en français pour toujours (i18n
++prévue, epic-4). Le format Fiesta de `guessItAll_gameHistory` n'a jamais été publié, donc la
++forme change sans migration. Une ligne `{title, detail}` écrite par une build de dev se relit
++comme un fait illisible : elle est ignorée seule, sans crash.
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index fe83be5..7b51a7f 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -9,19 +9,20 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `player.dart` | `Player` | Joueur (id, name, words). Factory `Player.create()` |
+ | `team.dart` | `Team` | Equipe (id, name, playerIds, score, scoreByRound[3]) |
+ | `game_settings.dart` | `GameSettings` | Config partie : nb equipes/joueurs, wordChoice, totalWords, turnDuration, passPenalty, categories, difficultes |
+-| `game_state.dart` | `GameState`, `HistoryEntry` | Etat complet de la partie en cours : ecran, round, tour, pools de mots, scores, timestamps, snapshots de validation. `turnAllottedSeconds` = durée de **départ** réelle du tour (continuation, rattrapage, malus), base de `HistoryEntry.timeSpent` ; nul = partie d'une version antérieure → `turnDuration` |
++| `game_state.dart` | `GameState`, `HistoryEntry` | Etat complet de la partie en cours : ecran, round, tour, pools de mots, scores, timestamps, snapshots de validation. `turnAllottedSeconds` = durée de **départ** réelle du tour (continuation, rattrapage, malus), base de `HistoryEntry.timeSpent` ; nul = partie d'une version antérieure → `turnDuration`. `HistoryEntry.pointsScored` (optionnel) : écrit seulement s'il diffère du nombre de mots (×2) ; absent = un point par mot ; `points` est la seule source de « Évolution des scores » |
+ | `game_analytics.dart` | `GameAnalytics`, `DeviceInfo` | Analytics completes d'une partie pour Firebase (gameId, events, wordMetadata, wordStats). Fiesta : `gameMode`, `fiestaRules` (clés absentes en Classique ; recopiés par `copyWith`, sinon perdus au 1er event) |
+ | `word_event.dart` | `WordEvent`, `WordEventType`, `PassEvent` | Evenement atomique : shown/guessed/passed/expired/invalidated avec contexte (round, turn, team, player). Fiesta : `modifiers` (clé absente en Classique) |
+-| `game_result.dart` | `GameResult`, `TeamResult`, `ModifierRecapLine` | Partie archivée pour l'historique. Fiesta : `mode`, `modifierRecap` (clés absentes en Classique) |
++| `game_result.dart` | `GameResult`, `TeamResult`, `ModifierRecapItem` | Partie archivée pour l'historique. Fiesta : `mode`, `modifierRecap` (clés absentes en Classique) ; le récap est archivé en **faits** (`{kind, round, catalogId?, teamId?, chooserId?, seconds?}`), jamais en phrases ; fait illisible ignoré seul |
+ | `word_stats.dart` | `WordMetadata`, `WordRoundStats`, `WordStats` | Metadonnees mot (category, difficulty, language), stats par manche et agregees |
+ | `category_metadata.dart` | `CategoryMetadata` | Metadonnees categorie multilingue (id, icon, noms, locales) |
+ | `fiesta/modifier_catalog.dart` | `ModifierDef`, `kModifierCatalog`, `kModifierIncompatibilities`, enums `ModifierNature/Scope/Target` | Catalogue Fiesta V1 (11 ids **figés**, du code, jamais persisté), `modifierById`, `areCompatible` |
+ | `fiesta/modifier_instance.dart` | `ModifierInstance` | Modificateur actif dans une partie. `tryFromJson` tolérant (id inconnu → `null`, jamais de défaut inventé). `canAdd(active, candidate, {maxPerTurn: 2})` |
+ | `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, `CatchUpRules`, enums `FiestaMode`, `ModifierArrival` | Configuration Fiesta **immuable** (Auto / Personnalisé, réglage par modificateur, rattrapage, tirage, règles communes). `CatchUpRules.auto` = constantes du mode Auto. `tryFromJson` : structure illisible → `null`, réglage d'id inconnu ignoré seul |
+ | `fiesta/symmetric_draw.dart` | fonctions pures | Modificateurs d'une manche pour toutes les équipes : `fixedForRound` puis `drawSymmetric`, réunis par `roundModifiers(rules, gameId:, round:)`. Graine `drawSeed(gameId, round)` (FNV-1a, stable entre exécutions) |
+-| `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn, catchUpDue}`. `turn` : compteurs du tour (2-8 : `freePassesUsed`, `blockedPlayerId`, clés dans `turn_effects.dart`), vidés à la vraie fin du tour (continuation de fin de manche comprise dans le tour). `catchUpDue` : id d'équipe → secondes dues (négatives = malus du leader), posé par `nextRound`, consommé au premier tour non-continuation. `chargesUsed` (2-9, clé omise si vide) : charges dépensées `{catalogId, teamId, round}`, décompte de la manche en cours + récap « Bonus utilisés » ; `offerChoices` (2-10, clé omise si vide) : cartes 1 parmi 3 choisies `{chooserId, modifier}` — celles dont `modifier.round` = manche suivante forment la file de la transition, `nextRound` les rend actives ; relues pour le récap et `blockingTeam` |
+-| `fiesta/modifier_recap.dart` | fonctions pures | `fiestaModeId` (`fiesta_auto`/`fiesta_custom`), `fiestaModeLabel`, `buildModifierRecap` : récap « Modificateurs de la partie » **recalculé** (tirage par graine, rattrapage sur les scores cumulés par manche), rien de persisté pendant la partie |
+-| `fiesta/turn_effects.dart` | fonctions pures | Effets de tour (2-8) : clés des compteurs du tour, `freePassAllowance` (charges de `free_pass`), `canBlockGuesser` (équipe de 3+). 2-9 : clé `doublePoints` (`armed` à l'interrupteur, `spent` au départ), `doublePointsAllowance`. 2-11 : clés `twoWords` (mêmes valeurs), `secondWord`, `secondExpiredWord`, `twoWordsAllowance`, `drawOtherCard` (remplaçant ≠ l'autre carte) |
++| `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn, catchUpDue}`. `turn` : `FiestaTurnState` typé (`turn_effects.dart`), vidé à la vraie fin du tour (continuation de fin de manche comprise dans le tour). `catchUpDue` : id d'équipe → secondes dues (négatives = malus du leader), posé par `nextRound`, consommé au premier tour non-continuation. `chargesUsed` (2-9, clé omise si vide) : charges dépensées `{catalogId, teamId, round}`, décompte de la manche en cours + récap « Bonus utilisés » ; `offerChoices` (2-10, clé omise si vide) : cartes 1 parmi 3 choisies `{chooserId, modifier}` — celles dont `modifier.round` = manche suivante forment la file de la transition, `nextRound` les rend actives ; relues pour le récap et `blockingTeam` |
++| `fiesta/modifier_recap.dart` | fonctions pures | `fiestaModeId` (`fiesta_auto`/`fiesta_custom`), `fiestaModeLabel`, `buildModifierRecap` : récap « Modificateurs de la partie » **recalculé** en faits (tirage par graine, rattrapage et coup de pouce par `planRoundTransition` sur les scores cumulés par manche), rien de persisté pendant la partie ; `formatModifierRecap` forme les lignes affichées (`ModifierRecapLine`, jamais persistée) |
++| `fiesta/turn_effects.dart` | `FiestaTurnState` + fonctions pures | État du tour typé et immuable (`freePassesUsed`, `blockedPlayerId`, `charges` par id ↔ clés JSON `doublePoints`/`twoWords` via `kChargeBonusKeys`, valeurs `armed`/`spent`, `secondWord`, `secondExpiredWord`) : JSON conditionnel, lecture tolérante clé par clé, `afterRoundEnd()` (continuation) ; `chargeAllowance`, `canBlockGuesser` (équipe de 3+), `drawOtherCard` (remplaçant ≠ l'autre carte) |
++| `fiesta/round_transition.dart` | fonctions pures | `planRoundTransition` → `RoundTransitionPlan` (tirage + cadeaux + choix + rattrapage de N+1 ; `apply` garde les instances de N pour la continuation) : SEULE source de l'aperçu et de `nextRound`. `modifiersForTurn` : effets d'un tour = instances de sa manche logique (N pour une continuation) |
+ | `fiesta/turn_time.dart` | fonctions pures | `composeTurnSeconds` (base + rattrapage − malus du leader − 10 s × `minus_10s`, plancher `kTurnFloorSeconds` = 10 ; continuation = ses secondes, sans modificateur) ; `computeCatchUp` (k × écart avec la tête, plafonds, co-leaders tous en tête, égalité = rien) ; `effectiveCatchUp` (Auto → auto-calibrage, Personnalisé → curseurs) |
+ | `fiesta/offers.dart` | `Standings`, `OfferStrength`, fonctions pures | 2-10 : `kOfferStrength` + `strengthForGap` (≤3 légère, ≤7 moyenne, >7 forte, **à recalibrer**), cran vide → cran inférieur ; `Standings` (leader unique ou `null`, `gapOf`, `choosingOrder` dernière → avant-dernière, vide si égalité ; map construite **dans l'ordre des équipes**) ; `pickThreeOffers(…, roundDraw:, choices:, blockImmuneTeamIds:)` (≤3 cartes utiles : compatibles, plafond 2, pas un modificateur que la cible a déjà ; vide = équipe sautée) ; `appBoost(…, roundDraw:)` (Auto : 1 bonus par menée + 1 malus au leader, jamais `block_guesser`). Graine `offerSeed(gameId, round, teamId)` **figée par test**. 🔴 Lane cœur : persister les choix en `Map<chooserTeamId, ModifierInstance>` ; `choices` ne contient que les choix des équipes passées AVANT celle dont on calcule les offres (un malus vise le leader, la clé dit qui l'a choisi) ; prochaine équipe = 1ʳᵉ de `choosingOrder` absente de la map dont les offres ne sont pas vides |
+ | `fiesta/fiesta_ensemble.dart` | `FiestaEnsemble`, `defaultEnsembleRules`, extensions `copyWith`, `catchUpOn` | Ensemble Personnalisé `{id, rules}` (nom = `rules.ensembleName`, mode toujours `custom`), défauts de la maquette (`mkSet`). Persisté par `FiestaEnsembleService` |
+@@ -29,8 +30,10 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ 
+ ## Fiesta — invariants (epic-2)
+ 
+-- **`GameState.fiesta` nul = Classique.** `toJson()` n'écrit **pas** la clé quand nul : le blob
+-  d'une partie Classique est octet pour octet celui d'avant. `kCurrentSchemaVersion` inchangé.
++- **`GameState.fiesta` nul = Classique.** `toJson()` n'écrit **pas** la clé quand nul. Contrat
++  Classique = **règle 7** (ajouts optionnels, absents = défaut, lecture tolérante), pas l'identité
++  à l'octet : une partie Classique jouée écrit `turnAllottedSeconds` (2-6), approuvé par Florent.
++  `kCurrentSchemaVersion` inchangé.
+ - **Relecture tolérante** : `fiesta` non-objet ou règles illisibles → Classique ; instance ou
+   réglage illisible → ignoré seul (règle `WordEvent.tryFromJson`).
+ - 🔴 **Champ ajouté après la 1ʳᵉ release Fiesta** : il se lit **clé absente = défaut documenté**
+@@ -58,8 +61,8 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+   pour un tirage Fiesta.
+ - Forme JSON : `fiesta: {rules: {mode, symmetric, autoCalibrate, ensembleName?, modifiers:
+   {id: {active, arrival, startRound, fixedRound?, charges}}, oneOfThree, catchUp: {b1, b2, cap,
+-  mal, malCap}, drawCount, oneAnswer, carryOver}, active: [{catalogId, scope, target, teamId?,
+-  playerId?, charges, nature, round}], turn: {}, catchUpDue: {teamId: int}, chargesUsed?: [...], offerChoices?: [{chooserId, modifier}]}`.
++  mal, malCap}, drawCount, oneAnswer}, active: [{catalogId, scope, target, teamId?,
++  playerId?, charges, nature, round}]?, turn?: {}, catchUpDue?: {teamId: int}, chargesUsed?: [...], offerChoices?: [{chooserId, modifier}]}`.
+ - **Temps du tour** (2-6) : `GameProvider.turnTime` est la **seule** source de la durée de
+   départ ; `startTurn` (aperçu) et `startTurnTimer` (chrono, qui écrit `turnAllottedSeconds` et
+   consomme `catchUpDue`) la lisent tous deux. `TurnClock` reste la seule autorité sur le temps
+diff --git a/lib/models/fiesta/ensemble_validation.dart b/lib/models/fiesta/ensemble_validation.dart
+index 86888ba..8c3b2d1 100644
+--- a/lib/models/fiesta/ensemble_validation.dart
++++ b/lib/models/fiesta/ensemble_validation.dart
+@@ -1,5 +1,6 @@
+ import 'fiesta_rules.dart';
+ import 'modifier_catalog.dart';
++import 'symmetric_draw.dart';
+ 
+ /// Pourquoi un ensemble ne peut pas être enregistré (messages affichés tels
+ /// quels sous le bouton de l'éditeur). Vide = enregistrable.
+@@ -25,6 +26,12 @@ List<String> validateEnsemble(FiestaRules rules) {
+     if (!setting.active || def == null) continue;
+     final name = def.name;
+ 
++    // Un modificateur à cible joueur n'est ni tiré ni fixé (`isForAllTeams`) :
++    // il n'arriverait jamais.
++    if (!isForAllTeams(def) && setting.arrival != ModifierArrival.offer) {
++      errors.add('$name ne peut être que proposé à l\'équipe menée.');
++    }
++
+     switch (setting.arrival) {
+       case ModifierArrival.draw:
+         if (!drawOn) {
+diff --git a/lib/models/fiesta/fiesta_ensemble.dart b/lib/models/fiesta/fiesta_ensemble.dart
+index dc6d476..5f9c80f 100644
+--- a/lib/models/fiesta/fiesta_ensemble.dart
++++ b/lib/models/fiesta/fiesta_ensemble.dart
+@@ -1,5 +1,6 @@
+ import 'fiesta_rules.dart';
+ import 'modifier_catalog.dart';
++import 'symmetric_draw.dart';
+ 
+ /// Un ensemble du mode Personnalisé : des `FiestaRules` nommées, enregistrées
+ /// sur le téléphone (`FiestaEnsembleService`).
+@@ -33,7 +34,8 @@ class FiestaEnsemble {
+ /// Règles d'un nouvel ensemble : les valeurs par défaut de la maquette
+ /// (`mkSet`). Tout le catalogue est actif ; les contraintes de mime arrivent en
+ /// manche 3 (« Dessiner » fixé dessus, les autres tirées), les bonus sont
+-/// proposés dès M2, les malus tirés dès M1.
++/// proposés dès M2, les malus tirés dès M1 — sauf ceux à cible joueur
++/// (« Bloquer un devineur »), jamais tirés : proposés dès M2.
+ FiestaRules defaultEnsembleRules(String name) => FiestaRules(
+       mode: FiestaMode.custom,
+       ensembleName: name,
+@@ -43,12 +45,13 @@ FiestaRules defaultEnsembleRules(String name) => FiestaRules(
+             active: true,
+             arrival: def.id == 'draw'
+                 ? ModifierArrival.fixed
+-                : def.nature == ModifierNature.bonus && !def.round3Only
++                : !isForAllTeams(def) ||
++                        def.nature == ModifierNature.bonus && !def.round3Only
+                     ? ModifierArrival.offer
+                     : ModifierArrival.draw,
+             startRound: def.round3Only
+                 ? 3
+-                : def.nature == ModifierNature.bonus
++                : !isForAllTeams(def) || def.nature == ModifierNature.bonus
+                     ? 2
+                     : 1,
+             fixedRound: 3,
+@@ -69,7 +72,6 @@ extension FiestaRulesCopy on FiestaRules {
+     bool? symmetric,
+     int? drawCount,
+     bool? oneAnswer,
+-    bool? carryOver,
+   }) =>
+       FiestaRules(
+         mode: mode,
+@@ -81,7 +83,6 @@ extension FiestaRulesCopy on FiestaRules {
+         catchUp: catchUp ?? this.catchUp,
+         drawCount: drawCount ?? this.drawCount,
+         oneAnswer: oneAnswer ?? this.oneAnswer,
+-        carryOver: carryOver ?? this.carryOver,
+       );
+ }
+ 
+diff --git a/lib/models/fiesta/fiesta_rules.dart b/lib/models/fiesta/fiesta_rules.dart
+index cc82ab2..d9a6392 100644
+--- a/lib/models/fiesta/fiesta_rules.dart
++++ b/lib/models/fiesta/fiesta_rules.dart
+@@ -29,7 +29,7 @@ class ModifierSetting {
+         'active': active,
+         'arrival': arrival.name,
+         'startRound': startRound,
+-        'fixedRound': fixedRound,
++        if (fixedRound != null) 'fixedRound': fixedRound,
+         'charges': charges,
+       };
+ 
+@@ -135,9 +135,9 @@ class FiestaRules {
+   /// Nombre de modificateurs tirés pour tous à chaque manche, 0 à 2.
+   final int drawCount;
+ 
+-  // Règles communes.
++  // Règle commune. Le report du temps de fin de manche n'est PAS un réglage
++  // (epic : « conservé ») ; l'ancienne clé `carryOver` d'un blob est ignorée.
+   final bool oneAnswer;
+-  final bool carryOver;
+ 
+   FiestaRules({
+     required this.mode,
+@@ -149,21 +149,19 @@ class FiestaRules {
+     this.catchUp = CatchUpRules.auto,
+     this.drawCount = 1,
+     this.oneAnswer = true,
+-    this.carryOver = true,
+   }) : modifiers = Map.unmodifiable(modifiers);
+ 
+   Map<String, dynamic> toJson() => {
+         'mode': mode.name,
+         'symmetric': symmetric,
+         'autoCalibrate': autoCalibrate,
+-        'ensembleName': ensembleName,
++        if (ensembleName != null) 'ensembleName': ensembleName,
+         'modifiers':
+             modifiers.map((id, setting) => MapEntry(id, setting.toJson())),
+         'oneOfThree': oneOfThree,
+         'catchUp': catchUp.toJson(),
+         'drawCount': drawCount,
+         'oneAnswer': oneAnswer,
+-        'carryOver': carryOver,
+       };
+ 
+   /// Variante tolérante : `null` si la structure est illisible (`mode` inconnu,
+@@ -180,7 +178,6 @@ class FiestaRules {
+     final rawCatchUp = readOr<Map>(json, 'catchUp', const {});
+     final drawCount = readOr(json, 'drawCount', 1);
+     final oneAnswer = readOr(json, 'oneAnswer', true);
+-    final carryOver = readOr(json, 'carryOver', true);
+     if (mode == null ||
+         symmetric == null ||
+         autoCalibrate == null ||
+@@ -189,8 +186,7 @@ class FiestaRules {
+         oneOfThree == null ||
+         rawCatchUp == null ||
+         drawCount == null ||
+-        oneAnswer == null ||
+-        carryOver == null) {
++        oneAnswer == null) {
+       return null;
+     }
+     final catchUp =
+@@ -217,7 +213,6 @@ class FiestaRules {
+       catchUp: catchUp,
+       drawCount: drawCount,
+       oneAnswer: oneAnswer,
+-      carryOver: carryOver,
+     );
+   }
+ }
+diff --git a/lib/models/fiesta/fiesta_state.dart b/lib/models/fiesta/fiesta_state.dart
+index 60140f8..4957357 100644
+--- a/lib/models/fiesta/fiesta_state.dart
++++ b/lib/models/fiesta/fiesta_state.dart
+@@ -1,5 +1,6 @@
+ import 'fiesta_rules.dart';
+ import 'modifier_instance.dart';
++import 'turn_effects.dart';
+ 
+ /// État Fiesta d'une partie en cours, porté par `GameState.fiesta`.
+ ///
+@@ -13,9 +14,8 @@ class FiestaState {
+   /// Instances actives.
+   final List<ModifierInstance> active;
+ 
+-  /// Compteurs propres au tour en cours (clés dans `turn_effects.dart` :
+-  /// passes gratuites utilisées, devineur bloqué). Vidés à la fin du tour.
+-  final Map<String, dynamic> turn;
++  /// État propre au tour en cours ([FiestaTurnState]). Vidé à la fin du tour.
++  final FiestaTurnState turn;
+ 
+   /// Rattrapage DÛ par équipe (id → secondes, négatives pour le malus du
+   /// leader), posé à l'entrée de la manche et consommé par l'équipe à son
+@@ -37,19 +37,19 @@ class FiestaState {
+   FiestaState({
+     required this.rules,
+     List<ModifierInstance> active = const [],
+-    Map<String, dynamic> turn = const {},
++    FiestaTurnState? turn,
+     Map<String, int> catchUpDue = const {},
+     List<ChargeUse> chargesUsed = const [],
+     List<OfferChoice> offerChoices = const [],
+   })  : active = List.unmodifiable(active),
+-        turn = Map.unmodifiable(turn),
++        turn = turn ?? FiestaTurnState.empty,
+         catchUpDue = Map.unmodifiable(catchUpDue),
+         chargesUsed = List.unmodifiable(chargesUsed),
+         offerChoices = List.unmodifiable(offerChoices);
+ 
+   FiestaState copyWith({
+     List<ModifierInstance>? active,
+-    Map<String, dynamic>? turn,
++    FiestaTurnState? turn,
+     Map<String, int>? catchUpDue,
+     List<ChargeUse>? chargesUsed,
+     List<OfferChoice>? offerChoices,
+@@ -65,9 +65,10 @@ class FiestaState {
+ 
+   Map<String, dynamic> toJson() => {
+         'rules': rules.toJson(),
+-        'active': active.map((e) => e.toJson()).toList(),
+-        'turn': turn,
+-        'catchUpDue': catchUpDue,
++        // Clés vides omises : l'absence se relit comme le défaut.
++        if (active.isNotEmpty) 'active': active.map((e) => e.toJson()).toList(),
++        if (!turn.isEmpty) 'turn': turn.toJson(),
++        if (catchUpDue.isNotEmpty) 'catchUpDue': catchUpDue,
+         if (chargesUsed.isNotEmpty)
+           'chargesUsed': chargesUsed.map((e) => e.toJson()).toList(),
+         if (offerChoices.isNotEmpty)
+@@ -101,7 +102,9 @@ class FiestaState {
+     return FiestaState(
+       rules: rules,
+       active: active,
+-      turn: rawTurn is Map ? Map<String, dynamic>.from(rawTurn) : const {},
++      turn: rawTurn is Map
++          ? FiestaTurnState.fromJson(Map<String, dynamic>.from(rawTurn))
++          : null,
+       catchUpDue: rawDue is Map
+           ? {
+               for (final e in rawDue.entries)
+diff --git a/lib/models/fiesta/modifier_instance.dart b/lib/models/fiesta/modifier_instance.dart
+index 5a69687..64a6c46 100644
+--- a/lib/models/fiesta/modifier_instance.dart
++++ b/lib/models/fiesta/modifier_instance.dart
+@@ -40,8 +40,8 @@ class ModifierInstance {
+         'catalogId': catalogId,
+         'scope': scope.name,
+         'target': target.name,
+-        'teamId': teamId,
+-        'playerId': playerId,
++        if (teamId != null) 'teamId': teamId,
++        if (playerId != null) 'playerId': playerId,
+         'charges': charges,
+         'nature': nature.name,
+         'round': round,
+diff --git a/lib/models/fiesta/modifier_recap.dart b/lib/models/fiesta/modifier_recap.dart
+index 0436ae2..d606b33 100644
+--- a/lib/models/fiesta/modifier_recap.dart
++++ b/lib/models/fiesta/modifier_recap.dart
+@@ -4,10 +4,8 @@ import '../team.dart';
+ import 'fiesta_rules.dart';
+ import 'fiesta_state.dart';
+ import 'modifier_catalog.dart';
+-import 'modifier_instance.dart';
+-import 'offers.dart';
++import 'round_transition.dart';
+ import 'symmetric_draw.dart';
+-import 'turn_time.dart';
+ 
+ /// Id du mode Fiesta pour les analytics et l'historique (story 2-7).
+ String fiestaModeId(FiestaRules rules) =>
+@@ -18,17 +16,25 @@ String fiestaModeLabel(FiestaRules rules) => rules.mode == FiestaMode.auto
+     ? 'Fiesta · Auto'
+     : 'Fiesta · ${rules.ensembleName ?? 'Personnalisé'}';
+ 
+-/// Récap « Modificateurs de la partie » en fin de partie : tirage par manche,
+-/// rattrapages.
++/// Une ligne AFFICHÉE du récap « Modificateurs de la partie » : titre et
++/// détail formés depuis les faits archivés. Jamais persistée.
++class ModifierRecapLine {
++  final String title;
++  final String detail;
++
++  const ModifierRecapLine({required this.title, required this.detail});
++}
++
++/// Récap « Modificateurs de la partie » en fin de partie, en FAITS (ids,
++/// manche, secondes) : c'est ce qui est archivé, le texte est formé à
++/// l'affichage par [formatModifierRecap].
+ ///
+ /// RECALCULÉ, pas relu d'un journal : le tirage vient de la graine
+-/// `(gameId, manche)` (comme `nextRoundModifiers`) et le rattrapage des
+-/// scores cumulés en fin de manche, soit ce que la transition a montré. Rien à
+-/// persister pendant la partie. Exception : les bonus utilisés (2-9) sont
+-/// relus de [chargesUsed], seule trace d'une activation, et les cartes 1 parmi 3
+-/// de [offerChoices] (2-10). Le coup de pouce de l'app (Auto) est recalculé
+-/// comme le rattrapage.
+-List<ModifierRecapLine> buildModifierRecap({
++/// `(gameId, manche)` et le rattrapage des scores cumulés en fin de manche,
++/// soit ce que la transition a montré (même plan, `planRoundTransition`).
++/// Exceptions : les bonus utilisés (2-9), relus de [chargesUsed], et les
++/// cartes 1 parmi 3 de [offerChoices] (2-10).
++List<ModifierRecapItem> buildModifierRecap({
+   required FiestaRules rules,
+   required String gameId,
+   required List<Team> teams,
+@@ -36,12 +42,62 @@ List<ModifierRecapLine> buildModifierRecap({
+   List<ChargeUse> chargesUsed = const [],
+   List<OfferChoice> offerChoices = const [],
+ }) {
+-  final lines = <ModifierRecapLine>[];
++  final fiesta = FiestaState(rules: rules, offerChoices: offerChoices);
++  final transitions = [
++    // Après M1 et après M2 seulement, si la manche suivante a été jouée.
++    for (var round = 1; round <= 2 && round < roundsPlayed; round++)
++      planRoundTransition(
++        fiesta: fiesta,
++        gameId: gameId,
++        finishedRound: round,
++        scores: {
++          for (final t in teams)
++            t.id: t.scoreByRound.take(round).fold(0, (a, b) => a + b),
++        },
++      )!,
++  ];
++  return [
++    for (var round = 1; round <= roundsPlayed; round++)
++      for (final m in roundModifiers(rules, gameId: gameId, round: round))
++        ModifierRecapItem(RecapKind.draw, round: round, catalogId: m.catalogId),
++    for (final plan in transitions)
++      for (final e in plan.catchUp)
++        ModifierRecapItem(RecapKind.catchUp,
++            round: plan.round, teamId: e.teamId, seconds: e.seconds),
++    for (final c in offerChoices)
++      ModifierRecapItem(RecapKind.choice,
++          round: c.modifier.round,
++          catalogId: c.modifier.catalogId,
++          teamId: c.modifier.teamId,
++          chooserId: c.chooserId),
++    for (final plan in transitions)
++      for (final m in plan.gifts)
++        ModifierRecapItem(RecapKind.boost,
++            round: m.round, catalogId: m.catalogId, teamId: m.teamId),
++    for (final u in chargesUsed)
++      ModifierRecapItem(RecapKind.bonusUsed,
++          round: u.round, catalogId: u.catalogId, teamId: u.teamId),
++  ];
++}
++
++/// Lignes affichées du récap, depuis ses faits. [teamNames] : id → nom, dans
++/// l'ordre des équipes (ordre des lignes du rattrapage).
++List<ModifierRecapLine> formatModifierRecap(
++  List<ModifierRecapItem> items, {
++  required Map<String, String> teamNames,
++}) {
++  String mod(String? id) => modifierById(id ?? '')?.name ?? id ?? '?';
++  String team(String? id) => teamNames[id] ?? '?';
++  Iterable<ModifierRecapItem> of(RecapKind kind) =>
++      items.where((i) => i.kind == kind);
++  String joined(RecapKind kind, String Function(ModifierRecapItem) line) =>
++      of(kind).map(line).join(' · ');
+ 
+-  for (var round = 1; round <= roundsPlayed; round++) {
+-    final names = roundModifiers(rules, gameId: gameId, round: round)
+-        .map((m) => modifierById(m.catalogId)?.name ?? m.catalogId)
+-        .toList();
++  final lines = <ModifierRecapLine>[];
++  for (var round = 1; round <= 3; round++) {
++    final names = of(RecapKind.draw)
++        .where((i) => i.round == round)
++        .map((i) => mod(i.catalogId));
+     if (names.isEmpty) continue;
+     lines.add(ModifierRecapLine(
+       title: 'Manche $round · ${AppConstants.roundModes[round] ?? ''}',
+@@ -49,83 +105,53 @@ List<ModifierRecapLine> buildModifierRecap({
+     ));
+   }
+ 
+-  final catchUp = effectiveCatchUp(rules);
+-  if (catchUp != null) {
+-    final byTeam = <String, List<String>>{};
+-    // Après M1 et après M2 seulement, et seulement si la manche suivante a
+-    // été jouée.
+-    for (var round = 1; round <= 2 && round < roundsPlayed; round++) {
+-      final scores = {
+-        for (final t in teams)
+-          t.id: t.scoreByRound.take(round).fold(0, (a, b) => a + b),
+-      };
+-      for (final e
+-          in computeCatchUp(rules: catchUp, round: round, scores: scores)) {
+-        final sign = e.seconds < 0 ? '−' : '+';
+-        byTeam
+-            .putIfAbsent(e.teamId, () => [])
+-            .add('$sign${e.seconds.abs()} s (M${round + 1})');
+-      }
+-    }
+-    if (byTeam.isNotEmpty) {
+-      lines.add(ModifierRecapLine(
+-        title: 'Rattrapage',
+-        detail: teams
+-            .where((t) => byTeam.containsKey(t.id))
+-            .map((t) => '${t.name} ${byTeam[t.id]!.join(', ')}')
+-            .join(' · '),
+-      ));
+-    }
++  String catchUp(ModifierRecapItem i) {
++    final s = i.seconds ?? 0;
++    return '${s < 0 ? '−' : '+'}${s.abs()} s (M${i.round})';
+   }
+ 
+-  final teamName = {for (final t in teams) t.id: t.name};
+-  String mod(String id) => modifierById(id)?.name ?? id;
+-  String gift(String chooserId, ModifierInstance m) => m.teamId == chooserId
+-      ? '${teamName[chooserId] ?? '?'} : ${mod(m.catalogId)} (M${m.round})'
+-      : '${teamName[chooserId] ?? '?'} : ${mod(m.catalogId)} contre '
+-          '${teamName[m.teamId] ?? '?'} (M${m.round})';
++  final catchUpTeams = teamNames.keys
++      .where((id) => of(RecapKind.catchUp).any((i) => i.teamId == id));
++  if (catchUpTeams.isNotEmpty) {
++    lines.add(ModifierRecapLine(
++      title: 'Rattrapage',
++      detail: catchUpTeams
++          .map((id) =>
++              '${team(id)} ${of(RecapKind.catchUp).where((i) => i.teamId == id).map(catchUp).join(', ')}')
++          .join(' · '),
++    ));
++  }
+ 
+-  if (offerChoices.isNotEmpty) {
++  if (of(RecapKind.choice).isNotEmpty) {
+     lines.add(ModifierRecapLine(
+       title: 'Choix 1 parmi 3',
+-      detail:
+-          offerChoices.map((c) => gift(c.chooserId, c.modifier)).join(' · '),
++      detail: joined(
++          RecapKind.choice,
++          (i) => i.teamId == i.chooserId
++              ? '${team(i.chooserId)} : ${mod(i.catalogId)} (M${i.round})'
++              : '${team(i.chooserId)} : ${mod(i.catalogId)} contre '
++                  '${team(i.teamId)} (M${i.round})'),
+     ));
+   }
+ 
+-  final boosts = <String>[];
+-  for (var round = 1; round <= 2 && round < roundsPlayed; round++) {
+-    if (!isAppBoostOn(rules, round)) continue;
+-    final standings = Standings({
+-      for (final t in teams)
+-        t.id: t.scoreByRound.take(round).fold(0, (a, b) => a + b),
+-    });
+-    for (final m in appBoost(
+-      rules: rules,
+-      gameId: gameId,
+-      round: round,
+-      standings: standings,
+-      roundDraw: roundModifiers(rules, gameId: gameId, round: round + 1),
+-    )) {
+-      final verb = m.nature == ModifierNature.bonus ? 'reçoit' : 'subit';
+-      boosts.add('${teamName[m.teamId] ?? '?'} $verb ${mod(m.catalogId)} '
+-          '(M${m.round})');
+-    }
+-  }
+-  if (boosts.isNotEmpty) {
++  if (of(RecapKind.boost).isNotEmpty) {
+     lines.add(ModifierRecapLine(
+-        title: 'Coup de pouce de l\'app', detail: boosts.join(' · ')));
++      title: 'Coup de pouce de l\'app',
++      detail: joined(RecapKind.boost, (i) {
++        final bonus =
++            modifierById(i.catalogId ?? '')?.nature == ModifierNature.bonus;
++        return '${team(i.teamId)} ${bonus ? 'reçoit' : 'subit'} '
++            '${mod(i.catalogId)} (M${i.round})';
++      }),
++    ));
+   }
+ 
+-  if (chargesUsed.isNotEmpty) {
++  if (of(RecapKind.bonusUsed).isNotEmpty) {
+     lines.add(ModifierRecapLine(
+       title: 'Bonus utilisés',
+-      detail: chargesUsed
+-          .map((u) => '${modifierById(u.catalogId)?.name ?? u.catalogId}, '
+-              '${teamName[u.teamId] ?? '?'} en M${u.round}')
+-          .join(' · '),
++      detail: joined(RecapKind.bonusUsed,
++          (i) => '${mod(i.catalogId)}, ${team(i.teamId)} en M${i.round}'),
+     ));
+   }
+-
+   return lines;
+ }
+diff --git a/lib/models/fiesta/round_transition.dart b/lib/models/fiesta/round_transition.dart
+new file mode 100644
+index 0000000..280a26b
+--- /dev/null
++++ b/lib/models/fiesta/round_transition.dart
+@@ -0,0 +1,105 @@
++import 'fiesta_state.dart';
++import 'modifier_catalog.dart';
++import 'modifier_instance.dart';
++import 'offers.dart';
++import 'symmetric_draw.dart';
++import 'turn_time.dart';
++
++/// Passage de la manche N à N+1 (stories 2-5, 2-6, 2-10) : tout ce qu'il pose.
++///
++/// 🔴 UN seul plan, recalculé depuis l'état de fin de N (graine, scores,
++/// choix persistés) : l'aperçu de la transition et l'application atomique de
++/// `nextRound` le lisent tous deux, ils ne peuvent donc pas diverger. Le
++/// retour arrière et l'app tuée retrouvent le même plan sans rien stocker.
++class RoundTransitionPlan {
++  /// Manche d'arrivée (N+1).
++  final int round;
++
++  /// Fixés + tirage symétrique de N+1, pour toutes les équipes.
++  final List<ModifierInstance> draw;
++
++  /// Coup de pouce de l'app (Auto).
++  final List<ModifierInstance> gifts;
++
++  /// Cartes « 1 parmi 3 » choisies sur cette transition, dans l'ordre.
++  final List<ModifierInstance> choices;
++
++  /// Rattrapage dû à l'entrée de N+1, sur les scores de fin de N.
++  final List<CatchUpEntry> catchUp;
++
++  const RoundTransitionPlan({
++    required this.round,
++    required this.draw,
++    required this.gifts,
++    required this.choices,
++    required this.catchUp,
++  });
++
++  /// L'état Fiesta d'entrée de N+1.
++  ///
++  /// Ce qui survit : les instances de N, et seulement elles. Elles servent à
++  /// la continuation (même tour que la fin de N, `modifiersForTurn`) et
++  /// partent à sa fin ; celles d'avant N partent ici. Celles de N+1 arrivent,
++  /// mais ne s'appliquent qu'aux vrais tours de N+1.
++  FiestaState apply(FiestaState fiesta) => fiesta.copyWith(
++        active: [
++          ...fiesta.active.where((m) => m.round >= round - 1),
++          ...draw,
++          ...gifts,
++          ...choices,
++        ],
++        catchUpDue: {for (final e in catchUp) e.teamId: e.seconds},
++      );
++}
++
++/// Plan du passage après la manche [finishedRound], sur les [scores] de fin de
++/// manche. `null` après M3 (on va aux résultats).
++RoundTransitionPlan? planRoundTransition({
++  required FiestaState fiesta,
++  required String gameId,
++  required int finishedRound,
++  required Map<String, int> scores,
++}) {
++  if (finishedRound >= 3) return null;
++  final rules = fiesta.rules;
++  final round = finishedRound + 1;
++  final draw = roundModifiers(rules, gameId: gameId, round: round);
++  final catchUpRules = effectiveCatchUp(rules);
++  return RoundTransitionPlan(
++    round: round,
++    draw: draw,
++    gifts: isAppBoostOn(rules, finishedRound)
++        ? appBoost(
++            rules: rules,
++            gameId: gameId,
++            round: finishedRound,
++            standings: Standings(scores),
++            roundDraw: draw,
++          )
++        : const [],
++    choices: [
++      for (final c in fiesta.offerChoices)
++        if (c.modifier.round == round) c.modifier,
++    ],
++    catchUp: catchUpRules == null
++        ? const []
++        : computeCatchUp(
++            rules: catchUpRules, round: finishedRound, scores: scores),
++  );
++}
++
++/// Instances qui pèsent sur [teamId] pendant son tour : celles de la manche
++/// LOGIQUE du tour. Une continuation (temps reporté en début de N+1) est le
++/// même tour que la fin de N : elle joue avec les effets de N, jamais ceux de
++/// N+1, qui commencent au premier vrai tour de chaque équipe. Le plafond de 2
++/// (Q8), tenu en N, tient donc aussi sur la continuation.
++List<ModifierInstance> modifiersForTurn(
++  List<ModifierInstance> active, {
++  required String teamId,
++  required int logicalRound,
++}) =>
++    active
++        .where((m) =>
++            m.round == logicalRound &&
++            (m.target == ModifierTarget.both || m.teamId == teamId))
++        .toList();
+diff --git a/lib/models/fiesta/turn_effects.dart b/lib/models/fiesta/turn_effects.dart
+index 706ecfc..dcc12ce 100644
+--- a/lib/models/fiesta/turn_effects.dart
++++ b/lib/models/fiesta/turn_effects.dart
+@@ -1,44 +1,117 @@
++import 'modifier_catalog.dart';
+ import 'modifier_instance.dart';
+ 
+ /// Effets de tour (story 2-8) : règles pures sur les modificateurs qui pèsent
+ /// sur l'équipe qui joue. Le provider ne fait que brancher.
+ 
+-/// Clés des compteurs du tour dans `FiestaState.turn`. Absentes = valeur
+-/// initiale (0 passe gratuite utilisée, aucun devineur bloqué).
+-const String kFreePassesUsedKey = 'freePassesUsed';
+-const String kBlockedPlayerIdKey = 'blockedPlayerId';
+-
+-/// « Mot compte double » du tour (story 2-9) : [kDoubleArmed] tant que
+-/// l'interrupteur de l'avant-tour est allumé, [kDoubleSpent] une fois la
+-/// charge dépensée au départ du tour. Absent = éteint.
+-const String kDoublePointsKey = 'doublePoints';
+-const String kDoubleArmed = 'armed';
+-const String kDoubleSpent = 'spent';
+-
+-/// « Deux mots à la fois » du tour (story 2-11) : mêmes valeurs que
+-/// [kDoublePointsKey] ([kDoubleArmed] puis [kDoubleSpent]). La carte B vit
+-/// sous [kSecondWordKey] (la carte A reste `GameState.currentWord`), et B
+-/// encore à l'écran quand le chrono tombe sous [kSecondExpiredWordKey]. Clés
+-/// absentes = un seul mot, comme en Classique.
+-const String kTwoWordsKey = 'twoWords';
+-const String kSecondWordKey = 'secondWord';
+-const String kSecondExpiredWordKey = 'secondExpiredWord';
+-
+-/// Nombre de passes gratuites du tour : les charges de `free_pass`.
+-int freePassAllowance(List<ModifierInstance> modifiers) => modifiers
+-    .where((m) => m.catalogId == 'free_pass')
+-    .fold(0, (sum, m) => sum + m.charges);
+-
+-/// Charges de « Mot compte double » de la manche : les charges des instances
+-/// `double_points`.
+-int doublePointsAllowance(List<ModifierInstance> modifiers) => modifiers
+-    .where((m) => m.catalogId == 'double_points')
+-    .fold(0, (sum, m) => sum + m.charges);
+-
+-/// Charges de « Deux mots à la fois » de la manche (instances `two_words`).
+-int twoWordsAllowance(List<ModifierInstance> modifiers) => modifiers
+-    .where((m) => m.catalogId == 'two_words')
+-    .fold(0, (sum, m) => sum + m.charges);
++/// Bonus à charge activables avant le tour (stories 2-9, 2-11), par id de
++/// catalogue, avec leur clé JSON dans `fiesta.turn`. Une 3ᵉ charge = une ligne.
++const Map<String, String> kChargeBonusKeys = {
++  'double_points': 'doublePoints',
++  'two_words': 'twoWords',
++};
++
++/// Une charge du tour : allumée à l'avant-tour ([armed]), puis dépensée au
++/// départ du chrono ([spent]). Absente = éteinte. Le nom est la valeur JSON.
++enum ChargeState { armed, spent }
++
++/// État propre au tour en cours (`FiestaState.turn`), immuable et typé.
++///
++/// 🔴 C'est LUI qui dit ce qui survit : [afterRoundEnd] (la continuation en
++/// N+1 est le même tour) et [FiestaTurnState.empty] à la vraie fin du tour.
++/// JSON : clés omises quand elles valent la valeur initiale, lecture
++/// tolérante clé par clé (une valeur mal typée = valeur initiale).
++class FiestaTurnState {
++  /// Passes gratuites déjà utilisées ce tour (2-8).
++  final int freePassesUsed;
++
++  /// Devineur bloqué, désigné avant le tour (2-8, 2-10).
++  final String? blockedPlayerId;
++
++  /// Charges du tour par id de catalogue ([kChargeBonusKeys]).
++  final Map<String, ChargeState> charges;
++
++  /// Carte B de « Deux mots à la fois » (la carte A est `currentWord`).
++  final String? secondWord;
++
++  /// Carte B encore à l'écran quand le chrono est tombé, à vérifier.
++  final String? secondExpiredWord;
++
++  FiestaTurnState({
++    this.freePassesUsed = 0,
++    this.blockedPlayerId,
++    Map<String, ChargeState> charges = const {},
++    this.secondWord,
++    this.secondExpiredWord,
++  }) : charges = Map.unmodifiable(charges);
++
++  static final empty = FiestaTurnState();
++
++  bool get isEmpty => toJson().isEmpty;
++
++  FiestaTurnState copyWith({
++    int? freePassesUsed,
++    String? blockedPlayerId,
++    Map<String, ChargeState>? charges,
++    String? secondWord,
++    bool clearSecondWord = false,
++    String? secondExpiredWord,
++    bool clearSecondExpiredWord = false,
++  }) =>
++      FiestaTurnState(
++        freePassesUsed: freePassesUsed ?? this.freePassesUsed,
++        blockedPlayerId: blockedPlayerId ?? this.blockedPlayerId,
++        charges: charges ?? this.charges,
++        secondWord: clearSecondWord ? null : secondWord ?? this.secondWord,
++        secondExpiredWord: clearSecondExpiredWord
++            ? null
++            : secondExpiredWord ?? this.secondExpiredWord,
++      );
++
++  /// La charge [catalogId] passée à [state] (nul = éteinte).
++  FiestaTurnState withCharge(String catalogId, ChargeState? state) =>
++      copyWith(charges: {
++        for (final e in charges.entries)
++          if (e.key != catalogId) e.key: e.value,
++        if (state != null) catalogId: state,
++      });
++
++  /// Fin de manche : le tour continue en N+1 (continuation), tout survit sauf
++  /// la carte B expirée, déjà dépouillée par la vérification.
++  FiestaTurnState afterRoundEnd() => copyWith(clearSecondExpiredWord: true);
++
++  Map<String, dynamic> toJson() => {
++        if (freePassesUsed > 0) 'freePassesUsed': freePassesUsed,
++        if (blockedPlayerId != null) 'blockedPlayerId': blockedPlayerId,
++        for (final MapEntry(key: id, value: key) in kChargeBonusKeys.entries)
++          if (charges[id] != null) key: charges[id]!.name,
++        if (secondWord != null) 'secondWord': secondWord,
++        if (secondExpiredWord != null) 'secondExpiredWord': secondExpiredWord,
++      };
++
++  factory FiestaTurnState.fromJson(Map<String, dynamic> json) {
++    String? string(String key) => json[key] is String ? json[key] : null;
++    final used = json['freePassesUsed'];
++    return FiestaTurnState(
++      freePassesUsed: used is int ? used : 0,
++      blockedPlayerId: string('blockedPlayerId'),
++      charges: {
++        for (final MapEntry(key: id, value: key) in kChargeBonusKeys.entries)
++          if (enumFromJson(ChargeState.values, json[key]) case final state?)
++            id: state,
++      },
++      secondWord: string('secondWord'),
++      secondExpiredWord: string('secondExpiredWord'),
++    );
++  }
++}
++
++/// Charges de [catalogId] posées par [modifiers] (passes gratuites,
++/// « Mot compte double », « Deux mots à la fois »).
++int chargeAllowance(List<ModifierInstance> modifiers, String catalogId) =>
++    modifiers
++        .where((m) => m.catalogId == catalogId)
++        .fold(0, (sum, m) => sum + m.charges);
+ 
+ /// Remplaçant d'une carte « Deux mots » traitée : premier mot de [pool] (déjà
+ /// privé du mot traité) autre que [other], la carte qui reste. Pool épuisé :
+diff --git a/lib/models/game_result.dart b/lib/models/game_result.dart
+index 99239b4..5ec188b 100644
+--- a/lib/models/game_result.dart
++++ b/lib/models/game_result.dart
+@@ -51,22 +51,69 @@ class TeamResult {
+       );
+ }
+ 
+-/// Une ligne du récap « Modificateurs de la partie » (story 2-7), archivée
+-/// TELLE QU'AFFICHÉE : titre et détail déjà formés.
+-@immutable
+-class ModifierRecapLine {
+-  final String title;
+-  final String detail;
++/// Nature d'un fait du récap « Modificateurs de la partie ».
++enum RecapKind {
++  /// Tiré ou fixé pour toutes les équipes en manche [ModifierRecapItem.round].
++  draw,
++
++  /// Rattrapage dû à [ModifierRecapItem.teamId] à l'entrée de la manche.
++  catchUp,
++
++  /// Carte 1 parmi 3 choisie par [ModifierRecapItem.chooserId].
++  choice,
+ 
+-  const ModifierRecapLine({required this.title, required this.detail});
++  /// Coup de pouce de l'app (Auto) pour [ModifierRecapItem.teamId].
++  boost,
+ 
+-  Map<String, dynamic> toJson() => {'title': title, 'detail': detail};
++  /// Charge dépensée par [ModifierRecapItem.teamId].
++  bonusUsed,
++}
+ 
+-  static ModifierRecapLine? tryFromJson(Map<String, dynamic> json) {
+-    final title = json['title'];
+-    final detail = json['detail'];
+-    if (title is! String || detail is! String) return null;
+-    return ModifierRecapLine(title: title, detail: detail);
++/// Un fait du récap des modificateurs, archivé en DONNÉES (ids, manche,
++/// secondes) et jamais en phrases : le texte est formé à l'affichage
++/// (`formatModifierRecap`), donc traduisible plus tard (epic i18n).
++@immutable
++class ModifierRecapItem {
++  final RecapKind kind;
++  final int round;
++  final String? catalogId;
++  final String? teamId;
++  final String? chooserId;
++  final int? seconds;
++
++  const ModifierRecapItem(
++    this.kind, {
++    required this.round,
++    this.catalogId,
++    this.teamId,
++    this.chooserId,
++    this.seconds,
++  });
++
++  Map<String, dynamic> toJson() => {
++        'kind': kind.name,
++        'round': round,
++        if (catalogId != null) 'catalogId': catalogId,
++        if (teamId != null) 'teamId': teamId,
++        if (chooserId != null) 'chooserId': chooserId,
++        if (seconds != null) 'seconds': seconds,
++      };
++
++  /// `null` si le fait est illisible (dont une ligne `{title, detail}`
++  /// d'une version de dev antérieure) : ignoré seul.
++  static ModifierRecapItem? tryFromJson(Map<String, dynamic> json) {
++    final kind = RecapKind.values.asNameMap()[json['kind']];
++    final round = json['round'];
++    String? string(String key) => json[key] is String ? json[key] : null;
++    if (kind == null || round is! int) return null;
++    return ModifierRecapItem(
++      kind,
++      round: round,
++      catalogId: string('catalogId'),
++      teamId: string('teamId'),
++      chooserId: string('chooserId'),
++      seconds: json['seconds'] is int ? json['seconds'] : null,
++    );
+   }
+ }
+ 
+@@ -97,7 +144,7 @@ class GameResult {
+   final String? mode;
+ 
+   /// Récap des modificateurs, `null` en Classique (clé absente).
+-  final List<ModifierRecapLine>? modifierRecap;
++  final List<ModifierRecapItem>? modifierRecap;
+ 
+   const GameResult({
+     required this.gameId,
+@@ -177,8 +224,8 @@ class GameResult {
+       modifierRecap: json['modifierRecap'] is List
+           ? (json['modifierRecap'] as List<dynamic>)
+               .whereType<Map<String, dynamic>>()
+-              .map(ModifierRecapLine.tryFromJson)
+-              .whereType<ModifierRecapLine>()
++              .map(ModifierRecapItem.tryFromJson)
++              .whereType<ModifierRecapItem>()
+               .toList()
+           : null,
+     );
+diff --git a/lib/models/game_state.dart b/lib/models/game_state.dart
+index 597653c..4f38bf1 100644
+--- a/lib/models/game_state.dart
++++ b/lib/models/game_state.dart
+@@ -12,6 +12,14 @@ class HistoryEntry {
+   final int timeSpent;
+   final bool isBonusContinuation;
+ 
++  /// Points marqués par ce tour, quand ils diffèrent du nombre de mots
++  /// validés (Fiesta : « Mot compte double »). Nul = un point par mot : la
++  /// clé n'est alors pas écrite, une partie Classique garde l'ancienne forme.
++  final int? pointsScored;
++
++  /// Points de ce tour, pour « Évolution des scores ».
++  int get points => pointsScored ?? wordsGuessed.length;
++
+   HistoryEntry({
+     required this.round,
+     required this.turn,
+@@ -22,7 +30,8 @@ class HistoryEntry {
+     required this.wordsPassed,
+     required this.timeSpent,
+     this.isBonusContinuation = false,
+-  });
++    int? pointsScored,
++  }) : pointsScored = pointsScored == wordsGuessed.length ? null : pointsScored;
+ 
+   Map<String, dynamic> toJson() {
+     return {
+@@ -35,6 +44,7 @@ class HistoryEntry {
+       'wordsPassed': wordsPassed,
+       'timeSpent': timeSpent,
+       'isBonusContinuation': isBonusContinuation,
++      if (pointsScored != null) 'pointsScored': pointsScored,
+     };
+   }
+ 
+@@ -54,6 +64,9 @@ class HistoryEntry {
+           (json['wordsPassed'] as List<dynamic>?)?.cast<String>() ?? [],
+       timeSpent: json['timeSpent'] as int? ?? 0,
+       isBonusContinuation: json['isBonusContinuation'] as bool? ?? false,
++      // Absent (Classique, versions antérieures) ou mal typé : un par mot.
++      pointsScored:
++          json['pointsScored'] is int ? json['pointsScored'] as int : null,
+     );
+   }
+ }
+@@ -291,8 +304,9 @@ class GameState {
+       'preValidationSnapshot': preValidationSnapshot,
+       'restoredValidatedWords': restoredValidatedWords,
+       // Pas de clé `fiesta: null` ni `turnAllottedSeconds: null` : absent =
+-      // Classique / version antérieure, et le blob d'une partie Classique
+-      // reprise reste octet pour octet celui d'avant.
++      // Classique / version antérieure (règle 7 : ajouts optionnels, lecture
++      // tolérante). Seul ajout écrit par une partie Classique jouée :
++      // `turnAllottedSeconds` (2-6), approuvé par Florent.
+       if (turnAllottedSeconds != null)
+         'turnAllottedSeconds': turnAllottedSeconds,
+       if (fiesta != null) 'fiesta': fiesta!.toJson(),
+diff --git a/lib/models/word_event.dart b/lib/models/word_event.dart
+index 1b85236..c6bf08e 100644
+--- a/lib/models/word_event.dart
++++ b/lib/models/word_event.dart
+@@ -45,57 +45,6 @@ class WordEvent {
+     this.modifiers,
+   }) : eventId = eventId ?? const Uuid().v4();
+ 
+-  /// Factory pour créer un événement 'shown'
+-  factory WordEvent.shown({
+-    required String word,
+-    required int round,
+-    required int turn,
+-    required String teamId,
+-    required String playerId,
+-    required String gameId,
+-    List<String>? modifiers,
+-  }) {
+-    return WordEvent(
+-      word: word,
+-      eventType: WordEventType.shown,
+-      timestamp: DateTime.now().millisecondsSinceEpoch,
+-      round: round,
+-      turn: turn,
+-      teamId: teamId,
+-      playerId: playerId,
+-      gameId: gameId,
+-      durationMs: null,
+-      modifiers: modifiers,
+-    );
+-  }
+-
+-  /// Factory pour créer un événement avec durée
+-  factory WordEvent.withDuration({
+-    required String word,
+-    required WordEventType eventType,
+-    required int round,
+-    required int turn,
+-    required String teamId,
+-    required String playerId,
+-    required String gameId,
+-    required int shownTimestamp,
+-    List<String>? modifiers,
+-  }) {
+-    final now = DateTime.now().millisecondsSinceEpoch;
+-    return WordEvent(
+-      word: word,
+-      eventType: eventType,
+-      timestamp: now,
+-      round: round,
+-      turn: turn,
+-      teamId: teamId,
+-      playerId: playerId,
+-      gameId: gameId,
+-      durationMs: now - shownTimestamp,
+-      modifiers: modifiers,
+-    );
+-  }
+-
+   Map<String, dynamic> toJson() => {
+         'eventId': eventId,
+         'word': word,
+diff --git a/lib/providers/CLAUDE.md b/lib/providers/CLAUDE.md
+index 401719e..7f35d25 100644
+--- a/lib/providers/CLAUDE.md
++++ b/lib/providers/CLAUDE.md
+@@ -4,7 +4,13 @@ Gestion d'etat centralisee via Provider.
+ 
+ ## Fichier unique : `game_provider.dart`
+ 
+-`GameProvider` (ChangeNotifier, ~1276 lignes) : cerveau de l'application.
++`GameProvider` (ChangeNotifier, ~2020 lignes) : cerveau de l'application.
++
++**Frontière** : le provider orchestre (mutations, navigation, persistance, analytics) ; les
++règles Fiesta sont des fonctions pures de `lib/models/fiesta/` (passage de manche
++`planRoundTransition`, effets du tour `modifiersForTurn`, état du tour typé `FiestaTurnState`).
++Les ~400 lignes de getters Fiesta (modèle de lecture) restent ici pour l'instant : extraction
++`FiestaView` reportée (`docs/notes_pour_plus_tard.md`).
+ 
+ ### Responsabilites
+ 
+@@ -23,10 +29,10 @@ Gestion d'etat centralisee via Provider.
+ - La navigation arriere est complexe : depend de l'ecran courant, du tour, et de l'existence de snapshots de validation.
+ - `_ensureWordsForPlayer()` conserve les mots existants d'un joueur si le compte est suffisant (meme apres changement de categories).
+ - **Durée du tour** : `turnTime` (composée par `composeTurnSeconds`) est lue par `startTurn` ET `startTurnTimer`. Ne jamais recalculer la durée ailleurs : l'avant-tour et le chrono divergeraient. `timeSpent` se mesure sur `turnAllottedSeconds`, pas sur le réglage.
+-- **Effets de tour Fiesta (2-8)** : `canPassWith(secondesAffichées)` est la **seule** garde de la passe (`passWord` ET le bouton de `turn_screen`), sur la pénalité **effective** (`currentPassPenalty`, 0 si `hasFreePass`) ; sous `no_pass`, `passWord` sort avant `onWordPassed`. **Un seul tour** : fin de manche + continuation en N+1. `validateWords` vide `fiesta.turn` et consomme les instances de portée **tour** de l'équipe à la vraie fin seulement (pas dans la branche fin de manche).
+-- **Mot compte double (2-9)** : `setDoublePoints` n'écrit que `fiesta.turn[doublePoints]=armed` ; la charge se dépense dans `startTurnTimer` (`spent` + `chargesUsed`). `validateWords` passe `pointsMultiplier` à `resolveTurn` (pur). La continuation de fin de manche garde `spent` (même tour) sans dépenser la charge de N+1. `turnModifiers` = badges / tags analytics sans la charge non activée.
+-- **1 parmi 3 / coup de pouce (2-10)** : offres (`offersFor`) et cadeaux (`appBoostPreview`) recalculés sur la transition, jamais stockés ; seuls les choix vont dans `fiesta.offerChoices` (`chooseOffer`, refusé hors tour). 🔴 `nextRound` refuse tant que `nextChooserId` n'est pas nul. `_fiestaForRound` ajoute tirage + cadeaux + choix de la transition.
+-- **Deux mots à la fois (2-11)** : même interrupteur que le ×2 (`setTwoWords`, `_armCharge`, dépense dans `startTurnTimer`). Carte A = `game.currentWord`, carte B = `fiesta.turn[secondWord]` (tirée au départ, continuation comprise) ; 🔴 les deux restent dans `remainingWords`. `markWordAsGuessed(mot)` / `passWord(mot)` visent une carte (mot plus à l'écran = ignoré) ; seule elle est remplacée, par `drawOtherCard` (≠ l'autre carte, recyclage des passés hors l'autre carte) ; plus aucun autre mot → l'autre carte reste seule en tête, et la logique d'un mot seul reprend. `endTurn` déplace B dans `fiesta.turn[secondExpiredWord]`, que `resolveTurn(expiredWords:)` dépouille ; la branche fin de manche de `validateWords` le retire. Q8 : chaque interrupteur compte l'autre bonus allumé.
++- **Effets de tour Fiesta (2-8)** : `canPassWith(secondesAffichées)` est la **seule** garde de la passe (`passWord` ET le bouton de `turn_screen`), sur la pénalité **effective** (`currentPassPenalty`, 0 si `hasFreePass`) ; sous `no_pass`, `passWord` sort avant `onWordPassed`. **Un seul tour** : fin de manche + continuation en N+1. 🔴 **Règle de la continuation** (epic fix) : `isContinuation` (dérivé de l'historique, pas de `turnBonusTime`) ; elle joue avec les effets de N (`currentTeamModifiers` = `modifiersForTurn` sur la manche logique N), jamais ceux de N+1 (tirage, choix, cadeaux, charges), qui commencent au premier vrai tour de chaque équipe ; aucune charge ne s'y allume. `validateWords` vide `fiesta.turn` et consomme les instances de portée **tour** qui ont pesé sur le tour, à la vraie fin seulement (pas dans la branche fin de manche) ; à la fin d'une continuation, les instances de N partent. `malusToReveal` = premier VRAI tour (jamais la continuation).
++- **Mot compte double (2-9)** : Bonus à charge (×2, deux mots) : une table `kChargeBonusKeys`, une implémentation (`_charge`, `_chargesLeft`, `_capped`, `_setCharge`). `setDoublePoints` n'écrit que `armed` dans `fiesta.turn.charges` ; la charge se dépense dans `startTurnTimer` (`spent` + `chargesUsed`). `validateWords` passe `pointsMultiplier` à `resolveTurn` (pur). La continuation de fin de manche garde `spent` (même tour), sans charge de N+1. `turnModifiers` = badges / tags analytics sans la charge non activée.
++- **1 parmi 3 / coup de pouce (2-10)** : offres (`offersFor`) et cadeaux (`appBoostPreview`) recalculés sur la transition, jamais stockés ; seuls les choix vont dans `fiesta.offerChoices` (`chooseOffer`, refusé hors tour). 🔴 `nextRound` refuse tant que `nextChooserId` n'est pas nul. 🔴 Un seul plan pur `planRoundTransition` (tirage + cadeaux + choix + rattrapage + ce qui survit) : aperçu (`nextRoundModifiers`, `appBoostPreview`, `catchUpPreview`) et application de `nextRound` (`plan.apply`) lisent le même.
++- **Deux mots à la fois (2-11)** : même interrupteur que le ×2 (`setTwoWords`, `_setCharge`, dépense dans `startTurnTimer`). Carte A = `game.currentWord`, carte B = `fiesta.turn.secondWord` (tirée au départ, continuation comprise) ; 🔴 les deux restent dans `remainingWords`. `markWordAsGuessed(mot)` / `passWord(mot)` visent une carte (mot plus à l'écran = ignoré) ; seule elle est remplacée, par `drawOtherCard` (≠ l'autre carte, recyclage des passés hors l'autre carte) ; plus aucun autre mot → l'autre carte reste seule en tête, et la logique d'un mot seul reprend. `endTurn` déplace B dans `fiesta.turn.secondExpiredWord`, que `resolveTurn(expiredWords:)` dépouille ; la branche fin de manche le retire (`afterRoundEnd`). Q8 : chaque interrupteur compte l'autre bonus allumé.
+ - **Rattrapage Fiesta** : `catchUpPreview` (transition, calculé sur les scores) → `nextRound` le pose dans `fiesta.catchUpDue` → `startTurnTimer` le consomme au premier tour non-continuation de l'équipe.
+ 
+ ### Dependances
+diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
+index dac8a57..a077f88 100644
+--- a/lib/providers/game_provider.dart
++++ b/lib/providers/game_provider.dart
+@@ -10,6 +10,7 @@ import '../models/fiesta/modifier_catalog.dart';
+ import '../models/fiesta/modifier_instance.dart';
+ import '../models/fiesta/modifier_recap.dart';
+ import '../models/fiesta/offers.dart';
++import '../models/fiesta/round_transition.dart';
+ import '../models/fiesta/symmetric_draw.dart';
+ import '../models/fiesta/turn_effects.dart';
+ import '../models/fiesta/turn_time.dart';
+@@ -596,30 +597,18 @@ class GameProvider extends ChangeNotifier {
+       fiesta = fiesta.copyWith(
+           catchUpDue: Map.of(fiesta.catchUpDue)..remove(teamId));
+     }
+-    // Mot compte double : la charge se dépense ICI, pas à l'interrupteur.
+-    // Éteindre avant le départ ou revenir en arrière n'a donc rien à rendre.
+-    if (fiesta != null && fiesta.turn[kDoublePointsKey] == kDoubleArmed) {
+-      fiesta = fiesta.copyWith(
+-        turn: {...fiesta.turn, kDoublePointsKey: kDoubleSpent},
+-        chargesUsed: [
+-          ...fiesta.chargesUsed,
+-          ChargeUse(
+-              catalogId: 'double_points',
+-              teamId: teamId,
+-              round: _game.currentRound),
+-        ],
+-      );
+-    }
+-    // Deux mots à la fois : même règle de dépense que le ×2.
+-    if (fiesta != null && fiesta.turn[kTwoWordsKey] == kDoubleArmed) {
++    // Bonus à charge (×2, deux mots) : la charge se dépense ICI, pas à
++    // l'interrupteur. Éteindre avant le départ ou revenir en arrière n'a donc
++    // rien à rendre.
++    for (final id in kChargeBonusKeys.keys) {
++      if (fiesta == null || fiesta.turn.charges[id] != ChargeState.armed) {
++        continue;
++      }
+       fiesta = fiesta.copyWith(
+-        turn: {...fiesta.turn, kTwoWordsKey: kDoubleSpent},
++        turn: fiesta.turn.withCharge(id, ChargeState.spent),
+         chargesUsed: [
+           ...fiesta.chargesUsed,
+-          ChargeUse(
+-              catalogId: 'two_words',
+-              teamId: teamId,
+-              round: _game.currentRound),
++          ChargeUse(catalogId: id, teamId: teamId, round: _game.currentRound),
+         ],
+       );
+     }
+@@ -629,8 +618,8 @@ class GameProvider extends ChangeNotifier {
+     final currentWord = _game.currentWord;
+     String? drawnSecond;
+     if (fiesta != null &&
+-        fiesta.turn[kTwoWordsKey] == kDoubleSpent &&
+-        fiesta.turn[kSecondWordKey] == null &&
++        fiesta.turn.charges['two_words'] == ChargeState.spent &&
++        fiesta.turn.secondWord == null &&
+         currentWord != null) {
+       drawnSecond = drawOtherCard(
+         pool: _game.remainingWords,
+@@ -638,8 +627,7 @@ class GameProvider extends ChangeNotifier {
+         other: currentWord,
+       ).word;
+       if (drawnSecond != null) {
+-        fiesta = fiesta
+-            .copyWith(turn: {...fiesta.turn, kSecondWordKey: drawnSecond});
++        fiesta = _withSecondWord(fiesta, drawnSecond);
+       }
+     }
+ 
+@@ -670,27 +658,27 @@ class GameProvider extends ChangeNotifier {
+     final currentWord = word ?? _game.currentWord;
+     if (currentWord == null || !_analytics.isTracking) return;
+ 
+-    final currentTeam = getCurrentTeam();
+-    final currentPlayer = getCurrentPlayer();
+-
+-    _analytics.onWordShown(
+-      word: currentWord,
+-      round: _game.currentRound,
+-      turn: _game.currentTurn,
+-      teamId: currentTeam?.id ?? '',
+-      playerId: currentPlayer?.id ?? '',
+-      // Relus de l'état PERSISTÉ à chaque mot (survit à un kill). Nul en
+-      // Classique : l'événement garde alors exactement l'ancienne forme.
+-      modifiers: isFiesta
+-          ? [
+-              ...turnModifiers.map((m) => m.catalogId),
+-              if (isDoublePointsOn) 'double_points',
+-              if (isTwoWordsOn) 'two_words',
+-            ]
+-          : null,
+-    );
++    _analytics.onWordShown(currentWord, _eventContext);
+   }
+ 
++  /// Contexte analytics du tour en cours, relu de l'état PERSISTÉ à chaque
++  /// événement : il survit à un kill, y compris sur la vérification (le tour
++  /// vérifié est encore le tour courant). `modifiers` nul en Classique :
++  /// l'événement garde alors exactement l'ancienne forme.
++  WordEventContext get _eventContext => (
++        round: _game.currentRound,
++        turn: _game.currentTurn,
++        teamId: getCurrentTeam()?.id ?? '',
++        playerId: getCurrentPlayer()?.id ?? '',
++        modifiers: isFiesta
++            ? [
++                ...turnModifiers.map((m) => m.catalogId),
++                if (isDoublePointsOn) 'double_points',
++                if (isTwoWordsOn) 'two_words',
++              ]
++            : null,
++      );
++
+   /// [word] : la carte visée (« Deux mots à la fois »), la carte A par
+   /// défaut. Un mot qui n'est plus à l'écran (tap périmé) est ignoré.
+   void markWordAsGuessed([String? word]) {
+@@ -700,7 +688,7 @@ class GameProvider extends ChangeNotifier {
+     if (currentWord != _game.currentWord && currentWord != second) return;
+ 
+     // Tracker le mot deviné AVANT de changer l'état
+-    _analytics.onWordGuessed(currentWord);
++    _analytics.onWordGuessed(currentWord, _eventContext);
+ 
+     final newGuessedWords = List<String>.from(_game.wordsGuessedThisTurn);
+     if (!newGuessedWords.contains(currentWord)) {
+@@ -815,7 +803,7 @@ class GameProvider extends ChangeNotifier {
+     final usesFreePass = fiesta != null && hasFreePass;
+ 
+     // Tracker le pass AVANT de changer l'état
+-    _analytics.onWordPassed(currentWord);
++    _analytics.onWordPassed(currentWord, _eventContext);
+ 
+     // La pénalité est retirée à la deadline, en ms exactes : plus de ré-ancrage
+     // sur une seconde arrondie au supérieur (qui rendait du temps à chaque passe
+@@ -831,7 +819,7 @@ class GameProvider extends ChangeNotifier {
+ 
+     var newFiesta = usesFreePass
+         ? fiesta.copyWith(
+-            turn: {...fiesta.turn, kFreePassesUsedKey: freePassesUsed + 1})
++            turn: fiesta.turn.copyWith(freePassesUsed: freePassesUsed + 1))
+         : fiesta;
+     String? newCurrentWord;
+     String? drawn;
+@@ -896,17 +884,17 @@ class GameProvider extends ChangeNotifier {
+     if (second != null) {
+       fiesta = _withSecondWord(fiesta!, null);
+       if (!isRoundFinished) {
+-        fiesta = fiesta
+-            .copyWith(turn: {...fiesta.turn, kSecondExpiredWordKey: second});
++        fiesta = fiesta.copyWith(
++            turn: fiesta.turn.copyWith(secondExpiredWord: second));
+       }
+     }
+ 
+     // Tracker le mot expiré si applicable
+     if (expiredWord != null) {
+-      _analytics.onWordExpired(expiredWord);
++      _analytics.onWordExpired(expiredWord, _eventContext);
+     }
+     if (second != null && !isRoundFinished) {
+-      _analytics.onWordExpired(second);
++      _analytics.onWordExpired(second, _eventContext);
+     }
+ 
+     _game = _game.copyWith(
+@@ -1014,6 +1002,10 @@ class GameProvider extends ChangeNotifier {
+   }
+ 
+   void validateWords(List<String> validatedWords) {
++    // Double tap sur « Valider » : le second appel recréditait les mots à
++    // l'équipe suivante et brûlait ses cartes de tour. Seul l'écran de
++    // vérification valide (même garde que `nextRound`).
++    if (_game.currentScreen != AppConstants.screenVerification) return;
+     final currentTeam = _teams[_game.currentTeamIndex];
+     final passedWordsThisTurn = _game.passedWordsThisTurn;
+ 
+@@ -1036,17 +1028,17 @@ class GameProvider extends ChangeNotifier {
+     final newRemainingWords = resolution.remainingPool;
+     final pointsScored = resolution.pointsScored;
+ 
+-    // Tracker les mots invalidés pour les analytics
++    // Tracker les mots invalidés pour les analytics, puis les mots
++    // passed/expired validés comme guessed. Contexte lu AVANT la mutation.
++    final context = _eventContext;
+     for (final word in allInvalidatedWords) {
+-      _analytics.onWordInvalidated(word);
++      _analytics.onWordInvalidated(word, context);
+     }
+-
+-    // Tracker les mots passed/expired qui sont validés comme guessed
+     for (final word in resolution.validatedPassed) {
+-      _analytics.onWordValidatedAsGuessed(word);
++      _analytics.onWordValidatedAsGuessed(word, context);
+     }
+     for (final word in resolution.expiredValidated) {
+-      _analytics.onWordValidatedAsGuessed(word);
++      _analytics.onWordValidatedAsGuessed(word, context);
+     }
+ 
+     // Mettre à jour le score
+@@ -1089,6 +1081,7 @@ class GameProvider extends ChangeNotifier {
+         wordsPassed: passedWordsThisTurn,
+         timeSpent: currentTimeSpent,
+         isBonusContinuation: true, // Marquer comme continuation
++        pointsScored: pointsScored,
+       );
+       // Ajouter l'entrée (pas de remplacement)
+       newHistory = [..._game.history, bonusEntry];
+@@ -1105,6 +1098,7 @@ class GameProvider extends ChangeNotifier {
+         wordsInvalidated: allInvalidatedWords,
+         wordsPassed: passedWordsThisTurn,
+         timeSpent: currentTimeSpent,
++        pointsScored: pointsScored,
+       );
+       newHistory = [..._game.history, historyEntry];
+       nextTurn = _game.currentTurn + 1;
+@@ -1130,11 +1124,10 @@ class GameProvider extends ChangeNotifier {
+         turnBonusTime: _game.timeRemaining,
+         clearExpiredWord: true,
+         // Pas de `_fiestaAfterTurn` ici : la même équipe poursuit CE tour en
+-        // manche suivante (continuation). Compteurs et instances de portée
+-        // tour vivent jusqu'à sa vraie fin. Seule la carte B expirée, dépouillée,
+-        // s'en va (comme `clearExpiredWord`).
+-        fiesta: _game.fiesta?.copyWith(
+-            turn: Map.of(_game.fiesta!.turn)..remove(kSecondExpiredWordKey)),
++        // manche suivante (continuation). L'état du tour vit jusqu'à sa vraie
++        // fin (`FiestaTurnState.afterRoundEnd`).
++        fiesta:
++            _game.fiesta?.copyWith(turn: _game.fiesta!.turn.afterRoundEnd()),
+         pendingBonusTurnId: shouldPrepareBonusFusion ? _game.currentTurn : null,
+         clearPendingBonusTurnId: !shouldPrepareBonusFusion,
+       );
+@@ -1234,7 +1227,8 @@ class GameProvider extends ChangeNotifier {
+         wordsGuessedThisTurn: [],
+         passedWordsThisTurn: [],
+         currentScreen: AppConstants.screenGame,
+-        fiesta: _fiestaForRound(nextRoundNumber),
++        // Calculé AVANT le changement de manche : le plan de la transition.
++        fiesta: _transitionPlan?.apply(_game.fiesta!),
+       );
+     }
+ 
+@@ -1242,69 +1236,67 @@ class GameProvider extends ChangeNotifier {
+     _saveGameState();
+   }
+ 
+-  /// Fiesta à l'entrée de la manche [round] : les instances de portée manche
+-  /// de la manche finie partent, celles de [round] (fixés + tirage, puis
+-  /// coup de pouce ou cartes choisies) arrivent, et le rattrapage dû est posé
+-  /// sur les scores de la manche finie.
+-  /// Nul en Classique (et `copyWith(fiesta: null)` laisse alors `fiesta` nul).
+-  FiestaState? _fiestaForRound(int round) {
++  /// Plan du passage à la manche suivante, recalculé sur l'état de fin de
++  /// manche (scores, graine, choix persistés) : montré par la transition
++  /// ([nextRoundModifiers], [appBoostPreview], [catchUpPreview]) et appliqué
++  /// tel quel par `nextRound`. Nul en Classique et après M3.
++  RoundTransitionPlan? get _transitionPlan {
+     final fiesta = _game.fiesta;
+     if (fiesta == null) return null;
+-    return fiesta.copyWith(
+-      active: [
+-        ...fiesta.active
+-            .where((m) => !(m.scope == ModifierScope.round && m.round < round)),
+-        ...roundModifiers(fiesta.rules,
+-            gameId: _game.gameId ?? '', round: round),
+-        // Lus AVANT que `nextRound` change de manche : ceux de la transition.
+-        ...appBoostPreview,
+-        ..._pendingChoices.values,
+-      ],
+-      catchUpDue: {for (final e in catchUpPreview) e.teamId: e.seconds},
+-    );
+-  }
+-
+-  /// Rattrapage qui s'appliquera à la manche suivante, calculé sur les scores
+-  /// actuels : montré sur la transition, posé par `nextRound`. Calculé et non
+-  /// stocké sur la transition (comme [nextRoundModifiers]) : le retour arrière
+-  /// restaure les scores, la revalidation redonne le même. Vide en Classique,
+-  /// rattrapage éteint, après M3, ou à égalité.
+-  List<CatchUpEntry> get catchUpPreview {
+-    final fiesta = _game.fiesta;
+-    if (fiesta == null || _game.currentRound >= 3) return const [];
+-    final rules = effectiveCatchUp(fiesta.rules);
+-    if (rules == null) return const [];
+-    return computeCatchUp(
+-      rules: rules,
+-      round: _game.currentRound,
++    return planRoundTransition(
++      fiesta: fiesta,
++      gameId: _game.gameId ?? '',
++      finishedRound: _game.currentRound,
+       scores: {for (final t in _teams) t.id: t.score},
+     );
+   }
+ 
+-  /// Ce qui s'appliquera à toutes les équipes à la manche suivante, montré
+-  /// sur la transition AVANT « Manche suivante ». Calculé, jamais stocké : la
+-  /// graine `(gameId, manche)` rend le même tirage après un retour arrière ou
+-  /// une app tuée. Vide en Classique et après M3.
+-  List<ModifierInstance> get nextRoundModifiers {
+-    final fiesta = _game.fiesta;
+-    if (fiesta == null || _game.currentRound >= 3) return const [];
+-    return roundModifiers(fiesta.rules,
+-        gameId: _game.gameId ?? '', round: _game.currentRound + 1);
++  /// Rattrapage qui s'appliquera à la manche suivante (vide à égalité ou
++  /// rattrapage éteint).
++  List<CatchUpEntry> get catchUpPreview => _transitionPlan?.catchUp ?? const [];
++
++  /// Fixés + tirage pour toutes les équipes à la manche suivante.
++  List<ModifierInstance> get nextRoundModifiers =>
++      _transitionPlan?.draw ?? const [];
++
++  /// Équipe qui ouvre la manche en cours par sa continuation : celle de la
++  /// dernière entrée de la manche précédente. Nulle en M1.
++  String? get _continuingTeamId => _game.currentRound <= 1
++      ? null
++      : _game.history
++          .where((h) => h.round == _game.currentRound - 1)
++          .lastOrNull
++          ?.teamId;
++
++  int _entriesThisRound(String teamId) => _game.history
++      .where((h) => h.round == _game.currentRound && h.teamId == teamId)
++      .length;
++
++  /// Le tour en cours est une continuation : l'équipe qui a fini la manche N
++  /// poursuit CE tour en N+1 avec le temps reporté. Dérivé de l'historique,
++  /// pas de `turnBonusTime` (effacé au départ du chrono) : il tient donc
++  /// pendant le tour, sur la vérification, après un kill et un retour arrière.
++  bool get isContinuation {
++    final teamId = getCurrentTeam()?.id;
++    return teamId != null &&
++        teamId == _continuingTeamId &&
++        _entriesThisRound(teamId) == 0;
+   }
+ 
+-  /// Modificateurs actifs qui pèsent sur l'équipe qui joue (badges).
++  /// Modificateurs qui pèsent sur l'équipe qui joue (badges) : ceux de la
++  /// manche LOGIQUE du tour, N pour une continuation ([modifiersForTurn]).
+   List<ModifierInstance> get currentTeamModifiers {
+     final fiesta = _game.fiesta;
+-    if (fiesta == null || _teams.isEmpty) return const [];
+-    final teamId = _teams[_game.currentTeamIndex].id;
+-    return fiesta.active
+-        .where((m) => m.target == ModifierTarget.both || m.teamId == teamId)
+-        .toList();
++    final teamId = getCurrentTeam()?.id;
++    if (fiesta == null || teamId == null) return const [];
++    return modifiersForTurn(fiesta.active,
++        teamId: teamId,
++        logicalRound: _game.currentRound - (isContinuation ? 1 : 0));
+   }
+ 
+   // ========== EFFETS DE TOUR (2-8) ==========
+ 
+-  Map<String, dynamic> get _turnCounters => _game.fiesta?.turn ?? const {};
++  FiestaTurnState get _turn => _game.fiesta?.turn ?? FiestaTurnState.empty;
+ 
+   bool _has(String catalogId) =>
+       currentTeamModifiers.any((m) => m.catalogId == catalogId);
+@@ -1313,11 +1305,8 @@ class GameProvider extends ChangeNotifier {
+   bool get passBlocked => _has('no_pass');
+ 
+   /// Passes gratuites du tour (`free_pass` ×N), et celles déjà utilisées.
+-  int get freePasses => freePassAllowance(currentTeamModifiers);
+-  int get freePassesUsed {
+-    final used = _turnCounters[kFreePassesUsedKey];
+-    return used is int ? used : 0;
+-  }
++  int get freePasses => chargeAllowance(currentTeamModifiers, 'free_pass');
++  int get freePassesUsed => _turn.freePassesUsed;
+ 
+   /// Il reste une passe gratuite ce tour. Toujours faux en Classique.
+   bool get hasFreePass => freePassesUsed < freePasses;
+@@ -1353,8 +1342,8 @@ class GameProvider extends ChangeNotifier {
+ 
+   /// Devineur bloqué pour ce tour, choisi par les adversaires (annonce seule).
+   Player? get blockedGuesser {
+-    final id = _turnCounters[kBlockedPlayerIdKey];
+-    return id is String ? getPlayerById(id) : null;
++    final id = _turn.blockedPlayerId;
++    return id == null ? null : getPlayerById(id);
+   }
+ 
+   /// Le sélecteur doit s'ouvrir avant ce tour.
+@@ -1367,113 +1356,89 @@ class GameProvider extends ChangeNotifier {
+       return;
+     }
+     _game = _game.copyWith(
+-      fiesta: fiesta
+-          .copyWith(turn: {...fiesta.turn, kBlockedPlayerIdKey: playerId}),
++      fiesta: fiesta.copyWith(
++          turn: fiesta.turn.copyWith(blockedPlayerId: playerId)),
+     );
+     notifyListeners();
+     _saveGameState();
+   }
+ 
+-  // ========== MOT COMPTE DOUBLE (2-9) ==========
++  // ========== BONUS À CHARGE : ×2 (2-9), DEUX MOTS (2-11) ==========
++  // Une table (`kChargeBonusKeys`), une implémentation : chaque getter public
++  // n'est qu'un id de catalogue.
+ 
+   /// Modificateurs EN JEU pendant le tour (badges du tour, tags analytics) :
+-  /// une charge de « Mot compte double » ou de « Deux mots à la fois » non
+-  /// activée n'en est pas un (activée : badge et tag à part).
++  /// une charge non activée n'en est pas un (activée : badge et tag à part).
+   List<ModifierInstance> get turnModifiers => currentTeamModifiers
+-      .where(
+-          (m) => m.catalogId != 'double_points' && m.catalogId != 'two_words')
++      .where((m) => !kChargeBonusKeys.containsKey(m.catalogId))
+       .toList();
+ 
+-  String? get _doublePoints {
+-    final value = _turnCounters[kDoublePointsKey];
+-    return value is String ? value : null;
+-  }
+-
+-  /// Interrupteur de l'avant-tour allumé (ou charge déjà dépensée).
+-  bool get isDoublePointsArmed => _doublePoints != null;
+-
+-  /// Les points de CE tour comptent ×2 : charge dépensée au départ. Vaut aussi
+-  /// pour la continuation de fin de manche, qui est le même tour (2-8).
+-  bool get isDoublePointsOn => _doublePoints == kDoubleSpent;
++  ChargeState? _charge(String id) => _turn.charges[id];
+ 
+-  /// Charges restantes de l'équipe qui joue pour la manche en cours. Celles
+-  /// des manches finies sont perdues : le décompte ne regarde que celle-ci.
+-  int get doublePointsLeft {
++  /// Charges restantes de l'équipe qui joue pour la manche en cours (celles
++  /// des manches finies sont perdues). Aucune sur une continuation : c'est
++  /// le même tour que la fin de N, on n'y allume rien, et les charges de N+1
++  /// commencent au premier vrai tour.
++  int _chargesLeft(String id) {
++    if (isContinuation) return 0;
+     final teamId = getCurrentTeam()?.id;
+     final used = (_game.fiesta?.chargesUsed ?? const <ChargeUse>[])
+         .where((u) =>
+-            u.catalogId == 'double_points' &&
++            u.catalogId == id &&
+             u.teamId == teamId &&
+             u.round == _game.currentRound)
+         .length;
+-    return doublePointsAllowance(currentTeamModifiers) - used;
++    return chargeAllowance(currentTeamModifiers, id) - used;
+   }
+ 
+-  /// Q8 : activer est refusé si l'équipe a déjà 2 modificateurs en jeu
+-  /// (« Deux mots à la fois » allumé compris).
+-  bool get doublePointsCapped =>
+-      turnModifiers.length + (isTwoWordsArmed ? 1 : 0) >= 2;
++  /// Q8 : allumer est refusé si l'équipe a déjà 2 modificateurs en jeu, l'autre
++  /// bonus allumé compris.
++  bool _capped(String id) =>
++      turnModifiers.length +
++          kChargeBonusKeys.keys
++              .where((other) => other != id && _charge(other) != null)
++              .length >=
++      2;
+ 
+-  /// Allumer / éteindre le ×2 avant le départ. Rien n'est dépensé ici.
+-  void setDoublePoints(bool on) => _armCharge(kDoublePointsKey, on,
+-      isOn: isDoublePointsOn,
+-      left: doublePointsLeft,
+-      capped: doublePointsCapped);
+-
+-  /// Interrupteur d'un bonus à charge (×2, deux mots) : seul l'état `armed`
+-  /// est écrit ; la charge se dépense dans `startTurnTimer`.
+-  void _armCharge(String key, bool on,
+-      {required bool isOn, required int left, required bool capped}) {
++  /// Interrupteur d'un bonus à charge, avant le départ : seul `armed` est
++  /// écrit ; la charge se dépense dans `startTurnTimer`.
++  void _setCharge(String id, bool on) {
+     final fiesta = _game.fiesta;
+-    if (fiesta == null || isOn || (on && (left <= 0 || capped))) {
++    if (fiesta == null ||
++        _charge(id) == ChargeState.spent ||
++        (on && (_chargesLeft(id) <= 0 || _capped(id)))) {
+       return;
+     }
+-    final turn = Map<String, dynamic>.of(fiesta.turn)..remove(key);
+-    if (on) turn[key] = kDoubleArmed;
+-    _game = _game.copyWith(fiesta: fiesta.copyWith(turn: turn));
++    _game = _game.copyWith(
++      fiesta: fiesta.copyWith(
++          turn: fiesta.turn.withCharge(id, on ? ChargeState.armed : null)),
++    );
+     notifyListeners();
+     _saveGameState();
+   }
+ 
+-  // ========== DEUX MOTS À LA FOIS (2-11) ==========
+-
+-  String? _turnString(String key) {
+-    final value = _turnCounters[key];
+-    return value is String ? value : null;
+-  }
+-
+   /// Interrupteur de l'avant-tour allumé (ou charge déjà dépensée).
+-  bool get isTwoWordsArmed => _turnString(kTwoWordsKey) != null;
++  bool get isDoublePointsArmed => _charge('double_points') != null;
+ 
+-  /// Deux mots à l'écran pendant CE tour (charge dépensée au départ ; vaut
+-  /// aussi pour la continuation de fin de manche, même tour).
+-  bool get isTwoWordsOn => _turnString(kTwoWordsKey) == kDoubleSpent;
++  /// Les points de CE tour comptent ×2 : charge dépensée au départ. Vaut aussi
++  /// pour la continuation de fin de manche, qui est le même tour.
++  bool get isDoublePointsOn => _charge('double_points') == ChargeState.spent;
++  int get doublePointsLeft => _chargesLeft('double_points');
++  bool get doublePointsCapped => _capped('double_points');
++  void setDoublePoints(bool on) => _setCharge('double_points', on);
++
++  /// Deux mots à l'écran pendant CE tour (continuation comprise).
++  bool get isTwoWordsArmed => _charge('two_words') != null;
++  bool get isTwoWordsOn => _charge('two_words') == ChargeState.spent;
++  int get twoWordsLeft => _chargesLeft('two_words');
++  bool get twoWordsCapped => _capped('two_words');
++  void setTwoWords(bool on) => _setCharge('two_words', on);
+ 
+   /// Carte B (la carte A est `game.currentWord`). Nulle = une seule carte.
+-  String? get secondWord => _turnString(kSecondWordKey);
++  String? get secondWord => _turn.secondWord;
+ 
+   /// Carte B encore à l'écran quand le chrono est tombé, à vérifier.
+-  String? get secondExpiredWord => _turnString(kSecondExpiredWordKey);
+-
+-  /// Charges restantes de l'équipe qui joue pour la manche en cours.
+-  int get twoWordsLeft {
+-    final teamId = getCurrentTeam()?.id;
+-    final used = (_game.fiesta?.chargesUsed ?? const <ChargeUse>[])
+-        .where((u) =>
+-            u.catalogId == 'two_words' &&
+-            u.teamId == teamId &&
+-            u.round == _game.currentRound)
+-        .length;
+-    return twoWordsAllowance(currentTeamModifiers) - used;
+-  }
+-
+-  /// Q8, comme [doublePointsCapped].
+-  bool get twoWordsCapped =>
+-      turnModifiers.length + (isDoublePointsArmed ? 1 : 0) >= 2;
+-
+-  /// Allumer / éteindre « Deux mots à la fois » avant le départ.
+-  void setTwoWords(bool on) => _armCharge(kTwoWordsKey, on,
+-      isOn: isTwoWordsOn, left: twoWordsLeft, capped: twoWordsCapped);
++  String? get secondExpiredWord => _turn.secondExpiredWord;
+ 
+   /// Cartes après le traitement (trouvé ou passé) de [target], l'une des deux
+   /// cartes : elle seule est remplacée, par un mot ≠ l'autre carte
+@@ -1496,47 +1461,48 @@ class GameProvider extends ChangeNotifier {
+         : (first: a, second: drawn, drawn: drawn, pool: next.pool);
+   }
+ 
+-  /// [fiesta] avec la carte B [word] (nulle = clé retirée).
+-  FiestaState _withSecondWord(FiestaState fiesta, String? word) {
+-    final turn = Map<String, dynamic>.of(fiesta.turn)..remove(kSecondWordKey);
+-    if (word != null) turn[kSecondWordKey] = word;
+-    return fiesta.copyWith(turn: turn);
+-  }
++  /// [fiesta] avec la carte B [word] (nulle = plus de carte B).
++  FiestaState _withSecondWord(FiestaState fiesta, String? word) =>
++      fiesta.copyWith(
++          turn: word == null
++              ? fiesta.turn.copyWith(clearSecondWord: true)
++              : fiesta.turn.copyWith(secondWord: word));
+ 
+-  /// Fiesta à la VRAIE fin d'un tour : compteurs du tour vidés, instances
+-  /// de portée tour de l'équipe consommées. 🔴 Un seul « tour » : une fin de
+-  /// manche n'en est pas une, la continuation en N+1 est le même tour (elle
+-  /// hérite donc aussi du compteur de passes gratuites). Nul en Classique.
++  /// Fiesta à la VRAIE fin d'un tour : état du tour vidé, instances de portée
++  /// tour qui ont pesé sur ce tour consommées. 🔴 Une fin de manche n'en est
++  /// pas une : la continuation en N+1 est le même tour. À la fin d'une
++  /// continuation, les instances de N, qui ne servaient qu'à elle, partent.
++  /// Nul en Classique.
+   FiestaState? _fiestaAfterTurn() {
+     final fiesta = _game.fiesta;
+     if (fiesta == null || _teams.isEmpty) return null;
+-    final teamId = _teams[_game.currentTeamIndex].id;
++    final applied = currentTeamModifiers;
++    final continuation = isContinuation;
+     return fiesta.copyWith(
+-      turn: const {},
++      turn: FiestaTurnState.empty,
+       active: fiesta.active
+-          .where((m) => !(m.scope == ModifierScope.turn &&
+-              (m.target == ModifierTarget.both || m.teamId == teamId)))
++          .where((m) =>
++              !(m.scope == ModifierScope.turn && applied.contains(m)) &&
++              !(continuation && m.round < _game.currentRound))
+           .toList(),
+     );
+   }
+ 
+   /// Malus à révéler en plein écran avant le tour : ceux de l'équipe qui joue,
+-  /// à son PREMIER tour de la manche (aucune entrée d'historique à son nom
+-  /// dans cette manche). Le malus de 10 s, qui ne touche pas une continuation
+-  /// (Q5), se révèle au premier tour NON-continuation. Dérivé de
+-  /// l'historique : rien à persister.
++  /// à son PREMIER VRAI tour de la manche. Jamais sur une continuation (elle
++  /// joue avec les effets de N, déjà annoncés) ; l'entrée d'historique de la
++  /// continuation ne compte pas comme un tour de N+1. Dérivé de l'historique :
++  /// rien à persister.
+   List<ModifierInstance> get malusToReveal {
+-    if (_game.fiesta == null || _teams.isEmpty) return const [];
+-    final teamId = _teams[_game.currentTeamIndex].id;
+-    final played = _game.history
+-        .where((h) => h.round == _game.currentRound && h.teamId == teamId);
+-    final firstTurn = played.isEmpty;
+-    final firstFullTurn = _game.turnBonusTime == null &&
+-        played.every((h) => h.isBonusContinuation);
++    final teamId = getCurrentTeam()?.id;
++    if (_game.fiesta == null || teamId == null || isContinuation) {
++      return const [];
++    }
++    final realTurns =
++        _entriesThisRound(teamId) - (teamId == _continuingTeamId ? 1 : 0);
++    if (realTurns > 0) return const [];
+     return currentTeamModifiers
+-        .where((m) =>
+-            m.nature == ModifierNature.malus &&
+-            (m.catalogId == 'minus_10s' ? firstFullTurn : firstTurn))
++        .where((m) => m.nature == ModifierNature.malus)
+         .toList();
+   }
+ 
+@@ -1614,40 +1580,31 @@ class GameProvider extends ChangeNotifier {
+     _saveGameState();
+   }
+ 
+-  /// Coup de pouce de l'app (Auto) pour la manche suivante : montré sur la
+-  /// transition, posé par `nextRound`. Vide hors Auto + auto-calibrage, après
+-  /// M3 ou à égalité.
+-  List<ModifierInstance> get appBoostPreview {
+-    final fiesta = _game.fiesta;
+-    if (fiesta == null || !isAppBoostOn(fiesta.rules, _game.currentRound)) {
+-      return const [];
+-    }
+-    return appBoost(
+-      rules: fiesta.rules,
+-      gameId: _game.gameId ?? '',
+-      round: _game.currentRound,
+-      standings: standings,
+-      roundDraw: nextRoundModifiers,
+-    );
+-  }
++  /// Coup de pouce de l'app (Auto) pour la manche suivante. Vide hors Auto +
++  /// auto-calibrage, après M3 ou à égalité.
++  List<ModifierInstance> get appBoostPreview =>
++      _transitionPlan?.gifts ?? const [];
+ 
+   /// Équipe qui désigne le devineur bloqué de l'équipe qui joue : celle qui a
+   /// choisi « Bloquer un devineur » contre elle. `null` = les adversaires.
+   Team? get blockingTeam {
+-    final teamId = getCurrentTeam()?.id;
++    final block = currentTeamModifiers
++        .where((m) => m.catalogId == 'block_guesser')
++        .firstOrNull;
++    if (block == null) return null;
+     for (final c in _game.fiesta?.offerChoices ?? const <OfferChoice>[]) {
+       if (c.modifier.catalogId == 'block_guesser' &&
+-          c.modifier.teamId == teamId &&
+-          c.modifier.round == _game.currentRound) {
++          c.modifier.teamId == block.teamId &&
++          c.modifier.round == block.round) {
+         return getTeamById(c.chooserId);
+       }
+     }
+     return null;
+   }
+ 
+-  /// Récap « Modificateurs de la partie » (écran Résultats, archive). Vide en
++  /// Récap « Modificateurs de la partie », en faits (archivés). Vide en
+   /// Classique.
+-  List<ModifierRecapLine> get modifierRecap {
++  List<ModifierRecapItem> get _modifierRecapItems {
+     final fiesta = _game.fiesta;
+     if (fiesta == null) return const [];
+     return buildModifierRecap(
+@@ -1660,6 +1617,12 @@ class GameProvider extends ChangeNotifier {
+     );
+   }
+ 
++  /// Le même récap, en lignes affichées (écran Résultats).
++  List<ModifierRecapLine> get modifierRecap => formatModifierRecap(
++        _modifierRecapItems,
++        teamNames: {for (final t in _teams) t.id: t.name},
++      );
++
+   /// Archive la partie terminée pour l'écran d'historique.
+   ///
+   /// On enregistre le résultat **tel qu'il a été montré aux joueurs**, pas une
+@@ -1693,7 +1656,7 @@ class GameProvider extends ChangeNotifier {
+       turnDuration: _settings.turnDuration,
+       roundsPlayed: _game.currentRound,
+       mode: _game.fiesta == null ? null : fiestaModeId(_game.fiesta!.rules),
+-      modifierRecap: _game.fiesta == null ? null : modifierRecap,
++      modifierRecap: _game.fiesta == null ? null : _modifierRecapItems,
+     );
+ 
+     unawaited(_history.record(result));
+@@ -1983,6 +1946,8 @@ class GameProvider extends ChangeNotifier {
+   // silencieusement incomplète. C'est exactement le piège que le mode Fiesta
+   // aurait déclenché, lui qui ajoutera des champs d'état par construction.
+   void savePreValidationState(List<String> validatedWords) {
++    // Double tap : ne pas écraser le snapshot par l'état déjà validé.
++    if (_game.currentScreen != AppConstants.screenVerification) return;
+     _game = _game.copyWith(
+       preValidationSnapshot: {
+         // On retire le snapshot de lui-même : sans ça, chaque sauvegarde
+diff --git a/lib/screens/fiesta_auto_screen.dart b/lib/screens/fiesta_auto_screen.dart
+index f39679f..d42266f 100644
+--- a/lib/screens/fiesta_auto_screen.dart
++++ b/lib/screens/fiesta_auto_screen.dart
+@@ -26,7 +26,6 @@ class _FiestaAutoScreenState extends State<FiestaAutoScreen> {
+   late bool _symmetric = _previous?.symmetric ?? true;
+   late bool _autoCalibrate = _previous?.autoCalibrate ?? true;
+   late bool _oneAnswer = _previous?.oneAnswer ?? true;
+-  late bool _carryOver = _previous?.carryOver ?? true;
+ 
+   @override
+   Widget build(BuildContext context) {
+@@ -71,10 +70,8 @@ class _FiestaAutoScreenState extends State<FiestaAutoScreen> {
+         ),
+         FiestaCommonRulesCard(
+           oneAnswer: _oneAnswer,
+-          carryOver: _carryOver,
+-          onChanged: ({oneAnswer, carryOver}) => setState(() {
++          onChanged: ({oneAnswer}) => setState(() {
+             _oneAnswer = oneAnswer ?? _oneAnswer;
+-            _carryOver = carryOver ?? _carryOver;
+           }),
+         ),
+       ],
+@@ -102,7 +99,6 @@ class _FiestaAutoScreenState extends State<FiestaAutoScreen> {
+                         symmetric: _symmetric,
+                         autoCalibrate: _autoCalibrate,
+                         oneAnswer: _oneAnswer,
+-                        carryOver: _carryOver,
+                       ),
+                     );
+                     provider.goToScreen(AppConstants.screenFiestaRecap);
+diff --git a/lib/screens/fiesta_ensemble_editor_screen.dart b/lib/screens/fiesta_ensemble_editor_screen.dart
+index c0f74be..d92270e 100644
+--- a/lib/screens/fiesta_ensemble_editor_screen.dart
++++ b/lib/screens/fiesta_ensemble_editor_screen.dart
+@@ -4,6 +4,7 @@ import '../models/fiesta/ensemble_validation.dart';
+ import '../models/fiesta/fiesta_ensemble.dart';
+ import '../models/fiesta/fiesta_rules.dart';
+ import '../models/fiesta/modifier_catalog.dart';
++import '../models/fiesta/symmetric_draw.dart';
+ import '../services/fiesta_ensemble_service.dart';
+ import '../theme/app_theme.dart';
+ import '../widgets/common/app_back_button.dart';
+@@ -246,7 +247,10 @@ class _FiestaEnsembleEditorScreenState
+           if (open) ...[
+             const SizedBox(height: 8),
+             _Choices<ModifierArrival>(
+-              values: ModifierArrival.values,
++              // Cible joueur : ni tiré ni fixé, seulement proposé.
++              values: isForAllTeams(def)
++                  ? ModifierArrival.values
++                  : const [ModifierArrival.offer],
+               selected: s.arrival,
+               label: (a) => _arrivalLabels[a]!,
+               onSelect: (a) => _setModifier(
+@@ -388,13 +392,6 @@ class _FiestaEnsembleEditorScreenState
+               (v) => setState(() => _rules = _rules.copyWith(oneAnswer: v)),
+             ),
+           ),
+-          _line(
+-            'Temps reporté de fin de manche',
+-            _switch(
+-              _rules.carryOver,
+-              (v) => setState(() => _rules = _rules.copyWith(carryOver: v)),
+-            ),
+-          ),
+         ],
+       ),
+     );
+diff --git a/lib/screens/fiesta_recap_screen.dart b/lib/screens/fiesta_recap_screen.dart
+index def7e13..43b6892 100644
+--- a/lib/screens/fiesta_recap_screen.dart
++++ b/lib/screens/fiesta_recap_screen.dart
+@@ -61,7 +61,6 @@ class FiestaRecapScreen extends StatelessWidget {
+         ),
+         FiestaCommonRulesCard(
+           oneAnswer: rules.oneAnswer,
+-          carryOver: rules.carryOver,
+         ),
+         FiestaCard(
+           title: 'Réglages de base',
+diff --git a/lib/screens/stats_screen.dart b/lib/screens/stats_screen.dart
+index af0c1e9..6d221ba 100644
+--- a/lib/screens/stats_screen.dart
++++ b/lib/screens/stats_screen.dart
+@@ -348,11 +348,9 @@ class _StatsScreenState extends State<StatsScreen> {
+     // Parcourir l'historique
+     for (final entry in provider.game.history) {
+       final teamId = entry.teamId;
+-      final wordsCount = entry.wordsGuessed.length;
+-
+-      // Mettre à jour le score cumulatif (toujours)
++      // Points du tour, pas nombre de mots : un tour à ×2 compte double.
+       teamCumulativeScore[teamId] =
+-          (teamCumulativeScore[teamId] ?? 0) + wordsCount;
++          (teamCumulativeScore[teamId] ?? 0) + entry.points;
+ 
+       if (entry.isBonusContinuation) {
+         // C'est une continuation du tour précédent (bonus time)
+diff --git a/lib/services/CLAUDE.md b/lib/services/CLAUDE.md
+index aa04c3e..be63af4 100644
+--- a/lib/services/CLAUDE.md
++++ b/lib/services/CLAUDE.md
+@@ -7,7 +7,7 @@
+ | Service | Classe | Role |
+ |---------|--------|------|
+ | `storage_service.dart` | `StorageService` | Wrapper SharedPreferences : persistance settings, gameSession, gameState |
+-| `analytics_service.dart` | `AnalyticsService` | Tracking temps reel WordEvents, calcul stats, persistance locale. Retention 50 parties. Recovery des parties orphelines (crash). Fiesta : `modifiers` par event (contexte du tour), durée par mot (`_shownAt`, deux cartes en 2-11, `docs/ANALYTICS.md`) |
++| `analytics_service.dart` | `AnalyticsService` | Tracking temps reel WordEvents, calcul stats, persistance locale. Retention 50 parties. Recovery des parties orphelines (crash). Contexte de chaque event (`WordEventContext`) fourni par l'appelant depuis l'état persisté, jamais deviné ; durée par mot (`_shownAt`, mémoire seule : après un kill, event terminal sans durée), `docs/ANALYTICS.md` |
+ | `user_service.dart` | `UserService` | userId persistant (UUID v4) + DeviceInfo (appVersion, platform, locale, deviceModel) |
+ | `word_history_service.dart` | `WordHistoryService` | Historique mots joues (mot→seenCount). Priorise les mots jamais vus via `selectWordsByPriority()` |
+ | `word_loader_service.dart` | `WordLoaderService` | Charge categories depuis JSON (assets/translations/). Cache en memoire. Methodes : `loadCategory()`, `getCategoriesMetadata()` |
+diff --git a/lib/services/analytics_service.dart b/lib/services/analytics_service.dart
+index b742d7d..63a52eb 100644
+--- a/lib/services/analytics_service.dart
++++ b/lib/services/analytics_service.dart
+@@ -9,6 +9,18 @@ import 'user_service.dart';
+ import 'firebase_sync_service.dart';
+ import 'word_history_service.dart';
+ 
++/// Le tour auquel appartient un événement. Fourni par l'appelant depuis
++/// l'état PERSISTÉ de la partie à CHAQUE événement : il survit donc à un kill.
++/// Le service ne le devine jamais. [modifiers] : ids Fiesta actifs pour
++/// l'équipe qui joue, `null` en Classique.
++typedef WordEventContext = ({
++  int round,
++  int turn,
++  String teamId,
++  String playerId,
++  List<String>? modifiers,
++});
++
+ /// Service de tracking et de persistance des analytics
+ ///
+ /// Ce service est un singleton qui gère :
+@@ -34,17 +46,9 @@ class AnalyticsService {
+   // son mot : retirée par `_recordEventWithDuration`. Par mot et non « le
+   // dernier affiché » : avec « Deux mots à la fois » (2-11), deux mots sont à
+   // l'écran et chacun a sa propre durée. En Classique, un seul à la fois.
++  // Mémoire seulement : perdue par un kill, d'où la durée inconnue ensuite.
+   final Map<String, int> _shownAt = {};
+ 
+-  // Contexte du tour : survit aux mots, relu par `onWordInvalidated` et
+-  // `onWordValidatedAsGuessed` (vérification, après le tour). Ne dépend pas du
+-  // nombre de mots à l'écran.
+-  int? _lastRound;
+-  int? _lastTurn;
+-  String? _lastTeamId;
+-  String? _lastPlayerId;
+-  List<String>? _lastModifiers;
+-
+   /// Vérifie si une partie est en cours de tracking
+   bool get isTracking => _currentGame != null;
+ 
+@@ -150,131 +154,65 @@ class AnalyticsService {
+   /// Remet à zéro l'état du tracking
+   void _clearTrackingState() {
+     _shownAt.clear();
+-    _lastRound = null;
+-    _lastTurn = null;
+-    _lastTeamId = null;
+-    _lastPlayerId = null;
+-    _lastModifiers = null;
+   }
+ 
+   // ========== TRACKING EN TEMPS RÉEL ==========
+ 
+   /// Appelé quand un nouveau mot est affiché à un joueur.
+-  ///
+-  /// [modifiers] : ids Fiesta actifs pour l'équipe qui joue, `null` en
+-  /// Classique. L'appelant les relit à CHAQUE mot depuis l'état persisté de la
+-  /// partie : après un kill, le mot suivant est donc de nouveau étiqueté.
+-  void onWordShown({
+-    required String word,
+-    required int round,
+-    required int turn,
+-    required String teamId,
+-    required String playerId,
+-    List<String>? modifiers,
+-  }) {
++  void onWordShown(String word, WordEventContext context) {
+     if (_currentGame == null) return;
+-
+-    // Mémoriser pour calculer la durée
+     _shownAt[word] = DateTime.now().millisecondsSinceEpoch;
+-    _lastRound = round;
+-    _lastTurn = turn;
+-    _lastTeamId = teamId;
+-    _lastPlayerId = playerId;
+-    _lastModifiers = modifiers;
+-
+-    // Enregistrer l'événement 'shown'
+-    final event = WordEvent.shown(
+-      word: word,
+-      round: round,
+-      turn: turn,
+-      teamId: teamId,
+-      playerId: playerId,
+-      gameId: _currentGame!.gameId,
+-      modifiers: modifiers,
+-    );
+-
+-    _currentGame = _currentGame!.addEvent(event);
++    _addEvent(word, WordEventType.shown, context);
+   }
+ 
+   /// Appelé quand un mot est deviné
+-  void onWordGuessed(String word) {
+-    _recordEventWithDuration(word, WordEventType.guessed);
+-  }
++  void onWordGuessed(String word, WordEventContext context) =>
++      _recordEventWithDuration(word, WordEventType.guessed, context);
+ 
+   /// Appelé quand un mot est passé
+-  void onWordPassed(String word) {
+-    _recordEventWithDuration(word, WordEventType.passed);
+-  }
++  void onWordPassed(String word, WordEventContext context) =>
++      _recordEventWithDuration(word, WordEventType.passed, context);
+ 
+   /// Appelé quand le temps expire avec un mot affiché
+-  void onWordExpired(String word) {
+-    _recordEventWithDuration(word, WordEventType.expired);
+-  }
+-
+-  /// Appelé quand un mot est invalidé lors de la vérification
+-  void onWordInvalidated(String word) {
+-    if (_currentGame == null) return;
+-
+-    // Pour l'invalidation, on n'a pas de durée car ça se passe après le tour
+-    final event = WordEvent(
+-      word: word,
+-      eventType: WordEventType.invalidated,
+-      timestamp: DateTime.now().millisecondsSinceEpoch,
+-      round: _lastRound ?? 1,
+-      turn: _lastTurn ?? 1,
+-      teamId: _lastTeamId ?? '',
+-      playerId: _lastPlayerId ?? '',
+-      gameId: _currentGame!.gameId,
+-      durationMs: null,
+-      modifiers: _lastModifiers,
+-    );
+-
+-    _currentGame = _currentGame!.addEvent(event);
+-  }
+-
+-  /// Appelé quand un mot passed/expired est validé comme guessed lors de la vérification
+-  void onWordValidatedAsGuessed(String word) {
++  void onWordExpired(String word, WordEventContext context) =>
++      _recordEventWithDuration(word, WordEventType.expired, context);
++
++  /// Appelé quand un mot est invalidé lors de la vérification (sans durée :
++  /// ça se passe après le tour).
++  void onWordInvalidated(String word, WordEventContext context) =>
++      _addEvent(word, WordEventType.invalidated, context);
++
++  /// Appelé quand un mot passed/expired est validé comme guessed lors de la
++  /// vérification (sans durée : validation a posteriori).
++  void onWordValidatedAsGuessed(String word, WordEventContext context) =>
++      _addEvent(word, WordEventType.guessed, context);
++
++  /// Enregistre un événement avec sa durée depuis le `shown` de CE mot. Un mot
++  /// sans `shown` en mémoire (affiché avant un kill) est enregistré quand même,
++  /// SANS durée : jamais de durée inventée, jamais d'événement perdu.
++  void _recordEventWithDuration(
++      String word, WordEventType eventType, WordEventContext context) {
+     if (_currentGame == null) return;
+-
+-    // Créer un event guessed sans durée (validation a posteriori)
+-    final event = WordEvent(
+-      word: word,
+-      eventType: WordEventType.guessed,
+-      timestamp: DateTime.now().millisecondsSinceEpoch,
+-      round: _lastRound ?? 1,
+-      turn: _lastTurn ?? 1,
+-      teamId: _lastTeamId ?? '',
+-      playerId: _lastPlayerId ?? '',
+-      gameId: _currentGame!.gameId,
+-      durationMs: null, // Pas de durée car validation a posteriori
+-      modifiers: _lastModifiers,
+-    );
+-
+-    _currentGame = _currentGame!.addEvent(event);
++    final shownAt = _shownAt.remove(word);
++    _addEvent(word, eventType, context, shownAt: shownAt);
+   }
+ 
+-  /// Enregistre un événement avec calcul de durée, depuis le `shown` de CE
+-  /// mot. Un mot sans `shown` en cours (app tuée depuis, par exemple) est
+-  /// abandonné : pas de durée inventée. Le contexte du tour (dont
+-  /// `_lastModifiers`) est celui du dernier `shown`, commun aux deux cartes.
+-  void _recordEventWithDuration(String word, WordEventType eventType) {
++  void _addEvent(String word, WordEventType eventType, WordEventContext context,
++      {int? shownAt}) {
+     if (_currentGame == null) return;
+-    final shownAt = _shownAt.remove(word);
+-    if (shownAt == null) return;
+-
+-    final event = WordEvent.withDuration(
++    final now = DateTime.now().millisecondsSinceEpoch;
++    _currentGame = _currentGame!.addEvent(WordEvent(
+       word: word,
+       eventType: eventType,
+-      round: _lastRound ?? 1,
+-      turn: _lastTurn ?? 1,
+-      teamId: _lastTeamId ?? '',
+-      playerId: _lastPlayerId ?? '',
++      timestamp: now,
++      round: context.round,
++      turn: context.turn,
++      teamId: context.teamId,
++      playerId: context.playerId,
+       gameId: _currentGame!.gameId,
+-      shownTimestamp: shownAt,
+-      modifiers: _lastModifiers,
+-    );
+-
+-    _currentGame = _currentGame!.addEvent(event);
++      durationMs: shownAt == null ? null : now - shownAt,
++      modifiers: context.modifiers,
++    ));
+   }
+ 
+   // ========== PERSISTANCE ==========
+diff --git a/lib/services/fiesta_ensemble_service.dart b/lib/services/fiesta_ensemble_service.dart
+index 1ecd99f..517f113 100644
+--- a/lib/services/fiesta_ensemble_service.dart
++++ b/lib/services/fiesta_ensemble_service.dart
+@@ -186,7 +186,7 @@ class FiestaEnsembleService {
+           ...store.ensembles.map((e) => e.toJson()),
+           ...unreadable,
+         ],
+-        'lastUsedId': store.lastUsedId,
++        if (store.lastUsedId != null) 'lastUsedId': store.lastUsedId,
+       })),
+     );
+   }
+diff --git a/lib/widgets/fiesta/fiesta_setup_widgets.dart b/lib/widgets/fiesta/fiesta_setup_widgets.dart
+index e2ee9e9..adbd5b2 100644
+--- a/lib/widgets/fiesta/fiesta_setup_widgets.dart
++++ b/lib/widgets/fiesta/fiesta_setup_widgets.dart
+@@ -264,17 +264,16 @@ class FiestaLine extends StatelessWidget {
+   }
+ }
+ 
+-/// Les deux règles communes Fiesta (maquette `commonCard`).
++/// La règle commune Fiesta (maquette `commonCard`). Le temps reporté de fin
++/// de manche n'est pas un réglage : il est toujours conservé.
+ class FiestaCommonRulesCard extends StatelessWidget {
+   final bool oneAnswer;
+-  final bool carryOver;
+ 
+   /// Nul = lecture seule (Récap).
+-  final void Function({bool? oneAnswer, bool? carryOver})? onChanged;
++  final void Function({bool? oneAnswer})? onChanged;
+ 
+   const FiestaCommonRulesCard({
+     required this.oneAnswer,
+-    required this.carryOver,
+     this.onChanged,
+     super.key,
+   });
+@@ -292,13 +291,6 @@ class FiestaCommonRulesCard extends StatelessWidget {
+           value: oneAnswer,
+           onChanged: edit == null ? null : (v) => edit(oneAnswer: v),
+         ),
+-        FiestaLine(
+-          label: 'Temps reporté de fin de manche',
+-          detail: 'Le temps restant à la fin d\'une manche est rendu à '
+-              'l\'équipe au début de la suivante.',
+-          value: carryOver,
+-          onChanged: edit == null ? null : (v) => edit(carryOver: v),
+-        ),
+       ],
+     );
+   }
+diff --git a/test/models/fiesta/ensemble_validation_test.dart b/test/models/fiesta/ensemble_validation_test.dart
+index 1a7980a..2134273 100644
+--- a/test/models/fiesta/ensemble_validation_test.dart
++++ b/test/models/fiesta/ensemble_validation_test.dart
+@@ -89,6 +89,15 @@ void main() {
+     );
+   });
+ 
++  test('« Bloquer un devineur » tiré → refusé (proposé seulement)', () {
++    expect(
++      validateEnsemble(rulesWith(overrides: {
++        'block_guesser': setting(ModifierArrival.draw),
++      })),
++      contains(startsWith('Bloquer un devineur ne peut être que proposé')),
++    );
++  });
++
+   test('« fixé » sans manche → refusé', () {
+     // Impossible par l'éditeur, possible dans un blob relu.
+     expect(
+diff --git a/test/models/game_state_test.dart b/test/models/game_state_test.dart
+index 35c7063..150843b 100644
+--- a/test/models/game_state_test.dart
++++ b/test/models/game_state_test.dart
+@@ -204,7 +204,8 @@ void main() {
+ 
+       expect(restored.fiesta, isNull);
+       expect(restored.toJson(), equals(legacy),
+-          reason: 'le blob Classique ne doit pas changer, ni `fiesta: null`');
++          reason: 'relu puis réécrit sans rien ajouter, ni `fiesta: null` '
++              '(règle 7 ; un tour joué ajoute `turnAllottedSeconds`, 2-6)');
+     });
+ 
+     test(
+@@ -213,19 +214,19 @@ void main() {
+       final json = GameState(gameId: 'abc', fiesta: fiestaState()).toJson();
+       final rules = (json['fiesta'] as Map<String, dynamic>)['rules']
+           as Map<String, dynamic>;
+-      rules.remove('carryOver');
++      rules.remove('oneAnswer');
+       rules['fromTheFuture'] = 42;
+       (rules['catchUp'] as Map<String, dynamic>).remove('malCap');
+ 
+       final restored = GameState.fromJson(json);
+ 
+       expect(restored.fiesta, isNotNull);
+-      expect(restored.fiesta!.rules.carryOver, isTrue);
++      expect(restored.fiesta!.rules.oneAnswer, isTrue);
+       expect(restored.fiesta!.rules.catchUp.malCap, CatchUpRules.auto.malCap);
+       expect(restored.fiesta!.rules.catchUp.b1, 2,
+           reason: 'les présents restent');
+ 
+-      rules['carryOver'] = 'oui';
++      rules['oneAnswer'] = 'oui';
+       expect(GameState.fromJson(json).fiesta, isNull);
+     });
+ 
+diff --git a/test/providers/fiesta_double_points_test.dart b/test/providers/fiesta_double_points_test.dart
+index e93bb6b..8e121cb 100644
+--- a/test/providers/fiesta_double_points_test.dart
++++ b/test/providers/fiesta_double_points_test.dart
+@@ -1,6 +1,7 @@
+ import 'package:flutter_test/flutter_test.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+ import 'package:guess_it_all_mobile/providers/game_provider.dart';
++import 'package:guess_it_all_mobile/utils/constants.dart';
+ 
+ import '../helpers/test_prefs.dart';
+ 
+@@ -116,11 +117,13 @@ void main() {
+     provider.nextRound();
+     expect(provider.getCurrentTeam()!.id, teamId);
+     expect(provider.isDoublePointsOn, isTrue);
+-    expect(provider.doublePointsLeft, 1); // charge de M2 intacte
++    // Rien à allumer sur une continuation ; la charge de M2 reste intacte.
++    expect(provider.doublePointsLeft, 0);
+ 
+     provider.startTurn();
+     provider.startTurnTimer();
+-    expect(provider.doublePointsLeft, 1);
++    expect(
++        provider.game.fiesta!.chargesUsed.where((u) => u.round == 2), isEmpty);
+     provider.markWordAsGuessed();
+     provider.endTurn();
+     final word = provider.game.wordsGuessedThisTurn.first;
+@@ -136,41 +139,80 @@ void main() {
+   });
+ 
+   test(
+-      'Continuation NON activée en fin de M1 : la charge de M2 s\'y active, se '
+-      'dépense au départ et double les points de M2 (AC8)', () async {
++      'Continuation NON activée en fin de M1 : la charge de M2 ne s\'y allume '
++      'pas ; elle sert au premier vrai tour de M2 de l\'équipe (AC8, epic fix)',
++      () async {
+     final provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
+     await provider.startGame(fiesta: doubleEveryRound);
+     final teamId = provider.getCurrentTeam()!.id;
+-    provider.startTurn();
+-    provider.startTurnTimer();
+-    while (provider.game.currentWord != null) {
+-      provider.markWordAsGuessed();
++    void playOne(List<String> Function(List<String>) validate, {int n = 1}) {
++      provider.startTurn();
++      provider.startTurnTimer();
++      for (var i = 0; i < n; i++) {
++        provider.markWordAsGuessed();
++      }
++      if (provider.game.currentScreen != AppConstants.screenVerification)
++        provider.endTurn();
++      final words = validate(provider.game.wordsGuessedThisTurn);
++      provider.savePreValidationState(words);
++      provider.validateWords(words);
+     }
+-    final guessed = List<String>.from(provider.game.wordsGuessedThisTurn);
+-    provider.savePreValidationState(guessed);
+-    provider.validateWords(guessed);
++
++    playOne((w) => w, n: 4);
+     expect(teamRounds(provider, teamId), [4, 0, 0]);
+ 
+     provider.nextRound();
+     expect(provider.getCurrentTeam()!.id, teamId);
+     expect(provider.game.turnBonusTime, isNot(anyOf(isNull, 0)));
+     provider.setDoublePoints(true);
+-    provider.startTurn();
+-    provider.startTurnTimer();
+-    expect(provider.isDoublePointsOn, isTrue);
+-    expect(provider.doublePointsLeft, 0);
++    expect(provider.isDoublePointsArmed, isFalse);
++    playOne((w) => w); // la continuation : 1 point
++    playOne((w) => const []); // l'autre équipe
++
++    expect(provider.getCurrentTeam()!.id, teamId);
++    expect(provider.doublePointsLeft, 1);
++    provider.setDoublePoints(true);
++    playOne((w) => w);
++    expect(teamRounds(provider, teamId), [4, 3, 0]);
+     expect(
+         provider.game.fiesta!.chargesUsed
+             .where((u) => u.teamId == teamId && u.round == 2),
+         hasLength(1));
++  });
+ 
++  test(
++      'Évolution des scores : le dernier point de chaque équipe = son score, '
++      'avec ×2 et continuation ; la clé n\'est écrite que si elle diffère '
++      'du nombre de mots (epic fix B3)', () async {
++    final provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
++    await provider.startGame(fiesta: doubleEveryRound);
++    provider.setDoublePoints(true);
++    provider.startTurn();
++    provider.startTurnTimer();
++    while (provider.game.currentWord != null) {
++      provider.markWordAsGuessed();
++    }
++    final guessed = List<String>.from(provider.game.wordsGuessedThisTurn);
++    provider.savePreValidationState(guessed);
++    provider.validateWords(guessed);
++    provider.nextRound();
++    provider.startTurn(); // continuation, toujours ×2
++    provider.startTurnTimer();
+     provider.markWordAsGuessed();
+     provider.endTurn();
+-    final word = provider.game.wordsGuessedThisTurn.first;
+-    provider.savePreValidationState([word]);
+-    provider.validateWords([word]);
+-    expect(teamRounds(provider, teamId), [4, 2, 0]);
+-    expect(teamScore(provider, teamId), 6);
++    final word = List<String>.from(provider.game.wordsGuessedThisTurn);
++    provider.savePreValidationState(word);
++    provider.validateWords(word);
++
++    for (final team in provider.teams) {
++      final lastPoint = provider.game.history
++          .where((h) => h.teamId == team.id)
++          .fold(0, (sum, h) => sum + h.points);
++      expect(lastPoint, team.score, reason: team.name);
++    }
++    final json = provider.game.history.map((h) => h.toJson()).toList();
++    expect(json.every((h) => h['pointsScored'] == 2 * h['wordsGuessed'].length),
++        isTrue);
+   });
+ 
+   test(
+@@ -191,5 +233,7 @@ void main() {
+     provider.validateWords(guessed);
+     expect(teamScore(provider, teamId), 2);
+     expect(provider.game.toJson().containsKey('fiesta'), isFalse);
++    expect(provider.game.history.single.toJson().containsKey('pointsScored'),
++        isFalse);
+   });
+ }
+diff --git a/test/providers/fiesta_freeze_test.dart b/test/providers/fiesta_freeze_test.dart
+index cb3905a..7dcf0e1 100644
+--- a/test/providers/fiesta_freeze_test.dart
++++ b/test/providers/fiesta_freeze_test.dart
+@@ -65,6 +65,9 @@ void main() {
+     test('le retour arrière restaure l\'état Fiesta capturé', () async {
+       final provider = await givenReadyProvider();
+       await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
++      provider.startTurn();
++      provider.startTurnTimer();
++      provider.endTurn();
+       final captured = provider.game.fiesta!.toJson();
+ 
+       provider.savePreValidationState(const []);
+diff --git a/test/providers/fiesta_pick_three_test.dart b/test/providers/fiesta_pick_three_test.dart
+index c17dbad..1c9d668 100644
+--- a/test/providers/fiesta_pick_three_test.dart
++++ b/test/providers/fiesta_pick_three_test.dart
+@@ -35,7 +35,7 @@ String playTurn(GameProvider provider, int n) {
+   for (var i = 0; i < n; i++) {
+     provider.markWordAsGuessed();
+   }
+-  if (provider.game.currentScreen == AppConstants.screenGame) {
++  if (provider.game.currentScreen != AppConstants.screenVerification) {
+     provider.endTurn();
+   }
+   final guessed = List<String>.from(provider.game.wordsGuessedThisTurn);
+@@ -149,9 +149,10 @@ void main() {
+   });
+ 
+   test(
+-      '« Bloquer un devineur » choisi : désigné par l\'équipe qui l\'a choisi, '
+-      'il dure UN tour du leader (continuation de fin de manche comprise) '
+-      'et ne rouvre pas le sélecteur ensuite', () async {
++      '« Bloquer un devineur » choisi pour M2 contre le leader qui a fini M1 : '
++      'ni appliqué ni consommé par sa continuation ; annoncé et désigné par '
++      'l\'équipe qui l\'a choisi à son premier vrai tour de M2, consommé à '
++      'sa fin (epic fix M3)', () async {
+     final provider =
+         await givenProvider(['A', 'B', 'C', 'D', 'E'], wordsEach: 4, teams: 2);
+     await provider.startGame(fiesta: pickThree);
+@@ -169,20 +170,166 @@ void main() {
+     provider.chooseOffer(trailing, 0);
+     provider.nextRound();
+ 
++    // La continuation du leader : le blocage de M2 attend.
+     expect(provider.getCurrentTeam()!.id, leader);
++    expect(provider.isContinuation, isTrue);
++    expect(provider.needsBlockedGuesser, isFalse);
++    expect(provider.malusToReveal, isEmpty);
++    playTurn(provider, 0);
++    expect(ids(provider.game.fiesta!.active), ['block_guesser@2>$leader']);
++    playTurn(provider, 0);
++
++    // Premier vrai tour de M2 du leader : annoncé, désigné par la menée.
++    expect(provider.getCurrentTeam()!.id, leader);
++    expect(ids(provider.malusToReveal), ['block_guesser@2>$leader']);
+     expect(provider.needsBlockedGuesser, isTrue);
+     expect(provider.blockingTeam!.id, trailing);
+     provider.setBlockedGuesser(provider.blockableGuessers.first.id);
+-
+-    // Vraie fin du tour (la continuation) : la carte est consommée.
+     playTurn(provider, 0);
+-    expect(provider.game.fiesta!.active.map((m) => m.catalogId),
+-        isNot(contains('block_guesser')));
++    expect(provider.game.fiesta!.active, isEmpty);
+     playTurn(provider, 0);
+     expect(provider.getCurrentTeam()!.id, leader);
+     expect(provider.needsBlockedGuesser, isFalse);
+   });
+ 
++  test(
++      'M2 → M3 : ×2 + blocage de M2 sur le dernier tour, deux tirages en M3. '
++      'La continuation garde ×2 et blocage, pas les tirages (2 effets, pas 4) ; '
++      'idem après un kill et un retour arrière ; les tirages de M3 commencent '
++      'au premier vrai tour (epic fix, Codex MAJOR-1)', () async {
++    final provider =
++        await givenProvider(['A', 'B', 'C', 'D', 'E'], wordsEach: 4, teams: 2);
++    ModifierSetting setting(ModifierArrival arrival, int round) =>
++        ModifierSetting(
++            active: true,
++            arrival: arrival,
++            startRound: round,
++            fixedRound: round,
++            charges: 1);
++    await provider.startGame(
++      fiesta: FiestaRules(
++        mode: FiestaMode.custom,
++        oneOfThree: true,
++        drawCount: 2,
++        modifiers: {
++          'block_guesser': setting(ModifierArrival.offer, 2),
++          'double_points': setting(ModifierArrival.fixed, 2),
++          'no_pass': setting(ModifierArrival.draw, 3),
++          'reversed': setting(ModifierArrival.draw, 3),
++        },
++      ),
++    );
++    // M1 : le leader (3 joueurs, bloquable) mène de 10+, la menée finit M1.
++    final leader = provider.teams.firstWhere((t) => t.playerIds.length == 3).id;
++    final trailing = provider.teams.firstWhere((t) => t.id != leader).id;
++    if (provider.getCurrentTeam()!.id == trailing) playTurn(provider, 1);
++    playTurn(provider, 15);
++    expect(playTurn(provider, 20), trailing);
++    provider.chooseOffer(trailing, 0);
++    provider.nextRound();
++    playTurn(provider, 0); // continuation de la menée
++
++    // M2 : premier vrai tour du leader, bloqué et à ×2 ; il finit M2.
++    expect(provider.getCurrentTeam()!.id, leader);
++    provider.setBlockedGuesser(provider.blockableGuessers.first.id);
++    provider.setDoublePoints(true);
++    playTurn(provider, 20);
++    expect(provider.nextRoundModifiers.map((m) => m.catalogId),
++        unorderedEquals(['no_pass', 'reversed']));
++    expect(provider.nextChooserId, isNull, reason: 'plafond : rien à offrir');
++    provider.nextRound();
++
++    void expectContinuation(GameProvider p) {
++      expect(p.getCurrentTeam()!.id, leader);
++      expect(p.isContinuation, isTrue);
++      expect(ids(p.turnModifiers), ['block_guesser@2>$leader']);
++      expect(p.isDoublePointsOn, isTrue);
++      expect(p.turnModifiers.length + (p.isDoublePointsOn ? 1 : 0), 2);
++      expect(p.blockedGuesser, isNotNull);
++      expect(p.needsBlockedGuesser, isFalse);
++      expect([p.passBlocked, p.isWordReversed], [false, false]);
++      expect(p.malusToReveal, isEmpty);
++    }
++
++    expectContinuation(provider);
++    await pumpEventQueue();
++    final reloaded = GameProvider(); // app tuée avant la continuation
++    await pumpEventQueue();
++    expectContinuation(reloaded);
++
++    final before = reloaded.teams.firstWhere((t) => t.id == leader).score;
++    reloaded.startTurn();
++    reloaded.startTurnTimer();
++    expectContinuation(reloaded);
++    reloaded.markWordAsGuessed();
++    reloaded.endTurn();
++    final word = List<String>.from(reloaded.game.wordsGuessedThisTurn);
++    reloaded.savePreValidationState(word);
++    reloaded.validateWords(word);
++    // Retour arrière : de nouveau la continuation, puis même revalidation.
++    reloaded.restorePreValidationState();
++    expectContinuation(reloaded);
++    reloaded.savePreValidationState(word);
++    reloaded.validateWords(word);
++    expect(reloaded.teams.firstWhere((t) => t.id == leader).score, before + 2);
++
++    // Les tirages de M3 commencent au premier vrai tour de chaque équipe ;
++    // les effets de M2 sont partis avec la continuation.
++    expect(reloaded.getCurrentTeam()!.id, trailing);
++    expect(reloaded.passBlocked, isTrue);
++    playTurn(reloaded, 0);
++    expect(reloaded.getCurrentTeam()!.id, leader);
++    expect(reloaded.turnModifiers.map((m) => m.catalogId),
++        unorderedEquals(['no_pass', 'reversed']));
++    expect(reloaded.malusToReveal.map((m) => m.catalogId),
++        unorderedEquals(['no_pass', 'reversed']));
++    expect([reloaded.isDoublePointsOn, reloaded.needsBlockedGuesser],
++        [false, false]);
++    expect(reloaded.game.fiesta!.active.every((m) => m.round == 3), isTrue);
++  });
++
++  test(
++      'double tap sur « Valider » : les mots sont crédités une fois, le '
++      'retour arrière est gardé, la carte de tour de l\'équipe suivante '
++      'n\'est pas brûlée (bug antérieur à Fiesta)', () async {
++    final provider =
++        await givenProvider(['A', 'B', 'C', 'D', 'E'], wordsEach: 4, teams: 2);
++    await provider.startGame(fiesta: pickThree);
++    // L'équipe menée (2 joueurs) finit M1 : elle joue la continuation, puis
++    // vient le premier tour M2 du leader, bloqué.
++    final leader = provider.teams.firstWhere((t) => t.playerIds.length == 3).id;
++    final trailing = provider.teams.firstWhere((t) => t.id != leader).id;
++    if (provider.getCurrentTeam()!.id == trailing) playTurn(provider, 1);
++    playTurn(provider, 18);
++    expect(playTurn(provider, 20), trailing);
++    provider.chooseOffer(trailing, 0);
++    provider.nextRound();
++    expect(provider.getCurrentTeam()!.id, trailing);
++
++    provider.startTurn();
++    provider.startTurnTimer();
++    provider.markWordAsGuessed();
++    provider.endTurn();
++    final guessed = List<String>.from(provider.game.wordsGuessedThisTurn);
++    final scoreBefore = {for (final t in provider.teams) t.id: t.score};
++    for (var tap = 0; tap < 2; tap++) {
++      provider.savePreValidationState(guessed);
++      provider.validateWords(guessed);
++    }
++
++    expect(provider.teams.firstWhere((t) => t.id == trailing).score,
++        scoreBefore[trailing]! + 1);
++    expect(provider.teams.firstWhere((t) => t.id == leader).score,
++        scoreBefore[leader]);
++    expect(provider.getCurrentTeam()!.id, leader);
++    expect(ids(provider.game.fiesta!.active), ['block_guesser@2>$leader']);
++
++    provider.restorePreValidationState();
++    expect(provider.game.currentScreen, AppConstants.screenVerification);
++    expect(provider.getCurrentTeam()!.id, trailing);
++    expect(provider.game.wordsGuessedThisTurn, guessed);
++  });
++
+   test(
+       'Auto : le coup de pouce montré sur la transition (force « moyenne » '
+       'pour un écart de 6) est actif en M2, sans file de choix (AC7)',
+diff --git a/test/providers/fiesta_round_draw_test.dart b/test/providers/fiesta_round_draw_test.dart
+index b8afc7f..04edbd3 100644
+--- a/test/providers/fiesta_round_draw_test.dart
++++ b/test/providers/fiesta_round_draw_test.dart
+@@ -95,6 +95,13 @@ void main() {
+         ids(reloaded.game.fiesta!.active), ids(provider.game.fiesta!.active));
+ 
+     reloaded.nextRound();
++    // La continuation est le même tour que la fin de M1 : elle garde le tirage
++    // de M1, qui part à sa fin ; celui de M2 commence au premier vrai tour.
++    final m1 = ids(reloaded.game.fiesta!.active.where((m) => m.round == 1));
++    expect(
++        ids(reloaded.game.fiesta!.active.where((m) => m.round == 2)), preview);
++    expect(ids(reloaded.currentTeamModifiers), m1);
++    playEmptyTurn(reloaded);
+     expect(ids(reloaded.game.fiesta!.active), preview);
+     expect(ids(reloaded.currentTeamModifiers), preview);
+   });
+diff --git a/test/providers/fiesta_turn_effects_test.dart b/test/providers/fiesta_turn_effects_test.dart
+index b5c4df8..92072a3 100644
+--- a/test/providers/fiesta_turn_effects_test.dart
++++ b/test/providers/fiesta_turn_effects_test.dart
+@@ -47,7 +47,7 @@ Future<GameProvider> withTurnInstance(
+     GameProvider provider, String catalogId) async {
+   await pumpEventQueue();
+   final saved = (await StorageService().loadGameState())!;
+-  (saved['game']['fiesta']['active'] as List).add(ModifierInstance(
++  ((saved['game']['fiesta'] as Map)['active'] ??= []).add(ModifierInstance(
+     catalogId: catalogId,
+     scope: ModifierScope.turn,
+     target: ModifierTarget.team,
+diff --git a/test/providers/fiesta_two_words_test.dart b/test/providers/fiesta_two_words_test.dart
+index f0e8c9c..046a388 100644
+--- a/test/providers/fiesta_two_words_test.dart
++++ b/test/providers/fiesta_two_words_test.dart
+@@ -238,6 +238,68 @@ void main() {
+     expect(p.isDoublePointsArmed, isFalse);
+   });
+ 
++  test(
++      'Analytics après un kill (vrai redémarrage du service) : en plein tour '
++      'à deux cartes, puis sur la vérification, chaque événement terminal est '
++      'écrit, sans durée inventée, avec manche, équipe et tags de la partie',
++      () async {
++    final p = await givenTwoWordsTurn(alsoDouble: true);
++    final team = p.getCurrentTeam()!.id;
++    final a = p.game.currentWord!;
++    final b = p.secondWord!;
++
++    Future<GameProvider> kill() async {
++      await AnalyticsService().saveCurrentGame(); // app mise en arrière-plan
++      AnalyticsService().forgetCurrentGame();
++      final reloaded = GameProvider();
++      await pumpEventQueue();
++      return reloaded;
++    }
++
++    List<WordEvent> after(int n) =>
++        AnalyticsService().currentGame!.events.skip(n).toList();
++    void expectContext(List<WordEvent> events) {
++      for (final e in events) {
++        expect((e.round, e.turn, e.teamId), (1, 1, team), reason: '$e');
++        expect(e.modifiers, ['double_points', 'two_words'], reason: '$e');
++      }
++    }
++
++    // En plein tour : les deux cartes à l'écran avant le kill.
++    var r = await kill();
++    var seen = AnalyticsService().currentGame!.events.length;
++    r.markWordAsGuessed(a);
++    r.passWord(b);
++    final a2 = r.game.currentWord!;
++    final b2 = r.secondWord!;
++    var events = after(seen);
++    expect(
++        events
++            .where((e) => e.word == a || e.word == b)
++            .map((e) => (e.word, e.eventType, e.durationMs)),
++        [(a, WordEventType.guessed, null), (b, WordEventType.passed, null)]);
++    expectContext(events);
++    r.endTurn();
++
++    // Sur la vérification : seul A' (expiré) est validé, a posteriori ; le
++    // reste du tour (A trouvé, B passé, B' expiré) est invalidé.
++    r = await kill();
++    expect(r.game.currentScreen, AppConstants.screenVerification);
++    seen = AnalyticsService().currentGame!.events.length;
++    r.savePreValidationState([a2]);
++    r.validateWords([a2]);
++    events = after(seen);
++    expect(
++        events.map((e) => (e.word, e.eventType)),
++        unorderedEquals([
++          (a, WordEventType.invalidated),
++          (b, WordEventType.invalidated),
++          (b2, WordEventType.invalidated),
++          (a2, WordEventType.guessed),
++        ]));
++    expectContext(events);
++  });
++
+   test(
+       'Analytics : chaque carte a son shown puis son guessed / passed / '
+       'expired avec durée, tag two_words (AC7) ; Classique : un mot, pas de tag',
+diff --git a/test/providers/turn_time_fiesta_test.dart b/test/providers/turn_time_fiesta_test.dart
+index 4ea3c58..6438582 100644
+--- a/test/providers/turn_time_fiesta_test.dart
++++ b/test/providers/turn_time_fiesta_test.dart
+@@ -127,8 +127,9 @@ void main() {
+ 
+     provider.nextRound();
+     expect(provider.game.fiesta!.catchUpDue, {leader: -2, trailing: 6});
+-    expect(provider.currentTeamModifiers.map((m) => m.catalogId),
+-        unorderedEquals(['no_pass', 'minus_10s']));
++    // Continuation = même tour que la fin de M1 : les fixés de M2 attendent
++    // le premier vrai tour.
++    expect(provider.currentTeamModifiers, isEmpty);
+ 
+     // Continuation du leader : 25 s reportées, ni malus du leader ni −10 s,
+     // et son dû n'est pas consommé.
+diff --git a/test/services/fiesta_analytics_test.dart b/test/services/fiesta_analytics_test.dart
+index e778473..77b3f9c 100644
+--- a/test/services/fiesta_analytics_test.dart
++++ b/test/services/fiesta_analytics_test.dart
+@@ -33,15 +33,11 @@ Future<void> _start(AnalyticsService a, String id, {bool fiesta = false}) =>
+       fiestaRules: fiesta ? const {'mode': 'auto'} : null,
+     );
+ 
++WordEventContext _ctx([List<String>? modifiers]) =>
++    (round: 2, turn: 3, teamId: 't1', playerId: 'p1', modifiers: modifiers);
++
+ void _show(AnalyticsService a, String word, {List<String>? modifiers}) =>
+-    a.onWordShown(
+-      word: word,
+-      round: 2,
+-      turn: 3,
+-      teamId: 't1',
+-      playerId: 'p1',
+-      modifiers: modifiers,
+-    );
++    a.onWordShown(word, _ctx(modifiers));
+ 
+ /// Blob `guessItAll_analytics_<id>` tel que l'écrit la version en store :
+ /// ni `gameMode`, ni `fiestaRules`, ni `modifiers` sur les events. Partie non
+@@ -121,8 +117,8 @@ void main() {
+       () async {
+     await _start(analytics, 'classic');
+     _show(analytics, 'chat');
+-    analytics.onWordGuessed('chat');
+-    analytics.onWordInvalidated('chat');
++    analytics.onWordGuessed('chat', _ctx());
++    analytics.onWordInvalidated('chat', _ctx());
+ 
+     // `toJson()` est exactement le document envoyé à Firestore.
+     final json = analytics.currentGame!.toJson();
+@@ -137,9 +133,9 @@ void main() {
+       'y compris après un kill, et survivent à la relecture', () async {
+     await _start(analytics, 'fiesta', fiesta: true);
+     _show(analytics, 'chat', modifiers: ['minus_10s']);
+-    analytics.onWordGuessed('chat');
+-    // Vérification après le tour : `_lastShownWord` est déjà remis à zéro.
+-    analytics.onWordInvalidated('chat');
++    analytics.onWordGuessed('chat', _ctx(['minus_10s']));
++    // Vérification après le tour : contexte fourni par l'appelant.
++    analytics.onWordInvalidated('chat', _ctx(['minus_10s']));
+     await analytics.saveCurrentGame();
+ 
+     // Kill : la mémoire est perdue, le disque reste. Le mot suivant est
+@@ -147,7 +143,7 @@ void main() {
+     analytics.forgetCurrentGame();
+     expect(await analytics.resumeGame('fiesta'), isTrue);
+     _show(analytics, 'chien', modifiers: ['minus_10s']);
+-    analytics.onWordPassed('chien');
++    analytics.onWordPassed('chien', _ctx(['minus_10s']));
+     await analytics.saveCurrentGame();
+ 
+     final reread = (await analytics.loadGameAnalytics('fiesta'))!;
+@@ -181,7 +177,7 @@ void main() {
+           isNot(contains(anyOf('mode', 'modifierRecap'))));
+     });
+ 
+-    test('une partie Fiesta archive son mode et son récap', () {
++    test('une partie Fiesta archive son mode et son récap, en faits', () {
+       final result = GameResult(
+         gameId: 'f',
+         playedAt: DateTime(2026, 11, 3),
+@@ -191,13 +187,21 @@ void main() {
+         roundsPlayed: 3,
+         mode: 'fiesta_custom',
+         modifierRecap: const [
+-          ModifierRecapLine(title: 'Rattrapage', detail: 'Bleue +18 s (M2)'),
++          ModifierRecapItem(RecapKind.catchUp,
++              round: 2, teamId: 'bleue', seconds: 18),
++          ModifierRecapItem(RecapKind.choice,
++              round: 3,
++              catalogId: 'block_guesser',
++              teamId: 'rouge',
++              chooserId: 'bleue'),
+         ],
+       );
+-      final reread =
+-          GameResult.tryFromJson(jsonDecode(jsonEncode(result.toJson())))!;
++      final json = jsonEncode(result.toJson());
++      final reread = GameResult.tryFromJson(jsonDecode(json))!;
+       expect(reread.mode, 'fiesta_custom');
+-      expect(reread.modifierRecap!.single.detail, 'Bleue +18 s (M2)');
++      // Archivé en faits (ids, secondes), jamais en phrases (epic fix B5).
++      expect(jsonEncode(reread.toJson()), json);
++      expect(json, isNot(contains('Rattrapage')));
+     });
+   });
+ }
+diff --git a/test/services/fiesta_ensemble_service_test.dart b/test/services/fiesta_ensemble_service_test.dart
+index f9b0d78..a2638bf 100644
+--- a/test/services/fiesta_ensemble_service_test.dart
++++ b/test/services/fiesta_ensemble_service_test.dart
+@@ -3,6 +3,9 @@ import 'dart:convert';
+ import 'package:flutter_test/flutter_test.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_state.dart';
++import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
++import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
+ import 'package:guess_it_all_mobile/services/fiesta_ensemble_service.dart';
+ import 'package:guess_it_all_mobile/services/persisted_schema.dart';
+ 
+@@ -62,6 +65,60 @@ void main() {
+     expect(rules.catchUp.b2, 5);
+   });
+ 
++  test(
++      'écriture figée : une clé vide ou nulle est omise (blob Fiesta et '
++      'ensembles), et l\'absence se relit comme le défaut', () async {
++    final fiesta = FiestaState(rules: FiestaRules(mode: FiestaMode.auto));
++    const frozenFiesta = '{"rules":{"mode":"auto","symmetric":true,'
++        '"autoCalibrate":true,"modifiers":{},"oneOfThree":false,"catchUp":'
++        '{"b1":3,"b2":5,"cap":30,"mal":1,"malCap":15},"drawCount":1,'
++        '"oneAnswer":true}}';
++    expect(jsonEncode(fiesta.toJson()), frozenFiesta);
++    final relu = FiestaState.tryFromJson(jsonDecode(frozenFiesta))!;
++    expect([relu.active, relu.turn, relu.catchUpDue, relu.rules.ensembleName],
++        [isEmpty, isEmpty, isEmpty, isNull]);
++
++    const forAll = ModifierInstance(
++      catalogId: 'no_pass',
++      scope: ModifierScope.round,
++      target: ModifierTarget.both,
++      charges: 0,
++      nature: ModifierNature.malus,
++      round: 2,
++    );
++    expect(
++        jsonEncode(forAll.toJson()),
++        '{"catalogId":"no_pass","scope":"round","target":"both","charges":0,'
++        '"nature":"malus","round":2}');
++
++    await givenPrefs();
++    await service.create(FiestaRules(
++      mode: FiestaMode.custom,
++      ensembleName: 'E',
++      modifiers: {
++        'no_pass': const ModifierSetting(
++            active: true,
++            arrival: ModifierArrival.draw,
++            startRound: 1,
++            charges: 0),
++      },
++    ));
++    final data = jsonDecode((await rawString(key))!)['data'] as Map;
++    expect(data.containsKey('lastUsedId'), isFalse);
++    expect(
++        jsonEncode(data['ensembles'][0]['rules']['modifiers']),
++        '{"no_pass":{"active":true,"arrival":"draw","startRound":1,'
++        '"charges":0}}');
++    expect(
++        (await service.load())
++            .ensembles
++            .single
++            .rules
++            .modifiers['no_pass']!
++            .fixedRound,
++        isNull);
++  });
++
+   test('supprimer le dernier utilisé efface lastUsedId (AC6)', () async {
+     await givenPrefs();
+     final a = (await service.create(defaultEnsembleRules('A')))!;
