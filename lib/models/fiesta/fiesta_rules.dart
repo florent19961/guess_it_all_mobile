@@ -118,7 +118,9 @@ T? readOr<T extends Object>(Map<String, dynamic> json, String key, T fallback) {
 class FiestaRules {
   final FiestaMode mode;
 
-  // Mode Auto : au moins un des deux allumé.
+  // `symmetric` : tirage pour tous, lu par les DEUX modes (en Personnalisé, le
+  // tirage est actif seulement si `symmetric && drawCount > 0`).
+  // `autoCalibrate` : mode Auto ; au moins un des deux allumé en Auto.
   final bool symmetric;
   final bool autoCalibrate;
 
