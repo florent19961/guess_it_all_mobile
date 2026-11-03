@@ -52,9 +52,17 @@ class _GameScreenState extends State<GameScreen> {
   /// Première partie sur ce téléphone : l'aide s'ouvre seule au premier tour
   /// de chaque joueur (jamais l'aide Fiesta, qui reste derrière le « ? »).
   Future<void> _firstGameHelp() async {
-    final player = context.read<GameProvider>().getCurrentPlayer();
+    final provider = context.read<GameProvider>();
+    final player = provider.getCurrentPlayer();
+    final gameId = provider.game.gameId;
+    // Sans gameId (partie d'avant la mise à jour) : pas d'aide automatique.
     final show = player != null &&
-        await FirstGameHelp.claim(FirstGameHelp.preTurn, player.id);
+        gameId != null &&
+        await FirstGameHelp.claim(
+          gameId: gameId,
+          playerId: player.id,
+          screen: FirstGameHelp.preTurn,
+        );
     _helpPending = false;
     if (show && mounted) {
       await CoachMarks.show(context, _preTurnSteps(player.name));

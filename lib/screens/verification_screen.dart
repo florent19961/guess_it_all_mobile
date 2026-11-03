@@ -33,9 +33,17 @@ class _VerificationScreenState extends State<VerificationScreen> {
   bool _helpPending = true;
 
   Future<void> _firstGameHelp() async {
-    final player = context.read<GameProvider>().getCurrentPlayer();
+    final provider = context.read<GameProvider>();
+    final player = provider.getCurrentPlayer();
+    final gameId = provider.game.gameId;
+    // Sans gameId (partie d'avant la mise à jour) : pas d'aide automatique.
     final show = player != null &&
-        await FirstGameHelp.claim(FirstGameHelp.verification, player.id);
+        gameId != null &&
+        await FirstGameHelp.claim(
+          gameId: gameId,
+          playerId: player.id,
+          screen: FirstGameHelp.verification,
+        );
     _helpPending = false;
     if (show && mounted) {
       await CoachMarks.show(context, _helpSteps);
