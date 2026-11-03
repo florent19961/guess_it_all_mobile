@@ -1,7 +1,9 @@
 # Help wiring r1: review brief
 
-Branch `feat/help-wiring`, stacked on `feat/help-kit` (merge-base 16de8d8).
-Patch: `help-wiring-patch-r1.diff` (lib only). Tier: standard (UI). Scoring logic is untouched:
+Branch `feat/help-wiring`, rebased onto main ac80723 together with the help-kit commits
+(rebased kit tip = 0ad6feb, equivalent to origin/feat/help-kit e80d377).
+Patch: `help-wiring-patch-r1.diff` = `git diff 0ad6feb HEAD -- lib` (this lane only). The
+merge-base with origin/feat/help-kit predates main ac80723 and would drag replay-history in. Tier: standard (UI). Scoring logic is untouched:
 no change to `game_provider` or the models. Only displays were removed.
 
 ## What was done
@@ -49,10 +51,15 @@ no change to `game_provider` or the models. Only displays were removed.
    behave the same on Android and iOS, and the system back button closes them.
 10. PickThreeCard loses its `standings` parameter, which my change left unused.
 
-## Not done (waiting)
-- players_screen and history_screen: the lead will give the go once replay-history has merged.
+## Players and history (after replay-history)
+- players: keys on player 1's row, its words button / « N mots prêts » badge, and « Suivant ».
+  `playersHelp` now also explains « N mots prêts » in random mode.
+- history: new `historyHelp` (Trends, a game card you tap for details, « Rejouer » on the
+  first card). With an empty history, the « ? » does nothing because no target is mounted.
+
+## Tests
 - No tests added: the per-player trigger logic is the kit's, unchanged. The full suite is green
-  (216).
+  (223).
 
 ## Focus for the reviewer
 - GlobalKey placement: keys on `Positioned` widgets (HomeButton, GameBackButton), on `Expanded`,
