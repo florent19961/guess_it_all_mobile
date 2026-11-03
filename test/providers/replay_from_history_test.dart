@@ -6,8 +6,11 @@ import 'package:guess_it_all_mobile/models/game_result.dart';
 import 'package:guess_it_all_mobile/models/game_settings.dart';
 import 'package:guess_it_all_mobile/models/game_setup_snapshot.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
+import 'package:guess_it_all_mobile/services/analytics_service.dart';
 import 'package:guess_it_all_mobile/services/game_history_service.dart';
+import 'package:guess_it_all_mobile/services/word_history_service.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
+import 'package:guess_it_all_mobile/utils/word_categories/utils.dart';
 
 import '../helpers/test_prefs.dart';
 
@@ -78,6 +81,20 @@ void main() {
     expect(s.passPenalty, 2);
     expect(provider.pendingFiesta, isNull);
     expect(provider.game.currentScreen, AppConstants.screenSettings);
+
+    // Snapshot bien typé mais hors bornes, et totalWords archivé hors bornes :
+    // tout est écarté, les réglages courants restent.
+    final corrupt = GameResult.tryFromJson({
+      ...jsonDecode(frozen) as Map<String, dynamic>,
+      'totalWords': 101,
+      'setup': {
+        'settings': {...GameSettings().toJson(), 'turnDuration': 0},
+      },
+    })!;
+    expect(corrupt.setup, isNull);
+    await provider.replayFromHistory(corrupt);
+    expect([provider.settings.totalWords, provider.settings.turnDuration],
+        [25, 45]);
   });
 
   test(
@@ -168,5 +185,39 @@ void main() {
     expect(provider.pendingFiesta!.toJson(), rules.toJson());
     expect(provider.game.isGameSuspended, isFalse);
     expect(provider.game.currentScreen, AppConstants.screenFiestaRecap);
+
+    // Aléatoire (réglage de l'archive) : l'écran des mots reste fermé.
+    provider.goToScreen(AppConstants.screenWords);
+    expect(provider.game.currentScreen, AppConstants.screenFiestaRecap);
+  });
+
+  test(
+      'rejouer par-dessus une partie suspendue la clôt UNE fois : historique '
+      'des mots incrémenté une fois, plus de tracking en cours', () async {
+    final provider = await givenProvider();
+    await WordHistoryService().initialize();
+    await WordHistoryService().clearHistory();
+    AnalyticsService().forgetCurrentGame();
+    final words = await generateWordsFromCategoriesAsync(['nature'], 2);
+    for (var i = 0; i < 2; i++) {
+      final id = (provider.addPlayer('J$i')['player'] as dynamic).id as String;
+      provider.updatePlayerWords(id, [words[i]]);
+    }
+    provider.createTeams();
+    provider.randomizeTeams();
+    await provider.startGame();
+    await provider.suspendGame();
+    final archived = GameResult.tryFromJson(jsonDecode(
+        '{"gameId":"g","playedAt":"2026-10-12T21:04:00.000","teams":'
+        '[{"name":"A","playerNames":["Ana"]},{"name":"B","playerNames":["Bob"]}],'
+        '"totalWords":25,"turnDuration":45,"roundsPlayed":3}'))!;
+
+    await provider.replayFromHistory(archived);
+    await provider.replayFromHistory(archived);
+
+    expect(AnalyticsService().isTracking, isFalse);
+    for (final w in words) {
+      expect(WordHistoryService().getSeenCount(w), 1, reason: w);
+    }
   });
 }

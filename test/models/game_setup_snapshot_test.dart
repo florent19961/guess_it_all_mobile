@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/models/game_settings.dart';
 import 'package:guess_it_all_mobile/models/game_setup_snapshot.dart';
+import 'package:guess_it_all_mobile/utils/constants.dart';
 
 void main() {
   test('round-trip JSON : paramètres et règles Fiesta survivent', () {
@@ -11,7 +12,7 @@ void main() {
       settings: GameSettings(
         numberOfTeams: 3,
         numberOfPlayers: 6,
-        wordChoice: 'custom',
+        wordChoice: AppConstants.wordChoiceCustom,
         totalWords: 42,
         turnDuration: 45,
         passPenalty: 2,
@@ -66,6 +67,18 @@ void main() {
           'selectedCategories': [1, 2],
         },
       },
+      // Bien typé mais injouable : hors bornes des curseurs, enum inconnu.
+      for (final bad in <String, Object>{
+        'totalWords': 101,
+        'turnDuration': 0,
+        'passPenalty': -1,
+        'wordChoice': 'Inconnu',
+        'selectedDifficultyLevels': [5],
+        'selectedCategories': <String>[],
+      }.entries)
+        {
+          'settings': {...okSettings, bad.key: bad.value},
+        },
       {'settings': okSettings, 'fiesta': 'x'},
       {
         'settings': okSettings,

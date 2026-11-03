@@ -8,7 +8,7 @@ import '../theme/app_theme.dart';
 import '../utils/constants.dart';
 import '../widgets/common/app_back_button.dart';
 import '../widgets/common/app_button.dart';
-import '../widgets/common/app_modal.dart';
+import '../widgets/common/app_confirm_dialog.dart';
 
 /// Historique des dernières parties : scores, détail par manche et tendances.
 ///
@@ -108,50 +108,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  /// Partie suspendue : confirmer avant de la remplacer (même modale que
-  /// « Nouvelle partie » de l'accueil). Sinon, rejouer directement.
-  void _replay(BuildContext context, GameProvider provider, GameResult game) {
-    if (!provider.game.isGameSuspended) {
-      provider.replayFromHistory(game);
+  /// Partie suspendue : confirmer avant de la remplacer. Sinon, rejouer
+  /// directement.
+  Future<void> _replay(
+      BuildContext context, GameProvider provider, GameResult game) async {
+    if (provider.game.isGameSuspended &&
+        !await AppConfirmDialog.show(
+          context,
+          title: 'Rejouer',
+          message: 'Une partie est en cours. La remplacer par ce réglage ?',
+          confirmText: 'Valider',
+        )) {
       return;
     }
-    AppModal.show(
-      context,
-      title: 'Rejouer',
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            'Une partie est en cours. La remplacer par ce réglage ?',
-            style: TextStyle(fontFamily: 'Poppins', color: Colors.white),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: AppButton(
-                  text: 'Annuler',
-                  variant: AppButtonVariant.ghost,
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: AppButton(
-                  text: 'Valider',
-                  variant: AppButtonVariant.primary,
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    provider.replayFromHistory(game);
-                  },
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+    await provider.replayFromHistory(game);
   }
 
   Widget _buildEmpty() {

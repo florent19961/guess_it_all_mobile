@@ -662,6 +662,9 @@ ni bump de `kCurrentSchemaVersion`. Une archive sans `setup` se rejoue avec ce q
 Classique. Le nombre d'équipes et de joueurs suit toujours les joueurs recréés, et pas un réglage
 archivé qui pourrait les contredire. Des règles Fiesta illisibles invalident tout le snapshot,
 pour ne pas rejouer en Classique une partie qui était Fiesta.
+Revue Codex r1 : bien typé ne suffit pas. Un snapshot hors bornes des curseurs (`Slider` lève),
+ou dont le mode de mots est inconnu, est écarté. Les catégories disparues du catalogue sont filtrées
+au rejeu. `goToScreen` refuse l'écran des mots en mode Aléatoire.
 
 **Noms d'équipe.** `createTeams` tire maintenant des noms drôles et distincts dans
 `kFunnyTeamNames`, à la place de « Équipe N ». Il n'y a pas de bouton pour retirer d'autres noms :

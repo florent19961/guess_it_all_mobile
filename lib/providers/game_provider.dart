@@ -28,7 +28,8 @@ import '../services/analytics_service.dart';
 import '../services/user_service.dart';
 import '../utils/constants.dart';
 import '../utils/team_names.dart';
-import '../utils/word_categories/utils.dart' show lookupWordsMetadata;
+import '../utils/word_categories/utils.dart'
+    show getCategoryListAsync, lookupWordsMetadata;
 
 class GameProvider extends ChangeNotifier {
   final StorageService _storage = StorageService();
@@ -1688,6 +1689,11 @@ class GameProvider extends ChangeNotifier {
   // ========== ACTIONS - NAVIGATION ==========
 
   void goToScreen(String screenName) {
+    // En Aléatoire, les mots tirés ne se montrent jamais (badge « mots prêts »).
+    if (screenName == AppConstants.screenWords &&
+        _settings.wordChoice == AppConstants.wordChoiceRandom) {
+      return;
+    }
     _game = _game.copyWith(currentScreen: screenName);
     notifyListeners();
     // Sauvegarder seulement si une partie est en cours
@@ -1843,16 +1849,28 @@ class GameProvider extends ChangeNotifier {
       ));
     }
 
+    // Archive sans snapshot : n'en reprendre que les valeurs que les
+    // curseurs d'« Avancés » acceptent (`Slider` lève hors bornes).
+    int? inRange(int v, int min, int max) => v >= min && v <= max ? v : null;
     final base = setup?.settings ??
         _settings.copyWith(
-          totalWords: result.totalWords > 0 ? result.totalWords : null,
-          turnDuration: result.turnDuration > 0 ? result.turnDuration : null,
+          totalWords: inRange(result.totalWords, AppConstants.minTotalWords,
+              AppConstants.maxTotalWords),
+          turnDuration: inRange(result.turnDuration,
+              AppConstants.minTurnDuration, AppConstants.maxTurnDuration),
         );
     // Les effectifs suivent les joueurs recréés, pas un réglage archivé qui
     // pourrait les contredire.
+    // Catégories disparues du catalogue depuis l'archive : retirées ; s'il
+    // n'en reste aucune, les catégories courantes.
+    final known = (await getCategoryListAsync()).map((c) => c.id).toSet();
+    final categories = base.selectedCategories.where(known.contains).toList();
     _settings = base.copyWith(
       numberOfTeams: teams.length,
       numberOfPlayers: players.length,
+      selectedCategories: categories.isEmpty
+          ? List.of(_settings.selectedCategories)
+          : categories,
     );
     _players = players;
     _teams = teams;

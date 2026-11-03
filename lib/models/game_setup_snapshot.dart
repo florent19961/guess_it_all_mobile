@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../utils/constants.dart';
 import 'fiesta/fiesta_rules.dart';
 import 'game_settings.dart';
 
@@ -27,6 +28,11 @@ class GameSetupSnapshot {
   /// Tolérant : `null` si la structure est inexploitable, jamais d'exception.
   /// Des règles Fiesta présentes mais illisibles invalident tout le snapshot,
   /// plutôt que de rejouer en Classique une partie qui était Fiesta.
+  ///
+  /// 🔴 Bien typé ne suffit pas : une valeur hors des bornes des curseurs
+  /// d'« Avancés » (`Slider` lève hors de `[min, max]`) ou un mode de mots
+  /// inconnu invalide aussi le snapshot. Les catégories disparues sont
+  /// filtrées par `replayFromHistory`, le catalogue étant asynchrone.
   static GameSetupSnapshot? tryFromJson(Object? json) {
     if (json is! Map) return null;
     final rawSettings = json['settings'];
@@ -46,6 +52,7 @@ class GameSetupSnapshot {
     } catch (_) {
       return null;
     }
+    if (!_isPlayable(settings)) return null;
 
     FiestaRules? fiesta;
     if (rawFiesta != null) {
@@ -54,5 +61,21 @@ class GameSetupSnapshot {
       if (fiesta == null) return null;
     }
     return GameSetupSnapshot(settings: settings, fiesta: fiesta);
+  }
+
+  static bool _isPlayable(GameSettings s) {
+    bool within(int v, int min, int max) => v >= min && v <= max;
+    return (s.wordChoice == AppConstants.wordChoiceRandom ||
+            s.wordChoice == AppConstants.wordChoiceCustom) &&
+        within(s.totalWords, AppConstants.minTotalWords,
+            AppConstants.maxTotalWords) &&
+        within(s.turnDuration, AppConstants.minTurnDuration,
+            AppConstants.maxTurnDuration) &&
+        within(s.passPenalty, AppConstants.minPassPenalty,
+            AppConstants.maxPassPenalty) &&
+        s.selectedCategories.isNotEmpty &&
+        s.selectedDifficultyLevels.isNotEmpty &&
+        s.selectedDifficultyLevels
+            .every(AppConstants.difficultyLabels.containsKey);
   }
 }
