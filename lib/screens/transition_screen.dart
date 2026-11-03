@@ -210,7 +210,7 @@ class _TransitionScreenState extends State<TransitionScreen> {
                   AppButton(
                     key: _nextKey,
                     text: chooser != null
-                        ? 'En attente du choix de ${chooser.name}'
+                        ? 'En attente du choix : ${chooser.name}'
                         : 'Manche $nextRound',
                     variant: AppButtonVariant.primary,
                     size: AppButtonSize.large,
