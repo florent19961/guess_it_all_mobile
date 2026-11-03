@@ -3,11 +3,11 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
 import '../utils/constants.dart';
-import '../services/storage_service.dart';
 import '../widgets/common/app_back_button.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/app_modal.dart';
 import '../widgets/effects/shooting_stars.dart';
+import '../widgets/help/first_game_help.dart';
 import 'fiesta_tutorial_screen.dart';
 import 'rules_tutorial_screen.dart';
 
@@ -176,7 +176,7 @@ class RulesScreen extends StatelessWidget {
   /// Rejoue les aides automatiques de la première partie : chaque joueur les
   /// reverra à son premier tour de la prochaine partie.
   Future<void> _resetHelps(BuildContext context) async {
-    await StorageService().resetFirstGameDone();
+    await FirstGameHelp.reset();
     if (!context.mounted) return;
     AppModal.show<void>(
       context,

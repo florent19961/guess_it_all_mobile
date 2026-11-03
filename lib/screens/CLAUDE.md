@@ -29,7 +29,9 @@ SettingsScreen → (CategoriesScreen) → PlayersScreen → (WordsScreen) → Te
 | `transition_screen.dart` | Entre manches : scores, medailles, indicateur bonus ; Fiesta : tirage, rattrapage, coup de pouce, 1 parmi 3 (route `_PickThreeFlow` : passer le telephone puis choisir, non persistee) |
 | `results_screen.dart` | Podium anime, tableau scores par manche, carte « Modificateurs de la partie » (Fiesta seulement), boutons Rejouer/Stats |
 | `stats_screen.dart` | Stats detaillees : graphique evolution scores (fl_chart), top joueurs, temps moyen |
-| `rules_screen.dart` | Regles completes du jeu (3 manches) |
+| `rules_screen.dart` | Regles completes du jeu (3 manches) + Revoir le tuto / le tuto Fiesta / les aides |
+| `rules_tutorial_screen.dart` | Tuto des regles, 4 cartes (`Navigator.push` via `show`), pénalité de passe lue dans les reglages |
+| `fiesta_tutorial_screen.dart` | Tuto Fiesta, 3 cartes (`Navigator.push` via `show`) |
 | `game_mode_screen.dart` | Nouvelle partie : Classique ou Fiesta |
 | `fiesta_choice_screen.dart` | Fiesta : Mode Auto ou Personnalise |
 | `fiesta_auto_screen.dart` | Mode Auto : 2 interrupteurs (au moins un) + regles communes |

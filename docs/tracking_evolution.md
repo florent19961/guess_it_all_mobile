@@ -670,3 +670,21 @@ au rejeu. `goToScreen` refuse l'écran des mots en mode Aléatoire.
 `kFunnyTeamNames`, à la place de « Équipe N ». Il n'y a pas de bouton pour retirer d'autres noms :
 le renommage manuel suffit. Le nom est déjà une chaîne persistée, donc la forme ne change pas
 (règle 7). Les sessions existantes gardent « Équipe N ».
+## 2026-11-03 — Prise en main : kit d'aide (bouton « ? », coach marks, tutos)
+
+**Quoi.** `lib/widgets/help/` : `HelpButton`, `CoachMarks` (route transparente, voile percé
+autour d'une `GlobalKey`, bulle Suivant / Passer), textes par écran, `TutorialPager` ; deux
+écrans `RulesTutorialScreen` (4 cartes) et `FiestaTutorialScreen` (3 cartes) ouverts par
+`Navigator.push` ; prompt « Première partie ? » sur le premier « Jouer » ; 3 boutons dans Règles.
+Trois clés booléennes neuves : `guessItAll_tutorialSeen`, `guessItAll_fiestaTutorialSeen`,
+`guessItAll_firstGameDone`.
+
+**Pourquoi.** Retour Florent sur la maquette : pas de voile automatique à la première ouverture
+de chaque écran (trop intrusif), un « ? » partout à la place. Seule exception automatique : la
+première partie du téléphone, au premier tour de chaque joueur (avant-tour + vérification),
+parce que la vérification est l'écran le plus mal compris. Le « déjà vu » par joueur reste en
+mémoire (`FirstGameHelp`) : le persister aurait demandé une clé par joueur pour un gain nul.
+Tutos en `Navigator.push` plutôt qu'en route `currentScreen` : pas de toucher à `app.dart` ni à
+la machine d'écrans. Clés neuves, absentes = `false` : aucune migration (règle 7).
+
+**Conséquence.** Le branchement des autres écrans suit `lib/widgets/help/WIRING.md`.
