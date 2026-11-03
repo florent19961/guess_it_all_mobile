@@ -474,3 +474,31 @@ stories.
   rattrapage **accordé**, même si l'équipe n'a pas joué dans la manche suivante.
 - **Archivé tel qu'affiché** (`ModifierRecapLine` = titre + détail formés), comme les scores de
   `GameResult`.
+
+---
+
+## 2026-11-03 — Fiesta 2-8 : effets de tour (passe bloquée ou gratuite, devineur bloqué, à l'envers)
+
+**Quoi.** `no_pass` (Passer désactivé, `passWord` refuse), `free_pass` ×N (N premières passes
+du tour à 0 s, compteur « Passes gratuites : k / N »), `block_guesser` (les adversaires
+choisissent un devineur avant le tour, annonce « X ne répond pas »), `reversed` (mot en
+MAJUSCULES inversé sur l'écran de tour seulement), contraintes de mime / dessin et texte Q6
+annoncés avant le tour. Règles pures dans `models/fiesta/turn_effects.dart`.
+
+**Pourquoi ces choix.**
+- **Une seule garde** (`GameProvider.canPassWith`) sur la pénalité **effective**, lue par
+  `passWord` et par le bouton : sinon le bouton s'affiche actif et le provider refuse. Sous
+  `no_pass`, sortie **avant** `onWordPassed` : aucune passe fantôme dans les analytics.
+- **Compteurs dans `FiestaState.turn`** (`freePassesUsed`, `blockedPlayerId`) : la clé existait
+  déjà (map vide, relue tolérante), donc **aucun changement de forme** de `guessItAll_*`. Persistés
+  (survivent à un kill) et restaurés par le retour arrière (snapshot `GameState`). Vidés par
+  `validateWords`, donc chaque tour (continuation comprise) repart à 0.
+- **Portée tour consommée à la fin du tour, pas de la manche** : `validateWords` retire les
+  instances de portée tour de l'équipe quand le tour est vraiment fini ; en fin de manche, la même
+  équipe poursuit en N+1, l'instance reste et tombe à la fin de la continuation (invariant noté
+  par 2-5). Personne n'en pose encore (2-10) : testé avec une instance injectée.
+- **Devineur bloqué choisi au début du tour**, pas au tirage : celui qui fait deviner tourne.
+  Sélecteur fermé sans choix → on reste sur l'avant-tour, le tour ne démarre pas.
+
+**Conséquence.** Une partie Classique ne voit aucune différence : sans modificateur, pénalité
+effective = pénalité réglée, garde identique.
