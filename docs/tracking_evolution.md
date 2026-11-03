@@ -553,3 +553,25 @@ parmi 3 » et « Coup de pouce de l'app ».
 
 **Conséquence.** Les malus reçus passent par la révélation de 2-5 et les tags analytics de 2-7
 sans code dédié : ils sont dans `active` comme le tirage.
+
+## 2026-11-03 — Fiesta 2-11 : Deux mots à la fois
+
+**Quoi.** Bonus à charge (1 par équipe et par manche), allumé sur l'avant-tour comme le ×2,
+annoncé sur la même carte. Pendant le tour : deux cartes, chacune avec Trouvé / Passer ; la
+carte traitée est remplacée par un mot ≠ l'autre, l'autre ne bouge pas ; une seule carte quand
+il ne reste qu'un mot. À l'expiration, les deux mots partent à la vérification, chacun avec son
+choix.
+
+**Pourquoi ces choix.**
+- **Carte B dans `fiesta.turn`** (`secondWord`, puis `secondExpiredWord`), pas dans `GameState` :
+  le blob Classique ne change pas d'un octet, clés absentes = un seul mot, pas de bump de schéma.
+  Le retour arrière et l'app tuée les retrouvent sans code dédié (snapshot = `toJson`).
+- **Le mot visé est un argument** de `markWordAsGuessed` / `passWord` : un tap sur une carte
+  déjà remplacée est ignoré par le provider (en plus du verrou visuel de 0,3 s).
+- **`resolveTurn(expiredWords:)`** : N mots expirés, toujours pur ; adaptation mécanique des
+  tests existants.
+- **Analytics : durée par mot** (`AnalyticsService._shownAt`) au lieu du « dernier mot affiché »,
+  qui jetait en silence les événements de l'autre carte. `two_words` dans les `modifiers`.
+
+**Conséquence.** Pas d'indicateur sur `HistoryEntry` (forme d'une clé `guessItAll_*` de premier
+niveau) : le tag analytics porte l'information.
