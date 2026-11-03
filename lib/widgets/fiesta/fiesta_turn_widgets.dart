@@ -54,8 +54,12 @@ class _FiestaWordCardState extends State<FiestaWordCard>
     with SingleTickerProviderStateMixin {
   late final AnimationController _entry =
       AnimationController(vsync: this, duration: kWordCardLock)..forward();
-  late final Animation<double> _curve =
+  late final CurvedAnimation _curve =
       CurvedAnimation(parent: _entry, curve: Curves.easeOut);
+  late final Animation<double> _opacity =
+      Tween<double>(begin: 0.4, end: 1).animate(_curve);
+  late final Animation<double> _scale =
+      Tween<double>(begin: 0.94, end: 1).animate(_curve);
 
   @override
   void didUpdateWidget(FiestaWordCard oldWidget) {
@@ -65,10 +69,13 @@ class _FiestaWordCardState extends State<FiestaWordCard>
 
   @override
   void dispose() {
+    _curve.dispose();
     _entry.dispose();
     super.dispose();
   }
 
+  // Garde au moment du tap : couvre un appui commencé avant le changement de
+  // mot et relâché après (l'IgnorePointer, lui, retire l'effet d'appui).
   VoidCallback? _locked(VoidCallback? action) {
     if (action == null) return null;
     return () {
@@ -80,9 +87,9 @@ class _FiestaWordCardState extends State<FiestaWordCard>
   Widget build(BuildContext context) {
     final label = widget.label;
     return FadeTransition(
-      opacity: Tween<double>(begin: 0.4, end: 1).animate(_curve),
+      opacity: _opacity,
       child: ScaleTransition(
-        scale: Tween<double>(begin: 0.94, end: 1).animate(_curve),
+        scale: _scale,
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -122,26 +129,33 @@ class _FiestaWordCardState extends State<FiestaWordCard>
                   ),
                 ),
               ),
-              Row(
-                children: [
-                  Expanded(
-                    child: _CardButton(
-                      label: widget.passLabel,
-                      color: AppColors.gray600,
-                      textColor: Colors.white,
-                      onTap: _locked(widget.onPass),
+              AnimatedBuilder(
+                animation: _entry,
+                builder: (context, child) => IgnorePointer(
+                  ignoring: _entry.isAnimating,
+                  child: child,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _CardButton(
+                        label: widget.passLabel,
+                        color: AppColors.gray600,
+                        textColor: Colors.white,
+                        onTap: _locked(widget.onPass),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _CardButton(
-                      label: 'Trouvé ✓',
-                      color: AppColors.secondaryCyan,
-                      textColor: AppColors.backgroundMain,
-                      onTap: _locked(widget.onGuessed),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _CardButton(
+                        label: 'Trouvé ✓',
+                        color: AppColors.secondaryCyan,
+                        textColor: AppColors.backgroundMain,
+                        onTap: _locked(widget.onGuessed),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -223,7 +237,10 @@ class TwoWordsLayout extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Clé = le mot (A ≠ B, doublons refusés à la saisie) : la carte B qui
+        // passe seule en tête garde son état, sans se ré-animer ni se reverrouiller.
         FiestaWordCard(
+          key: ValueKey(firstWord),
           word: firstWord,
           reversed: reversed,
           label: second == null ? null : 'Mot A',
@@ -235,6 +252,7 @@ class TwoWordsLayout extends StatelessWidget {
         if (second != null) ...[
           const SizedBox(height: 12),
           FiestaWordCard(
+            key: ValueKey(second),
             word: second,
             reversed: reversed,
             label: 'Mot B',
@@ -252,7 +270,7 @@ class TwoWordsLayout extends StatelessWidget {
 /// Bandeau statique d'une contrainte annoncée de la manche 3 (mime, dessin) :
 /// nom et description du catalogue (2-8).
 class MimeConstraintBanner extends StatelessWidget {
-  /// Les ids du catalogue que ce bandeau sait afficher.
+  /// Les ids du catalogue que ce bandeau sait afficher (= les `round3Only`).
   static const Map<String, IconData> icons = {
     'mime_no_arms': Icons.do_not_touch,
     'mime_no_fists': Icons.back_hand,

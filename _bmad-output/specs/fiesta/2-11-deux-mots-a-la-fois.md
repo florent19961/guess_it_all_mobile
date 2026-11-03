@@ -128,3 +128,8 @@ risqué.
 5. Tuer l'app en plein tour, rouvrir : les deux mêmes cartes.
 6. Petits écrans (iPhone SE, petit Android) : deux cartes + chrono + badges tiennent sans
    défilement, zones sûres respectées.
+   Refaire le contrôle avec la **taille de texte système au maximum** : les cartes de
+   `TwoWordsLayout` (`lib/widgets/fiesta/fiesta_turn_widgets.dart`) ne rétrécissent pas en
+   hauteur. Sur `turn_screen`, placer `TwoWordsLayout` dans un `Flexible` /
+   `SingleChildScrollView` ; si ça déborde, envelopper le mot de la carte, puis chaque carte,
+   dans un `Flexible`.

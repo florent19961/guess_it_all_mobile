@@ -85,8 +85,10 @@ mot est grillé jusqu'à la fin du tour. »
 
 - Provider, pénalité de passe (tier ⑥) : critères 1, 2 et 3, plus le Classique inchangé (7).
   Dans `test/providers/turn_time_test.dart` ou à côté.
-- `reverseForDisplay` : un test pur avec « Tour Eiffel », un accent (« Été » → « ÉTÉ »), et
-  un emoji. C'est une transformation de chaîne au comportement non évident, d'où ce test.
+- `reversedWordDisplay` (`lib/utils/reversed_word.dart`) : un test pur avec « Tour Eiffel », un
+  accent (« Été » → « ÉTÉ »), et un emoji. C'est une transformation de chaîne au comportement non
+  évident, d'où ce test. **Déjà livré** par le kit visuel (`test/utils/reversed_word_test.dart`) :
+  2-8 n'a plus de test pur à écrire. 2-8 n'utilise que cette fonction, pas `FiestaWordCard`.
 - Pas de widget test.
 
 ## Recette device (Florent, Android + iOS)
