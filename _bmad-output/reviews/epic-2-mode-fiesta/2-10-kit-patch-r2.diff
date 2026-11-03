@@ -1,0 +1,906 @@
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index 83de793..83dcced 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -22,6 +22,7 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn, catchUpDue}`. `turn` est vide pour l'instant (compteurs des stories d'effets). `catchUpDue` : id d'équipe → secondes dues (négatives = malus du leader), posé par `nextRound`, consommé au premier tour non-continuation |
+ | `fiesta/modifier_recap.dart` | fonctions pures | `fiestaModeId` (`fiesta_auto`/`fiesta_custom`), `fiestaModeLabel`, `buildModifierRecap` : récap « Modificateurs de la partie » **recalculé** (tirage par graine, rattrapage sur les scores cumulés par manche), rien de persisté pendant la partie |
+ | `fiesta/turn_time.dart` | fonctions pures | `composeTurnSeconds` (base + rattrapage − malus du leader − 10 s × `minus_10s`, plancher `kTurnFloorSeconds` = 10 ; continuation = ses secondes, sans modificateur) ; `computeCatchUp` (k × écart avec la tête, plafonds, co-leaders tous en tête, égalité = rien) ; `effectiveCatchUp` (Auto → auto-calibrage, Personnalisé → curseurs) |
++| `fiesta/offers.dart` | `Standings`, `OfferStrength`, fonctions pures | 2-10 : `kOfferStrength` + `strengthForGap` (≤3 légère, ≤7 moyenne, >7 forte, **à recalibrer**), cran vide → cran inférieur ; `Standings` (leader unique ou `null`, `gapOf`, `choosingOrder` dernière → avant-dernière, vide si égalité ; map construite **dans l'ordre des équipes**) ; `pickThreeOffers(…, roundDraw:, choices:, blockImmuneTeamIds:)` (≤3 cartes utiles : compatibles, plafond 2, pas un modificateur que la cible a déjà ; vide = équipe sautée) ; `appBoost(…, roundDraw:)` (Auto : 1 bonus par menée + 1 malus au leader, jamais `block_guesser`). Graine `offerSeed(gameId, round, teamId)` **figée par test**. 🔴 Lane cœur : persister les choix en `Map<chooserTeamId, ModifierInstance>` (un malus vise le leader, la clé dit qui l'a choisi) ; prochaine équipe = 1ʳᵉ de `choosingOrder` absente de la map dont les offres ne sont pas vides |
+ | `fiesta/fiesta_ensemble.dart` | `FiestaEnsemble`, `defaultEnsembleRules`, extensions `copyWith`, `catchUpOn` | Ensemble Personnalisé `{id, rules}` (nom = `rules.ensembleName`, mode toujours `custom`), défauts de la maquette (`mkSet`). Persisté par `FiestaEnsembleService` |
+ | `fiesta/ensemble_validation.dart` | `validateEnsemble` | Validation **pure** d'un ensemble (messages FR) : bloque l'enregistrement d'une config impossible |
+ 
+diff --git a/lib/models/fiesta/offers.dart b/lib/models/fiesta/offers.dart
+new file mode 100644
+index 0000000..0c4e409
+--- /dev/null
++++ b/lib/models/fiesta/offers.dart
+@@ -0,0 +1,283 @@
++import 'dart:math';
++
++import 'fiesta_rules.dart';
++import 'modifier_catalog.dart';
++import 'modifier_instance.dart';
++import 'symmetric_draw.dart';
++
++/// « 1 parmi 3 » (Personnalisé) et « Coup de pouce de l'app » (Auto), story
++/// 2-10. Tout est pur et DÉTERMINISTE par `(gameId, manche, équipe)` : une app
++/// tuée ou un retour arrière retrouvent les mêmes offres (voir [drawSeed]).
++///
++/// Vocabulaire : [round] = la manche N qui vient de finir ; les effets portent
++/// sur toute la manche N+1 (Q7).
++
++enum OfferStrength { light, medium, heavy }
++
++/// 🔴 À RECALIBRER : table « au doigt mouillé » (Q7). Un id absent n'est
++/// jamais proposé.
++const Map<String, OfferStrength> kOfferStrength = {
++  'free_pass': OfferStrength.light,
++  'minus_10s': OfferStrength.light,
++  'reversed': OfferStrength.light,
++  'mime_no_fists': OfferStrength.light,
++  'double_points': OfferStrength.medium,
++  'two_words': OfferStrength.medium,
++  'no_pass': OfferStrength.medium,
++  'draw': OfferStrength.medium,
++  'block_guesser': OfferStrength.heavy,
++  'mime_no_arms': OfferStrength.heavy,
++  'mime_eyes_closed': OfferStrength.heavy,
++};
++
++/// 🔴 À RECALIBRER : seuils de la maquette, écart ≤ 3 → légère, ≤ 7 →
++/// moyenne, au-delà → forte.
++OfferStrength strengthForGap(int gap) => gap <= 3
++    ? OfferStrength.light
++    : gap <= 7
++        ? OfferStrength.medium
++        : OfferStrength.heavy;
++
++String strengthLabel(OfferStrength s) => switch (s) {
++      OfferStrength.light => 'légère',
++      OfferStrength.medium => 'moyenne',
++      OfferStrength.heavy => 'forte',
++    };
++
++/// Nombre d'offres montrées à une équipe qui choisit.
++const int kOfferCount = 3;
++
++/// Classement de fin de manche, même lecture que `computeCatchUp` (2-6).
++class Standings {
++  /// Score par id d'équipe, dans l'ordre des équipes.
++  final Map<String, int> scores;
++
++  const Standings(this.scores);
++
++  int get _top => scores.values.reduce(max);
++
++  /// Égalité générale (Q3) : ni 1 parmi 3, ni coup de pouce.
++  bool get isTie => scores.length < 2 || scores.values.every((s) => s == _top);
++
++  /// Équipes en tête (plusieurs = co-leaders).
++  List<String> get leaderIds => isTie
++      ? const []
++      : [
++          for (final e in scores.entries)
++            if (e.value == _top) e.key
++        ];
++
++  /// LA cible d'un malus : l'équipe en tête, `null` si égalité ou co-leaders
++  /// (pas de cible unique, donc aucun malus proposé ni donné).
++  String? get leaderId => leaderIds.length == 1 ? leaderIds.single : null;
++
++  /// Écart avec la tête pour une équipe menée ; avec la 2ᵉ pour le leader.
++  int gapOf(String teamId) {
++    final score = scores[teamId]!;
++    if (score < _top) return _top - score;
++    final others = scores.values.where((s) => s < _top);
++    return others.isEmpty ? 0 : _top - others.reduce(max);
++  }
++
++  /// Ordre de choix : les équipes NON en tête, de la dernière à la meilleure.
++  /// À score égal, l'ordre des équipes (tri stable). Vide en cas d'égalité.
++  List<String> get choosingOrder {
++    if (isTie) return const [];
++    final top = _top;
++    final trailing = scores.entries.where((e) => e.value < top).toList();
++    final indexed = trailing.indexed.toList()
++      ..sort((a, b) {
++        final byScore = a.$2.value.compareTo(b.$2.value);
++        return byScore != 0 ? byScore : a.$1.compareTo(b.$1);
++      });
++    return [for (final (_, e) in indexed) e.key];
++  }
++}
++
++/// Le 1 parmi 3 a-t-il lieu après la manche [round] ? (Personnalisé, `pick3`
++/// allumé, après M1 ou M2 seulement : après M3 on va aux résultats.)
++bool isPickThreeOn(FiestaRules rules, int round) =>
++    rules.mode == FiestaMode.custom && rules.oneOfThree && round < 3;
++
++/// Le coup de pouce de l'app a-t-il lieu après la manche [round] ? (Auto,
++/// « Auto-calibrage » allumé, après M1 ou M2.)
++bool isAppBoostOn(FiestaRules rules, int round) =>
++    rules.mode == FiestaMode.auto && rules.autoCalibrate && round < 3;
++
++/// Graine d'une équipe : `(gameId, manche, équipe)`. Réutilise le FNV-1a de
++/// [drawSeed] (chaîne `gameId#teamId#round`, distincte de celle du tirage).
++int offerSeed(String gameId, int round, String teamId) =>
++    drawSeed('$gameId#$teamId', round);
++
++/// Candidats d'une [nature] à la [strength] voulue pour la manche [round]+1,
++/// dans l'ordre du catalogue (le mélange doit partir de la même liste).
++///
++/// Un bonus vise [beneficiaryId], un malus vise [leaderId] (aucun malus si
++/// `null`). Personnalisé : seuls les modificateurs actifs réglés sur
++/// « proposé à l'équipe menée » et dont la manche de départ est atteinte.
++/// « Bloquer un devineur » : jamais en Auto (personne ne choisit, donc
++/// personne ne désigne le devineur) ; en Personnalisé, jamais contre une
++/// équipe de [blockImmuneTeamIds].
++List<ModifierInstance> _candidates({
++  required FiestaRules rules,
++  required int round,
++  required OfferStrength strength,
++  required Set<ModifierNature> natures,
++  required String beneficiaryId,
++  required String? leaderId,
++  required Set<String> blockImmuneTeamIds,
++}) {
++  final next = round + 1;
++  final custom = rules.mode == FiestaMode.custom;
++  final out = <ModifierInstance>[];
++  for (final def in kModifierCatalog) {
++    if (!natures.contains(def.nature) ||
++        kOfferStrength[def.id] != strength ||
++        !isEligibleForRound(def, next)) {
++      continue;
++    }
++    var charges = def.defaultCharges;
++    if (custom) {
++      final setting = rules.modifiers[def.id];
++      if (setting == null ||
++          !setting.active ||
++          setting.arrival != ModifierArrival.offer ||
++          setting.startRound > next) {
++        continue;
++      }
++      charges = setting.charges;
++    }
++    final targetTeam =
++        def.nature == ModifierNature.bonus ? beneficiaryId : leaderId;
++    if (targetTeam == null) continue;
++    final toPlayer = def.defaultTarget == ModifierTarget.player;
++    if (toPlayer && (!custom || blockImmuneTeamIds.contains(targetTeam))) {
++      continue;
++    }
++    out.add(ModifierInstance(
++      catalogId: def.id,
++      scope: ModifierScope.round,
++      target: toPlayer ? ModifierTarget.player : ModifierTarget.team,
++      teamId: targetTeam,
++      charges: charges,
++      nature: def.nature,
++      round: next,
++    ));
++  }
++  return out;
++}
++
++/// Une carte a-t-elle un effet ? Non si elle est incompatible ou dépasse le
++/// plafond de 2 pour sa cible (Q8), ni si le même modificateur touche déjà
++/// sa cible (tirage, choix ou cadeau précédent : la carte serait vide).
++bool _useful(List<ModifierInstance> taken, ModifierInstance c) =>
++    canAdd(taken, c) &&
++    !taken.any((t) => t.catalogId == c.catalogId && t.concernsSameTeamAs(c));
++
++/// Jusqu'à [count] cartes utiles (voir [_useful]) à la force de [gap],
++/// mélangées par la graine de [teamId]. Si cette force n'en a AUCUNE, on
++/// descend d'un cran (forte → moyenne → légère) ; vide seulement si tous les
++/// crans le sont.
++List<ModifierInstance> _offer({
++  required FiestaRules rules,
++  required String gameId,
++  required int round,
++  required String teamId,
++  required int gap,
++  required Set<ModifierNature> natures,
++  required String? leaderId,
++  required Set<String> blockImmuneTeamIds,
++  required List<ModifierInstance> taken,
++  required int count,
++}) {
++  final random = Random(offerSeed(gameId, round, teamId));
++  for (var s = strengthForGap(gap).index; s >= 0; s--) {
++    final candidates = _candidates(
++      rules: rules,
++      round: round,
++      strength: OfferStrength.values[s],
++      natures: natures,
++      beneficiaryId: teamId,
++      leaderId: leaderId,
++      blockImmuneTeamIds: blockImmuneTeamIds,
++    )..shuffle(random);
++    final picked =
++        candidates.where((c) => _useful(taken, c)).take(count).toList();
++    if (picked.isNotEmpty) return picked;
++  }
++  return const [];
++}
++
++/// Les offres (jusqu'à 3) montrées à [teamId] après la manche [round].
++/// Liste vide = l'équipe est sautée.
++///
++/// - [roundDraw] = le tirage de la manche N+1 (`roundModifiers`).
++/// - [choices] = les choix déjà faits, par id de l'équipe QUI a choisi (un
++///   malus choisi vise le leader : sans cette clé, on ne saurait plus qui l'a
++///   choisi, ni qui désigne le devineur de « Bloquer un devineur »).
++/// - [blockImmuneTeamIds] : équipes qui ne peuvent pas recevoir « Bloquer un
++///   devineur » (2 joueurs ou moins).
++///
++/// Prochaine équipe de la file = la première de [Standings.choosingOrder]
++/// absente de [choices] dont les offres ne sont pas vides.
++List<ModifierInstance> pickThreeOffers({
++  required FiestaRules rules,
++  required String gameId,
++  required int round,
++  required Standings standings,
++  required String teamId,
++  required List<ModifierInstance> roundDraw,
++  Map<String, ModifierInstance> choices = const {},
++  Set<String> blockImmuneTeamIds = const {},
++}) {
++  if (!standings.choosingOrder.contains(teamId)) return const [];
++  return _offer(
++    rules: rules,
++    gameId: gameId,
++    round: round,
++    teamId: teamId,
++    gap: standings.gapOf(teamId),
++    natures: ModifierNature.values.toSet(),
++    leaderId: standings.leaderId,
++    blockImmuneTeamIds: blockImmuneTeamIds,
++    taken: [...roundDraw, ...choices.values],
++    count: kOfferCount,
++  );
++}
++
++/// Coup de pouce de l'app (Auto) après la manche [round] : au plus un bonus
++/// par équipe menée (dans l'ordre de [Standings.choosingOrder]), puis au plus
++/// un malus pour l'équipe en tête, chacun à la force de l'écart de l'équipe
++/// concernée (un cran plus bas si elle est vide). Mêmes exclusions que le
++/// 1 parmi 3, vis-à-vis de [roundDraw] (le tirage de N+1) et des cadeaux déjà
++/// faits. Jamais de « Bloquer un devineur ».
++List<ModifierInstance> appBoost({
++  required FiestaRules rules,
++  required String gameId,
++  required int round,
++  required Standings standings,
++  required List<ModifierInstance> roundDraw,
++}) {
++  final gifts = <ModifierInstance>[];
++  final leaderId = standings.leaderId;
++  void give(String teamId, ModifierNature nature) {
++    gifts.addAll(_offer(
++      rules: rules,
++      gameId: gameId,
++      round: round,
++      teamId: teamId,
++      gap: standings.gapOf(teamId),
++      natures: {nature},
++      leaderId: leaderId,
++      blockImmuneTeamIds: const {},
++      taken: [...roundDraw, ...gifts],
++      count: 1,
++    ));
++  }
++
++  for (final teamId in standings.choosingOrder) {
++    give(teamId, ModifierNature.bonus);
++  }
++  if (leaderId != null) give(leaderId, ModifierNature.malus);
++  return gifts;
++}
+diff --git a/lib/widgets/CLAUDE.md b/lib/widgets/CLAUDE.md
+index 00e3edd..b6ac5ca 100644
+--- a/lib/widgets/CLAUDE.md
++++ b/lib/widgets/CLAUDE.md
+@@ -8,7 +8,7 @@ Widgets reutilisables organises en deux sous-repertoires.
+ |------------|------|
+ | `common/` | Composants UI reutilisables (boutons, inputs, modals, sliders, toggles) |
+ | `effects/` | Effets visuels et animations de fond |
+-| `fiesta/` | Squelette et cartes des ecrans de choix du mode Fiesta (retour systeme Android gere) ; kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawCard` (« Tirage de la manche N »), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `TurnTimeCard` (« Temps du tour », detail + total, avant-tour) et `CatchUpCard` (« Rattrapage », transition) |
++| `fiesta/` | Squelette et cartes des ecrans de choix du mode Fiesta (retour systeme Android gere) ; kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawCard` (« Tirage de la manche N »), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `TurnTimeCard` (« Temps du tour », detail + total, avant-tour) et `CatchUpCard` (« Rattrapage », transition) ; kit 2-10 (`offer_widgets.dart`, sans Provider) : `PickThreeCard`, `PassPhonePanel`, `OfferChoiceBody` (sélection tenue par l'appelant), `AppBoostCard` |
+ 
+ ## Kit visuel du tour Fiesta (`fiesta/fiesta_turn_widgets.dart`)
+ 
+diff --git a/lib/widgets/fiesta/offer_widgets.dart b/lib/widgets/fiesta/offer_widgets.dart
+new file mode 100644
+index 0000000..223e335
+--- /dev/null
++++ b/lib/widgets/fiesta/offer_widgets.dart
+@@ -0,0 +1,405 @@
++import 'package:flutter/material.dart';
++
++import '../../models/fiesta/modifier_catalog.dart';
++import '../../models/fiesta/modifier_instance.dart';
++import '../../models/fiesta/offers.dart';
++import '../../models/team.dart';
++import '../../theme/app_theme.dart';
++import '../common/app_button.dart';
++import 'fiesta_setup_widgets.dart';
++import 'modifier_badge.dart';
++
++/// Kit visuel de 2-10 (maquettes `r2` et `pick3`) : données en entrée,
++/// callbacks en sortie, aucune lecture de Provider.
++
++String _name(List<Team> teams, String id) {
++  for (final t in teams) {
++    if (t.id == id) return t.name;
++  }
++  return id;
++}
++
++/// Force RÉELLE d'une offre : elle peut être d'un cran sous celle de
++/// l'écart, quand la force de l'écart n'avait aucune carte utile.
++String _strength(ModifierInstance offer) =>
++    strengthLabel(kOfferStrength[offer.catalogId] ?? OfferStrength.light);
++
++Color _color(List<Team> teams, String id) {
++  final index = teams.indexWhere((t) => t.id == id);
++  return AppColors.getTeamColor(index < 0 ? 0 : index);
++}
++
++/// « Choix 1 parmi 3 » sur la transition. [nextTeamId] = la prochaine équipe
++/// de la file ; `null` = file vide (tous les choix sont faits).
++class PickThreeCard extends StatelessWidget {
++  final List<Team> teams;
++  final Standings standings;
++  final String? nextTeamId;
++  final VoidCallback onPassPhone;
++
++  const PickThreeCard({
++    required this.teams,
++    required this.standings,
++    required this.nextTeamId,
++    required this.onPassPhone,
++    super.key,
++  });
++
++  @override
++  Widget build(BuildContext context) {
++    final next = nextTeamId;
++    if (next == null) {
++      return const FiestaCard(
++        title: 'Choix 1 parmi 3',
++        children: [FiestaHint('Tous les choix sont faits.')],
++      );
++    }
++    final name = _name(teams, next);
++    final gap = standings.gapOf(next);
++    return FiestaCard(
++      title: 'Choix 1 parmi 3',
++      children: [
++        FiestaHint('$name, menée de $gap point${gap > 1 ? 's' : ''}, va '
++            'choisir une carte.'),
++        const SizedBox(height: 10),
++        AppButton(
++          text: 'Passer le téléphone à $name',
++          variant: AppButtonVariant.secondary,
++          fullWidth: true,
++          onPressed: onPassPhone,
++        ),
++      ],
++    );
++  }
++}
++
++/// Écran « Passer le téléphone » : sépare deux équipes de la file sans rien
++/// révéler des offres de la suivante.
++class PassPhonePanel extends StatelessWidget {
++  final String teamName;
++  final Color teamColor;
++  final VoidCallback onReady;
++
++  const PassPhonePanel({
++    required this.teamName,
++    required this.teamColor,
++    required this.onReady,
++    super.key,
++  });
++
++  @override
++  Widget build(BuildContext context) {
++    return Material(
++      color: AppColors.backgroundMain,
++      child: SafeArea(
++        child: Center(
++          child: SingleChildScrollView(
++            padding: const EdgeInsets.all(24),
++            child: Column(
++              mainAxisSize: MainAxisSize.min,
++              crossAxisAlignment: CrossAxisAlignment.stretch,
++              children: [
++                Text(
++                  'Passe le téléphone à',
++                  textAlign: TextAlign.center,
++                  style: AppTextStyles.bodySmall
++                      .copyWith(color: AppColors.gray400),
++                ),
++                const SizedBox(height: 8),
++                Text(
++                  teamName,
++                  textAlign: TextAlign.center,
++                  style: AppTextStyles.subtitle(fontSize: 40)
++                      .copyWith(color: teamColor),
++                ),
++                const SizedBox(height: 8),
++                Text(
++                  'Les autres équipes ne regardent pas l\'écran.',
++                  textAlign: TextAlign.center,
++                  style: AppTextStyles.bodySmall
++                      .copyWith(color: AppColors.gray400),
++                ),
++                const SizedBox(height: 24),
++                AppButton(
++                  text: 'C\'est nous : voir les cartes',
++                  size: AppButtonSize.large,
++                  fullWidth: true,
++                  onPressed: onReady,
++                ),
++              ],
++            ),
++          ),
++        ),
++      ),
++    );
++  }
++}
++
++/// Corps de l'écran de choix (maquette `pick3`) : équipe, écart et force,
++/// ordre de la file, offres, « Valider ce choix ». La sélection est tenue par
++/// l'appelant ([selected], [onSelect]).
++class OfferChoiceBody extends StatelessWidget {
++  /// La manche N qui vient de finir.
++  final int round;
++  final List<Team> teams;
++  final Standings standings;
++  final String chooserId;
++  final List<ModifierInstance> offers;
++  final int? selected;
++  final ValueChanged<int> onSelect;
++  final VoidCallback onConfirm;
++
++  const OfferChoiceBody({
++    required this.round,
++    required this.teams,
++    required this.standings,
++    required this.chooserId,
++    required this.offers,
++    required this.selected,
++    required this.onSelect,
++    required this.onConfirm,
++    super.key,
++  });
++
++  @override
++  Widget build(BuildContext context) {
++    final gap = standings.gapOf(chooserId);
++    final order = standings.choosingOrder;
++    final leaders = standings.leaderIds.map((id) => _name(teams, id)).toList();
++    final hint = AppTextStyles.bodySmall
++        .copyWith(fontSize: 12.5, color: AppColors.gray400);
++    return SafeArea(
++      child: Padding(
++        padding: const EdgeInsets.all(24),
++        child: Column(
++          crossAxisAlignment: CrossAxisAlignment.stretch,
++          children: [
++            Expanded(
++              child: SingleChildScrollView(
++                child: Column(
++                  crossAxisAlignment: CrossAxisAlignment.stretch,
++                  children: [
++                    Text('Entre la manche $round et la manche ${round + 1}',
++                        textAlign: TextAlign.center, style: hint),
++                    const SizedBox(height: 4),
++                    Text(
++                      _name(teams, chooserId),
++                      textAlign: TextAlign.center,
++                      style: AppTextStyles.subtitle(fontSize: 34)
++                          .copyWith(color: _color(teams, chooserId)),
++                    ),
++                    Text(
++                      'Menée de $gap point${gap > 1 ? 's' : ''}'
++                      '${offers.isEmpty ? '' : ' · offre ${_strength(offers.first)}'}',
++                      textAlign: TextAlign.center,
++                      style: hint,
++                    ),
++                    const SizedBox(height: 12),
++                    Wrap(
++                      crossAxisAlignment: WrapCrossAlignment.center,
++                      spacing: 6,
++                      runSpacing: 6,
++                      children: [
++                        Text('Ordre :', style: hint),
++                        for (final (i, id) in order.indexed) ...[
++                          if (i > 0) Text('→', style: hint),
++                          _QueueChip(
++                              name: _name(teams, id), now: id == chooserId),
++                        ],
++                        Text(
++                          '· ${leaders.join(', ')} (en tête) '
++                          '${leaders.length > 1 ? 'ne choisissent' : 'ne choisit'}'
++                          ' pas',
++                          style: hint,
++                        ),
++                      ],
++                    ),
++                    const SizedBox(height: 16),
++                    for (final (i, offer) in offers.indexed)
++                      _OfferCard(
++                        offer: offer,
++                        who: offer.teamId == chooserId
++                            ? 'Pour vous'
++                            : 'Contre ${_name(teams, offer.teamId!)}',
++                        selected: selected == i,
++                        onTap: () => onSelect(i),
++                      ),
++                  ],
++                ),
++              ),
++            ),
++            const SizedBox(height: 16),
++            AppButton(
++              text: selected == null ? 'Choisis une carte' : 'Valider ce choix',
++              size: AppButtonSize.large,
++              fullWidth: true,
++              disabled: selected == null,
++              onPressed: selected == null ? null : onConfirm,
++            ),
++          ],
++        ),
++      ),
++    );
++  }
++}
++
++class _QueueChip extends StatelessWidget {
++  final String name;
++  final bool now;
++
++  const _QueueChip({required this.name, required this.now});
++
++  @override
++  Widget build(BuildContext context) => Container(
++        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
++        decoration: BoxDecoration(
++          color: AppColors.backgroundMain,
++          borderRadius: BorderRadius.circular(99),
++          border: Border.all(
++              color: now ? AppColors.secondaryCyan : AppColors.gray600),
++        ),
++        child: Text(
++          name,
++          style: AppTextStyles.bodySmall.copyWith(
++              fontSize: 12.5,
++              color: now ? AppColors.secondaryCyan : AppColors.gray400),
++        ),
++      );
++}
++
++/// Une offre sélectionnable (maquette `.pick`), avec sa cible en pastille.
++class _OfferCard extends StatelessWidget {
++  final ModifierInstance offer;
++  final String who;
++  final bool selected;
++  final VoidCallback onTap;
++
++  const _OfferCard({
++    required this.offer,
++    required this.who,
++    required this.selected,
++    required this.onTap,
++  });
++
++  @override
++  Widget build(BuildContext context) {
++    final def = modifierById(offer.catalogId);
++    final color = modifierColor(offer.nature);
++    return Padding(
++      padding: const EdgeInsets.only(bottom: 10),
++      child: Semantics(
++        button: true,
++        selected: selected,
++        child: GestureDetector(
++          onTap: onTap,
++          child: Container(
++            padding: const EdgeInsets.all(12),
++            decoration: BoxDecoration(
++              color: AppColors.backgroundMain,
++              borderRadius: BorderRadius.circular(16),
++              border: Border.all(
++                color: selected ? AppColors.secondaryCyan : Colors.transparent,
++                width: 2,
++              ),
++            ),
++            child: Row(
++              crossAxisAlignment: CrossAxisAlignment.start,
++              children: [
++                Container(
++                  width: 44,
++                  height: 44,
++                  alignment: Alignment.center,
++                  decoration: BoxDecoration(
++                    color: color.withValues(alpha: 0.18),
++                    borderRadius: BorderRadius.circular(14),
++                  ),
++                  child: Text(
++                    modifierIcon(offer.catalogId),
++                    style: TextStyle(
++                        fontFamily: 'Bangers', fontSize: 22, color: color),
++                  ),
++                ),
++                const SizedBox(width: 12),
++                Expanded(
++                  child: Column(
++                    crossAxisAlignment: CrossAxisAlignment.start,
++                    children: [
++                      Text(def?.name ?? offer.catalogId,
++                          style: AppTextStyles.label),
++                      if (def != null) FiestaHint(def.description),
++                      const SizedBox(height: 6),
++                      Container(
++                        padding: const EdgeInsets.symmetric(
++                            horizontal: 8, vertical: 2),
++                        decoration: BoxDecoration(
++                          borderRadius: BorderRadius.circular(99),
++                          border: Border.all(color: AppColors.gray600),
++                        ),
++                        child: Text(
++                          offer.charges > 0 ? '$who · +${offer.charges}' : who,
++                          style: const TextStyle(
++                              fontFamily: 'Poppins',
++                              fontSize: 10.5,
++                              color: AppColors.gray400),
++                        ),
++                      ),
++                    ],
++                  ),
++                ),
++              ],
++            ),
++          ),
++        ),
++      ),
++    );
++  }
++}
++
++/// « Coup de pouce de l'app » (Auto, maquette `r2`) : ce que l'app donne à
++/// chaque équipe menée et impose à l'équipe en tête, avec la force appliquée.
++/// Rien si [gifts] est vide.
++class AppBoostCard extends StatelessWidget {
++  final List<Team> teams;
++  final List<ModifierInstance> gifts;
++
++  const AppBoostCard({
++    required this.teams,
++    required this.gifts,
++    super.key,
++  });
++
++  @override
++  Widget build(BuildContext context) {
++    if (gifts.isEmpty) return const SizedBox.shrink();
++    return FiestaCard(
++      title: 'Coup de pouce de l\'app',
++      children: [
++        const FiestaHint('Choisi par l\'app selon l\'écart. Personne ne '
++            'choisit. Pour toute la manche suivante.'),
++        const SizedBox(height: 6),
++        for (final gift in gifts)
++          Builder(builder: (context) {
++            final id = gift.teamId!;
++            final strength = _strength(gift);
++            final verb =
++                gift.nature == ModifierNature.bonus ? 'reçoit' : 'subit';
++            return Padding(
++              padding: const EdgeInsets.only(bottom: 6),
++              child: Row(
++                children: [
++                  Expanded(
++                    child: Text(
++                      '${_name(teams, id)} $verb · $strength',
++                      style: AppTextStyles.bodySmall
++                          .copyWith(color: _color(teams, id)),
++                    ),
++                  ),
++                  ModifierBadge.of(gift),
++                ],
++              ),
++            );
++          }),
++      ],
++    );
++  }
++}
+diff --git a/test/models/fiesta/offers_test.dart b/test/models/fiesta/offers_test.dart
+new file mode 100644
+index 0000000..41c34d4
+--- /dev/null
++++ b/test/models/fiesta/offers_test.dart
+@@ -0,0 +1,175 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
++import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
++import 'package:guess_it_all_mobile/models/fiesta/offers.dart';
++
++/// Personnalisé, 1 parmi 3 allumé, tout le catalogue « proposé » dès M1,
++/// sauf `minus_10s` (tiré pour tous) et `reversed` (dès M3).
++final rules = FiestaRules(
++  mode: FiestaMode.custom,
++  oneOfThree: true,
++  modifiers: {
++    for (final def in kModifierCatalog)
++      def.id: ModifierSetting(
++        active: true,
++        arrival: def.id == 'minus_10s'
++            ? ModifierArrival.draw
++            : ModifierArrival.offer,
++        startRound: def.id == 'reversed' ? 3 : 1,
++        charges: def.defaultCharges,
++      ),
++  },
++);
++
++List<ModifierInstance> offersFor(
++  Standings s,
++  String teamId, {
++  int round = 1,
++  String gameId = 'g',
++  List<ModifierInstance> roundDraw = const [],
++  Map<String, ModifierInstance> choices = const {},
++  Set<String> blockImmuneTeamIds = const {},
++}) =>
++    pickThreeOffers(
++        rules: rules,
++        gameId: gameId,
++        round: round,
++        standings: s,
++        teamId: teamId,
++        roundDraw: roundDraw,
++        choices: choices,
++        blockImmuneTeamIds: blockImmuneTeamIds);
++
++ModifierInstance forAll(String id) => ModifierInstance(
++      catalogId: id,
++      scope: ModifierScope.round,
++      target: ModifierTarget.both,
++      charges: 0,
++      nature: modifierById(id)!.nature,
++      round: 2,
++    );
++
++List<String> ids(List<ModifierInstance> mods) =>
++    mods.map((m) => m.catalogId).toList();
++
++void main() {
++  test('force par écart, aux seuils', () {
++    expect(strengthForGap(3), OfferStrength.light);
++    expect(strengthForGap(4), OfferStrength.medium);
++    expect(strengthForGap(7), OfferStrength.medium);
++    expect(strengthForGap(8), OfferStrength.heavy);
++  });
++
++  test(
++      '4 équipes : de la dernière à l\'avant-dernière, le leader exclu ; '
++      'égalité générale : personne', () {
++    const s = Standings({'rose': 20, 'bleue': 15, 'verte': 11, 'jaune': 13});
++    expect(s.choosingOrder, ['verte', 'jaune', 'bleue']);
++    expect(s.leaderId, 'rose');
++    expect(s.gapOf('verte'), 9);
++    expect(const Standings({'a': 5, 'b': 5}).choosingOrder, isEmpty);
++    expect(const Standings({'a': 9, 'b': 9, 'c': 2}).leaderId, isNull,
++        reason: 'co-leaders : pas de cible de malus');
++  });
++
++  test(
++      'critère 1 : 14–8 → 3 offres « moyennes », bonus pour moi, malus '
++      'contre la tête', () {
++    const s = Standings({'rose': 14, 'bleue': 8});
++    final offers = offersFor(s, 'bleue');
++    expect(offers, hasLength(3));
++    for (final o in offers) {
++      expect(kOfferStrength[o.catalogId], OfferStrength.medium);
++      expect(o.teamId, o.nature == ModifierNature.bonus ? 'bleue' : 'rose');
++      expect(o.round, 2);
++    }
++    expect(offersFor(s, 'rose'), isEmpty, reason: 'le leader ne choisit pas');
++    // Écart léger : `minus_10s` (tiré pour tous) et `reversed` (dès M3)
++    // ne sont jamais proposés.
++    expect(ids(offersFor(const Standings({'rose': 12, 'bleue': 10}), 'bleue')),
++        ['free_pass']);
++  });
++
++  test(
++      'exclusions : incompatible avec le tirage, plafond de 2, aucune offre '
++      '→ équipe sautée', () {
++    const s = Standings({'rose': 14, 'bleue': 8});
++    // `no_pass` tiré pour tous : `two_words` (incompatible) et `no_pass`
++    // contre Rose (déjà subi, carte sans effet) disparaissent.
++    expect(ids(offersFor(s, 'bleue', roundDraw: [forAll('no_pass')])),
++        ['double_points']);
++
++    // Rose a déjà 2 modificateurs (tirage + choix d'une équipe précédente) :
++    // plus de malus contre elle, les bonus pour Bleue restent.
++    final roseChosen = ModifierInstance(
++      catalogId: 'reversed',
++      scope: ModifierScope.round,
++      target: ModifierTarget.team,
++      teamId: 'rose',
++      charges: 0,
++      nature: ModifierNature.malus,
++      round: 2,
++    );
++    expect(
++        ids(offersFor(s, 'bleue',
++            roundDraw: [forAll('minus_10s')], choices: {'verte': roseChosen})),
++        unorderedEquals(['double_points', 'two_words']));
++
++    // Plafond atteint à tous les crans : aucune offre, l'équipe est sautée.
++    expect(
++        offersFor(s, 'bleue',
++            roundDraw: [forAll('minus_10s'), forAll('reversed')]),
++        isEmpty);
++  });
++
++  test('cran vide : on descend d\'un cran (forte → moyenne)', () {
++    const s = Standings({'rose': 14, 'bleue': 5});
++    expect(ids(offersFor(s, 'bleue')), ['block_guesser']);
++    final stepped = offersFor(s, 'bleue', blockImmuneTeamIds: {'rose'});
++    expect(stepped, hasLength(3));
++    expect(stepped.map((o) => kOfferStrength[o.catalogId]),
++        everyElement(OfferStrength.medium));
++  });
++
++  test(
++      'graine figée (gameId, manche, équipe) : une app mise à jour '
++      'retrouve les mêmes offres', () {
++    expect(offerSeed('g', 1, 'bleue'), 1610297326);
++    expect(ids(offersFor(const Standings({'rose': 14, 'bleue': 8}), 'bleue')),
++        ['double_points', 'two_words', 'no_pass']);
++  });
++
++  test(
++      'coup de pouce (Auto) : un bonus par menée, un malus pour la tête, '
++      'jamais « Bloquer un devineur »', () {
++    final auto = FiestaRules(mode: FiestaMode.auto);
++    List<ModifierInstance> boost(Standings s, int round, String gameId) =>
++        appBoost(
++            rules: auto,
++            gameId: gameId,
++            round: round,
++            standings: s,
++            roundDraw: const []);
++
++    final gifts = boost(const Standings({'rose': 14, 'bleue': 8}), 1, 'g');
++    expect(gifts.map((g) => (g.teamId, g.nature)), [
++      ('bleue', ModifierNature.bonus),
++      ('rose', ModifierNature.malus),
++    ]);
++    expect(gifts.map((g) => kOfferStrength[g.catalogId]),
++        everyElement(OfferStrength.medium));
++
++    // Écart 10 après M1 : rien de « forte » possible en Auto avant M3, on
++    // descend d'un cran au lieu de ne rien donner.
++    expect(boost(const Standings({'rose': 20, 'bleue': 10}), 1, 'g'),
++        hasLength(2));
++
++    for (var i = 0; i < 50; i++) {
++      final g = boost(
++          const Standings({'rose': 20, 'jaune': 18, 'bleue': 5}), 2, 'game-$i');
++      expect(ids(g), isNot(contains('block_guesser')));
++      expect(g.where((x) => x.nature == ModifierNature.bonus), hasLength(2));
++    }
++  });
++}

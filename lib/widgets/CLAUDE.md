@@ -8,7 +8,7 @@ Widgets reutilisables organises en deux sous-repertoires.
 |------------|------|
 | `common/` | Composants UI reutilisables (boutons, inputs, modals, sliders, toggles) |
 | `effects/` | Effets visuels et animations de fond |
-| `fiesta/` | Squelette et cartes des ecrans de choix du mode Fiesta (retour systeme Android gere) ; kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawCard` (« Tirage de la manche N »), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `TurnTimeCard` (« Temps du tour », detail + total, avant-tour) `CatchUpCard` (« Rattrapage », transition) et `BlockedGuesser` (selecteur « Les adversaires choisissent » + annonce « X ne repond pas », 2-8) |
+| `fiesta/` | Squelette et cartes des ecrans de choix du mode Fiesta (retour systeme Android gere) ; kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawCard` (« Tirage de la manche N »), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `TurnTimeCard` (« Temps du tour », detail + total, avant-tour) `CatchUpCard` (« Rattrapage », transition) et `BlockedGuesser` (selecteur « Les adversaires choisissent » + annonce « X ne repond pas », 2-8) ; kit 2-10 (`offer_widgets.dart`, sans Provider) : `PickThreeCard`, `PassPhonePanel`, `OfferChoiceBody` (sélection tenue par l'appelant), `AppBoostCard` |
 
 ## Kit visuel du tour Fiesta (`fiesta/fiesta_turn_widgets.dart`)
 
