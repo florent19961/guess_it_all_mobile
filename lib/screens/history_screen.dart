@@ -7,6 +7,7 @@ import '../services/game_history_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/constants.dart';
 import '../widgets/common/app_back_button.dart';
+import '../widgets/common/app_button.dart';
 
 /// Historique des dernières parties : scores, détail par manche et tendances.
 ///
@@ -201,7 +202,14 @@ class _GameCard extends StatefulWidget {
   final GameResult game;
   final Color Function(int) colorFor;
 
-  const _GameCard({required this.game, required this.colorFor});
+  /// « Rejouer » : pré-remplit joueurs, équipes et réglages de cette partie.
+  final VoidCallback? onReplay;
+
+  const _GameCard({
+    required this.game,
+    required this.colorFor,
+    this.onReplay,
+  });
 
   @override
   State<_GameCard> createState() => _GameCardState();
@@ -287,6 +295,18 @@ class _GameCardState extends State<_GameCard> {
                         .copyWith(color: AppColors.gray500),
                   ),
                 ],
+              ),
+            ),
+          if (widget.onReplay != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: AppButton(
+                text: 'Rejouer',
+                variant: AppButtonVariant.secondary,
+                size: AppButtonSize.small,
+                fullWidth: true,
+                icon: const Icon(Icons.replay, size: 18, color: Colors.white),
+                onPressed: widget.onReplay,
               ),
             ),
         ],
