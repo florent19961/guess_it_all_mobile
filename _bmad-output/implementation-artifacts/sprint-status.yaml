@@ -32,7 +32,7 @@ epics:
     status: done   # ✅ PR #2 (squash 8f689b2) — 123 tests verts
   epic-2-mode-fiesta:
     title: "Mode Fiesta (Auto + Personnalisé) par-dessus le mode Classique"
-    status: ready-for-dev   # cadrage clos (grilling 2026-08-02 + 2026-11-03), 10 stories écrites
+    status: in-progress   # mode délégué depuis 2026-11-03 — journal : _bmad-output/reviews/epic-2-mode-fiesta/journal-arbitrages.md   # cadrage clos (grilling 2026-08-02 + 2026-11-03), 10 stories écrites
     note: >-
       Epic : _bmad-output/specs/fiesta/epic-fiesta.md (cadrage figé, stories,
       lanes, 16 questions ouvertes avec recommandation). Maquette UX :
@@ -194,7 +194,7 @@ stories:
   2-2-fondation-modele-fiesta:
     epic: epic-2-mode-fiesta
     title: "Fondation : catalogue, modèle, champs optionnels de GameState, gel au lancement"
-    status: ready-for-dev
+    status: done   # ✅ PR #8 (squash 802c5b1, mode délégué 2026-11-03). Revue Opus READY.
     depends: []
     spec: _bmad-output/specs/fiesta/2-2-fondation-modele-fiesta.md
     note: >-
@@ -210,7 +210,7 @@ stories:
   2-4-selection-mode-auto-recap:
     epic: epic-2-mode-fiesta
     title: "Choix du mode (Classique / Fiesta Auto / Personnalisé), écran Auto, récap, lancement et Rejouer"
-    status: ready-for-dev
+    status: done   # ✅ PR #9 (squash 035ae6e, mode délégué 2026-11-03). Revue Opus READY.
     depends: [2-2-fondation-modele-fiesta, 2-3-ensembles-stockage-editeur]
     spec: _bmad-output/specs/fiesta/2-4-selection-mode-auto-recap.md
     note: >-
