@@ -10,12 +10,12 @@ import '../helpers/test_prefs.dart';
 
 /// Un joueur par équipe, [wordsEach] mots chacun.
 Future<GameProvider> givenProvider(List<String> names,
-    {required int wordsEach}) async {
+    {required int wordsEach, int? teams}) async {
   await givenPrefs();
   givenFakePlatformPlugins();
   final provider = GameProvider();
   await pumpEventQueue();
-  provider.updateSettings(numberOfTeams: names.length);
+  provider.updateSettings(numberOfTeams: teams ?? names.length);
   for (final name in names) {
     final id = (provider.addPlayer(name)['player'] as dynamic).id as String;
     provider.updatePlayerWords(
@@ -146,6 +146,41 @@ void main() {
     expect(reloaded.game.currentRound, 2);
     expect(ids(reloaded.game.fiesta!.active),
         containsAll(ids([lastPick, secondOffers.first])));
+  });
+
+  test(
+      '« Bloquer un devineur » choisi : désigné par l\'équipe qui l\'a choisi, '
+      'il dure UN tour du leader (continuation de fin de manche comprise) '
+      'et ne rouvre pas le sélecteur ensuite', () async {
+    final provider =
+        await givenProvider(['A', 'B', 'C', 'D', 'E'], wordsEach: 4, teams: 2);
+    await provider.startGame(fiesta: pickThree);
+    // Le leader = l'équipe de 3 (seule bloquable) ; il finit la manche, il
+    // joue donc la continuation en M2. Écart 16 : force « forte ».
+    final leader = provider.teams.firstWhere((t) => t.playerIds.length == 3).id;
+    final trailing = provider.teams.firstWhere((t) => t.id != leader).id;
+    if (provider.getCurrentTeam()!.id == leader) playTurn(provider, 12);
+    playTurn(provider, 2);
+    expect(playTurn(provider, 20), leader);
+    expect(provider.game.currentScreen, AppConstants.screenTransition);
+
+    expect(provider.offersFor(trailing).map((m) => m.catalogId),
+        ['block_guesser']);
+    provider.chooseOffer(trailing, 0);
+    provider.nextRound();
+
+    expect(provider.getCurrentTeam()!.id, leader);
+    expect(provider.needsBlockedGuesser, isTrue);
+    expect(provider.blockingTeam!.id, trailing);
+    provider.setBlockedGuesser(provider.blockableGuessers.first.id);
+
+    // Vraie fin du tour (la continuation) : la carte est consommée.
+    playTurn(provider, 0);
+    expect(provider.game.fiesta!.active.map((m) => m.catalogId),
+        isNot(contains('block_guesser')));
+    playTurn(provider, 0);
+    expect(provider.getCurrentTeam()!.id, leader);
+    expect(provider.needsBlockedGuesser, isFalse);
   });
 
   test(

@@ -240,6 +240,38 @@ void main() {
       expect(restored.fiesta!.active.single.catalogId, 'no_pass');
     });
 
+    test(
+        '`offerChoices` (2-10) : clé omise vide, aller-retour, entrée '
+        'illisible ignorée seule, liste absente ou corrompue = vide', () {
+      final empty = GameState(gameId: 'abc', fiesta: fiestaState()).toJson();
+      final emptyFiesta = empty['fiesta'] as Map<String, dynamic>;
+      expect(emptyFiesta.containsKey('offerChoices'), isFalse);
+
+      const choice = OfferChoice(chooserId: 'a', modifier: instance);
+      final original = GameState(
+          gameId: 'abc',
+          fiesta: fiestaState().copyWith(offerChoices: const [choice]));
+      final json = original.toJson();
+      expect(GameState.fromJson(json).toJson(), equals(json));
+
+      final fiesta = json['fiesta'] as Map<String, dynamic>;
+      fiesta['offerChoices'] = [
+        choice.toJson(),
+        {'chooserId': 'b'},
+        {
+          'chooserId': 'c',
+          'modifier': {...instance.toJson(), 'catalogId': 'from_the_future'}
+        },
+        'pas un objet',
+      ];
+      expect(
+          GameState.fromJson(json).fiesta!.offerChoices.map((c) => c.chooserId),
+          ['a']);
+      fiesta['offerChoices'] = 'oui';
+      expect(GameState.fromJson(json).fiesta!.offerChoices, isEmpty);
+      expect(FiestaState.tryFromJson(emptyFiesta)!.offerChoices, isEmpty);
+    });
+
     test('une instance inconnue ou mal formée est ignorée, le reste se relit',
         () {
       final json = GameState(gameId: 'abc', fiesta: fiestaState()).toJson();
