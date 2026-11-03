@@ -203,3 +203,38 @@ sont révélés orphelins. Ils sont traités.
    au titre et à deux tailles de police. Le filtre « manche N » était le seul axe de
    variation : il devient un paramètre `int? round` sur deux fonctions **pures**, les
    premières du dépôt à porter des règles de classement testables.
+
+## 2026-11-03 — Orchestration : skill de session principale, gate ② à un reviewer, tests minimaux
+
+**Quoi.**
+
+- Nouvelle skill **`guessitall-orchestration`** (adaptée de `wasreal-orchestration`) : ce que fait
+  la session principale — cadrage `grilling`, planification d'un lot, jusqu'à 5 lanes bornées par
+  le graphe de conflits, sonde légère (`free -m` + PR ouvertes), mode délégué avec journal
+  d'arbitrages (`_bmad-output/reviews/<epic>/journal-arbitrages.md`), renumérotation de
+  `kCurrentSchemaVersion` entre deux merges, gate ③ conditionnel, passation dans le `note` de
+  l'epic de `sprint-status.yaml`.
+- **`guessitall-epic-intake` supprimée**, absorbée dans `guessitall-orchestration` §2 (intérêt
+  par US vérifié dans le code, graphe de conflits → lanes, dosage, prompt-pack à deux étages).
+- Nouvelle skill **`guessitall-etat-des-lieux`** (portée de WasReal) avec une table *Release* :
+  dernier tag, commits sur `main` depuis, schéma persisté touché ou non.
+- **Gate ② = un seul reviewer adversarial spec-aveugle.** Codex retiré (workflow, orchestration,
+  teach-back, `CLAUDE.md`), sans second reviewer Opus en substitut. Gate ③ = un reviewer sur le
+  diff cumulé, seulement si ≥ 2 stories ont été sérialisées sur un point de collision ou le tier
+  risqué.
+- **Tests minimaux** : un test seulement s'il épingle un invariant du tier risqué ou reproduit un
+  bug corrigé ; plus de TDD strict ni de widget test pour l'UI simple.
+- `grilling` : toutes les questions en un message numéroté, une ligne et une recommandation
+  chacune (texte de WasReal).
+- `.codex/skills/` : symlinks ajoutés pour les nouvelles skills et `grilling`, retiré pour
+  `epic-intake` ; `CLAUDE.md` ne prétend plus qu'il n'y a « rien à re-synchroniser ».
+
+**Pourquoi (décision Florent).** Les changements de ce dépôt sont simples : une revue cross-LLM
+coûte plus qu'elle ne trouve, un reviewer adversarial suffit. Le moins de tests possible, parce
+que chaque test est une maintenance et que seuls les invariants du tier risqué (données joueur en
+store, partie en cours) justifient ce coût. L'empreinte des tests GIA est légère : pas de plafond
+machine dédié aux lanes, le sémaphore `with-test-slot.sh` suffit.
+
+**Conséquence.** Une seule skill de session principale, une seule skill de lane. Une décision
+sur la forme d'une clé `guessItAll_*` ne s'arbitre jamais en mode délégué : elle remonte à
+Florent (`CLAUDE.md` règle 7).

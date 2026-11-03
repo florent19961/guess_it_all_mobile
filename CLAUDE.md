@@ -43,18 +43,21 @@ racine plutôt qu'empiler des fixes en revue).
 **La méthodologie vit dans les skills, pas ici.** La liste exhaustive est injectée par le harness à
 chaque session ; les règles projet ci-dessous surchargent les skills en cas de conflit.
 
+**La session principale suit `guessitall-orchestration`** (cadrage, lots, lanes, mode délégué,
+gate ③, passation) ; une lane suit `guessitall-workflow`.
+
 1. **Idée / design ouvert** → `superpowers:brainstorming` (divergent — jamais pour une pile de fixes).
 2. **Cadrage — SYSTÉMATIQUE avant d'écrire un epic (ou une US isolée)** → `grilling` : interview
-   convergente, question par question, jusqu'à résolution de chaque branche de décision.
+   convergente, toutes les questions en un message numéroté (avec recommandation), jusqu'à résolution de chaque branche de décision.
    ⚠️ La skill **model-invocable** est `grilling`. `grill-me` porte
    `disable-model-invocation: true` : c'est le raccourci **utilisateur** (`/grill-me`), qui délègue
    à `grilling` — un agent qui tente d'invoquer `grill-me` ne déclenche rien.
 3. **Écrire l'epic + ses US** → `bmad-create-epics-and-stories`.
-4. **Planifier l'exécution du lot** → `guessitall-epic-intake` : intérêt/US, graphe de conflits →
-   lanes, dosage, prompt-pack.
-5. **Implémenter chaque lane** → un worktree par lane, en suivant **`guessitall-workflow`** : TDD,
-   puis **gate ②** (1 reviewer adversarial spec-aveugle + Codex cross-LLM + consolidation).
-   **Pas de gate ①** — cf. garde-fous.
+4. **Planifier l'exécution du lot** → `guessitall-orchestration` §2 : intérêt/US, graphe de
+   conflits → lanes, dosage, prompt-pack.
+5. **Implémenter chaque lane** → un worktree par lane (jusqu'à 5, `guessitall-orchestration` §3),
+   en suivant **`guessitall-workflow`** : tests minimaux, puis **gate ②** (1 reviewer adversarial
+   spec-aveugle, sans Codex). **Pas de gate ①** — cf. garde-fous.
 6. **Teach-back puis closeout** → `teach-back` (gate de compréhension avant merge — skip auto si
    trivial) puis `guessitall-pr-closeout` (PR base `main`) — **merge uniquement sur go explicite de
    Florent**.
@@ -77,7 +80,9 @@ Hors cycle : bug / test rouge / comportement inattendu → `bmad-investigate` ; 
 ## Règles projet
 
 1. **Lire avant de modifier** — jamais de modification à l'aveugle.
-2. **Tests — ciblé en dev, complet au gate.** En dev : `scripts/with-test-slot.sh flutter test test/<fichier>`.
+2. **Tests — minimaux, ciblé en dev, complet au gate.** On n'écrit un test que s'il épingle un
+   invariant du tier risqué ou reproduit un bug corrigé ; pas de test cosmétique ni de widget test
+   pour de l'UI simple (`guessitall-orchestration`). En dev : `scripts/with-test-slot.sh flutter test test/<fichier>`.
    **Suite complète une seule fois avant la PR** : `scripts/run-full-suite.sh` (format + analyze +
    test). 🔴 **Tout run de tests passe par `scripts/with-test-slot.sh`** — la machine est contrainte
    par la **RAM** (~7 Go sous WSL2), pas par le CPU, et le sémaphore est **partagé avec WasReal** :
@@ -119,7 +124,7 @@ Hors cycle : bug / test rouge / comportement inattendu → `bmad-investigate` ; 
   `lib/widgets/`, `lib/theme/`, `lib/utils/`.
 
 🔴 **Points de collision structurels** (un seul track à la fois dessus, cf.
-`guessitall-epic-intake`) : `lib/providers/game_provider.dart`, `lib/models/game_state.dart`,
+`guessitall-orchestration` §2) : `lib/providers/game_provider.dart`, `lib/models/game_state.dart`,
 `lib/services/storage_service.dart` + les clés `guessItAll_*`.
 
 ## Flux de jeu
@@ -160,7 +165,8 @@ Hors cycle : bug / test rouge / comportement inattendu → `bmad-investigate` ; 
 ## Outillage agent
 
 `AGENTS.md` (lu par Codex) est un **symlink vers ce fichier** ; `.codex/skills/` est un mirror en
-symlinks de `.claude/skills/` — il n'y a donc **rien à re-synchroniser à la main**.
+symlinks **relatifs** de `.claude/skills/`, mais **sélectif** : le contenu suit seul, en revanche
+**créer, renommer ou supprimer une skill exige d'ajouter / retirer son symlink à la main**.
 
 ```bash
 scripts/run-full-suite.sh          # plancher déterministe (format + analyze + test)
