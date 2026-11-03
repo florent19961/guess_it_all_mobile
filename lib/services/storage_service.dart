@@ -2,9 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/constants.dart';
-import 'game_history_service.dart';
 import 'persisted_schema.dart';
-import 'word_history_service.dart';
 
 /// Accès à la persistance locale (`SharedPreferences`).
 ///
@@ -128,8 +126,7 @@ class StorageService {
   }
 
   // Aides de prise en main : booléens autonomes, absents = false (clés neuves,
-  // rien à migrer). Les joueurs déjà venus sont rattrapés au démarrage par
-  // [inferHelpFlagsFromPastGames].
+  // rien à migrer). Posés une fois au démarrage par [initHelpFlags].
 
   Future<bool> hasSeenTutorial() => _readFlag(AppConstants.tutorialSeenKey);
   Future<void> markTutorialSeen() =>
@@ -150,37 +147,23 @@ class StorageService {
   Future<void> resetFirstGameDone() =>
       _writeFlag(AppConstants.firstGameDoneKey, false);
 
-  /// Au démarrage, avant toute partie : un joueur qui a déjà fini une partie
-  /// (historique des mots — présent depuis la version en store — ou historique
-  /// des parties non vide) ne doit revoir ni le prompt « Première partie ? » ni
-  /// les aides du premier tour. Chaque flag ABSENT est alors écrit à `true`,
-  /// une fois ; un `false` écrit (« Revoir les aides ») prime.
-  ///
-  /// L'historique des mots n'est écrit qu'en fin de partie (`endGame`) : la
-  /// première partie d'un nouveau joueur ne peut pas le déclencher en avance.
-  Future<void> inferHelpFlagsFromPastGames() async {
-    const keys = [AppConstants.tutorialSeenKey, AppConstants.firstGameDoneKey];
+  /// Au démarrage, une seule fois dans la vie de l'app : chaque flag tuto /
+  /// première partie ABSENT est écrit à [playedBefore]. Ensuite il est présent
+  /// et plus jamais recalculé : une première partie abandonnée (qui écrit
+  /// aussi l'historique des mots) ne peut pas faire basculer une install neuve.
+  /// Un `false` écrit (« Revoir les aides ») prime donc toujours.
+  Future<void> initHelpFlags({required bool playedBefore}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final missing = keys.where((k) => !prefs.containsKey(k)).toList();
-      if (missing.isEmpty || !await _hasPlayedBefore(prefs)) return;
-      for (final key in missing) {
-        await prefs.setBool(key, true);
+      for (final key in const [
+        AppConstants.tutorialSeenKey,
+        AppConstants.firstGameDoneKey,
+      ]) {
+        if (!prefs.containsKey(key)) await prefs.setBool(key, playedBefore);
       }
     } catch (e) {
-      debugPrint('[Storage] Déduction des flags d\'aide impossible: $e');
+      debugPrint('[Storage] Initialisation des flags d\'aide impossible: $e');
     }
-  }
-
-  Future<bool> _hasPlayedBefore(SharedPreferences prefs) async {
-    final words = prefs.getString(WordHistoryService.storageKey);
-    if (words != null) {
-      try {
-        final decoded = jsonDecode(words);
-        if (decoded is Map && decoded.isNotEmpty) return true;
-      } catch (_) {}
-    }
-    return (await GameHistoryService().load()).isNotEmpty;
   }
 
   Future<bool> _readFlag(String key) async {

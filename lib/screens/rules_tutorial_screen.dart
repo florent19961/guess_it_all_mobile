@@ -52,7 +52,7 @@ class RulesTutorialScreen extends StatelessWidget {
         symbol: '★',
         title: 'Le score',
         text: 'Les points des 3 manches s\'additionnent, et on découvre les '
-            'scores à la fin de la partie. Astuce : retenez bien les mots de '
+            'scores à la fin de la partie. Astuce : retiens bien les mots de '
             'la manche 1, ils reviennent.',
       ),
     ]);

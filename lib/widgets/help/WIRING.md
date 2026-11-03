@@ -33,7 +33,7 @@ résultats finaux en montrent.
 | `teams_screen` | `teamsHelp` | `firstTeam` (carte de la 1re équipe), `shuffle`, `start` (« Commencer ») | `right: 16` |
 | `game_screen` (avant-tour) | `preTurnHelp(playerName: …)` | `team` (nom d'équipe + joueur), `roundRules` (icône info de la manche), `previousTurn` (« Tour précédent »), `start` | `right: besideCornerButton` |
 | `game_screen` Fiesta | `fiestaPreTurnHelp` | `badges` (Actif ce tour), `doublePoints` (interrupteur Mot compte double), `turnTime` (`TurnTimeCard`) | même bouton : concaténer `preTurnHelp(...) + fiestaPreTurnHelp(...)` en Fiesta |
-| `turn_screen` | `turnHelp(passPenalty: …)` | `timer`, `word`, `guessed`, `pass`, `pause` | `right: besideCornerButton` (pause à droite). 🔴 `provider.pauseTurn()` **avant** `CoachMarks.show`, reprise **après** : le chrono ne doit jamais tourner sous l'aide |
+| `turn_screen` | `turnHelp(passPenalty: provider.currentPassPenalty)` — pas `settings.passPenalty` : la Passe gratuite Fiesta la met à 0. Malus « Interdit de passer » : ne pas poser la clé `pass` (bouton désactivé, le texte « Passe-le » serait faux) | `timer`, `word`, `guessed`, `pass`, `pause` | `right: besideCornerButton` (pause à droite). 🔴 `provider.pauseTurn()` **avant** `CoachMarks.show`, reprise **après** : le chrono ne doit jamais tourner sous l'aide |
 | `verification_screen` | `verificationHelp` | `wordList` (la liste défilante entière), `validate` | `right: 16` (HomeButton à gauche) |
 | `transition_screen` | `transitionHelp` | `previousTurn` (« Voir les N mots devinés »), `next` (« Manche suivante » / « Voir les résultats »), `back` (`GameBackButton`), `home` (`HomeButton`) | `right: besideCornerButton` |
 | `transition_screen` Fiesta | `fiestaTransitionHelp` | `catchUp` (`CatchUpCard`), `pickThree` (`PickThreeCard` / `PassPhonePanel`), `appBoost` (`AppBoostCard`) | même bouton : concaténer `fiestaTransitionHelp(...) + transitionHelp(...)` en Fiesta |
@@ -75,8 +75,17 @@ chaque joueur).
 | `guessItAll_fiestaTutorialSeen` | `hasSeenFiestaTutorial` / `markFiestaTutorialSeen` | tuto Fiesta déjà vu |
 | `guessItAll_firstGameDone` | `isFirstGameDone` / `markFirstGameDone` / `resetFirstGameDone` | première partie terminée |
 
-Booléens autonomes, absents = `false` : clés neuves, aucune migration (règle 7). Joueurs déjà
-venus : au démarrage (`main.dart`, tâche locale), `inferHelpFlagsFromPastGames` écrit à `true`
-chaque flag tuto / première partie **absent** si `guessItAll_word_history` (présent depuis la
-version en store, écrit en fin de partie seulement) ou `guessItAll_game_results` est non vide.
-Un `false` écrit (« Revoir les aides ») prime.
+Booléens autonomes, aucune migration (règle 7). Au démarrage (`main.dart`, tâche locale),
+`FirstGameHelp.initAtStartup()` écrit **une seule fois** chaque flag tuto / première partie
+absent : `true` si `guessItAll_word_history` (présent dans la version en store) ou
+`guessItAll_game_results` est non vide, `false` sinon. Ensuite le flag est présent et n'est plus
+jamais recalculé : une première partie abandonnée (qui écrit aussi l'historique des mots) ne
+peut pas faire basculer une install neuve. Un `false` écrit (« Revoir les aides ») prime.
+
+## Limites connues
+
+- `CoachMarks` mesure la cible une fois par étape : pas de nouvelle mesure si la taille de
+  l'écran change pendant l'aide (écran partagé, pliable, clavier). L'app est bloquée en
+  portrait, c'est accepté.
+- Après un kill en pleine première partie, `FirstGameHelp` a oublié qui a déjà vu l'aide : ces
+  joueurs la revoient une fois.

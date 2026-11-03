@@ -15,8 +15,7 @@ class WordHistoryService {
   WordHistoryService._internal();
 
   // Clé de stockage
-  static const String storageKey = 'guessItAll_word_history';
-  static const String _historyKey = storageKey;
+  static const String _historyKey = 'guessItAll_word_history';
 
   // Cache mémoire pour performance
   Map<String, int>? _historyCache;
@@ -34,6 +33,9 @@ class WordHistoryService {
 
   /// Exposé pour les tests et le diagnostic.
   bool get isDegraded => _degraded;
+
+  /// Au moins une partie a déjà alimenté l'historique (après [initialize]).
+  bool get hasHistory => _historyCache?.isNotEmpty ?? false;
 
   /// Indique si le service a été initialisé
   bool get isInitialized => _isInitialized;

@@ -28,8 +28,8 @@ List<CoachStep> homeHelp({
       CoachStep(
         target: resume,
         title: 'Reprendre',
-        text: 'Une partie a été interrompue : reprends-la là où vous en '
-            'étiez.',
+        text: 'Une partie a été interrompue : reprends-la là où elle '
+            's\'était arrêtée.',
       ),
       CoachStep(
         target: replay,
@@ -69,7 +69,7 @@ List<CoachStep> settingsHelp({
       CoachStep(
         target: counts,
         title: 'Joueurs et équipes',
-        text: 'Combien vous êtes, et en combien d\'équipes. Il faut au moins '
+        text: 'Le nombre de joueurs, et d\'équipes. Il faut au moins '
             '2 joueurs par équipe.',
       ),
       CoachStep(
@@ -237,8 +237,8 @@ List<CoachStep> verificationHelp({
       CoachStep(
         target: wordList,
         title: 'Vérifie les mots',
-        text: 'Les mots que vous avez trouvés doivent être en VERT. Ceux que '
-            'vous n\'avez pas trouvés doivent être en ROUGE. Une erreur ? '
+        text: 'Les mots que ton équipe a trouvés doivent être en VERT. Ceux '
+            'qu\'elle n\'a pas trouvés doivent être en ROUGE. Une erreur ? '
             'Touche le mot pour le corriger : il passe du vert au rouge, ou '
             'du rouge au vert. S\'il y a beaucoup de mots, fais défiler la '
             'liste pour tous les vérifier.',
@@ -298,7 +298,7 @@ List<CoachStep> resultsHelp({
         target: podium,
         title: 'Le podium',
         text: 'Touche une marche pour voir les joueurs de cette équipe. '
-            'Pratique si vous avez oublié le nom de votre équipe.',
+            'Pratique si tu as oublié le nom de ton équipe.',
       ),
       CoachStep(
         target: details,

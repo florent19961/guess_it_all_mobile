@@ -70,9 +70,12 @@ class _CoachOverlayState extends State<_CoachOverlay> {
       alignment: 0.3,
       duration: const Duration(milliseconds: 250),
     );
-    if (!mounted || !targetContext.mounted) return;
+    if (!mounted) return;
+    // Cible démontée pendant le défilement : on passe à la suite plutôt que de
+    // laisser un voile sans bulle (sur iOS, aucune autre issue).
+    if (!targetContext.mounted) return _next();
     final box = targetContext.findRenderObject() as RenderBox?;
-    if (box == null || !box.hasSize) return;
+    if (box == null || !box.hasSize) return _next();
     setState(() => _hole = box.localToGlobal(Offset.zero) & box.size);
   }
 
@@ -119,106 +122,115 @@ class _CoachOverlayState extends State<_CoachOverlay> {
     final above = hole.top - media.padding.top;
     const minSpace = 180.0;
 
-    double? top;
-    double? bottom;
+    // Les deux bords sont toujours bornés et le texte défile : grand texte
+    // système ou petit écran, les boutons restent visibles.
+    var top = media.padding.top + 16;
+    var bottom = media.padding.bottom + 16;
+    var alignment = Alignment.bottomCenter;
     if (below >= minSpace && below >= above) {
       top = hole.bottom + 14;
+      alignment = Alignment.topCenter;
     } else if (above >= minSpace) {
       bottom = height - hole.top + 14;
-    } else {
-      // Cible trop grande (ex. une longue liste) : bulle posée en bas.
-      bottom = media.padding.bottom + 16;
     }
+    // Sinon : cible trop grande (ex. une longue liste), bulle posée en bas.
 
     return Positioned(
       left: 16,
       right: 16,
       top: top,
       bottom: bottom,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFFBEB),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: const [
-            BoxShadow(
-                color: Colors.black45, blurRadius: 24, offset: Offset(0, 8)),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    step.title.toUpperCase(),
+      child: Align(
+        alignment: alignment,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFFBEB),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: const [
+              BoxShadow(
+                  color: Colors.black45, blurRadius: 24, offset: Offset(0, 8)),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      step.title.toUpperCase(),
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                        color: Color(0xFF92400E),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${_index + 1} / ${widget.steps.length}',
                     style: const TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.8,
+                      fontWeight: FontWeight.w600,
                       color: Color(0xFF92400E),
                     ),
                   ),
-                ),
-                Text(
-                  '${_index + 1} / ${widget.steps.length}',
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF92400E),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              step.text,
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 15,
-                height: 1.4,
-                color: Color(0xFF1C1917),
+                ],
               ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                if (!isLast)
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFF78716C),
-                    ),
-                    child: const Text(
-                      'Passer',
-                      style: TextStyle(fontFamily: 'Poppins', fontSize: 14),
-                    ),
-                  ),
-                const Spacer(),
-                FilledButton(
-                  onPressed: _next,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF1C1917),
-                    foregroundColor: const Color(0xFFFFFBEB),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 12),
-                  ),
+              const SizedBox(height: 8),
+              Flexible(
+                child: SingleChildScrollView(
                   child: Text(
-                    isLast ? 'Compris' : 'Suivant',
+                    step.text,
                     style: const TextStyle(
                       fontFamily: 'Poppins',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                      height: 1.4,
+                      color: Color(0xFF1C1917),
                     ),
                   ),
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  if (!isLast)
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF78716C),
+                      ),
+                      child: const Text(
+                        'Passer',
+                        style: TextStyle(fontFamily: 'Poppins', fontSize: 14),
+                      ),
+                    ),
+                  const Spacer(),
+                  FilledButton(
+                    onPressed: _next,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF1C1917),
+                      foregroundColor: const Color(0xFFFFFBEB),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
+                    ),
+                    child: Text(
+                      isLast ? 'Compris' : 'Suivant',
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

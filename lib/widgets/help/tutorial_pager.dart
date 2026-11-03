@@ -103,9 +103,7 @@ class _TutorialPagerState extends State<TutorialPager> {
                       width: i == _index ? 18 : 7,
                       height: 7,
                       decoration: BoxDecoration(
-                        color: i == _index
-                            ? AppColors.primaryPink
-                            : AppColors.gray600,
+                        color: i == _index ? widget.accent : AppColors.gray600,
                         borderRadius: BorderRadius.circular(99),
                       ),
                     ),

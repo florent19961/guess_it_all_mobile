@@ -37,8 +37,11 @@ class FiestaTutorialScreen extends StatelessWidget {
           rows: [
             TutorialRow('1', 'Tirés au sort pour tous',
                 'En début de manche, pour toutes les équipes.'),
-            TutorialRow('2', 'Choix 1 parmi 3',
-                'Entre deux manches, l\'équipe menée choisit une carte.'),
+            TutorialRow(
+                '2',
+                'Entre deux manches',
+                'Personnalisé : les équipes menées choisissent 1 carte parmi 3. '
+                    'Auto : l\'app leur donne un coup de pouce.'),
             TutorialRow(
                 '3', 'Rattrapage', 'Du temps en plus pour l\'équipe menée.'),
           ],
@@ -47,8 +50,8 @@ class FiestaTutorialScreen extends StatelessWidget {
           symbol: 'A',
           title: 'Auto ou Personnalisé',
           text: 'Auto : l\'app décide de tout, personne ne choisit. '
-              'Personnalisé : vous réglez chaque modificateur et vous '
-              'enregistrez vos réglages sous un nom, pour les réutiliser.',
+              'Personnalisé : tu règles chaque modificateur et tu '
+              'enregistres tes réglages sous un nom, pour les réutiliser.',
         ),
       ],
     );
