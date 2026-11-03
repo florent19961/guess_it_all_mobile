@@ -17,3 +17,6 @@ date · sujet · question · choix · raison · état
 | 2026-11-04 | aides | Aide 1re partie si la 1re partie est abandonnée ou tuée | Liée au gameId de la 1re partie, état persisté ; une autre partie clôt la 1re partie | Aide automatique seulement pendant la vraie 1re partie, une fois par joueur | appliqué |
 | 2026-11-04 | aides | Détection « a déjà joué » | Décidée une seule fois au 1er lancement de cette version, puis figée | Une partie abandonnée écrit aussi l'historique de mots | appliqué |
 | 2026-11-04 | scores masqués | Le classement Fiesta reste déductible (ordre du 1 parmi 3, secondes de rattrapage) | Accepté | Inhérent au mécanisme de rattrapage | à valider |
+| 2026-11-04 | revues | Codex toujours hors quota | Revue thermo-nucléaire finale faite par Opus | Consigne Florent (repli Opus) | appliqué |
+| 2026-11-04 | noms d'équipes | Phrases incorrectes avec « Les … » (« choix de Les Mimes Fous ») | On garde les noms ; phrases au deux-points (« En attente du choix : X », « Passe le téléphone : X ») ; « menée » → « en retard » | Accord impossible avec un pluriel, noms voulus par Florent | à valider |
+| 2026-11-04 | revue finale | 10 MINOR (code dupliqué, provider à 2 110 lignes, widgets à usage unique…) | Différés après la release | Aucun n'affecte le joueur | appliqué |

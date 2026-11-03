@@ -35,7 +35,9 @@ epics:
     status: in-progress   # mode délégué depuis 2026-11-03 — journal : _bmad-output/reviews/epic-2-mode-fiesta/journal-arbitrages.md   # cadrage clos (grilling 2026-08-02 + 2026-11-03), 10 stories écrites
     note: >-
       ✅ 2026-11-03 : toutes les stories 2-2…2-11 mergées (PR #8…#19). Revue de fin d'epic Opus + Codex faite ;
-      corrections mergées PR #20 (squash e298fd2). Reste : recettes device, bilan, build store.
+      corrections mergées PR #20 (squash e298fd2). PASSATION 2026-11-04 : code terminé ; attend Florent →
+      recettes device Android + iOS (liste dans les PR #13…#24), validation des lignes « à valider » des deux
+      journaux, puis build store unique (+N ≥ 11, publication à activer dans codemagic.yaml).
       Epic : _bmad-output/specs/fiesta/epic-fiesta.md (cadrage figé, stories,
       lanes, 16 questions ouvertes avec recommandation). Maquette UX :
       https://claude.ai/artifact/N9w6ATfeJnXTkfq74AfAdj . Lanes : A séquentielle
@@ -66,6 +68,14 @@ epics:
       pour valider Gradle, commit de Podfile.lock. Team ID Apple P86JMJ3R72, clé
       ASC 5S5JV42UPB. Derniers builds en store : iOS 1.1.3 (10) du 2026-02-13,
       Android versionCode 8 (1.1.3) → prochain build ≥ +11 sur les deux.
+  epic-7-prise-en-main:
+    title: "Prise en main : Rejouer depuis l'historique, aides « ? », tutos, scores masqués, écran entre manches"
+    status: done   # ✅ PR #21 (rejeu + noms d'équipes + mots cachés), #22 (kit d'aide), #23 (branchement + scores masqués + transition), #24 (retouches revue finale)
+    note: >-
+      Demande Florent 2026-11-03/04, mode délégué jusqu'au bout. Maquette : https://claude.ai/artifact/4aCxoVzMtVED1druxUxhem .
+      Revue thermo-nucléaire finale (Opus, Codex hors quota) : SHIPPABLE → MAJOR corrigé PR #24 ; rapport
+      _bmad-output/reviews/prise-en-main/pem-final-review.md (10 MINOR différables). Journal :
+      _bmad-output/reviews/prise-en-main/journal-arbitrages.md. Recettes device dans les PR #21…#24.
   epic-3-audit-remediation:
     title: "Remédiation de l'audit du 2026-08-02 (3 blockers, 20 majors)"
     status: done   # ✅ MERGÉ PR #2 (squash 8f689b2, 2026-11-03, sur instruction Florent). Gate ② clos.
