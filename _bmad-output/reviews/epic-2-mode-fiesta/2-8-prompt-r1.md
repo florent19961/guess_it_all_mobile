@@ -1,8 +1,8 @@
 # Revue r1 — story 2-8 « Effets de tour » (tier risqué : timer / pénalité de passe ⑥, scoring indirect ②, machine à états ①)
 
 Tu es le reviewer Opus adversarial de la lane. Tu lis **le patch** `2-8-patch-r1.diff` (même
-dossier), calculé contre `117cbad`. C'est le kit visuel (#11 de `main`), posé sur la pointe de
-`feat/fiesta-2-7` (`106bc93`) pour que la lane compile. Ne lance jamais `git diff` toi-même.
+dossier), calculé contre `git merge-base origin/main HEAD` (`4e548a2`, 2-6 et 2-7 mergées). Ne
+lance jamais `git diff` toi-même.
 Lis le code **avant** la spec, puis confronte les deux. Écris ton rapport dans
 `2-8-review-r1.md` (même dossier). Le **mutation testing est obligatoire** sur les tests ajoutés.
 
@@ -50,6 +50,10 @@ Les modificateurs tirés changent vraiment le tour :
    sélecteur est un `AppModal` ; s'il est fermé sans choix, on reste sur l'avant-tour et rien ne
    démarre. Le choix est persisté avant l'annonce : après un kill, pas de second choix.
    `setBlockedGuesser` refuse celui qui fait deviner et tout joueur hors de l'équipe.
+   ⚠️ Sur `main`, `block_guesser` n'est ni tiré ni fixé (`isForAllTeams`, 2-5), alors que Q15
+   parle d'un blocage « tiré pour tous ». L'effet porte donc sur toute instance qui vise l'équipe
+   qui joue, sans source avant 2-10 ; le test l'injecte. `symmetric_draw.dart` n'est pas touché
+   (hors périmètre). À challenger.
 6. **Contraintes annoncées** : `MimeConstraintBanner` et le texte Q6 apparaissent dans la carte
    d'avant-tour. L'annonce plein écran du mime reste celle de `MalusReveal` (2-5).
 7. **À l'envers** : seul l'`AutoSizeText` du tour change. `currentWord`, la vérification et les
