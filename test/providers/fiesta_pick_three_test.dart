@@ -289,6 +289,86 @@ void main() {
   });
 
   test(
+      'Continuation en chaîne : la continuation M1→M2 vide le pool de M2. Son '
+      'tour logique M1 se clôt (×2 dépensé et instances M1 partis), et la '
+      'continuation M3 ne porte que le contexte de M2 (blocage M2 annoncé), '
+      'kill et retour arrière compris (epic fix r1, Codex MAJOR-1)', () async {
+    final provider =
+        await givenProvider(['A', 'B', 'C', 'D', 'E'], wordsEach: 4, teams: 2);
+    await provider.startGame(
+      fiesta: FiestaRules(
+        mode: FiestaMode.custom,
+        oneOfThree: true,
+        drawCount: 1,
+        modifiers: {
+          'block_guesser': const ModifierSetting(
+              active: true,
+              arrival: ModifierArrival.offer,
+              startRound: 2,
+              charges: 0),
+          'double_points': const ModifierSetting(
+              active: true,
+              arrival: ModifierArrival.draw,
+              startRound: 1,
+              charges: 1),
+        },
+      ),
+    );
+    final leader = provider.teams.firstWhere((t) => t.playerIds.length == 3).id;
+    final trailing = provider.teams.firstWhere((t) => t.id != leader).id;
+    // M1 : le leader finit la manche à ×2. Blocage choisi contre lui pour M2.
+    if (provider.getCurrentTeam()!.id == trailing) playTurn(provider, 1);
+    provider.setDoublePoints(true);
+    expect(playTurn(provider, 20), leader);
+    provider.chooseOffer(trailing, 0);
+    provider.nextRound();
+
+    // M2 : sa continuation (×2 de M1) vide à elle seule le pool de M2.
+    expect(provider.isContinuation, isTrue);
+    expect(provider.isDoublePointsOn, isTrue);
+    expect(playTurn(provider, 20), leader);
+    expect(provider.game.currentRound, 2);
+    if (provider.nextChooserId == trailing) provider.chooseOffer(trailing, 0);
+    provider.nextRound();
+
+    void expectChained(GameProvider p) {
+      expect(p.getCurrentTeam()!.id, leader);
+      expect(p.isContinuation, isTrue);
+      expect([p.isDoublePointsOn, p.freePassesUsed, p.doublePointsLeft],
+          [false, 0, 0]);
+      expect(ids(p.turnModifiers), ['block_guesser@2>$leader']);
+      expect(ids(p.malusToReveal), ['block_guesser@2>$leader']);
+      expect(p.blockingTeam!.id, trailing);
+      expect(p.game.fiesta!.active.where((m) => m.round < 2), isEmpty);
+    }
+
+    expectChained(provider);
+    expect(provider.needsBlockedGuesser, isTrue);
+    await pumpEventQueue();
+    final reloaded = GameProvider(); // app tuée avant la continuation M3
+    await pumpEventQueue();
+    expectChained(reloaded);
+    reloaded.setBlockedGuesser(reloaded.blockableGuessers.first.id);
+    reloaded.startTurn();
+    reloaded.startTurnTimer();
+    reloaded.markWordAsGuessed();
+    reloaded.endTurn();
+    final word = List<String>.from(reloaded.game.wordsGuessedThisTurn);
+    reloaded.savePreValidationState(word);
+    reloaded.validateWords(word);
+    reloaded.restorePreValidationState(); // retour arrière
+    expect(reloaded.blockedGuesser, isNotNull);
+    expect(ids(reloaded.turnModifiers), ['block_guesser@2>$leader']);
+    reloaded.savePreValidationState(word);
+    reloaded.validateWords(word);
+
+    // Fin de la continuation M3 : tout le contexte de M2 est parti.
+    expect(reloaded.getCurrentTeam()!.id, trailing);
+    expect(reloaded.game.fiesta!.active.every((m) => m.round == 3), isTrue);
+    expect(reloaded.game.fiesta!.turn.isEmpty, isTrue);
+  });
+
+  test(
       'double tap sur « Valider » : les mots sont crédités une fois, le '
       'retour arrière est gardé, la carte de tour de l\'équipe suivante '
       'n\'est pas brûlée (bug antérieur à Fiesta)', () async {

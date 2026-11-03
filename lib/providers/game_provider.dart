@@ -1123,11 +1123,7 @@ class GameProvider extends ChangeNotifier {
             : AppConstants.screenTransition,
         turnBonusTime: _game.timeRemaining,
         clearExpiredWord: true,
-        // Pas de `_fiestaAfterTurn` ici : la même équipe poursuit CE tour en
-        // manche suivante (continuation). L'état du tour vit jusqu'à sa vraie
-        // fin (`FiestaTurnState.afterRoundEnd`).
-        fiesta:
-            _game.fiesta?.copyWith(turn: _game.fiesta!.turn.afterRoundEnd()),
+        fiesta: _fiestaAtRoundEnd(),
         pendingBonusTurnId: shouldPrepareBonusFusion ? _game.currentTurn : null,
         clearPendingBonusTurnId: !shouldPrepareBonusFusion,
       );
@@ -1261,12 +1257,12 @@ class GameProvider extends ChangeNotifier {
 
   /// Équipe qui ouvre la manche en cours par sa continuation : celle de la
   /// dernière entrée de la manche précédente. Nulle en M1.
-  String? get _continuingTeamId => _game.currentRound <= 1
+  String? get _continuingTeamId => _continuingTeamOf(_game.currentRound);
+
+  /// Équipe qui ouvre la manche [round] par sa continuation (nulle en M1).
+  String? _continuingTeamOf(int round) => round <= 1
       ? null
-      : _game.history
-          .where((h) => h.round == _game.currentRound - 1)
-          .lastOrNull
-          ?.teamId;
+      : _game.history.where((h) => h.round == round - 1).lastOrNull?.teamId;
 
   int _entriesThisRound(String teamId) => _game.history
       .where((h) => h.round == _game.currentRound && h.teamId == teamId)
@@ -1488,18 +1484,33 @@ class GameProvider extends ChangeNotifier {
     );
   }
 
+  /// Fiesta à une fin de manche. D'ordinaire, la même équipe poursuit CE tour
+  /// en N+1 (continuation) : l'état du tour vit jusqu'à sa vraie fin
+  /// ([FiestaTurnState.afterRoundEnd]). Mais si ce tour était DÉJÀ une
+  /// continuation (elle a vidé le pool de N+1 à elle seule), son tour logique
+  /// N se termine ici, comme à une vraie fin de tour : la continuation
+  /// suivante ne porte alors que le contexte de N+1, jamais celui de N.
+  FiestaState? _fiestaAtRoundEnd() {
+    final fiesta = _game.fiesta;
+    if (fiesta == null) return null;
+    if (isContinuation) return _fiestaAfterTurn();
+    return fiesta.copyWith(turn: fiesta.turn.afterRoundEnd());
+  }
+
   /// Malus à révéler en plein écran avant le tour : ceux de l'équipe qui joue,
-  /// à son PREMIER VRAI tour de la manche. Jamais sur une continuation (elle
-  /// joue avec les effets de N, déjà annoncés) ; l'entrée d'historique de la
-  /// continuation ne compte pas comme un tour de N+1. Dérivé de l'historique :
-  /// rien à persister.
+  /// à son premier tour de la manche LOGIQUE du tour (celle de ses effets).
+  /// Une continuation ordinaire ne révèle rien (l'équipe a déjà joué en N) ;
+  /// une continuation en chaîne révèle les malus de N+1, qu'elle subit pour
+  /// la première fois. L'entrée de la continuation ne compte jamais comme un
+  /// tour de sa manche. Dérivé de l'historique : rien à persister.
   List<ModifierInstance> get malusToReveal {
     final teamId = getCurrentTeam()?.id;
-    if (_game.fiesta == null || teamId == null || isContinuation) {
-      return const [];
-    }
-    final realTurns =
-        _entriesThisRound(teamId) - (teamId == _continuingTeamId ? 1 : 0);
+    if (_game.fiesta == null || teamId == null) return const [];
+    final round = _game.currentRound - (isContinuation ? 1 : 0);
+    final realTurns = _game.history
+            .where((h) => h.round == round && h.teamId == teamId)
+            .length -
+        (teamId == _continuingTeamOf(round) ? 1 : 0);
     if (realTurns > 0) return const [];
     return currentTeamModifiers
         .where((m) => m.nature == ModifierNature.malus)

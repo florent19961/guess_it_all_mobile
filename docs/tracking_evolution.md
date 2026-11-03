@@ -586,7 +586,10 @@ niveau) : le tag analytics porte l'information.
   premier vrai tour de chaque équipe. Aucune charge ne s'allume sur une continuation : 🔴 cela
   **change l'AC8 de 2-9** (on pouvait allumer la charge de N+1 pendant la continuation). Le test
   AC8 vérifie désormais le refus sur la continuation et la charge de N+1 disponible au premier
-  vrai tour (lecture (a), validée par Florent). Les
+  vrai tour (lecture (a), validée par Florent). **Continuation en chaîne** (revue r1) : si la
+  continuation vide à elle seule le pool de N+1, son tour logique N se clôt à cette fin de manche
+  (`_fiestaAtRoundEnd`) ; la continuation en N+2 ne porte que le contexte de N+1, dont les malus
+  se révèlent alors (`malusToReveal` sur la manche logique). Les
   instances de N partent à la fin de la continuation. Tous les malus de N+1 se révèlent au
   premier vrai tour (plus de cas particulier `minus_10s`).
 - `isContinuation` est **dérivé de l'historique** (l'équipe a joué la dernière entrée de N et
