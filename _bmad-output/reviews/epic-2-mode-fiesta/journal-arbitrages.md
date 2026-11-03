@@ -18,3 +18,6 @@ Délégation explicite de Florent le 2026-11-03 : « avance tout droit jusqu'à 
 | 2026-11-03 | 2-6 / 2-7 | Lanes empilées sur des branches encore en revue | Oui, restack au merge | Paralléliser (demande Florent) | appliqué |
 | 2026-11-03 | 2-6 | Nouveau champ `turnAllottedSeconds` dans GameState, écrit aussi en Classique | Accepté si optionnel en lecture (vérifié en revue) | Corrige le bug store du temps par mot ; ajout additif couvert par la décision d'epic « stocker la vraie durée » | à valider |
 | 2026-11-03 | 2-6 | Résidu m3c (mutant non tué) | Résidu assumé | Coût de test disproportionné | appliqué |
+| 2026-11-03 | 2-7 | Revue r2 après un fix test+doc seul ? | Clôture vérifiée par l'orchestrateur, pas de 2ᵉ reviewer | Aucun code de prod changé, mutants M10/M11 tués | appliqué |
+| 2026-11-03 | 2-7 | HistoryEntry.modifiers (listé dans la story) | Non ajouté | Aucun AC ne l'exige ; changerait la forme de la partie en cours | à valider |
+| 2026-11-03 | 2-7 | Récap : rattrapage accordé même si non consommé | Accepté | Jugé acceptable en revue | à valider |

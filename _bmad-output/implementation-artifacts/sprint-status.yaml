@@ -236,10 +236,12 @@ stories:
   2-7-analytics-archive-recap:
     epic: epic-2-mode-fiesta
     title: "Analytics (modificateurs par événement, mode de partie), archive GameResult, récap des résultats"
-    status: ready-for-dev
+    status: done
     depends: [2-5-tirage-symetrique-transition, 2-6-temps-rattrapage-duree-reelle]
     spec: _bmad-output/specs/fiesta/2-7-analytics-archive-recap.md
     note: >-
+      ✅ MERGÉ PR #14 (squash a6ffbde, mode délégué). Revue Opus r1 NOT READY (1 MAJOR test
+      provider) → fix test+doc seul, clôture vérifiée par l'orchestrateur.
       R ⑤ · AN + GP + GS. Avant les effets de tour pour ne poser le contrat d'événements qu'une fois.
   2-8-effets-de-tour-catalogue:
     epic: epic-2-mode-fiesta
