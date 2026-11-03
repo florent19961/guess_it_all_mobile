@@ -238,3 +238,24 @@ machine dédié aux lanes, le sémaphore `with-test-slot.sh` suffit.
 **Conséquence.** Une seule skill de session principale, une seule skill de lane. Une décision
 sur la forme d'une clé `guessItAll_*` ne s'arbitre jamais en mode délégué : elle remonte à
 Florent (`CLAUDE.md` règle 7).
+
+## 2026-11-03 — Builds cloud Codemagic, publication désactivée
+
+**Quoi.** `codemagic.yaml` à la racine avec deux workflows sur `mac_mini_m2` : `dry-run`
+(manuel) et `release` (tag `v*`, garde « tag = `v` + version pubspec »). Les deux font pub get →
+analyze → test → AAB signé (keystore `gia_android_signing`, `google-services.json` depuis le
+groupe `gia_firebase`) → IPA en signature automatique (`gia_asc_key`), et gardent les artefacts
+(dont `ios/Podfile.lock`). `android/app/build.gradle.kts` ne crée la signature release que si
+`key.properties` existe.
+
+**Pourquoi.** Le build iOS exigeait un Mac branché ; un clone propre doit suffire. Le cast
+`as String` sans garde faisait planter **tout** build Gradle sans `key.properties` (debug compris) :
+désormais release non signé + warning, comportement inchangé sur le poste Windows. Choix « non
+signé » plutôt que « signé debug » : un AAB signé debug pourrait partir au store par erreur, un
+non signé est refusé tout de suite. **Publication présente mais commentée** : décision Florent,
+une seule release après le mode Fiesta.
+
+**Conséquence.** Florent crée les secrets listés dans `docs/releases-stores.md` §Codemagic, lance
+un 1er `dry-run`, commite le `Podfile.lock` produit. Points incertains jusque-là : `xcode: latest`
+vs Flutter 3.44, chemin de l'export plist iOS, et le build Gradle lui-même (non compilable depuis
+WSL).
