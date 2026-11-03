@@ -30,11 +30,11 @@ class AnalyticsService {
   // État du tracking
   GameAnalytics? _currentGame;
 
-  // Mot affiché : vit le temps d'UN mot, remis à zéro par
-  // `_recordEventWithDuration`. 🔴 Contrat « un seul mot à l'écran » : voir
-  // `_recordEventWithDuration`. Story 2-11 (deux mots) remplace CE bloc seul.
-  int? _lastShownTimestamp;
-  String? _lastShownWord;
+  // Mots à l'écran → horodatage de leur `shown`. Une entrée vit le temps de
+  // son mot : retirée par `_recordEventWithDuration`. Par mot et non « le
+  // dernier affiché » : avec « Deux mots à la fois » (2-11), deux mots sont à
+  // l'écran et chacun a sa propre durée. En Classique, un seul à la fois.
+  final Map<String, int> _shownAt = {};
 
   // Contexte du tour : survit aux mots, relu par `onWordInvalidated` et
   // `onWordValidatedAsGuessed` (vérification, après le tour). Ne dépend pas du
@@ -149,8 +149,7 @@ class AnalyticsService {
 
   /// Remet à zéro l'état du tracking
   void _clearTrackingState() {
-    _lastShownTimestamp = null;
-    _lastShownWord = null;
+    _shownAt.clear();
     _lastRound = null;
     _lastTurn = null;
     _lastTeamId = null;
@@ -176,8 +175,7 @@ class AnalyticsService {
     if (_currentGame == null) return;
 
     // Mémoriser pour calculer la durée
-    _lastShownTimestamp = DateTime.now().millisecondsSinceEpoch;
-    _lastShownWord = word;
+    _shownAt[word] = DateTime.now().millisecondsSinceEpoch;
     _lastRound = round;
     _lastTurn = turn;
     _lastTeamId = teamId;
@@ -255,16 +253,14 @@ class AnalyticsService {
     _currentGame = _currentGame!.addEvent(event);
   }
 
-  /// Enregistre un événement avec calcul de durée.
-  ///
-  /// 🔴 Contrat « un seul mot à l'écran » : un événement sur un mot qui n'est
-  /// PAS le dernier affiché est abandonné en silence (pas de `shown`, donc pas
-  /// de durée). Vrai tant qu'un seul mot est affiché ; la story 2-11 (deux
-  /// mots) doit remplacer le bloc « mot affiché » par un suivi par mot. Le
-  /// contexte du tour (dont `_lastModifiers`) n'a pas à bouger.
+  /// Enregistre un événement avec calcul de durée, depuis le `shown` de CE
+  /// mot. Un mot sans `shown` en cours (app tuée depuis, par exemple) est
+  /// abandonné : pas de durée inventée. Le contexte du tour (dont
+  /// `_lastModifiers`) est celui du dernier `shown`, commun aux deux cartes.
   void _recordEventWithDuration(String word, WordEventType eventType) {
     if (_currentGame == null) return;
-    if (_lastShownTimestamp == null || word != _lastShownWord) return;
+    final shownAt = _shownAt.remove(word);
+    if (shownAt == null) return;
 
     final event = WordEvent.withDuration(
       word: word,
@@ -274,16 +270,11 @@ class AnalyticsService {
       teamId: _lastTeamId ?? '',
       playerId: _lastPlayerId ?? '',
       gameId: _currentGame!.gameId,
-      shownTimestamp: _lastShownTimestamp!,
+      shownTimestamp: shownAt,
       modifiers: _lastModifiers,
     );
 
     _currentGame = _currentGame!.addEvent(event);
-
-    // Reset du mot seulement : le contexte du tour sert encore à la
-    // vérification (`onWordInvalidated`).
-    _lastShownTimestamp = null;
-    _lastShownWord = null;
   }
 
   // ========== PERSISTANCE ==========

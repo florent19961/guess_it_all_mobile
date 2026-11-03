@@ -59,9 +59,11 @@ sont inchanges.
   les defauts `round` 1, `teamId` '' deja presents avant 2-7). Le mode de la partie se lit sur
   `GameAnalytics.gameMode`, jamais sur l'evenement.
 
-⚠️ **Contrat « un seul mot a l'ecran »** (`AnalyticsService._recordEventWithDuration`) : un
-evenement sur un mot qui n'est pas le dernier `shown` est abandonne en silence. La story 2-11
-(deux mots) remplace le bloc « mot affiche » du service ; le contexte du tour ne bouge pas.
+**Duree par mot** (`AnalyticsService._recordEventWithDuration`, story 2-11) : chaque mot a
+l'ecran garde l'horodatage de son `shown` ; `guessed` / `passed` / `expired` mesurent leur duree
+depuis le `shown` de CE mot. Avec « Deux mots a la fois », les deux cartes ont donc chacune leur
+paire d'evenements, et le tour porte `two_words` dans `modifiers`. Un mot sans `shown` en cours
+(app tuee depuis) est abandonne, comme avant : pas de duree inventee.
 
 **Types d'evenements :**
 

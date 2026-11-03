@@ -28,12 +28,10 @@ class TurnResolution {
   /// Mots passés pendant le tour mais finalement validés comme devinés.
   final List<String> validatedPassed;
 
-  /// Le mot affiché à l'expiration du chrono a-t-il été validé / refusé ?
-  final bool expiredValidated;
-  final bool expiredInvalidated;
-
-  /// Le mot affiché à l'expiration du chrono, s'il y en avait un.
-  final String? expiredWord;
+  /// Mots affichés à l'expiration du chrono (un, ou deux avec « Deux mots à
+  /// la fois »), validés / refusés à la vérification.
+  final List<String> expiredValidated;
+  final List<String> expiredInvalidated;
 
   /// Pool de mots restants après dépouillement.
   final List<String> remainingPool;
@@ -48,7 +46,6 @@ class TurnResolution {
     required this.validatedPassed,
     required this.expiredValidated,
     required this.expiredInvalidated,
-    required this.expiredWord,
     required this.remainingPool,
     required this.pointsScored,
   });
@@ -57,7 +54,7 @@ class TurnResolution {
   List<String> get allInvalidated => [
         ...invalidatedGuessed,
         ...invalidatedPassed,
-        if (expiredInvalidated && expiredWord != null) expiredWord!,
+        ...expiredInvalidated,
       ];
 
   /// La manche est terminée : plus aucun mot à faire deviner.
@@ -69,7 +66,8 @@ class TurnResolution {
 ///
 /// - [validatedWords] : ce que l'équipe a coché à la vérification.
 /// - [guessedThisTurn] / [passedThisTurn] : ce qui s'est passé pendant le tour.
-/// - [expiredWord] : le mot affiché quand le chrono est tombé, s'il y en a un.
+/// - [expiredWords] : les mots affichés quand le chrono est tombé (aucun, un,
+///   ou deux avec « Deux mots à la fois », story 2-11).
 /// - [currentPool] : les mots encore à faire deviner avant dépouillement.
 /// - [pointsMultiplier] : ×2 pour « Mot compte double » (Fiesta 2-9). Vaut
 ///   pour les POINTS seulement : [TurnResolution.validated] reste la liste
@@ -78,7 +76,7 @@ TurnResolution resolveTurn({
   required List<String> validatedWords,
   required List<String> guessedThisTurn,
   required List<String> passedThisTurn,
-  required String? expiredWord,
+  required List<String> expiredWords,
   required List<String> currentPool,
   int pointsMultiplier = 1,
 }) {
@@ -92,9 +90,9 @@ TurnResolution resolveTurn({
       passedThisTurn.where((w) => validatedSet.contains(w)).toList();
 
   final expiredValidated =
-      expiredWord != null && validatedSet.contains(expiredWord);
+      expiredWords.where((w) => validatedSet.contains(w)).toList();
   final expiredInvalidated =
-      expiredWord != null && !validatedSet.contains(expiredWord);
+      expiredWords.where((w) => !validatedSet.contains(w)).toList();
 
   // Les mots refusés retournent au pool ; le Set garantit qu'un mot recyclé
   // pendant le tour n'y apparaît pas deux fois.
@@ -106,7 +104,9 @@ TurnResolution resolveTurn({
 
   // Les mots finalement validés en sortent — y compris ceux qui avaient été
   // passés puis remis dans le pool pendant le tour.
-  if (expiredValidated) pool.remove(expiredWord);
+  for (final word in expiredValidated) {
+    pool.remove(word);
+  }
   for (final word in validatedPassed) {
     pool.remove(word);
   }
@@ -118,7 +118,6 @@ TurnResolution resolveTurn({
     validatedPassed: validatedPassed,
     expiredValidated: expiredValidated,
     expiredInvalidated: expiredInvalidated,
-    expiredWord: expiredWord,
     remainingPool: pool,
     pointsScored: validatedWords.length * pointsMultiplier,
   );
