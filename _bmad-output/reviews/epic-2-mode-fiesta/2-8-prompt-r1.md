@@ -50,10 +50,9 @@ Les modificateurs tirés changent vraiment le tour :
    sélecteur est un `AppModal` ; s'il est fermé sans choix, on reste sur l'avant-tour et rien ne
    démarre. Le choix est persisté avant l'annonce : après un kill, pas de second choix.
    `setBlockedGuesser` refuse celui qui fait deviner et tout joueur hors de l'équipe.
-   ⚠️ Sur `main`, `block_guesser` n'est ni tiré ni fixé (`isForAllTeams`, 2-5), alors que Q15
-   parle d'un blocage « tiré pour tous ». L'effet porte donc sur toute instance qui vise l'équipe
-   qui joue, sans source avant 2-10 ; le test l'injecte. `symmetric_draw.dart` n'est pas touché
-   (hors périmètre). À challenger.
+   Décision (lead) : `block_guesser` n'arrive que par offre (2-10), jamais tiré ni fixé pour
+   tous ; Q15 ne s'applique pas. L'effet porte sur toute instance qui vise l'équipe qui joue ;
+   le test l'injecte. Ne pas rouvrir.
 6. **Contraintes annoncées** : `MimeConstraintBanner` et le texte Q6 apparaissent dans la carte
    d'avant-tour. L'annonce plein écran du mime reste celle de `MalusReveal` (2-5).
 7. **À l'envers** : seul l'`AutoSizeText` du tour change. `currentWord`, la vérification et les
