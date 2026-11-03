@@ -204,7 +204,8 @@ void main() {
 
       expect(restored.fiesta, isNull);
       expect(restored.toJson(), equals(legacy),
-          reason: 'le blob Classique ne doit pas changer, ni `fiesta: null`');
+          reason: 'relu puis réécrit sans rien ajouter, ni `fiesta: null` '
+              '(règle 7 ; un tour joué ajoute `turnAllottedSeconds`, 2-6)');
     });
 
     test(

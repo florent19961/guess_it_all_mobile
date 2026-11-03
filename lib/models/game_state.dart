@@ -304,8 +304,9 @@ class GameState {
       'preValidationSnapshot': preValidationSnapshot,
       'restoredValidatedWords': restoredValidatedWords,
       // Pas de clé `fiesta: null` ni `turnAllottedSeconds: null` : absent =
-      // Classique / version antérieure, et le blob d'une partie Classique
-      // reprise reste octet pour octet celui d'avant.
+      // Classique / version antérieure (règle 7 : ajouts optionnels, lecture
+      // tolérante). Seul ajout écrit par une partie Classique jouée :
+      // `turnAllottedSeconds` (2-6), approuvé par Florent.
       if (turnAllottedSeconds != null)
         'turnAllottedSeconds': turnAllottedSeconds,
       if (fiesta != null) 'fiesta': fiesta!.toJson(),

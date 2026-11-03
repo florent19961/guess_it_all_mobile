@@ -321,8 +321,8 @@ nul. `GameProvider.startGame({FiestaRules? fiesta})` gèle la config ; sans argu
 
 **Pourquoi ces choix.**
 - **Un seul champ optionnel, pas de bump de `kCurrentSchemaVersion`** : absent = Classique, donc
-  une partie écrite par la version en store se relit sans migration, et le blob Classique ne
-  change pas d'un octet (règle 7). Les stories suivantes ajoutent leurs compteurs *dans* `fiesta`
+  une partie écrite par la version en store se relit sans migration, et `fiesta` n'est jamais
+  écrit en Classique (règle 7 ; seul ajout Classique de l'epic : `turnAllottedSeconds`, 2-6). Les stories suivantes ajoutent leurs compteurs *dans* `fiesta`
   (`turn`), jamais à la racine de `GameState`.
 - **Relecture tolérante à deux niveaux** : `fiesta` structurellement illisible → Classique (la
   partie reste jouable) ; une instance ou un réglage illisible → ignoré seul, jamais de valeur
@@ -564,7 +564,7 @@ choix.
 
 **Pourquoi ces choix.**
 - **Carte B dans `fiesta.turn`** (`secondWord`, puis `secondExpiredWord`), pas dans `GameState` :
-  le blob Classique ne change pas d'un octet, clés absentes = un seul mot, pas de bump de schéma.
+  rien de neuf dans le blob Classique, clés absentes = un seul mot, pas de bump de schéma.
   Le retour arrière et l'app tuée les retrouvent sans code dédié (snapshot = `toJson`).
 - **Le mot visé est un argument** de `markWordAsGuessed` / `passWord` : un tap sur une carte
   déjà remplacée est ignoré par le provider (en plus du verrou visuel de 0,3 s).
@@ -613,3 +613,15 @@ le score affiché (Codex MAJOR-3). Ajout dans `guessItAll_gameState` approuvé p
 (règle 7) : additif, optionnel, lecture tolérante. Une partie Classique n'écrit jamais la clé
 (points = mots), et un blob antérieur se relit à l'identique. Pas de migration ni de bump de
 schéma.
+
+## 2026-11-03 — Fiesta, fin d'epic : contrat Classique = règle 7, plus l'identité à l'octet
+
+**Ce qui change.** Rien dans le code. La promesse « blob Classique octet pour octet celui
+d'avant » est remplacée par la règle 7 telle qu'écrite : ajouts optionnels, absents = défaut,
+lecture tolérante, migration explicite seulement si une forme change. `turnAllottedSeconds`,
+écrit par toute partie Classique jouée depuis 2-6, est gardé.
+
+**Pourquoi.** Codex (BLOCKER-1) l'a relevé : la promesse ne tenait plus depuis 2-6. Florent
+garde le champ : il est additif et optionnel, l'ancien lecteur l'ignore, et il corrige le temps
+passé par joueur (`timeSpent` mesuré sur la durée réelle du tour). Les mentions « à l'octet »
+sont corrigées dans `game_state.dart`, `lib/models/CLAUDE.md`, ce journal et le test du blob figé.

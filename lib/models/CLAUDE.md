@@ -30,8 +30,10 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
 
 ## Fiesta — invariants (epic-2)
 
-- **`GameState.fiesta` nul = Classique.** `toJson()` n'écrit **pas** la clé quand nul : le blob
-  d'une partie Classique est octet pour octet celui d'avant. `kCurrentSchemaVersion` inchangé.
+- **`GameState.fiesta` nul = Classique.** `toJson()` n'écrit **pas** la clé quand nul. Contrat
+  Classique = **règle 7** (ajouts optionnels, absents = défaut, lecture tolérante), pas l'identité
+  à l'octet : une partie Classique jouée écrit `turnAllottedSeconds` (2-6), approuvé par Florent.
+  `kCurrentSchemaVersion` inchangé.
 - **Relecture tolérante** : `fiesta` non-objet ou règles illisibles → Classique ; instance ou
   réglage illisible → ignoré seul (règle `WordEvent.tryFromJson`).
 - 🔴 **Champ ajouté après la 1ʳᵉ release Fiesta** : il se lit **clé absente = défaut documenté**
