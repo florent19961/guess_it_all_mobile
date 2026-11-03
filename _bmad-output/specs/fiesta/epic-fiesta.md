@@ -200,10 +200,10 @@ taguer leurs événements, et 2-11 réécrit le suivi « un mot affiché à la f
 (`analytics_service.dart:32-38`, `:238`). Poser le champ « modificateurs actifs » d'abord évite de
 repasser trois fois sur le contrat d'événements.
 
-Modèle par lane (`guessitall-workflow` §Parallélisme) : **Fable** pour 2-2, 2-6, 2-9, 2-11 (état,
+Modèle par lane (`guessitall-workflow` §1) : **Fable** pour 2-2, 2-6, 2-9, 2-11 (état,
 temps, score, modèle de mot) ; **Opus** pour les autres.
 
-**Gate ③** (`guessitall-orchestration` §7) : **dû**, puisque plus de deux stories sont
+**Revue d'epic** (`guessitall-orchestration` §7) : **dû**, puisque plus de deux stories sont
 sérialisées sur `GP`/`GS`. Point clé de la revue cumulée : la garantie de retour arrière de 2-2
 tient-elle encore après les chemins ajoutés par 2-8, 2-9, 2-10 et 2-11 ?
 

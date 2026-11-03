@@ -1,12 +1,12 @@
 ---
 name: teach-back
-description: Gate de compréhension utilisateur AVANT tout closeout de PR Guess It All (étape 6 de guessitall-workflow) — vérifie que Florent comprend ce qui vient d'être implémenté avant que ça soit mergé. S'auto-déclenche quand un closeout approche ("on merge ?", "lance le closeout", PR prête + go imminent) SAUF skip explicite ou story triviale (dosage). Aussi sur demande — "teach-back", "explique-moi ce qu'on a fait", "est-ce que j'ai bien compris".
+description: Contrôle de compréhension utilisateur AVANT tout closeout de PR Guess It All (guessitall-workflow §7) — vérifie que Florent comprend ce qui vient d'être implémenté avant que ça soit mergé. S'auto-déclenche quand un closeout approche ("on merge ?", "lance le closeout", PR prête + go imminent) SAUF skip explicite ou story triviale (dosage). Aussi sur demande — "teach-back", "explique-moi ce qu'on a fait", "est-ce que j'ai bien compris".
 ---
 
 # teach-back — le propriétaire comprend ce qu'il merge
 
 **But** : transférer la propriété mentale du changement, pas évaluer. Le code est
-vérifié par le gate ② (reviewer adversarial) ; CE gate vérifie l'humain. Sortie réussie =
+vérifié par la revue du tier (reviewer Opus) ; CE contrôle vérifie l'humain. Sortie réussie =
 Florent peut reformuler le changement en 2-3 phrases ET répondre aux
 questions-scénario clés. C'est aussi le dernier détecteur de désalignement
 produit : une réponse « hein ? non, je pensais que ça faisait X » n'est pas un
@@ -40,7 +40,7 @@ trou de compréhension, c'est un finding.
    sur un « ok ok ».
 4. **Désalignement produit détecté** (la réponse révèle que Florent ATTENDAIT
    un autre comportement) → **STOP, le closeout est suspendu** : ce n'est plus
-   un problème de compréhension, c'est un finding de gate. Retour boucle
+   un problème de compréhension, c'est un finding de revue. Retour boucle
    (correction ou décision explicite d'assumer), teach-back reprend après.
 5. **Clôture = teach-back inversé** : « Reformule-moi le changement comme tu
    l'expliquerais à un dev qui arrive. » 2-3 phrases correctes → ✅ go closeout.
@@ -50,7 +50,7 @@ trou de compréhension, c'est un finding.
 
 ## Interdits
 
-- Ne PAS re-litiger la qualité du code (c'est le gate ②) ni rejouer la spec.
+- Ne PAS re-litiger la qualité du code (c'est la revue) ni rejouer la spec.
 - Ne PAS transformer en cours magistral : ratio questions/explications ≥ 2:1.
 - Ne PAS bloquer sur la perfection : 80 % de compréhension + les invariants
   critiques sus = go. Le but est l'autonomie, pas l'exhaustivité.

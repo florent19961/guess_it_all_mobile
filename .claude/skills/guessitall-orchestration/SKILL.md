@@ -1,6 +1,6 @@
 ---
 name: guessitall-orchestration
-description: Use when the MAIN Guess It All session frames, plans or drives work — grilling before any story, planning a batch of existing stories (interest per story, conflict graph, lanes, dosage, prompt-pack), running up to 5 lanes, launching the gate ② reviewer, the 15-minute light probe, delegated mode with an arbitration journal, board updates, persisted-schema ordering between merges, the end-of-epic gate ③ and report, opening and closing the session. Triggers — "plan these US", "what's the interest of each", "group / parallelize / sequence these stories", "give me prompts I can paste into separate Claude sessions", "create the lanes", "reprends mon backlog", "avance jusqu'au bout". What happens INSIDE one lane → guessitall-workflow. Full state report → guessitall-etat-des-lieux. Creating a new epic's stories → bmad-create-epics-and-stories. Keywords orchestrator, lanes, parallel, prompt-pack, sonde, délégué, journal d'arbitrages, board, sprint-status, gate ③, bilan, passation.
+description: Use when the MAIN Guess It All session frames, plans or drives work — grilling before any story, planning a batch of existing stories (interest per story, conflict graph, lanes, dosage, prompt-pack), running up to 5 lanes, launching the tier review, the 15-minute light probe, delegated mode with an arbitration journal, board updates, persisted-schema ordering between merges, the end-of-epic review and report, opening and closing the session. Triggers — "plan these US", "what's the interest of each", "group / parallelize / sequence these stories", "give me prompts I can paste into separate Claude sessions", "create the lanes", "reprends mon backlog", "avance jusqu'au bout". What happens INSIDE one lane → guessitall-workflow. Full state report → guessitall-etat-des-lieux. Creating a new epic's stories → bmad-create-epics-and-stories. Keywords orchestrator, lanes, parallel, prompt-pack, sonde, délégué, journal d'arbitrages, board, sprint-status, revue d'epic, bilan, passation.
 ---
 
 # Guess It All — ce que fait la session principale
@@ -51,29 +51,30 @@ sur go un prompt-pack. **Aucun code ici.**
    `game_state.dart` / `game_settings.dart`, `storage_service.dart` + clés `guessItAll_*`
    (et `persisted_schema.dart`). `analytics_service.dart` / `firebase_sync_service.dart` = contrat
    d'events, à sérialiser aussi. Les écrans (`lib/screens/*`) sont en général parallélisables.
-4. **Dosage** par story (trivial / risqué, `guessitall-workflow` §Doser) et **pièges** : une
+4. **Dosage** par story (trivial / standard / risqué, `guessitall-workflow` §1) et **pièges** : une
    correction suggérée par le board qui casserait un invariant se signale, elle ne s'applique pas
    au pied de la lettre. Story qui exige de voir l'app tourner → recette device listée pour
    Florent (depuis Windows), jamais simulée.
 5. **Sur go seulement, le prompt-pack**, en deux étages :
    - **un fichier par story** dans le scratchpad (`prompt-<id>.md`) : story et ligne de board,
-     périmètre et interdits entre lanes, fichiers et lignes vérifiés, pièges, dosage et gate,
+     périmètre et interdits entre lanes, fichiers et lignes vérifiés, pièges, tier et revue,
      **la règle des tests minimaux** (ci-dessus), « suis `guessitall-workflow` » ;
    - **un mini-prompt** auto-suffisant à froid : chemin absolu du fichier, « lis-le et suis-le »,
      identité de lane (worktree `/home/florent19961/guess-it-all-<slug>`, branche `feat/<slug>`
-     depuis `origin/main`, `flutter pub get`), modèle (`guessitall-workflow` §Parallélisme),
+     depuis `origin/main`, `flutter pub get`), modèle (`guessitall-workflow` §1),
      « lis tout sur `origin/main` », « committer souvent, ne pas pusher sans consigne ».
 
 ## 3. Faire tourner les lanes
 
-- **Au plus 5 lanes**, bornées par le graphe de conflits (§2.3). Pas de plafond machine dédié :
-  les tests GIA sont légers, mais **tout run passe par `scripts/with-test-slot.sh`** (sémaphore
-  partagé avec WasReal).
+- 🔴 **Au plus 5 agents en parallèle** (lanes + reviewers + sous-agents de lecture, décision
+  Florent 2026-11-03), bornés en plus par le graphe de conflits (§2.3), **sous la sonde de §4**.
+  Tout run de test passe par `scripts/with-test-slot.sh` (sémaphore partagé avec WasReal).
 - **Un agent neuf par story**, qui repart du board et des fichiers. L'implémenteur reste joignable
   (SendMessage) pour les corrections de sa story.
 - **Les sous-agents ne testent pas et n'écrivent pas de code** : lecture, exploration, revue.
-- **Gate ②** : la session principale lance le reviewer (`guessitall-workflow` §Gate ②) sur le
-  patch préparé par la lane, lit le verdict et les BLOCKER/MAJOR, transmet à l'implémenteur.
+- **Revue** (standard et risqué, `guessitall-workflow` §5) : la session principale lance le
+  reviewer sur le patch préparé par la lane, lit le verdict et les BLOCKER/MAJOR, transmet à
+  l'implémenteur. Trivial : aucune revue.
 - Depuis WSL : ni `flutter run` ni `flutter build`. Les recettes device vont dans la liste de
   Florent.
 - **Jamais un 2ᵉ agent sur le worktree d'une lane qui paraît stallée** : la stopper (TaskStop) ou
@@ -106,7 +107,7 @@ Seulement sur délégation explicite (« avance jusqu'au bout, prends les arbitr
   **date · story · question · choix · raison · état** (`appliqué`, `à valider`, `À TRANCHER`).
 - 🔴 **Un changement de forme d'une clé `guessItAll_*` ne s'arbitre jamais seul** : `À TRANCHER`,
   la story attend Florent (`CLAUDE.md` règle 7).
-- Même mécanisme au 3ᵉ round de gate = non-convergence : l'orchestrateur arbitre (simplifier,
+- Même mécanisme au 3ᵉ round de revue = non-convergence : l'orchestrateur arbitre (simplifier,
   réduire la spec, accepter un résidu nommé) et l'inscrit au journal ; hors délégation, il
   remonte à Florent.
 - Teach-back et recettes device reportés au bilan : le dire.
@@ -120,10 +121,10 @@ Seulement sur délégation explicite (« avance jusqu'au bout, prends les arbitr
   incrémenté depuis la même valeur, **le second merge renumérote** (version et migration chaînée
   après celle déjà mergée) et rejoue le test de migration avant de merger.
 
-## 7. Fin d'epic : gate ③ puis bilan
+## 7. Fin d'epic : revue d'epic puis bilan
 
-**Gate ③**, seulement si **≥ 2 stories ont été sérialisées** sur un point de collision ou un
-invariant du tier risqué : **un reviewer** (même rubrique que le gate ②) sur le **diff cumulé** de
+**Revue d'epic**, seulement si **≥ 2 stories ont été sérialisées** sur un point de collision ou un
+invariant du tier risqué : **un reviewer** (même rubrique que `guessitall-workflow` §5) sur le **diff cumulé** de
 l'epic depuis la merge-base de la première story, centré sur les invariants transverses
 (« la garantie posée par A tient-elle encore après le chemin ajouté par B ? »). Sinon, sauté.
 

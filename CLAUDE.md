@@ -44,7 +44,7 @@ racine plutôt qu'empiler des fixes en revue).
 chaque session ; les règles projet ci-dessous surchargent les skills en cas de conflit.
 
 **La session principale suit `guessitall-orchestration`** (cadrage, lots, lanes, mode délégué,
-gate ③, passation) ; une lane suit `guessitall-workflow`.
+revue d'epic, passation) ; une lane suit `guessitall-workflow`.
 
 1. **Idée / design ouvert** → `superpowers:brainstorming` (divergent — jamais pour une pile de fixes).
 2. **Cadrage — SYSTÉMATIQUE avant d'écrire un epic (ou une US isolée)** → `grilling` : interview
@@ -56,9 +56,9 @@ gate ③, passation) ; une lane suit `guessitall-workflow`.
 4. **Planifier l'exécution du lot** → `guessitall-orchestration` §2 : intérêt/US, graphe de
    conflits → lanes, dosage, prompt-pack.
 5. **Implémenter chaque lane** → un worktree par lane (jusqu'à 5, `guessitall-orchestration` §3),
-   en suivant **`guessitall-workflow`** : tests minimaux, puis **gate ②** (1 reviewer adversarial
-   spec-aveugle, sans Codex). **Pas de gate ①** — cf. garde-fous.
-6. **Teach-back puis closeout** → `teach-back` (gate de compréhension avant merge — skip auto si
+   en suivant **`guessitall-workflow`** : tests minimaux, puis la revue que le tier impose
+   (trivial : aucune ; standard et risqué : 1 reviewer Opus, sans Codex). Pas de gates numérotés.
+6. **Teach-back puis closeout** → `teach-back` (compréhension avant merge — skip auto si
    trivial) puis `guessitall-pr-closeout` (PR base `main`) — **merge uniquement sur go explicite de
    Florent**.
 
@@ -67,20 +67,18 @@ Hors cycle : bug / test rouge / comportement inattendu → `bmad-investigate` ; 
 
 **Garde-fous** (mécanique complète dans `guessitall-workflow`) :
 
-- **Dosage** : trivial (ajout de mots, copy, 1 écran) → direct, zéro cérémonie. **Tier risqué** →
-  pipeline complet : ① machine à états de la partie, ② scoring, ③ schéma `SharedPreferences`,
-  ④ sync Firestore/offline, ⑤ intégrité analytics, ⑥ timer & cycle de vie. Le dosage décide *si* un
-  gate tourne, **jamais** sa forme quand il tourne.
-- 🔴 **Gate ① (revue de spec) SAUTÉ par défaut** — ne pas le proposer, ne pas demander
-  confirmation. Le pare-feu amont est le **`grill-me` systématique** avant tout epic. Contrepartie :
-  le gate ② tourne **en entier**.
-- ⚠️ `bmad-*` = skills (Skill tool), **pas** des `subagent_type`. Les reviewers de gate se spawnent
-  en `general-purpose` + rubrique inline.
+- **Dosage par tier** (`guessitall-workflow` §1) : trivial (ajout de mots, copy, doc) → direct,
+  aucune revue. **Tier risqué** : ① machine à états de la partie, ② scoring, ③ schéma
+  `SharedPreferences`, ④ sync Firestore/offline, ⑤ intégrité analytics, ⑥ timer & cycle de vie.
+- **Pas de revue de spec** : le pare-feu amont est le **`grilling` systématique** avant tout epic.
+- **Au plus 5 agents en parallèle**, sous la sonde de 15 min (`guessitall-orchestration` §3-4).
+- ⚠️ `bmad-*` = skills (Skill tool), **pas** des `subagent_type`. Le reviewer se spawne en
+  `general-purpose` + rubrique inline.
 
 ## Règles projet
 
 1. **Lire avant de modifier** — jamais de modification à l'aveugle.
-2. **Tests — minimaux, ciblé en dev, complet au gate.** On n'écrit un test que s'il épingle un
+2. **Tests — minimaux, ciblé en dev, suite complète avant la PR.** On n'écrit un test que s'il épingle un
    invariant du tier risqué ou reproduit un bug corrigé ; pas de test cosmétique ni de widget test
    pour de l'UI simple (`guessitall-orchestration`). En dev : `scripts/with-test-slot.sh flutter test test/<fichier>`.
    **Suite complète une seule fois avant la PR** : `scripts/run-full-suite.sh` (format + analyze +
@@ -159,7 +157,7 @@ Hors cycle : bug / test rouge / comportement inattendu → `bmad-investigate` ; 
 | `docs/tracking_evolution.md` | Journal des évolutions techniques et raisons des choix |
 | `docs/notes_pour_plus_tard.md` | Journal des dettes techniques **assumées** |
 | `docs/SUPPORT.md` | Page support publiée |
-| `_bmad-output/implementation-artifacts/sprint-status.yaml` | Colonne vertébrale US → epic → gate |
+| `_bmad-output/implementation-artifacts/sprint-status.yaml` | Colonne vertébrale US → epic → statut |
 | `docs/agent-memory/` | **Backup mirror** de l'auto-memory Claude Code (canonical = `~/.claude/`) — sync via `scripts/sync-agent-memory.sh` (`--restore` pour repeupler) |
 
 ## Outillage agent

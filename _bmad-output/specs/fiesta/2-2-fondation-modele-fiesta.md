@@ -98,7 +98,7 @@ Hors périmètre : écrans, tirage, effets. Aucun effet de jeu dans cette story.
 - `test/models/fiesta/fiesta_catalog_test.dart` : critère 7 (symétrie, plafond de 2).
 - Le critère 6 se vérifie dans un test provider existant si c'est bon marché
   (`test/providers/turn_time_test.dart` montre comment monter le provider) ; sinon, le
-  laisser au gate ③.
+  laisser à la revue d'epic.
 
 ## Recette device (Florent, Android + iOS)
 
