@@ -1,0 +1,1176 @@
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index 14d63a8..44b3e51 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -309,3 +309,35 @@ garde « simplifier la racine ». **Au plus 5 agents en parallèle**, sous la so
+ coûtait plus qu'elle ne rapportait sur des changements simples ; WasReal a déjà convergé vers ce
+ modèle par tier. Différence assumée avec WasReal : pas de jambe Codex en risqué (décision du même
+ jour).
++
++---
++
++## 2026-11-03 — Fiesta 2-2 : `GameState.fiesta` optionnel, catalogue en code, gel au lancement
++
++**Quoi.** Nouveau dossier `lib/models/fiesta/` : catalogue V1 (11 ids figés + table
++d'incompatibilités Q14), `ModifierInstance`, `FiestaRules` (immuable), `FiestaState`
++`{rules, active, turn}`. `GameState` gagne **un** champ optionnel `fiesta`, absent du JSON quand
++nul. `GameProvider.startGame({FiestaRules? fiesta})` gèle la config ; sans argument il l'efface.
++
++**Pourquoi ces choix.**
++- **Un seul champ optionnel, pas de bump de `kCurrentSchemaVersion`** : absent = Classique, donc
++  une partie écrite par la version en store se relit sans migration, et le blob Classique ne
++  change pas d'un octet (règle 7). Les stories suivantes ajoutent leurs compteurs *dans* `fiesta`
++  (`turn`), jamais à la racine de `GameState`.
++- **Relecture tolérante à deux niveaux** : `fiesta` structurellement illisible → Classique (la
++  partie reste jouable) ; une instance ou un réglage illisible → ignoré seul, jamais de valeur
++  par défaut inventée (même règle que `WordEvent.tryFromJson`). Les ids sont donc figés : en
++  renommer un rendrait invisibles les instances en cours. `nature` est persistée avec
++  l'instance (exigé par la spec) : une instance dont la nature est illisible tombe, elle aussi.
++- **Catalogue en code** : seuls des ids, réglages et instances sont persistés ; nom et description
++  se relisent depuis le code courant, donc un libellé se corrige sans migration.
++- **Gel par immutabilité** plutôt que par copie profonde à chaque `startGame` : `FiestaRules`
++  copie ses collections en lecture seule à la construction, le test de 2-2 le prouve en mutant
++  la map source après le lancement.
++- **`CatchUpRules.auto`** porte les constantes du mode Auto (+3/+5 s, plafond 30 s, −1 s,
++  plafond 15 s) et est la valeur par défaut de `FiestaRules.catchUp` : 2-6 lit un seul champ,
++  quel que soit le mode.
++- **Champ absent = défaut, champ mal typé = illisible** (`readOr`, revue r1) : après la 1ʳᵉ
++  release Fiesta, une story qui ajoute un champ à `FiestaRules` ne doit pas faire retomber en
++  Classique les parties Fiesta en cours au moment de la mise à jour. Seule une valeur présente
++  et mal typée invalide le blob. Un `mode` inconnu reste bloquant : c'est la clé de structure.
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index 35ce1e0..7560814 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -14,6 +14,35 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `word_event.dart` | `WordEvent`, `WordEventType`, `PassEvent` | Evenement atomique : shown/guessed/passed/expired/invalidated avec contexte (round, turn, team, player) |
+ | `word_stats.dart` | `WordMetadata`, `WordRoundStats`, `WordStats` | Metadonnees mot (category, difficulty, language), stats par manche et agregees |
+ | `category_metadata.dart` | `CategoryMetadata` | Metadonnees categorie multilingue (id, icon, noms, locales) |
++| `fiesta/modifier_catalog.dart` | `ModifierDef`, `kModifierCatalog`, `kModifierIncompatibilities`, enums `ModifierNature/Scope/Target` | Catalogue Fiesta V1 (11 ids **figés**, du code, jamais persisté), `modifierById`, `areCompatible` |
++| `fiesta/modifier_instance.dart` | `ModifierInstance` | Modificateur actif dans une partie. `tryFromJson` tolérant (id inconnu → `null`, jamais de défaut inventé). `canAdd(active, candidate, {maxPerTurn: 2})` |
++| `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, `CatchUpRules`, enums `FiestaMode`, `ModifierArrival` | Configuration Fiesta **immuable** (Auto / Personnalisé, réglage par modificateur, rattrapage, tirage, règles communes). `CatchUpRules.auto` = constantes du mode Auto. `tryFromJson` : structure illisible → `null`, réglage d'id inconnu ignoré seul |
++| `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn}`. `turn` est vide pour l'instant (compteurs des stories d'effets) |
++
++## Fiesta — invariants (epic-2)
++
++- **`GameState.fiesta` nul = Classique.** `toJson()` n'écrit **pas** la clé quand nul : le blob
++  d'une partie Classique est octet pour octet celui d'avant. `kCurrentSchemaVersion` inchangé.
++- **Relecture tolérante** : `fiesta` non-objet ou règles illisibles → Classique ; instance ou
++  réglage illisible → ignoré seul (règle `WordEvent.tryFromJson`).
++- 🔴 **Champ ajouté après la 1ʳᵉ release Fiesta** : il se lit **clé absente = défaut documenté**
++  (`readOr`, `fiesta_rules.dart`) ; seule une valeur présente et mal typée invalide. Sinon une
++  mise à jour ferait retomber en Classique toute partie Fiesta en cours.
++- `ModifierInstance` : une cible `team` / `player` porte **toujours** son `teamId` (assert +
++  `tryFromJson`). `canAdd` plafonne **par équipe** : « pour tous » + les siennes.
++- **Gel au lancement** : `GameProvider.startGame({FiestaRules? fiesta})` pose une `FiestaState`
++  neuve ; `FiestaRules` copie ses collections en lecture seule. Sans argument, `clearFiesta`.
++- Tout l'état Fiesta vit ici, jamais dans le provider : persisté par `_saveGameState` et
++  restauré par le retour arrière (`savePreValidationState` = `GameState.toJson()`).
++- ⚠️ Pour 2-4 : `teams_screen.dart` appelle `startGame()` sans argument, ce qui **efface**
++  `fiesta`. Le mode choisi avant le lancement doit être porté jusqu'à cet appel (Q10 : en
++  mémoire, hors `GameState`).
++- `FiestaState.turn` est un sac `Map<String, dynamic>` non validé (choix de spec). Les stories
++  d'effets devraient préférer des champs typés dans `FiestaState` à des clés dans cette map.
++- Forme JSON : `fiesta: {rules: {mode, symmetric, autoCalibrate, ensembleName?, modifiers:
++  {id: {active, arrival, startRound, fixedRound?, charges}}, oneOfThree, catchUp: {b1, b2, cap,
++  mal, malCap}, drawCount, oneAnswer, carryOver}, active: [{catalogId, scope, target, teamId?,
++  playerId?, charges, nature, round}], turn: {}}`.
+ 
+ ## Relations
+ 
+diff --git a/lib/models/fiesta/fiesta_rules.dart b/lib/models/fiesta/fiesta_rules.dart
+new file mode 100644
+index 0000000..5fc8434
+--- /dev/null
++++ b/lib/models/fiesta/fiesta_rules.dart
+@@ -0,0 +1,221 @@
++import 'modifier_catalog.dart';
++
++enum FiestaMode { auto, custom }
++
++/// Comment un modificateur arrive en jeu (mode Personnalisé).
++enum ModifierArrival { draw, offer, fixed }
++
++/// Réglage d'UN modificateur dans un ensemble Personnalisé.
++class ModifierSetting {
++  final bool active;
++  final ModifierArrival arrival;
++
++  /// Manche à partir de laquelle il peut arriver (`draw` / `offer`).
++  final int startRound;
++
++  /// Manche sur laquelle il est fixé (`fixed`).
++  final int? fixedRound;
++  final int charges;
++
++  const ModifierSetting({
++    required this.active,
++    required this.arrival,
++    required this.startRound,
++    this.fixedRound,
++    required this.charges,
++  });
++
++  Map<String, dynamic> toJson() => {
++        'active': active,
++        'arrival': arrival.name,
++        'startRound': startRound,
++        'fixedRound': fixedRound,
++        'charges': charges,
++      };
++
++  static ModifierSetting? tryFromJson(Map<String, dynamic> json) {
++    final active = json['active'];
++    final arrival = enumFromJson(ModifierArrival.values, json['arrival']);
++    final startRound = readOr(json, 'startRound', 1);
++    final fixedRound = json['fixedRound'];
++    final charges = readOr(json, 'charges', 0);
++    if (active is! bool ||
++        arrival == null ||
++        startRound == null ||
++        fixedRound is! int? ||
++        charges == null) {
++      return null;
++    }
++    return ModifierSetting(
++      active: active,
++      arrival: arrival,
++      startRound: startRound,
++      fixedRound: fixedRound,
++      charges: charges,
++    );
++  }
++}
++
++/// Curseurs du rattrapage, en secondes.
++class CatchUpRules {
++  /// Bonus par point d'écart après M1 / après M2, et son plafond.
++  final int b1;
++  final int b2;
++  final int cap;
++
++  /// Malus du leader par point d'écart, et son plafond.
++  final int mal;
++  final int malCap;
++
++  const CatchUpRules({
++    required this.b1,
++    required this.b2,
++    required this.cap,
++    required this.mal,
++    required this.malCap,
++  });
++
++  /// Valeurs du mode Auto (cadrage figé) : +3/+5 s, plafond 30 s ; −1 s,
++  /// plafond 15 s.
++  static const auto = CatchUpRules(b1: 3, b2: 5, cap: 30, mal: 1, malCap: 15);
++
++  Map<String, dynamic> toJson() =>
++      {'b1': b1, 'b2': b2, 'cap': cap, 'mal': mal, 'malCap': malCap};
++
++  static CatchUpRules? tryFromJson(Map<String, dynamic> json) {
++    final b1 = readOr(json, 'b1', auto.b1);
++    final b2 = readOr(json, 'b2', auto.b2);
++    final cap = readOr(json, 'cap', auto.cap);
++    final mal = readOr(json, 'mal', auto.mal);
++    final malCap = readOr(json, 'malCap', auto.malCap);
++    if (b1 == null ||
++        b2 == null ||
++        cap == null ||
++        mal == null ||
++        malCap == null) {
++      return null;
++    }
++    return CatchUpRules(b1: b1, b2: b2, cap: cap, mal: mal, malCap: malCap);
++  }
++}
++
++/// Lit [key] en tolérant son ABSENCE : absent (ou `null`) → [fallback] ;
++/// présent et mal typé → `null` (blob illisible).
++///
++/// 🔴 Règle 7 : un champ ajouté à ces types après la 1ʳᵉ release Fiesta doit se
++/// relire « clé absente = défaut documenté », sinon toute partie Fiesta en cours
++/// au moment de la mise à jour retomberait silencieusement en Classique.
++T? readOr<T extends Object>(Map<String, dynamic> json, String key, T fallback) {
++  final raw = json[key];
++  if (raw == null) return fallback;
++  return raw is T ? raw : null;
++}
++
++/// La configuration Fiesta d'une partie, GELÉE dans `GameState` au lancement.
++///
++/// Immuable : les collections sont copiées en lecture seule à la construction,
++/// donc modifier l'ensemble source après `startGame` ne touche pas la partie.
++class FiestaRules {
++  final FiestaMode mode;
++
++  // Mode Auto : au moins un des deux allumé.
++  final bool symmetric;
++  final bool autoCalibrate;
++
++  // Mode Personnalisé.
++  final String? ensembleName;
++
++  /// Réglage par id de catalogue. Un id absent = modificateur non réglé.
++  final Map<String, ModifierSetting> modifiers;
++  final bool oneOfThree;
++  final CatchUpRules catchUp;
++
++  /// Nombre de modificateurs tirés pour tous à chaque manche, 0 à 2.
++  final int drawCount;
++
++  // Règles communes.
++  final bool oneAnswer;
++  final bool carryOver;
++
++  FiestaRules({
++    required this.mode,
++    this.symmetric = true,
++    this.autoCalibrate = true,
++    this.ensembleName,
++    Map<String, ModifierSetting> modifiers = const {},
++    this.oneOfThree = false,
++    this.catchUp = CatchUpRules.auto,
++    this.drawCount = 1,
++    this.oneAnswer = true,
++    this.carryOver = true,
++  }) : modifiers = Map.unmodifiable(modifiers);
++
++  Map<String, dynamic> toJson() => {
++        'mode': mode.name,
++        'symmetric': symmetric,
++        'autoCalibrate': autoCalibrate,
++        'ensembleName': ensembleName,
++        'modifiers':
++            modifiers.map((id, setting) => MapEntry(id, setting.toJson())),
++        'oneOfThree': oneOfThree,
++        'catchUp': catchUp.toJson(),
++        'drawCount': drawCount,
++        'oneAnswer': oneAnswer,
++        'carryOver': carryOver,
++      };
++
++  /// Variante tolérante : `null` si la structure est illisible (`mode` inconnu,
++  /// champ présent mais mal typé). Un champ ABSENT prend la valeur par défaut
++  /// du constructeur ([readOr], règle 7). Un réglage de modificateur d'id
++  /// inconnu ou mal formé est ignoré seul, pas l'ensemble.
++  static FiestaRules? tryFromJson(Map<String, dynamic> json) {
++    final mode = enumFromJson(FiestaMode.values, json['mode']);
++    final symmetric = readOr(json, 'symmetric', true);
++    final autoCalibrate = readOr(json, 'autoCalibrate', true);
++    final ensembleName = json['ensembleName'];
++    final rawModifiers = readOr<Map>(json, 'modifiers', const {});
++    final oneOfThree = readOr(json, 'oneOfThree', false);
++    final rawCatchUp = readOr<Map>(json, 'catchUp', const {});
++    final drawCount = readOr(json, 'drawCount', 1);
++    final oneAnswer = readOr(json, 'oneAnswer', true);
++    final carryOver = readOr(json, 'carryOver', true);
++    if (mode == null ||
++        symmetric == null ||
++        autoCalibrate == null ||
++        ensembleName is! String? ||
++        rawModifiers == null ||
++        oneOfThree == null ||
++        rawCatchUp == null ||
++        drawCount == null ||
++        oneAnswer == null ||
++        carryOver == null) {
++      return null;
++    }
++    final catchUp =
++        CatchUpRules.tryFromJson(Map<String, dynamic>.from(rawCatchUp));
++    if (catchUp == null) return null;
++
++    final modifiers = <String, ModifierSetting>{};
++    for (final entry in rawModifiers.entries) {
++      final id = entry.key;
++      final raw = entry.value;
++      if (id is! String || modifierById(id) == null || raw is! Map) continue;
++      final setting =
++          ModifierSetting.tryFromJson(Map<String, dynamic>.from(raw));
++      if (setting != null) modifiers[id] = setting;
++    }
++
++    return FiestaRules(
++      mode: mode,
++      symmetric: symmetric,
++      autoCalibrate: autoCalibrate,
++      ensembleName: ensembleName,
++      modifiers: modifiers,
++      oneOfThree: oneOfThree,
++      catchUp: catchUp,
++      drawCount: drawCount,
++      oneAnswer: oneAnswer,
++      carryOver: carryOver,
++    );
++  }
++}
+diff --git a/lib/models/fiesta/fiesta_state.dart b/lib/models/fiesta/fiesta_state.dart
+new file mode 100644
+index 0000000..01afa76
+--- /dev/null
++++ b/lib/models/fiesta/fiesta_state.dart
+@@ -0,0 +1,60 @@
++import 'fiesta_rules.dart';
++import 'modifier_instance.dart';
++
++/// État Fiesta d'une partie en cours, porté par `GameState.fiesta`.
++///
++/// Nul dans `GameState` = partie Classique. Tout ce qui est ici est persisté
++/// avec la partie et restauré par le retour arrière (le snapshot de
++/// `savePreValidationState` réutilise `GameState.toJson()`).
++class FiestaState {
++  /// Configuration gelée au lancement.
++  final FiestaRules rules;
++
++  /// Instances actives.
++  final List<ModifierInstance> active;
++
++  /// Compteurs propres au tour en cours. Vide pour l'instant : les stories
++  /// d'effets y ajoutent les leurs.
++  final Map<String, dynamic> turn;
++
++  FiestaState({
++    required this.rules,
++    List<ModifierInstance> active = const [],
++    Map<String, dynamic> turn = const {},
++  })  : active = List.unmodifiable(active),
++        turn = Map.unmodifiable(turn);
++
++  Map<String, dynamic> toJson() => {
++        'rules': rules.toJson(),
++        'active': active.map((e) => e.toJson()).toList(),
++        'turn': turn,
++      };
++
++  /// Variante tolérante : `null` (= Classique) si les règles sont illisibles.
++  /// Une instance illisible est ignorée seule (`ModifierInstance.tryFromJson`).
++  static FiestaState? tryFromJson(Map<String, dynamic> json) {
++    final rawRules = json['rules'];
++    if (rawRules is! Map) return null;
++    final rules = FiestaRules.tryFromJson(Map<String, dynamic>.from(rawRules));
++    if (rules == null) return null;
++
++    final rawActive = json['active'];
++    // `whereType` et non `cast` : un cast est paresseux et lèverait à la
++    // première lecture, pas ici.
++    final active = rawActive is List
++        ? rawActive
++            .whereType<Map>()
++            .map((e) =>
++                ModifierInstance.tryFromJson(Map<String, dynamic>.from(e)))
++            .whereType<ModifierInstance>()
++            .toList()
++        : <ModifierInstance>[];
++
++    final rawTurn = json['turn'];
++    return FiestaState(
++      rules: rules,
++      active: active,
++      turn: rawTurn is Map ? Map<String, dynamic>.from(rawTurn) : const {},
++    );
++  }
++}
+diff --git a/lib/models/fiesta/modifier_catalog.dart b/lib/models/fiesta/modifier_catalog.dart
+new file mode 100644
+index 0000000..01cf70a
+--- /dev/null
++++ b/lib/models/fiesta/modifier_catalog.dart
+@@ -0,0 +1,153 @@
++/// Catalogue des modificateurs Fiesta (epic-2, V1).
++///
++/// 🔴 Le catalogue est du CODE, pas de la donnée persistée : seules les
++/// instances (`ModifierInstance`) et les réglages (`FiestaRules`) stockent des
++/// ids. Renommer un id casserait la relecture des parties en cours et des
++/// ensembles enregistrés : les ids ci-dessous sont FIGÉS.
++library;
++
++enum ModifierNature { bonus, malus }
++
++/// Portée d'une instance : toute la manche, ou un seul tour.
++enum ModifierScope { round, turn }
++
++/// Cible d'une instance : toutes les équipes, une équipe, un joueur.
++enum ModifierTarget { both, team, player }
++
++class ModifierDef {
++  final String id;
++  final String name;
++  final String description;
++  final ModifierNature nature;
++  final ModifierScope defaultScope;
++  final ModifierTarget defaultTarget;
++  final int defaultCharges;
++
++  /// Contrainte de la manche 3 (mime / dessin) : jamais avant.
++  final bool round3Only;
++
++  const ModifierDef({
++    required this.id,
++    required this.name,
++    required this.description,
++    required this.nature,
++    this.defaultScope = ModifierScope.round,
++    this.defaultTarget = ModifierTarget.both,
++    this.defaultCharges = 0,
++    this.round3Only = false,
++  });
++}
++
++const List<ModifierDef> kModifierCatalog = [
++  ModifierDef(
++    id: 'mime_no_arms',
++    name: 'Mime sans les bras',
++    description: 'Les bras restent le long du corps pendant tout le tour.',
++    nature: ModifierNature.malus,
++    round3Only: true,
++  ),
++  ModifierDef(
++    id: 'mime_no_fists',
++    name: 'Mime sans les poings',
++    description: 'Mains ouvertes, jamais de poing fermé.',
++    nature: ModifierNature.malus,
++    round3Only: true,
++  ),
++  ModifierDef(
++    id: 'mime_eyes_closed',
++    name: 'Mime les yeux fermés',
++    description: 'On mime les yeux fermés pendant tout le tour.',
++    nature: ModifierNature.malus,
++    round3Only: true,
++  ),
++  ModifierDef(
++    id: 'draw',
++    name: 'Dessiner',
++    description: 'On dessine au lieu de mimer.',
++    nature: ModifierNature.malus,
++    round3Only: true,
++  ),
++  ModifierDef(
++    id: 'no_pass',
++    name: 'Interdit de passer',
++    description: 'Le bouton Passer est désactivé.',
++    nature: ModifierNature.malus,
++  ),
++  ModifierDef(
++    id: 'free_pass',
++    name: 'Passe gratuite',
++    description: 'Les premières passes du tour sont sans pénalité.',
++    nature: ModifierNature.bonus,
++    defaultCharges: 2,
++  ),
++  ModifierDef(
++    id: 'minus_10s',
++    name: 'Malus de 10 s',
++    description: 'Le tour démarre avec 10 secondes de moins.',
++    nature: ModifierNature.malus,
++  ),
++  ModifierDef(
++    id: 'double_points',
++    name: 'Mot compte double',
++    description: 'Une fois par manche, les points du tour comptent double.',
++    nature: ModifierNature.bonus,
++    defaultCharges: 1,
++  ),
++  ModifierDef(
++    id: 'two_words',
++    name: 'Deux mots à la fois',
++    description: 'Deux mots sont affichés en même temps.',
++    nature: ModifierNature.bonus,
++  ),
++  ModifierDef(
++    id: 'reversed',
++    name: 'Mot à l\'envers',
++    description: 'Le mot est affiché à l\'envers.',
++    nature: ModifierNature.malus,
++  ),
++  ModifierDef(
++    id: 'block_guesser',
++    name: 'Bloquer un devineur',
++    description: 'Les adversaires bloquent un devineur pour un tour.',
++    nature: ModifierNature.malus,
++    defaultScope: ModifierScope.turn,
++    defaultTarget: ModifierTarget.player,
++  ),
++];
++
++/// Paires incompatibles (Q14 de l'epic). Chaque paire est écrite une fois :
++/// [areCompatible] est symétrique par construction.
++const List<(String, String)> kModifierIncompatibilities = [
++  ('no_pass', 'two_words'),
++  ('no_pass', 'free_pass'),
++  ('mime_no_arms', 'mime_eyes_closed'),
++  ('mime_no_arms', 'draw'),
++  ('mime_eyes_closed', 'draw'),
++  ('mime_no_fists', 'mime_no_arms'),
++  ('mime_no_fists', 'draw'),
++];
++
++ModifierDef? modifierById(String id) {
++  for (final def in kModifierCatalog) {
++    if (def.id == id) return def;
++  }
++  return null;
++}
++
++bool areCompatible(String a, String b) {
++  for (final (x, y) in kModifierIncompatibilities) {
++    if ((x == a && y == b) || (x == b && y == a)) return false;
++  }
++  return true;
++}
++
++/// Retrouve une valeur d'enum par son `name` sérialisé, `null` si inconnue.
++///
++/// Même règle que `WordEvent.tryFromJson` : jamais de valeur par défaut
++/// inventée sur une donnée persistée illisible.
++T? enumFromJson<T extends Enum>(List<T> values, Object? raw) {
++  for (final value in values) {
++    if (value.name == raw) return value;
++  }
++  return null;
++}
+diff --git a/lib/models/fiesta/modifier_instance.dart b/lib/models/fiesta/modifier_instance.dart
+new file mode 100644
+index 0000000..5a69687
+--- /dev/null
++++ b/lib/models/fiesta/modifier_instance.dart
+@@ -0,0 +1,117 @@
++import 'modifier_catalog.dart';
++
++/// Un modificateur ACTIF dans une partie. Persisté dans `GameState.fiesta`.
++class ModifierInstance {
++  final String catalogId;
++  final ModifierScope scope;
++  final ModifierTarget target;
++  final String? teamId;
++  final String? playerId;
++  final int charges;
++  final ModifierNature nature;
++
++  /// Manche dans laquelle l'instance a été posée.
++  final int round;
++
++  /// Contrat : une cible `team` ou `player` porte toujours son [teamId] (le
++  /// joueur est repéré par son équipe pour le plafond par équipe).
++  const ModifierInstance({
++    required this.catalogId,
++    required this.scope,
++    required this.target,
++    this.teamId,
++    this.playerId,
++    required this.charges,
++    required this.nature,
++    required this.round,
++  }) : assert(target == ModifierTarget.both || teamId != null,
++            'une cible team/player exige un teamId');
++
++  /// Vrai si les deux instances pèsent sur la même équipe : une cible `both`
++  /// touche toutes les équipes, sinon c'est le même `teamId`.
++  bool concernsSameTeamAs(ModifierInstance other) {
++    if (target == ModifierTarget.both || other.target == ModifierTarget.both) {
++      return true;
++    }
++    return teamId == other.teamId;
++  }
++
++  Map<String, dynamic> toJson() => {
++        'catalogId': catalogId,
++        'scope': scope.name,
++        'target': target.name,
++        'teamId': teamId,
++        'playerId': playerId,
++        'charges': charges,
++        'nature': nature.name,
++        'round': round,
++      };
++
++  /// Variante tolérante : rend `null` au lieu de lever.
++  ///
++  /// 🔴 Un `catalogId` inconnu (écrit par une version plus récente, ou corrompu)
++  /// ou un champ illisible ABANDONNE l'instance : jamais de valeur par défaut
++  /// inventée (même règle que `WordEvent.tryFromJson`). L'appelant l'ignore et
++  /// relit le reste de la partie.
++  static ModifierInstance? tryFromJson(Map<String, dynamic> json) {
++    final catalogId = json['catalogId'];
++    if (catalogId is! String || modifierById(catalogId) == null) return null;
++    final scope = enumFromJson(ModifierScope.values, json['scope']);
++    final target = enumFromJson(ModifierTarget.values, json['target']);
++    final nature = enumFromJson(ModifierNature.values, json['nature']);
++    final charges = json['charges'];
++    final round = json['round'];
++    final teamId = json['teamId'];
++    final playerId = json['playerId'];
++    if (scope == null ||
++        target == null ||
++        nature == null ||
++        charges is! int ||
++        round is! int ||
++        teamId is! String? ||
++        playerId is! String? ||
++        (target != ModifierTarget.both && teamId == null)) {
++      return null;
++    }
++    return ModifierInstance(
++      catalogId: catalogId,
++      scope: scope,
++      target: target,
++      teamId: teamId,
++      playerId: playerId,
++      charges: charges,
++      nature: nature,
++      round: round,
++    );
++  }
++}
++
++/// Peut-on poser [candidate] à côté des instances [active] (celles du tour en
++/// cours) ? Non si UNE équipe qu'elle touche atteindrait [maxPerTurn]
++/// modificateurs, ou si une instance active d'une équipe qu'elle touche lui
++/// est incompatible.
++///
++/// Le plafond est PAR ÉQUIPE (epic, Q8) : la charge d'une équipe = les
++/// instances « pour tous » + les siennes. Une candidate `both` est jugée sur
++/// l'équipe la plus chargée.
++bool canAdd(
++  List<ModifierInstance> active,
++  ModifierInstance candidate, {
++  int maxPerTurn = 2,
++}) {
++  final shared = active.where(candidate.concernsSameTeamAs).toList();
++  if (!shared.every((a) => areCompatible(a.catalogId, candidate.catalogId))) {
++    return false;
++  }
++  var forAll = 0;
++  final perTeam = <String?, int>{};
++  for (final a in shared) {
++    if (a.target == ModifierTarget.both) {
++      forAll++;
++    } else {
++      perTeam[a.teamId] = (perTeam[a.teamId] ?? 0) + 1;
++    }
++  }
++  final heaviest = perTeam.values.fold(0, (m, n) => n > m ? n : m);
++  return forAll + heaviest < maxPerTurn;
++}
+diff --git a/lib/models/game_state.dart b/lib/models/game_state.dart
+index 2e9fef8..e7c7b80 100644
+--- a/lib/models/game_state.dart
++++ b/lib/models/game_state.dart
+@@ -1,4 +1,5 @@
+ import '../utils/constants.dart';
++import 'fiesta/fiesta_state.dart';
+ 
+ class HistoryEntry {
+   final int round;
+@@ -108,6 +109,10 @@ class GameState {
+   List<String>?
+       restoredValidatedWords; // Mots validés à restaurer lors du retour en arrière
+ 
++  /// État Fiesta, gelé au lancement. 🔴 Nul = partie Classique ; absent du
++  /// JSON quand nul, pour que le blob d'une partie Classique ne change pas.
++  FiestaState? fiesta;
++
+   GameState({
+     this.gameId,
+     this.currentScreen = AppConstants.screenHome,
+@@ -136,6 +141,7 @@ class GameState {
+     this.pendingBonusTurnId,
+     this.preValidationSnapshot,
+     this.restoredValidatedWords,
++    this.fiesta,
+   })  : teamPlayOrder = teamPlayOrder ?? [],
+         playerOrderByTeam = playerOrderByTeam ?? {},
+         allWords = allWords ?? [],
+@@ -188,6 +194,8 @@ class GameState {
+     bool clearPreValidationSnapshot = false,
+     List<String>? restoredValidatedWords,
+     bool clearRestoredValidatedWords = false,
++    FiestaState? fiesta,
++    bool clearFiesta = false,
+   }) {
+     return GameState(
+       gameId: clearGameId ? null : (gameId ?? this.gameId),
+@@ -240,6 +248,7 @@ class GameState {
+       restoredValidatedWords: clearRestoredValidatedWords
+           ? null
+           : (restoredValidatedWords ?? this.restoredValidatedWords),
++      fiesta: clearFiesta ? null : (fiesta ?? this.fiesta),
+     );
+   }
+ 
+@@ -272,6 +281,9 @@ class GameState {
+       'pendingBonusTurnId': pendingBonusTurnId,
+       'preValidationSnapshot': preValidationSnapshot,
+       'restoredValidatedWords': restoredValidatedWords,
++      // Pas de clé `fiesta: null` : absent = Classique, et le blob d'une
++      // partie Classique reste octet pour octet celui d'avant.
++      if (fiesta != null) 'fiesta': fiesta!.toJson(),
+     };
+   }
+ 
+@@ -321,6 +333,12 @@ class GameState {
+           json['preValidationSnapshot'] as Map<String, dynamic>?,
+       restoredValidatedWords:
+           (json['restoredValidatedWords'] as List<dynamic>?)?.cast<String>(),
++      // Un `fiesta` qui n'est pas un objet, ou illisible, donne une partie
++      // Classique : jamais un crash.
++      fiesta: json['fiesta'] is Map
++          ? FiestaState.tryFromJson(
++              Map<String, dynamic>.from(json['fiesta'] as Map))
++          : null,
+     );
+   }
+ }
+diff --git a/lib/providers/CLAUDE.md b/lib/providers/CLAUDE.md
+index 7493eeb..5309a92 100644
+--- a/lib/providers/CLAUDE.md
++++ b/lib/providers/CLAUDE.md
+@@ -12,6 +12,7 @@ Gestion d'etat centralisee via Provider.
+ - **Joueurs/Equipes** : ajout, suppression, formation des equipes (manuelle/aleatoire)
+ - **Generation de mots** : mode aleatoire (avec cache metadata `_wordMetadataCache`) ou personnalise
+ - **Flux de jeu** : startGame, startTurn, markWordAsGuessed, passWord, validateWords, nextRound
++- **Fiesta** : `startGame({FiestaRules? fiesta})` gele la config dans `GameState.fiesta` ; `startGame()` sans argument l'EFFACE (`clearFiesta`, le `copyWith` part de `_game`). Getter `isFiesta`. Tout l'etat Fiesta vit dans `GameState`, jamais dans des champs du provider (persistance + retour arriere)
+ - **Navigation** : changement d'ecran via `GameState.currentScreen`
+ - **Analytics** : tracking des evenements via `AnalyticsService`
+ - **Persistance** : sauvegarde/restauration etat via `StorageService`
+diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
+index 4fb26ad..e2a2d75 100644
+--- a/lib/providers/game_provider.dart
++++ b/lib/providers/game_provider.dart
+@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
+ import 'package:flutter/widgets.dart';
+ import '../models/player.dart';
+ import '../models/team.dart';
++import '../models/fiesta/fiesta_rules.dart';
++import '../models/fiesta/fiesta_state.dart';
+ import '../models/game_settings.dart';
+ import '../models/game_state.dart';
+ import '../models/turn_clock.dart';
+@@ -36,6 +38,7 @@ class GameProvider extends ChangeNotifier {
+   List<Player> get players => _players;
+   List<Team> get teams => _teams;
+   GameState get game => _game;
++  bool get isFiesta => _game.fiesta != null;
+   String? get currentEditingPlayerId => _currentEditingPlayerId;
+ 
+   // Setter pour le joueur en cours d'édition
+@@ -382,7 +385,11 @@ class GameProvider extends ChangeNotifier {
+ 
+   // ========== ACTIONS - GAME ==========
+ 
+-  Future<void> startGame() async {
++  /// [fiesta] = configuration Fiesta à GELER dans la partie ; nul = Classique.
++  ///
++  /// 🔴 Le `copyWith` ci-dessous part de `_game` : sans `clearFiesta`, la
++  /// config d'une partie Fiesta précédente survivrait à un lancement Classique.
++  Future<void> startGame({FiestaRules? fiesta}) async {
+     // Créer le pool de tous les mots
+     final List<String> allWords = [];
+     for (final player in _players) {
+@@ -421,6 +428,8 @@ class GameProvider extends ChangeNotifier {
+       timeRemaining: _settings.turnDuration,
+       clearTurnBonusTime: true,
+       history: [],
++      fiesta: fiesta == null ? null : FiestaState(rules: fiesta),
++      clearFiesta: fiesta == null,
+     );
+ 
+     // Initialiser le tracking analytics
+diff --git a/test/models/fiesta/fiesta_catalog_test.dart b/test/models/fiesta/fiesta_catalog_test.dart
+new file mode 100644
+index 0000000..50419b1
+--- /dev/null
++++ b/test/models/fiesta/fiesta_catalog_test.dart
+@@ -0,0 +1,110 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
++import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
++
++ModifierInstance _instance(String id,
++        {ModifierTarget target = ModifierTarget.both, String? teamId}) =>
++    ModifierInstance(
++      catalogId: id,
++      scope: ModifierScope.round,
++      target: target,
++      teamId: teamId,
++      charges: 0,
++      nature: ModifierNature.malus,
++      round: 1,
++    );
++
++void main() {
++  group('Catalogue Fiesta', () {
++    test(
++        '11 ids uniques, et la table d\'incompatibilités ne cite que des ids '
++        'du catalogue', () {
++      // 🔴 Ids FIGÉS : ils sont persistés dans les parties en cours et les
++      // ensembles enregistrés. En renommer un rend ces données illisibles.
++      final ids = kModifierCatalog.map((d) => d.id).toList();
++      expect(ids, [
++        'mime_no_arms',
++        'mime_no_fists',
++        'mime_eyes_closed',
++        'draw',
++        'no_pass',
++        'free_pass',
++        'minus_10s',
++        'double_points',
++        'two_words',
++        'reversed',
++        'block_guesser',
++      ]);
++
++      for (final (a, b) in kModifierIncompatibilities) {
++        expect(modifierById(a), isNotNull, reason: '$a hors catalogue');
++        expect(modifierById(b), isNotNull, reason: '$b hors catalogue');
++        expect(a, isNot(b));
++      }
++    });
++
++    test('areCompatible est symétrique sur toutes les paires', () {
++      final ids = kModifierCatalog.map((d) => d.id).toList();
++      for (final a in ids) {
++        for (final b in ids) {
++          expect(areCompatible(a, b), areCompatible(b, a), reason: '$a / $b');
++        }
++      }
++      expect(areCompatible('no_pass', 'two_words'), isFalse);
++      expect(areCompatible('two_words', 'no_pass'), isFalse);
++      expect(areCompatible('mime_no_fists', 'draw'), isFalse);
++      expect(areCompatible('no_pass', 'reversed'), isTrue);
++    });
++  });
++
++  group('canAdd', () {
++    test('refuse une 3ᵉ instance pour une même équipe et un même tour', () {
++      final active = [_instance('reversed'), _instance('minus_10s')];
++      expect(canAdd(active, _instance('no_pass')), isFalse);
++      expect(canAdd(active, _instance('no_pass'), maxPerTurn: 3), isTrue);
++    });
++
++    test('ne compte que les instances qui pèsent sur la même équipe', () {
++      final active = [
++        _instance('reversed', target: ModifierTarget.team, teamId: 'A'),
++        _instance('minus_10s', target: ModifierTarget.team, teamId: 'A'),
++      ];
++      expect(
++          canAdd(active,
++              _instance('no_pass', target: ModifierTarget.team, teamId: 'B')),
++          isTrue);
++      // Une instance « pour tous » pèse sur A, qui est déjà pleine.
++      expect(canAdd(active, _instance('no_pass')), isFalse);
++    });
++
++    test('le plafond est par équipe, pas la somme des équipes touchées', () {
++      // A et B ont chacune 1 instance : un tirage pour tous les porte à 2,
++      // c'est autorisé.
++      final active = [
++        _instance('reversed', target: ModifierTarget.team, teamId: 'A'),
++        _instance('minus_10s', target: ModifierTarget.team, teamId: 'B'),
++      ];
++      expect(canAdd(active, _instance('two_words')), isTrue);
++    });
++
++    test(
++        'une instance pour tous compte pour chaque équipe, compatibilité '
++        'comprise', () {
++      final active = [_instance('no_pass')];
++      expect(
++          canAdd(active,
++              _instance('two_words', target: ModifierTarget.team, teamId: 'B')),
++          isFalse);
++      expect(
++          canAdd(active,
++              _instance('reversed', target: ModifierTarget.team, teamId: 'B')),
++          isTrue);
++    });
++
++    test('refuse une instance incompatible avec une instance active', () {
++      expect(canAdd([_instance('no_pass')], _instance('two_words')), isFalse);
++      expect(canAdd([_instance('two_words')], _instance('no_pass')), isFalse);
++      expect(canAdd([_instance('no_pass')], _instance('reversed')), isTrue);
++    });
++  });
++}
+diff --git a/test/models/game_state_test.dart b/test/models/game_state_test.dart
+index eb9153d..9278202 100644
+--- a/test/models/game_state_test.dart
++++ b/test/models/game_state_test.dart
+@@ -1,4 +1,8 @@
+ import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_state.dart';
++import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
++import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
+ import 'package:guess_it_all_mobile/models/game_state.dart';
+ import 'package:guess_it_all_mobile/utils/constants.dart';
+ 
+@@ -108,6 +112,181 @@ void main() {
+     });
+   });
+ 
++  group('GameState — Fiesta (champ optionnel, absent = Classique)', () {
++    const instance = ModifierInstance(
++      catalogId: 'no_pass',
++      scope: ModifierScope.round,
++      target: ModifierTarget.both,
++      charges: 0,
++      nature: ModifierNature.malus,
++      round: 2,
++    );
++
++    FiestaState fiestaState() => FiestaState(
++          rules: FiestaRules(
++            mode: FiestaMode.custom,
++            ensembleName: 'Soirée chez Max',
++            modifiers: const {
++              'free_pass': ModifierSetting(
++                active: true,
++                arrival: ModifierArrival.offer,
++                startRound: 2,
++                charges: 3,
++              ),
++              'draw': ModifierSetting(
++                active: true,
++                arrival: ModifierArrival.fixed,
++                startRound: 3,
++                fixedRound: 3,
++                charges: 0,
++              ),
++            },
++            oneOfThree: true,
++            catchUp:
++                const CatchUpRules(b1: 2, b2: 4, cap: 20, mal: 1, malCap: 10),
++            drawCount: 2,
++            oneAnswer: false,
++          ),
++          active: const [instance],
++        );
++
++    test('un blob Classique (sans `fiesta`) reste Classique, sans bruit', () {
++      // 🔴 Littéral FIGÉ : la forme écrite par la version en store
++      // (`toJson()` au commit 51c0b78), telle qu'elle est sur les téléphones
++      // des joueurs. Ne pas le régénérer depuis le code courant.
++      final legacy = <String, dynamic>{
++        'gameId': 'abc',
++        'currentScreen': 'turn',
++        'currentRound': 2,
++        'currentTurn': 5,
++        'currentTeamIndex': 1,
++        'currentPlayerIndexInTeam': 0,
++        'teamPlayOrder': [1, 0],
++        'playerOrderByTeam': {
++          'team-0': [0, 1],
++          'team-1': [1, 0],
++        },
++        'currentTurnIndex': 3,
++        'allWords': ['chat', 'chien'],
++        'remainingWords': ['chien'],
++        'currentWord': 'chien',
++        'wordsGuessedThisTurn': ['chat'],
++        'passedWordsThisTurn': [],
++        'expiredWord': null,
++        'timeRemaining': 12,
++        'turnBonusTime': 7,
++        'turnStartTimestamp': 1000,
++        'turnEndTimestamp': 31000,
++        'pausedTimeRemaining': null,
++        'pausedRemainingMs': null,
++        'isGameSuspended': false,
++        'suspendedScreen': null,
++        'history': [
++          {
++            'round': 1,
++            'turn': 1,
++            'teamId': 'team-0',
++            'playerId': 'player-0',
++            'wordsGuessed': ['chat'],
++            'wordsInvalidated': [],
++            'wordsPassed': ['chien'],
++            'timeSpent': 30,
++            'isBonusContinuation': false,
++          },
++        ],
++        'pendingBonusTurnId': null,
++        'preValidationSnapshot': null,
++        'restoredValidatedWords': null,
++      };
++
++      final restored = GameState.fromJson(legacy);
++
++      expect(restored.fiesta, isNull);
++      expect(restored.toJson(), equals(legacy),
++          reason: 'le blob Classique ne doit pas changer, ni `fiesta: null`');
++    });
++
++    test(
++        'un champ de règles ABSENT prend sa valeur par défaut, un champ mal '
++        'typé invalide (règle 7 : champ ajouté après la 1ʳᵉ release)', () {
++      final json = GameState(gameId: 'abc', fiesta: fiestaState()).toJson();
++      final rules = (json['fiesta'] as Map<String, dynamic>)['rules']
++          as Map<String, dynamic>;
++      rules.remove('carryOver');
++      rules['fromTheFuture'] = 42;
++      (rules['catchUp'] as Map<String, dynamic>).remove('malCap');
++
++      final restored = GameState.fromJson(json);
++
++      expect(restored.fiesta, isNotNull);
++      expect(restored.fiesta!.rules.carryOver, isTrue);
++      expect(restored.fiesta!.rules.catchUp.malCap, CatchUpRules.auto.malCap);
++      expect(restored.fiesta!.rules.catchUp.b1, 2,
++          reason: 'les présents restent');
++
++      rules['carryOver'] = 'oui';
++      expect(GameState.fromJson(json).fiesta, isNull);
++    });
++
++    test('un aller-retour JSON préserve rules et active à l\'identique', () {
++      final original = GameState(gameId: 'abc', fiesta: fiestaState());
++
++      final restored = GameState.fromJson(original.toJson());
++
++      expect(restored.fiesta, isNotNull);
++      expect(restored.toJson(), equals(original.toJson()));
++      expect(restored.fiesta!.rules.modifiers.keys, ['free_pass', 'draw']);
++      expect(restored.fiesta!.active.single.catalogId, 'no_pass');
++    });
++
++    test('une instance inconnue ou mal formée est ignorée, le reste se relit',
++        () {
++      final json = GameState(gameId: 'abc', fiesta: fiestaState()).toJson();
++      final fiesta = json['fiesta'] as Map<String, dynamic>;
++      fiesta['active'] = [
++        instance.toJson(),
++        {...instance.toJson(), 'catalogId': 'from_the_future'},
++        {...instance.toJson(), 'charges': 'deux'},
++        'pas un objet',
++      ];
++      // Un réglage d'id inconnu dans les règles est ignoré seul, lui aussi.
++      (fiesta['rules'] as Map<String, dynamic>)['modifiers']['unknown'] = {
++        'active': true,
++        'arrival': 'draw',
++        'startRound': 1,
++        'charges': 0,
++      };
++
++      final restored = GameState.fromJson(json);
++
++      expect(restored.gameId, 'abc');
++      expect(restored.fiesta!.active.map((e) => e.catalogId), ['no_pass']);
++      expect(restored.fiesta!.rules.modifiers.keys, ['free_pass', 'draw']);
++    });
++
++    test(
++        'un `fiesta` qui n\'est pas un objet, ou aux règles illisibles, '
++        'donne une partie Classique', () {
++      final base = GameState(gameId: 'abc').toJson();
++
++      expect(GameState.fromJson({...base, 'fiesta': 'oui'}).fiesta, isNull);
++      expect(GameState.fromJson({...base, 'fiesta': 42}).fiesta, isNull);
++      expect(
++          GameState.fromJson({...base, 'fiesta': <String, dynamic>{}}).fiesta,
++          isNull);
++      expect(
++          GameState.fromJson({
++            ...base,
++            'fiesta': {
++              'rules': {'mode': 'party'},
++              'active': [],
++            },
++          }).fiesta,
++          isNull);
++      expect(GameState.fromJson({...base, 'fiesta': 'oui'}).gameId, 'abc');
++    });
++  });
++
+   group('HistoryEntry', () {
+     test('un aller-retour JSON préserve les champs', () {
+       final original = _entry(round: 3, turn: 7);
+diff --git a/test/providers/fiesta_freeze_test.dart b/test/providers/fiesta_freeze_test.dart
+new file mode 100644
+index 0000000..d17d3c1
+--- /dev/null
++++ b/test/providers/fiesta_freeze_test.dart
+@@ -0,0 +1,80 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/providers/game_provider.dart';
++
++import '../helpers/test_prefs.dart';
++
++/// Un provider prêt à lancer une partie : 2 joueurs, 2 équipes, 1 mot chacun.
++Future<GameProvider> givenReadyProvider() async {
++  await givenPrefs();
++  givenFakePlatformPlugins();
++  final provider = GameProvider();
++  await pumpEventQueue();
++  for (final name in ['Ana', 'Bob']) {
++    final id = (provider.addPlayer(name)['player'] as dynamic).id as String;
++    provider.updatePlayerWords(id, ['mot-$name']);
++  }
++  provider.createTeams();
++  provider.randomizeTeams();
++  return provider;
++}
++
++void main() {
++  group('Gel de la configuration Fiesta au lancement', () {
++    test(
++        'startGame(fiesta:) gèle une copie : modifier la source ensuite '
++        'ne change pas la partie', () async {
++      final provider = await givenReadyProvider();
++      final sourceModifiers = <String, ModifierSetting>{
++        'no_pass': const ModifierSetting(
++          active: true,
++          arrival: ModifierArrival.draw,
++          startRound: 1,
++          charges: 0,
++        ),
++      };
++      final rules =
++          FiestaRules(mode: FiestaMode.custom, modifiers: sourceModifiers);
++
++      await provider.startGame(fiesta: rules);
++      sourceModifiers['draw'] = const ModifierSetting(
++        active: true,
++        arrival: ModifierArrival.fixed,
++        startRound: 3,
++        charges: 0,
++      );
++
++      expect(provider.isFiesta, isTrue);
++      expect(provider.game.fiesta!.rules.modifiers.keys, ['no_pass']);
++    });
++
++    test('startGame() sans argument efface la Fiesta de la partie précédente',
++        () async {
++      final provider = await givenReadyProvider();
++      await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
++      expect(provider.isFiesta, isTrue);
++
++      await provider.startGame();
++
++      expect(provider.isFiesta, isFalse);
++      expect(provider.game.toJson().containsKey('fiesta'), isFalse);
++    });
++
++    test('le retour arrière restaure l\'état Fiesta capturé', () async {
++      final provider = await givenReadyProvider();
++      await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
++      final captured = provider.game.fiesta!.toJson();
++
++      provider.savePreValidationState(const []);
++      // Aucune API publique ne mute encore `fiesta` après le snapshot : on
++      // relance en Classique, ce qui l'efface sans toucher au snapshot.
++      await provider.startGame();
++      expect(provider.game.fiesta, isNull);
++
++      provider.restorePreValidationState();
++
++      expect(provider.game.fiesta, isNotNull);
++      expect(provider.game.fiesta!.toJson(), equals(captured));
++    });
++  });
++}
