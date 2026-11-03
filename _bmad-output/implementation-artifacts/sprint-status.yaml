@@ -246,15 +246,16 @@ stories:
   2-8-effets-de-tour-catalogue:
     epic: epic-2-mode-fiesta
     title: "Effets de tour : interdit de passer, passe gratuite, bloquer un devineur, contraintes annoncées, mot à l'envers"
-    status: ready-for-dev
+    status: done
     depends: [2-5-tirage-symetrique-transition, 2-7-analytics-archive-recap]
     spec: _bmad-output/specs/fiesta/2-8-effets-de-tour-catalogue.md
     note: >-
+      ✅ MERGÉ PR #15 (squash b3c4a1e, mode délégué). Revue Opus r1 READY (3 MINOR corrigés) → r2 READY.
       R ⑥② · GP + GS + turn_screen.
   2-9-mot-compte-double:
     epic: epic-2-mode-fiesta
     title: "Mot compte double : charges, activation avant le tour, score ×2 via resolveTurn pur, retour arrière"
-    status: ready-for-dev
+    status: in-progress
     depends: [2-8-effets-de-tour-catalogue]
     spec: _bmad-output/specs/fiesta/2-9-mot-compte-double.md
     note: >-
