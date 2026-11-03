@@ -1,5 +1,6 @@
 import 'fiesta_rules.dart';
 import 'modifier_catalog.dart';
+import 'symmetric_draw.dart';
 
 /// Pourquoi un ensemble ne peut pas être enregistré (messages affichés tels
 /// quels sous le bouton de l'éditeur). Vide = enregistrable.
@@ -24,6 +25,12 @@ List<String> validateEnsemble(FiestaRules rules) {
     final def = modifierById(entry.key);
     if (!setting.active || def == null) continue;
     final name = def.name;
+
+    // Un modificateur à cible joueur n'est ni tiré ni fixé (`isForAllTeams`) :
+    // il n'arriverait jamais.
+    if (!isForAllTeams(def) && setting.arrival != ModifierArrival.offer) {
+      errors.add('$name ne peut être que proposé à l\'équipe menée.');
+    }
 
     switch (setting.arrival) {
       case ModifierArrival.draw:

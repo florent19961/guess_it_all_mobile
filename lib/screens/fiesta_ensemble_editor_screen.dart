@@ -4,6 +4,7 @@ import '../models/fiesta/ensemble_validation.dart';
 import '../models/fiesta/fiesta_ensemble.dart';
 import '../models/fiesta/fiesta_rules.dart';
 import '../models/fiesta/modifier_catalog.dart';
+import '../models/fiesta/symmetric_draw.dart';
 import '../services/fiesta_ensemble_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common/app_back_button.dart';
@@ -246,7 +247,10 @@ class _FiestaEnsembleEditorScreenState
           if (open) ...[
             const SizedBox(height: 8),
             _Choices<ModifierArrival>(
-              values: ModifierArrival.values,
+              // Cible joueur : ni tiré ni fixé, seulement proposé.
+              values: isForAllTeams(def)
+                  ? ModifierArrival.values
+                  : const [ModifierArrival.offer],
               selected: s.arrival,
               label: (a) => _arrivalLabels[a]!,
               onSelect: (a) => _setModifier(

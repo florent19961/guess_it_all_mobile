@@ -1,5 +1,6 @@
 import 'fiesta_rules.dart';
 import 'modifier_catalog.dart';
+import 'symmetric_draw.dart';
 
 /// Un ensemble du mode Personnalisé : des `FiestaRules` nommées, enregistrées
 /// sur le téléphone (`FiestaEnsembleService`).
@@ -33,7 +34,8 @@ class FiestaEnsemble {
 /// Règles d'un nouvel ensemble : les valeurs par défaut de la maquette
 /// (`mkSet`). Tout le catalogue est actif ; les contraintes de mime arrivent en
 /// manche 3 (« Dessiner » fixé dessus, les autres tirées), les bonus sont
-/// proposés dès M2, les malus tirés dès M1.
+/// proposés dès M2, les malus tirés dès M1 — sauf ceux à cible joueur
+/// (« Bloquer un devineur »), jamais tirés : proposés dès M2.
 FiestaRules defaultEnsembleRules(String name) => FiestaRules(
       mode: FiestaMode.custom,
       ensembleName: name,
@@ -43,12 +45,13 @@ FiestaRules defaultEnsembleRules(String name) => FiestaRules(
             active: true,
             arrival: def.id == 'draw'
                 ? ModifierArrival.fixed
-                : def.nature == ModifierNature.bonus && !def.round3Only
+                : !isForAllTeams(def) ||
+                        def.nature == ModifierNature.bonus && !def.round3Only
                     ? ModifierArrival.offer
                     : ModifierArrival.draw,
             startRound: def.round3Only
                 ? 3
-                : def.nature == ModifierNature.bonus
+                : !isForAllTeams(def) || def.nature == ModifierNature.bonus
                     ? 2
                     : 1,
             fixedRound: 3,

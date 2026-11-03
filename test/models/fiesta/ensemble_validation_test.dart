@@ -89,6 +89,15 @@ void main() {
     );
   });
 
+  test('« Bloquer un devineur » tiré → refusé (proposé seulement)', () {
+    expect(
+      validateEnsemble(rulesWith(overrides: {
+        'block_guesser': setting(ModifierArrival.draw),
+      })),
+      contains(startsWith('Bloquer un devineur ne peut être que proposé')),
+    );
+  });
+
   test('« fixé » sans manche → refusé', () {
     // Impossible par l'éditeur, possible dans un blob relu.
     expect(
