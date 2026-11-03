@@ -10,6 +10,7 @@ import '../models/fiesta/modifier_catalog.dart';
 import '../models/fiesta/modifier_instance.dart';
 import '../models/fiesta/modifier_recap.dart';
 import '../models/fiesta/symmetric_draw.dart';
+import '../models/fiesta/turn_effects.dart';
 import '../models/fiesta/turn_time.dart';
 import '../models/game_settings.dart';
 import '../models/game_state.dart';
@@ -719,7 +720,6 @@ class GameProvider extends ChangeNotifier {
   }
 
   void passWord() {
-    final passPenalty = _settings.passPenalty;
     final currentWord = _game.currentWord;
     final clock = turnClock;
 
@@ -731,7 +731,13 @@ class GameProvider extends ChangeNotifier {
     // C'est délibéré — passer avec « 5 » à l'écran et une pénalité de 5 reste
     // autorisé et met le chrono à zéro, comme avant. Comparer les ms refuserait
     // ce cas et changerait la règle du jeu en douce.
-    if (clock.displayedSecondsAt(now) < passPenalty) return;
+    // 🔴 Sortie AVANT `onWordPassed` : sous `no_pass`, aucune passe n'a lieu.
+    if (!canPassWith(clock.displayedSecondsAt(now))) return;
+
+    // Pénalité EFFECTIVE : 0 tant qu'il reste une passe gratuite (2-8).
+    final passPenalty = currentPassPenalty;
+    final fiesta = _game.fiesta;
+    final usesFreePass = fiesta != null && freePassesUsed < freePasses;
 
     // Tracker le pass AVANT de changer l'état
     _analytics.onWordPassed(currentWord);
@@ -762,6 +768,10 @@ class GameProvider extends ChangeNotifier {
         currentWord: newCurrentWord,
         passedWordsThisTurn: newPassedWords,
         remainingWords: newRemainingWords,
+        fiesta: usesFreePass
+            ? fiesta.copyWith(
+                turn: {...fiesta.turn, kFreePassesUsedKey: freePassesUsed + 1})
+            : null,
       ),
       newClock,
       nowMs: now,
@@ -1006,6 +1016,9 @@ class GameProvider extends ChangeNotifier {
             : AppConstants.screenTransition,
         turnBonusTime: _game.timeRemaining,
         clearExpiredWord: true,
+        // La même équipe poursuit ce tour en manche suivante : il n'est pas
+        // fini, ses instances de portée tour restent.
+        fiesta: _fiestaAfterTurn(turnOver: false),
         pendingBonusTurnId: shouldPrepareBonusFusion ? _game.currentTurn : null,
         clearPendingBonusTurnId: !shouldPrepareBonusFusion,
       );
@@ -1036,6 +1049,7 @@ class GameProvider extends ChangeNotifier {
         clearTurnBonusTime: nextTurnBonusTime == null,
         clearExpiredWord: true,
         clearPendingBonusTurnId: true, // Réinitialiser après usage
+        fiesta: _fiestaAfterTurn(turnOver: true),
       );
     }
 
@@ -1164,6 +1178,98 @@ class GameProvider extends ChangeNotifier {
     return fiesta.active
         .where((m) => m.target == ModifierTarget.both || m.teamId == teamId)
         .toList();
+  }
+
+  // ========== EFFETS DE TOUR (2-8) ==========
+
+  Map<String, dynamic> get _turnCounters => _game.fiesta?.turn ?? const {};
+
+  /// `no_pass` pèse sur l'équipe qui joue.
+  bool get passBlocked => isPassBlocked(currentTeamModifiers);
+
+  /// Passes gratuites du tour (`free_pass` ×N), et celles déjà utilisées.
+  int get freePasses => freePassAllowance(currentTeamModifiers);
+  int get freePassesUsed {
+    final used = _turnCounters[kFreePassesUsedKey];
+    return used is int ? used : 0;
+  }
+
+  /// Pénalité de la PROCHAINE passe. Classique : la pénalité réglée.
+  int get currentPassPenalty => effectivePassPenalty(
+        basePenalty: _settings.passPenalty,
+        allowance: freePasses,
+        used: freePassesUsed,
+      );
+
+  /// 🔴 SEULE garde de la passe, sur la seconde affichée : `passWord` et le
+  /// bouton de `turn_screen` la lisent tous deux, sinon le bouton s'affiche
+  /// actif et le provider refuse (ou l'inverse).
+  bool canPassWith(int displayedSeconds) =>
+      !passBlocked && displayedSeconds >= currentPassPenalty;
+
+  /// `reversed` : le mot du tour s'affiche à l'envers (tour seulement).
+  bool get isWordReversed =>
+      currentTeamModifiers.any((m) => m.catalogId == 'reversed');
+
+  /// Devineurs que les adversaires peuvent bloquer : l'équipe qui joue, sauf
+  /// celui qui fait deviner. Vide si `block_guesser` ne la vise pas ou si elle
+  /// a 2 joueurs ou moins.
+  List<Player> get blockableGuessers {
+    final team = getCurrentTeam();
+    if (team == null ||
+        !currentTeamModifiers.any((m) => m.catalogId == 'block_guesser') ||
+        !canBlockGuesser(team.playerIds.length)) {
+      return const [];
+    }
+    final guesserId = getCurrentPlayer()?.id;
+    return [
+      for (final id in team.playerIds)
+        if (id != guesserId) getPlayerById(id),
+    ].whereType<Player>().toList();
+  }
+
+  /// Devineur bloqué pour ce tour, choisi par les adversaires (annonce seule).
+  Player? get blockedGuesser {
+    final id = _turnCounters[kBlockedPlayerIdKey];
+    return id is String ? getPlayerById(id) : null;
+  }
+
+  /// Le sélecteur doit s'ouvrir avant ce tour.
+  bool get needsBlockedGuesser =>
+      blockableGuessers.isNotEmpty && blockedGuesser == null;
+
+  void setBlockedGuesser(String playerId) {
+    final fiesta = _game.fiesta;
+    if (fiesta == null || !blockableGuessers.any((p) => p.id == playerId)) {
+      return;
+    }
+    _game = _game.copyWith(
+      fiesta: fiesta
+          .copyWith(turn: {...fiesta.turn, kBlockedPlayerIdKey: playerId}),
+    );
+    notifyListeners();
+    _saveGameState();
+  }
+
+  /// Fiesta à la fin d'un tour joué : les compteurs du tour repartent à zéro.
+  /// Si le tour est vraiment fini ([turnOver]), les instances de portée tour
+  /// de l'équipe sont consommées. 🔴 Une fin de manche n'est PAS une fin de
+  /// tour : la même équipe poursuit en manche suivante (continuation), et
+  /// l'instance doit tomber à la fin de CE tour-là, jamais franchir le tour
+  /// d'après. Nul en Classique.
+  FiestaState? _fiestaAfterTurn({required bool turnOver}) {
+    final fiesta = _game.fiesta;
+    if (fiesta == null || _teams.isEmpty) return null;
+    final teamId = _teams[_game.currentTeamIndex].id;
+    return fiesta.copyWith(
+      turn: const {},
+      active: turnOver
+          ? fiesta.active
+              .where((m) => !(m.scope == ModifierScope.turn &&
+                  (m.target == ModifierTarget.both || m.teamId == teamId)))
+              .toList()
+          : null,
+    );
   }
 
   /// Malus à révéler en plein écran avant le tour : ceux de l'équipe qui joue,
