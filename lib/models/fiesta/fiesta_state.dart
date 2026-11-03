@@ -65,9 +65,10 @@ class FiestaState {
 
   Map<String, dynamic> toJson() => {
         'rules': rules.toJson(),
-        'active': active.map((e) => e.toJson()).toList(),
-        'turn': turn,
-        'catchUpDue': catchUpDue,
+        // Clés vides omises : l'absence se relit comme le défaut.
+        if (active.isNotEmpty) 'active': active.map((e) => e.toJson()).toList(),
+        if (turn.isNotEmpty) 'turn': turn,
+        if (catchUpDue.isNotEmpty) 'catchUpDue': catchUpDue,
         if (chargesUsed.isNotEmpty)
           'chargesUsed': chargesUsed.map((e) => e.toJson()).toList(),
         if (offerChoices.isNotEmpty)

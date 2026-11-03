@@ -186,7 +186,7 @@ class FiestaEnsembleService {
           ...store.ensembles.map((e) => e.toJson()),
           ...unreadable,
         ],
-        'lastUsedId': store.lastUsedId,
+        if (store.lastUsedId != null) 'lastUsedId': store.lastUsedId,
       })),
     );
   }

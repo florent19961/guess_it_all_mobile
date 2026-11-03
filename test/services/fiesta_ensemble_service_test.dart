@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+import 'package:guess_it_all_mobile/models/fiesta/fiesta_state.dart';
+import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
+import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
 import 'package:guess_it_all_mobile/services/fiesta_ensemble_service.dart';
 import 'package:guess_it_all_mobile/services/persisted_schema.dart';
 
@@ -60,6 +63,60 @@ void main() {
     expect(rules.drawCount, 2);
     expect(rules.oneAnswer, isFalse);
     expect(rules.catchUp.b2, 5);
+  });
+
+  test(
+      'écriture figée : une clé vide ou nulle est omise (blob Fiesta et '
+      'ensembles), et l\'absence se relit comme le défaut', () async {
+    final fiesta = FiestaState(rules: FiestaRules(mode: FiestaMode.auto));
+    const frozenFiesta = '{"rules":{"mode":"auto","symmetric":true,'
+        '"autoCalibrate":true,"modifiers":{},"oneOfThree":false,"catchUp":'
+        '{"b1":3,"b2":5,"cap":30,"mal":1,"malCap":15},"drawCount":1,'
+        '"oneAnswer":true}}';
+    expect(jsonEncode(fiesta.toJson()), frozenFiesta);
+    final relu = FiestaState.tryFromJson(jsonDecode(frozenFiesta))!;
+    expect([relu.active, relu.turn, relu.catchUpDue, relu.rules.ensembleName],
+        [isEmpty, isEmpty, isEmpty, isNull]);
+
+    const forAll = ModifierInstance(
+      catalogId: 'no_pass',
+      scope: ModifierScope.round,
+      target: ModifierTarget.both,
+      charges: 0,
+      nature: ModifierNature.malus,
+      round: 2,
+    );
+    expect(
+        jsonEncode(forAll.toJson()),
+        '{"catalogId":"no_pass","scope":"round","target":"both","charges":0,'
+        '"nature":"malus","round":2}');
+
+    await givenPrefs();
+    await service.create(FiestaRules(
+      mode: FiestaMode.custom,
+      ensembleName: 'E',
+      modifiers: {
+        'no_pass': const ModifierSetting(
+            active: true,
+            arrival: ModifierArrival.draw,
+            startRound: 1,
+            charges: 0),
+      },
+    ));
+    final data = jsonDecode((await rawString(key))!)['data'] as Map;
+    expect(data.containsKey('lastUsedId'), isFalse);
+    expect(
+        jsonEncode(data['ensembles'][0]['rules']['modifiers']),
+        '{"no_pass":{"active":true,"arrival":"draw","startRound":1,'
+        '"charges":0}}');
+    expect(
+        (await service.load())
+            .ensembles
+            .single
+            .rules
+            .modifiers['no_pass']!
+            .fixedRound,
+        isNull);
   });
 
   test('supprimer le dernier utilisé efface lastUsedId (AC6)', () async {

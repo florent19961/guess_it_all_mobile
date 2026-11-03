@@ -47,7 +47,7 @@ Future<GameProvider> withTurnInstance(
     GameProvider provider, String catalogId) async {
   await pumpEventQueue();
   final saved = (await StorageService().loadGameState())!;
-  (saved['game']['fiesta']['active'] as List).add(ModifierInstance(
+  ((saved['game']['fiesta'] as Map)['active'] ??= []).add(ModifierInstance(
     catalogId: catalogId,
     scope: ModifierScope.turn,
     target: ModifierTarget.team,

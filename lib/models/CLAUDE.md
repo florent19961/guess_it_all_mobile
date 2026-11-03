@@ -59,7 +59,7 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
 - Forme JSON : `fiesta: {rules: {mode, symmetric, autoCalibrate, ensembleName?, modifiers:
   {id: {active, arrival, startRound, fixedRound?, charges}}, oneOfThree, catchUp: {b1, b2, cap,
   mal, malCap}, drawCount, oneAnswer}, active: [{catalogId, scope, target, teamId?,
-  playerId?, charges, nature, round}], turn: {}, catchUpDue: {teamId: int}, chargesUsed?: [...], offerChoices?: [{chooserId, modifier}]}`.
+  playerId?, charges, nature, round}]?, turn?: {}, catchUpDue?: {teamId: int}, chargesUsed?: [...], offerChoices?: [{chooserId, modifier}]}`.
 - **Temps du tour** (2-6) : `GameProvider.turnTime` est la **seule** source de la durée de
   départ ; `startTurn` (aperçu) et `startTurnTimer` (chrono, qui écrit `turnAllottedSeconds` et
   consomme `catchUpDue`) la lisent tous deux. `TurnClock` reste la seule autorité sur le temps

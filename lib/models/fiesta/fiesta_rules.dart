@@ -29,7 +29,7 @@ class ModifierSetting {
         'active': active,
         'arrival': arrival.name,
         'startRound': startRound,
-        'fixedRound': fixedRound,
+        if (fixedRound != null) 'fixedRound': fixedRound,
         'charges': charges,
       };
 
@@ -155,7 +155,7 @@ class FiestaRules {
         'mode': mode.name,
         'symmetric': symmetric,
         'autoCalibrate': autoCalibrate,
-        'ensembleName': ensembleName,
+        if (ensembleName != null) 'ensembleName': ensembleName,
         'modifiers':
             modifiers.map((id, setting) => MapEntry(id, setting.toJson())),
         'oneOfThree': oneOfThree,
