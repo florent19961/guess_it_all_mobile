@@ -18,9 +18,63 @@ import '../widgets/fiesta/modifier_card.dart';
 import '../widgets/fiesta/turn_time_cards.dart';
 import '../models/fiesta/modifier_catalog.dart';
 import '../models/fiesta/modifier_instance.dart';
+import '../widgets/help/coach_marks.dart';
+import '../widgets/help/first_game_help.dart';
+import '../widgets/help/help_button.dart';
+import '../widgets/help/help_content.dart';
 
-class GameScreen extends StatelessWidget {
+class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
+
+  @override
+  State<GameScreen> createState() => _GameScreenState();
+}
+
+class _GameScreenState extends State<GameScreen> {
+  final _teamKey = GlobalKey();
+  final _roundRulesKey = GlobalKey();
+  final _previousTurnKey = GlobalKey();
+  final _startKey = GlobalKey();
+  final _badgesKey = GlobalKey();
+  final _doublePointsKey = GlobalKey();
+  final _turnTimeKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _firstGameHelp());
+  }
+
+  /// Première partie sur ce téléphone : l'aide s'ouvre seule au premier tour
+  /// de chaque joueur (jamais l'aide Fiesta, qui reste derrière le « ? »).
+  Future<void> _firstGameHelp() async {
+    final player = context.read<GameProvider>().getCurrentPlayer();
+    if (player == null) return;
+    if (await FirstGameHelp.claim(FirstGameHelp.preTurn, player.id) &&
+        mounted) {
+      await CoachMarks.show(context, _preTurnSteps(player.name));
+    }
+  }
+
+  List<CoachStep> _preTurnSteps(String playerName) => preTurnHelp(
+        team: _teamKey,
+        roundRules: _roundRulesKey,
+        previousTurn: _previousTurnKey,
+        start: _startKey,
+        playerName: playerName,
+      );
+
+  void _showHelp(GameProvider provider) {
+    CoachMarks.show(context, [
+      ..._preTurnSteps(provider.getCurrentPlayer()?.name ?? ''),
+      if (provider.isFiesta)
+        ...fiestaPreTurnHelp(
+          badges: _badgesKey,
+          doublePoints: _doublePointsKey,
+          turnTime: _turnTimeKey,
+        ),
+    ]);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +105,7 @@ class GameScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
                       GestureDetector(
+                        key: _roundRulesKey,
                         onTap: () => _showRulesDialog(
                             context, provider.game.currentRound),
                         child: Container(
@@ -73,6 +128,7 @@ class GameScreen extends StatelessWidget {
 
                   // Team card (cliquable pour voir la composition)
                   GestureDetector(
+                    key: _teamKey,
                     onTap: () => _showTeamMembersDialog(
                         context, currentTeam, provider, teamColor),
                     child: Container(
@@ -121,7 +177,8 @@ class GameScreen extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
-                  // Bouton pour voir les autres scores + mots restants
+                  // Mots restants + mots devinés au tour précédent. Pas de
+                  // score : il reste caché jusqu'aux résultats.
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -133,38 +190,11 @@ class GameScreen extends StatelessWidget {
                           color: Colors.white60,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      GestureDetector(
-                        onTap: () => _showAllScoresDialog(context, provider),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.gray600,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.leaderboard,
-                                  size: 14, color: Colors.white70),
-                              SizedBox(width: 4),
-                              Text(
-                                'Scores',
-                                style: TextStyle(
-                                  fontFamily: 'Poppins',
-                                  fontSize: 12,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
                       // Bouton pour voir les mots devinés au tour précédent
                       if (provider.game.history.isNotEmpty) ...[
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 12),
                         GestureDetector(
+                          key: _previousTurnKey,
                           onTap: () =>
                               _showGuessedWordsDialog(context, provider),
                           child: Container(
@@ -208,7 +238,12 @@ class GameScreen extends StatelessWidget {
                       child: Align(
                         alignment: Alignment.bottomCenter,
                         child: SingleChildScrollView(
-                          child: _FiestaAnnouncements(provider: provider),
+                          child: _FiestaAnnouncements(
+                            provider: provider,
+                            badgesKey: _badgesKey,
+                            doublePointsKey: _doublePointsKey,
+                            turnTimeKey: _turnTimeKey,
+                          ),
                         ),
                       ),
                     ),
@@ -245,6 +280,7 @@ class GameScreen extends StatelessWidget {
                   ],
 
                   AppButton(
+                    key: _startKey,
                     text: 'Commencer le tour',
                     variant: AppButtonVariant.primary,
                     size: AppButtonSize.large,
@@ -258,6 +294,10 @@ class GameScreen extends StatelessWidget {
             ),
           ),
           const HomeButton(alignRight: true),
+          HelpButton(
+            right: HelpButton.besideCornerButton,
+            onPressed: () => _showHelp(provider),
+          ),
           // Back button conditionnel
           if (provider.isFirstTurnOfGame)
             GameBackButton(
@@ -332,93 +372,6 @@ class GameScreen extends StatelessWidget {
     ).then((confirme) {
       if (confirme) provider.goBackToTeams();
     });
-  }
-
-  void _showAllScoresDialog(BuildContext context, GameProvider provider) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: AppColors.backgroundMain,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: AppColors.gray600, width: 2),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header avec titre et croix
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Scores',
-                      style: AppTextStyles.subtitle(fontSize: 28),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: const Icon(
-                      Icons.close,
-                      color: AppColors.gray400,
-                      size: 24,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // Liste des scores
-              ...provider.teams.asMap().entries.map((entry) {
-                final team = entry.value;
-                final teamColor = AppColors.getTeamColor(entry.key);
-                final isCurrentTeam =
-                    entry.key == provider.game.currentTeamIndex;
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: teamColor,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          team.name,
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 16,
-                            fontWeight: isCurrentTeam
-                                ? FontWeight.w600
-                                : FontWeight.w400,
-                            color: teamColor,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        '${team.score}',
-                        style: TextStyle(
-                          fontFamily: 'Bangers',
-                          fontSize: 24,
-                          color: teamColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   void _showRulesDialog(BuildContext context, int round) {
@@ -640,8 +593,16 @@ class GameScreen extends StatelessWidget {
 /// Dans les deux cas, la carte « Temps du tour » dessous.
 class _FiestaAnnouncements extends StatelessWidget {
   final GameProvider provider;
+  final GlobalKey badgesKey;
+  final GlobalKey doublePointsKey;
+  final GlobalKey turnTimeKey;
 
-  const _FiestaAnnouncements({required this.provider});
+  const _FiestaAnnouncements({
+    required this.provider,
+    required this.badgesKey,
+    required this.doublePointsKey,
+    required this.turnTimeKey,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -652,7 +613,7 @@ class _FiestaAnnouncements extends StatelessWidget {
         if (provider.isDoublePointsArmed || provider.doublePointsLeft > 0)
           _doublePoints(),
         if (provider.isTwoWordsArmed || provider.twoWordsLeft > 0) _twoWords(),
-        TurnTimeCard(provider.turnTime),
+        KeyedSubtree(key: turnTimeKey, child: TurnTimeCard(provider.turnTime)),
       ],
     );
   }
@@ -677,6 +638,7 @@ class _FiestaAnnouncements extends StatelessWidget {
       editable = true;
     }
     return FiestaCard(
+      key: doublePointsKey,
       title: 'Bonus',
       children: [
         FiestaLine(
@@ -803,6 +765,7 @@ class _FiestaAnnouncements extends StatelessWidget {
     final inPlay = provider.turnModifiers;
     final doubled = provider.isDoublePointsOn;
     return FiestaCard(
+      key: badgesKey,
       title: 'Actif ce tour',
       children: [
         ..._constraints(rules.oneAnswer, modifiers),
@@ -814,16 +777,15 @@ class _FiestaAnnouncements extends StatelessWidget {
             alignment: WrapAlignment.start,
             extra: [
               if (doubled)
-                const ModifierBadge(
-                  icon: '×2',
-                  label: 'Mot compte double',
-                  nature: ModifierNature.bonus,
-                ),
+                ModifierBadge.catalog('double_points',
+                    nature: ModifierNature.bonus),
               if (rules.oneAnswer)
                 const ModifierBadge(
                   icon: '☝',
                   label: 'Une seule réponse',
                   nature: ModifierNature.bonus,
+                  description: 'Une seule réponse par mot. Une mauvaise '
+                      'réponse : il faut passer (pénalité de passe).',
                 ),
             ],
           ),

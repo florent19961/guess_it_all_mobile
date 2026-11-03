@@ -5,6 +5,10 @@ import '../providers/game_provider.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/home_button.dart';
 import '../services/audio_service.dart';
+import '../widgets/help/coach_marks.dart';
+import '../widgets/help/first_game_help.dart';
+import '../widgets/help/help_button.dart';
+import '../widgets/help/help_content.dart';
 
 class VerificationScreen extends StatefulWidget {
   const VerificationScreen({super.key});
@@ -15,6 +19,23 @@ class VerificationScreen extends StatefulWidget {
 
 class _VerificationScreenState extends State<VerificationScreen> {
   late Set<String> _validatedWords;
+
+  final _wordListKey = GlobalKey();
+  final _validateKey = GlobalKey();
+
+  List<CoachStep> get _helpSteps =>
+      verificationHelp(wordList: _wordListKey, validate: _validateKey);
+
+  /// Première partie sur ce téléphone : l'aide s'ouvre seule à la première
+  /// vérification de chaque joueur.
+  Future<void> _firstGameHelp() async {
+    final player = context.read<GameProvider>().getCurrentPlayer();
+    if (player == null) return;
+    if (await FirstGameHelp.claim(FirstGameHelp.verification, player.id) &&
+        mounted) {
+      await CoachMarks.show(context, _helpSteps);
+    }
+  }
 
   @override
   void initState() {
@@ -34,6 +55,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
       // Jouer le son de fin de tour seulement si ce n'est pas un retour en arrière
       AudioService.playKlaxon();
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _firstGameHelp());
   }
 
   void _toggleWord(String word) {
@@ -122,6 +144,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
                 Expanded(
                   child: SingleChildScrollView(
+                    key: _wordListKey,
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,6 +261,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                 Padding(
                   padding: const EdgeInsets.all(24),
                   child: AppButton(
+                    key: _validateKey,
                     text: 'Valider',
                     variant: AppButtonVariant.primary,
                     size: AppButtonSize.large,
@@ -252,6 +276,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
             ),
           ),
           const HomeButton(),
+          HelpButton(onPressed: () => CoachMarks.show(context, _helpSteps)),
         ],
       ),
     );

@@ -10,9 +10,29 @@ import '../widgets/common/back_button.dart';
 import '../widgets/effects/shooting_stars.dart';
 import '../widgets/fiesta/fiesta_setup_widgets.dart';
 import '../models/fiesta/modifier_recap.dart';
+import '../widgets/help/coach_marks.dart';
+import '../widgets/help/first_game_help.dart';
+import '../widgets/help/help_button.dart';
+import '../widgets/help/help_content.dart';
 
-class ResultsScreen extends StatelessWidget {
+class ResultsScreen extends StatefulWidget {
   const ResultsScreen({super.key});
+
+  @override
+  State<ResultsScreen> createState() => _ResultsScreenState();
+}
+
+class _ResultsScreenState extends State<ResultsScreen> {
+  final _podiumKey = GlobalKey();
+  final _detailsKey = GlobalKey();
+  final _replayKey = GlobalKey();
+  final _statsKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    FirstGameHelp.finishFirstGame();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +47,8 @@ class ResultsScreen extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  const SizedBox(height: 24),
+                  // Sous les boutons du coin (accueil, aide).
+                  const SizedBox(height: 72),
                   Text(
                     'Résultats',
                     style: AppTextStyles.title(fontSize: 48),
@@ -35,12 +56,19 @@ class ResultsScreen extends StatelessWidget {
                   const SizedBox(height: 32),
 
                   // Podium
-                  _buildPodium(context, provider, sortedTeams),
+                  KeyedSubtree(
+                    key: _podiumKey,
+                    child: _buildPodium(context, provider, sortedTeams),
+                  ),
 
                   const SizedBox(height: 32),
 
                   // Detailed scores
-                  _buildDetailedScores(context, provider, sortedTeams),
+                  KeyedSubtree(
+                    key: _detailsKey,
+                    child:
+                        _buildDetailedScores(context, provider, sortedTeams),
+                  ),
 
                   // Fiesta seulement (maquette `results`).
                   if (provider.isFiesta) ...[
@@ -52,6 +80,7 @@ class ResultsScreen extends StatelessWidget {
 
                   // Action buttons
                   AppButton(
+                    key: _replayKey,
                     text: 'Rejouer',
                     variant: AppButtonVariant.primary,
                     size: AppButtonSize.large,
@@ -63,6 +92,7 @@ class ResultsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   AppButton(
+                    key: _statsKey,
                     text: 'Voir les statistiques',
                     variant: AppButtonVariant.secondary,
                     fullWidth: true,
@@ -76,6 +106,18 @@ class ResultsScreen extends StatelessWidget {
             ),
           ),
           const HomeButton(alignRight: true),
+          HelpButton(
+            right: HelpButton.besideCornerButton,
+            onPressed: () => CoachMarks.show(
+              context,
+              resultsHelp(
+                podium: _podiumKey,
+                details: _detailsKey,
+                replay: _replayKey,
+                stats: _statsKey,
+              ),
+            ),
+          ),
           // Back button pour revenir à l'écran de vérification
           if (provider.canGoBackToVerification)
             GameBackButton(

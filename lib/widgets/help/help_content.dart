@@ -174,9 +174,9 @@ List<CoachStep> preTurnHelp({
       ),
       CoachStep(
         target: previousTurn,
-        title: 'Tour précédent',
-        text: 'Les mots trouvés au tour d\'avant. Retiens-les : les mêmes '
-            'mots reviennent à chaque manche.',
+        title: 'Mots du tour précédent',
+        text: 'Touche ici pour voir les mots trouvés au tour précédent. '
+            'Retiens-les : ils reviennent aux manches suivantes.',
       ),
       CoachStep(
         target: start,
@@ -270,7 +270,8 @@ List<CoachStep> transitionHelp({
         title: 'Manche suivante',
         text: 'Lance la manche suivante : tous les mots retournent dans le '
             'chapeau, avec une nouvelle règle. Après la dernière manche, ce '
-            'bouton devient « Voir les résultats ».',
+            'bouton devient « Voir les résultats ». En Fiesta, il attend que '
+            'chaque équipe menée ait choisi sa carte.',
       ),
       CoachStep(
         target: back,

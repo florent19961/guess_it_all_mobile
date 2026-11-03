@@ -27,30 +27,110 @@ Color modifierColor(ModifierNature nature) => nature == ModifierNature.bonus
     ? AppColors.secondaryCyan
     : AppColors.primaryPink;
 
+/// Enveloppe l'ouverture de l'explication d'un badge. L'écran du tour s'en
+/// sert pour geler le chrono tant que la fiche est ouverte.
+typedef BadgeExplainWrapper = Future<void> Function(
+    Future<void> Function() show);
+
 /// Pastille « icône + nom » (maquette `.badge`). [label] remplace le nom du
 /// catalogue (ex. « Une seule réponse », qui n'est pas un modificateur).
+///
+/// Avec une [description], un tap ouvre une petite fiche qui l'explique.
 class ModifierBadge extends StatelessWidget {
   final String icon;
   final String label;
   final ModifierNature nature;
+  final String? description;
+  final BadgeExplainWrapper? wrapExplain;
 
   const ModifierBadge({
     required this.icon,
     required this.label,
     required this.nature,
+    this.description,
+    this.wrapExplain,
     super.key,
   });
 
-  factory ModifierBadge.of(ModifierInstance instance, {Key? key}) =>
-      ModifierBadge(
-        key: key,
-        icon: modifierIcon(instance.catalogId),
-        label: modifierById(instance.catalogId)?.name ?? instance.catalogId,
-        nature: instance.nature,
-      );
+  factory ModifierBadge.of(ModifierInstance instance,
+          {BadgeExplainWrapper? wrapExplain, Key? key}) =>
+      ModifierBadge.catalog(instance.catalogId,
+          nature: instance.nature, wrapExplain: wrapExplain, key: key);
+
+  /// Badge d'un modificateur du catalogue, sans instance (×2, Deux mots…).
+  factory ModifierBadge.catalog(String id,
+      {required ModifierNature nature,
+      BadgeExplainWrapper? wrapExplain,
+      Key? key}) {
+    final def = modifierById(id);
+    return ModifierBadge(
+      key: key,
+      icon: modifierIcon(id),
+      label: def?.name ?? id,
+      nature: nature,
+      description: def?.description,
+      wrapExplain: wrapExplain,
+    );
+  }
+
+  Future<void> _explain(BuildContext context) {
+    final color = modifierColor(nature);
+    return showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.backgroundMain,
+      shape: RoundedRectangleBorder(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        side: BorderSide(color: color, width: 2),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '$icon $label',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.subtitle(fontSize: 26)
+                    .copyWith(color: color),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                description!,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodySmall.copyWith(color: Colors.white),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.of(sheetContext).pop(),
+                child: Text('Compris',
+                    style: AppTextStyles.bodySmall.copyWith(color: color)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final pill = _pill();
+    if (description == null) return pill;
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          Future<void> show() => _explain(context);
+          wrapExplain != null ? wrapExplain!(show) : show();
+        },
+        child: pill,
+      ),
+    );
+  }
+
+  Widget _pill() {
     final color = modifierColor(nature);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
@@ -77,11 +157,13 @@ class ModifierBadges extends StatelessWidget {
   final List<ModifierInstance> modifiers;
   final List<Widget> extra;
   final WrapAlignment alignment;
+  final BadgeExplainWrapper? wrapExplain;
 
   const ModifierBadges({
     required this.modifiers,
     this.extra = const [],
     this.alignment = WrapAlignment.center,
+    this.wrapExplain,
     super.key,
   });
 
@@ -90,6 +172,10 @@ class ModifierBadges extends StatelessWidget {
         alignment: alignment,
         spacing: 6,
         runSpacing: 6,
-        children: [...modifiers.map(ModifierBadge.of), ...extra],
+        children: [
+          for (final m in modifiers)
+            ModifierBadge.of(m, wrapExplain: wrapExplain),
+          ...extra,
+        ],
       );
 }
