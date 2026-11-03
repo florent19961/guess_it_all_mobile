@@ -41,6 +41,7 @@ void main() {
         expiredWord: 'souris',
         timeRemaining: 12,
         turnBonusTime: 7,
+        turnAllottedSeconds: 26,
         turnStartTimestamp: 1000,
         turnEndTimestamp: 31000,
         pausedTimeRemaining: 12,

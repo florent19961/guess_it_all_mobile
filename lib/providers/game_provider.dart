@@ -9,6 +9,7 @@ import '../models/fiesta/fiesta_state.dart';
 import '../models/fiesta/modifier_catalog.dart';
 import '../models/fiesta/modifier_instance.dart';
 import '../models/fiesta/symmetric_draw.dart';
+import '../models/fiesta/turn_time.dart';
 import '../models/game_settings.dart';
 import '../models/game_state.dart';
 import '../models/turn_clock.dart';
@@ -539,12 +540,34 @@ class GameProvider extends ChangeNotifier {
     };
   }
 
+  /// Durée de départ du tour à venir et son détail (carte « Temps du tour »).
+  ///
+  /// 🔴 SEULE source de la durée : `startTurn` (aperçu) et `startTurnTimer`
+  /// (chrono) la lisent tous deux, sinon l'avant-tour annonce 30 s et le chrono
+  /// part à 48. Continuation (`turnBonusTime` posé) = ses secondes, sans
+  /// modificateur (Q5). En Classique : `turnBonusTime ?? turnDuration`, comme
+  /// avant.
+  TurnTime get turnTime {
+    final fiesta = _game.fiesta;
+    final due = fiesta == null || _teams.isEmpty
+        ? 0
+        : fiesta.catchUpDue[_teams[_game.currentTeamIndex].id] ?? 0;
+    return composeTurnSeconds(
+      baseSeconds: _settings.turnDuration,
+      carriedSeconds: _game.turnBonusTime,
+      catchUpSeconds: max(0, due),
+      leaderMalusSeconds: max(0, -due),
+      minus10sCount:
+          currentTeamModifiers.where((m) => m.catalogId == 'minus_10s').length,
+    );
+  }
+
   void startTurn() {
     _game = _game.copyWith(
       currentScreen: AppConstants.screenCountdown,
       wordsGuessedThisTurn: [],
       passedWordsThisTurn: [],
-      timeRemaining: _game.turnBonusTime ?? _settings.turnDuration,
+      timeRemaining: turnTime.total,
     );
 
     notifyListeners();
@@ -553,8 +576,14 @@ class GameProvider extends ChangeNotifier {
 
   void startTurnTimer() {
     final now = DateTime.now().millisecondsSinceEpoch;
-    final durationSeconds = _game.turnBonusTime ?? _settings.turnDuration;
+    // À lire AVANT d'effacer `turnBonusTime` : c'est lui qui dit si ce tour est
+    // une continuation, donc si le rattrapage s'applique et se consomme.
+    final durationSeconds = turnTime.total;
     final durationMs = durationSeconds * 1000;
+    final fiesta = _game.fiesta;
+    final consumesCatchUp = fiesta != null &&
+        _game.turnBonusTime == null &&
+        fiesta.catchUpDue.containsKey(_teams[_game.currentTeamIndex].id);
 
     _game = _game.copyWith(
       currentScreen: AppConstants.screenTurn,
@@ -563,7 +592,14 @@ class GameProvider extends ChangeNotifier {
       clearPausedTimeRemaining: true,
       clearPausedRemainingMs: true,
       timeRemaining: durationSeconds,
+      turnAllottedSeconds: durationSeconds,
       clearTurnBonusTime: true,
+      // Consommé une fois, effacé : même principe que `turnBonusTime`.
+      fiesta: consumesCatchUp
+          ? fiesta.copyWith(
+              catchUpDue: Map.of(fiesta.catchUpDue)
+                ..remove(_teams[_game.currentTeamIndex].id))
+          : null,
     );
 
     // Tracker l'affichage du premier mot
@@ -897,8 +933,12 @@ class GameProvider extends ChangeNotifier {
     final hasBonusPending = _game.pendingBonusTurnId != null;
     final shouldMergeWithPrevious = hasBonusPending && _game.history.isNotEmpty;
 
-    // Calculer le temps passé pour ce segment
-    final currentTimeSpent = _settings.turnDuration - _game.timeRemaining;
+    // Temps passé sur ce tour : sur sa durée de DÉPART réelle, pas sur le
+    // réglage — une continuation de 7 s finie à 2 s comptait 28 s. Nul sur une
+    // partie reprise d'une version antérieure : comportement d'alors.
+    final currentTimeSpent =
+        (_game.turnAllottedSeconds ?? _settings.turnDuration) -
+            _game.timeRemaining;
 
     List<HistoryEntry> newHistory;
     int nextTurn;
@@ -1062,20 +1102,37 @@ class GameProvider extends ChangeNotifier {
   }
 
   /// Fiesta à l'entrée de la manche [round] : les instances de portée manche
-  /// de la manche finie partent, celles de [round] (fixés + tirage) arrivent.
+  /// de la manche finie partent, celles de [round] (fixés + tirage) arrivent,
+  /// et le rattrapage dû est posé sur les scores de la manche finie.
   /// Nul en Classique (et `copyWith(fiesta: null)` laisse alors `fiesta` nul).
   FiestaState? _fiestaForRound(int round) {
     final fiesta = _game.fiesta;
     if (fiesta == null) return null;
-    return FiestaState(
-      rules: fiesta.rules,
+    return fiesta.copyWith(
       active: [
         ...fiesta.active
             .where((m) => !(m.scope == ModifierScope.round && m.round < round)),
         ...roundModifiers(fiesta.rules,
             gameId: _game.gameId ?? '', round: round),
       ],
-      turn: fiesta.turn,
+      catchUpDue: {for (final e in catchUpPreview) e.teamId: e.seconds},
+    );
+  }
+
+  /// Rattrapage qui s'appliquera à la manche suivante, calculé sur les scores
+  /// actuels : montré sur la transition, posé par `nextRound`. Calculé et non
+  /// stocké sur la transition (comme [nextRoundModifiers]) : le retour arrière
+  /// restaure les scores, la revalidation redonne le même. Vide en Classique,
+  /// rattrapage éteint, après M3, ou à égalité.
+  List<CatchUpEntry> get catchUpPreview {
+    final fiesta = _game.fiesta;
+    if (fiesta == null || _game.currentRound >= 3) return const [];
+    final rules = effectiveCatchUp(fiesta.rules);
+    if (rules == null) return const [];
+    return computeCatchUp(
+      rules: rules,
+      round: _game.currentRound,
+      scores: {for (final t in _teams) t.id: t.score},
     );
   }
 
