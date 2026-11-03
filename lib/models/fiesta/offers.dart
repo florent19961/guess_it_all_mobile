@@ -115,6 +115,9 @@ int offerSeed(String gameId, int round, String teamId) =>
 /// Un bonus vise [beneficiaryId], un malus vise [leaderId] (aucun malus si
 /// `null`). Personnalisé : seuls les modificateurs actifs réglés sur
 /// « proposé à l'équipe menée » et dont la manche de départ est atteinte.
+/// « Bloquer un devineur » : jamais en Auto (personne ne choisit, donc
+/// personne ne désigne le devineur) ; en Personnalisé, jamais contre une
+/// équipe de [blockImmuneTeamIds].
 List<ModifierInstance> _candidates({
   required FiestaRules rules,
   required int round,
@@ -148,7 +151,9 @@ List<ModifierInstance> _candidates({
         def.nature == ModifierNature.bonus ? beneficiaryId : leaderId;
     if (targetTeam == null) continue;
     final toPlayer = def.defaultTarget == ModifierTarget.player;
-    if (toPlayer && blockImmuneTeamIds.contains(targetTeam)) continue;
+    if (toPlayer && (!custom || blockImmuneTeamIds.contains(targetTeam))) {
+      continue;
+    }
     out.add(ModifierInstance(
       catalogId: def.id,
       scope: ModifierScope.round,
@@ -162,82 +167,111 @@ List<ModifierInstance> _candidates({
   return out;
 }
 
-/// Jusqu'à [count] candidats mélangés par la graine, chacun posable à côté
-/// de [taken] (Q8 : incompatibilités et plafond de 2 pour la cible).
-List<ModifierInstance> _pick(
-  List<ModifierInstance> candidates,
-  List<ModifierInstance> taken,
-  int count,
-  Random random,
-) {
-  candidates.shuffle(random);
-  return candidates.where((c) => canAdd(taken, c)).take(count).toList();
+/// Une carte a-t-elle un effet ? Non si elle est incompatible ou dépasse le
+/// plafond de 2 pour sa cible (Q8), ni si le même modificateur touche déjà
+/// sa cible (tirage, choix ou cadeau précédent : la carte serait vide).
+bool _useful(List<ModifierInstance> taken, ModifierInstance c) =>
+    canAdd(taken, c) &&
+    !taken.any((t) => t.catalogId == c.catalogId && t.concernsSameTeamAs(c));
+
+/// Jusqu'à [count] cartes utiles (voir [_useful]) à la force de [gap],
+/// mélangées par la graine de [teamId]. Si cette force n'en a AUCUNE, on
+/// descend d'un cran (forte → moyenne → légère) ; vide seulement si tous les
+/// crans le sont.
+List<ModifierInstance> _offer({
+  required FiestaRules rules,
+  required String gameId,
+  required int round,
+  required String teamId,
+  required int gap,
+  required Set<ModifierNature> natures,
+  required String? leaderId,
+  required Set<String> blockImmuneTeamIds,
+  required List<ModifierInstance> taken,
+  required int count,
+}) {
+  final random = Random(offerSeed(gameId, round, teamId));
+  for (var s = strengthForGap(gap).index; s >= 0; s--) {
+    final candidates = _candidates(
+      rules: rules,
+      round: round,
+      strength: OfferStrength.values[s],
+      natures: natures,
+      beneficiaryId: teamId,
+      leaderId: leaderId,
+      blockImmuneTeamIds: blockImmuneTeamIds,
+    )..shuffle(random);
+    final picked =
+        candidates.where((c) => _useful(taken, c)).take(count).toList();
+    if (picked.isNotEmpty) return picked;
+  }
+  return const [];
 }
 
 /// Les offres (jusqu'à 3) montrées à [teamId] après la manche [round].
+/// Liste vide = l'équipe est sautée.
 ///
-/// [taken] = le tirage de la manche N+1 (`roundModifiers`) PLUS les choix
-/// déjà faits par les équipes précédentes de la file. Liste vide = l'équipe
-/// est sautée. [blockImmuneTeamIds] : équipes qui ne peuvent pas recevoir
-/// « Bloquer un devineur » (2 joueurs ou moins).
+/// - [roundDraw] = le tirage de la manche N+1 (`roundModifiers`).
+/// - [choices] = les choix déjà faits, par id de l'équipe QUI a choisi (un
+///   malus choisi vise le leader : sans cette clé, on ne saurait plus qui l'a
+///   choisi, ni qui désigne le devineur de « Bloquer un devineur »).
+/// - [blockImmuneTeamIds] : équipes qui ne peuvent pas recevoir « Bloquer un
+///   devineur » (2 joueurs ou moins).
+///
+/// Prochaine équipe de la file = la première de [Standings.choosingOrder]
+/// absente de [choices] dont les offres ne sont pas vides.
 List<ModifierInstance> pickThreeOffers({
   required FiestaRules rules,
   required String gameId,
   required int round,
   required Standings standings,
   required String teamId,
-  required List<ModifierInstance> taken,
+  required List<ModifierInstance> roundDraw,
+  Map<String, ModifierInstance> choices = const {},
   Set<String> blockImmuneTeamIds = const {},
 }) {
   if (!standings.choosingOrder.contains(teamId)) return const [];
-  return _pick(
-    _candidates(
-      rules: rules,
-      round: round,
-      strength: strengthForGap(standings.gapOf(teamId)),
-      natures: ModifierNature.values.toSet(),
-      beneficiaryId: teamId,
-      leaderId: standings.leaderId,
-      blockImmuneTeamIds: blockImmuneTeamIds,
-    ),
-    taken,
-    kOfferCount,
-    Random(offerSeed(gameId, round, teamId)),
+  return _offer(
+    rules: rules,
+    gameId: gameId,
+    round: round,
+    teamId: teamId,
+    gap: standings.gapOf(teamId),
+    natures: ModifierNature.values.toSet(),
+    leaderId: standings.leaderId,
+    blockImmuneTeamIds: blockImmuneTeamIds,
+    taken: [...roundDraw, ...choices.values],
+    count: kOfferCount,
   );
 }
 
 /// Coup de pouce de l'app (Auto) après la manche [round] : au plus un bonus
 /// par équipe menée (dans l'ordre de [Standings.choosingOrder]), puis au plus
 /// un malus pour l'équipe en tête, chacun à la force de l'écart de l'équipe
-/// concernée. Mêmes exclusions que le 1 parmi 3, vis-à-vis de [taken] (le
-/// tirage de N+1) et des cadeaux déjà faits.
-///
-/// Jamais de « Bloquer un devineur » : personne ne choisit, donc personne ne
-/// désigne le devineur (Q15 ne couvre que le tirage pour tous).
+/// concernée (un cran plus bas si elle est vide). Mêmes exclusions que le
+/// 1 parmi 3, vis-à-vis de [roundDraw] (le tirage de N+1) et des cadeaux déjà
+/// faits. Jamais de « Bloquer un devineur ».
 List<ModifierInstance> appBoost({
   required FiestaRules rules,
   required String gameId,
   required int round,
   required Standings standings,
-  required List<ModifierInstance> taken,
+  required List<ModifierInstance> roundDraw,
 }) {
   final gifts = <ModifierInstance>[];
   final leaderId = standings.leaderId;
-  final allTeams = standings.scores.keys.toSet();
   void give(String teamId, ModifierNature nature) {
-    gifts.addAll(_pick(
-      _candidates(
-        rules: rules,
-        round: round,
-        strength: strengthForGap(standings.gapOf(teamId)),
-        natures: {nature},
-        beneficiaryId: teamId,
-        leaderId: leaderId,
-        blockImmuneTeamIds: allTeams,
-      ),
-      [...taken, ...gifts],
-      1,
-      Random(offerSeed(gameId, round, teamId)),
+    gifts.addAll(_offer(
+      rules: rules,
+      gameId: gameId,
+      round: round,
+      teamId: teamId,
+      gap: standings.gapOf(teamId),
+      natures: {nature},
+      leaderId: leaderId,
+      blockImmuneTeamIds: const {},
+      taken: [...roundDraw, ...gifts],
+      count: 1,
     ));
   }
 

@@ -19,6 +19,11 @@ String _name(List<Team> teams, String id) {
   return id;
 }
 
+/// Force RÉELLE d'une offre : elle peut être d'un cran sous celle de
+/// l'écart, quand la force de l'écart n'avait aucune carte utile.
+String _strength(ModifierInstance offer) =>
+    strengthLabel(kOfferStrength[offer.catalogId] ?? OfferStrength.light);
+
 Color _color(List<Team> teams, String id) {
   final index = teams.indexWhere((t) => t.id == id);
   return AppColors.getTeamColor(index < 0 ? 0 : index);
@@ -54,8 +59,8 @@ class PickThreeCard extends StatelessWidget {
     return FiestaCard(
       title: 'Choix 1 parmi 3',
       children: [
-        FiestaHint('$name, menée, va choisir une carte. Offre '
-            '${strengthLabel(strengthForGap(gap))} (écart $gap).'),
+        FiestaHint('$name, menée de $gap point${gap > 1 ? 's' : ''}, va '
+            'choisir une carte.'),
         const SizedBox(height: 10),
         AppButton(
           text: 'Passer le téléphone à $name',
@@ -184,8 +189,8 @@ class OfferChoiceBody extends StatelessWidget {
                           .copyWith(color: _color(teams, chooserId)),
                     ),
                     Text(
-                      'Menée de $gap point${gap > 1 ? 's' : ''} · offre '
-                      '${strengthLabel(strengthForGap(gap))}',
+                      'Menée de $gap point${gap > 1 ? 's' : ''}'
+                      '${offers.isEmpty ? '' : ' · offre ${_strength(offers.first)}'}',
                       textAlign: TextAlign.center,
                       style: hint,
                     ),
@@ -282,63 +287,67 @@ class _OfferCard extends StatelessWidget {
     final color = modifierColor(offer.nature);
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.backgroundMain,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: selected ? AppColors.secondaryCyan : Colors.transparent,
-              width: 2,
+      child: Semantics(
+        button: true,
+        selected: selected,
+        child: GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.backgroundMain,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: selected ? AppColors.secondaryCyan : Colors.transparent,
+                width: 2,
+              ),
             ),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Text(
+                    modifierIcon(offer.catalogId),
+                    style: TextStyle(
+                        fontFamily: 'Bangers', fontSize: 22, color: color),
+                  ),
                 ),
-                child: Text(
-                  modifierIcon(offer.catalogId),
-                  style: TextStyle(
-                      fontFamily: 'Bangers', fontSize: 22, color: color),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(def?.name ?? offer.catalogId,
-                        style: AppTextStyles.label),
-                    if (def != null) FiestaHint(def.description),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(99),
-                        border: Border.all(color: AppColors.gray600),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(def?.name ?? offer.catalogId,
+                          style: AppTextStyles.label),
+                      if (def != null) FiestaHint(def.description),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(99),
+                          border: Border.all(color: AppColors.gray600),
+                        ),
+                        child: Text(
+                          offer.charges > 0 ? '$who · +${offer.charges}' : who,
+                          style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 10.5,
+                              color: AppColors.gray400),
+                        ),
                       ),
-                      child: Text(
-                        offer.charges > 0 ? '$who · +${offer.charges}' : who,
-                        style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 10.5,
-                            color: AppColors.gray400),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -351,12 +360,10 @@ class _OfferCard extends StatelessWidget {
 /// Rien si [gifts] est vide.
 class AppBoostCard extends StatelessWidget {
   final List<Team> teams;
-  final Standings standings;
   final List<ModifierInstance> gifts;
 
   const AppBoostCard({
     required this.teams,
-    required this.standings,
     required this.gifts,
     super.key,
   });
@@ -373,7 +380,7 @@ class AppBoostCard extends StatelessWidget {
         for (final gift in gifts)
           Builder(builder: (context) {
             final id = gift.teamId!;
-            final strength = strengthLabel(strengthForGap(standings.gapOf(id)));
+            final strength = _strength(gift);
             final verb =
                 gift.nature == ModifierNature.bonus ? 'reçoit' : 'subit';
             return Padding(
