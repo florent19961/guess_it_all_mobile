@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../models/fiesta/fiesta_rules.dart';
+import '../../screens/fiesta_tutorial_screen.dart';
 import '../../theme/app_theme.dart';
 import '../common/app_back_button.dart';
 import '../effects/shooting_stars.dart';
+import '../help/help_button.dart';
 
 /// Squelette commun des écrans de choix du mode (Mode de jeu, Fiesta, Auto,
 /// Récap) : titre, contenu défilant, bouton bas, et retour — bouton ET geste
@@ -72,6 +74,8 @@ class FiestaSetupScaffold extends StatelessWidget {
               ),
             ),
             AppBackButton(onPressed: onBack),
+            // Écrans de préparation Fiesta : le « ? » rouvre le tuto Fiesta.
+            HelpButton(onPressed: () => FiestaTutorialScreen.show(context)),
           ],
         ),
       ),

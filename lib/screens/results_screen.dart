@@ -66,8 +66,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
                   // Detailed scores
                   KeyedSubtree(
                     key: _detailsKey,
-                    child:
-                        _buildDetailedScores(context, provider, sortedTeams),
+                    child: _buildDetailedScores(context, provider, sortedTeams),
                   ),
 
                   // Fiesta seulement (maquette `results`).

@@ -6,7 +6,9 @@ import '../theme/app_theme.dart';
 import '../widgets/common/app_back_button.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/app_confirm_dialog.dart';
+import '../widgets/help/help_button.dart';
 import 'fiesta_ensemble_editor_screen.dart';
+import 'fiesta_tutorial_screen.dart';
 
 /// « Mes ensembles » (maquette `perso`) : les ensembles du mode Personnalisé.
 ///
@@ -103,6 +105,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
                 : _buildList(store),
           ),
           AppBackButton(onPressed: widget.onBack),
+          HelpButton(onPressed: () => FiestaTutorialScreen.show(context)),
         ],
       ),
     );

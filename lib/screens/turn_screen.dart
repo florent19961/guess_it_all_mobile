@@ -372,8 +372,7 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                           const SizedBox(height: 8),
                           ModifierBadges(
                             modifiers: provider.turnModifiers,
-                            wrapExplain: (show) =>
-                                _whilePaused(provider, show),
+                            wrapExplain: (show) => _whilePaused(provider, show),
                             extra: [
                               if (provider.isDoublePointsOn)
                                 ModifierBadge.catalog(

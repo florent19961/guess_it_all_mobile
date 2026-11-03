@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/game_provider.dart';
+import '../services/storage_service.dart';
 import '../utils/constants.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/fiesta/fiesta_setup_widgets.dart';
+import 'fiesta_tutorial_screen.dart';
 
 /// Premier choix d'une nouvelle partie : Classique (la partie d'aujourd'hui,
 /// inchangée) ou Fiesta.
@@ -46,8 +48,13 @@ class _GameModeScreenState extends State<GameModeScreen> {
         text: 'Continuer',
         size: AppButtonSize.large,
         fullWidth: true,
-        onPressed: () {
+        onPressed: () async {
           if (_fiesta) {
+            // Première partie Fiesta : le tuto (3 cartes) s'ouvre une fois.
+            if (!await StorageService().hasSeenFiestaTutorial()) {
+              if (!context.mounted) return;
+              await FiestaTutorialScreen.show(context);
+            }
             provider.goToScreen(AppConstants.screenFiestaChoice);
           } else {
             provider.setPendingFiesta(null);
