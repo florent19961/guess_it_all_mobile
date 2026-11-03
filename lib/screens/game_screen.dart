@@ -9,6 +9,11 @@ import '../widgets/common/game_dialogs.dart';
 import '../widgets/common/home_button.dart';
 import '../widgets/common/back_button.dart';
 import '../widgets/effects/shooting_stars.dart';
+import '../widgets/fiesta/fiesta_setup_widgets.dart';
+import '../widgets/fiesta/malus_reveal.dart';
+import '../widgets/fiesta/modifier_badge.dart';
+import '../widgets/fiesta/modifier_card.dart';
+import '../models/fiesta/modifier_catalog.dart';
 
 class GameScreen extends StatelessWidget {
   const GameScreen({super.key});
@@ -189,6 +194,16 @@ class GameScreen extends StatelessWidget {
 
                   const Spacer(),
 
+                  // Fiesta : annonces avant le tour. Défile si l'écran est
+                  // petit plutôt que de déborder.
+                  if (provider.isFiesta)
+                    Flexible(
+                      flex: 3,
+                      child: SingleChildScrollView(
+                        child: _FiestaAnnouncements(provider: provider),
+                      ),
+                    ),
+
                   // Time bonus indicator
                   if (provider.game.turnBonusTime != null) ...[
                     Container(
@@ -223,7 +238,7 @@ class GameScreen extends StatelessWidget {
                     variant: AppButtonVariant.primary,
                     size: AppButtonSize.large,
                     fullWidth: true,
-                    onPressed: () => provider.startTurn(),
+                    onPressed: () => _startTurn(context, provider, teamColor),
                   ),
 
                   const SizedBox(height: 24),
@@ -244,6 +259,22 @@ class GameScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Fiesta : révèle d'abord les malus de l'équipe à son premier tour de la
+  /// manche, puis lance le compte à rebours.
+  Future<void> _startTurn(
+      BuildContext context, GameProvider provider, Color teamColor) async {
+    final maluses = provider.malusToReveal;
+    if (maluses.isNotEmpty) {
+      await MalusReveal.showAll(
+        context,
+        maluses: maluses,
+        teamName: provider.getCurrentTeam()?.name ?? '',
+        teamColor: teamColor,
+      );
+    }
+    provider.startTurn();
   }
 
   void _showBackToTeamsDialog(BuildContext context, GameProvider provider) {
@@ -554,6 +585,67 @@ class GameScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Avant le tout premier tour : tirage de la manche 1 et annonce « Une seule
+/// réponse » (maquette `r1`). Ensuite : « Actif ce tour » (maquette `cd`).
+class _FiestaAnnouncements extends StatelessWidget {
+  final GameProvider provider;
+
+  const _FiestaAnnouncements({required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    final rules = provider.game.fiesta!.rules;
+    final modifiers = provider.currentTeamModifiers;
+
+    if (provider.isFirstTurnOfGame) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (rules.oneAnswer)
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                    color: AppColors.warning.withValues(alpha: 0.35)),
+              ),
+              child: Text(
+                'Une seule réponse par mot. Une mauvaise réponse → il faut '
+                'passer (pénalité de passe).',
+                style: AppTextStyles.bodySmall
+                    .copyWith(fontSize: 12.5, color: AppColors.warning),
+              ),
+            ),
+          RoundDrawCard(round: 1, modifiers: modifiers),
+        ],
+      );
+    }
+
+    return FiestaCard(
+      title: 'Actif ce tour',
+      children: [
+        if (modifiers.isEmpty && !rules.oneAnswer)
+          const FiestaHint('Aucun modificateur')
+        else
+          ModifierBadges(
+            modifiers: modifiers,
+            alignment: WrapAlignment.start,
+            extra: [
+              if (rules.oneAnswer)
+                const ModifierBadge(
+                  icon: '☝',
+                  label: 'Une seule réponse',
+                  nature: ModifierNature.bonus,
+                ),
+            ],
+          ),
+      ],
     );
   }
 }
