@@ -90,6 +90,14 @@ void main() {
         mode: FiestaMode.custom,
         catchUp: CatchUpRules.auto,
         modifiers: const {
+          // Un second malus, sans effet sur le temps : seul `minus_10s` compte.
+          'no_pass': ModifierSetting(
+            active: true,
+            arrival: ModifierArrival.fixed,
+            startRound: 1,
+            fixedRound: 2,
+            charges: 0,
+          ),
           'minus_10s': ModifierSetting(
             active: true,
             arrival: ModifierArrival.fixed,
@@ -119,8 +127,8 @@ void main() {
 
     provider.nextRound();
     expect(provider.game.fiesta!.catchUpDue, {leader: -2, trailing: 6});
-    expect(
-        provider.currentTeamModifiers.map((m) => m.catalogId), ['minus_10s']);
+    expect(provider.currentTeamModifiers.map((m) => m.catalogId),
+        unorderedEquals(['no_pass', 'minus_10s']));
 
     // Continuation du leader : 25 s reportées, ni malus du leader ni −10 s,
     // et son dû n'est pas consommé.

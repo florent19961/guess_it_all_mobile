@@ -1159,15 +1159,21 @@ class GameProvider extends ChangeNotifier {
 
   /// Malus à révéler en plein écran avant le tour : ceux de l'équipe qui joue,
   /// à son PREMIER tour de la manche (aucune entrée d'historique à son nom
-  /// dans cette manche). Dérivé de l'historique : rien à persister.
+  /// dans cette manche). Le malus de 10 s, qui ne touche pas une continuation
+  /// (Q5), se révèle au premier tour NON-continuation. Dérivé de
+  /// l'historique : rien à persister.
   List<ModifierInstance> get malusToReveal {
     if (_game.fiesta == null || _teams.isEmpty) return const [];
     final teamId = _teams[_game.currentTeamIndex].id;
-    final alreadyPlayed = _game.history
-        .any((h) => h.round == _game.currentRound && h.teamId == teamId);
-    if (alreadyPlayed) return const [];
+    final played = _game.history
+        .where((h) => h.round == _game.currentRound && h.teamId == teamId);
+    final firstTurn = played.isEmpty;
+    final firstFullTurn = _game.turnBonusTime == null &&
+        played.every((h) => h.isBonusContinuation);
     return currentTeamModifiers
-        .where((m) => m.nature == ModifierNature.malus)
+        .where((m) =>
+            m.nature == ModifierNature.malus &&
+            (m.catalogId == 'minus_10s' ? firstFullTurn : firstTurn))
         .toList();
   }
 

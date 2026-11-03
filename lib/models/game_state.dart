@@ -280,7 +280,6 @@ class GameState {
       'expiredWord': expiredWord,
       'timeRemaining': timeRemaining,
       'turnBonusTime': turnBonusTime,
-      'turnAllottedSeconds': turnAllottedSeconds,
       'turnStartTimestamp': turnStartTimestamp,
       'turnEndTimestamp': turnEndTimestamp,
       'pausedTimeRemaining': pausedTimeRemaining,
@@ -291,8 +290,11 @@ class GameState {
       'pendingBonusTurnId': pendingBonusTurnId,
       'preValidationSnapshot': preValidationSnapshot,
       'restoredValidatedWords': restoredValidatedWords,
-      // Pas de clé `fiesta: null` : absent = Classique, et le blob d'une
-      // partie Classique reste octet pour octet celui d'avant.
+      // Pas de clé `fiesta: null` ni `turnAllottedSeconds: null` : absent =
+      // Classique / version antérieure, et le blob d'une partie Classique
+      // reprise reste octet pour octet celui d'avant.
+      if (turnAllottedSeconds != null)
+        'turnAllottedSeconds': turnAllottedSeconds,
       if (fiesta != null) 'fiesta': fiesta!.toJson(),
     };
   }

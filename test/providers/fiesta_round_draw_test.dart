@@ -46,6 +46,15 @@ void playOneWordTurn(GameProvider provider) {
   provider.validateWords(guessed);
 }
 
+/// Un tour sans rien deviner, validé vide : passe la main.
+void playEmptyTurn(GameProvider provider) {
+  provider.startTurn();
+  provider.startTurnTimer();
+  provider.endTurn();
+  provider.savePreValidationState(const []);
+  provider.validateWords(const []);
+}
+
 List<String> ids(Iterable<ModifierInstance> mods) =>
     mods.map((m) => '${m.catalogId}@${m.round}').toList();
 
@@ -145,7 +154,14 @@ void main() {
     final first = provider.getCurrentTeam()!.id;
     playWholeRound(provider);
     provider.nextRound();
-    // La continuation garde l'équipe qui a joué toute la M1.
+    // La continuation garde l'équipe qui a joué toute la M1. Le malus de 10 s
+    // ne s'y applique pas (Q5, 2-6) : il se révèle au premier tour complet.
+    expect(provider.getCurrentTeam()!.id, first);
+    expect(provider.malusToReveal, isEmpty);
+    playEmptyTurn(provider); // la continuation
+    expect(provider.getCurrentTeam()!.id, isNot(first));
+    expect(ids(provider.malusToReveal), ['minus_10s@2']);
+    playEmptyTurn(provider);
     expect(provider.getCurrentTeam()!.id, first);
     expect(ids(provider.malusToReveal), ['minus_10s@2']);
   });
