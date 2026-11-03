@@ -115,6 +115,11 @@ tous les curseurs à chaque partie.
 4. Éditeur : vider le nom, mettre le tirage à 0 avec un modificateur « tiré pour tous » : le
    bouton est grisé et le message s'affiche. Vérifier le clavier et la zone sûre (encoche iOS,
    barre de gestes Android).
+5. Rattrapage (revue r2, MINOR 3) : l'interrupteur se lit « un curseur > 0 ». Juger si c'est
+   gênant : seul le plafond > 0 affiche « on » sans effet réel ; ramener le dernier curseur
+   non nul à 0 bascule l'interrupteur sur off et masque les curseurs pendant le glissement.
+6. Couper le tirage sur l'ensemble par défaut affiche un message par modificateur tiré (r1,
+   MINOR 7) : lisible ou à regrouper ?
 
 ## Notes d'implémentation (lane B, 2026-11-03)
 

@@ -112,6 +112,10 @@ void main() {
           'ensembles': [
             good,
             {'id': 'b', 'rules': 'cassé'},
+            'x', // pas même un objet
+            // Règles Auto : un ensemble est toujours Personnalisé.
+            FiestaEnsemble(id: 'c', rules: FiestaRules(mode: FiestaMode.auto))
+                .toJson(),
           ],
           'lastUsedId': null,
         })),
@@ -128,6 +132,8 @@ void main() {
       await service.create(defaultEnsembleRules('C'));
       final stored = (await persistedData(key))!['ensembles'] as List;
       expect(stored, anyElement(equals({'id': 'b', 'rules': 'cassé'})));
+      expect(stored, contains('x'));
+      expect(stored, anyElement(isA<Map>().having((m) => m['id'], 'id', 'c')));
     });
   });
 
