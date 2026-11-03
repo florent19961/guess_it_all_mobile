@@ -583,7 +583,10 @@ niveau) : le tag analytics porte l'information.
   les effets de N pour cette équipe (modificateurs de N, ×2 / deux mots dépensés, passes
   gratuites utilisées, `block_guesser` de N et devineur bloqué), **jamais** ceux de N+1 (tirage,
   cadeaux, choix — `block_guesser` choisi pour N+1 compris — et charges), qui commencent au
-  premier vrai tour de chaque équipe. Aucune charge ne s'allume sur une continuation. Les
+  premier vrai tour de chaque équipe. Aucune charge ne s'allume sur une continuation : 🔴 cela
+  **change l'AC8 de 2-9** (on pouvait allumer la charge de N+1 pendant la continuation). Le test
+  AC8 vérifie désormais le refus sur la continuation et la charge de N+1 disponible au premier
+  vrai tour (lecture (a), validée par Florent). Les
   instances de N partent à la fin de la continuation. Tous les malus de N+1 se révèlent au
   premier vrai tour (plus de cas particulier `minus_10s`).
 - `isContinuation` est **dérivé de l'historique** (l'équipe a joué la dernière entrée de N et

@@ -42,10 +42,12 @@ pesait sur l'équipe pendant ce tour de N :
 **Ce qui ne s'applique pas.** Rien de N+1 : ni tirage, ni cadeaux, ni choix (y compris un
 `block_guesser` choisi pour N+1), ni charges.
 
-> ⚠️ Lecture (a) retenue entre deux possibles. La lecture (b) aurait gardé seulement l'état du
-> tour et les instances de portée tour, sans les modificateurs de manche de N. (a) donne un sens
-> au « compteur de passes gratuites » gardé, et le plafond tenu en N tient par construction.
-> À confirmer par l'orchestrateur ou Florent.
+> Lecture (a), **validée par Florent** : la continuation joue avec le contexte de N de
+> l'équipe (modificateurs de manche + état du tour), rien de N+1.
+>
+> 🔴 **Changement d'AC : l'AC8 de 2-9 change.** On pouvait allumer la charge de N+1 pendant la
+> continuation ; c'est désormais refusé. Le test AC8 de `fiesta_double_points_test` est réécrit :
+> refus sur la continuation, charge de N+1 disponible au premier vrai tour.
 
 **Mécanisme.**
 - `isContinuation` est dérivé de l'historique : l'équipe a joué la dernière entrée de N-1 et n'a
@@ -115,6 +117,31 @@ La règle repose sur le modèle. Choses à vérifier :
 - Suite complète : **213/213**, format et analyze verts.
 - Le graphe B3 est testé sur `Σ HistoryEntry.points`, la seule valeur que le widget cumule. Le
   widget n'est pas testé, conformément à la règle « pas de widget test ».
+
+### 6. B6 — moyennes et durées nulles (A5)
+
+Consigne : une moyenne de temps par mot exclut les événements à durée nulle, au lieu de les
+compter 0 ms. Les totaux peuvent rester tels quels.
+
+**Constat : aucune moyenne de l'app ne lit la durée des événements.** Il n'y a donc rien à
+changer.
+- « Temps moyen par mot » (`stats_aggregation.averageTimePerWordRanking`, écran Stats) se
+  calcule sur `HistoryEntry.timeSpent` (durée du tour) ÷ mots trouvés. Il ne lit pas
+  `WordEvent.durationMs`.
+- Les agrégats d'événements sont des totaux, ou un min/max sur des totaux.
+
+**Lieux où une durée nulle compte 0 ms**, listés pour décision. Aucun n'a de lecteur dans l'UI
+aujourd'hui.
+
+| Lieu | Calcul | Effet d'une durée nulle |
+|---|---|---|
+| `WordRoundStats.fromEvents` (`word_stats.dart:122-125`) | `totalTimeMs` = Σ passes + deviné | total sous-estimé, comme la validation a posteriori d'avant |
+| `PassEvent.fromWordEvent` (`word_event.dart`) | durée nulle → 0 | idem |
+| `GameAnalytics.hardestWord` / `fastestWord` (`game_analytics.dart:193-214`) | max / min de `totalTimeMs` | un mot sans durée peut sortir « le plus rapide » |
+| `AnalyticsService.getHardestWords` / `getFastestWords` / `getStatsByCategory` / `getStatsByDifficulty` | tri / Σ de `totalTimeMs` | idem |
+
+Firestore reçoit les événements bruts (`durationMs` nul conservé) et `wordStats`. Une moyenne
+hors app doit filtrer `durationMs != null`, ce que `docs/ANALYTICS.md` documente déjà.
 
 ## Questions précises
 

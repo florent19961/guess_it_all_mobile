@@ -128,7 +128,7 @@ index b8aace9..72d52c0 100644
 +charges, devineur bloqué, offres, file de choix, récap. Le provider garde les mutations et
 +délègue ses getters ; tests purs sans provider.
 diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
-index af91cc6..f805dbb 100644
+index af91cc6..5109df6 100644
 --- a/docs/tracking_evolution.md
 +++ b/docs/tracking_evolution.md
 @@ -321,8 +321,8 @@ nul. `GameProvider.startGame({FiestaRules? fiesta})` gèle la config ; sans argu
@@ -151,7 +151,7 @@ index af91cc6..f805dbb 100644
    Le retour arrière et l'app tuée les retrouvent sans code dédié (snapshot = `toJson`).
  - **Le mot visé est un argument** de `markWordAsGuessed` / `passWord` : un tap sur une carte
    déjà remplacée est ignoré par le provider (en plus du verrou visuel de 0,3 s).
-@@ -575,3 +575,65 @@ choix.
+@@ -575,3 +575,68 @@ choix.
  
  **Conséquence.** Pas d'indicateur sur `HistoryEntry` (forme d'une clé `guessItAll_*` de premier
  niveau) : le tag analytics porte l'information.
@@ -163,7 +163,10 @@ index af91cc6..f805dbb 100644
 +  les effets de N pour cette équipe (modificateurs de N, ×2 / deux mots dépensés, passes
 +  gratuites utilisées, `block_guesser` de N et devineur bloqué), **jamais** ceux de N+1 (tirage,
 +  cadeaux, choix — `block_guesser` choisi pour N+1 compris — et charges), qui commencent au
-+  premier vrai tour de chaque équipe. Aucune charge ne s'allume sur une continuation. Les
++  premier vrai tour de chaque équipe. Aucune charge ne s'allume sur une continuation : 🔴 cela
++  **change l'AC8 de 2-9** (on pouvait allumer la charge de N+1 pendant la continuation). Le test
++  AC8 vérifie désormais le refus sur la continuation et la charge de N+1 disponible au premier
++  vrai tour (lecture (a), validée par Florent). Les
 +  instances de N partent à la fin de la continuation. Tous les malus de N+1 se révèlent au
 +  premier vrai tour (plus de cas particulier `minus_10s`).
 +- `isContinuation` est **dérivé de l'historique** (l'équipe a joué la dernière entrée de N et
