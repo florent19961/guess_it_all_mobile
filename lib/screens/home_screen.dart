@@ -6,6 +6,7 @@ import '../utils/constants.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/app_modal.dart';
 import '../widgets/effects/shooting_stars.dart';
+import '../widgets/help/first_game_prompt.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -85,6 +86,8 @@ class HomeScreen extends StatelessWidget {
                   size: AppButtonSize.large,
                   fullWidth: true,
                   onPressed: () async {
+                    await FirstGamePrompt.maybeShow(context);
+                    if (!context.mounted) return;
                     // startNewGame() : efface session + état, GARDE les réglages.
                     // clearLocalStorage() remettait GameSettings.initial() et le
                     // réécrivait sur disque — le joueur reperdait ses réglages à

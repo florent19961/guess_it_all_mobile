@@ -124,4 +124,44 @@ class StorageService {
       debugPrint('[Storage] Échec du marquage des paramètres avancés: $e');
     }
   }
+
+  // Aides de prise en main : booléens autonomes, absents = false (clés neuves,
+  // rien à migrer).
+
+  Future<bool> hasSeenTutorial() => _readFlag(AppConstants.tutorialSeenKey);
+  Future<void> markTutorialSeen() =>
+      _writeFlag(AppConstants.tutorialSeenKey, true);
+
+  Future<bool> hasSeenFiestaTutorial() =>
+      _readFlag(AppConstants.fiestaTutorialSeenKey);
+  Future<void> markFiestaTutorialSeen() =>
+      _writeFlag(AppConstants.fiestaTutorialSeenKey, true);
+
+  /// Vrai après la première partie terminée sur ce téléphone. Tant qu'il est
+  /// faux, chaque joueur voit les aides à son premier tour.
+  Future<bool> isFirstGameDone() => _readFlag(AppConstants.firstGameDoneKey);
+  Future<void> markFirstGameDone() =>
+      _writeFlag(AppConstants.firstGameDoneKey, true);
+
+  /// « Revoir les aides » (écran Règles).
+  Future<void> resetFirstGameDone() =>
+      _writeFlag(AppConstants.firstGameDoneKey, false);
+
+  Future<bool> _readFlag(String key) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(key) ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<void> _writeFlag(String key, bool value) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(key, value);
+    } catch (e) {
+      debugPrint('[Storage] Échec d\'écriture du flag $key: $e');
+    }
+  }
 }

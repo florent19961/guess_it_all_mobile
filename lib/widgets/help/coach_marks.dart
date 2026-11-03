@@ -1,0 +1,260 @@
+import 'package:flutter/material.dart';
+import '../../theme/app_theme.dart';
+
+/// Une étape d'aide : le contrôle mis en lumière ([target]) et sa bulle.
+class CoachStep {
+  final GlobalKey target;
+  final String title;
+  final String text;
+
+  const CoachStep({
+    required this.target,
+    required this.title,
+    required this.text,
+  });
+}
+
+/// Aide en surimpression : voile sombre percé autour du contrôle, bulle
+/// d'explication, « Suivant » / « Passer ».
+///
+/// Les étapes dont la cible n'est pas affichée (clé non montée) sont sautées :
+/// un écran peut passer toutes ses clés sans se soucier de ce qui est visible.
+/// Le retour système (Android) ferme l'aide comme « Passer ».
+class CoachMarks {
+  CoachMarks._();
+
+  /// Rend la main quand l'aide est terminée ou passée.
+  static Future<void> show(BuildContext context, List<CoachStep> steps) async {
+    final visible =
+        steps.where((s) => s.target.currentContext != null).toList();
+    if (visible.isEmpty) return;
+    await Navigator.of(context).push(PageRouteBuilder<void>(
+      opaque: false,
+      transitionDuration: const Duration(milliseconds: 200),
+      reverseTransitionDuration: const Duration(milliseconds: 150),
+      pageBuilder: (_, __, ___) => _CoachOverlay(steps: visible),
+      transitionsBuilder: (_, animation, __, child) =>
+          FadeTransition(opacity: animation, child: child),
+    ));
+  }
+}
+
+class _CoachOverlay extends StatefulWidget {
+  final List<CoachStep> steps;
+
+  const _CoachOverlay({required this.steps});
+
+  @override
+  State<_CoachOverlay> createState() => _CoachOverlayState();
+}
+
+class _CoachOverlayState extends State<_CoachOverlay> {
+  int _index = 0;
+  Rect? _hole;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _focusCurrent());
+  }
+
+  /// Fait défiler la cible dans l'écran si besoin, puis mesure sa position.
+  Future<void> _focusCurrent() async {
+    final targetContext = widget.steps[_index].target.currentContext;
+    if (targetContext == null) {
+      _next();
+      return;
+    }
+    await Scrollable.ensureVisible(
+      targetContext,
+      alignment: 0.3,
+      duration: const Duration(milliseconds: 250),
+    );
+    if (!mounted || !targetContext.mounted) return;
+    final box = targetContext.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    setState(() => _hole = box.localToGlobal(Offset.zero) & box.size);
+  }
+
+  void _next() {
+    if (_index >= widget.steps.length - 1) {
+      Navigator.of(context).pop();
+      return;
+    }
+    setState(() {
+      _index++;
+      _hole = null;
+    });
+    _focusCurrent();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final step = widget.steps[_index];
+    final isLast = _index == widget.steps.length - 1;
+    final hole = _hole;
+
+    return Material(
+      type: MaterialType.transparency,
+      child: Stack(
+        children: [
+          // Absorbe les taps : on ne touche pas l'écran dessous pendant l'aide.
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {},
+              child: CustomPaint(painter: _VeilPainter(hole)),
+            ),
+          ),
+          if (hole != null) _bubble(context, hole, step, isLast),
+        ],
+      ),
+    );
+  }
+
+  Widget _bubble(BuildContext context, Rect hole, CoachStep step, bool isLast) {
+    final media = MediaQuery.of(context);
+    final height = media.size.height;
+    final below = height - hole.bottom - media.padding.bottom;
+    final above = hole.top - media.padding.top;
+    const minSpace = 180.0;
+
+    double? top;
+    double? bottom;
+    if (below >= minSpace && below >= above) {
+      top = hole.bottom + 14;
+    } else if (above >= minSpace) {
+      bottom = height - hole.top + 14;
+    } else {
+      // Cible trop grande (ex. une longue liste) : bulle posée en bas.
+      bottom = media.padding.bottom + 16;
+    }
+
+    return Positioned(
+      left: 16,
+      right: 16,
+      top: top,
+      bottom: bottom,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFFBEB),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: const [
+            BoxShadow(
+                color: Colors.black45, blurRadius: 24, offset: Offset(0, 8)),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    step.title.toUpperCase(),
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8,
+                      color: Color(0xFF92400E),
+                    ),
+                  ),
+                ),
+                Text(
+                  '${_index + 1} / ${widget.steps.length}',
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF92400E),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              step.text,
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 15,
+                height: 1.4,
+                color: Color(0xFF1C1917),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                if (!isLast)
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFF78716C),
+                    ),
+                    child: const Text(
+                      'Passer',
+                      style: TextStyle(fontFamily: 'Poppins', fontSize: 14),
+                    ),
+                  ),
+                const Spacer(),
+                FilledButton(
+                  onPressed: _next,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF1C1917),
+                    foregroundColor: const Color(0xFFFFFBEB),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                  ),
+                  child: Text(
+                    isLast ? 'Compris' : 'Suivant',
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _VeilPainter extends CustomPainter {
+  final Rect? hole;
+
+  _VeilPainter(this.hole);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final veil = Path()..addRect(Offset.zero & size);
+    final veilPaint = Paint()..color = const Color(0xC7020617);
+    if (hole == null) {
+      canvas.drawPath(veil, veilPaint);
+      return;
+    }
+    final spot = RRect.fromRectAndRadius(
+      hole!.inflate(6),
+      const Radius.circular(16),
+    );
+    canvas.drawPath(
+      Path.combine(PathOperation.difference, veil, Path()..addRRect(spot)),
+      veilPaint,
+    );
+    canvas.drawRRect(
+      spot,
+      Paint()
+        ..color = AppColors.warning
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_VeilPainter old) => old.hole != hole;
+}
