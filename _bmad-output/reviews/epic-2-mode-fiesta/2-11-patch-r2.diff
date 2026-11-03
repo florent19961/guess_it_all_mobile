@@ -1,0 +1,3199 @@
+diff --git a/_bmad-output/reviews/epic-2-mode-fiesta/2-11-fix-r1.md b/_bmad-output/reviews/epic-2-mode-fiesta/2-11-fix-r1.md
+new file mode 100644
+index 0000000..b2c5ae0
+--- /dev/null
++++ b/_bmad-output/reviews/epic-2-mode-fiesta/2-11-fix-r1.md
+@@ -0,0 +1,10 @@
++# 2-11 — corrections r1
++
++Revue Codex r1 : READY, 0 BLOCKER, 0 MAJOR, 2 MINOR (`2-11-review-r1.md`).
++
++| Finding | Décision | Preuve |
++|---|---|---|
++| MINOR — frontière Q8 des deux interrupteurs non épinglée | **Corrigé** : un test. L'équipe a déjà un modificateur de manche (`reversed`, posé dans l'état persisté, car le tirage et les fixés plafonnent à 2). On allume ×2 → « deux mots » est refusé ; puis l'ordre inverse. Mutants tués : `doublePointsCapped` sans « deux mots » allumé, `twoWordsCapped` sans le ×2 allumé (chacun rougit ce test seul). | `test/providers/fiesta_two_words_test.dart:207` |
++| MINOR — le scénario « kill » ne tue pas le singleton analytics | **Résidu assumé** (arbitrage orchestrateur). Le contrat est documenté : après un kill, `resumeGame` → `_clearTrackingState` vide `_shownAt`, et un événement terminal sans `shown` en cours est abandonné, comme pour le mot seul avant 2-11. Le test kill de la lane porte sur la relecture des deux cartes (AC5), pas sur le tracker. | `lib/services/analytics_service.dart` (`_clearTrackingState`, `_recordEventWithDuration`), `docs/ANALYTICS.md` « Durée par mot » |
++
++Tests ciblés : `fiesta_two_words_test.dart` 5/5 vert.
+diff --git a/_bmad-output/reviews/epic-2-mode-fiesta/2-11-patch-r1.diff b/_bmad-output/reviews/epic-2-mode-fiesta/2-11-patch-r1.diff
+new file mode 100644
+index 0000000..7e7d310
+--- /dev/null
++++ b/_bmad-output/reviews/epic-2-mode-fiesta/2-11-patch-r1.diff
+@@ -0,0 +1,1498 @@
++diff --git a/docs/ANALYTICS.md b/docs/ANALYTICS.md
++index 64fac7c..be8000c 100644
++--- a/docs/ANALYTICS.md
+++++ b/docs/ANALYTICS.md
++@@ -59,9 +59,11 @@ sont inchanges.
++   les defauts `round` 1, `teamId` '' deja presents avant 2-7). Le mode de la partie se lit sur
++   `GameAnalytics.gameMode`, jamais sur l'evenement.
++ 
++-⚠️ **Contrat « un seul mot a l'ecran »** (`AnalyticsService._recordEventWithDuration`) : un
++-evenement sur un mot qui n'est pas le dernier `shown` est abandonne en silence. La story 2-11
++-(deux mots) remplace le bloc « mot affiche » du service ; le contexte du tour ne bouge pas.
+++**Duree par mot** (`AnalyticsService._recordEventWithDuration`, story 2-11) : chaque mot a
+++l'ecran garde l'horodatage de son `shown` ; `guessed` / `passed` / `expired` mesurent leur duree
+++depuis le `shown` de CE mot. Avec « Deux mots a la fois », les deux cartes ont donc chacune leur
+++paire d'evenements, et le tour porte `two_words` dans `modifiers`. Un mot sans `shown` en cours
+++(app tuee depuis) est abandonne, comme avant : pas de duree inventee.
++ 
++ **Types d'evenements :**
++ 
++diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
++index fd189a3..af91cc6 100644
++--- a/docs/tracking_evolution.md
+++++ b/docs/tracking_evolution.md
++@@ -553,3 +553,25 @@ parmi 3 » et « Coup de pouce de l'app ».
++ 
++ **Conséquence.** Les malus reçus passent par la révélation de 2-5 et les tags analytics de 2-7
++ sans code dédié : ils sont dans `active` comme le tirage.
+++
+++## 2026-11-03 — Fiesta 2-11 : Deux mots à la fois
+++
+++**Quoi.** Bonus à charge (1 par équipe et par manche), allumé sur l'avant-tour comme le ×2,
+++annoncé sur la même carte. Pendant le tour : deux cartes, chacune avec Trouvé / Passer ; la
+++carte traitée est remplacée par un mot ≠ l'autre, l'autre ne bouge pas ; une seule carte quand
+++il ne reste qu'un mot. À l'expiration, les deux mots partent à la vérification, chacun avec son
+++choix.
+++
+++**Pourquoi ces choix.**
+++- **Carte B dans `fiesta.turn`** (`secondWord`, puis `secondExpiredWord`), pas dans `GameState` :
+++  le blob Classique ne change pas d'un octet, clés absentes = un seul mot, pas de bump de schéma.
+++  Le retour arrière et l'app tuée les retrouvent sans code dédié (snapshot = `toJson`).
+++- **Le mot visé est un argument** de `markWordAsGuessed` / `passWord` : un tap sur une carte
+++  déjà remplacée est ignoré par le provider (en plus du verrou visuel de 0,3 s).
+++- **`resolveTurn(expiredWords:)`** : N mots expirés, toujours pur ; adaptation mécanique des
+++  tests existants.
+++- **Analytics : durée par mot** (`AnalyticsService._shownAt`) au lieu du « dernier mot affiché »,
+++  qui jetait en silence les événements de l'autre carte. `two_words` dans les `modifiers`.
+++
+++**Conséquence.** Pas d'indicateur sur `HistoryEntry` (forme d'une clé `guessItAll_*` de premier
+++niveau) : le tag analytics porte l'information.
++diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
++index dca0351..fe83be5 100644
++--- a/lib/models/CLAUDE.md
+++++ b/lib/models/CLAUDE.md
++@@ -21,7 +21,7 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
++ | `fiesta/symmetric_draw.dart` | fonctions pures | Modificateurs d'une manche pour toutes les équipes : `fixedForRound` puis `drawSymmetric`, réunis par `roundModifiers(rules, gameId:, round:)`. Graine `drawSeed(gameId, round)` (FNV-1a, stable entre exécutions) |
++ | `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn, catchUpDue}`. `turn` : compteurs du tour (2-8 : `freePassesUsed`, `blockedPlayerId`, clés dans `turn_effects.dart`), vidés à la vraie fin du tour (continuation de fin de manche comprise dans le tour). `catchUpDue` : id d'équipe → secondes dues (négatives = malus du leader), posé par `nextRound`, consommé au premier tour non-continuation. `chargesUsed` (2-9, clé omise si vide) : charges dépensées `{catalogId, teamId, round}`, décompte de la manche en cours + récap « Bonus utilisés » ; `offerChoices` (2-10, clé omise si vide) : cartes 1 parmi 3 choisies `{chooserId, modifier}` — celles dont `modifier.round` = manche suivante forment la file de la transition, `nextRound` les rend actives ; relues pour le récap et `blockingTeam` |
++ | `fiesta/modifier_recap.dart` | fonctions pures | `fiestaModeId` (`fiesta_auto`/`fiesta_custom`), `fiestaModeLabel`, `buildModifierRecap` : récap « Modificateurs de la partie » **recalculé** (tirage par graine, rattrapage sur les scores cumulés par manche), rien de persisté pendant la partie |
++-| `fiesta/turn_effects.dart` | fonctions pures | Effets de tour (2-8) : clés des compteurs du tour, `freePassAllowance` (charges de `free_pass`), `canBlockGuesser` (équipe de 3+). 2-9 : clé `doublePoints` (`armed` à l'interrupteur, `spent` au départ), `doublePointsAllowance` |
+++| `fiesta/turn_effects.dart` | fonctions pures | Effets de tour (2-8) : clés des compteurs du tour, `freePassAllowance` (charges de `free_pass`), `canBlockGuesser` (équipe de 3+). 2-9 : clé `doublePoints` (`armed` à l'interrupteur, `spent` au départ), `doublePointsAllowance`. 2-11 : clés `twoWords` (mêmes valeurs), `secondWord`, `secondExpiredWord`, `twoWordsAllowance`, `drawOtherCard` (remplaçant ≠ l'autre carte) |
++ | `fiesta/turn_time.dart` | fonctions pures | `composeTurnSeconds` (base + rattrapage − malus du leader − 10 s × `minus_10s`, plancher `kTurnFloorSeconds` = 10 ; continuation = ses secondes, sans modificateur) ; `computeCatchUp` (k × écart avec la tête, plafonds, co-leaders tous en tête, égalité = rien) ; `effectiveCatchUp` (Auto → auto-calibrage, Personnalisé → curseurs) |
++ | `fiesta/offers.dart` | `Standings`, `OfferStrength`, fonctions pures | 2-10 : `kOfferStrength` + `strengthForGap` (≤3 légère, ≤7 moyenne, >7 forte, **à recalibrer**), cran vide → cran inférieur ; `Standings` (leader unique ou `null`, `gapOf`, `choosingOrder` dernière → avant-dernière, vide si égalité ; map construite **dans l'ordre des équipes**) ; `pickThreeOffers(…, roundDraw:, choices:, blockImmuneTeamIds:)` (≤3 cartes utiles : compatibles, plafond 2, pas un modificateur que la cible a déjà ; vide = équipe sautée) ; `appBoost(…, roundDraw:)` (Auto : 1 bonus par menée + 1 malus au leader, jamais `block_guesser`). Graine `offerSeed(gameId, round, teamId)` **figée par test**. 🔴 Lane cœur : persister les choix en `Map<chooserTeamId, ModifierInstance>` ; `choices` ne contient que les choix des équipes passées AVANT celle dont on calcule les offres (un malus vise le leader, la clé dit qui l'a choisi) ; prochaine équipe = 1ʳᵉ de `choosingOrder` absente de la map dont les offres ne sont pas vides |
++ | `fiesta/fiesta_ensemble.dart` | `FiestaEnsemble`, `defaultEnsembleRules`, extensions `copyWith`, `catchUpOn` | Ensemble Personnalisé `{id, rules}` (nom = `rules.ensembleName`, mode toujours `custom`), défauts de la maquette (`mkSet`). Persisté par `FiestaEnsembleService` |
++diff --git a/lib/models/fiesta/modifier_catalog.dart b/lib/models/fiesta/modifier_catalog.dart
++index 01cf70a..7709408 100644
++--- a/lib/models/fiesta/modifier_catalog.dart
+++++ b/lib/models/fiesta/modifier_catalog.dart
++@@ -98,6 +98,7 @@ const List<ModifierDef> kModifierCatalog = [
++     name: 'Deux mots à la fois',
++     description: 'Deux mots sont affichés en même temps.',
++     nature: ModifierNature.bonus,
+++    defaultCharges: 1,
++   ),
++   ModifierDef(
++     id: 'reversed',
++diff --git a/lib/models/fiesta/turn_effects.dart b/lib/models/fiesta/turn_effects.dart
++index 10bce69..706ecfc 100644
++--- a/lib/models/fiesta/turn_effects.dart
+++++ b/lib/models/fiesta/turn_effects.dart
++@@ -15,6 +15,15 @@ const String kDoublePointsKey = 'doublePoints';
++ const String kDoubleArmed = 'armed';
++ const String kDoubleSpent = 'spent';
++ 
+++/// « Deux mots à la fois » du tour (story 2-11) : mêmes valeurs que
+++/// [kDoublePointsKey] ([kDoubleArmed] puis [kDoubleSpent]). La carte B vit
+++/// sous [kSecondWordKey] (la carte A reste `GameState.currentWord`), et B
+++/// encore à l'écran quand le chrono tombe sous [kSecondExpiredWordKey]. Clés
+++/// absentes = un seul mot, comme en Classique.
+++const String kTwoWordsKey = 'twoWords';
+++const String kSecondWordKey = 'secondWord';
+++const String kSecondExpiredWordKey = 'secondExpiredWord';
+++
++ /// Nombre de passes gratuites du tour : les charges de `free_pass`.
++ int freePassAllowance(List<ModifierInstance> modifiers) => modifiers
++     .where((m) => m.catalogId == 'free_pass')
++@@ -26,6 +35,28 @@ int doublePointsAllowance(List<ModifierInstance> modifiers) => modifiers
++     .where((m) => m.catalogId == 'double_points')
++     .fold(0, (sum, m) => sum + m.charges);
++ 
+++/// Charges de « Deux mots à la fois » de la manche (instances `two_words`).
+++int twoWordsAllowance(List<ModifierInstance> modifiers) => modifiers
+++    .where((m) => m.catalogId == 'two_words')
+++    .fold(0, (sum, m) => sum + m.charges);
+++
+++/// Remplaçant d'une carte « Deux mots » traitée : premier mot de [pool] (déjà
+++/// privé du mot traité) autre que [other], la carte qui reste. Pool épuisé :
+++/// les mots passés du tour (sauf [other]) y reviennent, comme le recyclage
+++/// d'un mot seul. `word` nul = plus aucun autre mot, une seule carte reste.
+++({String? word, List<String> pool}) drawOtherCard({
+++  required List<String> pool,
+++  required List<String> passed,
+++  required String other,
+++}) {
+++  for (final w in pool) {
+++    if (w != other) return (word: w, pool: pool);
+++  }
+++  final recycled = passed.where((w) => w != other).toList()..shuffle();
+++  if (recycled.isEmpty) return (word: null, pool: pool);
+++  return (word: recycled.first, pool: [...pool, ...recycled]);
+++}
+++
++ /// `block_guesser` n'a d'effet que si l'équipe a au moins 3 joueurs : il faut
++ /// un devineur à bloquer ET un autre qui puisse encore répondre.
++ bool canBlockGuesser(int teamSize) => teamSize > 2;
++diff --git a/lib/models/turn_resolution.dart b/lib/models/turn_resolution.dart
++index 36ca3e5..00891fe 100644
++--- a/lib/models/turn_resolution.dart
+++++ b/lib/models/turn_resolution.dart
++@@ -28,12 +28,10 @@ class TurnResolution {
++   /// Mots passés pendant le tour mais finalement validés comme devinés.
++   final List<String> validatedPassed;
++ 
++-  /// Le mot affiché à l'expiration du chrono a-t-il été validé / refusé ?
++-  final bool expiredValidated;
++-  final bool expiredInvalidated;
++-
++-  /// Le mot affiché à l'expiration du chrono, s'il y en avait un.
++-  final String? expiredWord;
+++  /// Mots affichés à l'expiration du chrono (un, ou deux avec « Deux mots à
+++  /// la fois »), validés / refusés à la vérification.
+++  final List<String> expiredValidated;
+++  final List<String> expiredInvalidated;
++ 
++   /// Pool de mots restants après dépouillement.
++   final List<String> remainingPool;
++@@ -48,7 +46,6 @@ class TurnResolution {
++     required this.validatedPassed,
++     required this.expiredValidated,
++     required this.expiredInvalidated,
++-    required this.expiredWord,
++     required this.remainingPool,
++     required this.pointsScored,
++   });
++@@ -57,7 +54,7 @@ class TurnResolution {
++   List<String> get allInvalidated => [
++         ...invalidatedGuessed,
++         ...invalidatedPassed,
++-        if (expiredInvalidated && expiredWord != null) expiredWord!,
+++        ...expiredInvalidated,
++       ];
++ 
++   /// La manche est terminée : plus aucun mot à faire deviner.
++@@ -69,7 +66,8 @@ class TurnResolution {
++ ///
++ /// - [validatedWords] : ce que l'équipe a coché à la vérification.
++ /// - [guessedThisTurn] / [passedThisTurn] : ce qui s'est passé pendant le tour.
++-/// - [expiredWord] : le mot affiché quand le chrono est tombé, s'il y en a un.
+++/// - [expiredWords] : les mots affichés quand le chrono est tombé (aucun, un,
+++///   ou deux avec « Deux mots à la fois », story 2-11).
++ /// - [currentPool] : les mots encore à faire deviner avant dépouillement.
++ /// - [pointsMultiplier] : ×2 pour « Mot compte double » (Fiesta 2-9). Vaut
++ ///   pour les POINTS seulement : [TurnResolution.validated] reste la liste
++@@ -78,7 +76,7 @@ TurnResolution resolveTurn({
++   required List<String> validatedWords,
++   required List<String> guessedThisTurn,
++   required List<String> passedThisTurn,
++-  required String? expiredWord,
+++  required List<String> expiredWords,
++   required List<String> currentPool,
++   int pointsMultiplier = 1,
++ }) {
++@@ -92,9 +90,9 @@ TurnResolution resolveTurn({
++       passedThisTurn.where((w) => validatedSet.contains(w)).toList();
++ 
++   final expiredValidated =
++-      expiredWord != null && validatedSet.contains(expiredWord);
+++      expiredWords.where((w) => validatedSet.contains(w)).toList();
++   final expiredInvalidated =
++-      expiredWord != null && !validatedSet.contains(expiredWord);
+++      expiredWords.where((w) => !validatedSet.contains(w)).toList();
++ 
++   // Les mots refusés retournent au pool ; le Set garantit qu'un mot recyclé
++   // pendant le tour n'y apparaît pas deux fois.
++@@ -106,7 +104,9 @@ TurnResolution resolveTurn({
++ 
++   // Les mots finalement validés en sortent — y compris ceux qui avaient été
++   // passés puis remis dans le pool pendant le tour.
++-  if (expiredValidated) pool.remove(expiredWord);
+++  for (final word in expiredValidated) {
+++    pool.remove(word);
+++  }
++   for (final word in validatedPassed) {
++     pool.remove(word);
++   }
++@@ -118,7 +118,6 @@ TurnResolution resolveTurn({
++     validatedPassed: validatedPassed,
++     expiredValidated: expiredValidated,
++     expiredInvalidated: expiredInvalidated,
++-    expiredWord: expiredWord,
++     remainingPool: pool,
++     pointsScored: validatedWords.length * pointsMultiplier,
++   );
++diff --git a/lib/providers/CLAUDE.md b/lib/providers/CLAUDE.md
++index 93a576b..401719e 100644
++--- a/lib/providers/CLAUDE.md
+++++ b/lib/providers/CLAUDE.md
++@@ -26,6 +26,7 @@ Gestion d'etat centralisee via Provider.
++ - **Effets de tour Fiesta (2-8)** : `canPassWith(secondesAffichées)` est la **seule** garde de la passe (`passWord` ET le bouton de `turn_screen`), sur la pénalité **effective** (`currentPassPenalty`, 0 si `hasFreePass`) ; sous `no_pass`, `passWord` sort avant `onWordPassed`. **Un seul tour** : fin de manche + continuation en N+1. `validateWords` vide `fiesta.turn` et consomme les instances de portée **tour** de l'équipe à la vraie fin seulement (pas dans la branche fin de manche).
++ - **Mot compte double (2-9)** : `setDoublePoints` n'écrit que `fiesta.turn[doublePoints]=armed` ; la charge se dépense dans `startTurnTimer` (`spent` + `chargesUsed`). `validateWords` passe `pointsMultiplier` à `resolveTurn` (pur). La continuation de fin de manche garde `spent` (même tour) sans dépenser la charge de N+1. `turnModifiers` = badges / tags analytics sans la charge non activée.
++ - **1 parmi 3 / coup de pouce (2-10)** : offres (`offersFor`) et cadeaux (`appBoostPreview`) recalculés sur la transition, jamais stockés ; seuls les choix vont dans `fiesta.offerChoices` (`chooseOffer`, refusé hors tour). 🔴 `nextRound` refuse tant que `nextChooserId` n'est pas nul. `_fiestaForRound` ajoute tirage + cadeaux + choix de la transition.
+++- **Deux mots à la fois (2-11)** : même interrupteur que le ×2 (`setTwoWords`, `_armCharge`, dépense dans `startTurnTimer`). Carte A = `game.currentWord`, carte B = `fiesta.turn[secondWord]` (tirée au départ, continuation comprise) ; 🔴 les deux restent dans `remainingWords`. `markWordAsGuessed(mot)` / `passWord(mot)` visent une carte (mot plus à l'écran = ignoré) ; seule elle est remplacée, par `drawOtherCard` (≠ l'autre carte, recyclage des passés hors l'autre carte) ; plus aucun autre mot → l'autre carte reste seule en tête, et la logique d'un mot seul reprend. `endTurn` déplace B dans `fiesta.turn[secondExpiredWord]`, que `resolveTurn(expiredWords:)` dépouille ; la branche fin de manche de `validateWords` le retire. Q8 : chaque interrupteur compte l'autre bonus allumé.
++ - **Rattrapage Fiesta** : `catchUpPreview` (transition, calculé sur les scores) → `nextRound` le pose dans `fiesta.catchUpDue` → `startTurnTimer` le consomme au premier tour non-continuation de l'équipe.
++ 
++ ### Dependances
++diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
++index 4015613..dac8a57 100644
++--- a/lib/providers/game_provider.dart
+++++ b/lib/providers/game_provider.dart
++@@ -610,6 +610,38 @@ class GameProvider extends ChangeNotifier {
++         ],
++       );
++     }
+++    // Deux mots à la fois : même règle de dépense que le ×2.
+++    if (fiesta != null && fiesta.turn[kTwoWordsKey] == kDoubleArmed) {
+++      fiesta = fiesta.copyWith(
+++        turn: {...fiesta.turn, kTwoWordsKey: kDoubleSpent},
+++        chargesUsed: [
+++          ...fiesta.chargesUsed,
+++          ChargeUse(
+++              catalogId: 'two_words',
+++              teamId: teamId,
+++              round: _game.currentRound),
+++        ],
+++      );
+++    }
+++    // Carte B tirée au départ (et au départ de la continuation de fin de
+++    // manche, même tour). Déjà là = partie reprise : on la garde. Les deux
+++    // cartes restent dans `remainingWords` jusqu'à être trouvées.
+++    final currentWord = _game.currentWord;
+++    String? drawnSecond;
+++    if (fiesta != null &&
+++        fiesta.turn[kTwoWordsKey] == kDoubleSpent &&
+++        fiesta.turn[kSecondWordKey] == null &&
+++        currentWord != null) {
+++      drawnSecond = drawOtherCard(
+++        pool: _game.remainingWords,
+++        passed: const [],
+++        other: currentWord,
+++      ).word;
+++      if (drawnSecond != null) {
+++        fiesta = fiesta
+++            .copyWith(turn: {...fiesta.turn, kSecondWordKey: drawnSecond});
+++      }
+++    }
++ 
++     _game = _game.copyWith(
++       currentScreen: AppConstants.screenTurn,
++@@ -624,16 +656,18 @@ class GameProvider extends ChangeNotifier {
++       fiesta: fiesta,
++     );
++ 
++-    // Tracker l'affichage du premier mot
+++    // Tracker l'affichage du premier mot (et de la carte B)
++     _trackWordShown();
+++    if (drawnSecond != null) _trackWordShown(drawnSecond);
++ 
++     notifyListeners();
++     _saveGameState();
++   }
++ 
++-  /// Notifie le service analytics qu'un nouveau mot est affiché
++-  void _trackWordShown() {
++-    final currentWord = _game.currentWord;
+++  /// Notifie le service analytics qu'un nouveau mot est affiché : [word], ou
+++  /// le mot courant (carte A) par défaut.
+++  void _trackWordShown([String? word]) {
+++    final currentWord = word ?? _game.currentWord;
++     if (currentWord == null || !_analytics.isTracking) return;
++ 
++     final currentTeam = getCurrentTeam();
++@@ -651,14 +685,19 @@ class GameProvider extends ChangeNotifier {
++           ? [
++               ...turnModifiers.map((m) => m.catalogId),
++               if (isDoublePointsOn) 'double_points',
+++              if (isTwoWordsOn) 'two_words',
++             ]
++           : null,
++     );
++   }
++ 
++-  void markWordAsGuessed() {
++-    final currentWord = _game.currentWord;
+++  /// [word] : la carte visée (« Deux mots à la fois »), la carte A par
+++  /// défaut. Un mot qui n'est plus à l'écran (tap périmé) est ignoré.
+++  void markWordAsGuessed([String? word]) {
+++    final currentWord = word ?? _game.currentWord;
++     if (currentWord == null) return;
+++    final second = secondWord;
+++    if (currentWord != _game.currentWord && currentWord != second) return;
++ 
++     // Tracker le mot deviné AVANT de changer l'état
++     _analytics.onWordGuessed(currentWord);
++@@ -677,8 +716,21 @@ class GameProvider extends ChangeNotifier {
++     // Mélanger les mots restants
++     newRemainingWords.shuffle(Random());
++ 
++-    // Fin de la manche si plus de mots
++-    if (newRemainingWords.isEmpty) {
+++    if (second != null) {
+++      // Deux cartes : seule la carte trouvée change, la manche continue
+++      // (l'autre carte est encore dans le pool).
+++      final cards = _cardsAfter(currentWord,
+++          pool: newRemainingWords, passed: newPassedWords);
+++      _game = _game.copyWith(
+++        currentWord: cards.first,
+++        remainingWords: cards.pool,
+++        wordsGuessedThisTurn: newGuessedWords,
+++        passedWordsThisTurn: newPassedWords,
+++        fiesta: _withSecondWord(_game.fiesta!, cards.second),
+++      );
+++      if (cards.drawn != null) _trackWordShown(cards.drawn);
+++    } else if (newRemainingWords.isEmpty) {
+++      // Fin de la manche si plus de mots
++       // Vérifier s'il reste des mots passés à recycler
++       if (newPassedWords.isNotEmpty) {
++         // Remettre les mots passés dans la pile
++@@ -739,11 +791,14 @@ class GameProvider extends ChangeNotifier {
++     _saveGameState();
++   }
++ 
++-  void passWord() {
++-    final currentWord = _game.currentWord;
+++  /// [word] : la carte visée, comme pour [markWordAsGuessed].
+++  void passWord([String? word]) {
+++    final currentWord = word ?? _game.currentWord;
++     final clock = turnClock;
++ 
++     if (currentWord == null || !clock.isRunning) return;
+++    final second = secondWord;
+++    if (currentWord != _game.currentWord && currentWord != second) return;
++ 
++     final now = DateTime.now().millisecondsSinceEpoch;
++ 
++@@ -774,32 +829,49 @@ class GameProvider extends ChangeNotifier {
++     var newRemainingWords = List<String>.from(_game.remainingWords)
++       ..remove(currentWord);
++ 
++-    // Si plus de mots restants, recycler les mots passés
++-    if (newRemainingWords.isEmpty && newPassedWords.isNotEmpty) {
++-      newRemainingWords = List<String>.from(newPassedWords);
++-    }
+++    var newFiesta = usesFreePass
+++        ? fiesta.copyWith(
+++            turn: {...fiesta.turn, kFreePassesUsedKey: freePassesUsed + 1})
+++        : fiesta;
+++    String? newCurrentWord;
+++    String? drawn;
+++    if (second != null) {
+++      // Deux cartes : seule la carte passée change. Le recyclage se fait dans
+++      // `_cardsAfter`, hors de l'autre carte.
+++      newRemainingWords.shuffle(Random());
+++      final cards = _cardsAfter(currentWord,
+++          pool: newRemainingWords, passed: newPassedWords);
+++      newRemainingWords = cards.pool;
+++      newCurrentWord = cards.first;
+++      drawn = cards.drawn;
+++      newFiesta = _withSecondWord(newFiesta!, cards.second);
+++    } else {
+++      // Si plus de mots restants, recycler les mots passés
+++      if (newRemainingWords.isEmpty && newPassedWords.isNotEmpty) {
+++        newRemainingWords = List<String>.from(newPassedWords);
+++      }
++ 
++-    newRemainingWords.shuffle(Random());
++-    final newCurrentWord =
++-        newRemainingWords.isNotEmpty ? newRemainingWords[0] : null;
+++      newRemainingWords.shuffle(Random());
+++      newCurrentWord =
+++          newRemainingWords.isNotEmpty ? newRemainingWords[0] : null;
+++      drawn = newCurrentWord;
+++    }
++ 
++     _game = _withClock(
++       _game.copyWith(
++         currentWord: newCurrentWord,
++         passedWordsThisTurn: newPassedWords,
++         remainingWords: newRemainingWords,
++-        fiesta: usesFreePass
++-            ? fiesta.copyWith(
++-                turn: {...fiesta.turn, kFreePassesUsedKey: freePassesUsed + 1})
++-            : null,
+++        // Nul en Classique : `copyWith(fiesta: null)` le laisse nul.
+++        fiesta: newFiesta,
++       ),
++       newClock,
++       nowMs: now,
++     );
++ 
++     // Tracker le nouveau mot affiché
++-    if (newCurrentWord != null) {
++-      _trackWordShown();
+++    if (drawn != null) {
+++      _trackWordShown(drawn);
++     }
++ 
++     notifyListeners();
++@@ -816,10 +888,26 @@ class GameProvider extends ChangeNotifier {
++     final isRoundFinished = _game.remainingWords.isEmpty;
++     final expiredWord = isRoundFinished ? null : _game.currentWord;
++ 
+++    // Deux mots : la carte B part aussi à la vérification, sous sa propre
+++    // clé. Touché seulement si B est à l'écran : un second `endTurn` (chrono
+++    // + dialogue) ne l'efface donc pas.
+++    final second = secondWord;
+++    var fiesta = _game.fiesta;
+++    if (second != null) {
+++      fiesta = _withSecondWord(fiesta!, null);
+++      if (!isRoundFinished) {
+++        fiesta = fiesta
+++            .copyWith(turn: {...fiesta.turn, kSecondExpiredWordKey: second});
+++      }
+++    }
+++
++     // Tracker le mot expiré si applicable
++     if (expiredWord != null) {
++       _analytics.onWordExpired(expiredWord);
++     }
+++    if (second != null && !isRoundFinished) {
+++      _analytics.onWordExpired(second);
+++    }
++ 
++     _game = _game.copyWith(
++       timeRemaining: timeRemaining,
++@@ -827,6 +915,7 @@ class GameProvider extends ChangeNotifier {
++       turnBonusTime: isRoundFinished ? timeRemaining : null,
++       expiredWord: expiredWord,
++       clearExpiredWord: isRoundFinished,
+++      fiesta: fiesta,
++       clearTurnStartTimestamp: true,
++       clearTurnEndTimestamp: true,
++       // Purger AUSSI le gel : sinon l'horloge reste « en pause » après la fin du
++@@ -935,7 +1024,10 @@ class GameProvider extends ChangeNotifier {
++       validatedWords: validatedWords,
++       guessedThisTurn: _game.wordsGuessedThisTurn,
++       passedThisTurn: passedWordsThisTurn,
++-      expiredWord: _game.expiredWord,
+++      expiredWords: [
+++        if (_game.expiredWord != null) _game.expiredWord!,
+++        if (secondExpiredWord != null) secondExpiredWord!,
+++      ],
++       currentPool: _game.remainingWords,
++       pointsMultiplier: isDoublePointsOn ? 2 : 1,
++     );
++@@ -953,8 +1045,8 @@ class GameProvider extends ChangeNotifier {
++     for (final word in resolution.validatedPassed) {
++       _analytics.onWordValidatedAsGuessed(word);
++     }
++-    if (resolution.expiredValidated) {
++-      _analytics.onWordValidatedAsGuessed(resolution.expiredWord!);
+++    for (final word in resolution.expiredValidated) {
+++      _analytics.onWordValidatedAsGuessed(word);
++     }
++ 
++     // Mettre à jour le score
++@@ -1039,7 +1131,10 @@ class GameProvider extends ChangeNotifier {
++         clearExpiredWord: true,
++         // Pas de `_fiestaAfterTurn` ici : la même équipe poursuit CE tour en
++         // manche suivante (continuation). Compteurs et instances de portée
++-        // tour vivent jusqu'à sa vraie fin.
+++        // tour vivent jusqu'à sa vraie fin. Seule la carte B expirée, dépouillée,
+++        // s'en va (comme `clearExpiredWord`).
+++        fiesta: _game.fiesta?.copyWith(
+++            turn: Map.of(_game.fiesta!.turn)..remove(kSecondExpiredWordKey)),
++         pendingBonusTurnId: shouldPrepareBonusFusion ? _game.currentTurn : null,
++         clearPendingBonusTurnId: !shouldPrepareBonusFusion,
++       );
++@@ -1282,9 +1377,11 @@ class GameProvider extends ChangeNotifier {
++   // ========== MOT COMPTE DOUBLE (2-9) ==========
++ 
++   /// Modificateurs EN JEU pendant le tour (badges du tour, tags analytics) :
++-  /// une charge de « Mot compte double » non activée n'en est pas un.
+++  /// une charge de « Mot compte double » ou de « Deux mots à la fois » non
+++  /// activée n'en est pas un (activée : badge et tag à part).
++   List<ModifierInstance> get turnModifiers => currentTeamModifiers
++-      .where((m) => m.catalogId != 'double_points')
+++      .where(
+++          (m) => m.catalogId != 'double_points' && m.catalogId != 'two_words')
++       .toList();
++ 
++   String? get _doublePoints {
++@@ -1312,24 +1409,100 @@ class GameProvider extends ChangeNotifier {
++     return doublePointsAllowance(currentTeamModifiers) - used;
++   }
++ 
++-  /// Q8 : activer est refusé si l'équipe a déjà 2 modificateurs en jeu.
++-  bool get doublePointsCapped => turnModifiers.length >= 2;
+++  /// Q8 : activer est refusé si l'équipe a déjà 2 modificateurs en jeu
+++  /// (« Deux mots à la fois » allumé compris).
+++  bool get doublePointsCapped =>
+++      turnModifiers.length + (isTwoWordsArmed ? 1 : 0) >= 2;
++ 
++   /// Allumer / éteindre le ×2 avant le départ. Rien n'est dépensé ici.
++-  void setDoublePoints(bool on) {
+++  void setDoublePoints(bool on) => _armCharge(kDoublePointsKey, on,
+++      isOn: isDoublePointsOn,
+++      left: doublePointsLeft,
+++      capped: doublePointsCapped);
+++
+++  /// Interrupteur d'un bonus à charge (×2, deux mots) : seul l'état `armed`
+++  /// est écrit ; la charge se dépense dans `startTurnTimer`.
+++  void _armCharge(String key, bool on,
+++      {required bool isOn, required int left, required bool capped}) {
++     final fiesta = _game.fiesta;
++-    if (fiesta == null ||
++-        isDoublePointsOn ||
++-        (on && (doublePointsLeft <= 0 || doublePointsCapped))) {
+++    if (fiesta == null || isOn || (on && (left <= 0 || capped))) {
++       return;
++     }
++-    final turn = Map<String, dynamic>.of(fiesta.turn)..remove(kDoublePointsKey);
++-    if (on) turn[kDoublePointsKey] = kDoubleArmed;
+++    final turn = Map<String, dynamic>.of(fiesta.turn)..remove(key);
+++    if (on) turn[key] = kDoubleArmed;
++     _game = _game.copyWith(fiesta: fiesta.copyWith(turn: turn));
++     notifyListeners();
++     _saveGameState();
++   }
++ 
+++  // ========== DEUX MOTS À LA FOIS (2-11) ==========
+++
+++  String? _turnString(String key) {
+++    final value = _turnCounters[key];
+++    return value is String ? value : null;
+++  }
+++
+++  /// Interrupteur de l'avant-tour allumé (ou charge déjà dépensée).
+++  bool get isTwoWordsArmed => _turnString(kTwoWordsKey) != null;
+++
+++  /// Deux mots à l'écran pendant CE tour (charge dépensée au départ ; vaut
+++  /// aussi pour la continuation de fin de manche, même tour).
+++  bool get isTwoWordsOn => _turnString(kTwoWordsKey) == kDoubleSpent;
+++
+++  /// Carte B (la carte A est `game.currentWord`). Nulle = une seule carte.
+++  String? get secondWord => _turnString(kSecondWordKey);
+++
+++  /// Carte B encore à l'écran quand le chrono est tombé, à vérifier.
+++  String? get secondExpiredWord => _turnString(kSecondExpiredWordKey);
+++
+++  /// Charges restantes de l'équipe qui joue pour la manche en cours.
+++  int get twoWordsLeft {
+++    final teamId = getCurrentTeam()?.id;
+++    final used = (_game.fiesta?.chargesUsed ?? const <ChargeUse>[])
+++        .where((u) =>
+++            u.catalogId == 'two_words' &&
+++            u.teamId == teamId &&
+++            u.round == _game.currentRound)
+++        .length;
+++    return twoWordsAllowance(currentTeamModifiers) - used;
+++  }
+++
+++  /// Q8, comme [doublePointsCapped].
+++  bool get twoWordsCapped =>
+++      turnModifiers.length + (isDoublePointsArmed ? 1 : 0) >= 2;
+++
+++  /// Allumer / éteindre « Deux mots à la fois » avant le départ.
+++  void setTwoWords(bool on) => _armCharge(kTwoWordsKey, on,
+++      isOn: isTwoWordsOn, left: twoWordsLeft, capped: twoWordsCapped);
+++
+++  /// Cartes après le traitement (trouvé ou passé) de [target], l'une des deux
+++  /// cartes : elle seule est remplacée, par un mot ≠ l'autre carte
+++  /// ([drawOtherCard]). Plus aucun autre mot : l'autre carte reste seule, en
+++  /// tête. [pool] est déjà privé de [target].
+++  ({String? first, String? second, String? drawn, List<String> pool})
+++      _cardsAfter(String target,
+++          {required List<String> pool, required List<String> passed}) {
+++    final a = _game.currentWord!;
+++    final b = secondWord!;
+++    final isA = target == a;
+++    final other = isA ? b : a;
+++    final next = drawOtherCard(pool: pool, passed: passed, other: other);
+++    final drawn = next.word;
+++    if (drawn == null) {
+++      return (first: other, second: null, drawn: null, pool: next.pool);
+++    }
+++    return isA
+++        ? (first: drawn, second: b, drawn: drawn, pool: next.pool)
+++        : (first: a, second: drawn, drawn: drawn, pool: next.pool);
+++  }
+++
+++  /// [fiesta] avec la carte B [word] (nulle = clé retirée).
+++  FiestaState _withSecondWord(FiestaState fiesta, String? word) {
+++    final turn = Map<String, dynamic>.of(fiesta.turn)..remove(kSecondWordKey);
+++    if (word != null) turn[kSecondWordKey] = word;
+++    return fiesta.copyWith(turn: turn);
+++  }
+++
++   /// Fiesta à la VRAIE fin d'un tour : compteurs du tour vidés, instances
++   /// de portée tour de l'équipe consommées. 🔴 Un seul « tour » : une fin de
++   /// manche n'en est pas une, la continuation en N+1 est le même tour (elle
++@@ -1756,8 +1929,10 @@ class GameProvider extends ChangeNotifier {
++         .where((w) => !remainingSet.contains(w))
++         .length;
++ 
++-    // Total = remainingWords + passés non recyclés - mot actuel
++-    return _game.remainingWords.length + passedNotInRemaining - 1;
+++    // Total = remainingWords + passés non recyclés - mot(s) à l'écran
+++    // (deux avec « Deux mots à la fois »)
+++    final onScreen = secondWord != null ? 2 : 1;
+++    return _game.remainingWords.length + passedNotInRemaining - onScreen;
++   }
++ 
++   /// Retourne la distribution des mots par joueur
++diff --git a/lib/screens/game_screen.dart b/lib/screens/game_screen.dart
++index 147c31a..c2a2fdc 100644
++--- a/lib/screens/game_screen.dart
+++++ b/lib/screens/game_screen.dart
++@@ -651,6 +651,7 @@ class _FiestaAnnouncements extends StatelessWidget {
++         _modifiers(),
++         if (provider.isDoublePointsArmed || provider.doublePointsLeft > 0)
++           _doublePoints(),
+++        if (provider.isTwoWordsArmed || provider.twoWordsLeft > 0) _twoWords(),
++         TurnTimeCard(provider.turnTime),
++       ],
++     );
++@@ -688,6 +689,84 @@ class _FiestaAnnouncements extends StatelessWidget {
++     );
++   }
++ 
+++  /// Interrupteur « Deux mots à la fois » puis, une fois allumé, son annonce
+++  /// (maquette `two_cd`). Même règle de charge que le ×2.
+++  Widget _twoWords() {
+++    final left = provider.twoWordsLeft;
+++    final String label;
+++    final String detail;
+++    var editable = false;
+++    if (provider.isTwoWordsOn) {
+++      label = 'Deux mots à la fois activé';
+++      detail = 'Deux mots à l\'écran pendant ce tour.';
+++    } else if (!provider.isTwoWordsArmed && provider.twoWordsCapped) {
+++      label = 'Activer Deux mots à la fois';
+++      detail = 'Impossible : votre équipe a déjà 2 modificateurs ce tour.';
+++    } else {
+++      label = 'Activer Deux mots à la fois';
+++      detail = '$left charge${left > 1 ? 's' : ''} pour cette manche.';
+++      editable = true;
+++    }
+++    final player = provider.getCurrentPlayer()?.name ?? 'Le joueur';
+++    return Column(
+++      crossAxisAlignment: CrossAxisAlignment.stretch,
+++      children: [
+++        FiestaCard(
+++          title: 'Bonus',
+++          children: [
+++            FiestaLine(
+++              label: label,
+++              detail: detail,
+++              value: provider.isTwoWordsArmed,
+++              onChanged: editable ? provider.setTwoWords : null,
+++            ),
+++          ],
+++        ),
+++        if (provider.isTwoWordsArmed)
+++          Container(
+++            margin: const EdgeInsets.only(bottom: 12),
+++            padding: const EdgeInsets.all(16),
+++            decoration: BoxDecoration(
+++              color: AppColors.secondaryCyan.withValues(alpha: 0.08),
+++              borderRadius: BorderRadius.circular(18),
+++              border: Border.all(
+++                  color: AppColors.secondaryCyan.withValues(alpha: 0.5)),
+++            ),
+++            child: Column(
+++              children: [
+++                const Text(
+++                  '⧉',
+++                  style:
+++                      TextStyle(fontSize: 38, color: AppColors.secondaryCyan),
+++                ),
+++                Text(
+++                  'Deux mots à la fois !',
+++                  textAlign: TextAlign.center,
+++                  style: AppTextStyles.subtitle(fontSize: 26),
+++                ),
+++                const SizedBox(height: 6),
+++                Text(
+++                  '$player voit deux mots et fait deviner celui de son choix. '
+++                  'Un mot trouvé ou passé est remplacé, l\'autre reste à '
+++                  'l\'écran.',
+++                  textAlign: TextAlign.center,
+++                  style: AppTextStyles.bodySmall
+++                      .copyWith(fontSize: 13, color: AppColors.gray400),
+++                ),
+++                const SizedBox(height: 4),
+++                Text(
+++                  'Chaque passe coûte toujours la pénalité habituelle.',
+++                  textAlign: TextAlign.center,
+++                  style: AppTextStyles.bodySmall
+++                      .copyWith(fontSize: 12, color: AppColors.gray400),
+++                ),
+++              ],
+++            ),
+++          ),
+++      ],
+++    );
+++  }
+++
++   Widget _modifiers() {
++     final rules = provider.game.fiesta!.rules;
++     final modifiers = provider.currentTeamModifiers;
++diff --git a/lib/screens/turn_screen.dart b/lib/screens/turn_screen.dart
++index d2e7369..f0a3719 100644
++--- a/lib/screens/turn_screen.dart
+++++ b/lib/screens/turn_screen.dart
++@@ -9,6 +9,7 @@ import '../services/audio_service.dart';
++ import '../utils/reversed_word.dart';
++ import '../widgets/common/app_confirm_dialog.dart';
++ import '../models/fiesta/modifier_catalog.dart';
+++import '../widgets/fiesta/fiesta_turn_widgets.dart';
++ import '../widgets/fiesta/modifier_badge.dart';
++ 
++ class TurnScreen extends StatefulWidget {
++@@ -262,6 +263,24 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
++     final hasFreePass = provider.hasFreePass;
++     final hasWordsToPassTo = provider.effectiveRemainingWordsCount > 0;
++     final canPass = provider.canPassWith(timeRemaining) && hasWordsToPassTo;
+++    // Fiesta 2-11 : deux cartes, chacune avec ses boutons (une seule au
+++    // dernier mot). Le mot visé est passé au provider : un tap sur une carte
+++    // déjà remplacée est ignoré.
+++    final twoWords = provider.isTwoWordsOn && currentWord != null;
+++    VoidCallback? guess(String word) => isPaused
+++        ? null
+++        : () {
+++            HapticFeedback.lightImpact();
+++            AudioService.playDing();
+++            provider.markWordAsGuessed(word);
+++          };
+++    VoidCallback? pass(String word) => canPass && !isPaused
+++        ? () {
+++            HapticFeedback.mediumImpact();
+++            AudioService.playWhoosh();
+++            provider.passWord(word);
+++          }
+++        : null;
++ 
++     return Material(
++       color: AppColors.backgroundMain,
++@@ -328,7 +347,8 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
++ 
++                         // Fiesta : modificateurs du tour, sous le chrono.
++                         if (provider.turnModifiers.isNotEmpty ||
++-                            provider.isDoublePointsOn) ...[
+++                            provider.isDoublePointsOn ||
+++                            provider.isTwoWordsOn) ...[
++                           const SizedBox(height: 8),
++                           ModifierBadges(
++                             modifiers: provider.turnModifiers,
++@@ -339,6 +359,12 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
++                                   label: 'Mot compte double',
++                                   nature: ModifierNature.bonus,
++                                 ),
+++                              if (provider.isTwoWordsOn)
+++                                const ModifierBadge(
+++                                  icon: '⧉',
+++                                  label: 'Deux mots à la fois',
+++                                  nature: ModifierNature.bonus,
+++                                ),
++                             ],
++                           ),
++                           if (provider.freePasses > 0) ...[
++@@ -356,36 +382,61 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
++                         ] else
++                           const SizedBox(height: 32),
++ 
++-                        // Current word
++-                        Flexible(
++-                          child: Padding(
++-                            padding: const EdgeInsets.symmetric(horizontal: 16),
++-                            child: AutoSizeText(
++-                              // À l'envers : affichage du tour SEULEMENT, le
++-                              // mot du jeu reste en clair.
++-                              provider.isWordReversed
++-                                  ? reversedWordDisplay(currentWord ?? '')
++-                                  : currentWord ?? '',
++-                              style: const TextStyle(
++-                                fontFamily: 'Bangers',
++-                                fontSize: 72,
++-                                color: Colors.white,
++-                                shadows: [
++-                                  Shadow(
++-                                    offset: Offset(2, 2),
++-                                    color: AppColors.primaryPinkDark,
++-                                    blurRadius: 0,
++-                                  ),
++-                                ],
+++                        if (twoWords)
+++                          Flexible(
+++                            child: SingleChildScrollView(
+++                              child: TwoWordsLayout(
+++                                firstWord: currentWord,
+++                                secondWord: provider.secondWord,
+++                                reversed: provider.isWordReversed,
+++                                passLabel: hasFreePass
+++                                    ? 'Passer · gratuit'
+++                                    : passPenalty > 0
+++                                        ? 'Passer · −$passPenalty s'
+++                                        : 'Passer',
+++                                onGuessedFirst: guess(currentWord),
+++                                onPassFirst: pass(currentWord),
+++                                onGuessedSecond: provider.secondWord == null
+++                                    ? null
+++                                    : guess(provider.secondWord!),
+++                                onPassSecond: provider.secondWord == null
+++                                    ? null
+++                                    : pass(provider.secondWord!),
+++                              ),
+++                            ),
+++                          )
+++                        else
+++                          // Current word
+++                          Flexible(
+++                            child: Padding(
+++                              padding:
+++                                  const EdgeInsets.symmetric(horizontal: 16),
+++                              child: AutoSizeText(
+++                                // À l'envers : affichage du tour SEULEMENT, le
+++                                // mot du jeu reste en clair.
+++                                provider.isWordReversed
+++                                    ? reversedWordDisplay(currentWord ?? '')
+++                                    : currentWord ?? '',
+++                                style: const TextStyle(
+++                                  fontFamily: 'Bangers',
+++                                  fontSize: 72,
+++                                  color: Colors.white,
+++                                  shadows: [
+++                                    Shadow(
+++                                      offset: Offset(2, 2),
+++                                      color: AppColors.primaryPinkDark,
+++                                      blurRadius: 0,
+++                                    ),
+++                                  ],
+++                                ),
+++                                textAlign: TextAlign.center,
+++                                maxLines: 3,
+++                                minFontSize: 36,
+++                                wrapWords: false,
+++                                overflow: TextOverflow.ellipsis,
++                               ),
++-                              textAlign: TextAlign.center,
++-                              maxLines: 3,
++-                              minFontSize: 36,
++-                              wrapWords: false,
++-                              overflow: TextOverflow.ellipsis,
++                             ),
++                           ),
++-                        ),
++ 
++                         const SizedBox(height: 16),
++ 
++@@ -411,101 +462,102 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
++ 
++                   const SizedBox(height: 32),
++ 
++-                  // Action buttons (fixes en bas)
++-                  Row(
++-                    children: [
++-                      // Pass button
++-                      Expanded(
++-                        child: GestureDetector(
++-                          onTap: canPass && !isPaused
++-                              ? () {
++-                                  HapticFeedback.mediumImpact();
++-                                  AudioService.playWhoosh();
++-                                  provider.passWord();
++-                                }
++-                              : null,
++-                          child: Container(
++-                            padding: const EdgeInsets.symmetric(vertical: 20),
++-                            decoration: BoxDecoration(
++-                              color: canPass && !isPaused
++-                                  ? AppColors.error
++-                                  : AppColors.gray700,
++-                              borderRadius: BorderRadius.circular(20),
++-                            ),
++-                            child: Column(
++-                              children: [
++-                                Icon(
++-                                  Icons.skip_next,
++-                                  color: canPass && !isPaused
++-                                      ? Colors.white
++-                                      : AppColors.gray500,
++-                                  size: 32,
++-                                ),
++-                                const SizedBox(height: 4),
++-                                Text(
++-                                  provider.passBlocked
++-                                      ? 'Passer (bloqué)'
++-                                      : 'Passer',
++-                                  style: TextStyle(
++-                                    fontFamily: 'Poppins',
++-                                    fontSize: 14,
++-                                    fontWeight: FontWeight.w600,
+++                  // Action buttons (fixes en bas). Deux mots : sur les cartes.
+++                  if (!twoWords)
+++                    Row(
+++                      children: [
+++                        // Pass button
+++                        Expanded(
+++                          child: GestureDetector(
+++                            onTap: canPass && !isPaused
+++                                ? () {
+++                                    HapticFeedback.mediumImpact();
+++                                    AudioService.playWhoosh();
+++                                    provider.passWord();
+++                                  }
+++                                : null,
+++                            child: Container(
+++                              padding: const EdgeInsets.symmetric(vertical: 20),
+++                              decoration: BoxDecoration(
+++                                color: canPass && !isPaused
+++                                    ? AppColors.error
+++                                    : AppColors.gray700,
+++                                borderRadius: BorderRadius.circular(20),
+++                              ),
+++                              child: Column(
+++                                children: [
+++                                  Icon(
+++                                    Icons.skip_next,
++                                     color: canPass && !isPaused
++                                         ? Colors.white
++                                         : AppColors.gray500,
+++                                    size: 32,
++                                   ),
++-                                ),
++-                                if (passPenalty > 0 || hasFreePass)
+++                                  const SizedBox(height: 4),
++                                   Text(
++-                                    hasFreePass
++-                                        ? 'gratuit'
++-                                        : '-${passPenalty}s',
+++                                    provider.passBlocked
+++                                        ? 'Passer (bloqué)'
+++                                        : 'Passer',
++                                     style: TextStyle(
++                                       fontFamily: 'Poppins',
++-                                      fontSize: 12,
+++                                      fontSize: 14,
+++                                      fontWeight: FontWeight.w600,
++                                       color: canPass && !isPaused
++-                                          ? Colors.white.withOpacity(0.7)
++-                                          : AppColors.gray600,
+++                                          ? Colors.white
+++                                          : AppColors.gray500,
++                                     ),
++                                   ),
++-                              ],
+++                                  if (passPenalty > 0 || hasFreePass)
+++                                    Text(
+++                                      hasFreePass
+++                                          ? 'gratuit'
+++                                          : '-${passPenalty}s',
+++                                      style: TextStyle(
+++                                        fontFamily: 'Poppins',
+++                                        fontSize: 12,
+++                                        color: canPass && !isPaused
+++                                            ? Colors.white.withOpacity(0.7)
+++                                            : AppColors.gray600,
+++                                      ),
+++                                    ),
+++                                ],
+++                              ),
++                             ),
++                           ),
++                         ),
++-                      ),
++ 
++-                      const SizedBox(width: 16),
++-
++-                      // Guessed button
++-                      Expanded(
++-                        flex: 2,
++-                        child: GestureDetector(
++-                          onTap: isPaused
++-                              ? null
++-                              : () {
++-                                  HapticFeedback.lightImpact();
++-                                  AudioService.playDing();
++-                                  provider.markWordAsGuessed();
++-                                },
++-                          child: Container(
++-                            padding: const EdgeInsets.symmetric(vertical: 33),
++-                            decoration: BoxDecoration(
++-                              color: isPaused
++-                                  ? AppColors.gray700
++-                                  : AppColors.secondaryCyan,
++-                              borderRadius: BorderRadius.circular(20),
++-                            ),
++-                            child: Icon(
++-                              Icons.check,
++-                              color:
++-                                  isPaused ? AppColors.gray500 : Colors.white,
++-                              size: 48,
+++                        const SizedBox(width: 16),
+++
+++                        // Guessed button
+++                        Expanded(
+++                          flex: 2,
+++                          child: GestureDetector(
+++                            onTap: isPaused
+++                                ? null
+++                                : () {
+++                                    HapticFeedback.lightImpact();
+++                                    AudioService.playDing();
+++                                    provider.markWordAsGuessed();
+++                                  },
+++                            child: Container(
+++                              padding: const EdgeInsets.symmetric(vertical: 33),
+++                              decoration: BoxDecoration(
+++                                color: isPaused
+++                                    ? AppColors.gray700
+++                                    : AppColors.secondaryCyan,
+++                                borderRadius: BorderRadius.circular(20),
+++                              ),
+++                              child: Icon(
+++                                Icons.check,
+++                                color:
+++                                    isPaused ? AppColors.gray500 : Colors.white,
+++                                size: 48,
+++                              ),
++                             ),
++                           ),
++                         ),
++-                      ),
++-                    ],
++-                  ),
+++                      ],
+++                    ),
++ 
++                   const SizedBox(height: 72),
++                 ],
++diff --git a/lib/screens/verification_screen.dart b/lib/screens/verification_screen.dart
++index 4c728a4..b3bb57e 100644
++--- a/lib/screens/verification_screen.dart
+++++ b/lib/screens/verification_screen.dart
++@@ -50,10 +50,15 @@ class _VerificationScreenState extends State<VerificationScreen> {
++   Widget build(BuildContext context) {
++     final provider = context.watch<GameProvider>();
++     final guessedWords = provider.game.wordsGuessedThisTurn;
+++    // Mots à l'écran quand le chrono est tombé : un, ou deux avec « Deux mots
+++    // à la fois » (2-11). Chacun a sa carte, hors de la liste des passés.
+++    final expiredWords = [
+++      if (provider.game.expiredWord != null) provider.game.expiredWord!,
+++      if (provider.secondExpiredWord != null) provider.secondExpiredWord!,
+++    ];
++     final passedWords = provider.game.passedWordsThisTurn
++-        .where((w) => w != provider.game.expiredWord)
+++        .where((w) => !expiredWords.contains(w))
++         .toList();
++-    final expiredWord = provider.game.expiredWord;
++     // Fiesta 2-9 : même multiplicateur que `validateWords` (maquette `verif`).
++     final doubled = provider.isDoublePointsOn;
++     final points = _validatedWords.length * (doubled ? 2 : 1);
++@@ -141,11 +146,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
++                         ],
++ 
++                         // Expired word section
++-                        if (expiredWord != null) ...[
+++                        if (expiredWords.isNotEmpty) ...[
++                           Row(
++                             children: [
++-                              const Text(
++-                                'Mot en cours',
+++                              Text(
+++                                expiredWords.length > 1
+++                                    ? 'Mots en cours'
+++                                    : 'Mot en cours',
++                                 style: TextStyle(
++                                   fontFamily: 'Poppins',
++                                   fontSize: 16,
++@@ -175,11 +182,11 @@ class _VerificationScreenState extends State<VerificationScreen> {
++                             ],
++                           ),
++                           const SizedBox(height: 12),
++-                          _buildWordCard(
++-                            expiredWord,
++-                            isGuessed: false,
++-                            isExpired: true,
++-                          ),
+++                          ...expiredWords.map((word) => _buildWordCard(
+++                                word,
+++                                isGuessed: false,
+++                                isExpired: true,
+++                              )),
++                           const SizedBox(height: 24),
++                         ],
++ 
++diff --git a/lib/services/CLAUDE.md b/lib/services/CLAUDE.md
++index a39894a..aa04c3e 100644
++--- a/lib/services/CLAUDE.md
+++++ b/lib/services/CLAUDE.md
++@@ -7,7 +7,7 @@
++ | Service | Classe | Role |
++ |---------|--------|------|
++ | `storage_service.dart` | `StorageService` | Wrapper SharedPreferences : persistance settings, gameSession, gameState |
++-| `analytics_service.dart` | `AnalyticsService` | Tracking temps reel WordEvents, calcul stats, persistance locale. Retention 50 parties. Recovery des parties orphelines (crash). Fiesta : `modifiers` par event (contexte du tour), contrat « un seul mot à l'écran » documenté pour 2-11 (`docs/ANALYTICS.md`) |
+++| `analytics_service.dart` | `AnalyticsService` | Tracking temps reel WordEvents, calcul stats, persistance locale. Retention 50 parties. Recovery des parties orphelines (crash). Fiesta : `modifiers` par event (contexte du tour), durée par mot (`_shownAt`, deux cartes en 2-11, `docs/ANALYTICS.md`) |
++ | `user_service.dart` | `UserService` | userId persistant (UUID v4) + DeviceInfo (appVersion, platform, locale, deviceModel) |
++ | `word_history_service.dart` | `WordHistoryService` | Historique mots joues (mot→seenCount). Priorise les mots jamais vus via `selectWordsByPriority()` |
++ | `word_loader_service.dart` | `WordLoaderService` | Charge categories depuis JSON (assets/translations/). Cache en memoire. Methodes : `loadCategory()`, `getCategoriesMetadata()` |
++diff --git a/lib/services/analytics_service.dart b/lib/services/analytics_service.dart
++index 2df11b0..b742d7d 100644
++--- a/lib/services/analytics_service.dart
+++++ b/lib/services/analytics_service.dart
++@@ -30,11 +30,11 @@ class AnalyticsService {
++   // État du tracking
++   GameAnalytics? _currentGame;
++ 
++-  // Mot affiché : vit le temps d'UN mot, remis à zéro par
++-  // `_recordEventWithDuration`. 🔴 Contrat « un seul mot à l'écran » : voir
++-  // `_recordEventWithDuration`. Story 2-11 (deux mots) remplace CE bloc seul.
++-  int? _lastShownTimestamp;
++-  String? _lastShownWord;
+++  // Mots à l'écran → horodatage de leur `shown`. Une entrée vit le temps de
+++  // son mot : retirée par `_recordEventWithDuration`. Par mot et non « le
+++  // dernier affiché » : avec « Deux mots à la fois » (2-11), deux mots sont à
+++  // l'écran et chacun a sa propre durée. En Classique, un seul à la fois.
+++  final Map<String, int> _shownAt = {};
++ 
++   // Contexte du tour : survit aux mots, relu par `onWordInvalidated` et
++   // `onWordValidatedAsGuessed` (vérification, après le tour). Ne dépend pas du
++@@ -149,8 +149,7 @@ class AnalyticsService {
++ 
++   /// Remet à zéro l'état du tracking
++   void _clearTrackingState() {
++-    _lastShownTimestamp = null;
++-    _lastShownWord = null;
+++    _shownAt.clear();
++     _lastRound = null;
++     _lastTurn = null;
++     _lastTeamId = null;
++@@ -176,8 +175,7 @@ class AnalyticsService {
++     if (_currentGame == null) return;
++ 
++     // Mémoriser pour calculer la durée
++-    _lastShownTimestamp = DateTime.now().millisecondsSinceEpoch;
++-    _lastShownWord = word;
+++    _shownAt[word] = DateTime.now().millisecondsSinceEpoch;
++     _lastRound = round;
++     _lastTurn = turn;
++     _lastTeamId = teamId;
++@@ -255,16 +253,14 @@ class AnalyticsService {
++     _currentGame = _currentGame!.addEvent(event);
++   }
++ 
++-  /// Enregistre un événement avec calcul de durée.
++-  ///
++-  /// 🔴 Contrat « un seul mot à l'écran » : un événement sur un mot qui n'est
++-  /// PAS le dernier affiché est abandonné en silence (pas de `shown`, donc pas
++-  /// de durée). Vrai tant qu'un seul mot est affiché ; la story 2-11 (deux
++-  /// mots) doit remplacer le bloc « mot affiché » par un suivi par mot. Le
++-  /// contexte du tour (dont `_lastModifiers`) n'a pas à bouger.
+++  /// Enregistre un événement avec calcul de durée, depuis le `shown` de CE
+++  /// mot. Un mot sans `shown` en cours (app tuée depuis, par exemple) est
+++  /// abandonné : pas de durée inventée. Le contexte du tour (dont
+++  /// `_lastModifiers`) est celui du dernier `shown`, commun aux deux cartes.
++   void _recordEventWithDuration(String word, WordEventType eventType) {
++     if (_currentGame == null) return;
++-    if (_lastShownTimestamp == null || word != _lastShownWord) return;
+++    final shownAt = _shownAt.remove(word);
+++    if (shownAt == null) return;
++ 
++     final event = WordEvent.withDuration(
++       word: word,
++@@ -274,16 +270,11 @@ class AnalyticsService {
++       teamId: _lastTeamId ?? '',
++       playerId: _lastPlayerId ?? '',
++       gameId: _currentGame!.gameId,
++-      shownTimestamp: _lastShownTimestamp!,
+++      shownTimestamp: shownAt,
++       modifiers: _lastModifiers,
++     );
++ 
++     _currentGame = _currentGame!.addEvent(event);
++-
++-    // Reset du mot seulement : le contexte du tour sert encore à la
++-    // vérification (`onWordInvalidated`).
++-    _lastShownTimestamp = null;
++-    _lastShownWord = null;
++   }
++ 
++   // ========== PERSISTANCE ==========
++diff --git a/test/models/turn_resolution_test.dart b/test/models/turn_resolution_test.dart
++index 8cc0bff..d313b85 100644
++--- a/test/models/turn_resolution_test.dart
+++++ b/test/models/turn_resolution_test.dart
++@@ -12,7 +12,7 @@ TurnResolution resolve({
++       validatedWords: validated,
++       guessedThisTurn: guessed,
++       passedThisTurn: passed,
++-      expiredWord: expired,
+++      expiredWords: [if (expired != null) expired],
++       currentPool: pool,
++     );
++ 
++@@ -85,8 +85,8 @@ void main() {
++         pool: const ['tigre', 'lion'],
++       );
++ 
++-      expect(r.expiredValidated, isTrue);
++-      expect(r.expiredInvalidated, isFalse);
+++      expect(r.expiredValidated, ['tigre']);
+++      expect(r.expiredInvalidated, isEmpty);
++       expect(r.pointsScored, 1);
++       expect(r.remainingPool, ['lion']);
++       expect(r.allInvalidated, isEmpty);
++@@ -100,7 +100,7 @@ void main() {
++         pool: const ['tigre', 'lion'],
++       );
++ 
++-      expect(r.expiredInvalidated, isTrue);
+++      expect(r.expiredInvalidated, ['tigre']);
++       expect(r.allInvalidated, contains('tigre'));
++       expect(r.remainingPool, contains('tigre'));
++     });
++@@ -108,8 +108,8 @@ void main() {
++     test('sans mot expiré, aucun des deux drapeaux n\'est levé', () {
++       final r = resolve(validated: const ['a'], guessed: const ['a']);
++ 
++-      expect(r.expiredValidated, isFalse);
++-      expect(r.expiredInvalidated, isFalse);
+++      expect(r.expiredValidated, isEmpty);
+++      expect(r.expiredInvalidated, isEmpty);
++       expect(r.allInvalidated, isEmpty);
++     });
++   });
++diff --git a/test/providers/fiesta_two_words_test.dart b/test/providers/fiesta_two_words_test.dart
++new file mode 100644
++index 0000000..fc8c0cd
++--- /dev/null
+++++ b/test/providers/fiesta_two_words_test.dart
++@@ -0,0 +1,249 @@
+++import 'package:flutter_test/flutter_test.dart';
+++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+++import 'package:guess_it_all_mobile/models/word_event.dart';
+++import 'package:guess_it_all_mobile/providers/game_provider.dart';
+++import 'package:guess_it_all_mobile/services/analytics_service.dart';
+++import 'package:guess_it_all_mobile/utils/constants.dart';
+++
+++import '../helpers/test_prefs.dart';
+++
+++/// 4 joueurs × 3 mots, 2 équipes, pénalité de passe 0 (les passes ne vident
+++/// pas le chrono).
+++Future<GameProvider> givenReadyProvider() async {
+++  await givenPrefs();
+++  givenFakePlatformPlugins();
+++  final provider = GameProvider();
+++  await pumpEventQueue();
+++  for (final name in ['A', 'B', 'C', 'D']) {
+++    final id = (provider.addPlayer(name)['player'] as dynamic).id as String;
+++    provider.updatePlayerWords(id, ['$name-1', '$name-2', '$name-3']);
+++  }
+++  provider.createTeams();
+++  provider.randomizeTeams();
+++  provider.updateSettings(passPenalty: 0);
+++  return provider;
+++}
+++
+++/// Personnalisé, sans tirage : [ids] fixés sur la manche 1, 1 charge.
+++FiestaRules fixedOnRound1(List<String> ids) => FiestaRules(
+++      mode: FiestaMode.custom,
+++      drawCount: 0,
+++      modifiers: {
+++        for (final id in ids)
+++          id: ModifierSetting(
+++            active: true,
+++            arrival: ModifierArrival.fixed,
+++            startRound: 1,
+++            fixedRound: 1,
+++            charges: 1,
+++          ),
+++      },
+++    );
+++
+++Future<GameProvider> givenTwoWordsTurn({bool alsoDouble = false}) async {
+++  final provider = await givenReadyProvider();
+++  await provider.startGame(
+++      fiesta: fixedOnRound1(['two_words', if (alsoDouble) 'double_points']));
+++  provider.setTwoWords(true);
+++  if (alsoDouble) provider.setDoublePoints(true);
+++  provider.startTurn();
+++  provider.startTurnTimer();
+++  return provider;
+++}
+++
+++/// Pool jamais corrompu : cartes distinctes et dans le pool, pas de doublon,
+++/// aucun mot perdu ni trouvé encore à faire deviner.
+++void expectPoolIntact(GameProvider p) {
+++  final g = p.game;
+++  final pool = g.remainingWords;
+++  expect(pool.toSet().length, pool.length, reason: 'doublon dans le pool');
+++  expect({
+++    ...pool,
+++    ...g.wordsGuessedThisTurn,
+++    ...g.passedWordsThisTurn
+++  }, g.allWords.toSet(), reason: 'mot perdu');
+++  expect(pool.toSet().intersection(g.wordsGuessedThisTurn.toSet()), isEmpty);
+++  if (g.currentWord != null) expect(pool, contains(g.currentWord));
+++  if (p.secondWord != null) {
+++    expect(pool, contains(p.secondWord));
+++    expect(p.secondWord, isNot(g.currentWord));
+++  }
+++}
+++
+++void main() {
+++  test(
+++      'Deux cartes : seule la carte visée est remplacée, par un mot ≠ l\'autre ; '
+++      'pool intact ; une seule carte au dernier mot, qui revient si on la passe ; '
+++      'puis fin de manche avec temps reporté (AC2, AC3, AC8)', () async {
+++    final p = await givenTwoWordsTurn();
+++    expect(p.twoWordsLeft, 0);
+++    expect(p.secondWord, isNotNull);
+++    expectPoolIntact(p);
+++
+++    // Alterner carte A / carte B, passer et trouver : recyclage compris.
+++    for (var i = 0; i < 8; i++) {
+++      final a = p.game.currentWord!;
+++      final b = p.secondWord!;
+++      final onA = i.isEven;
+++      final target = onA ? a : b;
+++      if (i % 4 < 2) {
+++        p.passWord(target);
+++        expect(p.game.passedWordsThisTurn, contains(target));
+++      } else {
+++        p.markWordAsGuessed(target);
+++        expect(p.game.wordsGuessedThisTurn, contains(target));
+++        expect(p.game.remainingWords, isNot(contains(target)));
+++      }
+++      // L'autre carte ne bouge pas.
+++      expect(onA ? p.secondWord : p.game.currentWord, onA ? b : a);
+++      expectPoolIntact(p);
+++    }
+++
+++    // Un tap périmé (mot plus à l'écran) ne fait rien.
+++    final before = p.game.wordsGuessedThisTurn.length;
+++    p.markWordAsGuessed(p.game.wordsGuessedThisTurn.first);
+++    expect(p.game.wordsGuessedThisTurn.length, before);
+++
+++    // Trouver la carte A jusqu'à ce qu'il ne reste qu'une carte.
+++    while (p.secondWord != null) {
+++      final b = p.secondWord!;
+++      p.markWordAsGuessed(p.game.currentWord!);
+++      expectPoolIntact(p);
+++      if (p.secondWord == null) expect(p.game.currentWord, b);
+++    }
+++    final last = p.game.currentWord!;
+++    expect(p.game.remainingWords, [last]);
+++    expect(p.effectiveRemainingWordsCount, 0);
+++
+++    // Passer le dernier mot : il revient.
+++    p.passWord(last);
+++    expect(p.game.currentWord, last);
+++    expect(p.secondWord, isNull);
+++
+++    p.markWordAsGuessed(last);
+++    expect(p.game.currentScreen, AppConstants.screenVerification);
+++    expect(p.game.remainingWords, isEmpty);
+++    expect(p.game.wordsGuessedThisTurn.toSet(), p.game.allWords.toSet());
+++    expect(p.game.turnBonusTime, isNotNull);
+++  });
+++
+++  test(
+++      'Chrono à 0 avec deux cartes, ×2 : kill en plein tour = mêmes cartes ; '
+++      'vérification séparée de A et B ; retour arrière restaure les deux '
+++      '(AC4, AC5, AC6)', () async {
+++    var p = await givenTwoWordsTurn(alsoDouble: true);
+++    final teamId = p.getCurrentTeam()!.id;
+++    final a = p.game.currentWord!;
+++    final b = p.secondWord!;
+++
+++    // AC5 : app tuée en plein tour.
+++    await pumpEventQueue();
+++    p = GameProvider();
+++    await pumpEventQueue();
+++    expect(p.game.currentWord, a);
+++    expect(p.secondWord, b);
+++    expect(p.isTwoWordsOn, isTrue);
+++
+++    p.endTurn();
+++    expect(p.game.expiredWord, a);
+++    expect(p.secondExpiredWord, b);
+++    expect(p.secondWord, isNull);
+++
+++    // AC4 : A validé, B refusé → 1 mot ×2, B retourne au pool.
+++    p.savePreValidationState([a]);
+++    p.validateWords([a]);
+++    expect(p.teams.firstWhere((t) => t.id == teamId).score, 2);
+++    expect(p.game.remainingWords, contains(b));
+++    expect(p.game.remainingWords, isNot(contains(a)));
+++    expect(p.secondExpiredWord, isNull);
+++
+++    // AC6 : retour arrière.
+++    p.restorePreValidationState();
+++    expect(p.game.expiredWord, a);
+++    expect(p.secondExpiredWord, b);
+++    expect(p.game.restoredValidatedWords, [a]);
+++    expect(p.teams.firstWhere((t) => t.id == teamId).score, 0);
+++
+++    p.savePreValidationState([a, b]);
+++    p.validateWords([a, b]);
+++    expect(p.teams.firstWhere((t) => t.id == teamId).score, 4);
+++    expect(p.game.remainingWords, isNot(contains(b)));
+++  });
+++
+++  test(
+++      'Fin de manche à la vérification avec deux cartes expirées, puis '
+++      'continuation (même tour) : B dépouillée une seule fois, deux cartes '
+++      'tirées sans redépenser de charge (AC8)', () async {
+++    final p = await givenTwoWordsTurn();
+++    final teamId = p.getCurrentTeam()!.id;
+++    while (p.game.remainingWords.length > 2) {
+++      p.markWordAsGuessed(p.game.currentWord!);
+++    }
+++    p.endTurn();
+++    final validated = [
+++      ...p.game.wordsGuessedThisTurn,
+++      p.game.expiredWord!,
+++      p.secondExpiredWord!,
+++    ];
+++    p.validateWords(validated);
+++    expect(p.game.currentScreen, AppConstants.screenTransition);
+++    expect(p.secondExpiredWord, isNull);
+++
+++    p.nextRound();
+++    expect(p.getCurrentTeam()!.id, teamId);
+++    p.startTurn();
+++    p.startTurnTimer();
+++    expect(p.isTwoWordsOn, isTrue);
+++    expect(p.secondWord, isNotNull);
+++    expectPoolIntact(p);
+++    expect(p.game.fiesta!.chargesUsed.where((u) => u.catalogId == 'two_words'),
+++        hasLength(1));
+++  });
+++
+++  test(
+++      'Analytics : chaque carte a son shown puis son guessed / passed / '
+++      'expired avec durée, tag two_words (AC7) ; Classique : un mot, pas de tag',
+++      () async {
+++    final p = await givenTwoWordsTurn();
+++    final a = p.game.currentWord!;
+++    final b = p.secondWord!;
+++    p.markWordAsGuessed(a); // carte A alors que B est le dernier `shown`
+++    final a2 = p.game.currentWord!;
+++    p.passWord(b);
+++    final b2 = p.secondWord!;
+++    p.endTurn();
+++
+++    final events = AnalyticsService().currentGame!.events;
+++    void expectPair(String word, WordEventType end) {
+++      final mine = events.where((e) => e.word == word).toList();
+++      expect(mine.map((e) => e.eventType), [WordEventType.shown, end],
+++          reason: word);
+++      expect(mine.last.durationMs, isNotNull, reason: word);
+++      expect(mine.first.modifiers, contains('two_words'));
+++    }
+++
+++    expectPair(a, WordEventType.guessed);
+++    expectPair(b, WordEventType.passed);
+++    expectPair(a2, WordEventType.expired);
+++    expectPair(b2, WordEventType.expired);
+++
+++    // Classique : l'interrupteur ne fait rien, un mot à la fois, sans tag.
+++    final c = await givenReadyProvider();
+++    await c.startGame();
+++    c.setTwoWords(true);
+++    c.startTurn();
+++    c.startTurnTimer();
+++    expect(c.secondWord, isNull);
+++    final w = c.game.currentWord!;
+++    c.markWordAsGuessed();
+++    final classic = AnalyticsService().currentGame!.events;
+++    expect(classic.map((e) => (e.word, e.eventType)).take(3), [
+++      (w, WordEventType.shown),
+++      (w, WordEventType.guessed),
+++      (c.game.currentWord!, WordEventType.shown),
+++    ]);
+++    expect(classic.every((e) => e.modifiers == null), isTrue);
+++    expect(classic[1].durationMs, isNotNull);
+++    expect(c.game.toJson().containsKey('fiesta'), isFalse);
+++  });
+++}
+diff --git a/_bmad-output/reviews/epic-2-mode-fiesta/2-11-prompt-r1.md b/_bmad-output/reviews/epic-2-mode-fiesta/2-11-prompt-r1.md
+new file mode 100644
+index 0000000..c7330e6
+--- /dev/null
++++ b/_bmad-output/reviews/epic-2-mode-fiesta/2-11-prompt-r1.md
+@@ -0,0 +1,65 @@
++# Revue 2-11 Deux mots à la fois — r1
++
++Tier **risqué** ① (machine à états : pool, fin de manche, continuation) + ② (scoring ×2,
++passe gratuite) + ⑤ (analytics : durée par mot) + ⑥ (expiration). Lire `2-11-patch-r1.diff`
++(base = `6816b43`, sommet de 2-10 cœur, lui-même sur 2-9 : le patch ne contient que 2-11).
++Briques déjà sur main : `FiestaWordCard`, `TwoWordsLayout` (verrou 0,3 s, `ValueKey(mot)`).
++
++Sources : `_bmad-output/specs/fiesta/2-11-deux-mots-a-la-fois.md` (AC1-AC9, pièges),
++`epic-fiesta.md` (Q8, table d'incompatibilités), maquette `two_cd` … `two_verif`.
++
++## Interprétations prises (à challenger)
++
++1. **Carte B dans `fiesta.turn`**, pas dans `GameState` (règle 7 : clés additives optionnelles
++   du blob Fiesta seulement) : `twoWords` (`armed`/`spent`, mêmes valeurs que le ×2),
++   `secondWord` (carte B), `secondExpiredWord` (B à l'expiration). Absentes = un seul mot. La
++   carte A reste `currentWord`, `expiredWord` reste le mot A expiré.
++2. **Pas d'indicateur sur `HistoryEntry`** (la story le demandait) : c'est la forme de
++   `guessItAll_gameState` au premier niveau → hors règle 7 sans accord. Le tag `two_words` des
++   événements porte l'information.
++3. **Le mot visé est un argument** : `markWordAsGuessed([mot])`, `passWord([mot])`, mot A par
++   défaut (Classique : appels sans argument, chemin inchangé). Un mot qui n'est plus à l'écran
++   est ignoré (tap périmé).
++4. **Remplaçant** (`drawOtherCard`, pur) : 1ᵉʳ mot du pool mélangé ≠ l'autre carte ; pool
++   épuisé → les passés du tour (sauf l'autre carte) sont recyclés, comme pour un mot seul ;
++   rien → l'autre carte reste seule, **en tête** (A ← B). Ensuite, la logique d'un mot seul
++   reprend telle quelle (y compris « passer le dernier mot le fait revenir » et la vraie fin de
++   manche avec temps reporté).
++5. **Carte B tirée dans `startTurnTimer`** après la dépense de la charge, continuation de fin de
++   manche comprise (`spent` survit à la fin de manche, même tour) ; déjà présente = gardée.
++6. **`endTurn`** déplace B vers `secondExpiredWord` (ne touche rien si B absente : second
++   `endTurn` idempotent) ; `validateWords` passe `[expiredWord, secondExpiredWord]` à
++   `resolveTurn(expiredWords:)` ; la branche fin de manche retire `secondExpiredWord` (la
++   branche normale vide `turn`).
++7. **`effectiveRemainingWordsCount`** soustrait le nombre de cartes à l'écran. Le bouton Passer
++   d'une carte est donc grisé quand il n'y a aucun autre mot (comme aujourd'hui pour un mot
++   seul), même si la maquette `two_last` le montre actif.
++8. **Q8** : `doublePointsCapped` compte « deux mots » allumé et `twoWordsCapped` compte le ×2
++   allumé ; `turnModifiers` exclut `two_words` (charge non activée), badge et tag à part.
++9. **Analytics** : `_lastShownWord/_lastShownTimestamp` → `Map<String,int> _shownAt`. Classique :
++   un seul mot à la fois, donc même sortie. Après un kill, les cartes à l'écran perdent leur
++   `shown` (événements suivants abandonnés), comme aujourd'hui pour le mot seul.
++10. **UI** : annonce = carte sous l'interrupteur sur l'avant-tour (comme la maquette `two_cd`),
++    pas une route plein écran. Pas d'écran intermédiaire « Temps écoulé » (`two_end`) : on va à
++    la vérification comme aujourd'hui, avec une carte par mot expiré (toggle existant).
++11. `two_words` reçoit `defaultCharges: 1` (sinon 0 charge en Auto et dans les ensembles neufs).
++12. Tests : provider uniquement (consigne de lane), pas d'ajout dans `turn_resolution_test.dart`
++    (AC4 ×2 couvert au niveau provider) ; adaptation mécanique des 3 asserts `expired*`.
++
++## Questions précises
++
++- Un chemin peut-il afficher deux fois le même mot, perdre un mot, ou laisser un mot trouvé
++  dans le pool ? (recyclage avec l'autre carte déjà passée puis recyclée ; pass de la carte A
++  quand le pool = {A, B} ; fin de manche dans `markWordAsGuessed` avec B encore là — censée
++  impossible, à vérifier.)
++- `secondWord` / `secondExpiredWord` périmés : `nextRound`, retour arrière depuis le tour
++  suivant, app tuée sur le compte à rebours, double `endTurn`.
++- Score : ×2 et passe gratuite consommée une seule fois par passe ; B validé compté une fois.
++- Analytics : un événement peut-il partir sans `shown` ou avec la durée d'un autre mot ? La sortie
++  Classique est-elle strictement identique (test figé `legacy` + `fiesta_analytics_test`) ?
++- Mutation testing sur `test/providers/fiesta_two_words_test.dart` (4 tests). Mutants tués
++  localement : garde « dernier `shown` » rétablie, `drawOtherCard` sans exclusion de l'autre
++  carte, B non déplacée à l'expiration, `secondExpiredWord` non retiré en fin de manche.
++
++Format attendu : findings BLOCKER / MAJOR / MINOR avec `fichier:ligne`, puis verdict READY / NOT
++READY.
+diff --git a/_bmad-output/reviews/epic-2-mode-fiesta/2-11-review-r1.md b/_bmad-output/reviews/epic-2-mode-fiesta/2-11-review-r1.md
+new file mode 100644
+index 0000000..8da57a4
+--- /dev/null
++++ b/_bmad-output/reviews/epic-2-mode-fiesta/2-11-review-r1.md
+@@ -0,0 +1,66 @@
++# Revue 2-11 — Deux mots à la fois (r1)
++
++**Revue statique uniquement.** Lecture du patch fourni contre `6816b43`, du code
++concerné et des contrats fournis ; aucune commande Flutter/Dart ni aucun test n'a
++été exécuté.
++
++## Verdict : READY
++
++Pas de **BLOCKER** ni de **MAJOR** dans le diff 2-11.
++
++## Vérifications
++
++- Le pool conserve les deux cartes jusqu'à leur traitement. Une action sur A ou
++  B retire seulement sa cible, `drawOtherCard` exclut l'autre carte et ne recycle
++  les passés que lorsqu'il n'existe plus de troisième mot. Le dernier mot retombe
++  bien dans le chemin historique à une carte ; un tap portant un mot sorti des
++  cartes est ignoré par le provider.
++- À l'expiration, A reste `expiredWord` et B est déplacé atomiquement dans
++  `fiesta.turn.secondExpiredWord`. `resolveTurn(expiredWords:)` les dépouille
++  individuellement, y compris avec x2, puis la branche de continuation retire
++  B expirée sans vider `twoWords=spent` ni dépenser une nouvelle charge.
++- `free_pass` passe par la même mutation de compteur quel que soit le côté visé ;
++  `no_pass` reste bloquant avant l'analytics. Les incompatibilités et le plafond
++  Q8 sont appliqués par `canAdd`/les deux getters de plafond.
++- L'horodatage analytics est désormais propre à chaque mot (`_shownAt`) et est
++  consommé au terminal event. La carte conservée ne perd donc pas son timestamp
++  quand l'autre est remplacée. Un redémarrage réel remet la map à zéro via
++  `_clearTrackingState`, conformément au contrat documenté (pas de durée inventée).
++- Les trois nouvelles clés sont additives dans `fiesta.turn`, lues comme chaînes
++  uniquement, et passent par le snapshot JSON existant. La sérialisation
++  Classique et les clés `guessItAll_*` ne changent pas.
++
++## Findings
++
++### MINOR — le scénario nommé « kill » ne simule pas un kill du tracker analytics
++
++- **Emplacement :** `test/providers/fiesta_two_words_test.dart:138-145`
++- **Scénario :** ce test réinstancie `GameProvider`, mais conserve le singleton
++  `AnalyticsService` en mémoire. Il vérifie correctement la relecture des deux
++  cartes depuis `SharedPreferences`, mais ne peut pas prouver que `_shownAt` ne
++  survit pas à un processus tué ni le contrat « événement terminal abandonné
++  faute de `shown` après kill ».
++- **Correctif :** ajouter un test analytics séparé qui persiste le jeu analytics,
++  appelle `AnalyticsService().forgetCurrentGame()`, recharge, puis vérifie la
++  politique documentée pour les cartes restaurées (aucun timestamp hérité et pas
++  de durée fabriquée).
++
++### MINOR — la frontière Q8 des deux interrupteurs n'est pas directement épinglée
++
++- **Emplacement :** `test/providers/fiesta_two_words_test.dart:43-50`,
++  `lib/providers/game_provider.dart:1412-1476`
++- **Scénario :** le test couvre la coexistence licite x2 + deux mots, mais pas
++  le refus d'un troisième modificateur ni les deux ordres d'activation au
++  plafond. Une régression des additions croisées dans `doublePointsCapped` /
++  `twoWordsCapped` ne serait donc pas détectée par les quatre tests de la lane.
++- **Correctif :** construire une équipe avec un modificateur de manche déjà
++  comptabilisé, armer l'un des deux bonus, puis vérifier que l'autre est refusé
++  (et répéter l'ordre inverse).
++
++## Qualité du diff
++
++Le changement est focalisé. `drawOtherCard` isole la règle de pool et `_armCharge`
++supprime de la duplication entre x2 et deux mots ; aucune nouvelle couche
++artificielle, conversion non typée additionnelle, ni branche dispersée n'est
++introduite. `game_provider.dart` était déjà très grand avant ce patch : le diff
++ne franchit pas le seuil des 1 000 lignes et sa logique ajoutée reste regroupée.
+diff --git a/docs/ANALYTICS.md b/docs/ANALYTICS.md
+index 64fac7c..be8000c 100644
+--- a/docs/ANALYTICS.md
++++ b/docs/ANALYTICS.md
+@@ -59,9 +59,11 @@ sont inchanges.
+   les defauts `round` 1, `teamId` '' deja presents avant 2-7). Le mode de la partie se lit sur
+   `GameAnalytics.gameMode`, jamais sur l'evenement.
+ 
+-⚠️ **Contrat « un seul mot a l'ecran »** (`AnalyticsService._recordEventWithDuration`) : un
+-evenement sur un mot qui n'est pas le dernier `shown` est abandonne en silence. La story 2-11
+-(deux mots) remplace le bloc « mot affiche » du service ; le contexte du tour ne bouge pas.
++**Duree par mot** (`AnalyticsService._recordEventWithDuration`, story 2-11) : chaque mot a
++l'ecran garde l'horodatage de son `shown` ; `guessed` / `passed` / `expired` mesurent leur duree
++depuis le `shown` de CE mot. Avec « Deux mots a la fois », les deux cartes ont donc chacune leur
++paire d'evenements, et le tour porte `two_words` dans `modifiers`. Un mot sans `shown` en cours
++(app tuee depuis) est abandonne, comme avant : pas de duree inventee.
+ 
+ **Types d'evenements :**
+ 
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index fd189a3..af91cc6 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -553,3 +553,25 @@ parmi 3 » et « Coup de pouce de l'app ».
+ 
+ **Conséquence.** Les malus reçus passent par la révélation de 2-5 et les tags analytics de 2-7
+ sans code dédié : ils sont dans `active` comme le tirage.
++
++## 2026-11-03 — Fiesta 2-11 : Deux mots à la fois
++
++**Quoi.** Bonus à charge (1 par équipe et par manche), allumé sur l'avant-tour comme le ×2,
++annoncé sur la même carte. Pendant le tour : deux cartes, chacune avec Trouvé / Passer ; la
++carte traitée est remplacée par un mot ≠ l'autre, l'autre ne bouge pas ; une seule carte quand
++il ne reste qu'un mot. À l'expiration, les deux mots partent à la vérification, chacun avec son
++choix.
++
++**Pourquoi ces choix.**
++- **Carte B dans `fiesta.turn`** (`secondWord`, puis `secondExpiredWord`), pas dans `GameState` :
++  le blob Classique ne change pas d'un octet, clés absentes = un seul mot, pas de bump de schéma.
++  Le retour arrière et l'app tuée les retrouvent sans code dédié (snapshot = `toJson`).
++- **Le mot visé est un argument** de `markWordAsGuessed` / `passWord` : un tap sur une carte
++  déjà remplacée est ignoré par le provider (en plus du verrou visuel de 0,3 s).
++- **`resolveTurn(expiredWords:)`** : N mots expirés, toujours pur ; adaptation mécanique des
++  tests existants.
++- **Analytics : durée par mot** (`AnalyticsService._shownAt`) au lieu du « dernier mot affiché »,
++  qui jetait en silence les événements de l'autre carte. `two_words` dans les `modifiers`.
++
++**Conséquence.** Pas d'indicateur sur `HistoryEntry` (forme d'une clé `guessItAll_*` de premier
++niveau) : le tag analytics porte l'information.
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index dca0351..fe83be5 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -21,7 +21,7 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `fiesta/symmetric_draw.dart` | fonctions pures | Modificateurs d'une manche pour toutes les équipes : `fixedForRound` puis `drawSymmetric`, réunis par `roundModifiers(rules, gameId:, round:)`. Graine `drawSeed(gameId, round)` (FNV-1a, stable entre exécutions) |
+ | `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn, catchUpDue}`. `turn` : compteurs du tour (2-8 : `freePassesUsed`, `blockedPlayerId`, clés dans `turn_effects.dart`), vidés à la vraie fin du tour (continuation de fin de manche comprise dans le tour). `catchUpDue` : id d'équipe → secondes dues (négatives = malus du leader), posé par `nextRound`, consommé au premier tour non-continuation. `chargesUsed` (2-9, clé omise si vide) : charges dépensées `{catalogId, teamId, round}`, décompte de la manche en cours + récap « Bonus utilisés » ; `offerChoices` (2-10, clé omise si vide) : cartes 1 parmi 3 choisies `{chooserId, modifier}` — celles dont `modifier.round` = manche suivante forment la file de la transition, `nextRound` les rend actives ; relues pour le récap et `blockingTeam` |
+ | `fiesta/modifier_recap.dart` | fonctions pures | `fiestaModeId` (`fiesta_auto`/`fiesta_custom`), `fiestaModeLabel`, `buildModifierRecap` : récap « Modificateurs de la partie » **recalculé** (tirage par graine, rattrapage sur les scores cumulés par manche), rien de persisté pendant la partie |
+-| `fiesta/turn_effects.dart` | fonctions pures | Effets de tour (2-8) : clés des compteurs du tour, `freePassAllowance` (charges de `free_pass`), `canBlockGuesser` (équipe de 3+). 2-9 : clé `doublePoints` (`armed` à l'interrupteur, `spent` au départ), `doublePointsAllowance` |
++| `fiesta/turn_effects.dart` | fonctions pures | Effets de tour (2-8) : clés des compteurs du tour, `freePassAllowance` (charges de `free_pass`), `canBlockGuesser` (équipe de 3+). 2-9 : clé `doublePoints` (`armed` à l'interrupteur, `spent` au départ), `doublePointsAllowance`. 2-11 : clés `twoWords` (mêmes valeurs), `secondWord`, `secondExpiredWord`, `twoWordsAllowance`, `drawOtherCard` (remplaçant ≠ l'autre carte) |
+ | `fiesta/turn_time.dart` | fonctions pures | `composeTurnSeconds` (base + rattrapage − malus du leader − 10 s × `minus_10s`, plancher `kTurnFloorSeconds` = 10 ; continuation = ses secondes, sans modificateur) ; `computeCatchUp` (k × écart avec la tête, plafonds, co-leaders tous en tête, égalité = rien) ; `effectiveCatchUp` (Auto → auto-calibrage, Personnalisé → curseurs) |
+ | `fiesta/offers.dart` | `Standings`, `OfferStrength`, fonctions pures | 2-10 : `kOfferStrength` + `strengthForGap` (≤3 légère, ≤7 moyenne, >7 forte, **à recalibrer**), cran vide → cran inférieur ; `Standings` (leader unique ou `null`, `gapOf`, `choosingOrder` dernière → avant-dernière, vide si égalité ; map construite **dans l'ordre des équipes**) ; `pickThreeOffers(…, roundDraw:, choices:, blockImmuneTeamIds:)` (≤3 cartes utiles : compatibles, plafond 2, pas un modificateur que la cible a déjà ; vide = équipe sautée) ; `appBoost(…, roundDraw:)` (Auto : 1 bonus par menée + 1 malus au leader, jamais `block_guesser`). Graine `offerSeed(gameId, round, teamId)` **figée par test**. 🔴 Lane cœur : persister les choix en `Map<chooserTeamId, ModifierInstance>` ; `choices` ne contient que les choix des équipes passées AVANT celle dont on calcule les offres (un malus vise le leader, la clé dit qui l'a choisi) ; prochaine équipe = 1ʳᵉ de `choosingOrder` absente de la map dont les offres ne sont pas vides |
+ | `fiesta/fiesta_ensemble.dart` | `FiestaEnsemble`, `defaultEnsembleRules`, extensions `copyWith`, `catchUpOn` | Ensemble Personnalisé `{id, rules}` (nom = `rules.ensembleName`, mode toujours `custom`), défauts de la maquette (`mkSet`). Persisté par `FiestaEnsembleService` |
+diff --git a/lib/models/fiesta/modifier_catalog.dart b/lib/models/fiesta/modifier_catalog.dart
+index 01cf70a..7709408 100644
+--- a/lib/models/fiesta/modifier_catalog.dart
++++ b/lib/models/fiesta/modifier_catalog.dart
+@@ -98,6 +98,7 @@ const List<ModifierDef> kModifierCatalog = [
+     name: 'Deux mots à la fois',
+     description: 'Deux mots sont affichés en même temps.',
+     nature: ModifierNature.bonus,
++    defaultCharges: 1,
+   ),
+   ModifierDef(
+     id: 'reversed',
+diff --git a/lib/models/fiesta/turn_effects.dart b/lib/models/fiesta/turn_effects.dart
+index 10bce69..706ecfc 100644
+--- a/lib/models/fiesta/turn_effects.dart
++++ b/lib/models/fiesta/turn_effects.dart
+@@ -15,6 +15,15 @@ const String kDoublePointsKey = 'doublePoints';
+ const String kDoubleArmed = 'armed';
+ const String kDoubleSpent = 'spent';
+ 
++/// « Deux mots à la fois » du tour (story 2-11) : mêmes valeurs que
++/// [kDoublePointsKey] ([kDoubleArmed] puis [kDoubleSpent]). La carte B vit
++/// sous [kSecondWordKey] (la carte A reste `GameState.currentWord`), et B
++/// encore à l'écran quand le chrono tombe sous [kSecondExpiredWordKey]. Clés
++/// absentes = un seul mot, comme en Classique.
++const String kTwoWordsKey = 'twoWords';
++const String kSecondWordKey = 'secondWord';
++const String kSecondExpiredWordKey = 'secondExpiredWord';
++
+ /// Nombre de passes gratuites du tour : les charges de `free_pass`.
+ int freePassAllowance(List<ModifierInstance> modifiers) => modifiers
+     .where((m) => m.catalogId == 'free_pass')
+@@ -26,6 +35,28 @@ int doublePointsAllowance(List<ModifierInstance> modifiers) => modifiers
+     .where((m) => m.catalogId == 'double_points')
+     .fold(0, (sum, m) => sum + m.charges);
+ 
++/// Charges de « Deux mots à la fois » de la manche (instances `two_words`).
++int twoWordsAllowance(List<ModifierInstance> modifiers) => modifiers
++    .where((m) => m.catalogId == 'two_words')
++    .fold(0, (sum, m) => sum + m.charges);
++
++/// Remplaçant d'une carte « Deux mots » traitée : premier mot de [pool] (déjà
++/// privé du mot traité) autre que [other], la carte qui reste. Pool épuisé :
++/// les mots passés du tour (sauf [other]) y reviennent, comme le recyclage
++/// d'un mot seul. `word` nul = plus aucun autre mot, une seule carte reste.
++({String? word, List<String> pool}) drawOtherCard({
++  required List<String> pool,
++  required List<String> passed,
++  required String other,
++}) {
++  for (final w in pool) {
++    if (w != other) return (word: w, pool: pool);
++  }
++  final recycled = passed.where((w) => w != other).toList()..shuffle();
++  if (recycled.isEmpty) return (word: null, pool: pool);
++  return (word: recycled.first, pool: [...pool, ...recycled]);
++}
++
+ /// `block_guesser` n'a d'effet que si l'équipe a au moins 3 joueurs : il faut
+ /// un devineur à bloquer ET un autre qui puisse encore répondre.
+ bool canBlockGuesser(int teamSize) => teamSize > 2;
+diff --git a/lib/models/turn_resolution.dart b/lib/models/turn_resolution.dart
+index 36ca3e5..00891fe 100644
+--- a/lib/models/turn_resolution.dart
++++ b/lib/models/turn_resolution.dart
+@@ -28,12 +28,10 @@ class TurnResolution {
+   /// Mots passés pendant le tour mais finalement validés comme devinés.
+   final List<String> validatedPassed;
+ 
+-  /// Le mot affiché à l'expiration du chrono a-t-il été validé / refusé ?
+-  final bool expiredValidated;
+-  final bool expiredInvalidated;
+-
+-  /// Le mot affiché à l'expiration du chrono, s'il y en avait un.
+-  final String? expiredWord;
++  /// Mots affichés à l'expiration du chrono (un, ou deux avec « Deux mots à
++  /// la fois »), validés / refusés à la vérification.
++  final List<String> expiredValidated;
++  final List<String> expiredInvalidated;
+ 
+   /// Pool de mots restants après dépouillement.
+   final List<String> remainingPool;
+@@ -48,7 +46,6 @@ class TurnResolution {
+     required this.validatedPassed,
+     required this.expiredValidated,
+     required this.expiredInvalidated,
+-    required this.expiredWord,
+     required this.remainingPool,
+     required this.pointsScored,
+   });
+@@ -57,7 +54,7 @@ class TurnResolution {
+   List<String> get allInvalidated => [
+         ...invalidatedGuessed,
+         ...invalidatedPassed,
+-        if (expiredInvalidated && expiredWord != null) expiredWord!,
++        ...expiredInvalidated,
+       ];
+ 
+   /// La manche est terminée : plus aucun mot à faire deviner.
+@@ -69,7 +66,8 @@ class TurnResolution {
+ ///
+ /// - [validatedWords] : ce que l'équipe a coché à la vérification.
+ /// - [guessedThisTurn] / [passedThisTurn] : ce qui s'est passé pendant le tour.
+-/// - [expiredWord] : le mot affiché quand le chrono est tombé, s'il y en a un.
++/// - [expiredWords] : les mots affichés quand le chrono est tombé (aucun, un,
++///   ou deux avec « Deux mots à la fois », story 2-11).
+ /// - [currentPool] : les mots encore à faire deviner avant dépouillement.
+ /// - [pointsMultiplier] : ×2 pour « Mot compte double » (Fiesta 2-9). Vaut
+ ///   pour les POINTS seulement : [TurnResolution.validated] reste la liste
+@@ -78,7 +76,7 @@ TurnResolution resolveTurn({
+   required List<String> validatedWords,
+   required List<String> guessedThisTurn,
+   required List<String> passedThisTurn,
+-  required String? expiredWord,
++  required List<String> expiredWords,
+   required List<String> currentPool,
+   int pointsMultiplier = 1,
+ }) {
+@@ -92,9 +90,9 @@ TurnResolution resolveTurn({
+       passedThisTurn.where((w) => validatedSet.contains(w)).toList();
+ 
+   final expiredValidated =
+-      expiredWord != null && validatedSet.contains(expiredWord);
++      expiredWords.where((w) => validatedSet.contains(w)).toList();
+   final expiredInvalidated =
+-      expiredWord != null && !validatedSet.contains(expiredWord);
++      expiredWords.where((w) => !validatedSet.contains(w)).toList();
+ 
+   // Les mots refusés retournent au pool ; le Set garantit qu'un mot recyclé
+   // pendant le tour n'y apparaît pas deux fois.
+@@ -106,7 +104,9 @@ TurnResolution resolveTurn({
+ 
+   // Les mots finalement validés en sortent — y compris ceux qui avaient été
+   // passés puis remis dans le pool pendant le tour.
+-  if (expiredValidated) pool.remove(expiredWord);
++  for (final word in expiredValidated) {
++    pool.remove(word);
++  }
+   for (final word in validatedPassed) {
+     pool.remove(word);
+   }
+@@ -118,7 +118,6 @@ TurnResolution resolveTurn({
+     validatedPassed: validatedPassed,
+     expiredValidated: expiredValidated,
+     expiredInvalidated: expiredInvalidated,
+-    expiredWord: expiredWord,
+     remainingPool: pool,
+     pointsScored: validatedWords.length * pointsMultiplier,
+   );
+diff --git a/lib/providers/CLAUDE.md b/lib/providers/CLAUDE.md
+index 93a576b..401719e 100644
+--- a/lib/providers/CLAUDE.md
++++ b/lib/providers/CLAUDE.md
+@@ -26,6 +26,7 @@ Gestion d'etat centralisee via Provider.
+ - **Effets de tour Fiesta (2-8)** : `canPassWith(secondesAffichées)` est la **seule** garde de la passe (`passWord` ET le bouton de `turn_screen`), sur la pénalité **effective** (`currentPassPenalty`, 0 si `hasFreePass`) ; sous `no_pass`, `passWord` sort avant `onWordPassed`. **Un seul tour** : fin de manche + continuation en N+1. `validateWords` vide `fiesta.turn` et consomme les instances de portée **tour** de l'équipe à la vraie fin seulement (pas dans la branche fin de manche).
+ - **Mot compte double (2-9)** : `setDoublePoints` n'écrit que `fiesta.turn[doublePoints]=armed` ; la charge se dépense dans `startTurnTimer` (`spent` + `chargesUsed`). `validateWords` passe `pointsMultiplier` à `resolveTurn` (pur). La continuation de fin de manche garde `spent` (même tour) sans dépenser la charge de N+1. `turnModifiers` = badges / tags analytics sans la charge non activée.
+ - **1 parmi 3 / coup de pouce (2-10)** : offres (`offersFor`) et cadeaux (`appBoostPreview`) recalculés sur la transition, jamais stockés ; seuls les choix vont dans `fiesta.offerChoices` (`chooseOffer`, refusé hors tour). 🔴 `nextRound` refuse tant que `nextChooserId` n'est pas nul. `_fiestaForRound` ajoute tirage + cadeaux + choix de la transition.
++- **Deux mots à la fois (2-11)** : même interrupteur que le ×2 (`setTwoWords`, `_armCharge`, dépense dans `startTurnTimer`). Carte A = `game.currentWord`, carte B = `fiesta.turn[secondWord]` (tirée au départ, continuation comprise) ; 🔴 les deux restent dans `remainingWords`. `markWordAsGuessed(mot)` / `passWord(mot)` visent une carte (mot plus à l'écran = ignoré) ; seule elle est remplacée, par `drawOtherCard` (≠ l'autre carte, recyclage des passés hors l'autre carte) ; plus aucun autre mot → l'autre carte reste seule en tête, et la logique d'un mot seul reprend. `endTurn` déplace B dans `fiesta.turn[secondExpiredWord]`, que `resolveTurn(expiredWords:)` dépouille ; la branche fin de manche de `validateWords` le retire. Q8 : chaque interrupteur compte l'autre bonus allumé.
+ - **Rattrapage Fiesta** : `catchUpPreview` (transition, calculé sur les scores) → `nextRound` le pose dans `fiesta.catchUpDue` → `startTurnTimer` le consomme au premier tour non-continuation de l'équipe.
+ 
+ ### Dependances
+diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
+index 4015613..dac8a57 100644
+--- a/lib/providers/game_provider.dart
++++ b/lib/providers/game_provider.dart
+@@ -610,6 +610,38 @@ class GameProvider extends ChangeNotifier {
+         ],
+       );
+     }
++    // Deux mots à la fois : même règle de dépense que le ×2.
++    if (fiesta != null && fiesta.turn[kTwoWordsKey] == kDoubleArmed) {
++      fiesta = fiesta.copyWith(
++        turn: {...fiesta.turn, kTwoWordsKey: kDoubleSpent},
++        chargesUsed: [
++          ...fiesta.chargesUsed,
++          ChargeUse(
++              catalogId: 'two_words',
++              teamId: teamId,
++              round: _game.currentRound),
++        ],
++      );
++    }
++    // Carte B tirée au départ (et au départ de la continuation de fin de
++    // manche, même tour). Déjà là = partie reprise : on la garde. Les deux
++    // cartes restent dans `remainingWords` jusqu'à être trouvées.
++    final currentWord = _game.currentWord;
++    String? drawnSecond;
++    if (fiesta != null &&
++        fiesta.turn[kTwoWordsKey] == kDoubleSpent &&
++        fiesta.turn[kSecondWordKey] == null &&
++        currentWord != null) {
++      drawnSecond = drawOtherCard(
++        pool: _game.remainingWords,
++        passed: const [],
++        other: currentWord,
++      ).word;
++      if (drawnSecond != null) {
++        fiesta = fiesta
++            .copyWith(turn: {...fiesta.turn, kSecondWordKey: drawnSecond});
++      }
++    }
+ 
+     _game = _game.copyWith(
+       currentScreen: AppConstants.screenTurn,
+@@ -624,16 +656,18 @@ class GameProvider extends ChangeNotifier {
+       fiesta: fiesta,
+     );
+ 
+-    // Tracker l'affichage du premier mot
++    // Tracker l'affichage du premier mot (et de la carte B)
+     _trackWordShown();
++    if (drawnSecond != null) _trackWordShown(drawnSecond);
+ 
+     notifyListeners();
+     _saveGameState();
+   }
+ 
+-  /// Notifie le service analytics qu'un nouveau mot est affiché
+-  void _trackWordShown() {
+-    final currentWord = _game.currentWord;
++  /// Notifie le service analytics qu'un nouveau mot est affiché : [word], ou
++  /// le mot courant (carte A) par défaut.
++  void _trackWordShown([String? word]) {
++    final currentWord = word ?? _game.currentWord;
+     if (currentWord == null || !_analytics.isTracking) return;
+ 
+     final currentTeam = getCurrentTeam();
+@@ -651,14 +685,19 @@ class GameProvider extends ChangeNotifier {
+           ? [
+               ...turnModifiers.map((m) => m.catalogId),
+               if (isDoublePointsOn) 'double_points',
++              if (isTwoWordsOn) 'two_words',
+             ]
+           : null,
+     );
+   }
+ 
+-  void markWordAsGuessed() {
+-    final currentWord = _game.currentWord;
++  /// [word] : la carte visée (« Deux mots à la fois »), la carte A par
++  /// défaut. Un mot qui n'est plus à l'écran (tap périmé) est ignoré.
++  void markWordAsGuessed([String? word]) {
++    final currentWord = word ?? _game.currentWord;
+     if (currentWord == null) return;
++    final second = secondWord;
++    if (currentWord != _game.currentWord && currentWord != second) return;
+ 
+     // Tracker le mot deviné AVANT de changer l'état
+     _analytics.onWordGuessed(currentWord);
+@@ -677,8 +716,21 @@ class GameProvider extends ChangeNotifier {
+     // Mélanger les mots restants
+     newRemainingWords.shuffle(Random());
+ 
+-    // Fin de la manche si plus de mots
+-    if (newRemainingWords.isEmpty) {
++    if (second != null) {
++      // Deux cartes : seule la carte trouvée change, la manche continue
++      // (l'autre carte est encore dans le pool).
++      final cards = _cardsAfter(currentWord,
++          pool: newRemainingWords, passed: newPassedWords);
++      _game = _game.copyWith(
++        currentWord: cards.first,
++        remainingWords: cards.pool,
++        wordsGuessedThisTurn: newGuessedWords,
++        passedWordsThisTurn: newPassedWords,
++        fiesta: _withSecondWord(_game.fiesta!, cards.second),
++      );
++      if (cards.drawn != null) _trackWordShown(cards.drawn);
++    } else if (newRemainingWords.isEmpty) {
++      // Fin de la manche si plus de mots
+       // Vérifier s'il reste des mots passés à recycler
+       if (newPassedWords.isNotEmpty) {
+         // Remettre les mots passés dans la pile
+@@ -739,11 +791,14 @@ class GameProvider extends ChangeNotifier {
+     _saveGameState();
+   }
+ 
+-  void passWord() {
+-    final currentWord = _game.currentWord;
++  /// [word] : la carte visée, comme pour [markWordAsGuessed].
++  void passWord([String? word]) {
++    final currentWord = word ?? _game.currentWord;
+     final clock = turnClock;
+ 
+     if (currentWord == null || !clock.isRunning) return;
++    final second = secondWord;
++    if (currentWord != _game.currentWord && currentWord != second) return;
+ 
+     final now = DateTime.now().millisecondsSinceEpoch;
+ 
+@@ -774,32 +829,49 @@ class GameProvider extends ChangeNotifier {
+     var newRemainingWords = List<String>.from(_game.remainingWords)
+       ..remove(currentWord);
+ 
+-    // Si plus de mots restants, recycler les mots passés
+-    if (newRemainingWords.isEmpty && newPassedWords.isNotEmpty) {
+-      newRemainingWords = List<String>.from(newPassedWords);
+-    }
++    var newFiesta = usesFreePass
++        ? fiesta.copyWith(
++            turn: {...fiesta.turn, kFreePassesUsedKey: freePassesUsed + 1})
++        : fiesta;
++    String? newCurrentWord;
++    String? drawn;
++    if (second != null) {
++      // Deux cartes : seule la carte passée change. Le recyclage se fait dans
++      // `_cardsAfter`, hors de l'autre carte.
++      newRemainingWords.shuffle(Random());
++      final cards = _cardsAfter(currentWord,
++          pool: newRemainingWords, passed: newPassedWords);
++      newRemainingWords = cards.pool;
++      newCurrentWord = cards.first;
++      drawn = cards.drawn;
++      newFiesta = _withSecondWord(newFiesta!, cards.second);
++    } else {
++      // Si plus de mots restants, recycler les mots passés
++      if (newRemainingWords.isEmpty && newPassedWords.isNotEmpty) {
++        newRemainingWords = List<String>.from(newPassedWords);
++      }
+ 
+-    newRemainingWords.shuffle(Random());
+-    final newCurrentWord =
+-        newRemainingWords.isNotEmpty ? newRemainingWords[0] : null;
++      newRemainingWords.shuffle(Random());
++      newCurrentWord =
++          newRemainingWords.isNotEmpty ? newRemainingWords[0] : null;
++      drawn = newCurrentWord;
++    }
+ 
+     _game = _withClock(
+       _game.copyWith(
+         currentWord: newCurrentWord,
+         passedWordsThisTurn: newPassedWords,
+         remainingWords: newRemainingWords,
+-        fiesta: usesFreePass
+-            ? fiesta.copyWith(
+-                turn: {...fiesta.turn, kFreePassesUsedKey: freePassesUsed + 1})
+-            : null,
++        // Nul en Classique : `copyWith(fiesta: null)` le laisse nul.
++        fiesta: newFiesta,
+       ),
+       newClock,
+       nowMs: now,
+     );
+ 
+     // Tracker le nouveau mot affiché
+-    if (newCurrentWord != null) {
+-      _trackWordShown();
++    if (drawn != null) {
++      _trackWordShown(drawn);
+     }
+ 
+     notifyListeners();
+@@ -816,10 +888,26 @@ class GameProvider extends ChangeNotifier {
+     final isRoundFinished = _game.remainingWords.isEmpty;
+     final expiredWord = isRoundFinished ? null : _game.currentWord;
+ 
++    // Deux mots : la carte B part aussi à la vérification, sous sa propre
++    // clé. Touché seulement si B est à l'écran : un second `endTurn` (chrono
++    // + dialogue) ne l'efface donc pas.
++    final second = secondWord;
++    var fiesta = _game.fiesta;
++    if (second != null) {
++      fiesta = _withSecondWord(fiesta!, null);
++      if (!isRoundFinished) {
++        fiesta = fiesta
++            .copyWith(turn: {...fiesta.turn, kSecondExpiredWordKey: second});
++      }
++    }
++
+     // Tracker le mot expiré si applicable
+     if (expiredWord != null) {
+       _analytics.onWordExpired(expiredWord);
+     }
++    if (second != null && !isRoundFinished) {
++      _analytics.onWordExpired(second);
++    }
+ 
+     _game = _game.copyWith(
+       timeRemaining: timeRemaining,
+@@ -827,6 +915,7 @@ class GameProvider extends ChangeNotifier {
+       turnBonusTime: isRoundFinished ? timeRemaining : null,
+       expiredWord: expiredWord,
+       clearExpiredWord: isRoundFinished,
++      fiesta: fiesta,
+       clearTurnStartTimestamp: true,
+       clearTurnEndTimestamp: true,
+       // Purger AUSSI le gel : sinon l'horloge reste « en pause » après la fin du
+@@ -935,7 +1024,10 @@ class GameProvider extends ChangeNotifier {
+       validatedWords: validatedWords,
+       guessedThisTurn: _game.wordsGuessedThisTurn,
+       passedThisTurn: passedWordsThisTurn,
+-      expiredWord: _game.expiredWord,
++      expiredWords: [
++        if (_game.expiredWord != null) _game.expiredWord!,
++        if (secondExpiredWord != null) secondExpiredWord!,
++      ],
+       currentPool: _game.remainingWords,
+       pointsMultiplier: isDoublePointsOn ? 2 : 1,
+     );
+@@ -953,8 +1045,8 @@ class GameProvider extends ChangeNotifier {
+     for (final word in resolution.validatedPassed) {
+       _analytics.onWordValidatedAsGuessed(word);
+     }
+-    if (resolution.expiredValidated) {
+-      _analytics.onWordValidatedAsGuessed(resolution.expiredWord!);
++    for (final word in resolution.expiredValidated) {
++      _analytics.onWordValidatedAsGuessed(word);
+     }
+ 
+     // Mettre à jour le score
+@@ -1039,7 +1131,10 @@ class GameProvider extends ChangeNotifier {
+         clearExpiredWord: true,
+         // Pas de `_fiestaAfterTurn` ici : la même équipe poursuit CE tour en
+         // manche suivante (continuation). Compteurs et instances de portée
+-        // tour vivent jusqu'à sa vraie fin.
++        // tour vivent jusqu'à sa vraie fin. Seule la carte B expirée, dépouillée,
++        // s'en va (comme `clearExpiredWord`).
++        fiesta: _game.fiesta?.copyWith(
++            turn: Map.of(_game.fiesta!.turn)..remove(kSecondExpiredWordKey)),
+         pendingBonusTurnId: shouldPrepareBonusFusion ? _game.currentTurn : null,
+         clearPendingBonusTurnId: !shouldPrepareBonusFusion,
+       );
+@@ -1282,9 +1377,11 @@ class GameProvider extends ChangeNotifier {
+   // ========== MOT COMPTE DOUBLE (2-9) ==========
+ 
+   /// Modificateurs EN JEU pendant le tour (badges du tour, tags analytics) :
+-  /// une charge de « Mot compte double » non activée n'en est pas un.
++  /// une charge de « Mot compte double » ou de « Deux mots à la fois » non
++  /// activée n'en est pas un (activée : badge et tag à part).
+   List<ModifierInstance> get turnModifiers => currentTeamModifiers
+-      .where((m) => m.catalogId != 'double_points')
++      .where(
++          (m) => m.catalogId != 'double_points' && m.catalogId != 'two_words')
+       .toList();
+ 
+   String? get _doublePoints {
+@@ -1312,24 +1409,100 @@ class GameProvider extends ChangeNotifier {
+     return doublePointsAllowance(currentTeamModifiers) - used;
+   }
+ 
+-  /// Q8 : activer est refusé si l'équipe a déjà 2 modificateurs en jeu.
+-  bool get doublePointsCapped => turnModifiers.length >= 2;
++  /// Q8 : activer est refusé si l'équipe a déjà 2 modificateurs en jeu
++  /// (« Deux mots à la fois » allumé compris).
++  bool get doublePointsCapped =>
++      turnModifiers.length + (isTwoWordsArmed ? 1 : 0) >= 2;
+ 
+   /// Allumer / éteindre le ×2 avant le départ. Rien n'est dépensé ici.
+-  void setDoublePoints(bool on) {
++  void setDoublePoints(bool on) => _armCharge(kDoublePointsKey, on,
++      isOn: isDoublePointsOn,
++      left: doublePointsLeft,
++      capped: doublePointsCapped);
++
++  /// Interrupteur d'un bonus à charge (×2, deux mots) : seul l'état `armed`
++  /// est écrit ; la charge se dépense dans `startTurnTimer`.
++  void _armCharge(String key, bool on,
++      {required bool isOn, required int left, required bool capped}) {
+     final fiesta = _game.fiesta;
+-    if (fiesta == null ||
+-        isDoublePointsOn ||
+-        (on && (doublePointsLeft <= 0 || doublePointsCapped))) {
++    if (fiesta == null || isOn || (on && (left <= 0 || capped))) {
+       return;
+     }
+-    final turn = Map<String, dynamic>.of(fiesta.turn)..remove(kDoublePointsKey);
+-    if (on) turn[kDoublePointsKey] = kDoubleArmed;
++    final turn = Map<String, dynamic>.of(fiesta.turn)..remove(key);
++    if (on) turn[key] = kDoubleArmed;
+     _game = _game.copyWith(fiesta: fiesta.copyWith(turn: turn));
+     notifyListeners();
+     _saveGameState();
+   }
+ 
++  // ========== DEUX MOTS À LA FOIS (2-11) ==========
++
++  String? _turnString(String key) {
++    final value = _turnCounters[key];
++    return value is String ? value : null;
++  }
++
++  /// Interrupteur de l'avant-tour allumé (ou charge déjà dépensée).
++  bool get isTwoWordsArmed => _turnString(kTwoWordsKey) != null;
++
++  /// Deux mots à l'écran pendant CE tour (charge dépensée au départ ; vaut
++  /// aussi pour la continuation de fin de manche, même tour).
++  bool get isTwoWordsOn => _turnString(kTwoWordsKey) == kDoubleSpent;
++
++  /// Carte B (la carte A est `game.currentWord`). Nulle = une seule carte.
++  String? get secondWord => _turnString(kSecondWordKey);
++
++  /// Carte B encore à l'écran quand le chrono est tombé, à vérifier.
++  String? get secondExpiredWord => _turnString(kSecondExpiredWordKey);
++
++  /// Charges restantes de l'équipe qui joue pour la manche en cours.
++  int get twoWordsLeft {
++    final teamId = getCurrentTeam()?.id;
++    final used = (_game.fiesta?.chargesUsed ?? const <ChargeUse>[])
++        .where((u) =>
++            u.catalogId == 'two_words' &&
++            u.teamId == teamId &&
++            u.round == _game.currentRound)
++        .length;
++    return twoWordsAllowance(currentTeamModifiers) - used;
++  }
++
++  /// Q8, comme [doublePointsCapped].
++  bool get twoWordsCapped =>
++      turnModifiers.length + (isDoublePointsArmed ? 1 : 0) >= 2;
++
++  /// Allumer / éteindre « Deux mots à la fois » avant le départ.
++  void setTwoWords(bool on) => _armCharge(kTwoWordsKey, on,
++      isOn: isTwoWordsOn, left: twoWordsLeft, capped: twoWordsCapped);
++
++  /// Cartes après le traitement (trouvé ou passé) de [target], l'une des deux
++  /// cartes : elle seule est remplacée, par un mot ≠ l'autre carte
++  /// ([drawOtherCard]). Plus aucun autre mot : l'autre carte reste seule, en
++  /// tête. [pool] est déjà privé de [target].
++  ({String? first, String? second, String? drawn, List<String> pool})
++      _cardsAfter(String target,
++          {required List<String> pool, required List<String> passed}) {
++    final a = _game.currentWord!;
++    final b = secondWord!;
++    final isA = target == a;
++    final other = isA ? b : a;
++    final next = drawOtherCard(pool: pool, passed: passed, other: other);
++    final drawn = next.word;
++    if (drawn == null) {
++      return (first: other, second: null, drawn: null, pool: next.pool);
++    }
++    return isA
++        ? (first: drawn, second: b, drawn: drawn, pool: next.pool)
++        : (first: a, second: drawn, drawn: drawn, pool: next.pool);
++  }
++
++  /// [fiesta] avec la carte B [word] (nulle = clé retirée).
++  FiestaState _withSecondWord(FiestaState fiesta, String? word) {
++    final turn = Map<String, dynamic>.of(fiesta.turn)..remove(kSecondWordKey);
++    if (word != null) turn[kSecondWordKey] = word;
++    return fiesta.copyWith(turn: turn);
++  }
++
+   /// Fiesta à la VRAIE fin d'un tour : compteurs du tour vidés, instances
+   /// de portée tour de l'équipe consommées. 🔴 Un seul « tour » : une fin de
+   /// manche n'en est pas une, la continuation en N+1 est le même tour (elle
+@@ -1756,8 +1929,10 @@ class GameProvider extends ChangeNotifier {
+         .where((w) => !remainingSet.contains(w))
+         .length;
+ 
+-    // Total = remainingWords + passés non recyclés - mot actuel
+-    return _game.remainingWords.length + passedNotInRemaining - 1;
++    // Total = remainingWords + passés non recyclés - mot(s) à l'écran
++    // (deux avec « Deux mots à la fois »)
++    final onScreen = secondWord != null ? 2 : 1;
++    return _game.remainingWords.length + passedNotInRemaining - onScreen;
+   }
+ 
+   /// Retourne la distribution des mots par joueur
+diff --git a/lib/screens/game_screen.dart b/lib/screens/game_screen.dart
+index b865b19..bbc7ef5 100644
+--- a/lib/screens/game_screen.dart
++++ b/lib/screens/game_screen.dart
+@@ -651,6 +651,7 @@ class _FiestaAnnouncements extends StatelessWidget {
+         _modifiers(),
+         if (provider.isDoublePointsArmed || provider.doublePointsLeft > 0)
+           _doublePoints(),
++        if (provider.isTwoWordsArmed || provider.twoWordsLeft > 0) _twoWords(),
+         TurnTimeCard(provider.turnTime),
+       ],
+     );
+@@ -688,6 +689,84 @@ class _FiestaAnnouncements extends StatelessWidget {
+     );
+   }
+ 
++  /// Interrupteur « Deux mots à la fois » puis, une fois allumé, son annonce
++  /// (maquette `two_cd`). Même règle de charge que le ×2.
++  Widget _twoWords() {
++    final left = provider.twoWordsLeft;
++    final String label;
++    final String detail;
++    var editable = false;
++    if (provider.isTwoWordsOn) {
++      label = 'Deux mots à la fois activé';
++      detail = 'Deux mots à l\'écran pendant ce tour.';
++    } else if (!provider.isTwoWordsArmed && provider.twoWordsCapped) {
++      label = 'Activer Deux mots à la fois';
++      detail = 'Impossible : votre équipe a déjà 2 modificateurs ce tour.';
++    } else {
++      label = 'Activer Deux mots à la fois';
++      detail = '$left charge${left > 1 ? 's' : ''} pour cette manche.';
++      editable = true;
++    }
++    final player = provider.getCurrentPlayer()?.name ?? 'Le joueur';
++    return Column(
++      crossAxisAlignment: CrossAxisAlignment.stretch,
++      children: [
++        FiestaCard(
++          title: 'Bonus',
++          children: [
++            FiestaLine(
++              label: label,
++              detail: detail,
++              value: provider.isTwoWordsArmed,
++              onChanged: editable ? provider.setTwoWords : null,
++            ),
++          ],
++        ),
++        if (provider.isTwoWordsArmed)
++          Container(
++            margin: const EdgeInsets.only(bottom: 12),
++            padding: const EdgeInsets.all(16),
++            decoration: BoxDecoration(
++              color: AppColors.secondaryCyan.withValues(alpha: 0.08),
++              borderRadius: BorderRadius.circular(18),
++              border: Border.all(
++                  color: AppColors.secondaryCyan.withValues(alpha: 0.5)),
++            ),
++            child: Column(
++              children: [
++                const Text(
++                  '⧉',
++                  style:
++                      TextStyle(fontSize: 38, color: AppColors.secondaryCyan),
++                ),
++                Text(
++                  'Deux mots à la fois !',
++                  textAlign: TextAlign.center,
++                  style: AppTextStyles.subtitle(fontSize: 26),
++                ),
++                const SizedBox(height: 6),
++                Text(
++                  '$player voit deux mots et fait deviner celui de son choix. '
++                  'Un mot trouvé ou passé est remplacé, l\'autre reste à '
++                  'l\'écran.',
++                  textAlign: TextAlign.center,
++                  style: AppTextStyles.bodySmall
++                      .copyWith(fontSize: 13, color: AppColors.gray400),
++                ),
++                const SizedBox(height: 4),
++                Text(
++                  'Chaque passe coûte toujours la pénalité habituelle.',
++                  textAlign: TextAlign.center,
++                  style: AppTextStyles.bodySmall
++                      .copyWith(fontSize: 12, color: AppColors.gray400),
++                ),
++              ],
++            ),
++          ),
++      ],
++    );
++  }
++
+   Widget _modifiers() {
+     final rules = provider.game.fiesta!.rules;
+     final modifiers = provider.currentTeamModifiers;
+diff --git a/lib/screens/turn_screen.dart b/lib/screens/turn_screen.dart
+index d2e7369..f0a3719 100644
+--- a/lib/screens/turn_screen.dart
++++ b/lib/screens/turn_screen.dart
+@@ -9,6 +9,7 @@ import '../services/audio_service.dart';
+ import '../utils/reversed_word.dart';
+ import '../widgets/common/app_confirm_dialog.dart';
+ import '../models/fiesta/modifier_catalog.dart';
++import '../widgets/fiesta/fiesta_turn_widgets.dart';
+ import '../widgets/fiesta/modifier_badge.dart';
+ 
+ class TurnScreen extends StatefulWidget {
+@@ -262,6 +263,24 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+     final hasFreePass = provider.hasFreePass;
+     final hasWordsToPassTo = provider.effectiveRemainingWordsCount > 0;
+     final canPass = provider.canPassWith(timeRemaining) && hasWordsToPassTo;
++    // Fiesta 2-11 : deux cartes, chacune avec ses boutons (une seule au
++    // dernier mot). Le mot visé est passé au provider : un tap sur une carte
++    // déjà remplacée est ignoré.
++    final twoWords = provider.isTwoWordsOn && currentWord != null;
++    VoidCallback? guess(String word) => isPaused
++        ? null
++        : () {
++            HapticFeedback.lightImpact();
++            AudioService.playDing();
++            provider.markWordAsGuessed(word);
++          };
++    VoidCallback? pass(String word) => canPass && !isPaused
++        ? () {
++            HapticFeedback.mediumImpact();
++            AudioService.playWhoosh();
++            provider.passWord(word);
++          }
++        : null;
+ 
+     return Material(
+       color: AppColors.backgroundMain,
+@@ -328,7 +347,8 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+ 
+                         // Fiesta : modificateurs du tour, sous le chrono.
+                         if (provider.turnModifiers.isNotEmpty ||
+-                            provider.isDoublePointsOn) ...[
++                            provider.isDoublePointsOn ||
++                            provider.isTwoWordsOn) ...[
+                           const SizedBox(height: 8),
+                           ModifierBadges(
+                             modifiers: provider.turnModifiers,
+@@ -339,6 +359,12 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+                                   label: 'Mot compte double',
+                                   nature: ModifierNature.bonus,
+                                 ),
++                              if (provider.isTwoWordsOn)
++                                const ModifierBadge(
++                                  icon: '⧉',
++                                  label: 'Deux mots à la fois',
++                                  nature: ModifierNature.bonus,
++                                ),
+                             ],
+                           ),
+                           if (provider.freePasses > 0) ...[
+@@ -356,36 +382,61 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+                         ] else
+                           const SizedBox(height: 32),
+ 
+-                        // Current word
+-                        Flexible(
+-                          child: Padding(
+-                            padding: const EdgeInsets.symmetric(horizontal: 16),
+-                            child: AutoSizeText(
+-                              // À l'envers : affichage du tour SEULEMENT, le
+-                              // mot du jeu reste en clair.
+-                              provider.isWordReversed
+-                                  ? reversedWordDisplay(currentWord ?? '')
+-                                  : currentWord ?? '',
+-                              style: const TextStyle(
+-                                fontFamily: 'Bangers',
+-                                fontSize: 72,
+-                                color: Colors.white,
+-                                shadows: [
+-                                  Shadow(
+-                                    offset: Offset(2, 2),
+-                                    color: AppColors.primaryPinkDark,
+-                                    blurRadius: 0,
+-                                  ),
+-                                ],
++                        if (twoWords)
++                          Flexible(
++                            child: SingleChildScrollView(
++                              child: TwoWordsLayout(
++                                firstWord: currentWord,
++                                secondWord: provider.secondWord,
++                                reversed: provider.isWordReversed,
++                                passLabel: hasFreePass
++                                    ? 'Passer · gratuit'
++                                    : passPenalty > 0
++                                        ? 'Passer · −$passPenalty s'
++                                        : 'Passer',
++                                onGuessedFirst: guess(currentWord),
++                                onPassFirst: pass(currentWord),
++                                onGuessedSecond: provider.secondWord == null
++                                    ? null
++                                    : guess(provider.secondWord!),
++                                onPassSecond: provider.secondWord == null
++                                    ? null
++                                    : pass(provider.secondWord!),
++                              ),
++                            ),
++                          )
++                        else
++                          // Current word
++                          Flexible(
++                            child: Padding(
++                              padding:
++                                  const EdgeInsets.symmetric(horizontal: 16),
++                              child: AutoSizeText(
++                                // À l'envers : affichage du tour SEULEMENT, le
++                                // mot du jeu reste en clair.
++                                provider.isWordReversed
++                                    ? reversedWordDisplay(currentWord ?? '')
++                                    : currentWord ?? '',
++                                style: const TextStyle(
++                                  fontFamily: 'Bangers',
++                                  fontSize: 72,
++                                  color: Colors.white,
++                                  shadows: [
++                                    Shadow(
++                                      offset: Offset(2, 2),
++                                      color: AppColors.primaryPinkDark,
++                                      blurRadius: 0,
++                                    ),
++                                  ],
++                                ),
++                                textAlign: TextAlign.center,
++                                maxLines: 3,
++                                minFontSize: 36,
++                                wrapWords: false,
++                                overflow: TextOverflow.ellipsis,
+                               ),
+-                              textAlign: TextAlign.center,
+-                              maxLines: 3,
+-                              minFontSize: 36,
+-                              wrapWords: false,
+-                              overflow: TextOverflow.ellipsis,
+                             ),
+                           ),
+-                        ),
+ 
+                         const SizedBox(height: 16),
+ 
+@@ -411,101 +462,102 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+ 
+                   const SizedBox(height: 32),
+ 
+-                  // Action buttons (fixes en bas)
+-                  Row(
+-                    children: [
+-                      // Pass button
+-                      Expanded(
+-                        child: GestureDetector(
+-                          onTap: canPass && !isPaused
+-                              ? () {
+-                                  HapticFeedback.mediumImpact();
+-                                  AudioService.playWhoosh();
+-                                  provider.passWord();
+-                                }
+-                              : null,
+-                          child: Container(
+-                            padding: const EdgeInsets.symmetric(vertical: 20),
+-                            decoration: BoxDecoration(
+-                              color: canPass && !isPaused
+-                                  ? AppColors.error
+-                                  : AppColors.gray700,
+-                              borderRadius: BorderRadius.circular(20),
+-                            ),
+-                            child: Column(
+-                              children: [
+-                                Icon(
+-                                  Icons.skip_next,
+-                                  color: canPass && !isPaused
+-                                      ? Colors.white
+-                                      : AppColors.gray500,
+-                                  size: 32,
+-                                ),
+-                                const SizedBox(height: 4),
+-                                Text(
+-                                  provider.passBlocked
+-                                      ? 'Passer (bloqué)'
+-                                      : 'Passer',
+-                                  style: TextStyle(
+-                                    fontFamily: 'Poppins',
+-                                    fontSize: 14,
+-                                    fontWeight: FontWeight.w600,
++                  // Action buttons (fixes en bas). Deux mots : sur les cartes.
++                  if (!twoWords)
++                    Row(
++                      children: [
++                        // Pass button
++                        Expanded(
++                          child: GestureDetector(
++                            onTap: canPass && !isPaused
++                                ? () {
++                                    HapticFeedback.mediumImpact();
++                                    AudioService.playWhoosh();
++                                    provider.passWord();
++                                  }
++                                : null,
++                            child: Container(
++                              padding: const EdgeInsets.symmetric(vertical: 20),
++                              decoration: BoxDecoration(
++                                color: canPass && !isPaused
++                                    ? AppColors.error
++                                    : AppColors.gray700,
++                                borderRadius: BorderRadius.circular(20),
++                              ),
++                              child: Column(
++                                children: [
++                                  Icon(
++                                    Icons.skip_next,
+                                     color: canPass && !isPaused
+                                         ? Colors.white
+                                         : AppColors.gray500,
++                                    size: 32,
+                                   ),
+-                                ),
+-                                if (passPenalty > 0 || hasFreePass)
++                                  const SizedBox(height: 4),
+                                   Text(
+-                                    hasFreePass
+-                                        ? 'gratuit'
+-                                        : '-${passPenalty}s',
++                                    provider.passBlocked
++                                        ? 'Passer (bloqué)'
++                                        : 'Passer',
+                                     style: TextStyle(
+                                       fontFamily: 'Poppins',
+-                                      fontSize: 12,
++                                      fontSize: 14,
++                                      fontWeight: FontWeight.w600,
+                                       color: canPass && !isPaused
+-                                          ? Colors.white.withOpacity(0.7)
+-                                          : AppColors.gray600,
++                                          ? Colors.white
++                                          : AppColors.gray500,
+                                     ),
+                                   ),
+-                              ],
++                                  if (passPenalty > 0 || hasFreePass)
++                                    Text(
++                                      hasFreePass
++                                          ? 'gratuit'
++                                          : '-${passPenalty}s',
++                                      style: TextStyle(
++                                        fontFamily: 'Poppins',
++                                        fontSize: 12,
++                                        color: canPass && !isPaused
++                                            ? Colors.white.withOpacity(0.7)
++                                            : AppColors.gray600,
++                                      ),
++                                    ),
++                                ],
++                              ),
+                             ),
+                           ),
+                         ),
+-                      ),
+ 
+-                      const SizedBox(width: 16),
+-
+-                      // Guessed button
+-                      Expanded(
+-                        flex: 2,
+-                        child: GestureDetector(
+-                          onTap: isPaused
+-                              ? null
+-                              : () {
+-                                  HapticFeedback.lightImpact();
+-                                  AudioService.playDing();
+-                                  provider.markWordAsGuessed();
+-                                },
+-                          child: Container(
+-                            padding: const EdgeInsets.symmetric(vertical: 33),
+-                            decoration: BoxDecoration(
+-                              color: isPaused
+-                                  ? AppColors.gray700
+-                                  : AppColors.secondaryCyan,
+-                              borderRadius: BorderRadius.circular(20),
+-                            ),
+-                            child: Icon(
+-                              Icons.check,
+-                              color:
+-                                  isPaused ? AppColors.gray500 : Colors.white,
+-                              size: 48,
++                        const SizedBox(width: 16),
++
++                        // Guessed button
++                        Expanded(
++                          flex: 2,
++                          child: GestureDetector(
++                            onTap: isPaused
++                                ? null
++                                : () {
++                                    HapticFeedback.lightImpact();
++                                    AudioService.playDing();
++                                    provider.markWordAsGuessed();
++                                  },
++                            child: Container(
++                              padding: const EdgeInsets.symmetric(vertical: 33),
++                              decoration: BoxDecoration(
++                                color: isPaused
++                                    ? AppColors.gray700
++                                    : AppColors.secondaryCyan,
++                                borderRadius: BorderRadius.circular(20),
++                              ),
++                              child: Icon(
++                                Icons.check,
++                                color:
++                                    isPaused ? AppColors.gray500 : Colors.white,
++                                size: 48,
++                              ),
+                             ),
+                           ),
+                         ),
+-                      ),
+-                    ],
+-                  ),
++                      ],
++                    ),
+ 
+                   const SizedBox(height: 72),
+                 ],
+diff --git a/lib/screens/verification_screen.dart b/lib/screens/verification_screen.dart
+index 4c728a4..b3bb57e 100644
+--- a/lib/screens/verification_screen.dart
++++ b/lib/screens/verification_screen.dart
+@@ -50,10 +50,15 @@ class _VerificationScreenState extends State<VerificationScreen> {
+   Widget build(BuildContext context) {
+     final provider = context.watch<GameProvider>();
+     final guessedWords = provider.game.wordsGuessedThisTurn;
++    // Mots à l'écran quand le chrono est tombé : un, ou deux avec « Deux mots
++    // à la fois » (2-11). Chacun a sa carte, hors de la liste des passés.
++    final expiredWords = [
++      if (provider.game.expiredWord != null) provider.game.expiredWord!,
++      if (provider.secondExpiredWord != null) provider.secondExpiredWord!,
++    ];
+     final passedWords = provider.game.passedWordsThisTurn
+-        .where((w) => w != provider.game.expiredWord)
++        .where((w) => !expiredWords.contains(w))
+         .toList();
+-    final expiredWord = provider.game.expiredWord;
+     // Fiesta 2-9 : même multiplicateur que `validateWords` (maquette `verif`).
+     final doubled = provider.isDoublePointsOn;
+     final points = _validatedWords.length * (doubled ? 2 : 1);
+@@ -141,11 +146,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
+                         ],
+ 
+                         // Expired word section
+-                        if (expiredWord != null) ...[
++                        if (expiredWords.isNotEmpty) ...[
+                           Row(
+                             children: [
+-                              const Text(
+-                                'Mot en cours',
++                              Text(
++                                expiredWords.length > 1
++                                    ? 'Mots en cours'
++                                    : 'Mot en cours',
+                                 style: TextStyle(
+                                   fontFamily: 'Poppins',
+                                   fontSize: 16,
+@@ -175,11 +182,11 @@ class _VerificationScreenState extends State<VerificationScreen> {
+                             ],
+                           ),
+                           const SizedBox(height: 12),
+-                          _buildWordCard(
+-                            expiredWord,
+-                            isGuessed: false,
+-                            isExpired: true,
+-                          ),
++                          ...expiredWords.map((word) => _buildWordCard(
++                                word,
++                                isGuessed: false,
++                                isExpired: true,
++                              )),
+                           const SizedBox(height: 24),
+                         ],
+ 
+diff --git a/lib/services/CLAUDE.md b/lib/services/CLAUDE.md
+index a39894a..aa04c3e 100644
+--- a/lib/services/CLAUDE.md
++++ b/lib/services/CLAUDE.md
+@@ -7,7 +7,7 @@
+ | Service | Classe | Role |
+ |---------|--------|------|
+ | `storage_service.dart` | `StorageService` | Wrapper SharedPreferences : persistance settings, gameSession, gameState |
+-| `analytics_service.dart` | `AnalyticsService` | Tracking temps reel WordEvents, calcul stats, persistance locale. Retention 50 parties. Recovery des parties orphelines (crash). Fiesta : `modifiers` par event (contexte du tour), contrat « un seul mot à l'écran » documenté pour 2-11 (`docs/ANALYTICS.md`) |
++| `analytics_service.dart` | `AnalyticsService` | Tracking temps reel WordEvents, calcul stats, persistance locale. Retention 50 parties. Recovery des parties orphelines (crash). Fiesta : `modifiers` par event (contexte du tour), durée par mot (`_shownAt`, deux cartes en 2-11, `docs/ANALYTICS.md`) |
+ | `user_service.dart` | `UserService` | userId persistant (UUID v4) + DeviceInfo (appVersion, platform, locale, deviceModel) |
+ | `word_history_service.dart` | `WordHistoryService` | Historique mots joues (mot→seenCount). Priorise les mots jamais vus via `selectWordsByPriority()` |
+ | `word_loader_service.dart` | `WordLoaderService` | Charge categories depuis JSON (assets/translations/). Cache en memoire. Methodes : `loadCategory()`, `getCategoriesMetadata()` |
+diff --git a/lib/services/analytics_service.dart b/lib/services/analytics_service.dart
+index 2df11b0..b742d7d 100644
+--- a/lib/services/analytics_service.dart
++++ b/lib/services/analytics_service.dart
+@@ -30,11 +30,11 @@ class AnalyticsService {
+   // État du tracking
+   GameAnalytics? _currentGame;
+ 
+-  // Mot affiché : vit le temps d'UN mot, remis à zéro par
+-  // `_recordEventWithDuration`. 🔴 Contrat « un seul mot à l'écran » : voir
+-  // `_recordEventWithDuration`. Story 2-11 (deux mots) remplace CE bloc seul.
+-  int? _lastShownTimestamp;
+-  String? _lastShownWord;
++  // Mots à l'écran → horodatage de leur `shown`. Une entrée vit le temps de
++  // son mot : retirée par `_recordEventWithDuration`. Par mot et non « le
++  // dernier affiché » : avec « Deux mots à la fois » (2-11), deux mots sont à
++  // l'écran et chacun a sa propre durée. En Classique, un seul à la fois.
++  final Map<String, int> _shownAt = {};
+ 
+   // Contexte du tour : survit aux mots, relu par `onWordInvalidated` et
+   // `onWordValidatedAsGuessed` (vérification, après le tour). Ne dépend pas du
+@@ -149,8 +149,7 @@ class AnalyticsService {
+ 
+   /// Remet à zéro l'état du tracking
+   void _clearTrackingState() {
+-    _lastShownTimestamp = null;
+-    _lastShownWord = null;
++    _shownAt.clear();
+     _lastRound = null;
+     _lastTurn = null;
+     _lastTeamId = null;
+@@ -176,8 +175,7 @@ class AnalyticsService {
+     if (_currentGame == null) return;
+ 
+     // Mémoriser pour calculer la durée
+-    _lastShownTimestamp = DateTime.now().millisecondsSinceEpoch;
+-    _lastShownWord = word;
++    _shownAt[word] = DateTime.now().millisecondsSinceEpoch;
+     _lastRound = round;
+     _lastTurn = turn;
+     _lastTeamId = teamId;
+@@ -255,16 +253,14 @@ class AnalyticsService {
+     _currentGame = _currentGame!.addEvent(event);
+   }
+ 
+-  /// Enregistre un événement avec calcul de durée.
+-  ///
+-  /// 🔴 Contrat « un seul mot à l'écran » : un événement sur un mot qui n'est
+-  /// PAS le dernier affiché est abandonné en silence (pas de `shown`, donc pas
+-  /// de durée). Vrai tant qu'un seul mot est affiché ; la story 2-11 (deux
+-  /// mots) doit remplacer le bloc « mot affiché » par un suivi par mot. Le
+-  /// contexte du tour (dont `_lastModifiers`) n'a pas à bouger.
++  /// Enregistre un événement avec calcul de durée, depuis le `shown` de CE
++  /// mot. Un mot sans `shown` en cours (app tuée depuis, par exemple) est
++  /// abandonné : pas de durée inventée. Le contexte du tour (dont
++  /// `_lastModifiers`) est celui du dernier `shown`, commun aux deux cartes.
+   void _recordEventWithDuration(String word, WordEventType eventType) {
+     if (_currentGame == null) return;
+-    if (_lastShownTimestamp == null || word != _lastShownWord) return;
++    final shownAt = _shownAt.remove(word);
++    if (shownAt == null) return;
+ 
+     final event = WordEvent.withDuration(
+       word: word,
+@@ -274,16 +270,11 @@ class AnalyticsService {
+       teamId: _lastTeamId ?? '',
+       playerId: _lastPlayerId ?? '',
+       gameId: _currentGame!.gameId,
+-      shownTimestamp: _lastShownTimestamp!,
++      shownTimestamp: shownAt,
+       modifiers: _lastModifiers,
+     );
+ 
+     _currentGame = _currentGame!.addEvent(event);
+-
+-    // Reset du mot seulement : le contexte du tour sert encore à la
+-    // vérification (`onWordInvalidated`).
+-    _lastShownTimestamp = null;
+-    _lastShownWord = null;
+   }
+ 
+   // ========== PERSISTANCE ==========
+diff --git a/test/models/turn_resolution_test.dart b/test/models/turn_resolution_test.dart
+index 8cc0bff..d313b85 100644
+--- a/test/models/turn_resolution_test.dart
++++ b/test/models/turn_resolution_test.dart
+@@ -12,7 +12,7 @@ TurnResolution resolve({
+       validatedWords: validated,
+       guessedThisTurn: guessed,
+       passedThisTurn: passed,
+-      expiredWord: expired,
++      expiredWords: [if (expired != null) expired],
+       currentPool: pool,
+     );
+ 
+@@ -85,8 +85,8 @@ void main() {
+         pool: const ['tigre', 'lion'],
+       );
+ 
+-      expect(r.expiredValidated, isTrue);
+-      expect(r.expiredInvalidated, isFalse);
++      expect(r.expiredValidated, ['tigre']);
++      expect(r.expiredInvalidated, isEmpty);
+       expect(r.pointsScored, 1);
+       expect(r.remainingPool, ['lion']);
+       expect(r.allInvalidated, isEmpty);
+@@ -100,7 +100,7 @@ void main() {
+         pool: const ['tigre', 'lion'],
+       );
+ 
+-      expect(r.expiredInvalidated, isTrue);
++      expect(r.expiredInvalidated, ['tigre']);
+       expect(r.allInvalidated, contains('tigre'));
+       expect(r.remainingPool, contains('tigre'));
+     });
+@@ -108,8 +108,8 @@ void main() {
+     test('sans mot expiré, aucun des deux drapeaux n\'est levé', () {
+       final r = resolve(validated: const ['a'], guessed: const ['a']);
+ 
+-      expect(r.expiredValidated, isFalse);
+-      expect(r.expiredInvalidated, isFalse);
++      expect(r.expiredValidated, isEmpty);
++      expect(r.expiredInvalidated, isEmpty);
+       expect(r.allInvalidated, isEmpty);
+     });
+   });
+diff --git a/test/providers/fiesta_two_words_test.dart b/test/providers/fiesta_two_words_test.dart
+new file mode 100644
+index 0000000..f0e8c9c
+--- /dev/null
++++ b/test/providers/fiesta_two_words_test.dart
+@@ -0,0 +1,287 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
++import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
++import 'package:guess_it_all_mobile/models/word_event.dart';
++import 'package:guess_it_all_mobile/providers/game_provider.dart';
++import 'package:guess_it_all_mobile/services/analytics_service.dart';
++import 'package:guess_it_all_mobile/services/storage_service.dart';
++import 'package:guess_it_all_mobile/utils/constants.dart';
++
++import '../helpers/test_prefs.dart';
++
++/// 4 joueurs × 3 mots, 2 équipes, pénalité de passe 0 (les passes ne vident
++/// pas le chrono).
++Future<GameProvider> givenReadyProvider() async {
++  await givenPrefs();
++  givenFakePlatformPlugins();
++  final provider = GameProvider();
++  await pumpEventQueue();
++  for (final name in ['A', 'B', 'C', 'D']) {
++    final id = (provider.addPlayer(name)['player'] as dynamic).id as String;
++    provider.updatePlayerWords(id, ['$name-1', '$name-2', '$name-3']);
++  }
++  provider.createTeams();
++  provider.randomizeTeams();
++  provider.updateSettings(passPenalty: 0);
++  return provider;
++}
++
++/// Personnalisé, sans tirage : [ids] fixés sur la manche 1, 1 charge.
++FiestaRules fixedOnRound1(List<String> ids) => FiestaRules(
++      mode: FiestaMode.custom,
++      drawCount: 0,
++      modifiers: {
++        for (final id in ids)
++          id: ModifierSetting(
++            active: true,
++            arrival: ModifierArrival.fixed,
++            startRound: 1,
++            fixedRound: 1,
++            charges: 1,
++          ),
++      },
++    );
++
++Future<GameProvider> givenTwoWordsTurn({bool alsoDouble = false}) async {
++  final provider = await givenReadyProvider();
++  await provider.startGame(
++      fiesta: fixedOnRound1(['two_words', if (alsoDouble) 'double_points']));
++  provider.setTwoWords(true);
++  if (alsoDouble) provider.setDoublePoints(true);
++  provider.startTurn();
++  provider.startTurnTimer();
++  return provider;
++}
++
++/// Pool jamais corrompu : cartes distinctes et dans le pool, pas de doublon,
++/// aucun mot perdu ni trouvé encore à faire deviner.
++void expectPoolIntact(GameProvider p) {
++  final g = p.game;
++  final pool = g.remainingWords;
++  expect(pool.toSet().length, pool.length, reason: 'doublon dans le pool');
++  expect({
++    ...pool,
++    ...g.wordsGuessedThisTurn,
++    ...g.passedWordsThisTurn
++  }, g.allWords.toSet(), reason: 'mot perdu');
++  expect(pool.toSet().intersection(g.wordsGuessedThisTurn.toSet()), isEmpty);
++  if (g.currentWord != null) expect(pool, contains(g.currentWord));
++  if (p.secondWord != null) {
++    expect(pool, contains(p.secondWord));
++    expect(p.secondWord, isNot(g.currentWord));
++  }
++}
++
++void main() {
++  test(
++      'Deux cartes : seule la carte visée est remplacée, par un mot ≠ l\'autre ; '
++      'pool intact ; une seule carte au dernier mot, qui revient si on la passe ; '
++      'puis fin de manche avec temps reporté (AC2, AC3, AC8)', () async {
++    final p = await givenTwoWordsTurn();
++    expect(p.twoWordsLeft, 0);
++    expect(p.secondWord, isNotNull);
++    expectPoolIntact(p);
++
++    // Alterner carte A / carte B, passer et trouver : recyclage compris.
++    for (var i = 0; i < 8; i++) {
++      final a = p.game.currentWord!;
++      final b = p.secondWord!;
++      final onA = i.isEven;
++      final target = onA ? a : b;
++      if (i % 4 < 2) {
++        p.passWord(target);
++        expect(p.game.passedWordsThisTurn, contains(target));
++      } else {
++        p.markWordAsGuessed(target);
++        expect(p.game.wordsGuessedThisTurn, contains(target));
++        expect(p.game.remainingWords, isNot(contains(target)));
++      }
++      // L'autre carte ne bouge pas.
++      expect(onA ? p.secondWord : p.game.currentWord, onA ? b : a);
++      expectPoolIntact(p);
++    }
++
++    // Un tap périmé (mot plus à l'écran) ne fait rien.
++    final before = p.game.wordsGuessedThisTurn.length;
++    p.markWordAsGuessed(p.game.wordsGuessedThisTurn.first);
++    expect(p.game.wordsGuessedThisTurn.length, before);
++
++    // Trouver la carte A jusqu'à ce qu'il ne reste qu'une carte.
++    while (p.secondWord != null) {
++      final b = p.secondWord!;
++      p.markWordAsGuessed(p.game.currentWord!);
++      expectPoolIntact(p);
++      if (p.secondWord == null) expect(p.game.currentWord, b);
++    }
++    final last = p.game.currentWord!;
++    expect(p.game.remainingWords, [last]);
++    expect(p.effectiveRemainingWordsCount, 0);
++
++    // Passer le dernier mot : il revient.
++    p.passWord(last);
++    expect(p.game.currentWord, last);
++    expect(p.secondWord, isNull);
++
++    p.markWordAsGuessed(last);
++    expect(p.game.currentScreen, AppConstants.screenVerification);
++    expect(p.game.remainingWords, isEmpty);
++    expect(p.game.wordsGuessedThisTurn.toSet(), p.game.allWords.toSet());
++    expect(p.game.turnBonusTime, isNotNull);
++  });
++
++  test(
++      'Chrono à 0 avec deux cartes, ×2 : kill en plein tour = mêmes cartes ; '
++      'vérification séparée de A et B ; retour arrière restaure les deux '
++      '(AC4, AC5, AC6)', () async {
++    var p = await givenTwoWordsTurn(alsoDouble: true);
++    final teamId = p.getCurrentTeam()!.id;
++    final a = p.game.currentWord!;
++    final b = p.secondWord!;
++
++    // AC5 : app tuée en plein tour.
++    await pumpEventQueue();
++    p = GameProvider();
++    await pumpEventQueue();
++    expect(p.game.currentWord, a);
++    expect(p.secondWord, b);
++    expect(p.isTwoWordsOn, isTrue);
++
++    p.endTurn();
++    expect(p.game.expiredWord, a);
++    expect(p.secondExpiredWord, b);
++    expect(p.secondWord, isNull);
++
++    // AC4 : A validé, B refusé → 1 mot ×2, B retourne au pool.
++    p.savePreValidationState([a]);
++    p.validateWords([a]);
++    expect(p.teams.firstWhere((t) => t.id == teamId).score, 2);
++    expect(p.game.remainingWords, contains(b));
++    expect(p.game.remainingWords, isNot(contains(a)));
++    expect(p.secondExpiredWord, isNull);
++
++    // AC6 : retour arrière.
++    p.restorePreValidationState();
++    expect(p.game.expiredWord, a);
++    expect(p.secondExpiredWord, b);
++    expect(p.game.restoredValidatedWords, [a]);
++    expect(p.teams.firstWhere((t) => t.id == teamId).score, 0);
++
++    p.savePreValidationState([a, b]);
++    p.validateWords([a, b]);
++    expect(p.teams.firstWhere((t) => t.id == teamId).score, 4);
++    expect(p.game.remainingWords, isNot(contains(b)));
++  });
++
++  test(
++      'Fin de manche à la vérification avec deux cartes expirées, puis '
++      'continuation (même tour) : B dépouillée une seule fois, deux cartes '
++      'tirées sans redépenser de charge (AC8)', () async {
++    final p = await givenTwoWordsTurn();
++    final teamId = p.getCurrentTeam()!.id;
++    while (p.game.remainingWords.length > 2) {
++      p.markWordAsGuessed(p.game.currentWord!);
++    }
++    p.endTurn();
++    final validated = [
++      ...p.game.wordsGuessedThisTurn,
++      p.game.expiredWord!,
++      p.secondExpiredWord!,
++    ];
++    p.validateWords(validated);
++    expect(p.game.currentScreen, AppConstants.screenTransition);
++    expect(p.secondExpiredWord, isNull);
++
++    p.nextRound();
++    expect(p.getCurrentTeam()!.id, teamId);
++    p.startTurn();
++    p.startTurnTimer();
++    expect(p.isTwoWordsOn, isTrue);
++    expect(p.secondWord, isNotNull);
++    expectPoolIntact(p);
++    expect(p.game.fiesta!.chargesUsed.where((u) => u.catalogId == 'two_words'),
++        hasLength(1));
++  });
++
++  test(
++      'Q8 : avec déjà un modificateur de manche, un bonus allumé refuse '
++      'l\'autre, dans les deux ordres', () async {
++    final first = await givenReadyProvider();
++    await first.startGame(
++        fiesta: fixedOnRound1(['two_words', 'double_points']));
++    // Un 3ᵉ modificateur de manche (le tirage et les fixés plafonnent à 2) :
++    // posé dans l'état persisté, puis partie relue.
++    await pumpEventQueue();
++    final saved = (await StorageService().loadGameState())!;
++    (saved['game']['fiesta']['active'] as List).add(ModifierInstance(
++      catalogId: 'reversed',
++      scope: ModifierScope.round,
++      target: ModifierTarget.both,
++      charges: 0,
++      nature: ModifierNature.malus,
++      round: 1,
++    ).toJson());
++    await StorageService().saveGameState(saved);
++    final p = GameProvider();
++    await pumpEventQueue();
++    expect(p.turnModifiers.map((m) => m.catalogId), ['reversed']);
++
++    p.setDoublePoints(true);
++    p.setTwoWords(true);
++    expect(p.isDoublePointsArmed, isTrue);
++    expect(p.isTwoWordsArmed, isFalse);
++
++    p.setDoublePoints(false);
++    p.setTwoWords(true);
++    p.setDoublePoints(true);
++    expect(p.isTwoWordsArmed, isTrue);
++    expect(p.isDoublePointsArmed, isFalse);
++  });
++
++  test(
++      'Analytics : chaque carte a son shown puis son guessed / passed / '
++      'expired avec durée, tag two_words (AC7) ; Classique : un mot, pas de tag',
++      () async {
++    final p = await givenTwoWordsTurn();
++    final a = p.game.currentWord!;
++    final b = p.secondWord!;
++    p.markWordAsGuessed(a); // carte A alors que B est le dernier `shown`
++    final a2 = p.game.currentWord!;
++    p.passWord(b);
++    final b2 = p.secondWord!;
++    p.endTurn();
++
++    final events = AnalyticsService().currentGame!.events;
++    void expectPair(String word, WordEventType end) {
++      final mine = events.where((e) => e.word == word).toList();
++      expect(mine.map((e) => e.eventType), [WordEventType.shown, end],
++          reason: word);
++      expect(mine.last.durationMs, isNotNull, reason: word);
++      expect(mine.first.modifiers, contains('two_words'));
++    }
++
++    expectPair(a, WordEventType.guessed);
++    expectPair(b, WordEventType.passed);
++    expectPair(a2, WordEventType.expired);
++    expectPair(b2, WordEventType.expired);
++
++    // Classique : l'interrupteur ne fait rien, un mot à la fois, sans tag.
++    final c = await givenReadyProvider();
++    await c.startGame();
++    c.setTwoWords(true);
++    c.startTurn();
++    c.startTurnTimer();
++    expect(c.secondWord, isNull);
++    final w = c.game.currentWord!;
++    c.markWordAsGuessed();
++    final classic = AnalyticsService().currentGame!.events;
++    expect(classic.map((e) => (e.word, e.eventType)).take(3), [
++      (w, WordEventType.shown),
++      (w, WordEventType.guessed),
++      (c.game.currentWord!, WordEventType.shown),
++    ]);
++    expect(classic.every((e) => e.modifiers == null), isTrue);
++    expect(classic[1].durationMs, isNotNull);
++    expect(c.game.toJson().containsKey('fiesta'), isFalse);
++  });
++}
