@@ -662,3 +662,8 @@ ni bump de `kCurrentSchemaVersion`. Une archive sans `setup` se rejoue avec ce q
 Classique. Le nombre d'équipes et de joueurs suit toujours les joueurs recréés, et pas un réglage
 archivé qui pourrait les contredire. Des règles Fiesta illisibles invalident tout le snapshot,
 pour ne pas rejouer en Classique une partie qui était Fiesta.
+
+**Noms d'équipe.** `createTeams` tire maintenant des noms drôles et distincts dans
+`kFunnyTeamNames`, à la place de « Équipe N ». Il n'y a pas de bouton pour retirer d'autres noms :
+le renommage manuel suffit. Le nom est déjà une chaîne persistée, donc la forme ne change pas
+(règle 7). Les sessions existantes gardent « Équipe N ».

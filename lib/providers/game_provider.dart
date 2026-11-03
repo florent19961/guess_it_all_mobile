@@ -27,6 +27,7 @@ import '../services/storage_service.dart';
 import '../services/analytics_service.dart';
 import '../services/user_service.dart';
 import '../utils/constants.dart';
+import '../utils/team_names.dart';
 import '../utils/word_categories/utils.dart' show lookupWordsMetadata;
 
 class GameProvider extends ChangeNotifier {
@@ -297,9 +298,10 @@ class GameProvider extends ChangeNotifier {
   // ========== ACTIONS - TEAMS ==========
 
   void createTeams() {
+    final names = drawTeamNames(_settings.numberOfTeams);
     _teams = List.generate(
       _settings.numberOfTeams,
-      (i) => Team.create(i),
+      (i) => Team.create(i).copyWith(name: names[i]),
     );
     notifyListeners();
     _saveGameSession();
