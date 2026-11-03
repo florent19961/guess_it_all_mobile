@@ -6,7 +6,7 @@
 # présent mais commenté — à activer à la 1re release.
 #
 # Noms à créer côté Codemagic (placeholders, cf. runbook) :
-#   - keystore Android (Code signing identities) : gia_android_signing
+#   - keystore Android (Code signing identities) : gia-android-signing
 #   - intégration App Store Connect (clé API)     : "Guess It All (flow data)"
 #   - groupe de variables                          : gia-firebase  (GOOGLE_SERVICES_JSON : JSON brut ou base64)
 #   - groupe de variables (publication, plus tard) : gia-google-play (GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS)
@@ -17,7 +17,7 @@ definitions:
     xcode: latest # à vérifier au 1er dry-run (compat Xcode ↔ Flutter 3.44)
     cocoapods: default
     android_signing:
-      - gia_android_signing
+      - gia-android-signing
     ios_signing:
       distribution_type: app_store
       bundle_identifier: com.guessitall.guessItAllMobile
