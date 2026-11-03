@@ -58,13 +58,14 @@ if (await FirstGameHelp.claim(FirstGameHelp.preTurn, player.id) && mounted) {
 `FirstGameHelp.reset()`. Rien d'autre ne s'affiche tout seul : pas de voile au premier
 affichage d'un écran.
 
-**Tuto Fiesta** : au premier choix de Fiesta (`game_mode_screen`) —
+**Tuto Fiesta (3 cartes), automatique à la première partie Fiesta** — à brancher dans
+`game_mode_screen`, au choix de Fiesta, avant de naviguer :
 `if (!await StorageService().hasSeenFiestaTutorial()) await FiestaTutorialScreen.show(context);`
-avant de naviguer. `show` marque le flag.
+(`show` marque le flag).
 
-**Aides Fiesta automatiques** (avant-tour et fin de manche, « comme dans la maquette ») : même
-mécanique que ci-dessus si on les veut automatiques à la première partie Fiesta ; sinon le « ? »
-suffit. À trancher par la lane qui branche.
+**Aides Fiesta avant-tour et fin de manche : derrière le « ? » seulement**, jamais
+automatiques (décision Florent : plus aucune surimpression automatique hors premier tour de
+chaque joueur).
 
 ## Flags (`StorageService`)
 
@@ -74,4 +75,6 @@ suffit. À trancher par la lane qui branche.
 | `guessItAll_fiestaTutorialSeen` | `hasSeenFiestaTutorial` / `markFiestaTutorialSeen` | tuto Fiesta déjà vu |
 | `guessItAll_firstGameDone` | `isFirstGameDone` / `markFirstGameDone` / `resetFirstGameDone` | première partie terminée |
 
-Booléens autonomes, absents = `false` : clés neuves, aucune migration (règle 7).
+Booléens autonomes, absents = `false` : clés neuves, aucune migration (règle 7). Exception :
+`tutorialSeen` et `firstGameDone` absents **et** historique `guessItAll_game_results` non vide
+= joueur déjà venu → lus `true` et écrits une fois. Un `false` écrit (« Revoir les aides ») prime.

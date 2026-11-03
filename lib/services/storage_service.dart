@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/constants.dart';
+import 'game_history_service.dart';
 import 'persisted_schema.dart';
 
 /// Accès à la persistance locale (`SharedPreferences`).
@@ -126,9 +127,11 @@ class StorageService {
   }
 
   // Aides de prise en main : booléens autonomes, absents = false (clés neuves,
-  // rien à migrer).
+  // rien à migrer). Exception : tuto et première partie, absents chez un joueur
+  // qui a déjà un historique de parties = déjà vus (voir [_readFlagOrInfer]).
 
-  Future<bool> hasSeenTutorial() => _readFlag(AppConstants.tutorialSeenKey);
+  Future<bool> hasSeenTutorial() =>
+      _readFlagOrInfer(AppConstants.tutorialSeenKey);
   Future<void> markTutorialSeen() =>
       _writeFlag(AppConstants.tutorialSeenKey, true);
 
@@ -139,13 +142,30 @@ class StorageService {
 
   /// Vrai après la première partie terminée sur ce téléphone. Tant qu'il est
   /// faux, chaque joueur voit les aides à son premier tour.
-  Future<bool> isFirstGameDone() => _readFlag(AppConstants.firstGameDoneKey);
+  Future<bool> isFirstGameDone() =>
+      _readFlagOrInfer(AppConstants.firstGameDoneKey);
   Future<void> markFirstGameDone() =>
       _writeFlag(AppConstants.firstGameDoneKey, true);
 
   /// « Revoir les aides » (écran Règles).
   Future<void> resetFirstGameDone() =>
       _writeFlag(AppConstants.firstGameDoneKey, false);
+
+  /// Clé absente + historique de parties non vide = joueur déjà venu : on
+  /// rend vrai et on l'écrit une fois. Une valeur écrite (même `false`, posé
+  /// par « Revoir les aides ») prime toujours.
+  Future<bool> _readFlagOrInfer(String key) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final stored = prefs.getBool(key);
+      if (stored != null) return stored;
+      if ((await GameHistoryService().load()).isEmpty) return false;
+      await prefs.setBool(key, true);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
 
   Future<bool> _readFlag(String key) async {
     try {
