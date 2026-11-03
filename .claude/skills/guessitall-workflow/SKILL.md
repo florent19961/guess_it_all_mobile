@@ -1,6 +1,6 @@
 ---
 name: guessitall-workflow
-description: Use when taking a Guess It All user story (or a batch already planned into lanes) from spec through implementation to review and merge; when running a challenge/review gate on a spec or on an implementation diff; when executing work in an isolated git worktree; when deciding how much process a change warrants; or when cutting a store release. To PLAN a set of existing backlog stories into parallel/sequential lanes first (interest per US + prompt-pack) → guessitall-epic-intake. To CREATE a brand-new epic's stories → bmad-create-epics-and-stories. Keywords US, story, gate, challenge loop, Codex review, worktree, pipeline, dev-story, create-story, sprint, retro, release, tag, store.
+description: Use when taking a Guess It All user story (or a batch already planned into lanes) from spec through implementation to review and merge; when running a challenge/review gate on a spec or on an implementation diff; when executing work in an isolated git worktree; when deciding how much process a change warrants; or when cutting a store release. Framing, planning a batch of existing stories into lanes (interest per US + prompt-pack), running several lanes, delegated mode and the end-of-epic gate ③ → guessitall-orchestration. To CREATE a brand-new epic's stories → bmad-create-epics-and-stories. Keywords US, story, gate, challenge loop, adversarial reviewer, minimal tests, worktree, pipeline, dev-story, create-story, sprint, retro, release, tag, store.
 ---
 
 # Guess It All — pipeline projet (par-dessus BMad)
@@ -42,7 +42,8 @@ empiler des correctifs. Convergence saine = profil des findings qui décroît pa
 
 **Cadrage AVANT d'écrire quoi que ce soit :** design réellement ouvert → `superpowers:brainstorming`
 (divergent) ; puis **grilling SYSTÉMATIQUE avant tout epic (ou US isolée)** — interview
-convergente, une question à la fois, jusqu'à résolution de chaque branche de l'arbre de décision.
+convergente, toutes les questions en un message numéroté (une ligne + une recommandation
+chacune), jusqu'à résolution de chaque branche de l'arbre de décision.
 C'est le pare-feu contre les epics sous-spécifiés — et la raison pour laquelle le gate ① est sauté
 (cf. §Par story 3).
 
@@ -56,15 +57,16 @@ persisté, impact analytics) → `bmad-create-epics-and-stories` (découpe). `bm
 que le scope bouge en cours de sprint.
 
 ⚠️ **Ne PAS confondre** avec planifier l'exécution d'US **déjà existantes** (backlog) → ça, c'est
-`guessitall-epic-intake`.
+`guessitall-orchestration` §2.
 
 ## La boucle de challenge (gate ②) — forme ALLÉGÉE
 
-Composition actée pour ce projet (2026-08-01) : **1 reviewer adversarial + Codex cross-LLM**, sans
-thermo-nuclear ni adjudication multi-agents. C'est la version dosée au profil de risque de
-guess-it-all ; on ne la re-négocie pas story par story.
+Composition actée pour ce projet (Florent, 2026-11-03) : **UN reviewer adversarial spec-aveugle**,
+rien d'autre — **pas de Codex, pas de second reviewer Opus en substitut** : les changements sont
+simples. On ne la re-négocie pas story par story. La session principale le lance
+(`guessitall-orchestration` §3), ou la lane elle-même quand elle travaille seule.
 
-1. **(a) Adversarial spec-AVEUGLE** — 1 agent `general-purpose` + rubrique inline (⚠️ **jamais** en
+1. **Adversarial spec-AVEUGLE** — 1 agent `general-purpose` + rubrique inline (⚠️ **jamais** en
    `subagent_type` : les `bmad-*` sont des skills, pas des types d'agent). Correctness sur TOUS les
    chemins de mutation d'état + bornes/edge-cases + **mutation testing OBLIGATOIRE** (muter le
    code, vérifier qu'un test tombe). Il ne reçoit **PAS** la spec/ACs — son aveuglement est sa
@@ -78,20 +80,16 @@ guess-it-all ; on ne la re-négocie pas story par story.
      prouver un chemin d'erreur**. Règle mécanique : un test « aucun X » doit **dériver** le
      prédicat, jamais lister les variantes ; et toujours le pendant — le cas d'erreur ET le cas
      nominal, sinon on ne distingue pas « discriminé » de « garde neutralisée ».
-2. **(b) Codex cross-LLM** — `/codex:review [--base main]` (read-only). Famille de modèle ≠ de
-   celle qui a produit le code. **Toujours** sur les tiers 1/3/4/6 (états, persistance, sync,
-   cycle de vie) : la classe concurrence / reprise / bornes calculées est imprenable en
-   same-family. Codex exec en fond : `stdin` fermé (`< /dev/null`) + prompt **dans un fichier**
-   (un heredoc inline en background donne un rapport vide).
-3. **Consolidation** — le même agent (ou toi) dédoublonne l'union des findings (a)+(b) et
-   **re-trace la donnée** de chaque finding : réel / faux-positif / résidu assumé. Un reviewer ne
-   *vote* pas — sa sévérité est un claim à tracer. **Un rejet s'ÉCRIT** (sinon un finding
-   disparaît en silence).
-4. **Corriger** les blockers retenus → **re-run 1→3** sur l'artefact révisé. **Répéter jusqu'à
-   `ready`.**
+   - **Valeur des tests** : un test redondant, cosmétique ou d'échafaudage est un finding (règle
+     des tests minimaux, §Par story 4).
+2. **Tri** — l'implémenteur **re-trace la donnée** de chaque finding : réel / faux-positif /
+   résidu assumé. Une sévérité est un claim à tracer, pas un vote. **Un rejet s'ÉCRIT** (sinon un
+   finding disparaît en silence).
+3. **Corriger** les blockers retenus → **re-run 1→2** sur l'artefact révisé. **Répéter jusqu'à
+   `ready`.** Même mécanisme au 3ᵉ round = non-convergence → l'orchestrateur arbitre
+   (`guessitall-orchestration` §5).
 
-⚠️ **Escalade** (la seule autorisée hors forme allégée) : si (a) et (b) rendent des verdicts
-**opposés** sur le même finding, ou si une sévérité bloquante est contestée sur une prémisse →
+⚠️ **Escalade** (la seule autorisée) : une sévérité bloquante contestée sur une prémisse →
 1 agent adversarial de plus, en re-trace **ciblé sur ce seul finding**. Pas de `bmad-party-mode`
 pour de la consolidation de routine (réservé aux carrefours design).
 
@@ -118,8 +116,12 @@ pour de la consolidation de routine (réservé aux carrefours design).
    - ⚠️ **Ce que ça déplace** : les problèmes de spec surgissent en rework d'implémentation au lieu
      d'être attrapés à froid. Acceptable **parce que le gate ② tourne, lui, en entier**. Si tu te
      surprends à sauter AUSSI le gate ②, ce n'est plus du dosage.
-4. `bmad-dev-story` (**TDD strict**). Sur le tier risqué : `bmad-testarch-test-design` / `-atdd`
-   (tests d'acceptation dérivés des AC AVANT le code) → couverture des AC *prouvable*.
+4. `bmad-dev-story`, avec **le moins de tests possible** (décision Florent 2026-11-03) : un test
+   seulement s'il épingle un invariant du tier risqué (états, scoring, schéma persisté/migration,
+   sync, analytics, timer/cycle de vie) ou s'il reproduit un bug corrigé — test écrit avant le
+   code dans ces deux cas. Pas de test exhaustif ou cosmétique, pas de widget test pour de l'UI
+   simple. En dev, tests ciblés via `scripts/with-test-slot.sh` ; suite complète une fois avant la
+   PR. La PR dit combien de tests sont ajoutés/retirés et pourquoi.
 5. **Gate ② — challenger l'implémentation** (boucle ci-dessus) jusqu'à `ready`. **Re-lancer aussi
    sur le diff de PR**, pas seulement sur la branche.
 6. **`teach-back` AVANT le closeout** (skip auto si trivial, skip sur demande) : Florent doit
@@ -206,17 +208,14 @@ projet e-commerce.
 
 - **`sprint-status.yaml`** (`_bmad-output/implementation-artifacts/`) maintenu = colonne
   vertébrale US→epic→gate ; `bmad-sprint-status` surface les risques.
-- **Gate ③ — revue HOLISTIQUE cross-story**, à réserver aux **epics sérialisés sur un socle
-  partagé** (typiquement : un epic qui touche la machine à états ou le schéma persisté sur
-  plusieurs stories). Le gate ② est par-story : il ne voit pas qu'une garantie posée par la story A
-  est défaite par un chemin ajouté par la story B. Faire tourner la boucle de challenge sur
-  l'**epic ENTIER comme artefact** (diff cumulé + invariants transverses). Skip pour un epic dont
-  les stories sont indépendantes.
+- **Gate ③ — revue cross-story** : conditions et forme dans `guessitall-orchestration` §7 (un
+  reviewer sur le diff cumulé, seulement si ≥ 2 stories sérialisées sur un point de collision ou
+  le tier risqué).
 - **`/simplify`** — phase de POLISH appliquée **APRÈS le dernier gate qui s'applique**, sur du code
   déjà correct (pas une cible mouvante). Dosage : M+/structurel, **skip sur diff trivial**.
   - ⚠️ `/simplify` **modifie le code** et est **quality-only (ne chasse PAS les bugs)** → son diff
-    est une affirmation NON PROUVÉE. Le faire suivre de : **(1)** une vérif adversariale cross-LLM
-    (Codex) sur le diff `/simplify` SEUL — *behavior-preserving ? une garde retirée « au nom de la
+    est une affirmation NON PROUVÉE. Le faire suivre de : **(1)** une vérif par le reviewer
+    adversarial du gate ② sur le diff `/simplify` SEUL — *behavior-preserving ? une garde retirée « au nom de la
     simplicité » ?* — **sauf** si le delta ne touche que des commentaires/docs (0 ligne exécutée) ;
     **(2)** re-run `scripts/run-full-suite.sh` (toujours dû).
   - 🔴 **Un finding `/simplify` peut avoir un raisonnement JUSTE et une conclusion FAUSSE** :
@@ -237,8 +236,8 @@ projet e-commerce.
 
 ## Parallélisme (plusieurs blocs en vol)
 
-**Décider QUELLES US paralléliser (graphe de conflits → lanes) = `guessitall-epic-intake`, pas
-ici.** Cette section ne porte que l'*exécution* d'une lane décidée. Chaque session dans son
+**Décider QUELLES US paralléliser (graphe de conflits → lanes) = `guessitall-orchestration` §2,
+pas ici.** Cette section ne porte que l'*exécution* d'une lane décidée. Chaque session dans son
 worktree dédié (§Par story 1) ; **choix de modèle par lane** : Fable pour les lanes
 complexes/risquées (machine à états, persistance, sync), Opus pour le standard. Un seul track à la
 fois sur `game_provider.dart` et sur le schéma `SharedPreferences` — ce sont les deux points de

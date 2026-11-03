@@ -6,7 +6,7 @@ description: Gate de compréhension utilisateur AVANT tout closeout de PR Guess 
 # teach-back — le propriétaire comprend ce qu'il merge
 
 **But** : transférer la propriété mentale du changement, pas évaluer. Le code est
-vérifié par le gate ② (adversarial + Codex) ; CE gate vérifie l'humain. Sortie réussie =
+vérifié par le gate ② (reviewer adversarial) ; CE gate vérifie l'humain. Sortie réussie =
 Florent peut reformuler le changement en 2-3 phrases ET répondre aux
 questions-scénario clés. C'est aussi le dernier détecteur de désalignement
 produit : une réponse « hein ? non, je pensais que ça faisait X » n'est pas un

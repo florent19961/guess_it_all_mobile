@@ -61,7 +61,7 @@ sur go un prompt-pack. **Aucun code ici.**
      **la règle des tests minimaux** (ci-dessus), « suis `guessitall-workflow` » ;
    - **un mini-prompt** auto-suffisant à froid : chemin absolu du fichier, « lis-le et suis-le »,
      identité de lane (worktree `/home/florent19961/guess-it-all-<slug>`, branche `feat/<slug>`
-     depuis `origin/main`, `flutter pub get`), modèle (Sonnet si trivial, Opus sinon),
+     depuis `origin/main`, `flutter pub get`), modèle (`guessitall-workflow` §Parallélisme),
      « lis tout sur `origin/main` », « committer souvent, ne pas pusher sans consigne ».
 
 ## 3. Faire tourner les lanes
