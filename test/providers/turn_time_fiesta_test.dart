@@ -119,8 +119,8 @@ void main() {
 
     provider.nextRound();
     expect(provider.game.fiesta!.catchUpDue, {leader: -2, trailing: 6});
-    expect(provider.currentTeamModifiers.map((m) => m.catalogId),
-        ['minus_10s']);
+    expect(
+        provider.currentTeamModifiers.map((m) => m.catalogId), ['minus_10s']);
 
     // Continuation du leader : 25 s reportées, ni malus du leader ni −10 s,
     // et son dû n'est pas consommé.
@@ -157,7 +157,8 @@ void main() {
     reloaded.endTurn();
     reloaded.savePreValidationState(const []);
     reloaded.validateWords(const []);
-    expect(reloaded.game.history.last.timeSpent, 26 - reloaded.game.timeRemaining);
+    expect(
+        reloaded.game.history.last.timeSpent, 26 - reloaded.game.timeRemaining);
 
     // Leader, premier tour non-continuation : 30 − 2 − 10.
     expect(reloaded.getCurrentTeam()!.id, leader);

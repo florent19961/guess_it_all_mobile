@@ -18,8 +18,7 @@ void main() {
       expect((leader.gap, leader.perPoint), (6, 1));
 
       // AC2 : 30 + 18 = 48 s pour la menée, 30 − 6 = 24 s pour le leader.
-      expect(composeTurnSeconds(baseSeconds: 30, catchUpSeconds: 18).total,
-          48);
+      expect(composeTurnSeconds(baseSeconds: 30, catchUpSeconds: 18).total, 48);
       expect(
           composeTurnSeconds(baseSeconds: 30, leaderMalusSeconds: 6).total, 24);
     });
@@ -42,7 +41,8 @@ void main() {
       expect(due(capped), {'rose': -15, 'bleue': 30});
     });
 
-    test('égalité générale : rien ; co-leaders : tous en tête, malus sur la '
+    test(
+        'égalité générale : rien ; co-leaders : tous en tête, malus sur la '
         'meilleure non-leader', () {
       expect(
           computeCatchUp(
@@ -63,8 +63,7 @@ void main() {
     test('Personnalisé tout à 0 = éteint ; Auto sans auto-calibrage = éteint',
         () {
       const off = CatchUpRules(b1: 0, b2: 0, cap: 0, mal: 0, malCap: 0);
-      expect(
-          computeCatchUp(rules: off, round: 1, scores: {'a': 9, 'b': 1}),
+      expect(computeCatchUp(rules: off, round: 1, scores: {'a': 9, 'b': 1}),
           isEmpty);
       expect(
           effectiveCatchUp(
@@ -87,7 +86,8 @@ void main() {
       expect(time.lines.map((l) => l.seconds), [20, -15, -10]);
     });
 
-    test('une continuation garde exactement ses secondes, sans modificateur '
+    test(
+        'une continuation garde exactement ses secondes, sans modificateur '
         '(Q5)', () {
       final time = composeTurnSeconds(
         baseSeconds: 30,
