@@ -1159,6 +1159,8 @@ class GameProvider extends ChangeNotifier {
     await _analytics.endGame();
 
     await _storage.clearGameState();
+    // Garde la config Fiesta en mémoire pour le « Rejouer » de l'accueil.
+    _pendingFiesta = _game.fiesta?.rules;
     _game = GameState.initial();
     notifyListeners();
   }
@@ -1183,7 +1185,9 @@ class GameProvider extends ChangeNotifier {
   // (ou au Récap Fiesta, avec la config gelée de la partie finie : Q12).
   Future<void> restartWithSamePlayers() async {
     // 🔴 Lire AVANT `GameState.initial()` ci-dessous, qui efface `fiesta`.
-    _pendingFiesta = _game.fiesta?.rules;
+    // Sans partie jouée (Rejouer de l'accueil, après `endGameAndGoHome`), la
+    // config déjà en mémoire fait foi.
+    if (_game.allWords.isNotEmpty) _pendingFiesta = _game.fiesta?.rules;
 
     // Terminer et sauvegarder les analytics si une partie était en cours
     if (_analytics.isTracking) {

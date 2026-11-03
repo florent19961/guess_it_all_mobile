@@ -12,12 +12,19 @@ Future<GameProvider> givenReadyProvider() async {
   final provider = GameProvider();
   await pumpEventQueue();
   for (final name in ['Ana', 'Bob']) {
-    final id = (provider.addPlayer(name)['player'] as dynamic).id as String;
-    provider.updatePlayerWords(id, ['mot-$name']);
+    provider.addPlayer(name);
   }
+  givenWords(provider);
   provider.createTeams();
   provider.randomizeTeams();
   return provider;
+}
+
+/// « Rejouer » efface les mots : on les ressaisit avant chaque lancement.
+void givenWords(GameProvider provider) {
+  for (final player in provider.players) {
+    provider.updatePlayerWords(player.id, ['mot-${player.name}']);
+  }
 }
 
 void main() {
@@ -36,8 +43,18 @@ void main() {
     expect(provider.pendingFiesta!.mode, FiestaMode.auto);
     expect(provider.pendingFiesta!.symmetric, isFalse);
 
+    // Même chose via l'accueil : fin de partie, puis « Rejouer » de l'accueil.
+    givenWords(provider);
+    await provider.startGame(fiesta: provider.pendingFiesta);
+    await provider.endGameAndGoHome();
+    await provider.restartWithSamePlayers();
+
+    expect(provider.game.currentScreen, AppConstants.screenFiestaRecap);
+    expect(provider.pendingFiesta!.symmetric, isFalse);
+
     // Partie Classique lancée alors qu'une config traîne en attente : Rejouer
     // suit la partie jouée, pas l'attente.
+    givenWords(provider);
     await provider.startGame();
 
     await provider.restartWithSamePlayers();
