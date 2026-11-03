@@ -124,4 +124,107 @@ class StorageService {
       debugPrint('[Storage] Échec du marquage des paramètres avancés: $e');
     }
   }
+
+  // Aides de prise en main : booléens autonomes, absents = false (clés neuves,
+  // rien à migrer). Posés une fois au démarrage par [initHelpFlags].
+
+  Future<bool> hasSeenTutorial() => _readFlag(AppConstants.tutorialSeenKey);
+  Future<void> markTutorialSeen() =>
+      _writeFlag(AppConstants.tutorialSeenKey, true);
+
+  Future<bool> hasSeenFiestaTutorial() =>
+      _readFlag(AppConstants.fiestaTutorialSeenKey);
+  Future<void> markFiestaTutorialSeen() =>
+      _writeFlag(AppConstants.fiestaTutorialSeenKey, true);
+
+  /// Vrai après la première partie terminée sur ce téléphone. Tant qu'il est
+  /// faux, chaque joueur voit les aides à son premier tour.
+  Future<bool> isFirstGameDone() => _readFlag(AppConstants.firstGameDoneKey);
+  Future<void> markFirstGameDone() =>
+      _writeFlag(AppConstants.firstGameDoneKey, true);
+
+  /// « Revoir les aides » (écran Règles) : la prochaine partie redevient la
+  /// première, aides déjà montrées oubliées.
+  Future<void> resetFirstGameDone() async {
+    await _writeFlag(AppConstants.firstGameDoneKey, false);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(AppConstants.firstGameIdKey);
+      await prefs.remove(AppConstants.firstGameHelpShownKey);
+    } catch (e) {
+      debugPrint('[Storage] Échec de remise à zéro des aides: $e');
+    }
+  }
+
+  /// gameId de la première partie (absent = pas encore commencée).
+  Future<String?> loadFirstGameId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(AppConstants.firstGameIdKey);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<void> saveFirstGameId(String gameId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(AppConstants.firstGameIdKey, gameId);
+    } catch (e) {
+      debugPrint('[Storage] Échec d\'écriture de la première partie: $e');
+    }
+  }
+
+  /// Ajoute [entry] aux aides déjà montrées (absent = vide). Vrai si elle
+  /// n'y était pas.
+  Future<bool> addFirstGameHelpShown(String entry) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final shown =
+          prefs.getStringList(AppConstants.firstGameHelpShownKey) ?? const [];
+      if (shown.contains(entry)) return false;
+      await prefs
+          .setStringList(AppConstants.firstGameHelpShownKey, [...shown, entry]);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Au démarrage, une seule fois dans la vie de l'app : chaque flag tuto /
+  /// première partie ABSENT est écrit à [playedBefore]. Ensuite il est présent
+  /// et plus jamais recalculé : une première partie abandonnée (qui écrit
+  /// aussi l'historique des mots) ne peut pas faire basculer une install neuve.
+  /// Un `false` écrit (« Revoir les aides ») prime donc toujours.
+  Future<void> initHelpFlags({required bool playedBefore}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      for (final key in const [
+        AppConstants.tutorialSeenKey,
+        AppConstants.firstGameDoneKey,
+      ]) {
+        if (!prefs.containsKey(key)) await prefs.setBool(key, playedBefore);
+      }
+    } catch (e) {
+      debugPrint('[Storage] Initialisation des flags d\'aide impossible: $e');
+    }
+  }
+
+  Future<bool> _readFlag(String key) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(key) ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<void> _writeFlag(String key, bool value) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(key, value);
+    } catch (e) {
+      debugPrint('[Storage] Échec d\'écriture du flag $key: $e');
+    }
+  }
 }

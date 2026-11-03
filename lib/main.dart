@@ -11,6 +11,7 @@ import 'services/connectivity_service.dart';
 import 'services/firebase_sync_service.dart';
 import 'app.dart';
 import 'app_bootstrap.dart';
+import 'widgets/help/first_game_help.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +36,7 @@ void main() async {
     localTasks: [
       () => WordLoaderService().initialize(locale: 'fr'),
       () => WordHistoryService().initialize(),
+      () => FirstGameHelp.initAtStartup(),
       () async {
         await AnalyticsService().finalizeOrphanedGames();
       },

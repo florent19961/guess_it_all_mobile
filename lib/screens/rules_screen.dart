@@ -4,7 +4,12 @@ import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
 import '../utils/constants.dart';
 import '../widgets/common/app_back_button.dart';
+import '../widgets/common/app_button.dart';
+import '../widgets/common/app_modal.dart';
 import '../widgets/effects/shooting_stars.dart';
+import '../widgets/help/first_game_help.dart';
+import 'fiesta_tutorial_screen.dart';
+import 'rules_tutorial_screen.dart';
 
 class RulesScreen extends StatelessWidget {
   const RulesScreen({super.key});
@@ -28,6 +33,27 @@ class RulesScreen extends StatelessWidget {
                       'Règles du jeu',
                       style: AppTextStyles.subtitle(fontSize: 40),
                     ),
+                  ),
+                  const SizedBox(height: 24),
+                  AppButton(
+                    text: 'Revoir le tuto',
+                    variant: AppButtonVariant.secondary,
+                    fullWidth: true,
+                    onPressed: () => RulesTutorialScreen.show(context),
+                  ),
+                  const SizedBox(height: 12),
+                  AppButton(
+                    text: 'Revoir le tuto Fiesta',
+                    variant: AppButtonVariant.secondary,
+                    fullWidth: true,
+                    onPressed: () => FiestaTutorialScreen.show(context),
+                  ),
+                  const SizedBox(height: 12),
+                  AppButton(
+                    text: 'Revoir les aides',
+                    variant: AppButtonVariant.ghost,
+                    fullWidth: true,
+                    onPressed: () => _resetHelps(context),
                   ),
                   const SizedBox(height: 32),
                   _buildRuleSection(
@@ -143,6 +169,24 @@ class RulesScreen extends StatelessWidget {
             onPressed: () => provider.goToScreen(AppConstants.screenHome),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Rejoue les aides automatiques de la première partie : chaque joueur les
+  /// reverra à son premier tour de la prochaine partie.
+  Future<void> _resetHelps(BuildContext context) async {
+    await FirstGameHelp.reset();
+    if (!context.mounted) return;
+    AppModal.show<void>(
+      context,
+      title: 'Aides réactivées',
+      child: const Text(
+        'Pendant la prochaine partie, chaque joueur reverra les aides à son '
+        'premier tour. Le bouton « ? » de chaque écran reste disponible à '
+        'tout moment.',
+        style: TextStyle(fontFamily: 'Poppins', color: Colors.white),
+        textAlign: TextAlign.center,
       ),
     );
   }
