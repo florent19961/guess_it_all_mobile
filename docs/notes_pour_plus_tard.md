@@ -175,18 +175,3 @@ pour les parties en cours (règle 7).
 
 **Esquisse.** Soit stocker l'aperçu dans `FiestaState` en fin de manche (champ optionnel,
 absent = recalcul), soit versionner l'algorithme dans `FiestaState` et garder l'ancien.
-
----
-
-## 2026-11-03 — Double tap sur « Manche suivante » : la manche N+1 est sautée
-
-**Contexte.** Revue 2-5 r1, hors périmètre (déjà présent avant Fiesta). `nextRound()` n'a pas de
-garde : deux taps rapides font M1 → M3. Avec Fiesta, le tirage de M2 est sauté aussi.
-
-**Décision reportée.** Pas de correction dans 2-5.
-
-**Raison.** Bug préexistant, hors du périmètre de la story ; rien de remonté par les joueurs.
-
-**Signal déclencheur.** Un retour joueur, ou une story qui touche la transition (2-6, 2-10).
-
-**Esquisse.** Dans `nextRound`, ne rien faire si `currentScreen != screenTransition`.

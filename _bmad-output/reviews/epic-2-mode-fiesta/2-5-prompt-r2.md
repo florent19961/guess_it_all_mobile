@@ -17,8 +17,11 @@ Même reviewer, même posture que r1. Lis `2-5-patch-r2.diff` (même dossier ; t
    2-10 » est-elle tenable, et l'entrée de `notes_pour_plus_tard.md` suffit-elle à 2-8 / 2-10 ?
 4. **MINOR-5/6** : `Expanded` + `Align(bottomCenter)` sur le jeu Fiesta, `MalusReveal`
    défilant : débordement possible sur petit écran ? Classique toujours identique ?
-5. Régression : rien d'autre n'a bougé (diff r1 → r2 limité à `game_screen`, `malus_reveal`,
-   `symmetric_draw`, deux tests, `notes_pour_plus_tard`).
+5. **Bug préexistant corrigé en passant** : `nextRound` ne fait rien hors de l'écran de
+   transition (double tap « Manche suivante » = M1 → M3). Un appelant légitime hors transition
+   existe-t-il (reprise, résultats) ? Le test le reproduit-il bien ?
+6. Régression : rien d'autre n'a bougé (diff r1 → r2 limité à `game_screen`, `malus_reveal`,
+   `symmetric_draw`, `nextRound`, deux tests, `notes_pour_plus_tard`).
 
 ## Format attendu
 

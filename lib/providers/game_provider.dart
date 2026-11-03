@@ -1029,6 +1029,10 @@ class GameProvider extends ChangeNotifier {
   }
 
   void nextRound() {
+    // Idempotent par transition : un double tap sur « Manche suivante »
+    // rappelait `nextRound` depuis l'écran de jeu de la manche suivante et
+    // sautait une manche (M1 → M3). Seul l'écran de transition fait avancer.
+    if (_game.currentScreen != AppConstants.screenTransition) return;
     final nextRoundNumber = _game.currentRound + 1;
 
     if (nextRoundNumber > 3) {

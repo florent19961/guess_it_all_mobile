@@ -129,4 +129,19 @@ void main() {
     // Toujours actif, juste plus révélé.
     expect(ids(provider.currentTeamModifiers), ['minus_10s@1']);
   });
+
+  test(
+      'double tap sur « Manche suivante » : un seul passage de manche '
+      '(bug antérieur à Fiesta, M1 → M3)', () async {
+    final provider = await givenReadyProvider();
+    await provider.startGame();
+    playWholeRound(provider);
+    expect(provider.game.currentScreen, AppConstants.screenTransition);
+
+    provider.nextRound();
+    provider.nextRound();
+
+    expect(provider.game.currentRound, 2);
+    expect(provider.game.currentScreen, AppConstants.screenGame);
+  });
 }
