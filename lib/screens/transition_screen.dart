@@ -10,16 +10,48 @@ import '../widgets/fiesta/modifier_card.dart';
 import '../widgets/fiesta/offer_widgets.dart';
 import '../widgets/fiesta/turn_time_cards.dart';
 import '../models/fiesta/turn_time.dart';
+import '../widgets/help/coach_marks.dart';
+import '../widgets/help/help_button.dart';
+import '../widgets/help/help_content.dart';
 
-class TransitionScreen extends StatelessWidget {
+class TransitionScreen extends StatefulWidget {
   const TransitionScreen({super.key});
+
+  @override
+  State<TransitionScreen> createState() => _TransitionScreenState();
+}
+
+class _TransitionScreenState extends State<TransitionScreen> {
+  final _previousTurnKey = GlobalKey();
+  final _nextKey = GlobalKey();
+  final _backKey = GlobalKey();
+  final _homeKey = GlobalKey();
+  final _catchUpKey = GlobalKey();
+  final _pickThreeKey = GlobalKey();
+  final _appBoostKey = GlobalKey();
+
+  void _showHelp(GameProvider provider) {
+    CoachMarks.show(context, [
+      if (provider.isFiesta)
+        ...fiestaTransitionHelp(
+          catchUp: _catchUpKey,
+          pickThree: _pickThreeKey,
+          appBoost: _appBoostKey,
+        ),
+      ...transitionHelp(
+        previousTurn: _previousTurnKey,
+        next: _nextKey,
+        back: _backKey,
+        home: _homeKey,
+      ),
+    ]);
+  }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<GameProvider>();
     final currentRound = provider.game.currentRound;
     final isLastRound = currentRound >= 3;
-    final sortedTeams = provider.getTeamsSortedByScore();
     final fiestaRules = provider.game.fiesta?.rules;
     final catchUpRules =
         fiestaRules == null ? null : effectiveCatchUp(fiestaRules);
@@ -69,94 +101,11 @@ class TransitionScreen extends StatelessWidget {
 
                   const SizedBox(height: 24),
 
-                  // Scores
-                  Text(
-                    'Scores',
-                    style: AppTextStyles.subtitle(fontSize: 30),
-                  ),
-                  const SizedBox(height: 20),
-
+                  // Pas de score ici : il reste caché jusqu'aux résultats.
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(
-                        children:
-                            sortedTeams.asMap().entries.map<Widget>((entry) {
-                          final index = entry.key;
-                          final team = entry.value;
-                          final originalIndex = provider.teams.indexOf(team);
-                          final teamColor =
-                              AppColors.getTeamColor(originalIndex);
-
-                          // Calculer le rang réel en tenant compte des ex æquo
-                          int rank = 0;
-                          for (int i = 0; i < index; i++) {
-                            if (sortedTeams[i].score > team.score) {
-                              rank++;
-                            }
-                          }
-
-                          final medal = rank == 0
-                              ? '🥇'
-                              : rank == 1
-                                  ? '🥈'
-                                  : rank == 2
-                                      ? '🥉'
-                                      : rank == 3
-                                          ? '🍫'
-                                          : '';
-
-                          return GestureDetector(
-                            onTap: () => _showTeamMembersDialog(
-                                context, team, provider, teamColor),
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: teamColor.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: teamColor, width: 2),
-                              ),
-                              child: Row(
-                                children: [
-                                  if (medal.isNotEmpty)
-                                    Text(
-                                      medal,
-                                      style: const TextStyle(fontSize: 20),
-                                    ),
-                                  if (medal.isNotEmpty)
-                                    const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      team.name,
-                                      style: TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: teamColor,
-                                      ),
-                                    ),
-                                  ),
-                                  Text(
-                                    '${team.score}',
-                                    style: TextStyle(
-                                      fontFamily: 'Bangers',
-                                      fontSize: 28,
-                                      color: teamColor,
-                                    ),
-                                  ),
-                                  const Text(
-                                    ' pts',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 12,
-                                      color: AppColors.gray400,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }).followedBy([
+                        children: [
                           // Fiesta : tirage de la manche suivante, visible
                           // AVANT « Manche suivante ». Vide en Classique.
                           if (!isLastRound)
@@ -167,25 +116,32 @@ class TransitionScreen extends StatelessWidget {
                           // Fiesta : rattrapage de la manche suivante.
                           if (catchUpRules != null && !isLastRound)
                             CatchUpCard(
+                              // Carte vide (aucun rattrapage) : pas d'aide.
+                              key: provider.catchUpPreview.isEmpty
+                                  ? null
+                                  : _catchUpKey,
                               entries: provider.catchUpPreview,
                               rules: catchUpRules,
                               teams: provider.teams,
                             ),
                           // Fiesta Auto : coup de pouce de l'app.
                           AppBoostCard(
+                            key: provider.appBoostPreview.isEmpty
+                                ? null
+                                : _appBoostKey,
                             teams: provider.teams,
                             gifts: provider.appBoostPreview,
                           ),
                           // Fiesta Personnalisé : choix 1 parmi 3.
                           if (provider.hasPickThree)
                             PickThreeCard(
+                              key: _pickThreeKey,
                               teams: provider.teams,
-                              standings: provider.standings,
                               nextTeamId: chooserId,
                               onPassPhone: () =>
                                   _PickThreeFlow.open(context, chooserId!),
                             ),
-                        ]).toList(),
+                        ],
                       ),
                     ),
                   ),
@@ -227,6 +183,7 @@ class TransitionScreen extends StatelessWidget {
                   if (provider.game.history.isNotEmpty) ...[
                     Center(
                       child: GestureDetector(
+                        key: _previousTurnKey,
                         onTap: () => _showGuessedWordsDialog(context, provider),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -258,6 +215,7 @@ class TransitionScreen extends StatelessWidget {
                   ],
 
                   AppButton(
+                    key: _nextKey,
                     text: chooser != null
                         ? 'En attente du choix de ${chooser.name}'
                         : isLastRound
@@ -276,63 +234,18 @@ class TransitionScreen extends StatelessWidget {
               ),
             ),
           ),
-          const HomeButton(alignRight: true),
+          HomeButton(key: _homeKey, alignRight: true),
+          HelpButton(
+            right: HelpButton.besideCornerButton,
+            onPressed: () => _showHelp(provider),
+          ),
           // Back button pour revenir à l'écran de vérification
           if (provider.canGoBackToVerification)
             GameBackButton(
+              key: _backKey,
               onPressed: () => showBackToVerificationDialog(context, provider),
             ),
         ],
-      ),
-    );
-  }
-
-  void _showTeamMembersDialog(BuildContext context, dynamic team,
-      GameProvider provider, Color teamColor) {
-    if (team == null) return;
-
-    final players = team.playerIds
-        .map((id) => provider.getPlayerById(id))
-        .where((p) => p != null)
-        .toList();
-
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withOpacity(0.5),
-      builder: (context) => Dialog(
-        backgroundColor: AppColors.backgroundMain,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: teamColor, width: 2),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                team.name,
-                style: TextStyle(
-                  fontFamily: 'Bangers',
-                  fontSize: 24,
-                  color: teamColor,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ...players.map((p) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Text(
-                      p!.name,
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                  )),
-            ],
-          ),
-        ),
       ),
     );
   }
