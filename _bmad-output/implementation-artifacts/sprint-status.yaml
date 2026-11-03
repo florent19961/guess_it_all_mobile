@@ -218,7 +218,7 @@ stories:
   2-5-tirage-symetrique-transition:
     epic: epic-2-mode-fiesta
     title: "Tirage symétrique, transition de manche et annonces avant le tour"
-    status: ready-for-dev
+    status: done   # ✅ PR #12 (squash 934de6c, mode délégué 2026-11-03). Revue Opus READY r2. + bug store « Manche suivante » double tap corrigé.
     depends: [2-2-fondation-modele-fiesta]
     spec: _bmad-output/specs/fiesta/2-5-tirage-symetrique-transition.md
     note: >-
