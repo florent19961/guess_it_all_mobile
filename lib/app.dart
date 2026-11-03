@@ -20,6 +20,11 @@ import 'screens/results_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/categories_screen.dart';
 import 'screens/history_screen.dart';
+import 'screens/game_mode_screen.dart';
+import 'screens/fiesta_choice_screen.dart';
+import 'screens/fiesta_auto_screen.dart';
+import 'screens/fiesta_recap_screen.dart';
+import 'screens/fiesta_ensembles_stub_screen.dart';
 
 class GuessItAllApp extends StatelessWidget {
   const GuessItAllApp({super.key});
@@ -85,6 +90,16 @@ class GuessItAllApp extends StatelessWidget {
         return const CategoriesScreen();
       case AppConstants.screenHistory:
         return const HistoryScreen();
+      case AppConstants.screenGameMode:
+        return const GameModeScreen();
+      case AppConstants.screenFiestaChoice:
+        return const FiestaChoiceScreen();
+      case AppConstants.screenFiestaAuto:
+        return const FiestaAutoScreen();
+      case AppConstants.screenFiestaRecap:
+        return const FiestaRecapScreen();
+      case AppConstants.screenFiestaEnsembles:
+        return const FiestaEnsemblesStubScreen(); // BOUCHON 2-4 → écran de 2-3
       default:
         return const HomeScreen();
     }

@@ -75,8 +75,11 @@ class TeamsScreen extends StatelessWidget {
                         size: AppButtonSize.large,
                         fullWidth: true,
                         disabled: !allTeamsValid,
-                        onPressed:
-                            allTeamsValid ? () => provider.startGame() : null,
+                        onPressed: allTeamsValid
+                            ? () => provider.startGame(
+                                  fiesta: provider.pendingFiesta,
+                                )
+                            : null,
                       ),
                     ],
                   ),
