@@ -1501,8 +1501,10 @@ class GameProvider extends ChangeNotifier {
   /// à son premier tour de la manche LOGIQUE du tour (celle de ses effets).
   /// Une continuation ordinaire ne révèle rien (l'équipe a déjà joué en N) ;
   /// une continuation en chaîne révèle les malus de N+1, qu'elle subit pour
-  /// la première fois. L'entrée de la continuation ne compte jamais comme un
-  /// tour de sa manche. Dérivé de l'historique : rien à persister.
+  /// la première fois, sauf les malus de temps : une continuation joue
+  /// exactement son temps reporté, un « −10 s » annoncé n'y serait pas
+  /// appliqué. L'entrée de la continuation ne compte jamais comme un tour de
+  /// sa manche. Dérivé de l'historique : rien à persister.
   List<ModifierInstance> get malusToReveal {
     final teamId = getCurrentTeam()?.id;
     if (_game.fiesta == null || teamId == null) return const [];
@@ -1512,8 +1514,11 @@ class GameProvider extends ChangeNotifier {
             .length -
         (teamId == _continuingTeamOf(round) ? 1 : 0);
     if (realTurns > 0) return const [];
+    final continuation = isContinuation;
     return currentTeamModifiers
-        .where((m) => m.nature == ModifierNature.malus)
+        .where((m) =>
+            m.nature == ModifierNature.malus &&
+            !(continuation && kTimeModifierIds.contains(m.catalogId)))
         .toList();
   }
 

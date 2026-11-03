@@ -291,15 +291,16 @@ void main() {
   test(
       'Continuation en chaîne : la continuation M1→M2 vide le pool de M2. Son '
       'tour logique M1 se clôt (×2 dépensé et instances M1 partis), et la '
-      'continuation M3 ne porte que le contexte de M2 (blocage M2 annoncé), '
-      'kill et retour arrière compris (epic fix r1, Codex MAJOR-1)', () async {
+      'continuation M3 ne porte que le contexte de M2 (blocage M2 annoncé, '
+      '−10 s de M2 ni annoncé ni appliqué : temps reporté), kill et retour '
+      'arrière compris (epic fix r1-r2, Codex MAJOR-1)', () async {
     final provider =
         await givenProvider(['A', 'B', 'C', 'D', 'E'], wordsEach: 4, teams: 2);
     await provider.startGame(
       fiesta: FiestaRules(
         mode: FiestaMode.custom,
         oneOfThree: true,
-        drawCount: 1,
+        drawCount: 0,
         modifiers: {
           'block_guesser': const ModifierSetting(
               active: true,
@@ -308,9 +309,16 @@ void main() {
               charges: 0),
           'double_points': const ModifierSetting(
               active: true,
-              arrival: ModifierArrival.draw,
+              arrival: ModifierArrival.fixed,
               startRound: 1,
+              fixedRound: 1,
               charges: 1),
+          'minus_10s': const ModifierSetting(
+              active: true,
+              arrival: ModifierArrival.fixed,
+              startRound: 2,
+              fixedRound: 2,
+              charges: 0),
         },
       ),
     );
@@ -336,8 +344,12 @@ void main() {
       expect(p.isContinuation, isTrue);
       expect([p.isDoublePointsOn, p.freePassesUsed, p.doublePointsLeft],
           [false, 0, 0]);
-      expect(ids(p.turnModifiers), ['block_guesser@2>$leader']);
+      expect(ids(p.turnModifiers),
+          ['minus_10s@2>null', 'block_guesser@2>$leader']);
+      // Le −10 s de M2 n'est pas annoncé : la continuation joue son temps
+      // reporté, sans modificateur de temps.
       expect(ids(p.malusToReveal), ['block_guesser@2>$leader']);
+      expect(p.turnTime.lines.map((l) => l.label), ['Temps reporté']);
       expect(p.blockingTeam!.id, trailing);
       expect(p.game.fiesta!.active.where((m) => m.round < 2), isEmpty);
     }
@@ -358,7 +370,8 @@ void main() {
     reloaded.validateWords(word);
     reloaded.restorePreValidationState(); // retour arrière
     expect(reloaded.blockedGuesser, isNotNull);
-    expect(ids(reloaded.turnModifiers), ['block_guesser@2>$leader']);
+    expect(ids(reloaded.turnModifiers),
+        ['minus_10s@2>null', 'block_guesser@2>$leader']);
     reloaded.savePreValidationState(word);
     reloaded.validateWords(word);
 
@@ -366,6 +379,14 @@ void main() {
     expect(reloaded.getCurrentTeam()!.id, trailing);
     expect(reloaded.game.fiesta!.active.every((m) => m.round == 3), isTrue);
     expect(reloaded.game.fiesta!.turn.isEmpty, isTrue);
+
+    // Premier vrai tour M3 du leader : le −10 s de M2 n'est plus actif, ni
+    // annoncé ni appliqué.
+    playTurn(reloaded, 0);
+    expect(reloaded.getCurrentTeam()!.id, leader);
+    expect(reloaded.malusToReveal.map((m) => m.catalogId),
+        isNot(contains('minus_10s')));
+    expect(reloaded.turnTime.lines.map((l) => l.seconds), isNot(contains(-10)));
   });
 
   test(

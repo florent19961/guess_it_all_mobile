@@ -589,7 +589,9 @@ niveau) : le tag analytics porte l'information.
   vrai tour (lecture (a), validée par Florent). **Continuation en chaîne** (revue r1) : si la
   continuation vide à elle seule le pool de N+1, son tour logique N se clôt à cette fin de manche
   (`_fiestaAtRoundEnd`) ; la continuation en N+2 ne porte que le contexte de N+1, dont les malus
-  se révèlent alors (`malusToReveal` sur la manche logique). Les
+  se révèlent alors (`malusToReveal` sur la manche logique), **sauf les malus de temps**
+  (`kTimeModifierIds`, revue r2) : une continuation joue son temps reporté, sans modificateur de
+  temps, donc un « −10 s » n'y est ni annoncé ni appliqué. Les
   instances de N partent à la fin de la continuation. Tous les malus de N+1 se révèlent au
   premier vrai tour (plus de cas particulier `minus_10s`).
 - `isContinuation` est **dérivé de l'historique** (l'équipe a joué la dernière entrée de N et
