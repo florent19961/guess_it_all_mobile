@@ -1,0 +1,691 @@
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index 64a92af..5b18342 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -508,3 +508,25 @@ annoncés avant le tour. Règles pures dans `models/fiesta/turn_effects.dart`.
+ 
+ **Conséquence.** Une partie Classique ne voit aucune différence : sans modificateur, pénalité
+ effective = pénalité réglée, garde identique.
++
++## 2026-11-03 — Fiesta 2-9 : mot compte double
++
++**Quoi.** Une équipe qui a `double_points` (tiré, fixé, plus tard offert) active ×2 sur
++l'avant-tour ; les points du tour comptent double (`resolveTurn(pointsMultiplier:)`, pur). Badge
++« ×2 Mot compte double » pendant le tour, détail du calcul à la vérification, ligne « Bonus
++utilisés » au récap.
++
++**Pourquoi ces choix.**
++- **Dépense au départ** (`startTurnTimer`), pas à l'interrupteur : éteindre avant le départ
++  ou revenir à la vérification précédente n'a rien à rembourser, le snapshot efface l'armement.
++- **État dans `FiestaState`** : armement dans `turn` (survit au kill, vidé à la vraie fin du
++  tour) ; dépenses dans `chargesUsed`, une **clé optionnelle** de plus dans le blob Fiesta
++  (omise si vide, Classique intact, pas de bump de schéma). Une instance tirée pour tous est
++  partagée : le décompte par équipe ne peut pas vivre sur l'instance. Charges de la manche =
++  charges des instances − dépenses de CETTE manche : une charge non utilisée est perdue sans
++  remise à zéro.
++- **Un seul tour (2-8)** : la continuation en N+1 d'un tour joué à ×2 reste à ×2 sans dépenser
++  la charge de N+1 ; un tour non activé peut l'activer en continuation (charge de N+1).
++- **Q8** : activation refusée si l'équipe a déjà 2 autres modificateurs en jeu.
++- **Analytics** : `double_points` n'apparaît dans les `modifiers` d'un mot que si le ×2
++  s'applique à ce tour (une charge non activée n'est pas un modificateur en jeu).
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index 7e35338..00df909 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -19,9 +19,9 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `fiesta/modifier_instance.dart` | `ModifierInstance` | Modificateur actif dans une partie. `tryFromJson` tolérant (id inconnu → `null`, jamais de défaut inventé). `canAdd(active, candidate, {maxPerTurn: 2})` |
+ | `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, `CatchUpRules`, enums `FiestaMode`, `ModifierArrival` | Configuration Fiesta **immuable** (Auto / Personnalisé, réglage par modificateur, rattrapage, tirage, règles communes). `CatchUpRules.auto` = constantes du mode Auto. `tryFromJson` : structure illisible → `null`, réglage d'id inconnu ignoré seul |
+ | `fiesta/symmetric_draw.dart` | fonctions pures | Modificateurs d'une manche pour toutes les équipes : `fixedForRound` puis `drawSymmetric`, réunis par `roundModifiers(rules, gameId:, round:)`. Graine `drawSeed(gameId, round)` (FNV-1a, stable entre exécutions) |
+-| `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn, catchUpDue}`. `turn` : compteurs du tour (2-8 : `freePassesUsed`, `blockedPlayerId`, clés dans `turn_effects.dart`), vidés à la vraie fin du tour (continuation de fin de manche comprise dans le tour). `catchUpDue` : id d'équipe → secondes dues (négatives = malus du leader), posé par `nextRound`, consommé au premier tour non-continuation |
++| `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn, catchUpDue}`. `turn` : compteurs du tour (2-8 : `freePassesUsed`, `blockedPlayerId`, clés dans `turn_effects.dart`), vidés à la vraie fin du tour (continuation de fin de manche comprise dans le tour). `catchUpDue` : id d'équipe → secondes dues (négatives = malus du leader), posé par `nextRound`, consommé au premier tour non-continuation. `chargesUsed` (2-9, clé omise si vide) : charges dépensées `{catalogId, teamId, round}`, décompte de la manche en cours + récap « Bonus utilisés » |
+ | `fiesta/modifier_recap.dart` | fonctions pures | `fiestaModeId` (`fiesta_auto`/`fiesta_custom`), `fiestaModeLabel`, `buildModifierRecap` : récap « Modificateurs de la partie » **recalculé** (tirage par graine, rattrapage sur les scores cumulés par manche), rien de persisté pendant la partie |
+-| `fiesta/turn_effects.dart` | fonctions pures | Effets de tour (2-8) : clés des compteurs du tour, `freePassAllowance` (charges de `free_pass`), `canBlockGuesser` (équipe de 3+) |
++| `fiesta/turn_effects.dart` | fonctions pures | Effets de tour (2-8) : clés des compteurs du tour, `freePassAllowance` (charges de `free_pass`), `canBlockGuesser` (équipe de 3+). 2-9 : clé `doublePoints` (`armed` à l'interrupteur, `spent` au départ), `doublePointsAllowance` |
+ | `fiesta/turn_time.dart` | fonctions pures | `composeTurnSeconds` (base + rattrapage − malus du leader − 10 s × `minus_10s`, plancher `kTurnFloorSeconds` = 10 ; continuation = ses secondes, sans modificateur) ; `computeCatchUp` (k × écart avec la tête, plafonds, co-leaders tous en tête, égalité = rien) ; `effectiveCatchUp` (Auto → auto-calibrage, Personnalisé → curseurs) |
+ | `fiesta/fiesta_ensemble.dart` | `FiestaEnsemble`, `defaultEnsembleRules`, extensions `copyWith`, `catchUpOn` | Ensemble Personnalisé `{id, rules}` (nom = `rules.ensembleName`, mode toujours `custom`), défauts de la maquette (`mkSet`). Persisté par `FiestaEnsembleService` |
+ | `fiesta/ensemble_validation.dart` | `validateEnsemble` | Validation **pure** d'un ensemble (messages FR) : bloque l'enregistrement d'une config impossible |
+diff --git a/lib/models/fiesta/fiesta_state.dart b/lib/models/fiesta/fiesta_state.dart
+index 66838fd..5dd4e2e 100644
+--- a/lib/models/fiesta/fiesta_state.dart
++++ b/lib/models/fiesta/fiesta_state.dart
+@@ -22,25 +22,35 @@ class FiestaState {
+   /// premier tour non-continuation (story 2-6). Une équipe absente n'a rien.
+   final Map<String, int> catchUpDue;
+ 
++  /// Charges dépensées dans la partie (story 2-9), dans l'ordre. Sert au
++  /// décompte des charges de la manche en cours (une charge non dépensée est
++  /// perdue en fin de manche : rien à remettre à zéro) et au récap « Bonus
++  /// utilisés ». Clé omise tant que la liste est vide.
++  final List<ChargeUse> chargesUsed;
++
+   FiestaState({
+     required this.rules,
+     List<ModifierInstance> active = const [],
+     Map<String, dynamic> turn = const {},
+     Map<String, int> catchUpDue = const {},
++    List<ChargeUse> chargesUsed = const [],
+   })  : active = List.unmodifiable(active),
+         turn = Map.unmodifiable(turn),
+-        catchUpDue = Map.unmodifiable(catchUpDue);
++        catchUpDue = Map.unmodifiable(catchUpDue),
++        chargesUsed = List.unmodifiable(chargesUsed);
+ 
+   FiestaState copyWith({
+     List<ModifierInstance>? active,
+     Map<String, dynamic>? turn,
+     Map<String, int>? catchUpDue,
++    List<ChargeUse>? chargesUsed,
+   }) =>
+       FiestaState(
+         rules: rules,
+         active: active ?? this.active,
+         turn: turn ?? this.turn,
+         catchUpDue: catchUpDue ?? this.catchUpDue,
++        chargesUsed: chargesUsed ?? this.chargesUsed,
+       );
+ 
+   Map<String, dynamic> toJson() => {
+@@ -48,6 +58,8 @@ class FiestaState {
+         'active': active.map((e) => e.toJson()).toList(),
+         'turn': turn,
+         'catchUpDue': catchUpDue,
++        if (chargesUsed.isNotEmpty)
++          'chargesUsed': chargesUsed.map((e) => e.toJson()).toList(),
+       };
+ 
+   /// Variante tolérante : `null` (= Classique) si les règles sont illisibles.
+@@ -72,6 +84,7 @@ class FiestaState {
+ 
+     final rawTurn = json['turn'];
+     final rawDue = json['catchUpDue'];
++    final rawUsed = json['chargesUsed'];
+     return FiestaState(
+       rules: rules,
+       active: active,
+@@ -83,6 +96,40 @@ class FiestaState {
+                   e.key as String: e.value as int,
+             }
+           : const {},
++      chargesUsed: rawUsed is List
++          ? rawUsed
++              .whereType<Map>()
++              .map((e) => ChargeUse.tryFromJson(Map<String, dynamic>.from(e)))
++              .whereType<ChargeUse>()
++              .toList()
++          : const [],
+     );
+   }
+ }
++
++/// Une charge dépensée : [teamId] a utilisé [catalogId] en manche [round].
++class ChargeUse {
++  final String catalogId;
++  final String teamId;
++  final int round;
++
++  const ChargeUse({
++    required this.catalogId,
++    required this.teamId,
++    required this.round,
++  });
++
++  Map<String, dynamic> toJson() =>
++      {'catalogId': catalogId, 'teamId': teamId, 'round': round};
++
++  /// Variante tolérante : une entrée illisible est ignorée seule.
++  static ChargeUse? tryFromJson(Map<String, dynamic> json) {
++    final catalogId = json['catalogId'];
++    final teamId = json['teamId'];
++    final round = json['round'];
++    if (catalogId is! String || teamId is! String || round is! int) {
++      return null;
++    }
++    return ChargeUse(catalogId: catalogId, teamId: teamId, round: round);
++  }
++}
+diff --git a/lib/models/fiesta/modifier_recap.dart b/lib/models/fiesta/modifier_recap.dart
+index 3006918..fd2fcbf 100644
+--- a/lib/models/fiesta/modifier_recap.dart
++++ b/lib/models/fiesta/modifier_recap.dart
+@@ -2,6 +2,7 @@ import '../../utils/constants.dart';
+ import '../game_result.dart';
+ import '../team.dart';
+ import 'fiesta_rules.dart';
++import 'fiesta_state.dart';
+ import 'modifier_catalog.dart';
+ import 'symmetric_draw.dart';
+ import 'turn_time.dart';
+@@ -21,13 +22,15 @@ String fiestaModeLabel(FiestaRules rules) => rules.mode == FiestaMode.auto
+ /// RECALCULÉ, pas relu d'un journal : le tirage vient de la graine
+ /// `(gameId, manche)` (comme `nextRoundModifiers`) et le rattrapage des
+ /// scores cumulés en fin de manche, soit ce que la transition a montré. Rien à
+-/// persister pendant la partie. Les sections choix 1 parmi 3, bonus utilisés
+-/// et joueurs bloqués arrivent avec les stories qui les remplissent.
++/// persister pendant la partie. Exception : les bonus utilisés (2-9) sont
++/// relus de [chargesUsed], seule trace d'une activation. Les sections choix
++/// 1 parmi 3 et joueurs bloqués arrivent avec les stories qui les remplissent.
+ List<ModifierRecapLine> buildModifierRecap({
+   required FiestaRules rules,
+   required String gameId,
+   required List<Team> teams,
+   required int roundsPlayed,
++  List<ChargeUse> chargesUsed = const [],
+ }) {
+   final lines = <ModifierRecapLine>[];
+ 
+@@ -71,5 +74,16 @@ List<ModifierRecapLine> buildModifierRecap({
+     }
+   }
+ 
++  if (chargesUsed.isNotEmpty) {
++    final teamName = {for (final t in teams) t.id: t.name};
++    lines.add(ModifierRecapLine(
++      title: 'Bonus utilisés',
++      detail: chargesUsed
++          .map((u) => '${modifierById(u.catalogId)?.name ?? u.catalogId}, '
++              '${teamName[u.teamId] ?? '?'} en M${u.round}')
++          .join(' · '),
++    ));
++  }
++
+   return lines;
+ }
+diff --git a/lib/models/fiesta/turn_effects.dart b/lib/models/fiesta/turn_effects.dart
+index aea25a5..10bce69 100644
+--- a/lib/models/fiesta/turn_effects.dart
++++ b/lib/models/fiesta/turn_effects.dart
+@@ -8,11 +8,24 @@ import 'modifier_instance.dart';
+ const String kFreePassesUsedKey = 'freePassesUsed';
+ const String kBlockedPlayerIdKey = 'blockedPlayerId';
+ 
++/// « Mot compte double » du tour (story 2-9) : [kDoubleArmed] tant que
++/// l'interrupteur de l'avant-tour est allumé, [kDoubleSpent] une fois la
++/// charge dépensée au départ du tour. Absent = éteint.
++const String kDoublePointsKey = 'doublePoints';
++const String kDoubleArmed = 'armed';
++const String kDoubleSpent = 'spent';
++
+ /// Nombre de passes gratuites du tour : les charges de `free_pass`.
+ int freePassAllowance(List<ModifierInstance> modifiers) => modifiers
+     .where((m) => m.catalogId == 'free_pass')
+     .fold(0, (sum, m) => sum + m.charges);
+ 
++/// Charges de « Mot compte double » de la manche : les charges des instances
++/// `double_points`.
++int doublePointsAllowance(List<ModifierInstance> modifiers) => modifiers
++    .where((m) => m.catalogId == 'double_points')
++    .fold(0, (sum, m) => sum + m.charges);
++
+ /// `block_guesser` n'a d'effet que si l'équipe a au moins 3 joueurs : il faut
+ /// un devineur à bloquer ET un autre qui puisse encore répondre.
+ bool canBlockGuesser(int teamSize) => teamSize > 2;
+diff --git a/lib/models/turn_resolution.dart b/lib/models/turn_resolution.dart
+index dc23d03..36ca3e5 100644
+--- a/lib/models/turn_resolution.dart
++++ b/lib/models/turn_resolution.dart
+@@ -71,12 +71,16 @@ class TurnResolution {
+ /// - [guessedThisTurn] / [passedThisTurn] : ce qui s'est passé pendant le tour.
+ /// - [expiredWord] : le mot affiché quand le chrono est tombé, s'il y en a un.
+ /// - [currentPool] : les mots encore à faire deviner avant dépouillement.
++/// - [pointsMultiplier] : ×2 pour « Mot compte double » (Fiesta 2-9). Vaut
++///   pour les POINTS seulement : [TurnResolution.validated] reste la liste
++///   des mots, et les stats « mots devinés » ne doublent pas.
+ TurnResolution resolveTurn({
+   required List<String> validatedWords,
+   required List<String> guessedThisTurn,
+   required List<String> passedThisTurn,
+   required String? expiredWord,
+   required List<String> currentPool,
++  int pointsMultiplier = 1,
+ }) {
+   final validatedSet = validatedWords.toSet();
+ 
+@@ -116,6 +120,6 @@ TurnResolution resolveTurn({
+     expiredInvalidated: expiredInvalidated,
+     expiredWord: expiredWord,
+     remainingPool: pool,
+-    pointsScored: validatedWords.length,
++    pointsScored: validatedWords.length * pointsMultiplier,
+   );
+ }
+diff --git a/lib/providers/CLAUDE.md b/lib/providers/CLAUDE.md
+index b8b7eff..3635b79 100644
+--- a/lib/providers/CLAUDE.md
++++ b/lib/providers/CLAUDE.md
+@@ -24,6 +24,7 @@ Gestion d'etat centralisee via Provider.
+ - `_ensureWordsForPlayer()` conserve les mots existants d'un joueur si le compte est suffisant (meme apres changement de categories).
+ - **Durée du tour** : `turnTime` (composée par `composeTurnSeconds`) est lue par `startTurn` ET `startTurnTimer`. Ne jamais recalculer la durée ailleurs : l'avant-tour et le chrono divergeraient. `timeSpent` se mesure sur `turnAllottedSeconds`, pas sur le réglage.
+ - **Effets de tour Fiesta (2-8)** : `canPassWith(secondesAffichées)` est la **seule** garde de la passe (`passWord` ET le bouton de `turn_screen`), sur la pénalité **effective** (`currentPassPenalty`, 0 si `hasFreePass`) ; sous `no_pass`, `passWord` sort avant `onWordPassed`. **Un seul tour** : fin de manche + continuation en N+1. `validateWords` vide `fiesta.turn` et consomme les instances de portée **tour** de l'équipe à la vraie fin seulement (pas dans la branche fin de manche).
++- **Mot compte double (2-9)** : `setDoublePoints` n'écrit que `fiesta.turn[doublePoints]=armed` ; la charge se dépense dans `startTurnTimer` (`spent` + `chargesUsed`). `validateWords` passe `pointsMultiplier` à `resolveTurn` (pur). La continuation de fin de manche garde `spent` (même tour) sans dépenser la charge de N+1. `turnModifiers` = badges / tags analytics sans la charge non activée.
+ - **Rattrapage Fiesta** : `catchUpPreview` (transition, calculé sur les scores) → `nextRound` le pose dans `fiesta.catchUpDue` → `startTurnTimer` le consomme au premier tour non-continuation de l'équipe.
+ 
+ ### Dependances
+diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
+index ac5beea..3f01082 100644
+--- a/lib/providers/game_provider.dart
++++ b/lib/providers/game_provider.dart
+@@ -585,10 +585,30 @@ class GameProvider extends ChangeNotifier {
+     // une continuation, donc si le rattrapage s'applique et se consomme.
+     final durationSeconds = turnTime.total;
+     final durationMs = durationSeconds * 1000;
+-    final fiesta = _game.fiesta;
+-    final consumesCatchUp = fiesta != null &&
++    var fiesta = _game.fiesta;
++    // Lu seulement en Fiesta : en Classique, rien n'exige une équipe ici.
++    final teamId = fiesta == null ? '' : _teams[_game.currentTeamIndex].id;
++    if (fiesta != null &&
+         _game.turnBonusTime == null &&
+-        fiesta.catchUpDue.containsKey(_teams[_game.currentTeamIndex].id);
++        fiesta.catchUpDue.containsKey(teamId)) {
++      // Consommé une fois, effacé : même principe que `turnBonusTime`.
++      fiesta = fiesta.copyWith(
++          catchUpDue: Map.of(fiesta.catchUpDue)..remove(teamId));
++    }
++    // Mot compte double : la charge se dépense ICI, pas à l'interrupteur.
++    // Éteindre avant le départ ou revenir en arrière n'a donc rien à rendre.
++    if (fiesta != null && fiesta.turn[kDoublePointsKey] == kDoubleArmed) {
++      fiesta = fiesta.copyWith(
++        turn: {...fiesta.turn, kDoublePointsKey: kDoubleSpent},
++        chargesUsed: [
++          ...fiesta.chargesUsed,
++          ChargeUse(
++              catalogId: 'double_points',
++              teamId: teamId,
++              round: _game.currentRound),
++        ],
++      );
++    }
+ 
+     _game = _game.copyWith(
+       currentScreen: AppConstants.screenTurn,
+@@ -599,12 +619,8 @@ class GameProvider extends ChangeNotifier {
+       timeRemaining: durationSeconds,
+       turnAllottedSeconds: durationSeconds,
+       clearTurnBonusTime: true,
+-      // Consommé une fois, effacé : même principe que `turnBonusTime`.
+-      fiesta: consumesCatchUp
+-          ? fiesta.copyWith(
+-              catchUpDue: Map.of(fiesta.catchUpDue)
+-                ..remove(_teams[_game.currentTeamIndex].id))
+-          : null,
++      // Nul en Classique : `copyWith(fiesta: null)` le laisse nul.
++      fiesta: fiesta,
+     );
+ 
+     // Tracker l'affichage du premier mot
+@@ -631,7 +647,10 @@ class GameProvider extends ChangeNotifier {
+       // Relus de l'état PERSISTÉ à chaque mot (survit à un kill). Nul en
+       // Classique : l'événement garde alors exactement l'ancienne forme.
+       modifiers: isFiesta
+-          ? currentTeamModifiers.map((m) => m.catalogId).toList()
++          ? [
++              ...turnModifiers.map((m) => m.catalogId),
++              if (isDoublePointsOn) 'double_points',
++            ]
+           : null,
+     );
+   }
+@@ -917,6 +936,7 @@ class GameProvider extends ChangeNotifier {
+       passedThisTurn: passedWordsThisTurn,
+       expiredWord: _game.expiredWord,
+       currentPool: _game.remainingWords,
++      pointsMultiplier: isDoublePointsOn ? 2 : 1,
+     );
+ 
+     final allInvalidatedWords = resolution.allInvalidated;
+@@ -1252,6 +1272,57 @@ class GameProvider extends ChangeNotifier {
+     _saveGameState();
+   }
+ 
++  // ========== MOT COMPTE DOUBLE (2-9) ==========
++
++  /// Modificateurs EN JEU pendant le tour (badges du tour, tags analytics) :
++  /// une charge de « Mot compte double » non activée n'en est pas un.
++  List<ModifierInstance> get turnModifiers => currentTeamModifiers
++      .where((m) => m.catalogId != 'double_points')
++      .toList();
++
++  String? get _doublePoints {
++    final value = _turnCounters[kDoublePointsKey];
++    return value is String ? value : null;
++  }
++
++  /// Interrupteur de l'avant-tour allumé (ou charge déjà dépensée).
++  bool get isDoublePointsArmed => _doublePoints != null;
++
++  /// Les points de CE tour comptent ×2 : charge dépensée au départ. Vaut aussi
++  /// pour la continuation de fin de manche, qui est le même tour (2-8).
++  bool get isDoublePointsOn => _doublePoints == kDoubleSpent;
++
++  /// Charges restantes de l'équipe qui joue pour la manche en cours. Celles
++  /// des manches finies sont perdues : le décompte ne regarde que celle-ci.
++  int get doublePointsLeft {
++    final teamId = getCurrentTeam()?.id;
++    final used = (_game.fiesta?.chargesUsed ?? const <ChargeUse>[])
++        .where((u) =>
++            u.catalogId == 'double_points' &&
++            u.teamId == teamId &&
++            u.round == _game.currentRound)
++        .length;
++    return doublePointsAllowance(currentTeamModifiers) - used;
++  }
++
++  /// Q8 : activer est refusé si l'équipe a déjà 2 modificateurs en jeu.
++  bool get doublePointsCapped => turnModifiers.length >= 2;
++
++  /// Allumer / éteindre le ×2 avant le départ. Rien n'est dépensé ici.
++  void setDoublePoints(bool on) {
++    final fiesta = _game.fiesta;
++    if (fiesta == null ||
++        isDoublePointsOn ||
++        (on && (doublePointsLeft <= 0 || doublePointsCapped))) {
++      return;
++    }
++    final turn = Map<String, dynamic>.of(fiesta.turn)..remove(kDoublePointsKey);
++    if (on) turn[kDoublePointsKey] = kDoubleArmed;
++    _game = _game.copyWith(fiesta: fiesta.copyWith(turn: turn));
++    notifyListeners();
++    _saveGameState();
++  }
++
+   /// Fiesta à la VRAIE fin d'un tour : compteurs du tour vidés, instances
+   /// de portée tour de l'équipe consommées. 🔴 Un seul « tour » : une fin de
+   /// manche n'en est pas une, la continuation en N+1 est le même tour (elle
+@@ -1296,6 +1367,7 @@ class GameProvider extends ChangeNotifier {
+     if (fiesta == null) return const [];
+     return buildModifierRecap(
+       rules: fiesta.rules,
++      chargesUsed: fiesta.chargesUsed,
+       gameId: _game.gameId ?? '',
+       teams: _teams,
+       roundsPlayed: _game.currentRound,
+diff --git a/lib/screens/game_screen.dart b/lib/screens/game_screen.dart
+index c8dbc0c..212e8f5 100644
+--- a/lib/screens/game_screen.dart
++++ b/lib/screens/game_screen.dart
+@@ -645,11 +645,45 @@ class _FiestaAnnouncements extends StatelessWidget {
+       crossAxisAlignment: CrossAxisAlignment.stretch,
+       children: [
+         _modifiers(),
++        if (provider.isDoublePointsArmed || provider.doublePointsLeft > 0)
++          _doublePoints(),
+         TurnTimeCard(provider.turnTime),
+       ],
+     );
+   }
+ 
++  /// Interrupteur « Mot compte double » (maquette `cd`). La charge ne se
++  /// dépense qu'au départ du tour ; ensuite l'interrupteur est figé.
++  Widget _doublePoints() {
++    final left = provider.doublePointsLeft;
++    final String label;
++    final String detail;
++    var editable = false;
++    if (provider.isDoublePointsOn) {
++      label = 'Mot compte double activé';
++      detail = 'Les points de ce tour comptent ×2.';
++    } else if (!provider.isDoublePointsArmed && provider.doublePointsCapped) {
++      label = 'Activer Mot compte double';
++      detail = 'Impossible : votre équipe a déjà 2 modificateurs ce tour.';
++    } else {
++      label = 'Activer Mot compte double';
++      detail = '$left charge${left > 1 ? 's' : ''} pour cette manche. '
++          'Les points du tour seront ×2.';
++      editable = true;
++    }
++    return FiestaCard(
++      title: 'Bonus',
++      children: [
++        FiestaLine(
++          label: label,
++          detail: detail,
++          value: provider.isDoublePointsArmed,
++          onChanged: editable ? provider.setDoublePoints : null,
++        ),
++      ],
++    );
++  }
++
+   Widget _modifiers() {
+     final rules = provider.game.fiesta!.rules;
+     final modifiers = provider.currentTeamModifiers;
+diff --git a/lib/screens/turn_screen.dart b/lib/screens/turn_screen.dart
+index 3e3a0f2..d2e7369 100644
+--- a/lib/screens/turn_screen.dart
++++ b/lib/screens/turn_screen.dart
+@@ -8,6 +8,7 @@ import '../providers/game_provider.dart';
+ import '../services/audio_service.dart';
+ import '../utils/reversed_word.dart';
+ import '../widgets/common/app_confirm_dialog.dart';
++import '../models/fiesta/modifier_catalog.dart';
+ import '../widgets/fiesta/modifier_badge.dart';
+ 
+ class TurnScreen extends StatefulWidget {
+@@ -326,10 +327,20 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+                         ),
+ 
+                         // Fiesta : modificateurs du tour, sous le chrono.
+-                        if (provider.currentTeamModifiers.isNotEmpty) ...[
++                        if (provider.turnModifiers.isNotEmpty ||
++                            provider.isDoublePointsOn) ...[
+                           const SizedBox(height: 8),
+                           ModifierBadges(
+-                              modifiers: provider.currentTeamModifiers),
++                            modifiers: provider.turnModifiers,
++                            extra: [
++                              if (provider.isDoublePointsOn)
++                                const ModifierBadge(
++                                  icon: '×2',
++                                  label: 'Mot compte double',
++                                  nature: ModifierNature.bonus,
++                                ),
++                            ],
++                          ),
+                           if (provider.freePasses > 0) ...[
+                             const SizedBox(height: 8),
+                             Text(
+diff --git a/lib/screens/verification_screen.dart b/lib/screens/verification_screen.dart
+index d339450..4c728a4 100644
+--- a/lib/screens/verification_screen.dart
++++ b/lib/screens/verification_screen.dart
+@@ -54,6 +54,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
+         .where((w) => w != provider.game.expiredWord)
+         .toList();
+     final expiredWord = provider.game.expiredWord;
++    // Fiesta 2-9 : même multiplicateur que `validateWords` (maquette `verif`).
++    final doubled = provider.isDoublePointsOn;
++    final points = _validatedWords.length * (doubled ? 2 : 1);
+ 
+     return Material(
+       color: AppColors.backgroundMain,
+@@ -89,7 +92,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
+                         Border.all(color: AppColors.secondaryCyan, width: 2),
+                   ),
+                   child: Text(
+-                    'Score : ${_validatedWords.length} ${_validatedWords.length <= 1 ? 'point' : 'points'}',
++                    'Score : $points ${points <= 1 ? 'point' : 'points'}',
+                     style: const TextStyle(
+                       fontFamily: 'Bangers',
+                       fontSize: 24,
+@@ -97,6 +100,18 @@ class _VerificationScreenState extends State<VerificationScreen> {
+                     ),
+                   ),
+                 ),
++                if (doubled) ...[
++                  const SizedBox(height: 8),
++                  Text(
++                    'Mots devinés ${_validatedWords.length} · '
++                    'Mot compte double ×2 · Points du tour $points',
++                    style: const TextStyle(
++                      fontFamily: 'Poppins',
++                      fontSize: 13,
++                      color: AppColors.secondaryCyan,
++                    ),
++                  ),
++                ],
+ 
+                 const SizedBox(height: 24),
+ 
+diff --git a/test/providers/fiesta_double_points_test.dart b/test/providers/fiesta_double_points_test.dart
+new file mode 100644
+index 0000000..8e5f014
+--- /dev/null
++++ b/test/providers/fiesta_double_points_test.dart
+@@ -0,0 +1,157 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/providers/game_provider.dart';
++
++import '../helpers/test_prefs.dart';
++
++/// [names] joueurs (1 mot chacun) répartis en 2 équipes.
++Future<GameProvider> givenReadyProvider(List<String> names) async {
++  await givenPrefs();
++  givenFakePlatformPlugins();
++  final provider = GameProvider();
++  await pumpEventQueue();
++  for (final name in names) {
++    final id = (provider.addPlayer(name)['player'] as dynamic).id as String;
++    provider.updatePlayerWords(id, ['mot-$name']);
++  }
++  provider.createTeams();
++  provider.randomizeTeams();
++  return provider;
++}
++
++/// Personnalisé : « Mot compte double » tiré pour tous à chaque manche, seul
++/// candidat, 1 charge.
++final doubleEveryRound = FiestaRules(
++  mode: FiestaMode.custom,
++  drawCount: 1,
++  modifiers: {
++    'double_points': ModifierSetting(
++      active: true,
++      arrival: ModifierArrival.draw,
++      startRound: 1,
++      charges: 1,
++    ),
++  },
++);
++
++int teamScore(GameProvider p, String teamId) =>
++    p.teams.firstWhere((t) => t.id == teamId).score;
++
++List<int> teamRounds(GameProvider p, String teamId) =>
++    p.teams.firstWhere((t) => t.id == teamId).scoreByRound;
++
++void main() {
++  test(
++      '×2 : un mot refusé et le mot expiré validé à la vérification comptent '
++      'pour 2 × 2 ; interrupteur relu après un kill, charge dépensée au départ '
++      'seulement ; retour arrière = charge rendue et revalidation sans double '
++      'comptage (AC2-AC5, AC7)', () async {
++    var provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
++    await provider.startGame(fiesta: doubleEveryRound);
++    final teamId = provider.getCurrentTeam()!.id;
++
++    // AC3 : allumer / éteindre ne dépense rien.
++    provider.setDoublePoints(true);
++    provider.setDoublePoints(false);
++    provider.setDoublePoints(true);
++    expect(provider.doublePointsLeft, 1);
++
++    // AC7 : app tuée avant le départ.
++    await pumpEventQueue();
++    provider = GameProvider();
++    await pumpEventQueue();
++    expect(provider.isDoublePointsArmed, isTrue);
++    expect(provider.doublePointsLeft, 1);
++
++    provider.startTurn();
++    provider.startTurnTimer();
++    expect(provider.doublePointsLeft, 0);
++    expect(provider.isDoublePointsOn, isTrue);
++
++    provider.markWordAsGuessed();
++    provider.markWordAsGuessed();
++    provider.endTurn();
++    final guessed = provider.game.wordsGuessedThisTurn;
++    final validated = [guessed.first, provider.game.expiredWord!];
++    provider.savePreValidationState(validated);
++    provider.validateWords(validated);
++    expect(teamScore(provider, teamId), 4);
++    expect(teamRounds(provider, teamId).first, 4);
++
++    // AC4 : l'équipe suivante arme son ×2, puis on revient en arrière.
++    final nextTeamId = provider.getCurrentTeam()!.id;
++    provider.setDoublePoints(true);
++    provider.restorePreValidationState();
++    expect(teamScore(provider, teamId), 0);
++    expect(provider.isDoublePointsOn, isTrue); // le tour joué reste à ×2
++
++    // AC5 : revalidation avec un seul mot.
++    provider.savePreValidationState([guessed.first]);
++    provider.validateWords([guessed.first]);
++    expect(teamScore(provider, teamId), 2);
++    expect(teamRounds(provider, teamId).first, 2);
++    expect(provider.getCurrentTeam()!.id, nextTeamId);
++    expect(provider.isDoublePointsArmed, isFalse);
++    expect(provider.doublePointsLeft, 1);
++  });
++
++  test(
++      'Continuation de fin de manche : même tour, toujours ×2, sans dépenser '
++      'la charge de la nouvelle manche ; récap « Bonus utilisés » (AC6, AC8)',
++      () async {
++    final provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
++    await provider.startGame(fiesta: doubleEveryRound);
++    final teamId = provider.getCurrentTeam()!.id;
++    provider.setDoublePoints(true);
++    provider.startTurn();
++    provider.startTurnTimer();
++    while (provider.game.currentWord != null) {
++      provider.markWordAsGuessed();
++    }
++    final guessed = List<String>.from(provider.game.wordsGuessedThisTurn);
++    provider.savePreValidationState(guessed);
++    provider.validateWords(guessed);
++    expect(teamRounds(provider, teamId), [8, 0, 0]);
++
++    provider.nextRound();
++    expect(provider.getCurrentTeam()!.id, teamId);
++    expect(provider.isDoublePointsOn, isTrue);
++    expect(provider.doublePointsLeft, 1); // charge de M2 intacte
++
++    provider.startTurn();
++    provider.startTurnTimer();
++    expect(provider.doublePointsLeft, 1);
++    provider.markWordAsGuessed();
++    provider.endTurn();
++    final word = provider.game.wordsGuessedThisTurn.first;
++    provider.savePreValidationState([word]);
++    provider.validateWords([word]);
++    expect(teamRounds(provider, teamId), [8, 2, 0]);
++    expect(provider.isDoublePointsArmed, isFalse);
++
++    final recap = provider.modifierRecap.last;
++    expect(recap.title, 'Bonus utilisés');
++    expect(recap.detail,
++        'Mot compte double, ${provider.getTeamById(teamId)!.name} en M1');
++  });
++
++  test(
++      'Classique : l\'interrupteur est sans effet, 1 mot = 1 point, aucune '
++      'clé Fiesta écrite', () async {
++    final provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
++    await provider.startGame();
++    final teamId = provider.getCurrentTeam()!.id;
++    provider.setDoublePoints(true);
++    expect(provider.isDoublePointsArmed, isFalse);
++
++    provider.startTurn();
++    provider.startTurnTimer();
++    provider.markWordAsGuessed();
++    provider.markWordAsGuessed();
++    provider.endTurn();
++    final guessed = provider.game.wordsGuessedThisTurn;
++    provider.validateWords(guessed);
++    expect(teamScore(provider, teamId), 2);
++    expect(provider.game.toJson().containsKey('fiesta'), isFalse);
++  });
++}
