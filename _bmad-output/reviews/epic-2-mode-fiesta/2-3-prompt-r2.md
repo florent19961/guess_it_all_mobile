@@ -43,7 +43,8 @@ Rapport à écrire dans `2-3-review-r2.md`.
    - le message après un échec de `create` ;
    - la garde `_using` sur « Utiliser ».
 5. **Mutation testing des tests ajoutés.** Pour chacun : le format figé, S7, `copyName`, et la
-   ré-écriture des entrées illisibles.
+   ré-écriture des entrées illisibles, ainsi que la règle « fixé sans manche » de
+   `validateEnsemble` (finding m8 de la revue 2-4).
 6. **Les résidus assumés** (S8, S13, MINOR 7, NIT) : sont-ils bien justifiés ?
 
 ## Format attendu

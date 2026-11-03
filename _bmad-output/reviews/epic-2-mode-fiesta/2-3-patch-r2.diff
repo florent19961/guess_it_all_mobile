@@ -109,10 +109,10 @@ index 7560814..3b28613 100644
  - **Gel au lancement** : `GameProvider.startGame({FiestaRules? fiesta})` pose une `FiestaState`
 diff --git a/lib/models/fiesta/ensemble_validation.dart b/lib/models/fiesta/ensemble_validation.dart
 new file mode 100644
-index 0000000..299492b
+index 0000000..86888ba
 --- /dev/null
 +++ b/lib/models/fiesta/ensemble_validation.dart
-@@ -0,0 +1,68 @@
+@@ -0,0 +1,74 @@
 +import 'fiesta_rules.dart';
 +import 'modifier_catalog.dart';
 +
@@ -157,7 +157,13 @@ index 0000000..299492b
 +        }
 +      case ModifierArrival.fixed:
 +        final round = setting.fixedRound;
-+        if (round != null) (fixedByRound[round] ??= []).add(def.id);
++        if (round == null) {
++          // L'éditeur pose toujours une manche, mais un blob relu peut ne pas
++          // en avoir : sans manche, le modificateur ne s'appliquerait jamais.
++          errors.add('$name est fixé, mais sur aucune manche.');
++        } else {
++          (fixedByRound[round] ??= []).add(def.id);
++        }
 +    }
 +
 +    if (def.round3Only) {
@@ -1457,10 +1463,10 @@ index da9b466..b9928ff 100644
    static const String wordChoiceCustom = 'Personnalisé';
 diff --git a/test/models/fiesta/ensemble_validation_test.dart b/test/models/fiesta/ensemble_validation_test.dart
 new file mode 100644
-index 0000000..633e809
+index 0000000..1a7980a
 --- /dev/null
 +++ b/test/models/fiesta/ensemble_validation_test.dart
-@@ -0,0 +1,126 @@
+@@ -0,0 +1,136 @@
 +import 'package:flutter_test/flutter_test.dart';
 +import 'package:guess_it_all_mobile/models/fiesta/ensemble_validation.dart';
 +import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
@@ -1547,6 +1553,16 @@ index 0000000..633e809
 +    expect(
 +      validateEnsemble(rulesWith(overrides: {
 +        'free_pass': setting(ModifierArrival.offer, startRound: 1),
++      })),
++      hasLength(1),
++    );
++  });
++
++  test('« fixé » sans manche → refusé', () {
++    // Impossible par l'éditeur, possible dans un blob relu.
++    expect(
++      validateEnsemble(rulesWith(overrides: {
++        'no_pass': setting(ModifierArrival.fixed),
 +      })),
 +      hasLength(1),
 +    );

@@ -22,6 +22,25 @@ index 7560814..3b28613 100644
  - `ModifierInstance` : une cible `team` / `player` porte **toujours** son `teamId` (assert +
    `tryFromJson`). `canAdd` plafonne **par équipe** : « pour tous » + les siennes.
  - **Gel au lancement** : `GameProvider.startGame({FiestaRules? fiesta})` pose une `FiestaState`
+diff --git a/lib/models/fiesta/ensemble_validation.dart b/lib/models/fiesta/ensemble_validation.dart
+index 299492b..86888ba 100644
+--- a/lib/models/fiesta/ensemble_validation.dart
++++ b/lib/models/fiesta/ensemble_validation.dart
+@@ -42,7 +42,13 @@ List<String> validateEnsemble(FiestaRules rules) {
+         }
+       case ModifierArrival.fixed:
+         final round = setting.fixedRound;
+-        if (round != null) (fixedByRound[round] ??= []).add(def.id);
++        if (round == null) {
++          // L'éditeur pose toujours une manche, mais un blob relu peut ne pas
++          // en avoir : sans manche, le modificateur ne s'appliquerait jamais.
++          errors.add('$name est fixé, mais sur aucune manche.');
++        } else {
++          (fixedByRound[round] ??= []).add(def.id);
++        }
+     }
+ 
+     if (def.round3Only) {
 diff --git a/lib/models/fiesta/fiesta_ensemble.dart b/lib/models/fiesta/fiesta_ensemble.dart
 index 0f3289b..dc6d476 100644
 --- a/lib/models/fiesta/fiesta_ensemble.dart
@@ -321,6 +340,27 @@ index 1f69ba2..1ecd99f 100644
          'lastUsedId': store.lastUsedId,
        })),
      );
+diff --git a/test/models/fiesta/ensemble_validation_test.dart b/test/models/fiesta/ensemble_validation_test.dart
+index 633e809..1a7980a 100644
+--- a/test/models/fiesta/ensemble_validation_test.dart
++++ b/test/models/fiesta/ensemble_validation_test.dart
+@@ -89,6 +89,16 @@ void main() {
+     );
+   });
+ 
++  test('« fixé » sans manche → refusé', () {
++    // Impossible par l'éditeur, possible dans un blob relu.
++    expect(
++      validateEnsemble(rulesWith(overrides: {
++        'no_pass': setting(ModifierArrival.fixed),
++      })),
++      hasLength(1),
++    );
++  });
++
+   group('manche 3 seulement', () {
+     test('fixé sur une autre manche → refusé', () {
+       expect(
 diff --git a/test/services/fiesta_ensemble_service_test.dart b/test/services/fiesta_ensemble_service_test.dart
 index da3e83a..f8ccb68 100644
 --- a/test/services/fiesta_ensemble_service_test.dart
