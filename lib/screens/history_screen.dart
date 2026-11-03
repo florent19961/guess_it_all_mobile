@@ -25,6 +25,7 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
+  bool _busy = false;
   final _trendsKey = GlobalKey();
   final _firstGameKey = GlobalKey();
   final _replayKey = GlobalKey();
@@ -133,16 +134,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
   /// directement.
   Future<void> _replay(
       BuildContext context, GameProvider provider, GameResult game) async {
-    if (provider.game.isGameSuspended &&
-        !await AppConfirmDialog.show(
-          context,
-          title: 'Rejouer',
-          message: 'Une partie est en cours. La remplacer par ce réglage ?',
-          confirmText: 'Valider',
-        )) {
-      return;
+    if (_busy) return;
+    _busy = true;
+    try {
+      if (provider.game.isGameSuspended &&
+          !await AppConfirmDialog.show(
+            context,
+            title: 'Rejouer',
+            message: 'Une partie est en cours. La remplacer par ce réglage ?',
+            confirmText: 'Valider',
+          )) {
+        return;
+      }
+      await provider.replayFromHistory(game);
+    } finally {
+      _busy = false;
     }
-    await provider.replayFromHistory(game);
   }
 
   Widget _buildEmpty() {
