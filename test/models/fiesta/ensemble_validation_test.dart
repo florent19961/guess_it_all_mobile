@@ -89,6 +89,16 @@ void main() {
     );
   });
 
+  test('« fixé » sans manche → refusé', () {
+    // Impossible par l'éditeur, possible dans un blob relu.
+    expect(
+      validateEnsemble(rulesWith(overrides: {
+        'no_pass': setting(ModifierArrival.fixed),
+      })),
+      hasLength(1),
+    );
+  });
+
   group('manche 3 seulement', () {
     test('fixé sur une autre manche → refusé', () {
       expect(

@@ -42,7 +42,13 @@ List<String> validateEnsemble(FiestaRules rules) {
         }
       case ModifierArrival.fixed:
         final round = setting.fixedRound;
-        if (round != null) (fixedByRound[round] ??= []).add(def.id);
+        if (round == null) {
+          // L'éditeur pose toujours une manche, mais un blob relu peut ne pas
+          // en avoir : sans manche, le modificateur ne s'appliquerait jamais.
+          errors.add('$name est fixé, mais sur aucune manche.');
+        } else {
+          (fixedByRound[round] ??= []).add(def.id);
+        }
     }
 
     if (def.round3Only) {

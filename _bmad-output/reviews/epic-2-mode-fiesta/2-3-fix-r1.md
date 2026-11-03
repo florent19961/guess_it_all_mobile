@@ -15,7 +15,7 @@ ont été gardées.
 | MINOR 6 `lib/models/CLAUDE.md` | **Corrigé** | Deux lignes de modèle ajoutées, plus l'invariant « champ ajouté = optionnel à la lecture, aussi pour les ensembles ». |
 | MINOR 7 avalanche de messages | **Résidu assumé** | Ergonomie seulement, à juger en recette device. Un message par modificateur reste explicite. |
 | NIT `mode: auto` accepté | **Corrigé** | `FiestaEnsemble.tryFromJson` rejette `mode != custom`. L'entrée est alors gardée brute, pas détruite. |
-| NIT `fixed` avec `fixedRound == null` | Résidu | Impossible par l'interface : l'éditeur affiche `?? 3` et les défauts posent 3. |
+| NIT `fixed` avec `fixedRound == null` (= finding m8 de la revue de 2-4) | **Corrigé** : nouvelle règle bloquante dans `validateEnsemble` (« X est fixé, mais sur aucune manche. »). | L'interface ne peut pas produire cet état (l'éditeur affiche `?? 3`, les défauts posent 3), mais un blob relu, ancien ou modifié, peut le contenir : la règle reste donc. Test « « fixé » sans manche → refusé » ; sans la règle, il tombe (aucun message). |
 | NIT `copyWith` ne remet pas `fixedRound` à `null` | Dette notée | À rapatrier dans les types de 2-2 au besoin. Aucun usage aujourd'hui. |
 | NIT retour sans confirmation dans l'éditeur | Résidu | La maquette ne dit rien sur ce point. |
 
