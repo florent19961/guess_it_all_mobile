@@ -202,7 +202,7 @@ stories:
   2-3-ensembles-stockage-editeur:
     epic: epic-2-mode-fiesta
     title: "Ensembles : clé guessItAll_fiestaEnsembles versionnée, validation, liste et éditeur"
-    status: ready-for-dev
+    status: done   # ✅ PR #10 (squash c0e565f, mode délégué 2026-11-03). Revue Opus READY.
     depends: [2-2-fondation-modele-fiesta]
     spec: _bmad-output/specs/fiesta/2-3-ensembles-stockage-editeur.md
     note: >-
