@@ -105,14 +105,14 @@ artefacts (AAB/IPA) se téléchargent depuis Codemagic et s'uploadent à la main
 | Nom (exact) | Où dans Codemagic | Contenu |
 |-------------|-------------------|---------|
 | `gia_android_signing` | Team settings → Code signing identities → Android keystores (*reference name*) | Le keystore upload du Play Store + mot de passe, alias, mot de passe de clé (ceux du `key.properties` Windows) |
-| `gia_asc_key` | Team integrations → Developer Portal / App Store Connect (*nom de la clé API*) | Clé API App Store Connect (rôle App Manager) — sert à la signature automatique iOS |
-| `gia_firebase` | Application → Environment variables (groupe) | `GOOGLE_SERVICES_JSON` = `base64 -w0 android/app/google-services.json`, marquée *Secure* |
+| `Guess It All (flow data)` | Team integrations → Developer Portal / App Store Connect (*nom de la clé API*) | Clé API App Store Connect (rôle App Manager) — sert à la signature automatique iOS |
+| `gia_firebase` | Application → Environment variables (groupe) | `GOOGLE_SERVICES_JSON` = le contenu **brut** de `android/app/google-services.json` (ou sa version base64), marquée *Secure* |
 | `gia_google_play` | idem (groupe) — **seulement à la 1re publication** | `GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS` = JSON du compte de service Play, *Secure* |
 
 iOS n'a pas besoin de `GoogleService-Info.plist` : Firebase s'initialise via
 `lib/firebase_options.dart` (versionné). La signature iOS est **automatique** (`ios_signing`
 `app_store` sur `com.guessitall.guessItAllMobile`) : Codemagic crée/récupère certificat et profil
-via `gia_asc_key` — d'où l'absence de `DEVELOPMENT_TEAM` dans `project.pbxproj`, sans conséquence.
+via l'intégration `Guess It All (flow data)` — d'où l'absence de `DEVELOPMENT_TEAM` dans `project.pbxproj`, sans conséquence.
 
 ### Premier dry-run — à faire une fois
 

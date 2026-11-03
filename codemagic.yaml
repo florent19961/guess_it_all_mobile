@@ -7,8 +7,8 @@
 #
 # Noms à créer côté Codemagic (placeholders, cf. runbook) :
 #   - keystore Android (Code signing identities) : gia_android_signing
-#   - intégration App Store Connect (clé API)     : gia_asc_key
-#   - groupe de variables                          : gia_firebase  (GOOGLE_SERVICES_JSON, base64)
+#   - intégration App Store Connect (clé API)     : "Guess It All (flow data)"
+#   - groupe de variables                          : gia_firebase  (GOOGLE_SERVICES_JSON : JSON brut ou base64)
 #   - groupe de variables (publication, plus tard) : gia_google_play (GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS)
 
 definitions:
@@ -43,7 +43,12 @@ definitions:
         keyAlias=$CM_KEY_ALIAS
         storeFile=$CM_KEYSTORE_PATH
         EOF
-        echo "$GOOGLE_SERVICES_JSON" | base64 --decode > "$CM_BUILD_DIR/android/app/google-services.json"
+        # GOOGLE_SERVICES_JSON accepte le JSON collé tel quel OU sa version base64.
+        GS="$CM_BUILD_DIR/android/app/google-services.json"
+        case "$(printf '%s' "$GOOGLE_SERVICES_JSON" | tr -d '[:space:]' | cut -c1)" in
+          "{") printf '%s' "$GOOGLE_SERVICES_JSON" > "$GS" ;;
+          *)   printf '%s' "$GOOGLE_SERVICES_JSON" | base64 --decode > "$GS" ;;
+        esac
     - &build_aab
       name: Build Android AAB
       script: flutter build appbundle --release
@@ -71,7 +76,7 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 60
     integrations:
-      app_store_connect: gia_asc_key
+      app_store_connect: "Guess It All (flow data)"
     environment: *environment
     scripts:
       - *pub_get
@@ -89,7 +94,7 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 60
     integrations:
-      app_store_connect: gia_asc_key
+      app_store_connect: "Guess It All (flow data)"
     environment: *environment
     triggering:
       events:
