@@ -1,7 +1,8 @@
 # Brancher les aides sur un écran
 
-Le kit est prêt mais n'est branché que sur **Règles** (3 boutons) et **Accueil** (prompt
-« Première partie ? » sur le premier « Jouer »). Ce fichier dit, écran par écran, quoi poser.
+Le kit est branché partout (tous les écrans du tableau ci-dessous, plus **Règles** et le
+prompt « Première partie ? » de l'**Accueil**). Ce fichier décrit le geste et ce que porte
+chaque écran, pour en ajouter un ou vérifier un branchement.
 
 ## Le geste, partout pareil
 
@@ -35,7 +36,7 @@ résultats finaux en montrent.
 | `game_screen` Fiesta | `fiestaPreTurnHelp` | `badges` (Actif ce tour), `doublePoints` (interrupteur Mot compte double), `turnTime` (`TurnTimeCard`) | même bouton : concaténer `preTurnHelp(...) + fiestaPreTurnHelp(...)` en Fiesta |
 | `turn_screen` | `turnHelp(passPenalty: provider.currentPassPenalty)` — pas `settings.passPenalty` : la Passe gratuite Fiesta la met à 0. Malus « Interdit de passer » : ne pas poser la clé `pass` (bouton désactivé, le texte « Passe-le » serait faux) | `timer`, `word`, `guessed`, `pass`, `pause` | `right: besideCornerButton` (pause à droite). 🔴 `provider.pauseTurn()` **avant** `CoachMarks.show`, reprise **après** : le chrono ne doit jamais tourner sous l'aide |
 | `verification_screen` | `verificationHelp` | `wordList` (la liste défilante entière), `validate` | `right: 16` (HomeButton à gauche) |
-| `transition_screen` | `transitionHelp` | `previousTurn` (« Voir les N mots devinés »), `next` (« Manche suivante » / « Voir les résultats »), `back` (`GameBackButton`), `home` (`HomeButton`) | `right: besideCornerButton` |
+| `transition_screen` | `transitionHelp` | `previousTurn` (« Voir les N mots devinés »), `next` (bouton « Manche N » ; « En attente du choix : X » en Fiesta tant que le choix n'est pas fait), `back` (`GameBackButton`), `home` (`HomeButton`) | `right: besideCornerButton` |
 | `transition_screen` Fiesta | `fiestaTransitionHelp` | `catchUp` (`CatchUpCard`), `pickThree` (`PickThreeCard` / `PassPhonePanel`), `appBoost` (`AppBoostCard`) | même bouton : concaténer `fiestaTransitionHelp(...) + transitionHelp(...)` en Fiesta |
 | `results_screen` | `resultsHelp` | `podium` (la rangée du podium), `details` (Détails par manche), `replay`, `stats` | `right: besideCornerButton` |
 
@@ -84,6 +85,8 @@ chaque joueur).
 | `guessItAll_tutorialSeen` | `hasSeenTutorial` / `markTutorialSeen` | prompt « Première partie ? » déjà posé |
 | `guessItAll_fiestaTutorialSeen` | `hasSeenFiestaTutorial` / `markFiestaTutorialSeen` | tuto Fiesta déjà vu |
 | `guessItAll_firstGameDone` | `isFirstGameDone` / `markFirstGameDone` / `resetFirstGameDone` | première partie terminée |
+| `guessItAll_firstGameId` | `loadFirstGameId` / `saveFirstGameId` | `gameId` de la première partie (absent = pas encore enregistrée) |
+| `guessItAll_firstGameHelpShown` | `addFirstGameHelpShown` | liste de `écran:joueur` déjà montrés (absent = vide) |
 
 Booléens autonomes, aucune migration (règle 7). Au démarrage (`main.dart`, tâche locale),
 `FirstGameHelp.initAtStartup()` écrit **une seule fois** chaque flag tuto / première partie
