@@ -502,7 +502,7 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                       children: [
                         // Pass button
                         Expanded(
-                          key: _passKey,
+                          key: provider.passBlocked ? null : _passKey,
                           child: GestureDetector(
                             onTap: canPass && !isPaused
                                 ? () {
