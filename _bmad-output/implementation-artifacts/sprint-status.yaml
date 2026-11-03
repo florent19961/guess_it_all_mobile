@@ -21,7 +21,7 @@
 # ⚠️ `done` = mergé ET accepté. Un merge provisoire sous-revue reste `review`.
 
 project: guess_it_all_mobile
-last_updated: 2026-08-01
+last_updated: 2026-11-03
 
 epics:
   epic-0-harness:
@@ -29,13 +29,13 @@ epics:
     status: done
   epic-1-dette-baseline:
     title: "Solder la baseline rouge (aucun test qui tourne)"
-    status: backlog
+    status: done   # ✅ PR #2 (squash 8f689b2) — 123 tests verts
   epic-2-mode-fiesta:
     title: "Mode Fiesta — modificateurs de jeu par-dessus le mode libre"
     status: needs-design   # → grilling AVANT d'écrire quoi que ce soit
   epic-3-audit-remediation:
     title: "Remédiation de l'audit du 2026-08-02 (3 blockers, 20 majors)"
-    status: backlog
+    status: done   # ✅ MERGÉ PR #2 (squash 8f689b2, 2026-11-03, sur instruction Florent). Gate ② clos.
     note: >-
       Rapport : _bmad-output/reviews/audit-code-2026-08-02.md
       3 des 6 chantiers sont des PRÉ-REQUIS au mode Fiesta (temps, schéma
@@ -56,7 +56,7 @@ stories:
   3-1-runapp-avant-reseau:
     epic: epic-3-audit-remediation
     title: "runApp() avant tout réseau : sortir la sync Firestore du chemin de boot"
-    status: backlog
+    status: done   # ✅ PR #2 (squash 8f689b2).
     severity: blocker
     effort: S
     note: >-
@@ -70,7 +70,7 @@ stories:
   3-2-modele-du-temps:
     epic: epic-3-audit-remediation
     title: "Unifier le modèle du temps (une seule autorité) + brancher le cycle de vie"
-    status: backlog
+    status: done   # ✅ PR #2 (squash 8f689b2).
     severity: blocker
     effort: M
     prerequisite_for: epic-2-mode-fiesta
@@ -88,7 +88,7 @@ stories:
   3-3-schema-persiste:
     epic: epic-3-audit-remediation
     title: "Versionner le schéma persisté + quarantaine des blobs illisibles"
-    status: backlog
+    status: done   # ✅ PR #2 (squash 8f689b2).
     severity: major
     effort: M
     prerequisite_for: epic-2-mode-fiesta
@@ -102,7 +102,7 @@ stories:
   3-4-machine-etats-testable:
     epic: epic-3-audit-remediation
     title: "Rendre la machine à états testable (découper validateWords, tuer le snapshot manuel)"
-    status: backlog
+    status: done   # ✅ PR #2 (squash 8f689b2).
     severity: major
     effort: L
     prerequisite_for: epic-2-mode-fiesta
@@ -116,7 +116,7 @@ stories:
   3-5-alleger-persiste:
     epic: epic-3-audit-remediation
     title: "Alléger le blob persisté + sortir les analytics de SharedPreferences"
-    status: backlog
+    status: done   # ✅ PR #2 (squash 8f689b2). Sortie des analytics hors SharedPreferences REPORTÉE → notes_pour_plus_tard 2026-08-02.
     severity: major
     effort: M
     note: >-
@@ -127,7 +127,7 @@ stories:
   3-6-dedupliquer-ecrans:
     epic: epic-3-audit-remediation
     title: "Dédupliquer les dialogues d'écran + remettre le design system en circuit"
-    status: backlog
+    status: done   # ✅ PR #2 (squash 8f689b2).
     severity: major
     effort: M
     note: >-
@@ -138,7 +138,7 @@ stories:
   1-1-widget-test-scaffold:
     epic: epic-1-dette-baseline
     title: "Remplacer test/widget_test.dart (scaffold cassé) par un vrai smoke test"
-    status: backlog
+    status: done   # ✅ PR #2 (squash 8f689b2).
     note: >-
       Le seul fichier de test du dépôt est le scaffold Flutter par défaut : il
       pumpWidget(const MyApp()) alors que la racine est GuessItAllApp, et teste un
