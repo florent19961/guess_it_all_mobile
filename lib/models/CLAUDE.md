@@ -14,6 +14,25 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
 | `word_event.dart` | `WordEvent`, `WordEventType`, `PassEvent` | Evenement atomique : shown/guessed/passed/expired/invalidated avec contexte (round, turn, team, player) |
 | `word_stats.dart` | `WordMetadata`, `WordRoundStats`, `WordStats` | Metadonnees mot (category, difficulty, language), stats par manche et agregees |
 | `category_metadata.dart` | `CategoryMetadata` | Metadonnees categorie multilingue (id, icon, noms, locales) |
+| `fiesta/modifier_catalog.dart` | `ModifierDef`, `kModifierCatalog`, `kModifierIncompatibilities`, enums `ModifierNature/Scope/Target` | Catalogue Fiesta V1 (11 ids **figés**, du code, jamais persisté), `modifierById`, `areCompatible` |
+| `fiesta/modifier_instance.dart` | `ModifierInstance` | Modificateur actif dans une partie. `tryFromJson` tolérant (id inconnu → `null`, jamais de défaut inventé). `canAdd(active, candidate, {maxPerTurn: 2})` |
+| `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, `CatchUpRules`, enums `FiestaMode`, `ModifierArrival` | Configuration Fiesta **immuable** (Auto / Personnalisé, réglage par modificateur, rattrapage, tirage, règles communes). `CatchUpRules.auto` = constantes du mode Auto. `tryFromJson` : structure illisible → `null`, réglage d'id inconnu ignoré seul |
+| `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn}`. `turn` est vide pour l'instant (compteurs des stories d'effets) |
+
+## Fiesta — invariants (epic-2)
+
+- **`GameState.fiesta` nul = Classique.** `toJson()` n'écrit **pas** la clé quand nul : le blob
+  d'une partie Classique est octet pour octet celui d'avant. `kCurrentSchemaVersion` inchangé.
+- **Relecture tolérante** : `fiesta` non-objet ou règles illisibles → Classique ; instance ou
+  réglage illisible → ignoré seul (règle `WordEvent.tryFromJson`).
+- **Gel au lancement** : `GameProvider.startGame({FiestaRules? fiesta})` pose une `FiestaState`
+  neuve ; `FiestaRules` copie ses collections en lecture seule. Sans argument, `clearFiesta`.
+- Tout l'état Fiesta vit ici, jamais dans le provider : persisté par `_saveGameState` et
+  restauré par le retour arrière (`savePreValidationState` = `GameState.toJson()`).
+- Forme JSON : `fiesta: {rules: {mode, symmetric, autoCalibrate, ensembleName?, modifiers:
+  {id: {active, arrival, startRound, fixedRound?, charges}}, oneOfThree, catchUp: {b1, b2, cap,
+  mal, malCap}, drawCount, oneAnswer, carryOver}, active: [{catalogId, scope, target, teamId?,
+  playerId?, charges, nature, round}], turn: {}}`.
 
 ## Relations
 
