@@ -51,22 +51,69 @@ class TeamResult {
       );
 }
 
-/// Une ligne du récap « Modificateurs de la partie » (story 2-7), archivée
-/// TELLE QU'AFFICHÉE : titre et détail déjà formés.
+/// Nature d'un fait du récap « Modificateurs de la partie ».
+enum RecapKind {
+  /// Tiré ou fixé pour toutes les équipes en manche [ModifierRecapItem.round].
+  draw,
+
+  /// Rattrapage dû à [ModifierRecapItem.teamId] à l'entrée de la manche.
+  catchUp,
+
+  /// Carte 1 parmi 3 choisie par [ModifierRecapItem.chooserId].
+  choice,
+
+  /// Coup de pouce de l'app (Auto) pour [ModifierRecapItem.teamId].
+  boost,
+
+  /// Charge dépensée par [ModifierRecapItem.teamId].
+  bonusUsed,
+}
+
+/// Un fait du récap des modificateurs, archivé en DONNÉES (ids, manche,
+/// secondes) et jamais en phrases : le texte est formé à l'affichage
+/// (`formatModifierRecap`), donc traduisible plus tard (epic i18n).
 @immutable
-class ModifierRecapLine {
-  final String title;
-  final String detail;
+class ModifierRecapItem {
+  final RecapKind kind;
+  final int round;
+  final String? catalogId;
+  final String? teamId;
+  final String? chooserId;
+  final int? seconds;
 
-  const ModifierRecapLine({required this.title, required this.detail});
+  const ModifierRecapItem(
+    this.kind, {
+    required this.round,
+    this.catalogId,
+    this.teamId,
+    this.chooserId,
+    this.seconds,
+  });
 
-  Map<String, dynamic> toJson() => {'title': title, 'detail': detail};
+  Map<String, dynamic> toJson() => {
+        'kind': kind.name,
+        'round': round,
+        if (catalogId != null) 'catalogId': catalogId,
+        if (teamId != null) 'teamId': teamId,
+        if (chooserId != null) 'chooserId': chooserId,
+        if (seconds != null) 'seconds': seconds,
+      };
 
-  static ModifierRecapLine? tryFromJson(Map<String, dynamic> json) {
-    final title = json['title'];
-    final detail = json['detail'];
-    if (title is! String || detail is! String) return null;
-    return ModifierRecapLine(title: title, detail: detail);
+  /// `null` si le fait est illisible (dont une ligne `{title, detail}`
+  /// d'une version de dev antérieure) : ignoré seul.
+  static ModifierRecapItem? tryFromJson(Map<String, dynamic> json) {
+    final kind = RecapKind.values.asNameMap()[json['kind']];
+    final round = json['round'];
+    String? string(String key) => json[key] is String ? json[key] : null;
+    if (kind == null || round is! int) return null;
+    return ModifierRecapItem(
+      kind,
+      round: round,
+      catalogId: string('catalogId'),
+      teamId: string('teamId'),
+      chooserId: string('chooserId'),
+      seconds: json['seconds'] is int ? json['seconds'] : null,
+    );
   }
 }
 
@@ -97,7 +144,7 @@ class GameResult {
   final String? mode;
 
   /// Récap des modificateurs, `null` en Classique (clé absente).
-  final List<ModifierRecapLine>? modifierRecap;
+  final List<ModifierRecapItem>? modifierRecap;
 
   const GameResult({
     required this.gameId,
@@ -177,8 +224,8 @@ class GameResult {
       modifierRecap: json['modifierRecap'] is List
           ? (json['modifierRecap'] as List<dynamic>)
               .whereType<Map<String, dynamic>>()
-              .map(ModifierRecapLine.tryFromJson)
-              .whereType<ModifierRecapLine>()
+              .map(ModifierRecapItem.tryFromJson)
+              .whereType<ModifierRecapItem>()
               .toList()
           : null,
     );

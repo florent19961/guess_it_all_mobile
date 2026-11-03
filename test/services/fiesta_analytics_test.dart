@@ -177,7 +177,7 @@ void main() {
           isNot(contains(anyOf('mode', 'modifierRecap'))));
     });
 
-    test('une partie Fiesta archive son mode et son récap', () {
+    test('une partie Fiesta archive son mode et son récap, en faits', () {
       final result = GameResult(
         gameId: 'f',
         playedAt: DateTime(2026, 11, 3),
@@ -187,13 +187,21 @@ void main() {
         roundsPlayed: 3,
         mode: 'fiesta_custom',
         modifierRecap: const [
-          ModifierRecapLine(title: 'Rattrapage', detail: 'Bleue +18 s (M2)'),
+          ModifierRecapItem(RecapKind.catchUp,
+              round: 2, teamId: 'bleue', seconds: 18),
+          ModifierRecapItem(RecapKind.choice,
+              round: 3,
+              catalogId: 'block_guesser',
+              teamId: 'rouge',
+              chooserId: 'bleue'),
         ],
       );
-      final reread =
-          GameResult.tryFromJson(jsonDecode(jsonEncode(result.toJson())))!;
+      final json = jsonEncode(result.toJson());
+      final reread = GameResult.tryFromJson(jsonDecode(json))!;
       expect(reread.mode, 'fiesta_custom');
-      expect(reread.modifierRecap!.single.detail, 'Bleue +18 s (M2)');
+      // Archivé en faits (ids, secondes), jamais en phrases (epic fix B5).
+      expect(jsonEncode(reread.toJson()), json);
+      expect(json, isNot(contains('Rattrapage')));
     });
   });
 }

@@ -625,3 +625,15 @@ lecture tolérante, migration explicite seulement si une forme change. `turnAllo
 garde le champ : il est additif et optionnel, l'ancien lecteur l'ignore, et il corrige le temps
 passé par joueur (`timeSpent` mesuré sur la durée réelle du tour). Les mentions « à l'octet »
 sont corrigées dans `game_state.dart`, `lib/models/CLAUDE.md`, ce journal et le test du blob figé.
+
+## 2026-11-03 — Fiesta, fin d'epic : récap des modificateurs archivé en faits
+
+**Ce qui change.** `GameResult.modifierRecap` archive des `ModifierRecapItem` (`kind`, manche,
+id de catalogue, équipes, secondes), plus des phrases françaises. `formatModifierRecap` forme le
+texte à l'affichage (carte des Résultats). Le récap recalcule rattrapage et coup de pouce par
+`planRoundTransition`, le même plan que la transition.
+
+**Pourquoi.** Opus m6 : des phrases archivées seraient restées en français pour toujours (i18n
+prévue, epic-4). Le format Fiesta de `guessItAll_gameHistory` n'a jamais été publié, donc la
+forme change sans migration. Une ligne `{title, detail}` écrite par une build de dev se relit
+comme un fait illisible : elle est ignorée seule, sans crash.

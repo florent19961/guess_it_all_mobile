@@ -1602,9 +1602,9 @@ class GameProvider extends ChangeNotifier {
     return null;
   }
 
-  /// Récap « Modificateurs de la partie » (écran Résultats, archive). Vide en
+  /// Récap « Modificateurs de la partie », en faits (archivés). Vide en
   /// Classique.
-  List<ModifierRecapLine> get modifierRecap {
+  List<ModifierRecapItem> get _modifierRecapItems {
     final fiesta = _game.fiesta;
     if (fiesta == null) return const [];
     return buildModifierRecap(
@@ -1616,6 +1616,12 @@ class GameProvider extends ChangeNotifier {
       roundsPlayed: _game.currentRound,
     );
   }
+
+  /// Le même récap, en lignes affichées (écran Résultats).
+  List<ModifierRecapLine> get modifierRecap => formatModifierRecap(
+        _modifierRecapItems,
+        teamNames: {for (final t in _teams) t.id: t.name},
+      );
 
   /// Archive la partie terminée pour l'écran d'historique.
   ///
@@ -1650,7 +1656,7 @@ class GameProvider extends ChangeNotifier {
       turnDuration: _settings.turnDuration,
       roundsPlayed: _game.currentRound,
       mode: _game.fiesta == null ? null : fiestaModeId(_game.fiesta!.rules),
-      modifierRecap: _game.fiesta == null ? null : modifierRecap,
+      modifierRecap: _game.fiesta == null ? null : _modifierRecapItems,
     );
 
     unawaited(_history.record(result));
