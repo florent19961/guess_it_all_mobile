@@ -1,4 +1,5 @@
 import '../utils/constants.dart';
+import 'fiesta/fiesta_state.dart';
 
 class HistoryEntry {
   final int round;
@@ -108,6 +109,10 @@ class GameState {
   List<String>?
       restoredValidatedWords; // Mots validés à restaurer lors du retour en arrière
 
+  /// État Fiesta, gelé au lancement. 🔴 Nul = partie Classique ; absent du
+  /// JSON quand nul, pour que le blob d'une partie Classique ne change pas.
+  FiestaState? fiesta;
+
   GameState({
     this.gameId,
     this.currentScreen = AppConstants.screenHome,
@@ -136,6 +141,7 @@ class GameState {
     this.pendingBonusTurnId,
     this.preValidationSnapshot,
     this.restoredValidatedWords,
+    this.fiesta,
   })  : teamPlayOrder = teamPlayOrder ?? [],
         playerOrderByTeam = playerOrderByTeam ?? {},
         allWords = allWords ?? [],
@@ -188,6 +194,8 @@ class GameState {
     bool clearPreValidationSnapshot = false,
     List<String>? restoredValidatedWords,
     bool clearRestoredValidatedWords = false,
+    FiestaState? fiesta,
+    bool clearFiesta = false,
   }) {
     return GameState(
       gameId: clearGameId ? null : (gameId ?? this.gameId),
@@ -240,6 +248,7 @@ class GameState {
       restoredValidatedWords: clearRestoredValidatedWords
           ? null
           : (restoredValidatedWords ?? this.restoredValidatedWords),
+      fiesta: clearFiesta ? null : (fiesta ?? this.fiesta),
     );
   }
 
@@ -272,6 +281,9 @@ class GameState {
       'pendingBonusTurnId': pendingBonusTurnId,
       'preValidationSnapshot': preValidationSnapshot,
       'restoredValidatedWords': restoredValidatedWords,
+      // Pas de clé `fiesta: null` : absent = Classique, et le blob d'une
+      // partie Classique reste octet pour octet celui d'avant.
+      if (fiesta != null) 'fiesta': fiesta!.toJson(),
     };
   }
 
@@ -321,6 +333,12 @@ class GameState {
           json['preValidationSnapshot'] as Map<String, dynamic>?,
       restoredValidatedWords:
           (json['restoredValidatedWords'] as List<dynamic>?)?.cast<String>(),
+      // Un `fiesta` qui n'est pas un objet, ou illisible, donne une partie
+      // Classique : jamais un crash.
+      fiesta: json['fiesta'] is Map
+          ? FiestaState.tryFromJson(
+              Map<String, dynamic>.from(json['fiesta'] as Map))
+          : null,
     );
   }
 }
