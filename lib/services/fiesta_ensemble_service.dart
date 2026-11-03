@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show StringCharacters;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
@@ -51,7 +52,7 @@ class FiestaEnsembleService {
   /// Les ensembles, dans l'ordre d'affichage. Ne lève jamais.
   Future<EnsembleStore> load() async {
     try {
-      return await _read();
+      return (await _read()).$1;
     } catch (e) {
       // Panne transitoire : on n'efface rien, on rend simplement vide.
       debugPrint('[FiestaEnsembles] Lecture impossible: $e');
@@ -104,12 +105,15 @@ class FiestaEnsembleService {
   Future<void> markUsed(String id) =>
       _mutate((store) => (EnsembleStore(store.ensembles, id), null));
 
-  /// Q13 : pas d'unicité imposée, tronqué à la longueur maximale.
+  /// Q13 : pas d'unicité imposée, 30 caractères au plus. C'est le nom de
+  /// BASE qu'on raccourcit, pas le suffixe : sinon la copie d'un nom de 30
+  /// caractères porterait exactement le nom de l'original. Coupe en
+  /// caractères visibles (comme le `maxLength` du champ), jamais au milieu
+  /// d'un emoji.
   static String copyName(String name) {
-    final copy = '$name (copie)';
-    return copy.length <= maxNameLength
-        ? copy
-        : copy.substring(0, maxNameLength);
+    const suffix = ' (copie)';
+    final base = name.characters.take(maxNameLength - suffix.length);
+    return '$base$suffix';
   }
 
   /// Relit, applique [change], réécrit. [change] rend `null` pour ne rien
@@ -120,9 +124,10 @@ class FiestaEnsembleService {
   ) =>
       _serialized(() async {
         try {
-          final result = change(await _read());
+          final (store, unreadable) = await _read();
+          final result = change(store);
           if (result == null) return null;
-          await _write(result.$1);
+          await _write(result.$1, unreadable);
           return result.$2;
         } catch (e) {
           debugPrint('[FiestaEnsembles] Échec de modification: $e');
@@ -130,10 +135,14 @@ class FiestaEnsembleService {
         }
       });
 
-  Future<EnsembleStore> _read() async {
+  /// Rend aussi les entrées brutes illisibles : `_write` les réécrit telles
+  /// quelles. Un ensemble qu'une version donnée ne sait pas relire n'est
+  /// jamais détruit par la modification d'un autre (règle 7).
+  Future<(EnsembleStore, List<Object?>)> _read() async {
+    const nothing = (EnsembleStore.empty, <Object?>[]);
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(storageKey);
-    if (raw == null) return EnsembleStore.empty;
+    if (raw == null) return nothing;
 
     PersistedRead read;
     try {
@@ -145,35 +154,38 @@ class FiestaEnsembleService {
       debugPrint('[FiestaEnsembles] Blob illisible (${read.status}), '
           'quarantaine');
       await prefs.remove(storageKey);
-      return EnsembleStore.empty;
+      return nothing;
     }
-    if (!read.isUsable) return EnsembleStore.empty;
+    if (!read.isUsable) return nothing;
 
     final data = read.data!;
     final entries = data['ensembles'];
     final lastUsedId = data['lastUsedId'];
     // Un ensemble illisible est ignoré seul : un seul abîmé ne doit pas
     // effacer tous ceux de l'utilisateur.
-    final ensembles = entries is List
-        ? entries
-            .whereType<Map>()
-            .map(
-                (e) => FiestaEnsemble.tryFromJson(Map<String, dynamic>.from(e)))
-            .whereType<FiestaEnsemble>()
-            .toList()
-        : <FiestaEnsemble>[];
-    return EnsembleStore(
-      ensembles,
-      lastUsedId is String ? lastUsedId : null,
+    final ensembles = <FiestaEnsemble>[];
+    final unreadable = <Object?>[];
+    for (final entry in entries is List ? entries : const []) {
+      final ensemble = entry is Map
+          ? FiestaEnsemble.tryFromJson(Map<String, dynamic>.from(entry))
+          : null;
+      ensemble == null ? unreadable.add(entry) : ensembles.add(ensemble);
+    }
+    return (
+      EnsembleStore(ensembles, lastUsedId is String ? lastUsedId : null),
+      unreadable,
     );
   }
 
-  Future<void> _write(EnsembleStore store) async {
+  Future<void> _write(EnsembleStore store, List<Object?> unreadable) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
       storageKey,
       jsonEncode(wrapWithSchema({
-        'ensembles': store.ensembles.map((e) => e.toJson()).toList(),
+        'ensembles': [
+          ...store.ensembles.map((e) => e.toJson()),
+          ...unreadable,
+        ],
         'lastUsedId': store.lastUsedId,
       })),
     );

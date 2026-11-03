@@ -10,6 +10,18 @@ import '../helpers/test_prefs.dart';
 
 const key = FiestaEnsembleService.storageKey;
 
+/// Blob FIGÉ, tel qu'écrit par la version qui introduit les ensembles (2-3).
+/// 🔴 Ne jamais le régénérer : s'il ne se relit plus en entier, c'est qu'un
+/// changement de `FiestaRules` effacerait les ensembles des joueurs.
+const frozenBlob = '{"schemaVersion":1,"data":{"ensembles":[{"id":"e1",'
+    '"rules":{"mode":"custom","symmetric":true,"autoCalibrate":true,'
+    '"ensembleName":"Soirée chez Max","modifiers":{"no_pass":{"active":true,'
+    '"arrival":"draw","startRound":1,"fixedRound":3,"charges":0},'
+    '"free_pass":{"active":false,"arrival":"offer","startRound":2,'
+    '"fixedRound":3,"charges":2}},"oneOfThree":true,"catchUp":{"b1":3,'
+    '"b2":5,"cap":30,"mal":1,"malCap":15},"drawCount":2,"oneAnswer":false,'
+    '"carryOver":true}}],"lastUsedId":"e1"}}';
+
 void main() {
   final service = FiestaEnsembleService();
 
@@ -34,6 +46,41 @@ void main() {
     final restored = store.ensembles.single;
     expect(restored.id, created.id);
     expect(jsonEncode(restored.rules.toJson()), jsonEncode(rules.toJson()));
+  });
+
+  test('format figé de la 1re version : relu en entier', () async {
+    await givenPrefs({key: frozenBlob});
+
+    final store = await service.load();
+    expect(store.lastUsedId, 'e1');
+    final rules = store.ensembles.single.rules;
+    expect(rules.ensembleName, 'Soirée chez Max');
+    expect(rules.modifiers.keys, ['no_pass', 'free_pass']);
+    expect(rules.modifiers['free_pass']!.charges, 2);
+    expect(rules.drawCount, 2);
+    expect(rules.oneAnswer, isFalse);
+    expect(rules.catchUp.b2, 5);
+  });
+
+  test('supprimer le dernier utilisé efface lastUsedId (AC6)', () async {
+    await givenPrefs();
+    final a = (await service.create(defaultEnsembleRules('A')))!;
+    final b = (await service.create(defaultEnsembleRules('B')))!;
+    await service.markUsed(a.id);
+
+    await service.delete(a.id);
+
+    final store = await service.load();
+    expect(store.ensembles.map((e) => e.id), [b.id]);
+    expect(store.lastUsedId, isNull, reason: 'sinon il pointe dans le vide');
+  });
+
+  test('la copie d\'un nom de 30 caractères reste distincte', () {
+    final name = 'x' * FiestaEnsembleService.maxNameLength;
+    final copy = FiestaEnsembleService.copyName(name);
+    expect(copy, isNot(name));
+    expect(copy, endsWith(' (copie)'));
+    expect(copy.length, FiestaEnsembleService.maxNameLength);
   });
 
   group('lecture tolérante', () {
@@ -76,6 +123,11 @@ void main() {
           isFalse);
       expect(ensembles.single.rules.modifiers.containsKey('no_pass'), isTrue);
       expect(await rawString(key), isNotNull, reason: 'pas de quarantaine');
+
+      // Modifier un AUTRE ensemble ne détruit pas celui qu'on ne sait pas lire.
+      await service.create(defaultEnsembleRules('C'));
+      final stored = (await persistedData(key))!['ensembles'] as List;
+      expect(stored, anyElement(equals({'id': 'b', 'rules': 'cassé'})));
     });
   });
 

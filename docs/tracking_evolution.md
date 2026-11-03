@@ -377,9 +377,13 @@ l'enregistrement. Écrans « Mes ensembles » et éditeur.
   sans file, deux taps rapides liraient 9 et passeraient la borne, ou l'un écraserait l'autre.
 - **Une lecture en panne fait échouer la modification** au lieu de réécrire une liste vide par
   dessus des ensembles qu'on n'a pas pu lire ; `load()` seul rend vide sans effacer.
-- **Pas d'interrupteur de rattrapage** : la story demande 5 curseurs, `CatchUpRules` n'a pas de
-  champ « actif » ; tout à 0 = coupé. **Tirage pour tous d'un ensemble = `symmetric` ET
+- **Interrupteur de rattrapage d'interface seulement** (revue r1, maquette) : `CatchUpRules` n'a
+  pas de champ « actif » ; off = les 5 curseurs à 0, on = `CatchUpRules.auto` ; « actif » =
+  un curseur > 0 (`catchUpOn`). **Tirage pour tous d'un ensemble = `symmetric` ET
   `drawCount > 0`** (interrupteur + compteur de la maquette) : 2-5 doit lire les deux.
 - `copyWith` posés en **extensions** dans `fiesta_ensemble.dart` : les types de 2-2 ne changent
   pas.
+- **Un ensemble illisible n'est jamais détruit** (revue r1) : ses entrées brutes sont réécrites
+  telles quelles à chaque modification d'un autre ; un **blob figé** en test garantit que le
+  format de cette version se relit en entier.
 

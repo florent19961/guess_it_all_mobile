@@ -126,7 +126,8 @@ tous les curseurs à chaque partie.
   Contrat détaillé : `lib/screens/CLAUDE.md`.
 - **Recette device** : faute de bouton avant 2-4, elle se joue après 2-4 (ou en appelant la
   route à la main).
-- **Interprétations** : rattrapage sans interrupteur (5 curseurs, tout à 0 = coupé) ; le tirage
+- **Interprétations** : rattrapage avec un interrupteur d'interface (off = 5 curseurs à 0, on =
+  valeurs Auto ; rien de plus persisté) ; le tirage
   pour tous d'un ensemble est actif si `symmetric` **et** `drawCount > 0` ; les modificateurs
   « manche 3 seulement » ont leur manche verrouillée à 3 dans l'éditeur (comme la maquette) ;
   un nouvel ensemble part du `mkSet` de la maquette (`defaultEnsembleRules`).

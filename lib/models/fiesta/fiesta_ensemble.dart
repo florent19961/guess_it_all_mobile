@@ -23,7 +23,9 @@ class FiestaEnsemble {
     final rawRules = json['rules'];
     if (id is! String || rawRules is! Map) return null;
     final rules = FiestaRules.tryFromJson(Map<String, dynamic>.from(rawRules));
-    if (rules == null) return null;
+    // Un ensemble est toujours Personnalisé : des règles Auto ici ne
+    // viennent pas de l'éditeur, on ne les rend pas à `onUse`.
+    if (rules == null || rules.mode != FiestaMode.custom) return null;
     return FiestaEnsemble(id: id, rules: rules);
   }
 }
@@ -82,6 +84,12 @@ extension FiestaRulesCopy on FiestaRules {
         carryOver: carryOver ?? this.carryOver,
       );
 }
+
+/// Le rattrapage d'un ensemble est « actif » dès qu'un de ses curseurs est
+/// au-dessus de 0 : l'interrupteur de l'éditeur n'est pas un champ persisté
+/// (`CatchUpRules` n'en a pas), il met tout à 0 ou rend `CatchUpRules.auto`.
+bool catchUpOn(CatchUpRules c) =>
+    c.b1 > 0 || c.b2 > 0 || c.cap > 0 || c.mal > 0 || c.malCap > 0;
 
 /// Copie modifiée d'un réglage, pour l'éditeur (même raison que ci-dessus).
 extension ModifierSettingCopy on ModifierSetting {

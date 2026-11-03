@@ -93,13 +93,18 @@ class _FiestaEnsembleEditorScreenState
       Navigator.of(context).pop(true);
       return;
     }
+    // `create` rend aussi `null` sur une lecture en panne : on ne parle de la
+    // limite que si la liste relue est vraiment pleine.
+    final full = (await service.load()).ensembles.length >=
+        FiestaEnsembleService.maxEnsembles;
+    if (!mounted) return;
     setState(() => _saving = false);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(initial == null
+        content: Text(initial == null && full
             ? 'Limite de ${FiestaEnsembleService.maxEnsembles} ensembles '
                 'atteinte : rien n\'a été enregistré.'
-            : 'Enregistrement impossible : cet ensemble n\'existe plus.'),
+            : 'Enregistrement impossible, réessaie.'),
       ),
     );
   }
@@ -302,7 +307,6 @@ class _FiestaEnsembleEditorScreenState
 
   Widget _buildCatchUp() {
     final c = _rules.catchUp;
-    // Pas d'interrupteur : le rattrapage est coupé quand ses curseurs sont à 0.
     Widget slider(String label, int value, int max, int step,
             void Function(int) set) =>
         AppSlider(
@@ -313,26 +317,40 @@ class _FiestaEnsembleEditorScreenState
           unit: ' s',
           onChanged: (v) => set((v / step).round() * step),
         );
+    final on = catchUpOn(c);
     return _Card(
       title: 'Rattrapage',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          slider('Bonus après M1 (par point d\'écart)', c.b1, 10, 1,
-              (v) => _setCatchUp(b1: v)),
-          slider('Bonus après M2 (par point d\'écart)', c.b2, 10, 1,
-              (v) => _setCatchUp(b2: v)),
-          slider('Plafond du bonus', c.cap, 60, 5, (v) => _setCatchUp(cap: v)),
-          slider('Malus du leader (par point d\'écart)', c.mal, 5, 1,
-              (v) => _setCatchUp(mal: v)),
-          slider('Plafond du malus', c.malCap, 30, 5,
-              (v) => _setCatchUp(malCap: v)),
-          const _Hint(
-            'Le malus du leader s\'applique sur son 1er tour de la manche. '
-            'Écart mesuré par rapport à l\'équipe en tête.',
-          ),
-        ],
+      // Interrupteur d'interface (maquette) : off = tout à 0, on = valeurs
+      // du mode Auto. Rien de plus n'est persisté.
+      trailing: _switch(
+        on,
+        (v) => setState(() => _rules = _rules.copyWith(
+              catchUp: v
+                  ? CatchUpRules.auto
+                  : const CatchUpRules(b1: 0, b2: 0, cap: 0, mal: 0, malCap: 0),
+            )),
       ),
+      child: !on
+          ? const _Hint('Pas de temps en plus ni en moins selon le score.')
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                slider('Bonus après M1 (par point d\'écart)', c.b1, 10, 1,
+                    (v) => _setCatchUp(b1: v)),
+                slider('Bonus après M2 (par point d\'écart)', c.b2, 10, 1,
+                    (v) => _setCatchUp(b2: v)),
+                slider('Plafond du bonus', c.cap, 60, 5,
+                    (v) => _setCatchUp(cap: v)),
+                slider('Malus du leader (par point d\'écart)', c.mal, 5, 1,
+                    (v) => _setCatchUp(mal: v)),
+                slider('Plafond du malus', c.malCap, 30, 5,
+                    (v) => _setCatchUp(malCap: v)),
+                const _Hint(
+                  'Le malus du leader s\'applique sur son 1er tour de la manche. '
+                  'Écart mesuré par rapport à l\'équipe en tête.',
+                ),
+              ],
+            ),
     );
   }
 

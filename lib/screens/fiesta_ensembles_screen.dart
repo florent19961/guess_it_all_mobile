@@ -31,6 +31,9 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
   final _service = FiestaEnsembleService();
   EnsembleStore? _store;
 
+  /// Un double tap sur « Utiliser » ne doit pas naviguer deux fois.
+  bool _using = false;
+
   @override
   void initState() {
     super.initState();
@@ -55,8 +58,14 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
   }
 
   Future<void> _use(FiestaEnsemble ensemble) async {
-    await _service.markUsed(ensemble.id);
-    widget.onUse(ensemble);
+    if (_using) return;
+    _using = true;
+    try {
+      await _service.markUsed(ensemble.id);
+      if (mounted) widget.onUse(ensemble);
+    } finally {
+      _using = false;
+    }
   }
 
   Future<void> _duplicate(FiestaEnsemble ensemble) async {
@@ -179,7 +188,8 @@ class _EnsembleCard extends StatelessWidget {
         ? 'tirage ${rules.drawCount}/manche'
         : 'sans tirage';
     return '$active modificateurs · '
-        '${rules.oneOfThree ? 'choix 1 parmi 3' : 'pas de choix'} · $draw';
+        '${rules.oneOfThree ? 'choix 1 parmi 3' : 'pas de choix'} · '
+        '${catchUpOn(rules.catchUp) ? 'rattrapage' : 'sans rattrapage'} · $draw';
   }
 
   @override
