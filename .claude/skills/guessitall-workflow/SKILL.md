@@ -15,11 +15,11 @@ prime sur cette skill. **Pas de gates numérotés** (décision Florent 2026-11-0
 | Tier | Exemples | Implémenteur | Revue |
 |---|---|---|---|
 | **Trivial** | copie, libellé, ajout de mots, style, doc, board, fix mécanique d'un fichier | Sonnet | aucune |
-| **Standard** | écrans, UI, thème, catégories, outillage | Opus | 1 reviewer Opus |
-| **Risqué** | les six zones ci-dessous | Opus | 1 reviewer Opus (mutation testing obligatoire) |
+| **Standard** | écrans, UI, thème, catégories, outillage | Opus | 1 reviewer Codex |
+| **Risqué** | les six zones ci-dessous | Opus | 1 reviewer Codex (mutation testing obligatoire) |
 
 Dans le doute, prendre le plus haut. Jamais de PRD ni de party-mode pour un fix de quelques lignes.
-**Pas de Codex, jamais de Fable** (décisions Florent 2026-11-03) : implémenteurs et reviewers = Opus, Sonnet pour le trivial.
+**Revue = Codex, jamais de Fable** (décisions Florent 2026-11-03) : implémenteurs Opus (Sonnet pour le trivial), reviewer Codex (agent `codex:codex-rescue`, consigne lecture seule). Pas de second reviewer.
 
 🔴 **Zones risquées de ce projet** :
 1. **Machine à états de la partie** — manches, tours, équipes, pool de mots, fin de partie.
@@ -71,7 +71,7 @@ Dans le doute, prendre le plus haut. Jamais de PRD ni de party-mode pour un fix 
 
 La lane prépare `_bmad-output/reviews/<epic>/<story>-patch-rN.diff`, calculé sur la merge-base
 (`git diff $(git merge-base origin/main HEAD)`), et `<story>-prompt-rN.md` (objectif, décisions
-de l'epic, questions précises, format attendu). La session principale lance **un reviewer Opus**
+de l'epic, questions précises, format attendu). La session principale lance **un reviewer Codex**
 (`general-purpose` + rubrique inline), qui lit le patch (jamais `git diff` lui-même) et écrit son
 rapport dans un fichier :
 - conformité aux AC, **sur les deux plateformes** ;

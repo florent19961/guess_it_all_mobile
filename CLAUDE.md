@@ -57,7 +57,7 @@ revue d'epic, passation) ; une lane suit `guessitall-workflow`.
    conflits → lanes, dosage, prompt-pack.
 5. **Implémenter chaque lane** → un worktree par lane (jusqu'à 5, `guessitall-orchestration` §3),
    en suivant **`guessitall-workflow`** : tests minimaux, puis la revue que le tier impose
-   (trivial : aucune ; standard et risqué : 1 reviewer Opus, sans Codex). Pas de gates numérotés.
+   (trivial : aucune ; standard et risqué : 1 reviewer Codex). Pas de gates numérotés.
 6. **Teach-back puis closeout** → `teach-back` (compréhension avant merge — skip auto si
    trivial) puis `guessitall-pr-closeout` (PR base `main`) — **merge uniquement sur go explicite de
    Florent**.
