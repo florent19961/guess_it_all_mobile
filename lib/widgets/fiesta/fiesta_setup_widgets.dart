@@ -264,17 +264,16 @@ class FiestaLine extends StatelessWidget {
   }
 }
 
-/// Les deux règles communes Fiesta (maquette `commonCard`).
+/// La règle commune Fiesta (maquette `commonCard`). Le temps reporté de fin
+/// de manche n'est pas un réglage : il est toujours conservé.
 class FiestaCommonRulesCard extends StatelessWidget {
   final bool oneAnswer;
-  final bool carryOver;
 
   /// Nul = lecture seule (Récap).
-  final void Function({bool? oneAnswer, bool? carryOver})? onChanged;
+  final void Function({bool? oneAnswer})? onChanged;
 
   const FiestaCommonRulesCard({
     required this.oneAnswer,
-    required this.carryOver,
     this.onChanged,
     super.key,
   });
@@ -291,13 +290,6 @@ class FiestaCommonRulesCard extends StatelessWidget {
               '(pénalité de passe). Simple annonce, l\'app ne vérifie pas.',
           value: oneAnswer,
           onChanged: edit == null ? null : (v) => edit(oneAnswer: v),
-        ),
-        FiestaLine(
-          label: 'Temps reporté de fin de manche',
-          detail: 'Le temps restant à la fin d\'une manche est rendu à '
-              'l\'équipe au début de la suivante.',
-          value: carryOver,
-          onChanged: edit == null ? null : (v) => edit(carryOver: v),
         ),
       ],
     );

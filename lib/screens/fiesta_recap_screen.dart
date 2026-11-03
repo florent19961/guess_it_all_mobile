@@ -61,7 +61,6 @@ class FiestaRecapScreen extends StatelessWidget {
         ),
         FiestaCommonRulesCard(
           oneAnswer: rules.oneAnswer,
-          carryOver: rules.carryOver,
         ),
         FiestaCard(
           title: 'Réglages de base',

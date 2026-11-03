@@ -388,13 +388,6 @@ class _FiestaEnsembleEditorScreenState
               (v) => setState(() => _rules = _rules.copyWith(oneAnswer: v)),
             ),
           ),
-          _line(
-            'Temps reporté de fin de manche',
-            _switch(
-              _rules.carryOver,
-              (v) => setState(() => _rules = _rules.copyWith(carryOver: v)),
-            ),
-          ),
         ],
       ),
     );

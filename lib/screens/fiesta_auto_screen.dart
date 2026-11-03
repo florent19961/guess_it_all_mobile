@@ -26,7 +26,6 @@ class _FiestaAutoScreenState extends State<FiestaAutoScreen> {
   late bool _symmetric = _previous?.symmetric ?? true;
   late bool _autoCalibrate = _previous?.autoCalibrate ?? true;
   late bool _oneAnswer = _previous?.oneAnswer ?? true;
-  late bool _carryOver = _previous?.carryOver ?? true;
 
   @override
   Widget build(BuildContext context) {
@@ -71,10 +70,8 @@ class _FiestaAutoScreenState extends State<FiestaAutoScreen> {
         ),
         FiestaCommonRulesCard(
           oneAnswer: _oneAnswer,
-          carryOver: _carryOver,
-          onChanged: ({oneAnswer, carryOver}) => setState(() {
+          onChanged: ({oneAnswer}) => setState(() {
             _oneAnswer = oneAnswer ?? _oneAnswer;
-            _carryOver = carryOver ?? _carryOver;
           }),
         ),
       ],
@@ -102,7 +99,6 @@ class _FiestaAutoScreenState extends State<FiestaAutoScreen> {
                         symmetric: _symmetric,
                         autoCalibrate: _autoCalibrate,
                         oneAnswer: _oneAnswer,
-                        carryOver: _carryOver,
                       ),
                     );
                     provider.goToScreen(AppConstants.screenFiestaRecap);

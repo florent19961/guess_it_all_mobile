@@ -69,7 +69,6 @@ extension FiestaRulesCopy on FiestaRules {
     bool? symmetric,
     int? drawCount,
     bool? oneAnswer,
-    bool? carryOver,
   }) =>
       FiestaRules(
         mode: mode,
@@ -81,7 +80,6 @@ extension FiestaRulesCopy on FiestaRules {
         catchUp: catchUp ?? this.catchUp,
         drawCount: drawCount ?? this.drawCount,
         oneAnswer: oneAnswer ?? this.oneAnswer,
-        carryOver: carryOver ?? this.carryOver,
       );
 }
 

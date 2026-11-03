@@ -213,19 +213,19 @@ void main() {
       final json = GameState(gameId: 'abc', fiesta: fiestaState()).toJson();
       final rules = (json['fiesta'] as Map<String, dynamic>)['rules']
           as Map<String, dynamic>;
-      rules.remove('carryOver');
+      rules.remove('oneAnswer');
       rules['fromTheFuture'] = 42;
       (rules['catchUp'] as Map<String, dynamic>).remove('malCap');
 
       final restored = GameState.fromJson(json);
 
       expect(restored.fiesta, isNotNull);
-      expect(restored.fiesta!.rules.carryOver, isTrue);
+      expect(restored.fiesta!.rules.oneAnswer, isTrue);
       expect(restored.fiesta!.rules.catchUp.malCap, CatchUpRules.auto.malCap);
       expect(restored.fiesta!.rules.catchUp.b1, 2,
           reason: 'les présents restent');
 
-      rules['carryOver'] = 'oui';
+      rules['oneAnswer'] = 'oui';
       expect(GameState.fromJson(json).fiesta, isNull);
     });
 
