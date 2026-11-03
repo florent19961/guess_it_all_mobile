@@ -9,6 +9,7 @@ import '../services/audio_service.dart';
 import '../utils/reversed_word.dart';
 import '../widgets/common/app_confirm_dialog.dart';
 import '../models/fiesta/modifier_catalog.dart';
+import '../widgets/fiesta/fiesta_turn_widgets.dart';
 import '../widgets/fiesta/modifier_badge.dart';
 
 class TurnScreen extends StatefulWidget {
@@ -262,6 +263,24 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
     final hasFreePass = provider.hasFreePass;
     final hasWordsToPassTo = provider.effectiveRemainingWordsCount > 0;
     final canPass = provider.canPassWith(timeRemaining) && hasWordsToPassTo;
+    // Fiesta 2-11 : deux cartes, chacune avec ses boutons (une seule au
+    // dernier mot). Le mot visé est passé au provider : un tap sur une carte
+    // déjà remplacée est ignoré.
+    final twoWords = provider.isTwoWordsOn && currentWord != null;
+    VoidCallback? guess(String word) => isPaused
+        ? null
+        : () {
+            HapticFeedback.lightImpact();
+            AudioService.playDing();
+            provider.markWordAsGuessed(word);
+          };
+    VoidCallback? pass(String word) => canPass && !isPaused
+        ? () {
+            HapticFeedback.mediumImpact();
+            AudioService.playWhoosh();
+            provider.passWord(word);
+          }
+        : null;
 
     return Material(
       color: AppColors.backgroundMain,
@@ -328,7 +347,8 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
 
                         // Fiesta : modificateurs du tour, sous le chrono.
                         if (provider.turnModifiers.isNotEmpty ||
-                            provider.isDoublePointsOn) ...[
+                            provider.isDoublePointsOn ||
+                            provider.isTwoWordsOn) ...[
                           const SizedBox(height: 8),
                           ModifierBadges(
                             modifiers: provider.turnModifiers,
@@ -337,6 +357,12 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                                 const ModifierBadge(
                                   icon: '×2',
                                   label: 'Mot compte double',
+                                  nature: ModifierNature.bonus,
+                                ),
+                              if (provider.isTwoWordsOn)
+                                const ModifierBadge(
+                                  icon: '⧉',
+                                  label: 'Deux mots à la fois',
                                   nature: ModifierNature.bonus,
                                 ),
                             ],
@@ -356,36 +382,61 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                         ] else
                           const SizedBox(height: 32),
 
-                        // Current word
-                        Flexible(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: AutoSizeText(
-                              // À l'envers : affichage du tour SEULEMENT, le
-                              // mot du jeu reste en clair.
-                              provider.isWordReversed
-                                  ? reversedWordDisplay(currentWord ?? '')
-                                  : currentWord ?? '',
-                              style: const TextStyle(
-                                fontFamily: 'Bangers',
-                                fontSize: 72,
-                                color: Colors.white,
-                                shadows: [
-                                  Shadow(
-                                    offset: Offset(2, 2),
-                                    color: AppColors.primaryPinkDark,
-                                    blurRadius: 0,
-                                  ),
-                                ],
+                        if (twoWords)
+                          Flexible(
+                            child: SingleChildScrollView(
+                              child: TwoWordsLayout(
+                                firstWord: currentWord,
+                                secondWord: provider.secondWord,
+                                reversed: provider.isWordReversed,
+                                passLabel: hasFreePass
+                                    ? 'Passer · gratuit'
+                                    : passPenalty > 0
+                                        ? 'Passer · −$passPenalty s'
+                                        : 'Passer',
+                                onGuessedFirst: guess(currentWord),
+                                onPassFirst: pass(currentWord),
+                                onGuessedSecond: provider.secondWord == null
+                                    ? null
+                                    : guess(provider.secondWord!),
+                                onPassSecond: provider.secondWord == null
+                                    ? null
+                                    : pass(provider.secondWord!),
                               ),
-                              textAlign: TextAlign.center,
-                              maxLines: 3,
-                              minFontSize: 36,
-                              wrapWords: false,
-                              overflow: TextOverflow.ellipsis,
+                            ),
+                          )
+                        else
+                          // Current word
+                          Flexible(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: AutoSizeText(
+                                // À l'envers : affichage du tour SEULEMENT, le
+                                // mot du jeu reste en clair.
+                                provider.isWordReversed
+                                    ? reversedWordDisplay(currentWord ?? '')
+                                    : currentWord ?? '',
+                                style: const TextStyle(
+                                  fontFamily: 'Bangers',
+                                  fontSize: 72,
+                                  color: Colors.white,
+                                  shadows: [
+                                    Shadow(
+                                      offset: Offset(2, 2),
+                                      color: AppColors.primaryPinkDark,
+                                      blurRadius: 0,
+                                    ),
+                                  ],
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 3,
+                                minFontSize: 36,
+                                wrapWords: false,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ),
-                        ),
 
                         const SizedBox(height: 16),
 
@@ -411,101 +462,102 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
 
                   const SizedBox(height: 32),
 
-                  // Action buttons (fixes en bas)
-                  Row(
-                    children: [
-                      // Pass button
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: canPass && !isPaused
-                              ? () {
-                                  HapticFeedback.mediumImpact();
-                                  AudioService.playWhoosh();
-                                  provider.passWord();
-                                }
-                              : null,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 20),
-                            decoration: BoxDecoration(
-                              color: canPass && !isPaused
-                                  ? AppColors.error
-                                  : AppColors.gray700,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.skip_next,
-                                  color: canPass && !isPaused
-                                      ? Colors.white
-                                      : AppColors.gray500,
-                                  size: 32,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  provider.passBlocked
-                                      ? 'Passer (bloqué)'
-                                      : 'Passer',
-                                  style: TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
+                  // Action buttons (fixes en bas). Deux mots : sur les cartes.
+                  if (!twoWords)
+                    Row(
+                      children: [
+                        // Pass button
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: canPass && !isPaused
+                                ? () {
+                                    HapticFeedback.mediumImpact();
+                                    AudioService.playWhoosh();
+                                    provider.passWord();
+                                  }
+                                : null,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 20),
+                              decoration: BoxDecoration(
+                                color: canPass && !isPaused
+                                    ? AppColors.error
+                                    : AppColors.gray700,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.skip_next,
                                     color: canPass && !isPaused
                                         ? Colors.white
                                         : AppColors.gray500,
+                                    size: 32,
                                   ),
-                                ),
-                                if (passPenalty > 0 || hasFreePass)
+                                  const SizedBox(height: 4),
                                   Text(
-                                    hasFreePass
-                                        ? 'gratuit'
-                                        : '-${passPenalty}s',
+                                    provider.passBlocked
+                                        ? 'Passer (bloqué)'
+                                        : 'Passer',
                                     style: TextStyle(
                                       fontFamily: 'Poppins',
-                                      fontSize: 12,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
                                       color: canPass && !isPaused
-                                          ? Colors.white.withOpacity(0.7)
-                                          : AppColors.gray600,
+                                          ? Colors.white
+                                          : AppColors.gray500,
                                     ),
                                   ),
-                              ],
+                                  if (passPenalty > 0 || hasFreePass)
+                                    Text(
+                                      hasFreePass
+                                          ? 'gratuit'
+                                          : '-${passPenalty}s',
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 12,
+                                        color: canPass && !isPaused
+                                            ? Colors.white.withOpacity(0.7)
+                                            : AppColors.gray600,
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
 
-                      const SizedBox(width: 16),
+                        const SizedBox(width: 16),
 
-                      // Guessed button
-                      Expanded(
-                        flex: 2,
-                        child: GestureDetector(
-                          onTap: isPaused
-                              ? null
-                              : () {
-                                  HapticFeedback.lightImpact();
-                                  AudioService.playDing();
-                                  provider.markWordAsGuessed();
-                                },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 33),
-                            decoration: BoxDecoration(
-                              color: isPaused
-                                  ? AppColors.gray700
-                                  : AppColors.secondaryCyan,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Icon(
-                              Icons.check,
-                              color:
-                                  isPaused ? AppColors.gray500 : Colors.white,
-                              size: 48,
+                        // Guessed button
+                        Expanded(
+                          flex: 2,
+                          child: GestureDetector(
+                            onTap: isPaused
+                                ? null
+                                : () {
+                                    HapticFeedback.lightImpact();
+                                    AudioService.playDing();
+                                    provider.markWordAsGuessed();
+                                  },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 33),
+                              decoration: BoxDecoration(
+                                color: isPaused
+                                    ? AppColors.gray700
+                                    : AppColors.secondaryCyan,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Icon(
+                                Icons.check,
+                                color:
+                                    isPaused ? AppColors.gray500 : Colors.white,
+                                size: 48,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
 
                   const SizedBox(height: 72),
                 ],

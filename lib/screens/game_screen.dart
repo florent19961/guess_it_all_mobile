@@ -651,6 +651,7 @@ class _FiestaAnnouncements extends StatelessWidget {
         _modifiers(),
         if (provider.isDoublePointsArmed || provider.doublePointsLeft > 0)
           _doublePoints(),
+        if (provider.isTwoWordsArmed || provider.twoWordsLeft > 0) _twoWords(),
         TurnTimeCard(provider.turnTime),
       ],
     );
@@ -684,6 +685,84 @@ class _FiestaAnnouncements extends StatelessWidget {
           value: provider.isDoublePointsArmed,
           onChanged: editable ? provider.setDoublePoints : null,
         ),
+      ],
+    );
+  }
+
+  /// Interrupteur « Deux mots à la fois » puis, une fois allumé, son annonce
+  /// (maquette `two_cd`). Même règle de charge que le ×2.
+  Widget _twoWords() {
+    final left = provider.twoWordsLeft;
+    final String label;
+    final String detail;
+    var editable = false;
+    if (provider.isTwoWordsOn) {
+      label = 'Deux mots à la fois activé';
+      detail = 'Deux mots à l\'écran pendant ce tour.';
+    } else if (!provider.isTwoWordsArmed && provider.twoWordsCapped) {
+      label = 'Activer Deux mots à la fois';
+      detail = 'Impossible : votre équipe a déjà 2 modificateurs ce tour.';
+    } else {
+      label = 'Activer Deux mots à la fois';
+      detail = '$left charge${left > 1 ? 's' : ''} pour cette manche.';
+      editable = true;
+    }
+    final player = provider.getCurrentPlayer()?.name ?? 'Le joueur';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FiestaCard(
+          title: 'Bonus',
+          children: [
+            FiestaLine(
+              label: label,
+              detail: detail,
+              value: provider.isTwoWordsArmed,
+              onChanged: editable ? provider.setTwoWords : null,
+            ),
+          ],
+        ),
+        if (provider.isTwoWordsArmed)
+          Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.secondaryCyan.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                  color: AppColors.secondaryCyan.withValues(alpha: 0.5)),
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  '⧉',
+                  style:
+                      TextStyle(fontSize: 38, color: AppColors.secondaryCyan),
+                ),
+                Text(
+                  'Deux mots à la fois !',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.subtitle(fontSize: 26),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '$player voit deux mots et fait deviner celui de son choix. '
+                  'Un mot trouvé ou passé est remplacé, l\'autre reste à '
+                  'l\'écran.',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.bodySmall
+                      .copyWith(fontSize: 13, color: AppColors.gray400),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Chaque passe coûte toujours la pénalité habituelle.',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.bodySmall
+                      .copyWith(fontSize: 12, color: AppColors.gray400),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }

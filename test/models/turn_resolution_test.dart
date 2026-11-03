@@ -12,7 +12,7 @@ TurnResolution resolve({
       validatedWords: validated,
       guessedThisTurn: guessed,
       passedThisTurn: passed,
-      expiredWord: expired,
+      expiredWords: [if (expired != null) expired],
       currentPool: pool,
     );
 
@@ -85,8 +85,8 @@ void main() {
         pool: const ['tigre', 'lion'],
       );
 
-      expect(r.expiredValidated, isTrue);
-      expect(r.expiredInvalidated, isFalse);
+      expect(r.expiredValidated, ['tigre']);
+      expect(r.expiredInvalidated, isEmpty);
       expect(r.pointsScored, 1);
       expect(r.remainingPool, ['lion']);
       expect(r.allInvalidated, isEmpty);
@@ -100,7 +100,7 @@ void main() {
         pool: const ['tigre', 'lion'],
       );
 
-      expect(r.expiredInvalidated, isTrue);
+      expect(r.expiredInvalidated, ['tigre']);
       expect(r.allInvalidated, contains('tigre'));
       expect(r.remainingPool, contains('tigre'));
     });
@@ -108,8 +108,8 @@ void main() {
     test('sans mot expiré, aucun des deux drapeaux n\'est levé', () {
       final r = resolve(validated: const ['a'], guessed: const ['a']);
 
-      expect(r.expiredValidated, isFalse);
-      expect(r.expiredInvalidated, isFalse);
+      expect(r.expiredValidated, isEmpty);
+      expect(r.expiredInvalidated, isEmpty);
       expect(r.allInvalidated, isEmpty);
     });
   });

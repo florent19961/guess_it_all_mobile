@@ -98,6 +98,7 @@ const List<ModifierDef> kModifierCatalog = [
     name: 'Deux mots à la fois',
     description: 'Deux mots sont affichés en même temps.',
     nature: ModifierNature.bonus,
+    defaultCharges: 1,
   ),
   ModifierDef(
     id: 'reversed',

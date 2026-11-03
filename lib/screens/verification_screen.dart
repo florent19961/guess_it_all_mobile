@@ -50,10 +50,15 @@ class _VerificationScreenState extends State<VerificationScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<GameProvider>();
     final guessedWords = provider.game.wordsGuessedThisTurn;
+    // Mots à l'écran quand le chrono est tombé : un, ou deux avec « Deux mots
+    // à la fois » (2-11). Chacun a sa carte, hors de la liste des passés.
+    final expiredWords = [
+      if (provider.game.expiredWord != null) provider.game.expiredWord!,
+      if (provider.secondExpiredWord != null) provider.secondExpiredWord!,
+    ];
     final passedWords = provider.game.passedWordsThisTurn
-        .where((w) => w != provider.game.expiredWord)
+        .where((w) => !expiredWords.contains(w))
         .toList();
-    final expiredWord = provider.game.expiredWord;
     // Fiesta 2-9 : même multiplicateur que `validateWords` (maquette `verif`).
     final doubled = provider.isDoublePointsOn;
     final points = _validatedWords.length * (doubled ? 2 : 1);
@@ -141,11 +146,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
                         ],
 
                         // Expired word section
-                        if (expiredWord != null) ...[
+                        if (expiredWords.isNotEmpty) ...[
                           Row(
                             children: [
-                              const Text(
-                                'Mot en cours',
+                              Text(
+                                expiredWords.length > 1
+                                    ? 'Mots en cours'
+                                    : 'Mot en cours',
                                 style: TextStyle(
                                   fontFamily: 'Poppins',
                                   fontSize: 16,
@@ -175,11 +182,11 @@ class _VerificationScreenState extends State<VerificationScreen> {
                             ],
                           ),
                           const SizedBox(height: 12),
-                          _buildWordCard(
-                            expiredWord,
-                            isGuessed: false,
-                            isExpired: true,
-                          ),
+                          ...expiredWords.map((word) => _buildWordCard(
+                                word,
+                                isGuessed: false,
+                                isExpired: true,
+                              )),
                           const SizedBox(height: 24),
                         ],
 
