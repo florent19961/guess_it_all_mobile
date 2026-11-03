@@ -255,15 +255,17 @@ stories:
   2-9-mot-compte-double:
     epic: epic-2-mode-fiesta
     title: "Mot compte double : charges, activation avant le tour, score ×2 via resolveTurn pur, retour arrière"
-    status: in-progress
+    status: done
     depends: [2-8-effets-de-tour-catalogue]
     spec: _bmad-output/specs/fiesta/2-9-mot-compte-double.md
     note: >-
+      ✅ MERGÉ PR #17 (squash 231df07, mode délégué). Revue Codex statique r1 NOT READY (1 MAJOR test AC8,
+      1 MINOR badge) → corrigés ; mutations faites par la lane.
       R ②① · GP + GS + turn_resolution · Fable.
   2-10-un-parmi-trois-coup-de-pouce:
     epic: epic-2-mode-fiesta
     title: "1 parmi 3 (Personnalisé) et coup de pouce du catalogue (Auto)"
-    status: ready-for-dev
+    status: in-progress
     depends: [2-6-temps-rattrapage-duree-reelle, 2-9-mot-compte-double]
     spec: _bmad-output/specs/fiesta/2-10-un-parmi-trois-coup-de-pouce.md
     note: >-
@@ -273,7 +275,7 @@ stories:
   2-11-deux-mots-a-la-fois:
     epic: epic-2-mode-fiesta
     title: "Deux mots à la fois (deux cartes, N mots expirés, analytics par carte)"
-    status: ready-for-dev
+    status: in-progress
     depends: [2-7-analytics-archive-recap, 2-9-mot-compte-double]
     spec: _bmad-output/specs/fiesta/2-11-deux-mots-a-la-fois.md
     note: >-
