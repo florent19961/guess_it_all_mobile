@@ -54,10 +54,9 @@ n'invente aucun defaut : apres un kill, en plein tour comme sur l'ecran de verif
 evenements portent la vraie manche, la vraie equipe et les vrais tags. Sur la verification, le
 tour verifie est encore le tour courant (le contexte est lu avant la mutation de `validateWords`).
 
-- **Actifs, pas forcement appliques** : un tour de continuation (temps reporte en debut de
-  manche) est etiquete avec la liste active de l'equipe dans la nouvelle manche, alors qu'il
-  ignore les effets de duree (`minus_10s`...). Croiser avec `HistoryEntry.isBonusContinuation`
-  pour recalibrer.
+- **Continuation** (temps reporte en debut de manche) : meme tour que la fin de la manche N, elle
+  est etiquetee avec les effets de N (et ×2 / deux mots s'ils etaient depenses), jamais ceux de
+  N+1, qui commencent au premier vrai tour. Les events de la continuation portent `round` N+1.
 - **Evenements anterieurs a ce correctif** : une verification faite juste apres un kill a pu
   ecrire `invalidated` / `guessed` sans `modifiers`, avec `round` 1 et `teamId` ''. Le mode de la
   partie se lit sur `GameAnalytics.gameMode`, jamais sur l'evenement.

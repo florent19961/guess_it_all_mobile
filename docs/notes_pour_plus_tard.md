@@ -137,6 +137,10 @@ persistée) ; en Auto, les deux interrupteurs dans cette même clé ou dans la s
 
 ## 2026-11-03 — Fiesta : le tirage d'une manche ignore les instances qui survivent au passage de manche
 
+> ✅ **Résolu (epic fix, B1).** Les survivantes (instances de N) ne pèsent que sur la
+> continuation, les instances de N+1 que sur les vrais tours (`modifiersForTurn`) : elles ne se
+> croisent jamais sur un tour, le plafond n'a plus à les comparer.
+
 **Contexte.** Story 2-5, revue r1 (MINOR-3). `nextRound` garde les instances de portée **tour**
 et ajoute les modificateurs de la nouvelle manche (fixés + tirage) sans `canAdd` contre ces
 survivantes. Aujourd'hui rien d'autre n'écrit dans `active`, donc aucune n'existe.
@@ -183,6 +187,9 @@ absent = recalcul), soit versionner l'algorithme dans `FiestaState` et garder l'
 
 ## 2026-11-03 — Analytics : le contexte du tour n'est pas restauré après un kill
 
+> ✅ **Résolu (epic fix, A5).** Le provider passe un `WordEventContext` relu de `GameState` à
+> chaque événement ; le service ne garde plus de contexte en mémoire.
+
 **Contexte.** Story 2-7, revue r1 (MINOR-4). `AnalyticsService.resumeGame` relit la partie mais
 remet à zéro le contexte du tour (`_lastRound`, `_lastTurn`, `_lastTeamId`, `_lastPlayerId`,
 `_lastModifiers`). Une vérification faite juste après un kill, sans nouveau `shown`, écrit donc
@@ -200,3 +207,26 @@ sur `WordHistoryService` ; seule la ventilation par manche/équipe/modificateur 
 
 **Esquisse.** Dans `resumeGame`, reprendre le contexte du dernier événement relu
 (`round`, `turn`, `teamId`, `playerId`, `modifiers`), sans toucher au bloc « mot affiché ».
+
+---
+
+## 2026-11-03 — `GameProvider` : extraction du modèle de lecture Fiesta (`FiestaView`)
+
+**Contexte.** Revues de fin d'epic Fiesta (Opus M5, Codex MAJOR-5). `game_provider.dart` est à
+~2 020 lignes ; ~400 sont des getters Fiesta dérivés de `(fiesta, teams, currentTeamIndex,
+currentRound, history, currentScreen, gameId)`, mêlés aux mutations. L'epic fix a déjà sorti
+l'état du tour typé (`FiestaTurnState`), le plan de passage de manche (`planRoundTransition`) et
+les effets d'un tour (`modifiersForTurn`), et factorisé ×2 / deux mots.
+
+**Décision reportée.** Pas d'extraction `FiestaView` avant la release Fiesta.
+
+**Raison.** Refactor à comportement constant, rien de persisté ; le risque (≈400 lignes
+déplacées juste avant le build store) dépasse le gain immédiat.
+
+**Signal déclencheur.** Un nouveau modificateur ou une nouvelle règle Fiesta qui ajoute des
+getters au provider, ou le provider qui dépasse ~2 100 lignes.
+
+**Esquisse.** `lib/models/fiesta/fiesta_view.dart` : classe pure construite sur
+`(GameState, teams, settings)`, qui porte `isContinuation`, `currentTeamModifiers`, passes,
+charges, devineur bloqué, offres, file de choix, récap. Le provider garde les mutations et
+délègue ses getters ; tests purs sans provider.

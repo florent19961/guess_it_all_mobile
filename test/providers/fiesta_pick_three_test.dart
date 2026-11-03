@@ -149,9 +149,10 @@ void main() {
   });
 
   test(
-      '« Bloquer un devineur » choisi : désigné par l\'équipe qui l\'a choisi, '
-      'il dure UN tour du leader (continuation de fin de manche comprise) '
-      'et ne rouvre pas le sélecteur ensuite', () async {
+      '« Bloquer un devineur » choisi pour M2 contre le leader qui a fini M1 : '
+      'ni appliqué ni consommé par sa continuation ; annoncé et désigné par '
+      'l\'équipe qui l\'a choisi à son premier vrai tour de M2, consommé à '
+      'sa fin (epic fix M3)', () async {
     final provider =
         await givenProvider(['A', 'B', 'C', 'D', 'E'], wordsEach: 4, teams: 2);
     await provider.startGame(fiesta: pickThree);
@@ -169,18 +170,122 @@ void main() {
     provider.chooseOffer(trailing, 0);
     provider.nextRound();
 
+    // La continuation du leader : le blocage de M2 attend.
     expect(provider.getCurrentTeam()!.id, leader);
+    expect(provider.isContinuation, isTrue);
+    expect(provider.needsBlockedGuesser, isFalse);
+    expect(provider.malusToReveal, isEmpty);
+    playTurn(provider, 0);
+    expect(ids(provider.game.fiesta!.active), ['block_guesser@2>$leader']);
+    playTurn(provider, 0);
+
+    // Premier vrai tour de M2 du leader : annoncé, désigné par la menée.
+    expect(provider.getCurrentTeam()!.id, leader);
+    expect(ids(provider.malusToReveal), ['block_guesser@2>$leader']);
     expect(provider.needsBlockedGuesser, isTrue);
     expect(provider.blockingTeam!.id, trailing);
     provider.setBlockedGuesser(provider.blockableGuessers.first.id);
-
-    // Vraie fin du tour (la continuation) : la carte est consommée.
     playTurn(provider, 0);
-    expect(provider.game.fiesta!.active.map((m) => m.catalogId),
-        isNot(contains('block_guesser')));
+    expect(provider.game.fiesta!.active, isEmpty);
     playTurn(provider, 0);
     expect(provider.getCurrentTeam()!.id, leader);
     expect(provider.needsBlockedGuesser, isFalse);
+  });
+
+  test(
+      'M2 → M3 : ×2 + blocage de M2 sur le dernier tour, deux tirages en M3. '
+      'La continuation garde ×2 et blocage, pas les tirages (2 effets, pas 4) ; '
+      'idem après un kill et un retour arrière ; les tirages de M3 commencent '
+      'au premier vrai tour (epic fix, Codex MAJOR-1)', () async {
+    final provider =
+        await givenProvider(['A', 'B', 'C', 'D', 'E'], wordsEach: 4, teams: 2);
+    ModifierSetting setting(ModifierArrival arrival, int round) =>
+        ModifierSetting(
+            active: true,
+            arrival: arrival,
+            startRound: round,
+            fixedRound: round,
+            charges: 1);
+    await provider.startGame(
+      fiesta: FiestaRules(
+        mode: FiestaMode.custom,
+        oneOfThree: true,
+        drawCount: 2,
+        modifiers: {
+          'block_guesser': setting(ModifierArrival.offer, 2),
+          'double_points': setting(ModifierArrival.fixed, 2),
+          'no_pass': setting(ModifierArrival.draw, 3),
+          'reversed': setting(ModifierArrival.draw, 3),
+        },
+      ),
+    );
+    // M1 : le leader (3 joueurs, bloquable) mène de 10+, la menée finit M1.
+    final leader = provider.teams.firstWhere((t) => t.playerIds.length == 3).id;
+    final trailing = provider.teams.firstWhere((t) => t.id != leader).id;
+    if (provider.getCurrentTeam()!.id == trailing) playTurn(provider, 1);
+    playTurn(provider, 15);
+    expect(playTurn(provider, 20), trailing);
+    provider.chooseOffer(trailing, 0);
+    provider.nextRound();
+    playTurn(provider, 0); // continuation de la menée
+
+    // M2 : premier vrai tour du leader, bloqué et à ×2 ; il finit M2.
+    expect(provider.getCurrentTeam()!.id, leader);
+    provider.setBlockedGuesser(provider.blockableGuessers.first.id);
+    provider.setDoublePoints(true);
+    playTurn(provider, 20);
+    expect(provider.nextRoundModifiers.map((m) => m.catalogId),
+        unorderedEquals(['no_pass', 'reversed']));
+    expect(provider.nextChooserId, isNull, reason: 'plafond : rien à offrir');
+    provider.nextRound();
+
+    void expectContinuation(GameProvider p) {
+      expect(p.getCurrentTeam()!.id, leader);
+      expect(p.isContinuation, isTrue);
+      expect(ids(p.turnModifiers), ['block_guesser@2>$leader']);
+      expect(p.isDoublePointsOn, isTrue);
+      expect(p.turnModifiers.length + (p.isDoublePointsOn ? 1 : 0), 2);
+      expect(p.blockedGuesser, isNotNull);
+      expect(p.needsBlockedGuesser, isFalse);
+      expect([p.passBlocked, p.isWordReversed], [false, false]);
+      expect(p.malusToReveal, isEmpty);
+    }
+
+    expectContinuation(provider);
+    await pumpEventQueue();
+    final reloaded = GameProvider(); // app tuée avant la continuation
+    await pumpEventQueue();
+    expectContinuation(reloaded);
+
+    final before = reloaded.teams.firstWhere((t) => t.id == leader).score;
+    reloaded.startTurn();
+    reloaded.startTurnTimer();
+    expectContinuation(reloaded);
+    reloaded.markWordAsGuessed();
+    reloaded.endTurn();
+    final word = List<String>.from(reloaded.game.wordsGuessedThisTurn);
+    reloaded.savePreValidationState(word);
+    reloaded.validateWords(word);
+    // Retour arrière : de nouveau la continuation, puis même revalidation.
+    reloaded.restorePreValidationState();
+    expectContinuation(reloaded);
+    reloaded.savePreValidationState(word);
+    reloaded.validateWords(word);
+    expect(reloaded.teams.firstWhere((t) => t.id == leader).score, before + 2);
+
+    // Les tirages de M3 commencent au premier vrai tour de chaque équipe ;
+    // les effets de M2 sont partis avec la continuation.
+    expect(reloaded.getCurrentTeam()!.id, trailing);
+    expect(reloaded.passBlocked, isTrue);
+    playTurn(reloaded, 0);
+    expect(reloaded.getCurrentTeam()!.id, leader);
+    expect(reloaded.turnModifiers.map((m) => m.catalogId),
+        unorderedEquals(['no_pass', 'reversed']));
+    expect(reloaded.malusToReveal.map((m) => m.catalogId),
+        unorderedEquals(['no_pass', 'reversed']));
+    expect([reloaded.isDoublePointsOn, reloaded.needsBlockedGuesser],
+        [false, false]);
+    expect(reloaded.game.fiesta!.active.every((m) => m.round == 3), isTrue);
   });
 
   test(

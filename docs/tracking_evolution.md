@@ -575,3 +575,29 @@ choix.
 
 **Conséquence.** Pas d'indicateur sur `HistoryEntry` (forme d'une clé `guessItAll_*` de premier
 niveau) : le tag analytics porte l'information.
+
+## 2026-11-03 — Fiesta, fin d'epic : règle de la continuation, état du tour typé, plan de passage de manche
+
+**Ce qui change.**
+- **Continuation** (temps reporté en début de N+1) = même tour que la fin de N : elle joue avec
+  les effets de N pour cette équipe (modificateurs de N, ×2 / deux mots dépensés, passes
+  gratuites utilisées, `block_guesser` de N et devineur bloqué), **jamais** ceux de N+1 (tirage,
+  cadeaux, choix — `block_guesser` choisi pour N+1 compris — et charges), qui commencent au
+  premier vrai tour de chaque équipe. Aucune charge ne s'allume sur une continuation. Les
+  instances de N partent à la fin de la continuation. Tous les malus de N+1 se révèlent au
+  premier vrai tour (plus de cas particulier `minus_10s`).
+- `isContinuation` est **dérivé de l'historique** (l'équipe a joué la dernière entrée de N et
+  n'a encore rien joué en N+1), pas de `turnBonusTime`, effacé au départ du chrono : il tient
+  pendant le tour, sur la vérification, après un kill et un retour arrière. Rien de persisté.
+- `FiestaState.turn` : `Map<String, dynamic>` → `FiestaTurnState` typé, **mêmes clés JSON**,
+  écriture conditionnelle, lecture tolérante clé par clé. Il décide ce qui survit
+  (`afterRoundEnd`, `empty`).
+- `planRoundTransition` (pur) : tirage + cadeaux + choix + rattrapage + ce qui survit. L'aperçu
+  de la transition et `nextRound` lisent le même plan.
+- ×2 et deux mots : une table `kChargeBonusKeys`, une implémentation dans le provider.
+
+**Pourquoi.** Revues de fin d'epic : une continuation pouvait cumuler ×2 / blocage de N et deux
+tirages de N+1 (4 effets, Codex MAJOR-1), et un `block_guesser` choisi pour N+1 contre l'équipe
+qui avait fini N était brûlé par sa continuation, parfois de 0 s (Opus M3). Une seule règle
+(« la manche logique du tour ») supprime toute la famille de cas particuliers (m1, m2, m3, m8).
+Le blob Fiesta n'a jamais été publié : aucune migration.

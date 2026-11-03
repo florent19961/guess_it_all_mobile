@@ -10,6 +10,7 @@ import '../models/fiesta/modifier_catalog.dart';
 import '../models/fiesta/modifier_instance.dart';
 import '../models/fiesta/modifier_recap.dart';
 import '../models/fiesta/offers.dart';
+import '../models/fiesta/round_transition.dart';
 import '../models/fiesta/symmetric_draw.dart';
 import '../models/fiesta/turn_effects.dart';
 import '../models/fiesta/turn_time.dart';
@@ -596,30 +597,18 @@ class GameProvider extends ChangeNotifier {
       fiesta = fiesta.copyWith(
           catchUpDue: Map.of(fiesta.catchUpDue)..remove(teamId));
     }
-    // Mot compte double : la charge se dépense ICI, pas à l'interrupteur.
-    // Éteindre avant le départ ou revenir en arrière n'a donc rien à rendre.
-    if (fiesta != null && fiesta.turn[kDoublePointsKey] == kDoubleArmed) {
+    // Bonus à charge (×2, deux mots) : la charge se dépense ICI, pas à
+    // l'interrupteur. Éteindre avant le départ ou revenir en arrière n'a donc
+    // rien à rendre.
+    for (final id in kChargeBonusKeys.keys) {
+      if (fiesta == null || fiesta.turn.charges[id] != ChargeState.armed) {
+        continue;
+      }
       fiesta = fiesta.copyWith(
-        turn: {...fiesta.turn, kDoublePointsKey: kDoubleSpent},
+        turn: fiesta.turn.withCharge(id, ChargeState.spent),
         chargesUsed: [
           ...fiesta.chargesUsed,
-          ChargeUse(
-              catalogId: 'double_points',
-              teamId: teamId,
-              round: _game.currentRound),
-        ],
-      );
-    }
-    // Deux mots à la fois : même règle de dépense que le ×2.
-    if (fiesta != null && fiesta.turn[kTwoWordsKey] == kDoubleArmed) {
-      fiesta = fiesta.copyWith(
-        turn: {...fiesta.turn, kTwoWordsKey: kDoubleSpent},
-        chargesUsed: [
-          ...fiesta.chargesUsed,
-          ChargeUse(
-              catalogId: 'two_words',
-              teamId: teamId,
-              round: _game.currentRound),
+          ChargeUse(catalogId: id, teamId: teamId, round: _game.currentRound),
         ],
       );
     }
@@ -629,8 +618,8 @@ class GameProvider extends ChangeNotifier {
     final currentWord = _game.currentWord;
     String? drawnSecond;
     if (fiesta != null &&
-        fiesta.turn[kTwoWordsKey] == kDoubleSpent &&
-        fiesta.turn[kSecondWordKey] == null &&
+        fiesta.turn.charges['two_words'] == ChargeState.spent &&
+        fiesta.turn.secondWord == null &&
         currentWord != null) {
       drawnSecond = drawOtherCard(
         pool: _game.remainingWords,
@@ -638,8 +627,7 @@ class GameProvider extends ChangeNotifier {
         other: currentWord,
       ).word;
       if (drawnSecond != null) {
-        fiesta = fiesta
-            .copyWith(turn: {...fiesta.turn, kSecondWordKey: drawnSecond});
+        fiesta = _withSecondWord(fiesta, drawnSecond);
       }
     }
 
@@ -831,7 +819,7 @@ class GameProvider extends ChangeNotifier {
 
     var newFiesta = usesFreePass
         ? fiesta.copyWith(
-            turn: {...fiesta.turn, kFreePassesUsedKey: freePassesUsed + 1})
+            turn: fiesta.turn.copyWith(freePassesUsed: freePassesUsed + 1))
         : fiesta;
     String? newCurrentWord;
     String? drawn;
@@ -896,8 +884,8 @@ class GameProvider extends ChangeNotifier {
     if (second != null) {
       fiesta = _withSecondWord(fiesta!, null);
       if (!isRoundFinished) {
-        fiesta = fiesta
-            .copyWith(turn: {...fiesta.turn, kSecondExpiredWordKey: second});
+        fiesta = fiesta.copyWith(
+            turn: fiesta.turn.copyWith(secondExpiredWord: second));
       }
     }
 
@@ -1134,11 +1122,10 @@ class GameProvider extends ChangeNotifier {
         turnBonusTime: _game.timeRemaining,
         clearExpiredWord: true,
         // Pas de `_fiestaAfterTurn` ici : la même équipe poursuit CE tour en
-        // manche suivante (continuation). Compteurs et instances de portée
-        // tour vivent jusqu'à sa vraie fin. Seule la carte B expirée, dépouillée,
-        // s'en va (comme `clearExpiredWord`).
-        fiesta: _game.fiesta?.copyWith(
-            turn: Map.of(_game.fiesta!.turn)..remove(kSecondExpiredWordKey)),
+        // manche suivante (continuation). L'état du tour vit jusqu'à sa vraie
+        // fin (`FiestaTurnState.afterRoundEnd`).
+        fiesta:
+            _game.fiesta?.copyWith(turn: _game.fiesta!.turn.afterRoundEnd()),
         pendingBonusTurnId: shouldPrepareBonusFusion ? _game.currentTurn : null,
         clearPendingBonusTurnId: !shouldPrepareBonusFusion,
       );
@@ -1238,7 +1225,8 @@ class GameProvider extends ChangeNotifier {
         wordsGuessedThisTurn: [],
         passedWordsThisTurn: [],
         currentScreen: AppConstants.screenGame,
-        fiesta: _fiestaForRound(nextRoundNumber),
+        // Calculé AVANT le changement de manche : le plan de la transition.
+        fiesta: _transitionPlan?.apply(_game.fiesta!),
       );
     }
 
@@ -1246,69 +1234,67 @@ class GameProvider extends ChangeNotifier {
     _saveGameState();
   }
 
-  /// Fiesta à l'entrée de la manche [round] : les instances de portée manche
-  /// de la manche finie partent, celles de [round] (fixés + tirage, puis
-  /// coup de pouce ou cartes choisies) arrivent, et le rattrapage dû est posé
-  /// sur les scores de la manche finie.
-  /// Nul en Classique (et `copyWith(fiesta: null)` laisse alors `fiesta` nul).
-  FiestaState? _fiestaForRound(int round) {
+  /// Plan du passage à la manche suivante, recalculé sur l'état de fin de
+  /// manche (scores, graine, choix persistés) : montré par la transition
+  /// ([nextRoundModifiers], [appBoostPreview], [catchUpPreview]) et appliqué
+  /// tel quel par `nextRound`. Nul en Classique et après M3.
+  RoundTransitionPlan? get _transitionPlan {
     final fiesta = _game.fiesta;
     if (fiesta == null) return null;
-    return fiesta.copyWith(
-      active: [
-        ...fiesta.active
-            .where((m) => !(m.scope == ModifierScope.round && m.round < round)),
-        ...roundModifiers(fiesta.rules,
-            gameId: _game.gameId ?? '', round: round),
-        // Lus AVANT que `nextRound` change de manche : ceux de la transition.
-        ...appBoostPreview,
-        ..._pendingChoices.values,
-      ],
-      catchUpDue: {for (final e in catchUpPreview) e.teamId: e.seconds},
-    );
-  }
-
-  /// Rattrapage qui s'appliquera à la manche suivante, calculé sur les scores
-  /// actuels : montré sur la transition, posé par `nextRound`. Calculé et non
-  /// stocké sur la transition (comme [nextRoundModifiers]) : le retour arrière
-  /// restaure les scores, la revalidation redonne le même. Vide en Classique,
-  /// rattrapage éteint, après M3, ou à égalité.
-  List<CatchUpEntry> get catchUpPreview {
-    final fiesta = _game.fiesta;
-    if (fiesta == null || _game.currentRound >= 3) return const [];
-    final rules = effectiveCatchUp(fiesta.rules);
-    if (rules == null) return const [];
-    return computeCatchUp(
-      rules: rules,
-      round: _game.currentRound,
+    return planRoundTransition(
+      fiesta: fiesta,
+      gameId: _game.gameId ?? '',
+      finishedRound: _game.currentRound,
       scores: {for (final t in _teams) t.id: t.score},
     );
   }
 
-  /// Ce qui s'appliquera à toutes les équipes à la manche suivante, montré
-  /// sur la transition AVANT « Manche suivante ». Calculé, jamais stocké : la
-  /// graine `(gameId, manche)` rend le même tirage après un retour arrière ou
-  /// une app tuée. Vide en Classique et après M3.
-  List<ModifierInstance> get nextRoundModifiers {
-    final fiesta = _game.fiesta;
-    if (fiesta == null || _game.currentRound >= 3) return const [];
-    return roundModifiers(fiesta.rules,
-        gameId: _game.gameId ?? '', round: _game.currentRound + 1);
+  /// Rattrapage qui s'appliquera à la manche suivante (vide à égalité ou
+  /// rattrapage éteint).
+  List<CatchUpEntry> get catchUpPreview => _transitionPlan?.catchUp ?? const [];
+
+  /// Fixés + tirage pour toutes les équipes à la manche suivante.
+  List<ModifierInstance> get nextRoundModifiers =>
+      _transitionPlan?.draw ?? const [];
+
+  /// Équipe qui ouvre la manche en cours par sa continuation : celle de la
+  /// dernière entrée de la manche précédente. Nulle en M1.
+  String? get _continuingTeamId => _game.currentRound <= 1
+      ? null
+      : _game.history
+          .where((h) => h.round == _game.currentRound - 1)
+          .lastOrNull
+          ?.teamId;
+
+  int _entriesThisRound(String teamId) => _game.history
+      .where((h) => h.round == _game.currentRound && h.teamId == teamId)
+      .length;
+
+  /// Le tour en cours est une continuation : l'équipe qui a fini la manche N
+  /// poursuit CE tour en N+1 avec le temps reporté. Dérivé de l'historique,
+  /// pas de `turnBonusTime` (effacé au départ du chrono) : il tient donc
+  /// pendant le tour, sur la vérification, après un kill et un retour arrière.
+  bool get isContinuation {
+    final teamId = getCurrentTeam()?.id;
+    return teamId != null &&
+        teamId == _continuingTeamId &&
+        _entriesThisRound(teamId) == 0;
   }
 
-  /// Modificateurs actifs qui pèsent sur l'équipe qui joue (badges).
+  /// Modificateurs qui pèsent sur l'équipe qui joue (badges) : ceux de la
+  /// manche LOGIQUE du tour, N pour une continuation ([modifiersForTurn]).
   List<ModifierInstance> get currentTeamModifiers {
     final fiesta = _game.fiesta;
-    if (fiesta == null || _teams.isEmpty) return const [];
-    final teamId = _teams[_game.currentTeamIndex].id;
-    return fiesta.active
-        .where((m) => m.target == ModifierTarget.both || m.teamId == teamId)
-        .toList();
+    final teamId = getCurrentTeam()?.id;
+    if (fiesta == null || teamId == null) return const [];
+    return modifiersForTurn(fiesta.active,
+        teamId: teamId,
+        logicalRound: _game.currentRound - (isContinuation ? 1 : 0));
   }
 
   // ========== EFFETS DE TOUR (2-8) ==========
 
-  Map<String, dynamic> get _turnCounters => _game.fiesta?.turn ?? const {};
+  FiestaTurnState get _turn => _game.fiesta?.turn ?? FiestaTurnState.empty;
 
   bool _has(String catalogId) =>
       currentTeamModifiers.any((m) => m.catalogId == catalogId);
@@ -1317,11 +1303,8 @@ class GameProvider extends ChangeNotifier {
   bool get passBlocked => _has('no_pass');
 
   /// Passes gratuites du tour (`free_pass` ×N), et celles déjà utilisées.
-  int get freePasses => freePassAllowance(currentTeamModifiers);
-  int get freePassesUsed {
-    final used = _turnCounters[kFreePassesUsedKey];
-    return used is int ? used : 0;
-  }
+  int get freePasses => chargeAllowance(currentTeamModifiers, 'free_pass');
+  int get freePassesUsed => _turn.freePassesUsed;
 
   /// Il reste une passe gratuite ce tour. Toujours faux en Classique.
   bool get hasFreePass => freePassesUsed < freePasses;
@@ -1357,8 +1340,8 @@ class GameProvider extends ChangeNotifier {
 
   /// Devineur bloqué pour ce tour, choisi par les adversaires (annonce seule).
   Player? get blockedGuesser {
-    final id = _turnCounters[kBlockedPlayerIdKey];
-    return id is String ? getPlayerById(id) : null;
+    final id = _turn.blockedPlayerId;
+    return id == null ? null : getPlayerById(id);
   }
 
   /// Le sélecteur doit s'ouvrir avant ce tour.
@@ -1371,113 +1354,89 @@ class GameProvider extends ChangeNotifier {
       return;
     }
     _game = _game.copyWith(
-      fiesta: fiesta
-          .copyWith(turn: {...fiesta.turn, kBlockedPlayerIdKey: playerId}),
+      fiesta: fiesta.copyWith(
+          turn: fiesta.turn.copyWith(blockedPlayerId: playerId)),
     );
     notifyListeners();
     _saveGameState();
   }
 
-  // ========== MOT COMPTE DOUBLE (2-9) ==========
+  // ========== BONUS À CHARGE : ×2 (2-9), DEUX MOTS (2-11) ==========
+  // Une table (`kChargeBonusKeys`), une implémentation : chaque getter public
+  // n'est qu'un id de catalogue.
 
   /// Modificateurs EN JEU pendant le tour (badges du tour, tags analytics) :
-  /// une charge de « Mot compte double » ou de « Deux mots à la fois » non
-  /// activée n'en est pas un (activée : badge et tag à part).
+  /// une charge non activée n'en est pas un (activée : badge et tag à part).
   List<ModifierInstance> get turnModifiers => currentTeamModifiers
-      .where(
-          (m) => m.catalogId != 'double_points' && m.catalogId != 'two_words')
+      .where((m) => !kChargeBonusKeys.containsKey(m.catalogId))
       .toList();
 
-  String? get _doublePoints {
-    final value = _turnCounters[kDoublePointsKey];
-    return value is String ? value : null;
-  }
+  ChargeState? _charge(String id) => _turn.charges[id];
 
-  /// Interrupteur de l'avant-tour allumé (ou charge déjà dépensée).
-  bool get isDoublePointsArmed => _doublePoints != null;
-
-  /// Les points de CE tour comptent ×2 : charge dépensée au départ. Vaut aussi
-  /// pour la continuation de fin de manche, qui est le même tour (2-8).
-  bool get isDoublePointsOn => _doublePoints == kDoubleSpent;
-
-  /// Charges restantes de l'équipe qui joue pour la manche en cours. Celles
-  /// des manches finies sont perdues : le décompte ne regarde que celle-ci.
-  int get doublePointsLeft {
+  /// Charges restantes de l'équipe qui joue pour la manche en cours (celles
+  /// des manches finies sont perdues). Aucune sur une continuation : c'est
+  /// le même tour que la fin de N, on n'y allume rien, et les charges de N+1
+  /// commencent au premier vrai tour.
+  int _chargesLeft(String id) {
+    if (isContinuation) return 0;
     final teamId = getCurrentTeam()?.id;
     final used = (_game.fiesta?.chargesUsed ?? const <ChargeUse>[])
         .where((u) =>
-            u.catalogId == 'double_points' &&
+            u.catalogId == id &&
             u.teamId == teamId &&
             u.round == _game.currentRound)
         .length;
-    return doublePointsAllowance(currentTeamModifiers) - used;
+    return chargeAllowance(currentTeamModifiers, id) - used;
   }
 
-  /// Q8 : activer est refusé si l'équipe a déjà 2 modificateurs en jeu
-  /// (« Deux mots à la fois » allumé compris).
-  bool get doublePointsCapped =>
-      turnModifiers.length + (isTwoWordsArmed ? 1 : 0) >= 2;
+  /// Q8 : allumer est refusé si l'équipe a déjà 2 modificateurs en jeu, l'autre
+  /// bonus allumé compris.
+  bool _capped(String id) =>
+      turnModifiers.length +
+          kChargeBonusKeys.keys
+              .where((other) => other != id && _charge(other) != null)
+              .length >=
+      2;
 
-  /// Allumer / éteindre le ×2 avant le départ. Rien n'est dépensé ici.
-  void setDoublePoints(bool on) => _armCharge(kDoublePointsKey, on,
-      isOn: isDoublePointsOn,
-      left: doublePointsLeft,
-      capped: doublePointsCapped);
-
-  /// Interrupteur d'un bonus à charge (×2, deux mots) : seul l'état `armed`
-  /// est écrit ; la charge se dépense dans `startTurnTimer`.
-  void _armCharge(String key, bool on,
-      {required bool isOn, required int left, required bool capped}) {
+  /// Interrupteur d'un bonus à charge, avant le départ : seul `armed` est
+  /// écrit ; la charge se dépense dans `startTurnTimer`.
+  void _setCharge(String id, bool on) {
     final fiesta = _game.fiesta;
-    if (fiesta == null || isOn || (on && (left <= 0 || capped))) {
+    if (fiesta == null ||
+        _charge(id) == ChargeState.spent ||
+        (on && (_chargesLeft(id) <= 0 || _capped(id)))) {
       return;
     }
-    final turn = Map<String, dynamic>.of(fiesta.turn)..remove(key);
-    if (on) turn[key] = kDoubleArmed;
-    _game = _game.copyWith(fiesta: fiesta.copyWith(turn: turn));
+    _game = _game.copyWith(
+      fiesta: fiesta.copyWith(
+          turn: fiesta.turn.withCharge(id, on ? ChargeState.armed : null)),
+    );
     notifyListeners();
     _saveGameState();
   }
 
-  // ========== DEUX MOTS À LA FOIS (2-11) ==========
-
-  String? _turnString(String key) {
-    final value = _turnCounters[key];
-    return value is String ? value : null;
-  }
-
   /// Interrupteur de l'avant-tour allumé (ou charge déjà dépensée).
-  bool get isTwoWordsArmed => _turnString(kTwoWordsKey) != null;
+  bool get isDoublePointsArmed => _charge('double_points') != null;
 
-  /// Deux mots à l'écran pendant CE tour (charge dépensée au départ ; vaut
-  /// aussi pour la continuation de fin de manche, même tour).
-  bool get isTwoWordsOn => _turnString(kTwoWordsKey) == kDoubleSpent;
+  /// Les points de CE tour comptent ×2 : charge dépensée au départ. Vaut aussi
+  /// pour la continuation de fin de manche, qui est le même tour.
+  bool get isDoublePointsOn => _charge('double_points') == ChargeState.spent;
+  int get doublePointsLeft => _chargesLeft('double_points');
+  bool get doublePointsCapped => _capped('double_points');
+  void setDoublePoints(bool on) => _setCharge('double_points', on);
+
+  /// Deux mots à l'écran pendant CE tour (continuation comprise).
+  bool get isTwoWordsArmed => _charge('two_words') != null;
+  bool get isTwoWordsOn => _charge('two_words') == ChargeState.spent;
+  int get twoWordsLeft => _chargesLeft('two_words');
+  bool get twoWordsCapped => _capped('two_words');
+  void setTwoWords(bool on) => _setCharge('two_words', on);
 
   /// Carte B (la carte A est `game.currentWord`). Nulle = une seule carte.
-  String? get secondWord => _turnString(kSecondWordKey);
+  String? get secondWord => _turn.secondWord;
 
   /// Carte B encore à l'écran quand le chrono est tombé, à vérifier.
-  String? get secondExpiredWord => _turnString(kSecondExpiredWordKey);
-
-  /// Charges restantes de l'équipe qui joue pour la manche en cours.
-  int get twoWordsLeft {
-    final teamId = getCurrentTeam()?.id;
-    final used = (_game.fiesta?.chargesUsed ?? const <ChargeUse>[])
-        .where((u) =>
-            u.catalogId == 'two_words' &&
-            u.teamId == teamId &&
-            u.round == _game.currentRound)
-        .length;
-    return twoWordsAllowance(currentTeamModifiers) - used;
-  }
-
-  /// Q8, comme [doublePointsCapped].
-  bool get twoWordsCapped =>
-      turnModifiers.length + (isDoublePointsArmed ? 1 : 0) >= 2;
-
-  /// Allumer / éteindre « Deux mots à la fois » avant le départ.
-  void setTwoWords(bool on) => _armCharge(kTwoWordsKey, on,
-      isOn: isTwoWordsOn, left: twoWordsLeft, capped: twoWordsCapped);
+  String? get secondExpiredWord => _turn.secondExpiredWord;
 
   /// Cartes après le traitement (trouvé ou passé) de [target], l'une des deux
   /// cartes : elle seule est remplacée, par un mot ≠ l'autre carte
@@ -1500,47 +1459,48 @@ class GameProvider extends ChangeNotifier {
         : (first: a, second: drawn, drawn: drawn, pool: next.pool);
   }
 
-  /// [fiesta] avec la carte B [word] (nulle = clé retirée).
-  FiestaState _withSecondWord(FiestaState fiesta, String? word) {
-    final turn = Map<String, dynamic>.of(fiesta.turn)..remove(kSecondWordKey);
-    if (word != null) turn[kSecondWordKey] = word;
-    return fiesta.copyWith(turn: turn);
-  }
+  /// [fiesta] avec la carte B [word] (nulle = plus de carte B).
+  FiestaState _withSecondWord(FiestaState fiesta, String? word) =>
+      fiesta.copyWith(
+          turn: word == null
+              ? fiesta.turn.copyWith(clearSecondWord: true)
+              : fiesta.turn.copyWith(secondWord: word));
 
-  /// Fiesta à la VRAIE fin d'un tour : compteurs du tour vidés, instances
-  /// de portée tour de l'équipe consommées. 🔴 Un seul « tour » : une fin de
-  /// manche n'en est pas une, la continuation en N+1 est le même tour (elle
-  /// hérite donc aussi du compteur de passes gratuites). Nul en Classique.
+  /// Fiesta à la VRAIE fin d'un tour : état du tour vidé, instances de portée
+  /// tour qui ont pesé sur ce tour consommées. 🔴 Une fin de manche n'en est
+  /// pas une : la continuation en N+1 est le même tour. À la fin d'une
+  /// continuation, les instances de N, qui ne servaient qu'à elle, partent.
+  /// Nul en Classique.
   FiestaState? _fiestaAfterTurn() {
     final fiesta = _game.fiesta;
     if (fiesta == null || _teams.isEmpty) return null;
-    final teamId = _teams[_game.currentTeamIndex].id;
+    final applied = currentTeamModifiers;
+    final continuation = isContinuation;
     return fiesta.copyWith(
-      turn: const {},
+      turn: FiestaTurnState.empty,
       active: fiesta.active
-          .where((m) => !(m.scope == ModifierScope.turn &&
-              (m.target == ModifierTarget.both || m.teamId == teamId)))
+          .where((m) =>
+              !(m.scope == ModifierScope.turn && applied.contains(m)) &&
+              !(continuation && m.round < _game.currentRound))
           .toList(),
     );
   }
 
   /// Malus à révéler en plein écran avant le tour : ceux de l'équipe qui joue,
-  /// à son PREMIER tour de la manche (aucune entrée d'historique à son nom
-  /// dans cette manche). Le malus de 10 s, qui ne touche pas une continuation
-  /// (Q5), se révèle au premier tour NON-continuation. Dérivé de
-  /// l'historique : rien à persister.
+  /// à son PREMIER VRAI tour de la manche. Jamais sur une continuation (elle
+  /// joue avec les effets de N, déjà annoncés) ; l'entrée d'historique de la
+  /// continuation ne compte pas comme un tour de N+1. Dérivé de l'historique :
+  /// rien à persister.
   List<ModifierInstance> get malusToReveal {
-    if (_game.fiesta == null || _teams.isEmpty) return const [];
-    final teamId = _teams[_game.currentTeamIndex].id;
-    final played = _game.history
-        .where((h) => h.round == _game.currentRound && h.teamId == teamId);
-    final firstTurn = played.isEmpty;
-    final firstFullTurn = _game.turnBonusTime == null &&
-        played.every((h) => h.isBonusContinuation);
+    final teamId = getCurrentTeam()?.id;
+    if (_game.fiesta == null || teamId == null || isContinuation) {
+      return const [];
+    }
+    final realTurns =
+        _entriesThisRound(teamId) - (teamId == _continuingTeamId ? 1 : 0);
+    if (realTurns > 0) return const [];
     return currentTeamModifiers
-        .where((m) =>
-            m.nature == ModifierNature.malus &&
-            (m.catalogId == 'minus_10s' ? firstFullTurn : firstTurn))
+        .where((m) => m.nature == ModifierNature.malus)
         .toList();
   }
 
@@ -1618,31 +1578,22 @@ class GameProvider extends ChangeNotifier {
     _saveGameState();
   }
 
-  /// Coup de pouce de l'app (Auto) pour la manche suivante : montré sur la
-  /// transition, posé par `nextRound`. Vide hors Auto + auto-calibrage, après
-  /// M3 ou à égalité.
-  List<ModifierInstance> get appBoostPreview {
-    final fiesta = _game.fiesta;
-    if (fiesta == null || !isAppBoostOn(fiesta.rules, _game.currentRound)) {
-      return const [];
-    }
-    return appBoost(
-      rules: fiesta.rules,
-      gameId: _game.gameId ?? '',
-      round: _game.currentRound,
-      standings: standings,
-      roundDraw: nextRoundModifiers,
-    );
-  }
+  /// Coup de pouce de l'app (Auto) pour la manche suivante. Vide hors Auto +
+  /// auto-calibrage, après M3 ou à égalité.
+  List<ModifierInstance> get appBoostPreview =>
+      _transitionPlan?.gifts ?? const [];
 
   /// Équipe qui désigne le devineur bloqué de l'équipe qui joue : celle qui a
   /// choisi « Bloquer un devineur » contre elle. `null` = les adversaires.
   Team? get blockingTeam {
-    final teamId = getCurrentTeam()?.id;
+    final block = currentTeamModifiers
+        .where((m) => m.catalogId == 'block_guesser')
+        .firstOrNull;
+    if (block == null) return null;
     for (final c in _game.fiesta?.offerChoices ?? const <OfferChoice>[]) {
       if (c.modifier.catalogId == 'block_guesser' &&
-          c.modifier.teamId == teamId &&
-          c.modifier.round == _game.currentRound) {
+          c.modifier.teamId == block.teamId &&
+          c.modifier.round == block.round) {
         return getTeamById(c.chooserId);
       }
     }

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
+import 'package:guess_it_all_mobile/utils/constants.dart';
 
 import '../helpers/test_prefs.dart';
 
@@ -116,11 +117,13 @@ void main() {
     provider.nextRound();
     expect(provider.getCurrentTeam()!.id, teamId);
     expect(provider.isDoublePointsOn, isTrue);
-    expect(provider.doublePointsLeft, 1); // charge de M2 intacte
+    // Rien à allumer sur une continuation ; la charge de M2 reste intacte.
+    expect(provider.doublePointsLeft, 0);
 
     provider.startTurn();
     provider.startTurnTimer();
-    expect(provider.doublePointsLeft, 1);
+    expect(
+        provider.game.fiesta!.chargesUsed.where((u) => u.round == 2), isEmpty);
     provider.markWordAsGuessed();
     provider.endTurn();
     final word = provider.game.wordsGuessedThisTurn.first;
@@ -136,41 +139,45 @@ void main() {
   });
 
   test(
-      'Continuation NON activée en fin de M1 : la charge de M2 s\'y active, se '
-      'dépense au départ et double les points de M2 (AC8)', () async {
+      'Continuation NON activée en fin de M1 : la charge de M2 ne s\'y allume '
+      'pas ; elle sert au premier vrai tour de M2 de l\'équipe (AC8, epic fix)',
+      () async {
     final provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
     await provider.startGame(fiesta: doubleEveryRound);
     final teamId = provider.getCurrentTeam()!.id;
-    provider.startTurn();
-    provider.startTurnTimer();
-    while (provider.game.currentWord != null) {
-      provider.markWordAsGuessed();
+    void playOne(List<String> Function(List<String>) validate, {int n = 1}) {
+      provider.startTurn();
+      provider.startTurnTimer();
+      for (var i = 0; i < n; i++) {
+        provider.markWordAsGuessed();
+      }
+      if (provider.game.currentScreen != AppConstants.screenVerification)
+        provider.endTurn();
+      final words = validate(provider.game.wordsGuessedThisTurn);
+      provider.savePreValidationState(words);
+      provider.validateWords(words);
     }
-    final guessed = List<String>.from(provider.game.wordsGuessedThisTurn);
-    provider.savePreValidationState(guessed);
-    provider.validateWords(guessed);
+
+    playOne((w) => w, n: 4);
     expect(teamRounds(provider, teamId), [4, 0, 0]);
 
     provider.nextRound();
     expect(provider.getCurrentTeam()!.id, teamId);
     expect(provider.game.turnBonusTime, isNot(anyOf(isNull, 0)));
     provider.setDoublePoints(true);
-    provider.startTurn();
-    provider.startTurnTimer();
-    expect(provider.isDoublePointsOn, isTrue);
-    expect(provider.doublePointsLeft, 0);
+    expect(provider.isDoublePointsArmed, isFalse);
+    playOne((w) => w); // la continuation : 1 point
+    playOne((w) => const []); // l'autre équipe
+
+    expect(provider.getCurrentTeam()!.id, teamId);
+    expect(provider.doublePointsLeft, 1);
+    provider.setDoublePoints(true);
+    playOne((w) => w);
+    expect(teamRounds(provider, teamId), [4, 3, 0]);
     expect(
         provider.game.fiesta!.chargesUsed
             .where((u) => u.teamId == teamId && u.round == 2),
         hasLength(1));
-
-    provider.markWordAsGuessed();
-    provider.endTurn();
-    final word = provider.game.wordsGuessedThisTurn.first;
-    provider.savePreValidationState([word]);
-    provider.validateWords([word]);
-    expect(teamRounds(provider, teamId), [4, 2, 0]);
-    expect(teamScore(provider, teamId), 6);
   });
 
   test(
