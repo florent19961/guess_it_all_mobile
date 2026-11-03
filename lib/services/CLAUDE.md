@@ -7,7 +7,7 @@
 | Service | Classe | Role |
 |---------|--------|------|
 | `storage_service.dart` | `StorageService` | Wrapper SharedPreferences : persistance settings, gameSession, gameState |
-| `analytics_service.dart` | `AnalyticsService` | Tracking temps reel WordEvents, calcul stats, persistance locale. Retention 50 parties. Recovery des parties orphelines (crash). Fiesta : `modifiers` par event (contexte du tour), durée par mot (`_shownAt`, deux cartes en 2-11, `docs/ANALYTICS.md`) |
+| `analytics_service.dart` | `AnalyticsService` | Tracking temps reel WordEvents, calcul stats, persistance locale. Retention 50 parties. Recovery des parties orphelines (crash). Contexte de chaque event (`WordEventContext`) fourni par l'appelant depuis l'état persisté, jamais deviné ; durée par mot (`_shownAt`, mémoire seule : après un kill, event terminal sans durée), `docs/ANALYTICS.md` |
 | `user_service.dart` | `UserService` | userId persistant (UUID v4) + DeviceInfo (appVersion, platform, locale, deviceModel) |
 | `word_history_service.dart` | `WordHistoryService` | Historique mots joues (mot→seenCount). Priorise les mots jamais vus via `selectWordsByPriority()` |
 | `word_loader_service.dart` | `WordLoaderService` | Charge categories depuis JSON (assets/translations/). Cache en memoire. Methodes : `loadCategory()`, `getCategoriesMetadata()` |

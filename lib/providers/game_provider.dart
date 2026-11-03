@@ -670,26 +670,26 @@ class GameProvider extends ChangeNotifier {
     final currentWord = word ?? _game.currentWord;
     if (currentWord == null || !_analytics.isTracking) return;
 
-    final currentTeam = getCurrentTeam();
-    final currentPlayer = getCurrentPlayer();
-
-    _analytics.onWordShown(
-      word: currentWord,
-      round: _game.currentRound,
-      turn: _game.currentTurn,
-      teamId: currentTeam?.id ?? '',
-      playerId: currentPlayer?.id ?? '',
-      // Relus de l'état PERSISTÉ à chaque mot (survit à un kill). Nul en
-      // Classique : l'événement garde alors exactement l'ancienne forme.
-      modifiers: isFiesta
-          ? [
-              ...turnModifiers.map((m) => m.catalogId),
-              if (isDoublePointsOn) 'double_points',
-              if (isTwoWordsOn) 'two_words',
-            ]
-          : null,
-    );
+    _analytics.onWordShown(currentWord, _eventContext);
   }
+
+  /// Contexte analytics du tour en cours, relu de l'état PERSISTÉ à chaque
+  /// événement : il survit à un kill, y compris sur la vérification (le tour
+  /// vérifié est encore le tour courant). `modifiers` nul en Classique :
+  /// l'événement garde alors exactement l'ancienne forme.
+  WordEventContext get _eventContext => (
+        round: _game.currentRound,
+        turn: _game.currentTurn,
+        teamId: getCurrentTeam()?.id ?? '',
+        playerId: getCurrentPlayer()?.id ?? '',
+        modifiers: isFiesta
+            ? [
+                ...turnModifiers.map((m) => m.catalogId),
+                if (isDoublePointsOn) 'double_points',
+                if (isTwoWordsOn) 'two_words',
+              ]
+            : null,
+      );
 
   /// [word] : la carte visée (« Deux mots à la fois »), la carte A par
   /// défaut. Un mot qui n'est plus à l'écran (tap périmé) est ignoré.
@@ -700,7 +700,7 @@ class GameProvider extends ChangeNotifier {
     if (currentWord != _game.currentWord && currentWord != second) return;
 
     // Tracker le mot deviné AVANT de changer l'état
-    _analytics.onWordGuessed(currentWord);
+    _analytics.onWordGuessed(currentWord, _eventContext);
 
     final newGuessedWords = List<String>.from(_game.wordsGuessedThisTurn);
     if (!newGuessedWords.contains(currentWord)) {
@@ -815,7 +815,7 @@ class GameProvider extends ChangeNotifier {
     final usesFreePass = fiesta != null && hasFreePass;
 
     // Tracker le pass AVANT de changer l'état
-    _analytics.onWordPassed(currentWord);
+    _analytics.onWordPassed(currentWord, _eventContext);
 
     // La pénalité est retirée à la deadline, en ms exactes : plus de ré-ancrage
     // sur une seconde arrondie au supérieur (qui rendait du temps à chaque passe
@@ -903,10 +903,10 @@ class GameProvider extends ChangeNotifier {
 
     // Tracker le mot expiré si applicable
     if (expiredWord != null) {
-      _analytics.onWordExpired(expiredWord);
+      _analytics.onWordExpired(expiredWord, _eventContext);
     }
     if (second != null && !isRoundFinished) {
-      _analytics.onWordExpired(second);
+      _analytics.onWordExpired(second, _eventContext);
     }
 
     _game = _game.copyWith(
@@ -1040,17 +1040,17 @@ class GameProvider extends ChangeNotifier {
     final newRemainingWords = resolution.remainingPool;
     final pointsScored = resolution.pointsScored;
 
-    // Tracker les mots invalidés pour les analytics
+    // Tracker les mots invalidés pour les analytics, puis les mots
+    // passed/expired validés comme guessed. Contexte lu AVANT la mutation.
+    final context = _eventContext;
     for (final word in allInvalidatedWords) {
-      _analytics.onWordInvalidated(word);
+      _analytics.onWordInvalidated(word, context);
     }
-
-    // Tracker les mots passed/expired qui sont validés comme guessed
     for (final word in resolution.validatedPassed) {
-      _analytics.onWordValidatedAsGuessed(word);
+      _analytics.onWordValidatedAsGuessed(word, context);
     }
     for (final word in resolution.expiredValidated) {
-      _analytics.onWordValidatedAsGuessed(word);
+      _analytics.onWordValidatedAsGuessed(word, context);
     }
 
     // Mettre à jour le score

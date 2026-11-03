@@ -44,26 +44,35 @@ class WordEvent {
 **`modifiers` (Fiesta, story 2-7)** : ids du catalogue (`minus_10s`, `no_pass`...) actifs pour
 l'equipe qui joue quand l'evenement a lieu. Cle **absente** (pas `null`) en Classique et sur les
 evenements ecrits avant 2-7 ; `[]` = Fiesta sans modificateur ce tour. Un id peut apparaitre deux
-fois (deux instances cumulees). Le provider les relit de l'etat **persiste** a chaque mot
-affiche : apres un kill, le mot suivant est de nouveau etiquete. `guessed`/`passed`/`expired` et
-`invalidated`/validation a posteriori reprennent ceux du dernier `shown` (contexte du tour, comme
-`round`/`turn`). Rien n'est exclu des stats : `computeStats` et la difficulte initiale du mot
-sont inchanges.
+fois (deux instances cumulees). Rien n'est exclu des stats : `computeStats` et la difficulte
+initiale du mot sont inchanges.
+
+**Contexte de l'evenement** (`round`, `turn`, `teamId`, `playerId`, `modifiers`) : le provider le
+relit de l'etat **persiste** de la partie (`GameState`) a **chaque** evenement et le passe
+explicitement au service (`WordEventContext`). Le service ne garde aucun contexte en memoire et
+n'invente aucun defaut : apres un kill, en plein tour comme sur l'ecran de verification, les
+evenements portent la vraie manche, la vraie equipe et les vrais tags. Sur la verification, le
+tour verifie est encore le tour courant (le contexte est lu avant la mutation de `validateWords`).
 
 - **Actifs, pas forcement appliques** : un tour de continuation (temps reporte en debut de
   manche) est etiquete avec la liste active de l'equipe dans la nouvelle manche, alors qu'il
   ignore les effets de duree (`minus_10s`...). Croiser avec `HistoryEntry.isBonusContinuation`
   pour recalibrer.
-- **Cle absente dans une partie Fiesta = inconnu, pas Classique** : une verification faite juste
-  apres un kill, sans nouveau `shown`, ecrit `invalidated` / `guessed` sans `modifiers` (et avec
-  les defauts `round` 1, `teamId` '' deja presents avant 2-7). Le mode de la partie se lit sur
-  `GameAnalytics.gameMode`, jamais sur l'evenement.
+- **Evenements anterieurs a ce correctif** : une verification faite juste apres un kill a pu
+  ecrire `invalidated` / `guessed` sans `modifiers`, avec `round` 1 et `teamId` ''. Le mode de la
+  partie se lit sur `GameAnalytics.gameMode`, jamais sur l'evenement.
 
 **Duree par mot** (`AnalyticsService._recordEventWithDuration`, story 2-11) : chaque mot a
-l'ecran garde l'horodatage de son `shown` ; `guessed` / `passed` / `expired` mesurent leur duree
-depuis le `shown` de CE mot. Avec « Deux mots a la fois », les deux cartes ont donc chacune leur
-paire d'evenements, et le tour porte `two_words` dans `modifiers`. Un mot sans `shown` en cours
-(app tuee depuis) est abandonne, comme avant : pas de duree inventee.
+l'ecran garde en memoire l'horodatage de son `shown` ; `guessed` / `passed` / `expired` mesurent
+leur duree depuis le `shown` de CE mot. Avec « Deux mots a la fois », les deux cartes ont donc
+chacune leur paire d'evenements, et le tour porte `two_words` dans `modifiers`.
+
+**Mot affiche avant un kill** : l'horodatage du `shown` est perdu avec la memoire. L'evenement
+terminal (`guessed` / `passed` / `expired`, une ou deux cartes) est **quand meme enregistre**, avec
+`durationMs` **nul** (duree inconnue) : jamais de duree inventee, jamais d'evenement perdu. Le
+`shown` lui-meme peut manquer (les evenements ne sont sauvegardes qu'en fin de tour et a la mise
+en arriere-plan). Agregats : `WordRoundStats` compte une duree nulle comme 0 ms, comme deja pour
+la validation a posteriori ; filtrer `durationMs != null` pour un temps moyen.
 
 **Types d'evenements :**
 
@@ -214,11 +223,14 @@ class AnalyticsService {
   Future<void> endGame();          // Termine et sauvegarde
 
   // Tracking en temps reel
-  void onWordShown(String word, int round, int turn, String teamId, String playerId);
-  void onWordGuessed(String word);
-  void onWordPassed(String word);
-  void onWordExpired(String word);
-  void onWordInvalidated(String word);
+  // `context` = (round, turn, teamId, playerId, modifiers), relu par le
+  // provider de l'etat persiste a chaque appel (WordEventContext).
+  void onWordShown(String word, WordEventContext context);
+  void onWordGuessed(String word, WordEventContext context);
+  void onWordPassed(String word, WordEventContext context);
+  void onWordExpired(String word, WordEventContext context);
+  void onWordInvalidated(String word, WordEventContext context);
+  void onWordValidatedAsGuessed(String word, WordEventContext context);
 
   // Persistance
   Future<void> saveCurrentGame();
