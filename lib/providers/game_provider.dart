@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import '../models/player.dart';
 import '../models/team.dart';
+import '../models/fiesta/fiesta_rules.dart';
+import '../models/fiesta/fiesta_state.dart';
 import '../models/game_settings.dart';
 import '../models/game_state.dart';
 import '../models/turn_clock.dart';
@@ -36,6 +38,7 @@ class GameProvider extends ChangeNotifier {
   List<Player> get players => _players;
   List<Team> get teams => _teams;
   GameState get game => _game;
+  bool get isFiesta => _game.fiesta != null;
   String? get currentEditingPlayerId => _currentEditingPlayerId;
 
   // Setter pour le joueur en cours d'édition
@@ -382,7 +385,11 @@ class GameProvider extends ChangeNotifier {
 
   // ========== ACTIONS - GAME ==========
 
-  Future<void> startGame() async {
+  /// [fiesta] = configuration Fiesta à GELER dans la partie ; nul = Classique.
+  ///
+  /// 🔴 Le `copyWith` ci-dessous part de `_game` : sans `clearFiesta`, la
+  /// config d'une partie Fiesta précédente survivrait à un lancement Classique.
+  Future<void> startGame({FiestaRules? fiesta}) async {
     // Créer le pool de tous les mots
     final List<String> allWords = [];
     for (final player in _players) {
@@ -421,6 +428,8 @@ class GameProvider extends ChangeNotifier {
       timeRemaining: _settings.turnDuration,
       clearTurnBonusTime: true,
       history: [],
+      fiesta: fiesta == null ? null : FiestaState(rules: fiesta),
+      clearFiesta: fiesta == null,
     );
 
     // Initialiser le tracking analytics

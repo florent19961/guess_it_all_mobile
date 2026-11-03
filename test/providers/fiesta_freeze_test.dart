@@ -1,0 +1,80 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+import 'package:guess_it_all_mobile/providers/game_provider.dart';
+
+import '../helpers/test_prefs.dart';
+
+/// Un provider prêt à lancer une partie : 2 joueurs, 2 équipes, 1 mot chacun.
+Future<GameProvider> givenReadyProvider() async {
+  await givenPrefs();
+  givenFakePlatformPlugins();
+  final provider = GameProvider();
+  await pumpEventQueue();
+  for (final name in ['Ana', 'Bob']) {
+    final id = (provider.addPlayer(name)['player'] as dynamic).id as String;
+    provider.updatePlayerWords(id, ['mot-$name']);
+  }
+  provider.createTeams();
+  provider.randomizeTeams();
+  return provider;
+}
+
+void main() {
+  group('Gel de la configuration Fiesta au lancement', () {
+    test(
+        'startGame(fiesta:) gèle une copie : modifier la source ensuite '
+        'ne change pas la partie', () async {
+      final provider = await givenReadyProvider();
+      final sourceModifiers = <String, ModifierSetting>{
+        'no_pass': const ModifierSetting(
+          active: true,
+          arrival: ModifierArrival.draw,
+          startRound: 1,
+          charges: 0,
+        ),
+      };
+      final rules =
+          FiestaRules(mode: FiestaMode.custom, modifiers: sourceModifiers);
+
+      await provider.startGame(fiesta: rules);
+      sourceModifiers['draw'] = const ModifierSetting(
+        active: true,
+        arrival: ModifierArrival.fixed,
+        startRound: 3,
+        charges: 0,
+      );
+
+      expect(provider.isFiesta, isTrue);
+      expect(provider.game.fiesta!.rules.modifiers.keys, ['no_pass']);
+    });
+
+    test('startGame() sans argument efface la Fiesta de la partie précédente',
+        () async {
+      final provider = await givenReadyProvider();
+      await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
+      expect(provider.isFiesta, isTrue);
+
+      await provider.startGame();
+
+      expect(provider.isFiesta, isFalse);
+      expect(provider.game.toJson().containsKey('fiesta'), isFalse);
+    });
+
+    test('le retour arrière restaure l\'état Fiesta capturé', () async {
+      final provider = await givenReadyProvider();
+      await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
+      final captured = provider.game.fiesta!.toJson();
+
+      provider.savePreValidationState(const []);
+      // Aucune API publique ne mute encore `fiesta` après le snapshot : on
+      // relance en Classique, ce qui l'efface sans toucher au snapshot.
+      await provider.startGame();
+      expect(provider.game.fiesta, isNull);
+
+      provider.restorePreValidationState();
+
+      expect(provider.game.fiesta, isNotNull);
+      expect(provider.game.fiesta!.toJson(), equals(captured));
+    });
+  });
+}
