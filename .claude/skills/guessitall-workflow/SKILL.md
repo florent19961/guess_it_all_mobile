@@ -145,34 +145,12 @@ places, partagé avec les autres projets et worktrees). La machine est contraint
 (~7 Go sous WSL2), pas par le CPU : deux sessions qui compilent/testent en même temps peuvent
 faire tomber la machine par OOM. Le sémaphore borne leur NOMBRE.
 
-⚠️ **Baseline actuellement ROUGE** (constaté 2026-08-01, pré-existant — **ne pas confondre avec une
-régression de ta story** ; vérifier sur `origin/main` avant d'accuser ton diff). Deux causes
-DISTINCTES, à ne pas mélanger :
-
-1. **`test/widget_test.dart` — tracké, et c'est le scaffold Flutter jamais adapté.** Il fait
-   `pumpWidget(const MyApp())` alors que la racine réelle est `GuessItAllApp` (`lib/app.dart`), et
-   teste un compteur qui n'a jamais existé. Conséquence : **le dépôt n'a aucun test qui tourne**,
-   et `flutter test` échoue à la compilation. Un vrai smoke test n'est pas gratuit : il faut
-   fournir un `GameProvider` (donc `SharedPreferences`) et neutraliser `UpgradeAlert` (qui
-   interroge le store). Suivi dans `docs/notes_pour_plus_tard.md`.
-2. **`lib/utils/word_categories/backup/*.dart`** produisait 4 `error` supplémentaires : fichiers
-   GITIGNORÉS, absents d'un clone neuf, mais présents sur le disque — et `flutter analyze` analyse
-   le DISQUE, pas l'index. **Réglé** par `analyzer: exclude:` dans `analysis_options.yaml`.
-
-**Baseline vérifiée le 2026-08-02 sous Flutter 3.44.8 / Dart 3.12.2** (`flutter analyze` = 88
-issues) :
-
-| Sévérité | Nb | Détail |
-|---|---|---|
-| `error` | **1** | `test/widget_test.dart:16` — `MyApp` inexistant (cf. point 1) |
-| `warning` | **2** | `game_provider.dart:747` (`!` inutile) ; `firebase_sync_service.dart:124` |
-| `info` | 85 | majoritairement `avoid_print` (dans `tools/` et les services) |
-
-🔴 **`firebase_sync_service.dart:124` n'est pas un warning cosmétique.** `syncGame()` rend un
-`Future<bool>`, mais le `catchError` de `markForSync` a un callback **sans `return`** → au moment
-où la sync échoue, il rend `null` là où un `bool` est attendu et lève un `TypeError` asynchrone
-non capturé. Autrement dit : le chemin censé **absorber** l'échec réseau est précisément celui qui
-casse. À traiter avant toute story qui touche la sync.
+**Baseline verte depuis la PR #2** (2026-11-03 : 123 tests, `format` + `analyze` OK — l'ancien
+scaffold `test/widget_test.dart` et le `catchError` sans `return` de `firebase_sync_service.dart`
+sont réglés). Un rouge sur `origin/main` est une vraie régression : le vérifier là avant d'accuser
+ton diff. `run-full-suite.sh` gate sur `error` + `warning` ; les `info` restants sont une dette
+assumée (`docs/notes_pour_plus_tard.md`, 2026-08-02). Le dossier gitignoré
+`lib/utils/word_categories/backup/` reste exclu via `analysis_options.yaml`.
 
 ## Ce qu'on peut lancer depuis WSL (et ce qu'on ne peut pas)
 

@@ -87,8 +87,8 @@ Hors cycle : bug / test rouge / comportement inattendu → `bmad-investigate` ; 
    test). 🔴 **Tout run de tests passe par `scripts/with-test-slot.sh`** — la machine est contrainte
    par la **RAM** (~7 Go sous WSL2), pas par le CPU, et le sémaphore est **partagé avec WasReal** :
    sans lui, deux projets qui testent en même temps font tomber la machine par OOM.
-   ⚠️ **Baseline actuellement ROUGE** : `test/widget_test.dart` est le scaffold Flutter jamais
-   adapté → aucun test ne tourne sur ce dépôt. Détail + coût réel : `docs/notes_pour_plus_tard.md`.
+   Baseline **verte** depuis la PR #2 (2026-11-03, 123 tests) : un rouge sur `origin/main` est
+   donc une vraie régression, pas un héritage.
 3. **Pas de fichiers .md** sauf si demandé explicitement. Emplacements autorisés : specs BMad dans
    `_bmad-output/specs/`, reviews dans `_bmad-output/reviews/`, docs projet dans `docs/`.
 4. **Maintenir les CLAUDE.md à jour** — après ajout/suppression d'écran, service, modèle ou
