@@ -56,14 +56,18 @@ class _GameScreenState extends State<GameScreen> {
     final player = provider.getCurrentPlayer();
     final gameId = provider.game.gameId;
     // Sans gameId (partie d'avant la mise à jour) : pas d'aide automatique.
-    final show = player != null &&
-        gameId != null &&
-        await FirstGameHelp.claim(
-          gameId: gameId,
-          playerId: player.id,
-          screen: FirstGameHelp.preTurn,
-        );
-    _helpPending = false;
+    bool show;
+    try {
+      show = player != null &&
+          gameId != null &&
+          await FirstGameHelp.claim(
+            gameId: gameId,
+            playerId: player.id,
+            screen: FirstGameHelp.preTurn,
+          );
+    } finally {
+      _helpPending = false;
+    }
     if (show && mounted) {
       await CoachMarks.show(context, _preTurnSteps(player.name));
     }
