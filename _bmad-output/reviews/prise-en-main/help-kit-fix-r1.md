@@ -18,3 +18,13 @@ Chaque finding re-tracé dans le code avant correction.
 | NIT « équipe menée » révèle le classement | **À trancher par Florent** ; texte de la maquette conservé. | — |
 
 Tests : `help_flags_test` (cas « une fois » ajouté, cas lecture-déduction retiré), aucun autre ajout.
+
+## Ajout — M1 de la revue help-wiring (`FirstGameHelp` lié au gameId)
+
+**Corrigé.** `claim({gameId, playerId, screen})` : faux si `firstGameDone` ; premier `gameId`
+enregistré (`guessItAll_firstGameId`) ; un autre `gameId` → `markFirstGameDone`, faux ; paires
+(écran, joueur) persistées (`guessItAll_firstGameHelpShown`, absent = vide) → un kill ne remontre
+rien, une 1re partie abandonnée ne traîne plus. `finishFirstGame` garde son rôle ; « Revoir les
+aides » efface aussi les deux nouvelles clés. Clés additives (règle 7). Test : même partie après
+reload (paires sur disque), nouveau `gameId` → terminé. `WIRING.md` : nouvelle signature, `gameId`
+nullable → pas d'aide auto ; limite « kill » retirée. m5 n'est plus un résidu.

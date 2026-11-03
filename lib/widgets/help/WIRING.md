@@ -46,15 +46,25 @@ vérification (`first_game_help.dart`) :
 
 ```dart
 // game_screen, après le premier build du tour (addPostFrameCallback) :
-if (await FirstGameHelp.claim(FirstGameHelp.preTurn, player.id) && mounted) {
+final gameId = provider.game.gameId; // String? : pas d'id = pas d'aide auto
+if (gameId != null &&
+    await FirstGameHelp.claim(
+        gameId: gameId,
+        playerId: player.id,
+        screen: FirstGameHelp.preTurn) &&
+    mounted) {
   await CoachMarks.show(context, preTurnHelp(...));
 }
 // verification_screen : idem avec FirstGameHelp.verification et verificationHelp(...)
 // results_screen, initState : FirstGameHelp.finishFirstGame();
 ```
 
-`claim` rend vrai une seule fois par joueur et par écran, et faux dès que
-`guessItAll_firstGameDone` est vrai. « Revoir les aides » (Règles) appelle
+`claim({gameId, playerId, screen})` rend vrai une seule fois par (joueur, écran), et
+seulement pendant la première partie : le premier `gameId` qui appelle `claim` est enregistré
+(`guessItAll_firstGameId`), les paires montrées sont persistées
+(`guessItAll_firstGameHelpShown`, liste de chaînes ; absent = vide) — un kill ne remontre rien.
+Un **autre** `gameId` marque `firstGameDone` et rend faux : une première partie abandonnée ne
+traîne pas sur les suivantes. Faux aussi dès que `guessItAll_firstGameDone` est vrai. « Revoir les aides » (Règles) appelle
 `FirstGameHelp.reset()`. Rien d'autre ne s'affiche tout seul : pas de voile au premier
 affichage d'un écran.
 
@@ -87,5 +97,3 @@ peut pas faire basculer une install neuve. Un `false` écrit (« Revoir les aide
 - `CoachMarks` mesure la cible une fois par étape : pas de nouvelle mesure si la taille de
   l'écran change pendant l'aide (écran partagé, pliable, clavier). L'app est bloquée en
   portrait, c'est accepté.
-- Après un kill en pleine première partie, `FirstGameHelp` a oublié qui a déjà vu l'aide : ces
-  joueurs la revoient une fois.

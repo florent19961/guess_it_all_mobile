@@ -143,9 +143,53 @@ class StorageService {
   Future<void> markFirstGameDone() =>
       _writeFlag(AppConstants.firstGameDoneKey, true);
 
-  /// « Revoir les aides » (écran Règles).
-  Future<void> resetFirstGameDone() =>
-      _writeFlag(AppConstants.firstGameDoneKey, false);
+  /// « Revoir les aides » (écran Règles) : la prochaine partie redevient la
+  /// première, aides déjà montrées oubliées.
+  Future<void> resetFirstGameDone() async {
+    await _writeFlag(AppConstants.firstGameDoneKey, false);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(AppConstants.firstGameIdKey);
+      await prefs.remove(AppConstants.firstGameHelpShownKey);
+    } catch (e) {
+      debugPrint('[Storage] Échec de remise à zéro des aides: $e');
+    }
+  }
+
+  /// gameId de la première partie (absent = pas encore commencée).
+  Future<String?> loadFirstGameId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(AppConstants.firstGameIdKey);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<void> saveFirstGameId(String gameId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(AppConstants.firstGameIdKey, gameId);
+    } catch (e) {
+      debugPrint('[Storage] Échec d\'écriture de la première partie: $e');
+    }
+  }
+
+  /// Ajoute [entry] aux aides déjà montrées (absent = vide). Vrai si elle
+  /// n'y était pas.
+  Future<bool> addFirstGameHelpShown(String entry) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final shown =
+          prefs.getStringList(AppConstants.firstGameHelpShownKey) ?? const [];
+      if (shown.contains(entry)) return false;
+      await prefs
+          .setStringList(AppConstants.firstGameHelpShownKey, [...shown, entry]);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
 
   /// Au démarrage, une seule fois dans la vie de l'app : chaque flag tuto /
   /// première partie ABSENT est écrit à [playedBefore]. Ensuite il est présent

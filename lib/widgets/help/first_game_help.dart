@@ -5,16 +5,15 @@ import '../../services/word_history_service.dart';
 /// Aides automatiques de la première partie sur ce téléphone : chaque joueur
 /// les voit à SON premier tour, sur l'avant-tour et sur la vérification.
 ///
-/// Le « déjà vu » par joueur reste en mémoire (une partie reprise après un
-/// redémarrage de l'app peut remontrer l'aide une fois : sans gravité). Seul
-/// `guessItAll_firstGameDone` est persisté.
+/// La première partie est identifiée par son `gameId` : tout persiste
+/// (`guessItAll_firstGameId`, `guessItAll_firstGameHelpShown`), donc un kill
+/// ne remontre rien, et une première partie abandonnée ne traîne pas : la
+/// partie suivante (autre `gameId`) clôt la première.
 class FirstGameHelp {
   FirstGameHelp._();
 
   static const String preTurn = 'preTurn';
   static const String verification = 'verification';
-
-  static final Set<String> _shown = {};
 
   /// Au démarrage (tâche locale de `main.dart`, après l'init de
   /// `WordHistoryService`) : un joueur déjà venu — historique des mots,
@@ -27,21 +26,29 @@ class FirstGameHelp {
   }
 
   /// Vrai une seule fois par joueur et par écran ([preTurn] ou
-  /// [verification]), et seulement tant que la première partie n'est pas finie.
-  static Future<bool> claim(String screen, String playerId) async {
-    if (await StorageService().isFirstGameDone()) return false;
-    return _shown.add('$screen:$playerId');
+  /// [verification]), et seulement pendant la première partie : celle du
+  /// premier [gameId] qui appelle `claim` après le démarrage des aides. Un
+  /// autre [gameId] clôt la première partie et rend faux.
+  static Future<bool> claim({
+    required String gameId,
+    required String playerId,
+    required String screen,
+  }) async {
+    final storage = StorageService();
+    if (await storage.isFirstGameDone()) return false;
+    final firstGameId = await storage.loadFirstGameId();
+    if (firstGameId == null) {
+      await storage.saveFirstGameId(gameId);
+    } else if (firstGameId != gameId) {
+      await storage.markFirstGameDone();
+      return false;
+    }
+    return storage.addFirstGameHelpShown('$screen:$playerId');
   }
 
-  /// À appeler à l'arrivée sur les résultats de fin de partie.
-  static Future<void> finishFirstGame() {
-    _shown.clear();
-    return StorageService().markFirstGameDone();
-  }
+  /// Fin normale : à l'arrivée sur les résultats de fin de partie.
+  static Future<void> finishFirstGame() => StorageService().markFirstGameDone();
 
   /// « Revoir les aides » (écran Règles).
-  static Future<void> reset() {
-    _shown.clear();
-    return StorageService().resetFirstGameDone();
-  }
+  static Future<void> reset() => StorageService().resetFirstGameDone();
 }

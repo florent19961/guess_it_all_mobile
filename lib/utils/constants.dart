@@ -31,6 +31,8 @@ class AppConstants {
   static const String tutorialSeenKey = 'guessItAll_tutorialSeen';
   static const String fiestaTutorialSeenKey = 'guessItAll_fiestaTutorialSeen';
   static const String firstGameDoneKey = 'guessItAll_firstGameDone';
+  static const String firstGameIdKey = 'guessItAll_firstGameId';
+  static const String firstGameHelpShownKey = 'guessItAll_firstGameHelpShown';
 
   // Screen names
   static const String screenHome = 'home';

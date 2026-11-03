@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/services/storage_service.dart';
+import 'package:guess_it_all_mobile/utils/constants.dart';
+import 'package:guess_it_all_mobile/widgets/help/first_game_help.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../helpers/test_prefs.dart';
@@ -36,6 +38,26 @@ void main() {
     await givenPrefs();
     await storage.initHelpFlags(playedBefore: true);
     expect(await storage.hasSeenTutorial(), isTrue);
+    expect(await storage.isFirstGameDone(), isTrue);
+  });
+
+  test('aides de la 1re partie : liées au gameId, gardées après un reload',
+      () async {
+    await givenPrefs({AppConstants.firstGameDoneKey: false});
+    Future<bool> claim(String game, String player) => FirstGameHelp.claim(
+        gameId: game, playerId: player, screen: FirstGameHelp.preTurn);
+
+    expect(await claim('g1', 'alice'), isTrue);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.reload(); // kill + reprise : tout est sur disque
+    expect(prefs.getString(AppConstants.firstGameIdKey), 'g1');
+    expect(prefs.getStringList(AppConstants.firstGameHelpShownKey),
+        ['preTurn:alice']);
+    expect(await claim('g1', 'alice'), isFalse);
+    expect(await claim('g1', 'bob'), isTrue);
+
+    // 1re partie abandonnée : la suivante la clôt.
+    expect(await claim('g2', 'carol'), isFalse);
     expect(await storage.isFirstGameDone(), isTrue);
   });
 }
