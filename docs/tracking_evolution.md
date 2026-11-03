@@ -499,6 +499,8 @@ annoncés avant le tour. Règles pures dans `models/fiesta/turn_effects.dart`.
   par 2-5). Personne n'en pose encore (2-10) : testé avec une instance injectée.
 - **Devineur bloqué choisi au début du tour**, pas au tirage : celui qui fait deviner tourne.
   Sélecteur fermé sans choix → on reste sur l'avant-tour, le tour ne démarre pas.
+  Sur `main`, `block_guesser` n'est ni tiré ni fixé (`isForAllTeams`, 2-5) : l'effet se
+  déclenche sur toute instance qui vise l'équipe qui joue, et n'aura donc de source qu'avec 2-10.
 
 **Conséquence.** Une partie Classique ne voit aucune différence : sans modificateur, pénalité
 effective = pénalité réglée, garde identique.

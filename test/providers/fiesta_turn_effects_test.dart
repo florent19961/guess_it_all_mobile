@@ -40,6 +40,28 @@ FiestaRules fixedOnRound1(Map<String, int> fixed) => FiestaRules(
       },
     );
 
+/// Pose [catalogId] (portée tour, sur l'équipe qui joue) dans l'état
+/// persisté, puis relit la partie. Aucun écrivain ne pose encore d'instance de
+/// portée tour ni de `block_guesser` (2-10) : `fixed` et le tirage les excluent.
+Future<GameProvider> withTurnInstance(
+    GameProvider provider, String catalogId) async {
+  await pumpEventQueue();
+  final saved = (await StorageService().loadGameState())!;
+  (saved['game']['fiesta']['active'] as List).add(ModifierInstance(
+    catalogId: catalogId,
+    scope: ModifierScope.turn,
+    target: ModifierTarget.team,
+    teamId: provider.getCurrentTeam()!.id,
+    charges: 1,
+    nature: modifierById(catalogId)!.nature,
+    round: provider.game.currentRound,
+  ).toJson());
+  await StorageService().saveGameState(saved);
+  final reloaded = GameProvider();
+  await pumpEventQueue();
+  return reloaded;
+}
+
 int allotted(GameProvider p) =>
     (p.game.turnEndTimestamp! - p.game.turnStartTimestamp!) ~/ 1000;
 
@@ -101,12 +123,14 @@ void main() {
       'block_guesser : sans effet à 2 joueurs, sinon jamais celui qui fait '
       'deviner (AC5)', () async {
     var provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
-    await provider.startGame(fiesta: fixedOnRound1({'block_guesser': 0}));
+    await provider.startGame(fiesta: fixedOnRound1({}));
+    provider = await withTurnInstance(provider, 'block_guesser');
     expect(provider.blockableGuessers, isEmpty);
     expect(provider.needsBlockedGuesser, isFalse);
 
     provider = await givenReadyProvider(['A', 'B', 'C', 'D', 'E', 'F']);
-    await provider.startGame(fiesta: fixedOnRound1({'block_guesser': 0}));
+    await provider.startGame(fiesta: fixedOnRound1({}));
+    provider = await withTurnInstance(provider, 'block_guesser');
     final guesser = provider.getCurrentPlayer()!;
     expect(provider.blockableGuessers.map((p) => p.id),
         isNot(contains(guesser.id)));
@@ -124,23 +148,7 @@ void main() {
     var provider = await givenReadyProvider();
     await provider.startGame(fiesta: fixedOnRound1({}));
     final teamId = provider.getCurrentTeam()!.id;
-
-    // Pas encore d'écrivain d'instances de portée tour (2-10) : on en pose une
-    // dans l'état persisté, puis on relit la partie.
-    await pumpEventQueue();
-    final saved = (await StorageService().loadGameState())!;
-    (saved['game']['fiesta']['active'] as List).add(ModifierInstance(
-      catalogId: 'free_pass',
-      scope: ModifierScope.turn,
-      target: ModifierTarget.team,
-      teamId: teamId,
-      charges: 1,
-      nature: ModifierNature.bonus,
-      round: 1,
-    ).toJson());
-    await StorageService().saveGameState(saved);
-    provider = GameProvider();
-    await pumpEventQueue();
+    provider = await withTurnInstance(provider, 'free_pass');
     bool held() =>
         provider.game.fiesta!.active.any((m) => m.scope == ModifierScope.turn);
     expect(held(), isTrue);
