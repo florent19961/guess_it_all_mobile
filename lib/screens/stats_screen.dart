@@ -348,11 +348,9 @@ class _StatsScreenState extends State<StatsScreen> {
     // Parcourir l'historique
     for (final entry in provider.game.history) {
       final teamId = entry.teamId;
-      final wordsCount = entry.wordsGuessed.length;
-
-      // Mettre à jour le score cumulatif (toujours)
+      // Points du tour, pas nombre de mots : un tour à ×2 compte double.
       teamCumulativeScore[teamId] =
-          (teamCumulativeScore[teamId] ?? 0) + wordsCount;
+          (teamCumulativeScore[teamId] ?? 0) + entry.points;
 
       if (entry.isBonusContinuation) {
         // C'est une continuation du tour précédent (bonus time)

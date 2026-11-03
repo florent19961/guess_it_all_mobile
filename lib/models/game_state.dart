@@ -12,6 +12,14 @@ class HistoryEntry {
   final int timeSpent;
   final bool isBonusContinuation;
 
+  /// Points marqués par ce tour, quand ils diffèrent du nombre de mots
+  /// validés (Fiesta : « Mot compte double »). Nul = un point par mot : la
+  /// clé n'est alors pas écrite, une partie Classique garde l'ancienne forme.
+  final int? pointsScored;
+
+  /// Points de ce tour, pour « Évolution des scores ».
+  int get points => pointsScored ?? wordsGuessed.length;
+
   HistoryEntry({
     required this.round,
     required this.turn,
@@ -22,7 +30,8 @@ class HistoryEntry {
     required this.wordsPassed,
     required this.timeSpent,
     this.isBonusContinuation = false,
-  });
+    int? pointsScored,
+  }) : pointsScored = pointsScored == wordsGuessed.length ? null : pointsScored;
 
   Map<String, dynamic> toJson() {
     return {
@@ -35,6 +44,7 @@ class HistoryEntry {
       'wordsPassed': wordsPassed,
       'timeSpent': timeSpent,
       'isBonusContinuation': isBonusContinuation,
+      if (pointsScored != null) 'pointsScored': pointsScored,
     };
   }
 
@@ -54,6 +64,9 @@ class HistoryEntry {
           (json['wordsPassed'] as List<dynamic>?)?.cast<String>() ?? [],
       timeSpent: json['timeSpent'] as int? ?? 0,
       isBonusContinuation: json['isBonusContinuation'] as bool? ?? false,
+      // Absent (Classique, versions antérieures) ou mal typé : un par mot.
+      pointsScored:
+          json['pointsScored'] is int ? json['pointsScored'] as int : null,
     );
   }
 }
@@ -291,8 +304,9 @@ class GameState {
       'preValidationSnapshot': preValidationSnapshot,
       'restoredValidatedWords': restoredValidatedWords,
       // Pas de clé `fiesta: null` ni `turnAllottedSeconds: null` : absent =
-      // Classique / version antérieure, et le blob d'une partie Classique
-      // reprise reste octet pour octet celui d'avant.
+      // Classique / version antérieure (règle 7 : ajouts optionnels, lecture
+      // tolérante). Seul ajout écrit par une partie Classique jouée :
+      // `turnAllottedSeconds` (2-6), approuvé par Florent.
       if (turnAllottedSeconds != null)
         'turnAllottedSeconds': turnAllottedSeconds,
       if (fiesta != null) 'fiesta': fiesta!.toJson(),

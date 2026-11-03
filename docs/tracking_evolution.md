@@ -321,8 +321,8 @@ nul. `GameProvider.startGame({FiestaRules? fiesta})` gèle la config ; sans argu
 
 **Pourquoi ces choix.**
 - **Un seul champ optionnel, pas de bump de `kCurrentSchemaVersion`** : absent = Classique, donc
-  une partie écrite par la version en store se relit sans migration, et le blob Classique ne
-  change pas d'un octet (règle 7). Les stories suivantes ajoutent leurs compteurs *dans* `fiesta`
+  une partie écrite par la version en store se relit sans migration, et `fiesta` n'est jamais
+  écrit en Classique (règle 7 ; seul ajout Classique de l'epic : `turnAllottedSeconds`, 2-6). Les stories suivantes ajoutent leurs compteurs *dans* `fiesta`
   (`turn`), jamais à la racine de `GameState`.
 - **Relecture tolérante à deux niveaux** : `fiesta` structurellement illisible → Classique (la
   partie reste jouable) ; une instance ou un réglage illisible → ignoré seul, jamais de valeur
@@ -564,7 +564,7 @@ choix.
 
 **Pourquoi ces choix.**
 - **Carte B dans `fiesta.turn`** (`secondWord`, puis `secondExpiredWord`), pas dans `GameState` :
-  le blob Classique ne change pas d'un octet, clés absentes = un seul mot, pas de bump de schéma.
+  rien de neuf dans le blob Classique, clés absentes = un seul mot, pas de bump de schéma.
   Le retour arrière et l'app tuée les retrouvent sans code dédié (snapshot = `toJson`).
 - **Le mot visé est un argument** de `markWordAsGuessed` / `passWord` : un tap sur une carte
   déjà remplacée est ignoré par le provider (en plus du verrou visuel de 0,3 s).
@@ -575,3 +575,73 @@ choix.
 
 **Conséquence.** Pas d'indicateur sur `HistoryEntry` (forme d'une clé `guessItAll_*` de premier
 niveau) : le tag analytics porte l'information.
+
+## 2026-11-03 — Fiesta, fin d'epic : règle de la continuation, état du tour typé, plan de passage de manche
+
+**Ce qui change.**
+- **Continuation** (temps reporté en début de N+1) = même tour que la fin de N : elle joue avec
+  les effets de N pour cette équipe (modificateurs de N, ×2 / deux mots dépensés, passes
+  gratuites utilisées, `block_guesser` de N et devineur bloqué), **jamais** ceux de N+1 (tirage,
+  cadeaux, choix — `block_guesser` choisi pour N+1 compris — et charges), qui commencent au
+  premier vrai tour de chaque équipe. Aucune charge ne s'allume sur une continuation : 🔴 cela
+  **change l'AC8 de 2-9** (on pouvait allumer la charge de N+1 pendant la continuation). Le test
+  AC8 vérifie désormais le refus sur la continuation et la charge de N+1 disponible au premier
+  vrai tour (lecture (a), validée par Florent). **Continuation en chaîne** (revue r1) : si la
+  continuation vide à elle seule le pool de N+1, son tour logique N se clôt à cette fin de manche
+  (`_fiestaAtRoundEnd`) ; la continuation en N+2 ne porte que le contexte de N+1, dont les malus
+  se révèlent alors (`malusToReveal` sur la manche logique), **sauf les malus de temps**
+  (`kTimeModifierIds`, revue r2) : une continuation joue son temps reporté, sans modificateur de
+  temps, donc un « −10 s » n'y est ni annoncé ni appliqué. Les
+  instances de N partent à la fin de la continuation. Tous les malus de N+1 se révèlent au
+  premier vrai tour (plus de cas particulier `minus_10s`).
+- `isContinuation` est **dérivé de l'historique** (l'équipe a joué la dernière entrée de N et
+  n'a encore rien joué en N+1), pas de `turnBonusTime`, effacé au départ du chrono : il tient
+  pendant le tour, sur la vérification, après un kill et un retour arrière. Rien de persisté.
+- `FiestaState.turn` : `Map<String, dynamic>` → `FiestaTurnState` typé, **mêmes clés JSON**,
+  écriture conditionnelle, lecture tolérante clé par clé. Il décide ce qui survit
+  (`afterRoundEnd`, `empty`).
+- `planRoundTransition` (pur) : tirage + cadeaux + choix + rattrapage + ce qui survit. L'aperçu
+  de la transition et `nextRound` lisent le même plan.
+- ×2 et deux mots : une table `kChargeBonusKeys`, une implémentation dans le provider.
+
+**Pourquoi.** Revues de fin d'epic : une continuation pouvait cumuler ×2 / blocage de N et deux
+tirages de N+1 (4 effets, Codex MAJOR-1), et un `block_guesser` choisi pour N+1 contre l'équipe
+qui avait fini N était brûlé par sa continuation, parfois de 0 s (Opus M3). Une seule règle
+(« la manche logique du tour ») supprime toute la famille de cas particuliers (m1, m2, m3, m8).
+Le blob Fiesta n'a jamais été publié : aucune migration.
+
+## 2026-11-03 — Fiesta, fin d'epic : « Évolution des scores » compte les points, pas les mots
+
+**Ce qui change.** `HistoryEntry.pointsScored`, optionnel, écrit **seulement** quand il diffère du
+nombre de mots validés (×2). Absent = un point par mot (`HistoryEntry.points`). Le graphe
+« Évolution des scores » cumule `points` : son dernier point égale `Team.score`.
+
+**Pourquoi.** Le graphe ajoutait le nombre de mots : un tour à ×2 y valait moitié moins que dans
+le score affiché (Codex MAJOR-3). Ajout dans `guessItAll_gameState` approuvé par Florent
+(règle 7) : additif, optionnel, lecture tolérante. Une partie Classique n'écrit jamais la clé
+(points = mots), et un blob antérieur se relit à l'identique. Pas de migration ni de bump de
+schéma.
+
+## 2026-11-03 — Fiesta, fin d'epic : contrat Classique = règle 7, plus l'identité à l'octet
+
+**Ce qui change.** Rien dans le code. La promesse « blob Classique octet pour octet celui
+d'avant » est remplacée par la règle 7 telle qu'écrite : ajouts optionnels, absents = défaut,
+lecture tolérante, migration explicite seulement si une forme change. `turnAllottedSeconds`,
+écrit par toute partie Classique jouée depuis 2-6, est gardé.
+
+**Pourquoi.** Codex (BLOCKER-1) l'a relevé : la promesse ne tenait plus depuis 2-6. Florent
+garde le champ : il est additif et optionnel, l'ancien lecteur l'ignore, et il corrige le temps
+passé par joueur (`timeSpent` mesuré sur la durée réelle du tour). Les mentions « à l'octet »
+sont corrigées dans `game_state.dart`, `lib/models/CLAUDE.md`, ce journal et le test du blob figé.
+
+## 2026-11-03 — Fiesta, fin d'epic : récap des modificateurs archivé en faits
+
+**Ce qui change.** `GameResult.modifierRecap` archive des `ModifierRecapItem` (`kind`, manche,
+id de catalogue, équipes, secondes), plus des phrases françaises. `formatModifierRecap` forme le
+texte à l'affichage (carte des Résultats). Le récap recalcule rattrapage et coup de pouce par
+`planRoundTransition`, le même plan que la transition.
+
+**Pourquoi.** Opus m6 : des phrases archivées seraient restées en français pour toujours (i18n
+prévue, epic-4). Le format Fiesta de `guessItAll_gameHistory` n'a jamais été publié, donc la
+forme change sans migration. Une ligne `{title, detail}` écrite par une build de dev se relit
+comme un fait illisible : elle est ignorée seule, sans crash.

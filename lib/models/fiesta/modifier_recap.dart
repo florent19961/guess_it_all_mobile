@@ -4,10 +4,8 @@ import '../team.dart';
 import 'fiesta_rules.dart';
 import 'fiesta_state.dart';
 import 'modifier_catalog.dart';
-import 'modifier_instance.dart';
-import 'offers.dart';
+import 'round_transition.dart';
 import 'symmetric_draw.dart';
-import 'turn_time.dart';
 
 /// Id du mode Fiesta pour les analytics et l'historique (story 2-7).
 String fiestaModeId(FiestaRules rules) =>
@@ -18,17 +16,25 @@ String fiestaModeLabel(FiestaRules rules) => rules.mode == FiestaMode.auto
     ? 'Fiesta · Auto'
     : 'Fiesta · ${rules.ensembleName ?? 'Personnalisé'}';
 
-/// Récap « Modificateurs de la partie » en fin de partie : tirage par manche,
-/// rattrapages.
+/// Une ligne AFFICHÉE du récap « Modificateurs de la partie » : titre et
+/// détail formés depuis les faits archivés. Jamais persistée.
+class ModifierRecapLine {
+  final String title;
+  final String detail;
+
+  const ModifierRecapLine({required this.title, required this.detail});
+}
+
+/// Récap « Modificateurs de la partie » en fin de partie, en FAITS (ids,
+/// manche, secondes) : c'est ce qui est archivé, le texte est formé à
+/// l'affichage par [formatModifierRecap].
 ///
 /// RECALCULÉ, pas relu d'un journal : le tirage vient de la graine
-/// `(gameId, manche)` (comme `nextRoundModifiers`) et le rattrapage des
-/// scores cumulés en fin de manche, soit ce que la transition a montré. Rien à
-/// persister pendant la partie. Exception : les bonus utilisés (2-9) sont
-/// relus de [chargesUsed], seule trace d'une activation, et les cartes 1 parmi 3
-/// de [offerChoices] (2-10). Le coup de pouce de l'app (Auto) est recalculé
-/// comme le rattrapage.
-List<ModifierRecapLine> buildModifierRecap({
+/// `(gameId, manche)` et le rattrapage des scores cumulés en fin de manche,
+/// soit ce que la transition a montré (même plan, `planRoundTransition`).
+/// Exceptions : les bonus utilisés (2-9), relus de [chargesUsed], et les
+/// cartes 1 parmi 3 de [offerChoices] (2-10).
+List<ModifierRecapItem> buildModifierRecap({
   required FiestaRules rules,
   required String gameId,
   required List<Team> teams,
@@ -36,12 +42,62 @@ List<ModifierRecapLine> buildModifierRecap({
   List<ChargeUse> chargesUsed = const [],
   List<OfferChoice> offerChoices = const [],
 }) {
-  final lines = <ModifierRecapLine>[];
+  final fiesta = FiestaState(rules: rules, offerChoices: offerChoices);
+  final transitions = [
+    // Après M1 et après M2 seulement, si la manche suivante a été jouée.
+    for (var round = 1; round <= 2 && round < roundsPlayed; round++)
+      planRoundTransition(
+        fiesta: fiesta,
+        gameId: gameId,
+        finishedRound: round,
+        scores: {
+          for (final t in teams)
+            t.id: t.scoreByRound.take(round).fold(0, (a, b) => a + b),
+        },
+      )!,
+  ];
+  return [
+    for (var round = 1; round <= roundsPlayed; round++)
+      for (final m in roundModifiers(rules, gameId: gameId, round: round))
+        ModifierRecapItem(RecapKind.draw, round: round, catalogId: m.catalogId),
+    for (final plan in transitions)
+      for (final e in plan.catchUp)
+        ModifierRecapItem(RecapKind.catchUp,
+            round: plan.round, teamId: e.teamId, seconds: e.seconds),
+    for (final c in offerChoices)
+      ModifierRecapItem(RecapKind.choice,
+          round: c.modifier.round,
+          catalogId: c.modifier.catalogId,
+          teamId: c.modifier.teamId,
+          chooserId: c.chooserId),
+    for (final plan in transitions)
+      for (final m in plan.gifts)
+        ModifierRecapItem(RecapKind.boost,
+            round: m.round, catalogId: m.catalogId, teamId: m.teamId),
+    for (final u in chargesUsed)
+      ModifierRecapItem(RecapKind.bonusUsed,
+          round: u.round, catalogId: u.catalogId, teamId: u.teamId),
+  ];
+}
 
-  for (var round = 1; round <= roundsPlayed; round++) {
-    final names = roundModifiers(rules, gameId: gameId, round: round)
-        .map((m) => modifierById(m.catalogId)?.name ?? m.catalogId)
-        .toList();
+/// Lignes affichées du récap, depuis ses faits. [teamNames] : id → nom, dans
+/// l'ordre des équipes (ordre des lignes du rattrapage).
+List<ModifierRecapLine> formatModifierRecap(
+  List<ModifierRecapItem> items, {
+  required Map<String, String> teamNames,
+}) {
+  String mod(String? id) => modifierById(id ?? '')?.name ?? id ?? '?';
+  String team(String? id) => teamNames[id] ?? '?';
+  Iterable<ModifierRecapItem> of(RecapKind kind) =>
+      items.where((i) => i.kind == kind);
+  String joined(RecapKind kind, String Function(ModifierRecapItem) line) =>
+      of(kind).map(line).join(' · ');
+
+  final lines = <ModifierRecapLine>[];
+  for (var round = 1; round <= 3; round++) {
+    final names = of(RecapKind.draw)
+        .where((i) => i.round == round)
+        .map((i) => mod(i.catalogId));
     if (names.isEmpty) continue;
     lines.add(ModifierRecapLine(
       title: 'Manche $round · ${AppConstants.roundModes[round] ?? ''}',
@@ -49,83 +105,53 @@ List<ModifierRecapLine> buildModifierRecap({
     ));
   }
 
-  final catchUp = effectiveCatchUp(rules);
-  if (catchUp != null) {
-    final byTeam = <String, List<String>>{};
-    // Après M1 et après M2 seulement, et seulement si la manche suivante a
-    // été jouée.
-    for (var round = 1; round <= 2 && round < roundsPlayed; round++) {
-      final scores = {
-        for (final t in teams)
-          t.id: t.scoreByRound.take(round).fold(0, (a, b) => a + b),
-      };
-      for (final e
-          in computeCatchUp(rules: catchUp, round: round, scores: scores)) {
-        final sign = e.seconds < 0 ? '−' : '+';
-        byTeam
-            .putIfAbsent(e.teamId, () => [])
-            .add('$sign${e.seconds.abs()} s (M${round + 1})');
-      }
-    }
-    if (byTeam.isNotEmpty) {
-      lines.add(ModifierRecapLine(
-        title: 'Rattrapage',
-        detail: teams
-            .where((t) => byTeam.containsKey(t.id))
-            .map((t) => '${t.name} ${byTeam[t.id]!.join(', ')}')
-            .join(' · '),
-      ));
-    }
+  String catchUp(ModifierRecapItem i) {
+    final s = i.seconds ?? 0;
+    return '${s < 0 ? '−' : '+'}${s.abs()} s (M${i.round})';
   }
 
-  final teamName = {for (final t in teams) t.id: t.name};
-  String mod(String id) => modifierById(id)?.name ?? id;
-  String gift(String chooserId, ModifierInstance m) => m.teamId == chooserId
-      ? '${teamName[chooserId] ?? '?'} : ${mod(m.catalogId)} (M${m.round})'
-      : '${teamName[chooserId] ?? '?'} : ${mod(m.catalogId)} contre '
-          '${teamName[m.teamId] ?? '?'} (M${m.round})';
-
-  if (offerChoices.isNotEmpty) {
+  final catchUpTeams = teamNames.keys
+      .where((id) => of(RecapKind.catchUp).any((i) => i.teamId == id));
+  if (catchUpTeams.isNotEmpty) {
     lines.add(ModifierRecapLine(
-      title: 'Choix 1 parmi 3',
-      detail:
-          offerChoices.map((c) => gift(c.chooserId, c.modifier)).join(' · '),
-    ));
-  }
-
-  final boosts = <String>[];
-  for (var round = 1; round <= 2 && round < roundsPlayed; round++) {
-    if (!isAppBoostOn(rules, round)) continue;
-    final standings = Standings({
-      for (final t in teams)
-        t.id: t.scoreByRound.take(round).fold(0, (a, b) => a + b),
-    });
-    for (final m in appBoost(
-      rules: rules,
-      gameId: gameId,
-      round: round,
-      standings: standings,
-      roundDraw: roundModifiers(rules, gameId: gameId, round: round + 1),
-    )) {
-      final verb = m.nature == ModifierNature.bonus ? 'reçoit' : 'subit';
-      boosts.add('${teamName[m.teamId] ?? '?'} $verb ${mod(m.catalogId)} '
-          '(M${m.round})');
-    }
-  }
-  if (boosts.isNotEmpty) {
-    lines.add(ModifierRecapLine(
-        title: 'Coup de pouce de l\'app', detail: boosts.join(' · ')));
-  }
-
-  if (chargesUsed.isNotEmpty) {
-    lines.add(ModifierRecapLine(
-      title: 'Bonus utilisés',
-      detail: chargesUsed
-          .map((u) => '${modifierById(u.catalogId)?.name ?? u.catalogId}, '
-              '${teamName[u.teamId] ?? '?'} en M${u.round}')
+      title: 'Rattrapage',
+      detail: catchUpTeams
+          .map((id) =>
+              '${team(id)} ${of(RecapKind.catchUp).where((i) => i.teamId == id).map(catchUp).join(', ')}')
           .join(' · '),
     ));
   }
 
+  if (of(RecapKind.choice).isNotEmpty) {
+    lines.add(ModifierRecapLine(
+      title: 'Choix 1 parmi 3',
+      detail: joined(
+          RecapKind.choice,
+          (i) => i.teamId == i.chooserId
+              ? '${team(i.chooserId)} : ${mod(i.catalogId)} (M${i.round})'
+              : '${team(i.chooserId)} : ${mod(i.catalogId)} contre '
+                  '${team(i.teamId)} (M${i.round})'),
+    ));
+  }
+
+  if (of(RecapKind.boost).isNotEmpty) {
+    lines.add(ModifierRecapLine(
+      title: 'Coup de pouce de l\'app',
+      detail: joined(RecapKind.boost, (i) {
+        final bonus =
+            modifierById(i.catalogId ?? '')?.nature == ModifierNature.bonus;
+        return '${team(i.teamId)} ${bonus ? 'reçoit' : 'subit'} '
+            '${mod(i.catalogId)} (M${i.round})';
+      }),
+    ));
+  }
+
+  if (of(RecapKind.bonusUsed).isNotEmpty) {
+    lines.add(ModifierRecapLine(
+      title: 'Bonus utilisés',
+      detail: joined(RecapKind.bonusUsed,
+          (i) => '${mod(i.catalogId)}, ${team(i.teamId)} en M${i.round}'),
+    ));
+  }
   return lines;
 }

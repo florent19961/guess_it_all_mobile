@@ -127,8 +127,9 @@ void main() {
 
     provider.nextRound();
     expect(provider.game.fiesta!.catchUpDue, {leader: -2, trailing: 6});
-    expect(provider.currentTeamModifiers.map((m) => m.catalogId),
-        unorderedEquals(['no_pass', 'minus_10s']));
+    // Continuation = même tour que la fin de M1 : les fixés de M2 attendent
+    // le premier vrai tour.
+    expect(provider.currentTeamModifiers, isEmpty);
 
     // Continuation du leader : 25 s reportées, ni malus du leader ni −10 s,
     // et son dû n'est pas consommé.

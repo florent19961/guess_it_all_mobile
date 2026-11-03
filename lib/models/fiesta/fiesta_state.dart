@@ -1,5 +1,6 @@
 import 'fiesta_rules.dart';
 import 'modifier_instance.dart';
+import 'turn_effects.dart';
 
 /// État Fiesta d'une partie en cours, porté par `GameState.fiesta`.
 ///
@@ -13,9 +14,8 @@ class FiestaState {
   /// Instances actives.
   final List<ModifierInstance> active;
 
-  /// Compteurs propres au tour en cours (clés dans `turn_effects.dart` :
-  /// passes gratuites utilisées, devineur bloqué). Vidés à la fin du tour.
-  final Map<String, dynamic> turn;
+  /// État propre au tour en cours ([FiestaTurnState]). Vidé à la fin du tour.
+  final FiestaTurnState turn;
 
   /// Rattrapage DÛ par équipe (id → secondes, négatives pour le malus du
   /// leader), posé à l'entrée de la manche et consommé par l'équipe à son
@@ -37,19 +37,19 @@ class FiestaState {
   FiestaState({
     required this.rules,
     List<ModifierInstance> active = const [],
-    Map<String, dynamic> turn = const {},
+    FiestaTurnState? turn,
     Map<String, int> catchUpDue = const {},
     List<ChargeUse> chargesUsed = const [],
     List<OfferChoice> offerChoices = const [],
   })  : active = List.unmodifiable(active),
-        turn = Map.unmodifiable(turn),
+        turn = turn ?? FiestaTurnState.empty,
         catchUpDue = Map.unmodifiable(catchUpDue),
         chargesUsed = List.unmodifiable(chargesUsed),
         offerChoices = List.unmodifiable(offerChoices);
 
   FiestaState copyWith({
     List<ModifierInstance>? active,
-    Map<String, dynamic>? turn,
+    FiestaTurnState? turn,
     Map<String, int>? catchUpDue,
     List<ChargeUse>? chargesUsed,
     List<OfferChoice>? offerChoices,
@@ -65,9 +65,10 @@ class FiestaState {
 
   Map<String, dynamic> toJson() => {
         'rules': rules.toJson(),
-        'active': active.map((e) => e.toJson()).toList(),
-        'turn': turn,
-        'catchUpDue': catchUpDue,
+        // Clés vides omises : l'absence se relit comme le défaut.
+        if (active.isNotEmpty) 'active': active.map((e) => e.toJson()).toList(),
+        if (!turn.isEmpty) 'turn': turn.toJson(),
+        if (catchUpDue.isNotEmpty) 'catchUpDue': catchUpDue,
         if (chargesUsed.isNotEmpty)
           'chargesUsed': chargesUsed.map((e) => e.toJson()).toList(),
         if (offerChoices.isNotEmpty)
@@ -101,7 +102,9 @@ class FiestaState {
     return FiestaState(
       rules: rules,
       active: active,
-      turn: rawTurn is Map ? Map<String, dynamic>.from(rawTurn) : const {},
+      turn: rawTurn is Map
+          ? FiestaTurnState.fromJson(Map<String, dynamic>.from(rawTurn))
+          : null,
       catchUpDue: rawDue is Map
           ? {
               for (final e in rawDue.entries)

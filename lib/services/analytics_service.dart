@@ -9,6 +9,18 @@ import 'user_service.dart';
 import 'firebase_sync_service.dart';
 import 'word_history_service.dart';
 
+/// Le tour auquel appartient un événement. Fourni par l'appelant depuis
+/// l'état PERSISTÉ de la partie à CHAQUE événement : il survit donc à un kill.
+/// Le service ne le devine jamais. [modifiers] : ids Fiesta actifs pour
+/// l'équipe qui joue, `null` en Classique.
+typedef WordEventContext = ({
+  int round,
+  int turn,
+  String teamId,
+  String playerId,
+  List<String>? modifiers,
+});
+
 /// Service de tracking et de persistance des analytics
 ///
 /// Ce service est un singleton qui gère :
@@ -34,16 +46,8 @@ class AnalyticsService {
   // son mot : retirée par `_recordEventWithDuration`. Par mot et non « le
   // dernier affiché » : avec « Deux mots à la fois » (2-11), deux mots sont à
   // l'écran et chacun a sa propre durée. En Classique, un seul à la fois.
+  // Mémoire seulement : perdue par un kill, d'où la durée inconnue ensuite.
   final Map<String, int> _shownAt = {};
-
-  // Contexte du tour : survit aux mots, relu par `onWordInvalidated` et
-  // `onWordValidatedAsGuessed` (vérification, après le tour). Ne dépend pas du
-  // nombre de mots à l'écran.
-  int? _lastRound;
-  int? _lastTurn;
-  String? _lastTeamId;
-  String? _lastPlayerId;
-  List<String>? _lastModifiers;
 
   /// Vérifie si une partie est en cours de tracking
   bool get isTracking => _currentGame != null;
@@ -150,131 +154,65 @@ class AnalyticsService {
   /// Remet à zéro l'état du tracking
   void _clearTrackingState() {
     _shownAt.clear();
-    _lastRound = null;
-    _lastTurn = null;
-    _lastTeamId = null;
-    _lastPlayerId = null;
-    _lastModifiers = null;
   }
 
   // ========== TRACKING EN TEMPS RÉEL ==========
 
   /// Appelé quand un nouveau mot est affiché à un joueur.
-  ///
-  /// [modifiers] : ids Fiesta actifs pour l'équipe qui joue, `null` en
-  /// Classique. L'appelant les relit à CHAQUE mot depuis l'état persisté de la
-  /// partie : après un kill, le mot suivant est donc de nouveau étiqueté.
-  void onWordShown({
-    required String word,
-    required int round,
-    required int turn,
-    required String teamId,
-    required String playerId,
-    List<String>? modifiers,
-  }) {
+  void onWordShown(String word, WordEventContext context) {
     if (_currentGame == null) return;
-
-    // Mémoriser pour calculer la durée
     _shownAt[word] = DateTime.now().millisecondsSinceEpoch;
-    _lastRound = round;
-    _lastTurn = turn;
-    _lastTeamId = teamId;
-    _lastPlayerId = playerId;
-    _lastModifiers = modifiers;
-
-    // Enregistrer l'événement 'shown'
-    final event = WordEvent.shown(
-      word: word,
-      round: round,
-      turn: turn,
-      teamId: teamId,
-      playerId: playerId,
-      gameId: _currentGame!.gameId,
-      modifiers: modifiers,
-    );
-
-    _currentGame = _currentGame!.addEvent(event);
+    _addEvent(word, WordEventType.shown, context);
   }
 
   /// Appelé quand un mot est deviné
-  void onWordGuessed(String word) {
-    _recordEventWithDuration(word, WordEventType.guessed);
-  }
+  void onWordGuessed(String word, WordEventContext context) =>
+      _recordEventWithDuration(word, WordEventType.guessed, context);
 
   /// Appelé quand un mot est passé
-  void onWordPassed(String word) {
-    _recordEventWithDuration(word, WordEventType.passed);
-  }
+  void onWordPassed(String word, WordEventContext context) =>
+      _recordEventWithDuration(word, WordEventType.passed, context);
 
   /// Appelé quand le temps expire avec un mot affiché
-  void onWordExpired(String word) {
-    _recordEventWithDuration(word, WordEventType.expired);
-  }
+  void onWordExpired(String word, WordEventContext context) =>
+      _recordEventWithDuration(word, WordEventType.expired, context);
 
-  /// Appelé quand un mot est invalidé lors de la vérification
-  void onWordInvalidated(String word) {
-    if (_currentGame == null) return;
+  /// Appelé quand un mot est invalidé lors de la vérification (sans durée :
+  /// ça se passe après le tour).
+  void onWordInvalidated(String word, WordEventContext context) =>
+      _addEvent(word, WordEventType.invalidated, context);
 
-    // Pour l'invalidation, on n'a pas de durée car ça se passe après le tour
-    final event = WordEvent(
-      word: word,
-      eventType: WordEventType.invalidated,
-      timestamp: DateTime.now().millisecondsSinceEpoch,
-      round: _lastRound ?? 1,
-      turn: _lastTurn ?? 1,
-      teamId: _lastTeamId ?? '',
-      playerId: _lastPlayerId ?? '',
-      gameId: _currentGame!.gameId,
-      durationMs: null,
-      modifiers: _lastModifiers,
-    );
+  /// Appelé quand un mot passed/expired est validé comme guessed lors de la
+  /// vérification (sans durée : validation a posteriori).
+  void onWordValidatedAsGuessed(String word, WordEventContext context) =>
+      _addEvent(word, WordEventType.guessed, context);
 
-    _currentGame = _currentGame!.addEvent(event);
-  }
-
-  /// Appelé quand un mot passed/expired est validé comme guessed lors de la vérification
-  void onWordValidatedAsGuessed(String word) {
-    if (_currentGame == null) return;
-
-    // Créer un event guessed sans durée (validation a posteriori)
-    final event = WordEvent(
-      word: word,
-      eventType: WordEventType.guessed,
-      timestamp: DateTime.now().millisecondsSinceEpoch,
-      round: _lastRound ?? 1,
-      turn: _lastTurn ?? 1,
-      teamId: _lastTeamId ?? '',
-      playerId: _lastPlayerId ?? '',
-      gameId: _currentGame!.gameId,
-      durationMs: null, // Pas de durée car validation a posteriori
-      modifiers: _lastModifiers,
-    );
-
-    _currentGame = _currentGame!.addEvent(event);
-  }
-
-  /// Enregistre un événement avec calcul de durée, depuis le `shown` de CE
-  /// mot. Un mot sans `shown` en cours (app tuée depuis, par exemple) est
-  /// abandonné : pas de durée inventée. Le contexte du tour (dont
-  /// `_lastModifiers`) est celui du dernier `shown`, commun aux deux cartes.
-  void _recordEventWithDuration(String word, WordEventType eventType) {
+  /// Enregistre un événement avec sa durée depuis le `shown` de CE mot. Un mot
+  /// sans `shown` en mémoire (affiché avant un kill) est enregistré quand même,
+  /// SANS durée : jamais de durée inventée, jamais d'événement perdu.
+  void _recordEventWithDuration(
+      String word, WordEventType eventType, WordEventContext context) {
     if (_currentGame == null) return;
     final shownAt = _shownAt.remove(word);
-    if (shownAt == null) return;
+    _addEvent(word, eventType, context, shownAt: shownAt);
+  }
 
-    final event = WordEvent.withDuration(
+  void _addEvent(String word, WordEventType eventType, WordEventContext context,
+      {int? shownAt}) {
+    if (_currentGame == null) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    _currentGame = _currentGame!.addEvent(WordEvent(
       word: word,
       eventType: eventType,
-      round: _lastRound ?? 1,
-      turn: _lastTurn ?? 1,
-      teamId: _lastTeamId ?? '',
-      playerId: _lastPlayerId ?? '',
+      timestamp: now,
+      round: context.round,
+      turn: context.turn,
+      teamId: context.teamId,
+      playerId: context.playerId,
       gameId: _currentGame!.gameId,
-      shownTimestamp: shownAt,
-      modifiers: _lastModifiers,
-    );
-
-    _currentGame = _currentGame!.addEvent(event);
+      durationMs: shownAt == null ? null : now - shownAt,
+      modifiers: context.modifiers,
+    ));
   }
 
   // ========== PERSISTANCE ==========

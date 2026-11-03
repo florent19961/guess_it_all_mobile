@@ -29,7 +29,7 @@ class ModifierSetting {
         'active': active,
         'arrival': arrival.name,
         'startRound': startRound,
-        'fixedRound': fixedRound,
+        if (fixedRound != null) 'fixedRound': fixedRound,
         'charges': charges,
       };
 
@@ -135,9 +135,9 @@ class FiestaRules {
   /// Nombre de modificateurs tirés pour tous à chaque manche, 0 à 2.
   final int drawCount;
 
-  // Règles communes.
+  // Règle commune. Le report du temps de fin de manche n'est PAS un réglage
+  // (epic : « conservé ») ; l'ancienne clé `carryOver` d'un blob est ignorée.
   final bool oneAnswer;
-  final bool carryOver;
 
   FiestaRules({
     required this.mode,
@@ -149,21 +149,19 @@ class FiestaRules {
     this.catchUp = CatchUpRules.auto,
     this.drawCount = 1,
     this.oneAnswer = true,
-    this.carryOver = true,
   }) : modifiers = Map.unmodifiable(modifiers);
 
   Map<String, dynamic> toJson() => {
         'mode': mode.name,
         'symmetric': symmetric,
         'autoCalibrate': autoCalibrate,
-        'ensembleName': ensembleName,
+        if (ensembleName != null) 'ensembleName': ensembleName,
         'modifiers':
             modifiers.map((id, setting) => MapEntry(id, setting.toJson())),
         'oneOfThree': oneOfThree,
         'catchUp': catchUp.toJson(),
         'drawCount': drawCount,
         'oneAnswer': oneAnswer,
-        'carryOver': carryOver,
       };
 
   /// Variante tolérante : `null` si la structure est illisible (`mode` inconnu,
@@ -180,7 +178,6 @@ class FiestaRules {
     final rawCatchUp = readOr<Map>(json, 'catchUp', const {});
     final drawCount = readOr(json, 'drawCount', 1);
     final oneAnswer = readOr(json, 'oneAnswer', true);
-    final carryOver = readOr(json, 'carryOver', true);
     if (mode == null ||
         symmetric == null ||
         autoCalibrate == null ||
@@ -189,8 +186,7 @@ class FiestaRules {
         oneOfThree == null ||
         rawCatchUp == null ||
         drawCount == null ||
-        oneAnswer == null ||
-        carryOver == null) {
+        oneAnswer == null) {
       return null;
     }
     final catchUp =
@@ -217,7 +213,6 @@ class FiestaRules {
       catchUp: catchUp,
       drawCount: drawCount,
       oneAnswer: oneAnswer,
-      carryOver: carryOver,
     );
   }
 }

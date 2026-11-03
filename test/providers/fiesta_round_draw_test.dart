@@ -95,6 +95,13 @@ void main() {
         ids(reloaded.game.fiesta!.active), ids(provider.game.fiesta!.active));
 
     reloaded.nextRound();
+    // La continuation est le même tour que la fin de M1 : elle garde le tirage
+    // de M1, qui part à sa fin ; celui de M2 commence au premier vrai tour.
+    final m1 = ids(reloaded.game.fiesta!.active.where((m) => m.round == 1));
+    expect(
+        ids(reloaded.game.fiesta!.active.where((m) => m.round == 2)), preview);
+    expect(ids(reloaded.currentTeamModifiers), m1);
+    playEmptyTurn(reloaded);
     expect(ids(reloaded.game.fiesta!.active), preview);
     expect(ids(reloaded.currentTeamModifiers), preview);
   });

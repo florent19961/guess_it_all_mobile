@@ -45,57 +45,6 @@ class WordEvent {
     this.modifiers,
   }) : eventId = eventId ?? const Uuid().v4();
 
-  /// Factory pour créer un événement 'shown'
-  factory WordEvent.shown({
-    required String word,
-    required int round,
-    required int turn,
-    required String teamId,
-    required String playerId,
-    required String gameId,
-    List<String>? modifiers,
-  }) {
-    return WordEvent(
-      word: word,
-      eventType: WordEventType.shown,
-      timestamp: DateTime.now().millisecondsSinceEpoch,
-      round: round,
-      turn: turn,
-      teamId: teamId,
-      playerId: playerId,
-      gameId: gameId,
-      durationMs: null,
-      modifiers: modifiers,
-    );
-  }
-
-  /// Factory pour créer un événement avec durée
-  factory WordEvent.withDuration({
-    required String word,
-    required WordEventType eventType,
-    required int round,
-    required int turn,
-    required String teamId,
-    required String playerId,
-    required String gameId,
-    required int shownTimestamp,
-    List<String>? modifiers,
-  }) {
-    final now = DateTime.now().millisecondsSinceEpoch;
-    return WordEvent(
-      word: word,
-      eventType: eventType,
-      timestamp: now,
-      round: round,
-      turn: turn,
-      teamId: teamId,
-      playerId: playerId,
-      gameId: gameId,
-      durationMs: now - shownTimestamp,
-      modifiers: modifiers,
-    );
-  }
-
   Map<String, dynamic> toJson() => {
         'eventId': eventId,
         'word': word,

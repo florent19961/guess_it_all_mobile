@@ -239,6 +239,68 @@ void main() {
   });
 
   test(
+      'Analytics après un kill (vrai redémarrage du service) : en plein tour '
+      'à deux cartes, puis sur la vérification, chaque événement terminal est '
+      'écrit, sans durée inventée, avec manche, équipe et tags de la partie',
+      () async {
+    final p = await givenTwoWordsTurn(alsoDouble: true);
+    final team = p.getCurrentTeam()!.id;
+    final a = p.game.currentWord!;
+    final b = p.secondWord!;
+
+    Future<GameProvider> kill() async {
+      await AnalyticsService().saveCurrentGame(); // app mise en arrière-plan
+      AnalyticsService().forgetCurrentGame();
+      final reloaded = GameProvider();
+      await pumpEventQueue();
+      return reloaded;
+    }
+
+    List<WordEvent> after(int n) =>
+        AnalyticsService().currentGame!.events.skip(n).toList();
+    void expectContext(List<WordEvent> events) {
+      for (final e in events) {
+        expect((e.round, e.turn, e.teamId), (1, 1, team), reason: '$e');
+        expect(e.modifiers, ['double_points', 'two_words'], reason: '$e');
+      }
+    }
+
+    // En plein tour : les deux cartes à l'écran avant le kill.
+    var r = await kill();
+    var seen = AnalyticsService().currentGame!.events.length;
+    r.markWordAsGuessed(a);
+    r.passWord(b);
+    final a2 = r.game.currentWord!;
+    final b2 = r.secondWord!;
+    var events = after(seen);
+    expect(
+        events
+            .where((e) => e.word == a || e.word == b)
+            .map((e) => (e.word, e.eventType, e.durationMs)),
+        [(a, WordEventType.guessed, null), (b, WordEventType.passed, null)]);
+    expectContext(events);
+    r.endTurn();
+
+    // Sur la vérification : seul A' (expiré) est validé, a posteriori ; le
+    // reste du tour (A trouvé, B passé, B' expiré) est invalidé.
+    r = await kill();
+    expect(r.game.currentScreen, AppConstants.screenVerification);
+    seen = AnalyticsService().currentGame!.events.length;
+    r.savePreValidationState([a2]);
+    r.validateWords([a2]);
+    events = after(seen);
+    expect(
+        events.map((e) => (e.word, e.eventType)),
+        unorderedEquals([
+          (a, WordEventType.invalidated),
+          (b, WordEventType.invalidated),
+          (b2, WordEventType.invalidated),
+          (a2, WordEventType.guessed),
+        ]));
+    expectContext(events);
+  });
+
+  test(
       'Analytics : chaque carte a son shown puis son guessed / passed / '
       'expired avec durée, tag two_words (AC7) ; Classique : un mot, pas de tag',
       () async {

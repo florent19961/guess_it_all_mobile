@@ -33,15 +33,11 @@ Future<void> _start(AnalyticsService a, String id, {bool fiesta = false}) =>
       fiestaRules: fiesta ? const {'mode': 'auto'} : null,
     );
 
+WordEventContext _ctx([List<String>? modifiers]) =>
+    (round: 2, turn: 3, teamId: 't1', playerId: 'p1', modifiers: modifiers);
+
 void _show(AnalyticsService a, String word, {List<String>? modifiers}) =>
-    a.onWordShown(
-      word: word,
-      round: 2,
-      turn: 3,
-      teamId: 't1',
-      playerId: 'p1',
-      modifiers: modifiers,
-    );
+    a.onWordShown(word, _ctx(modifiers));
 
 /// Blob `guessItAll_analytics_<id>` tel que l'écrit la version en store :
 /// ni `gameMode`, ni `fiestaRules`, ni `modifiers` sur les events. Partie non
@@ -121,8 +117,8 @@ void main() {
       () async {
     await _start(analytics, 'classic');
     _show(analytics, 'chat');
-    analytics.onWordGuessed('chat');
-    analytics.onWordInvalidated('chat');
+    analytics.onWordGuessed('chat', _ctx());
+    analytics.onWordInvalidated('chat', _ctx());
 
     // `toJson()` est exactement le document envoyé à Firestore.
     final json = analytics.currentGame!.toJson();
@@ -137,9 +133,9 @@ void main() {
       'y compris après un kill, et survivent à la relecture', () async {
     await _start(analytics, 'fiesta', fiesta: true);
     _show(analytics, 'chat', modifiers: ['minus_10s']);
-    analytics.onWordGuessed('chat');
-    // Vérification après le tour : `_lastShownWord` est déjà remis à zéro.
-    analytics.onWordInvalidated('chat');
+    analytics.onWordGuessed('chat', _ctx(['minus_10s']));
+    // Vérification après le tour : contexte fourni par l'appelant.
+    analytics.onWordInvalidated('chat', _ctx(['minus_10s']));
     await analytics.saveCurrentGame();
 
     // Kill : la mémoire est perdue, le disque reste. Le mot suivant est
@@ -147,7 +143,7 @@ void main() {
     analytics.forgetCurrentGame();
     expect(await analytics.resumeGame('fiesta'), isTrue);
     _show(analytics, 'chien', modifiers: ['minus_10s']);
-    analytics.onWordPassed('chien');
+    analytics.onWordPassed('chien', _ctx(['minus_10s']));
     await analytics.saveCurrentGame();
 
     final reread = (await analytics.loadGameAnalytics('fiesta'))!;
@@ -181,7 +177,7 @@ void main() {
           isNot(contains(anyOf('mode', 'modifierRecap'))));
     });
 
-    test('une partie Fiesta archive son mode et son récap', () {
+    test('une partie Fiesta archive son mode et son récap, en faits', () {
       final result = GameResult(
         gameId: 'f',
         playedAt: DateTime(2026, 11, 3),
@@ -191,13 +187,21 @@ void main() {
         roundsPlayed: 3,
         mode: 'fiesta_custom',
         modifierRecap: const [
-          ModifierRecapLine(title: 'Rattrapage', detail: 'Bleue +18 s (M2)'),
+          ModifierRecapItem(RecapKind.catchUp,
+              round: 2, teamId: 'bleue', seconds: 18),
+          ModifierRecapItem(RecapKind.choice,
+              round: 3,
+              catalogId: 'block_guesser',
+              teamId: 'rouge',
+              chooserId: 'bleue'),
         ],
       );
-      final reread =
-          GameResult.tryFromJson(jsonDecode(jsonEncode(result.toJson())))!;
+      final json = jsonEncode(result.toJson());
+      final reread = GameResult.tryFromJson(jsonDecode(json))!;
       expect(reread.mode, 'fiesta_custom');
-      expect(reread.modifierRecap!.single.detail, 'Bleue +18 s (M2)');
+      // Archivé en faits (ids, secondes), jamais en phrases (epic fix B5).
+      expect(jsonEncode(reread.toJson()), json);
+      expect(json, isNot(contains('Rattrapage')));
     });
   });
 }

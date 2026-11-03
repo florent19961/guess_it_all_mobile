@@ -1,44 +1,117 @@
+import 'modifier_catalog.dart';
 import 'modifier_instance.dart';
 
 /// Effets de tour (story 2-8) : règles pures sur les modificateurs qui pèsent
 /// sur l'équipe qui joue. Le provider ne fait que brancher.
 
-/// Clés des compteurs du tour dans `FiestaState.turn`. Absentes = valeur
-/// initiale (0 passe gratuite utilisée, aucun devineur bloqué).
-const String kFreePassesUsedKey = 'freePassesUsed';
-const String kBlockedPlayerIdKey = 'blockedPlayerId';
+/// Bonus à charge activables avant le tour (stories 2-9, 2-11), par id de
+/// catalogue, avec leur clé JSON dans `fiesta.turn`. Une 3ᵉ charge = une ligne.
+const Map<String, String> kChargeBonusKeys = {
+  'double_points': 'doublePoints',
+  'two_words': 'twoWords',
+};
 
-/// « Mot compte double » du tour (story 2-9) : [kDoubleArmed] tant que
-/// l'interrupteur de l'avant-tour est allumé, [kDoubleSpent] une fois la
-/// charge dépensée au départ du tour. Absent = éteint.
-const String kDoublePointsKey = 'doublePoints';
-const String kDoubleArmed = 'armed';
-const String kDoubleSpent = 'spent';
+/// Une charge du tour : allumée à l'avant-tour ([armed]), puis dépensée au
+/// départ du chrono ([spent]). Absente = éteinte. Le nom est la valeur JSON.
+enum ChargeState { armed, spent }
 
-/// « Deux mots à la fois » du tour (story 2-11) : mêmes valeurs que
-/// [kDoublePointsKey] ([kDoubleArmed] puis [kDoubleSpent]). La carte B vit
-/// sous [kSecondWordKey] (la carte A reste `GameState.currentWord`), et B
-/// encore à l'écran quand le chrono tombe sous [kSecondExpiredWordKey]. Clés
-/// absentes = un seul mot, comme en Classique.
-const String kTwoWordsKey = 'twoWords';
-const String kSecondWordKey = 'secondWord';
-const String kSecondExpiredWordKey = 'secondExpiredWord';
+/// État propre au tour en cours (`FiestaState.turn`), immuable et typé.
+///
+/// 🔴 C'est LUI qui dit ce qui survit : [afterRoundEnd] (la continuation en
+/// N+1 est le même tour) et [FiestaTurnState.empty] à la vraie fin du tour.
+/// JSON : clés omises quand elles valent la valeur initiale, lecture
+/// tolérante clé par clé (une valeur mal typée = valeur initiale).
+class FiestaTurnState {
+  /// Passes gratuites déjà utilisées ce tour (2-8).
+  final int freePassesUsed;
 
-/// Nombre de passes gratuites du tour : les charges de `free_pass`.
-int freePassAllowance(List<ModifierInstance> modifiers) => modifiers
-    .where((m) => m.catalogId == 'free_pass')
-    .fold(0, (sum, m) => sum + m.charges);
+  /// Devineur bloqué, désigné avant le tour (2-8, 2-10).
+  final String? blockedPlayerId;
 
-/// Charges de « Mot compte double » de la manche : les charges des instances
-/// `double_points`.
-int doublePointsAllowance(List<ModifierInstance> modifiers) => modifiers
-    .where((m) => m.catalogId == 'double_points')
-    .fold(0, (sum, m) => sum + m.charges);
+  /// Charges du tour par id de catalogue ([kChargeBonusKeys]).
+  final Map<String, ChargeState> charges;
 
-/// Charges de « Deux mots à la fois » de la manche (instances `two_words`).
-int twoWordsAllowance(List<ModifierInstance> modifiers) => modifiers
-    .where((m) => m.catalogId == 'two_words')
-    .fold(0, (sum, m) => sum + m.charges);
+  /// Carte B de « Deux mots à la fois » (la carte A est `currentWord`).
+  final String? secondWord;
+
+  /// Carte B encore à l'écran quand le chrono est tombé, à vérifier.
+  final String? secondExpiredWord;
+
+  FiestaTurnState({
+    this.freePassesUsed = 0,
+    this.blockedPlayerId,
+    Map<String, ChargeState> charges = const {},
+    this.secondWord,
+    this.secondExpiredWord,
+  }) : charges = Map.unmodifiable(charges);
+
+  static final empty = FiestaTurnState();
+
+  bool get isEmpty => toJson().isEmpty;
+
+  FiestaTurnState copyWith({
+    int? freePassesUsed,
+    String? blockedPlayerId,
+    Map<String, ChargeState>? charges,
+    String? secondWord,
+    bool clearSecondWord = false,
+    String? secondExpiredWord,
+    bool clearSecondExpiredWord = false,
+  }) =>
+      FiestaTurnState(
+        freePassesUsed: freePassesUsed ?? this.freePassesUsed,
+        blockedPlayerId: blockedPlayerId ?? this.blockedPlayerId,
+        charges: charges ?? this.charges,
+        secondWord: clearSecondWord ? null : secondWord ?? this.secondWord,
+        secondExpiredWord: clearSecondExpiredWord
+            ? null
+            : secondExpiredWord ?? this.secondExpiredWord,
+      );
+
+  /// La charge [catalogId] passée à [state] (nul = éteinte).
+  FiestaTurnState withCharge(String catalogId, ChargeState? state) =>
+      copyWith(charges: {
+        for (final e in charges.entries)
+          if (e.key != catalogId) e.key: e.value,
+        if (state != null) catalogId: state,
+      });
+
+  /// Fin de manche : le tour continue en N+1 (continuation), tout survit sauf
+  /// la carte B expirée, déjà dépouillée par la vérification.
+  FiestaTurnState afterRoundEnd() => copyWith(clearSecondExpiredWord: true);
+
+  Map<String, dynamic> toJson() => {
+        if (freePassesUsed > 0) 'freePassesUsed': freePassesUsed,
+        if (blockedPlayerId != null) 'blockedPlayerId': blockedPlayerId,
+        for (final MapEntry(key: id, value: key) in kChargeBonusKeys.entries)
+          if (charges[id] != null) key: charges[id]!.name,
+        if (secondWord != null) 'secondWord': secondWord,
+        if (secondExpiredWord != null) 'secondExpiredWord': secondExpiredWord,
+      };
+
+  factory FiestaTurnState.fromJson(Map<String, dynamic> json) {
+    String? string(String key) => json[key] is String ? json[key] : null;
+    final used = json['freePassesUsed'];
+    return FiestaTurnState(
+      freePassesUsed: used is int ? used : 0,
+      blockedPlayerId: string('blockedPlayerId'),
+      charges: {
+        for (final MapEntry(key: id, value: key) in kChargeBonusKeys.entries)
+          if (enumFromJson(ChargeState.values, json[key]) case final state?)
+            id: state,
+      },
+      secondWord: string('secondWord'),
+      secondExpiredWord: string('secondExpiredWord'),
+    );
+  }
+}
+
+/// Charges de [catalogId] posées par [modifiers] (passes gratuites,
+/// « Mot compte double », « Deux mots à la fois »).
+int chargeAllowance(List<ModifierInstance> modifiers, String catalogId) =>
+    modifiers
+        .where((m) => m.catalogId == catalogId)
+        .fold(0, (sum, m) => sum + m.charges);
 
 /// Remplaçant d'une carte « Deux mots » traitée : premier mot de [pool] (déjà
 /// privé du mot traité) autre que [other], la carte qui reste. Pool épuisé :

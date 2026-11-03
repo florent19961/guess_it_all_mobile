@@ -5,6 +5,10 @@ import 'fiesta_rules.dart';
 /// Temps du tour (story 2-6) : rattrapage, malus de temps, composition de la
 /// durée de départ. Tout est pur ; le provider ne fait que brancher.
 
+/// Modificateurs de TEMPS : sans effet sur une continuation, qui joue
+/// exactement ses secondes reportées ([composeTurnSeconds]).
+const Set<String> kTimeModifierIds = {'minus_10s'};
+
 /// Plancher de la durée de départ d'un tour, après tous les malus (Q4).
 const int kTurnFloorSeconds = 10;
 
