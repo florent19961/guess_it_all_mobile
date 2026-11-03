@@ -15,6 +15,7 @@ import '../models/fiesta/symmetric_draw.dart';
 import '../models/fiesta/turn_effects.dart';
 import '../models/fiesta/turn_time.dart';
 import '../models/game_settings.dart';
+import '../models/game_setup_snapshot.dart';
 import '../models/game_state.dart';
 import '../models/turn_clock.dart';
 import '../models/game_result.dart';
@@ -1673,6 +1674,10 @@ class GameProvider extends ChangeNotifier {
       roundsPlayed: _game.currentRound,
       mode: _game.fiesta == null ? null : fiestaModeId(_game.fiesta!.rules),
       modifierRecap: _game.fiesta == null ? null : _modifierRecapItems,
+      setup: GameSetupSnapshot(
+        settings: _settings.copyWith(),
+        fiesta: _game.fiesta?.rules,
+      ),
     );
 
     unawaited(_history.record(result));
@@ -1812,6 +1817,49 @@ class GameProvider extends ChangeNotifier {
     );
     await _saveGameSession();
     notifyListeners();
+  }
+
+  /// « Rejouer » depuis l'historique : recrée joueurs et équipes de [result],
+  /// reprend ses réglages (et ses règles Fiesta), puis atterrit comme le
+  /// « Rejouer » de fin de partie. Les mots ne sont jamais rejoués.
+  ///
+  /// Archive antérieure (sans `setup`) : seuls `totalWords` et `turnDuration`
+  /// viennent de l'archive, le reste des réglages courants, en Classique.
+  /// 🔴 Remplace une éventuelle partie suspendue : l'écran confirme avant.
+  Future<void> replayFromHistory(GameResult result) async {
+    final setup = result.setup;
+    final players = <Player>[];
+    final teams = <Team>[];
+    for (var i = 0; i < result.teams.length; i++) {
+      final archived = result.teams[i];
+      final teamPlayers = archived.playerNames.map(Player.create).toList();
+      players.addAll(teamPlayers);
+      final team = Team.create(i);
+      teams.add(team.copyWith(
+        name: archived.name.isEmpty ? team.name : archived.name,
+        playerIds: teamPlayers.map((p) => p.id).toList(),
+      ));
+    }
+
+    final base = setup?.settings ??
+        _settings.copyWith(
+          totalWords: result.totalWords > 0 ? result.totalWords : null,
+          turnDuration: result.turnDuration > 0 ? result.turnDuration : null,
+        );
+    // Les effectifs suivent les joueurs recréés, pas un réglage archivé qui
+    // pourrait les contredire.
+    _settings = base.copyWith(
+      numberOfTeams: teams.length,
+      numberOfPlayers: players.length,
+    );
+    _players = players;
+    _teams = teams;
+    _pendingFiesta = setup?.fiesta;
+    // Sans ce reset, `restartWithSamePlayers` relirait la Fiesta de la partie
+    // suspendue par-dessus celle de l'archive.
+    _game = GameState.initial();
+    await _saveSettings();
+    await restartWithSamePlayers();
   }
 
   // Réinitialise TOUT : paramètres, joueurs, mots, équipes, état de jeu

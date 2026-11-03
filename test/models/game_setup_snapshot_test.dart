@@ -31,7 +31,7 @@ void main() {
           ),
         },
         drawCount: 2,
-        carryOver: false,
+        oneAnswer: false,
       ),
     );
 
