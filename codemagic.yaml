@@ -8,8 +8,8 @@
 # Noms à créer côté Codemagic (placeholders, cf. runbook) :
 #   - keystore Android (Code signing identities) : gia_android_signing
 #   - intégration App Store Connect (clé API)     : "Guess It All (flow data)"
-#   - groupe de variables                          : gia_firebase  (GOOGLE_SERVICES_JSON : JSON brut ou base64)
-#   - groupe de variables (publication, plus tard) : gia_google_play (GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS)
+#   - groupe de variables                          : gia-firebase  (GOOGLE_SERVICES_JSON : JSON brut ou base64)
+#   - groupe de variables (publication, plus tard) : gia-google-play (GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS)
 
 definitions:
   environment: &environment
@@ -22,7 +22,7 @@ definitions:
       distribution_type: app_store
       bundle_identifier: com.guessitall.guessItAllMobile
     groups:
-      - gia_firebase
+      - gia-firebase
 
   scripts:
     - &pub_get
@@ -121,7 +121,7 @@ workflows:
       - *build_ipa
     artifacts: *artifacts
     # 🔴 PUBLICATION DÉSACTIVÉE — à activer à la 1re release (après le mode Fiesta), sur go Florent.
-    # Pour activer : décommenter, et ajouter `gia_google_play` aux groups de l'environnement.
+    # Pour activer : décommenter, et ajouter `gia-google-play` aux groups de l'environnement.
     # Rappel Google Play : le tout 1er upload d'une app se fait à la main (déjà le cas ici).
     # publishing:
     #   google_play:

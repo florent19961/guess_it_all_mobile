@@ -97,7 +97,7 @@ Config : `codemagic.yaml` à la racine. Machine `mac_mini_m2` (builde Android ET
 Décision Florent : **une seule release, après le mode Fiesta**. Aucun workflow ne publie sur Play
 ni sur App Store Connect aujourd'hui. Le bloc `publishing` (Play track `internal` + TestFlight) est
 **présent mais commenté** dans `release` ; à la 1re release : le décommenter, ajouter le groupe
-`gia_google_play` à l'environnement, et seulement sur go explicite de Florent. D'ici là, les
+`gia-google-play` à l'environnement, et seulement sur go explicite de Florent. D'ici là, les
 artefacts (AAB/IPA) se téléchargent depuis Codemagic et s'uploadent à la main si besoin.
 
 ### Secrets à créer dans Codemagic (une fois — jamais dans le dépôt, il est PUBLIC)
@@ -106,8 +106,8 @@ artefacts (AAB/IPA) se téléchargent depuis Codemagic et s'uploadent à la main
 |-------------|-------------------|---------|
 | `gia_android_signing` | Team settings → Code signing identities → Android keystores (*reference name*) | Le keystore upload du Play Store + mot de passe, alias, mot de passe de clé (ceux du `key.properties` Windows) |
 | `Guess It All (flow data)` | Team integrations → Developer Portal / App Store Connect (*nom de la clé API*) | Clé API App Store Connect (rôle App Manager) — sert à la signature automatique iOS |
-| `gia_firebase` | Application → Environment variables (groupe) | `GOOGLE_SERVICES_JSON` = le contenu **brut** de `android/app/google-services.json` (ou sa version base64), marquée *Secure* |
-| `gia_google_play` | idem (groupe) — **seulement à la 1re publication** | `GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS` = JSON du compte de service Play, *Secure* |
+| `gia-firebase` | Application → Environment variables (groupe) | `GOOGLE_SERVICES_JSON` = le contenu **brut** de `android/app/google-services.json` (ou sa version base64), marquée *Secure* |
+| `gia-google-play` | idem (groupe) — **seulement à la 1re publication** | `GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS` = JSON du compte de service Play, *Secure* |
 
 iOS n'a pas besoin de `GoogleService-Info.plist` : Firebase s'initialise via
 `lib/firebase_options.dart` (versionné). La signature iOS est **automatique** (`ios_signing`

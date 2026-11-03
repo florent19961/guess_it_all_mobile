@@ -244,7 +244,7 @@ Florent (`CLAUDE.md` règle 7).
 **Quoi.** `codemagic.yaml` à la racine avec deux workflows sur `mac_mini_m2` : `dry-run`
 (manuel) et `release` (tag `v*`, garde « tag = `v` + version pubspec »). Les deux font pub get →
 analyze → test → AAB signé (keystore `gia_android_signing`, `google-services.json` depuis le
-groupe `gia_firebase`) → IPA en signature automatique (`gia_asc_key`), et gardent les artefacts
+groupe `gia-firebase`) → IPA en signature automatique (`gia_asc_key`), et gardent les artefacts
 (dont `ios/Podfile.lock`). `android/app/build.gradle.kts` ne crée la signature release que si
 `key.properties` existe.
 
