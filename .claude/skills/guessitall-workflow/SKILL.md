@@ -16,10 +16,10 @@ prime sur cette skill. **Pas de gates numérotés** (décision Florent 2026-11-0
 |---|---|---|---|
 | **Trivial** | copie, libellé, ajout de mots, style, doc, board, fix mécanique d'un fichier | Sonnet | aucune |
 | **Standard** | écrans, UI, thème, catégories, outillage | Opus | 1 reviewer Opus |
-| **Risqué** | les six zones ci-dessous | Fable | 1 reviewer Opus (mutation testing obligatoire) |
+| **Risqué** | les six zones ci-dessous | Opus | 1 reviewer Opus (mutation testing obligatoire) |
 
 Dans le doute, prendre le plus haut. Jamais de PRD ni de party-mode pour un fix de quelques lignes.
-**Pas de Codex** (décision Florent 2026-11-03).
+**Pas de Codex, jamais de Fable** (décisions Florent 2026-11-03) : implémenteurs et reviewers = Opus, Sonnet pour le trivial.
 
 🔴 **Zones risquées de ce projet** :
 1. **Machine à états de la partie** — manches, tours, équipes, pool de mots, fin de partie.
