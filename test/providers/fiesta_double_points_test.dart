@@ -136,6 +136,44 @@ void main() {
   });
 
   test(
+      'Continuation NON activée en fin de M1 : la charge de M2 s\'y active, se '
+      'dépense au départ et double les points de M2 (AC8)', () async {
+    final provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
+    await provider.startGame(fiesta: doubleEveryRound);
+    final teamId = provider.getCurrentTeam()!.id;
+    provider.startTurn();
+    provider.startTurnTimer();
+    while (provider.game.currentWord != null) {
+      provider.markWordAsGuessed();
+    }
+    final guessed = List<String>.from(provider.game.wordsGuessedThisTurn);
+    provider.savePreValidationState(guessed);
+    provider.validateWords(guessed);
+    expect(teamRounds(provider, teamId), [4, 0, 0]);
+
+    provider.nextRound();
+    expect(provider.getCurrentTeam()!.id, teamId);
+    expect(provider.game.turnBonusTime, isNot(anyOf(isNull, 0)));
+    provider.setDoublePoints(true);
+    provider.startTurn();
+    provider.startTurnTimer();
+    expect(provider.isDoublePointsOn, isTrue);
+    expect(provider.doublePointsLeft, 0);
+    expect(
+        provider.game.fiesta!.chargesUsed
+            .where((u) => u.teamId == teamId && u.round == 2),
+        hasLength(1));
+
+    provider.markWordAsGuessed();
+    provider.endTurn();
+    final word = provider.game.wordsGuessedThisTurn.first;
+    provider.savePreValidationState([word]);
+    provider.validateWords([word]);
+    expect(teamRounds(provider, teamId), [4, 2, 0]);
+    expect(teamScore(provider, teamId), 6);
+  });
+
+  test(
       'Classique : l\'interrupteur est sans effet, 1 mot = 1 point, aucune '
       'clé Fiesta écrite', () async {
     final provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
