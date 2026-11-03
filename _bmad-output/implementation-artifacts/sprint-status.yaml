@@ -226,10 +226,12 @@ stories:
   2-6-temps-rattrapage-duree-reelle:
     epic: epic-2-mode-fiesta
     title: "Temps du tour : rattrapage, malus de temps, durée réelle (corrige timeSpent, game_provider.dart:869)"
-    status: ready-for-dev
+    status: done
     depends: [2-5-tirage-symetrique-transition]
     spec: _bmad-output/specs/fiesta/2-6-temps-rattrapage-duree-reelle.md
     note: >-
+      ✅ MERGÉ PR #13 (squash ea78d6c, mode délégué). Revue Opus r1 READY ; turnAllottedSeconds
+      omis si null (blob Classique intact).
       R ⑥① · GP + GS · Fable. Q1-Q5 de l'epic appliquées par défaut.
   2-7-analytics-archive-recap:
     epic: epic-2-mode-fiesta
