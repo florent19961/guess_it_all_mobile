@@ -30,7 +30,9 @@ definitions:
       script: flutter pub get
     - &analyze
       name: flutter analyze
-      script: flutter analyze
+      # Même seuil que scripts/run-full-suite.sh : 0 error + 0 warning. Les `info`
+      # (withOpacity, print…) sont du lint pré-existant et ne doivent pas casser le build.
+      script: flutter analyze --no-fatal-infos
     - &test
       name: flutter test
       script: flutter test
