@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
 import '../utils/constants.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/fiesta/fiesta_setup_widgets.dart';
+import 'fiesta_tutorial_screen.dart';
 
 /// Mode Auto : deux interrupteurs cumulables (au moins un allumé) et les
 /// règles communes.
@@ -36,6 +37,7 @@ class _FiestaAutoScreenState extends State<FiestaAutoScreen> {
       title: 'Mode Auto',
       subtitle: 'Aucun choix pendant la partie : l\'app s\'occupe de tout.',
       onBack: () => provider.goToScreen(AppConstants.screenFiestaChoice),
+      onHelp: () => FiestaTutorialScreen.show(context),
       content: [
         FiestaCard(
           title: 'Symétrique',

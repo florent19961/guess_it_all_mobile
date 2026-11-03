@@ -11,6 +11,9 @@ import '../widgets/common/app_confirm_dialog.dart';
 import '../models/fiesta/modifier_catalog.dart';
 import '../widgets/fiesta/fiesta_turn_widgets.dart';
 import '../widgets/fiesta/modifier_badge.dart';
+import '../widgets/help/coach_marks.dart';
+import '../widgets/help/help_button.dart';
+import '../widgets/help/help_content.dart';
 
 class TurnScreen extends StatefulWidget {
   const TurnScreen({super.key});
@@ -21,6 +24,15 @@ class TurnScreen extends StatefulWidget {
 
 class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
   Timer? _timer;
+
+  /// Posé par le cycle de vie : l'app a quitté le premier plan.
+  bool _wentBackground = false;
+
+  final _timerKey = GlobalKey();
+  final _wordKey = GlobalKey();
+  final _guessedKey = GlobalKey();
+  final _passKey = GlobalKey();
+  final _pauseKey = GlobalKey();
 
   /// L'écran n'est plus l'autorité sur le temps : il lit `provider.turnClock` et
   /// demande au provider de geler / reprendre. Avant, la pause n'était qu'un
@@ -44,6 +56,7 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed && mounted) {
+      _wentBackground = true;
       context.read<GameProvider>().pauseTurn();
     }
   }
@@ -73,6 +86,21 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
       // Ne notifie que si la seconde AFFICHÉE change (et non 10 fois/s).
       provider.refreshDisplayedTime();
     });
+  }
+
+  /// Gèle le chrono pendant [show] (aide, fiche d'un badge), puis le relance
+  /// seulement s'il tournait : une pause du joueur reste une pause.
+  ///
+  /// App passée en arrière-plan pendant la fiche : pas de reprise
+  /// automatique, c'est au joueur de relancer (même règle que le gel du
+  /// cycle de vie).
+  Future<void> _whilePaused(
+      GameProvider provider, Future<void> Function() show) async {
+    final wasRunning = provider.turnClock.isRunning;
+    _wentBackground = false;
+    provider.pauseTurn();
+    await show();
+    if (wasRunning && !_wentBackground && mounted) provider.resumeTurn();
   }
 
   void _togglePause(BuildContext context, GameProvider provider) {
@@ -326,6 +354,7 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                       children: [
                         // Timer
                         TweenAnimationBuilder<double>(
+                          key: _timerKey,
                           tween: Tween(begin: 1.0, end: isLowTime ? 1.1 : 1.0),
                           duration: const Duration(milliseconds: 500),
                           builder: (context, scale, child) {
@@ -352,18 +381,21 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                           const SizedBox(height: 8),
                           ModifierBadges(
                             modifiers: provider.turnModifiers,
+                            wrapExplain: (show) => _whilePaused(provider, show),
                             extra: [
                               if (provider.isDoublePointsOn)
-                                const ModifierBadge(
-                                  icon: '×2',
-                                  label: 'Mot compte double',
+                                ModifierBadge.catalog(
+                                  'double_points',
                                   nature: ModifierNature.bonus,
+                                  wrapExplain: (show) =>
+                                      _whilePaused(provider, show),
                                 ),
                               if (provider.isTwoWordsOn)
-                                const ModifierBadge(
-                                  icon: '⧉',
-                                  label: 'Deux mots à la fois',
+                                ModifierBadge.catalog(
+                                  'two_words',
                                   nature: ModifierNature.bonus,
+                                  wrapExplain: (show) =>
+                                      _whilePaused(provider, show),
                                 ),
                             ],
                           ),
@@ -384,6 +416,7 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
 
                         if (twoWords)
                           Flexible(
+                            key: _wordKey,
                             child: SingleChildScrollView(
                               child: TwoWordsLayout(
                                 firstWord: currentWord,
@@ -408,6 +441,7 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                         else
                           // Current word
                           Flexible(
+                            key: _wordKey,
                             child: Padding(
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 16),
@@ -468,6 +502,7 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                       children: [
                         // Pass button
                         Expanded(
+                          key: _passKey,
                           child: GestureDetector(
                             onTap: canPass && !isPaused
                                 ? () {
@@ -530,6 +565,7 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
 
                         // Guessed button
                         Expanded(
+                          key: _guessedKey,
                           flex: 2,
                           child: GestureDetector(
                             onTap: isPaused
@@ -586,6 +622,7 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
             top: MediaQuery.of(context).padding.top + 16,
             right: 16,
             child: GestureDetector(
+              key: _pauseKey,
               onTap: () => _togglePause(context, provider),
               child: Container(
                 width: 48,
@@ -602,6 +639,23 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                   isPaused ? Icons.play_arrow : Icons.pause,
                   color: Colors.white,
                   size: 24,
+                ),
+              ),
+            ),
+          ),
+          HelpButton(
+            right: HelpButton.besideCornerButton,
+            onPressed: () => _whilePaused(
+              provider,
+              () => CoachMarks.show(
+                context,
+                turnHelp(
+                  timer: _timerKey,
+                  word: _wordKey,
+                  guessed: _guessedKey,
+                  pass: _passKey,
+                  pause: _pauseKey,
+                  passPenalty: passPenalty,
                 ),
               ),
             ),

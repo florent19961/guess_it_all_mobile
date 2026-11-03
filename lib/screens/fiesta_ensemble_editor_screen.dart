@@ -11,6 +11,8 @@ import '../widgets/common/app_back_button.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/app_input.dart';
 import '../widgets/common/app_slider.dart';
+import '../widgets/help/help_button.dart';
+import 'fiesta_tutorial_screen.dart';
 
 /// Éditeur d'un ensemble (maquette `edit`). Ouvert par `Navigator.push` depuis
 /// « Mes ensembles » ; rend `true` à l'appelant quand il a enregistré.
@@ -180,6 +182,7 @@ class _FiestaEnsembleEditorScreenState
             ),
           ),
           AppBackButton(onPressed: () => Navigator.of(context).pop(false)),
+          HelpButton(onPressed: () => FiestaTutorialScreen.show(context)),
         ],
       ),
     );

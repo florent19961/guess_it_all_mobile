@@ -9,6 +9,9 @@ import '../widgets/common/app_button.dart';
 import '../widgets/common/app_input.dart';
 import '../widgets/common/app_back_button.dart';
 import '../widgets/effects/shooting_stars.dart';
+import '../widgets/help/coach_marks.dart';
+import '../widgets/help/help_button.dart';
+import '../widgets/help/help_content.dart';
 
 class PlayersScreen extends StatefulWidget {
   const PlayersScreen({super.key});
@@ -18,6 +21,9 @@ class PlayersScreen extends StatefulWidget {
 }
 
 class _PlayersScreenState extends State<PlayersScreen> {
+  final _firstPlayerKey = GlobalKey();
+  final _wordsKey = GlobalKey();
+  final _nextKey = GlobalKey();
   final Map<String, TextEditingController> _controllers = {};
   final Map<String, FocusNode> _focusNodes = {};
   final Map<String, String> _errors = {};
@@ -349,6 +355,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                               child: Row(
                                 children: [
                                   Expanded(
+                                    key: index == 0 ? _firstPlayerKey : null,
                                     child: AppInput(
                                       key: ValueKey('input_${player.id}'),
                                       controller: _controllers[player.id],
@@ -378,6 +385,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                                   ),
                                   const SizedBox(width: 12),
                                   GestureDetector(
+                                    key: index == 0 ? _wordsKey : null,
                                     onTap: hasName && !isRandom
                                         ? () {
                                             provider.setCurrentEditingPlayer(
@@ -462,6 +470,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                 Padding(
                   padding: const EdgeInsets.all(24),
                   child: AppButton(
+                    key: _nextKey,
                     text: 'Suivant',
                     variant: AppButtonVariant.primary,
                     size: AppButtonSize.large,
@@ -485,6 +494,16 @@ class _PlayersScreenState extends State<PlayersScreen> {
               }
               provider.goToScreen(AppConstants.screenSettings);
             },
+          ),
+          HelpButton(
+            onPressed: () => CoachMarks.show(
+              context,
+              playersHelp(
+                firstPlayer: _firstPlayerKey,
+                words: _wordsKey,
+                next: _nextKey,
+              ),
+            ),
           ),
         ],
       ),

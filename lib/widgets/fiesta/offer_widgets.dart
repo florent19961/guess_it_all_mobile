@@ -33,13 +33,11 @@ Color _color(List<Team> teams, String id) {
 /// de la file ; `null` = file vide (tous les choix sont faits).
 class PickThreeCard extends StatelessWidget {
   final List<Team> teams;
-  final Standings standings;
   final String? nextTeamId;
   final VoidCallback onPassPhone;
 
   const PickThreeCard({
     required this.teams,
-    required this.standings,
     required this.nextTeamId,
     required this.onPassPhone,
     super.key,
@@ -55,12 +53,11 @@ class PickThreeCard extends StatelessWidget {
       );
     }
     final name = _name(teams, next);
-    final gap = standings.gapOf(next);
+    // Pas d'écart chiffré : les scores restent cachés jusqu'aux résultats.
     return FiestaCard(
       title: 'Choix 1 parmi 3',
       children: [
-        FiestaHint('$name, menée de $gap point${gap > 1 ? 's' : ''}, va '
-            'choisir une carte.'),
+        FiestaHint('$name, menée, va choisir une carte.'),
         const SizedBox(height: 10),
         AppButton(
           text: 'Passer le téléphone à $name',
@@ -163,7 +160,6 @@ class OfferChoiceBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final gap = standings.gapOf(chooserId);
     final order = standings.choosingOrder;
     final leaders = standings.leaderIds.map((id) => _name(teams, id)).toList();
     final hint = AppTextStyles.bodySmall
@@ -188,9 +184,12 @@ class OfferChoiceBody extends StatelessWidget {
                       style: AppTextStyles.subtitle(fontSize: 34)
                           .copyWith(color: _color(teams, chooserId)),
                     ),
+                    // Force de l'offre, jamais l'écart chiffré (scores
+                    // cachés jusqu'aux résultats).
                     Text(
-                      'Menée de $gap point${gap > 1 ? 's' : ''}'
-                      '${offers.isEmpty ? '' : ' · offre ${_strength(offers.first)}'}',
+                      offers.isEmpty
+                          ? 'Menée'
+                          : 'Menée · offre ${_strength(offers.first)}',
                       textAlign: TextAlign.center,
                       style: hint,
                     ),

@@ -12,6 +12,9 @@ import '../widgets/common/app_slider.dart';
 import '../widgets/common/app_modal.dart';
 import '../widgets/common/app_back_button.dart';
 import '../widgets/effects/shooting_stars.dart';
+import '../widgets/help/coach_marks.dart';
+import '../widgets/help/help_button.dart';
+import '../widgets/help/help_content.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -25,6 +28,11 @@ class _SettingsScreenState extends State<SettingsScreen>
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   bool _showAdvancedAnimation = false;
+
+  final _countsKey = GlobalKey();
+  final _wordChoiceKey = GlobalKey();
+  final _categoriesKey = GlobalKey();
+  final _advancedKey = GlobalKey();
 
   @override
   void initState() {
@@ -77,55 +85,65 @@ class _SettingsScreenState extends State<SettingsScreen>
                   ),
                   const SizedBox(height: 32),
 
-                  // Nombre de joueurs
-                  _buildSection(
-                    title: 'Joueurs',
-                    child: AppCounter(
-                      value: settings.numberOfPlayers,
-                      min: settings.numberOfTeams * 2, // Minimum dynamique
-                      max: AppConstants.maxPlayers,
-                      onChange: (value) =>
-                          provider.updateSettings(numberOfPlayers: value),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+                  // Nombre de joueurs et d'équipes (une seule cible d'aide)
+                  Column(
+                    key: _countsKey,
+                    children: [
+                      _buildSection(
+                        title: 'Joueurs',
+                        child: AppCounter(
+                          value: settings.numberOfPlayers,
+                          min: settings.numberOfTeams * 2, // Minimum dynamique
+                          max: AppConstants.maxPlayers,
+                          onChange: (value) =>
+                              provider.updateSettings(numberOfPlayers: value),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
 
-                  // Nombre d'équipes (ajuste le minimum de joueurs)
-                  _buildSection(
-                    title: 'Équipes',
-                    child: AppCounter(
-                      value: settings.numberOfTeams,
-                      min: AppConstants.minTeams,
-                      max: AppConstants.maxTeams,
-                      onChange: (value) {
-                        provider.updateSettings(numberOfTeams: value);
-                        // Ajuster le nombre de joueurs si nécessaire (min 2 par équipe)
-                        final minPlayers = value * 2;
-                        if (settings.numberOfPlayers < minPlayers) {
-                          provider.updateSettings(numberOfPlayers: minPlayers);
-                        }
-                      },
-                    ),
+                      // Nombre d'équipes (ajuste le minimum de joueurs)
+                      _buildSection(
+                        title: 'Équipes',
+                        child: AppCounter(
+                          value: settings.numberOfTeams,
+                          min: AppConstants.minTeams,
+                          max: AppConstants.maxTeams,
+                          onChange: (value) {
+                            provider.updateSettings(numberOfTeams: value);
+                            // Ajuster le nombre de joueurs si nécessaire (min 2 par équipe)
+                            final minPlayers = value * 2;
+                            if (settings.numberOfPlayers < minPlayers) {
+                              provider.updateSettings(
+                                  numberOfPlayers: minPlayers);
+                            }
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
 
                   // Choix des mots
-                  _buildSection(
-                    title: 'Choix des mots',
-                    child: AppToggle(
-                      options: const [
-                        AppConstants.wordChoiceCustom,
-                        AppConstants.wordChoiceRandom
-                      ],
-                      selected: settings.wordChoice,
-                      onChange: (value) =>
-                          provider.updateSettings(wordChoice: value),
+                  KeyedSubtree(
+                    key: _wordChoiceKey,
+                    child: _buildSection(
+                      title: 'Choix des mots',
+                      child: AppToggle(
+                        options: const [
+                          AppConstants.wordChoiceCustom,
+                          AppConstants.wordChoiceRandom
+                        ],
+                        selected: settings.wordChoice,
+                        onChange: (value) =>
+                            provider.updateSettings(wordChoice: value),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
 
                   // Choix des catégories (sous le toggle)
                   GestureDetector(
+                    key: _categoriesKey,
                     onTap: () =>
                         provider.goToScreen(AppConstants.screenCategories),
                     child: Container(
@@ -259,6 +277,19 @@ class _SettingsScreenState extends State<SettingsScreen>
             right: 16,
             child: Row(
               children: [
+                HelpButton.inline(
+                  onPressed: () => CoachMarks.show(
+                    context,
+                    settingsHelp(
+                      counts: _countsKey,
+                      wordChoice: _wordChoiceKey,
+                      categories: _categoriesKey,
+                      advanced: _advancedKey,
+                      passPenalty: provider.settings.passPenalty,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 // Bouton réinitialiser
                 GestureDetector(
                   onTap: () => _showResetConfirmation(context, provider),
@@ -280,6 +311,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                 const SizedBox(width: 12),
                 // Bouton paramètres avancés
                 GestureDetector(
+                  key: _advancedKey,
                   onTap: () {
                     // Marquer comme vu et arrêter l'animation
                     if (_showAdvancedAnimation) {

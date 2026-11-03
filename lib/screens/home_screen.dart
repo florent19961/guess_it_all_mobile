@@ -6,10 +6,24 @@ import '../utils/constants.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/app_modal.dart';
 import '../widgets/effects/shooting_stars.dart';
+import '../widgets/help/coach_marks.dart';
 import '../widgets/help/first_game_prompt.dart';
+import '../widgets/help/help_button.dart';
+import '../widgets/help/help_content.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final _playKey = GlobalKey();
+  final _resumeKey = GlobalKey();
+  final _replayKey = GlobalKey();
+  final _rulesKey = GlobalKey();
+  final _historyKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -18,107 +32,132 @@ class HomeScreen extends StatelessWidget {
     final hasGameSession = provider.hasGameSession;
 
     return ShootingStars(
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(),
-              Text(
-                'Guess It All',
-                style: AppTextStyles.title(fontSize: 72),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 48),
+      child: Stack(
+        children: [
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Spacer(),
+                  Text(
+                    'Guess It All',
+                    style: AppTextStyles.title(fontSize: 72),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 48),
 
-              // Cas 1: Partie suspendue
-              if (hasSuspendedGame) ...[
-                AppButton(
-                  text: 'Reprendre',
-                  variant: AppButtonVariant.primary,
-                  size: AppButtonSize.large,
-                  fullWidth: true,
-                  onPressed: () => provider.resumeGame(),
-                ),
-                const SizedBox(height: 16),
-                AppButton(
-                  text: 'Nouvelle partie',
-                  variant: AppButtonVariant.secondary,
-                  size: AppButtonSize.large,
-                  fullWidth: true,
-                  onPressed: () => _showNewGameConfirmation(context, provider),
-                ),
-              ]
-              // Cas 2: Session existante (joueurs d'une partie précédente)
-              else if (hasGameSession) ...[
-                AppButton(
-                  text: 'Rejouer',
-                  variant: AppButtonVariant.primary,
-                  size: AppButtonSize.large,
-                  fullWidth: true,
-                  onPressed: () async {
-                    await provider.restartWithSamePlayers();
-                  },
-                ),
-                const SizedBox(height: 16),
-                AppButton(
-                  text: 'Nouvelle partie',
-                  variant: AppButtonVariant.secondary,
-                  size: AppButtonSize.large,
-                  fullWidth: true,
-                  onPressed: () async {
-                    // startNewGame() : efface session + état, GARDE les réglages.
-                    // clearLocalStorage() remettait GameSettings.initial() et le
-                    // réécrivait sur disque — le joueur reperdait ses réglages à
-                    // chaque partie. La remise à zéro explicite reste disponible
-                    // depuis le bouton « Réinitialiser » de l'écran de réglages.
-                    await provider.startNewGame();
-                    provider.goToScreen(AppConstants.screenGameMode);
-                  },
-                ),
-              ]
-              // Cas 3: Pas de partie en cours
-              else ...[
-                AppButton(
-                  text: 'Jouer',
-                  variant: AppButtonVariant.primary,
-                  size: AppButtonSize.large,
-                  fullWidth: true,
-                  onPressed: () async {
-                    await FirstGamePrompt.maybeShow(context);
-                    if (!context.mounted) return;
-                    // startNewGame() : efface session + état, GARDE les réglages.
-                    // clearLocalStorage() remettait GameSettings.initial() et le
-                    // réécrivait sur disque — le joueur reperdait ses réglages à
-                    // chaque partie. La remise à zéro explicite reste disponible
-                    // depuis le bouton « Réinitialiser » de l'écran de réglages.
-                    await provider.startNewGame();
-                    provider.goToScreen(AppConstants.screenGameMode);
-                  },
-                ),
-              ],
+                  // Cas 1: Partie suspendue
+                  if (hasSuspendedGame) ...[
+                    AppButton(
+                      key: _resumeKey,
+                      text: 'Reprendre',
+                      variant: AppButtonVariant.primary,
+                      size: AppButtonSize.large,
+                      fullWidth: true,
+                      onPressed: () => provider.resumeGame(),
+                    ),
+                    const SizedBox(height: 16),
+                    AppButton(
+                      key: _playKey,
+                      text: 'Nouvelle partie',
+                      variant: AppButtonVariant.secondary,
+                      size: AppButtonSize.large,
+                      fullWidth: true,
+                      onPressed: () =>
+                          _showNewGameConfirmation(context, provider),
+                    ),
+                  ]
+                  // Cas 2: Session existante (joueurs d'une partie précédente)
+                  else if (hasGameSession) ...[
+                    AppButton(
+                      key: _replayKey,
+                      text: 'Rejouer',
+                      variant: AppButtonVariant.primary,
+                      size: AppButtonSize.large,
+                      fullWidth: true,
+                      onPressed: () async {
+                        await provider.restartWithSamePlayers();
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    AppButton(
+                      key: _playKey,
+                      text: 'Nouvelle partie',
+                      variant: AppButtonVariant.secondary,
+                      size: AppButtonSize.large,
+                      fullWidth: true,
+                      onPressed: () async {
+                        // startNewGame() : efface session + état, GARDE les réglages.
+                        // clearLocalStorage() remettait GameSettings.initial() et le
+                        // réécrivait sur disque — le joueur reperdait ses réglages à
+                        // chaque partie. La remise à zéro explicite reste disponible
+                        // depuis le bouton « Réinitialiser » de l'écran de réglages.
+                        await provider.startNewGame();
+                        provider.goToScreen(AppConstants.screenGameMode);
+                      },
+                    ),
+                  ]
+                  // Cas 3: Pas de partie en cours
+                  else ...[
+                    AppButton(
+                      key: _playKey,
+                      text: 'Jouer',
+                      variant: AppButtonVariant.primary,
+                      size: AppButtonSize.large,
+                      fullWidth: true,
+                      onPressed: () async {
+                        await FirstGamePrompt.maybeShow(context);
+                        if (!context.mounted) return;
+                        // startNewGame() : efface session + état, GARDE les réglages.
+                        // clearLocalStorage() remettait GameSettings.initial() et le
+                        // réécrivait sur disque — le joueur reperdait ses réglages à
+                        // chaque partie. La remise à zéro explicite reste disponible
+                        // depuis le bouton « Réinitialiser » de l'écran de réglages.
+                        await provider.startNewGame();
+                        provider.goToScreen(AppConstants.screenGameMode);
+                      },
+                    ),
+                  ],
 
-              const SizedBox(height: 16),
-              AppButton(
-                text: 'Règles',
-                variant: AppButtonVariant.ghost,
-                size: AppButtonSize.medium,
-                onPressed: () => provider.goToScreen(AppConstants.screenRules),
+                  const SizedBox(height: 16),
+                  AppButton(
+                    key: _rulesKey,
+                    text: 'Règles',
+                    variant: AppButtonVariant.ghost,
+                    size: AppButtonSize.medium,
+                    onPressed: () =>
+                        provider.goToScreen(AppConstants.screenRules),
+                  ),
+                  const SizedBox(height: 8),
+                  AppButton(
+                    key: _historyKey,
+                    text: 'Historique',
+                    variant: AppButtonVariant.ghost,
+                    size: AppButtonSize.medium,
+                    onPressed: () =>
+                        provider.goToScreen(AppConstants.screenHistory),
+                  ),
+                  const Spacer(),
+                  const SizedBox(height: 16),
+                ],
               ),
-              const SizedBox(height: 8),
-              AppButton(
-                text: 'Historique',
-                variant: AppButtonVariant.ghost,
-                size: AppButtonSize.medium,
-                onPressed: () =>
-                    provider.goToScreen(AppConstants.screenHistory),
-              ),
-              const Spacer(),
-              const SizedBox(height: 16),
-            ],
+            ),
           ),
-        ),
+          HelpButton(
+            onPressed: () => CoachMarks.show(
+              context,
+              homeHelp(
+                play: _playKey,
+                resume: _resumeKey,
+                replay: _replayKey,
+                rules: _rulesKey,
+                history: _historyKey,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

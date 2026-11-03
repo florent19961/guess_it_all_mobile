@@ -6,6 +6,7 @@ import '../providers/game_provider.dart';
 import '../utils/constants.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/fiesta/fiesta_setup_widgets.dart';
+import 'fiesta_tutorial_screen.dart';
 
 /// Fiesta : Mode Auto (l'app décide) ou Personnalisé (ensembles enregistrés).
 class FiestaChoiceScreen extends StatefulWidget {
@@ -26,6 +27,7 @@ class _FiestaChoiceScreenState extends State<FiestaChoiceScreen> {
       title: 'Fiesta',
       subtitle: 'Comment veux-tu jouer ?',
       onBack: () => provider.goToScreen(AppConstants.screenGameMode),
+      onHelp: () => FiestaTutorialScreen.show(context),
       content: [
         FiestaPickCard(
           icon: 'A',

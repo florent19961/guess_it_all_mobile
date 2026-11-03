@@ -111,7 +111,8 @@ List<CoachStep> playersHelp({
         title: 'Les mots du joueur',
         text: 'En mode Personnalisé, chaque joueur écrit ici ses mots, sans '
             'les montrer aux autres. « Saisir mots » devient « Voir mots » '
-            'quand c\'est fait.',
+            'quand c\'est fait. En mode Aléatoire, « N mots prêts » : l\'app '
+            'a tiré les mots du joueur, ils restent cachés jusqu\'au jeu.',
       ),
       CoachStep(
         target: next,
@@ -147,6 +148,34 @@ List<CoachStep> teamsHelp({
       ),
     ];
 
+// ========== HISTORIQUE ==========
+
+List<CoachStep> historyHelp({
+  required GlobalKey trends,
+  required GlobalKey firstGame,
+  required GlobalKey replay,
+}) =>
+    [
+      CoachStep(
+        target: trends,
+        title: 'Tendances',
+        text: 'Quelques chiffres sur toutes les parties jouées sur ce '
+            'téléphone.',
+      ),
+      CoachStep(
+        target: firstGame,
+        title: 'Une partie',
+        text: 'Touche une partie pour voir le détail : les équipes, leurs '
+            'joueurs et les points.',
+      ),
+      CoachStep(
+        target: replay,
+        title: 'Rejouer',
+        text: 'Relance cette partie avec les mêmes joueurs, les mêmes équipes '
+            'et les mêmes réglages. Les mots, eux, sont nouveaux.',
+      ),
+    ];
+
 // ========== AVANT LE TOUR (game_screen) ==========
 
 /// Aussi affichée automatiquement au premier tour de chaque joueur pendant la
@@ -174,9 +203,9 @@ List<CoachStep> preTurnHelp({
       ),
       CoachStep(
         target: previousTurn,
-        title: 'Tour précédent',
-        text: 'Les mots trouvés au tour d\'avant. Retiens-les : les mêmes '
-            'mots reviennent à chaque manche.',
+        title: 'Mots du tour précédent',
+        text: 'Touche ici pour voir les mots trouvés au tour précédent. '
+            'Retiens-les : ils reviennent aux manches suivantes.',
       ),
       CoachStep(
         target: start,
@@ -253,24 +282,35 @@ List<CoachStep> verificationHelp({
 
 // ========== ENTRE DEUX MANCHES (transition_screen) ==========
 
+/// [fiesta] (`fiestaTransitionHelp`) se place à l'ordre de l'écran : sous le
+/// héros et les mots du dernier tour, avant les boutons.
 List<CoachStep> transitionHelp({
+  required GlobalKey nextRound,
   required GlobalKey previousTurn,
   required GlobalKey next,
   required GlobalKey back,
   required GlobalKey home,
+  List<CoachStep> fiesta = const [],
 }) =>
     [
+      CoachStep(
+        target: nextRound,
+        title: 'La manche suivante',
+        text: 'Sa nouvelle règle, le nombre de mots qui reviennent dans le '
+            'chapeau, le temps reporté s\'il en reste, et qui commence. Ce '
+            'sont exactement les mêmes mots qu\'à la manche d\'avant.',
+      ),
       CoachStep(
         target: previousTurn,
         title: 'Mots du dernier tour',
         text: 'Revois les mots trouvés pendant le dernier tour.',
       ),
+      ...fiesta,
       CoachStep(
         target: next,
-        title: 'Manche suivante',
-        text: 'Lance la manche suivante : tous les mots retournent dans le '
-            'chapeau, avec une nouvelle règle. Après la dernière manche, ce '
-            'bouton devient « Voir les résultats ».',
+        title: 'Lancer la manche',
+        text: 'Lance la manche suivante. En Fiesta, il attend que chaque '
+            'équipe menée ait choisi sa carte.',
       ),
       CoachStep(
         target: back,

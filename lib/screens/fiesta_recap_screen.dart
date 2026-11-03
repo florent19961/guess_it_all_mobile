@@ -8,6 +8,7 @@ import '../theme/app_theme.dart';
 import '../utils/constants.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/fiesta/fiesta_setup_widgets.dart';
+import 'fiesta_tutorial_screen.dart';
 
 /// Récapitulatif avant les Paramètres : la config Fiesta en attente, les
 /// règles communes et les réglages de base (lus dans `GameSettings`).
@@ -39,6 +40,7 @@ class FiestaRecapScreen extends StatelessWidget {
     return FiestaSetupScaffold(
       title: 'Prêts ?',
       onBack: () => provider.goToScreen(editScreen),
+      onHelp: () => FiestaTutorialScreen.show(context),
       content: [
         FiestaCard(
           title: 'Mode',

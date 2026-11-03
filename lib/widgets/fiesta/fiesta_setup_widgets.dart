@@ -4,6 +4,7 @@ import '../../models/fiesta/fiesta_rules.dart';
 import '../../theme/app_theme.dart';
 import '../common/app_back_button.dart';
 import '../effects/shooting_stars.dart';
+import '../help/help_button.dart';
 
 /// Squelette commun des écrans de choix du mode (Mode de jeu, Fiesta, Auto,
 /// Récap) : titre, contenu défilant, bouton bas, et retour — bouton ET geste
@@ -12,6 +13,9 @@ class FiestaSetupScaffold extends StatelessWidget {
   final String title;
   final String? subtitle;
   final VoidCallback onBack;
+
+  /// Le « ? » en haut à droite (les écrans Fiesta rouvrent le tuto Fiesta).
+  final VoidCallback onHelp;
   final List<Widget> content;
   final Widget bottom;
 
@@ -19,6 +23,7 @@ class FiestaSetupScaffold extends StatelessWidget {
     required this.title,
     this.subtitle,
     required this.onBack,
+    required this.onHelp,
     required this.content,
     required this.bottom,
     super.key,
@@ -72,6 +77,7 @@ class FiestaSetupScaffold extends StatelessWidget {
               ),
             ),
             AppBackButton(onPressed: onBack),
+            HelpButton(onPressed: onHelp),
           ],
         ),
       ),

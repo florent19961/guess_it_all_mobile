@@ -7,9 +7,21 @@ import '../utils/constants.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/app_back_button.dart';
 import '../widgets/effects/shooting_stars.dart';
+import '../widgets/help/coach_marks.dart';
+import '../widgets/help/help_button.dart';
+import '../widgets/help/help_content.dart';
 
-class TeamsScreen extends StatelessWidget {
+class TeamsScreen extends StatefulWidget {
   const TeamsScreen({super.key});
+
+  @override
+  State<TeamsScreen> createState() => _TeamsScreenState();
+}
+
+class _TeamsScreenState extends State<TeamsScreen> {
+  final _firstTeamKey = GlobalKey();
+  final _shuffleKey = GlobalKey();
+  final _startKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +51,7 @@ class TeamsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 AppButton(
+                  key: _shuffleKey,
                   text: 'Mélanger',
                   variant: AppButtonVariant.secondary,
                   size: AppButtonSize.small,
@@ -70,6 +83,7 @@ class TeamsScreen extends StatelessWidget {
                           ),
                         ),
                       AppButton(
+                        key: _startKey,
                         text: 'Commencer',
                         variant: AppButtonVariant.primary,
                         size: AppButtonSize.large,
@@ -90,6 +104,16 @@ class TeamsScreen extends StatelessWidget {
           AppBackButton(
             onPressed: () => provider.goToScreen(AppConstants.screenPlayers),
           ),
+          HelpButton(
+            onPressed: () => CoachMarks.show(
+              context,
+              teamsHelp(
+                firstTeam: _firstTeamKey,
+                shuffle: _shuffleKey,
+                start: _startKey,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -107,6 +131,7 @@ class TeamsScreen extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: _TeamCard(
+                key: entry.key == 0 ? _firstTeamKey : null,
                 team: teams[entry.key],
                 teamIndex: entry.key,
                 provider: provider,
@@ -125,6 +150,7 @@ class TeamsScreen extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: _TeamCard(
+                    key: _firstTeamKey,
                     team: teams[0],
                     teamIndex: 0,
                     provider: provider,
@@ -184,6 +210,7 @@ class _TeamCard extends StatefulWidget {
   final GameProvider provider;
 
   const _TeamCard({
+    super.key,
     required this.team,
     required this.teamIndex,
     required this.provider,

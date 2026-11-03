@@ -9,6 +9,9 @@ import '../utils/constants.dart';
 import '../widgets/common/app_back_button.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/app_confirm_dialog.dart';
+import '../widgets/help/coach_marks.dart';
+import '../widgets/help/help_button.dart';
+import '../widgets/help/help_content.dart';
 
 /// Historique des dernières parties : scores, détail par manche et tendances.
 ///
@@ -22,6 +25,9 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
+  final _trendsKey = GlobalKey();
+  final _firstGameKey = GlobalKey();
+  final _replayKey = GlobalKey();
   late Future<List<GameResult>> _future;
 
   @override
@@ -82,10 +88,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),
-                      _buildTrends(computeTrends(games)),
+                      KeyedSubtree(
+                        key: _trendsKey,
+                        child: _buildTrends(computeTrends(games)),
+                      ),
                       const SizedBox(height: 24),
-                      for (final g in games) ...[
+                      for (final (i, g) in games.indexed) ...[
                         _GameCard(
+                          key: i == 0 ? _firstGameKey : null,
+                          replayKey: i == 0 ? _replayKey : null,
                           game: g,
                           colorFor: _colorFor,
                           onReplay: g.teams.isEmpty
@@ -102,6 +113,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
           AppBackButton(
             onPressed: () => provider.goToScreen(AppConstants.screenHome),
+          ),
+          HelpButton(
+            onPressed: () => CoachMarks.show(
+              context,
+              historyHelp(
+                trends: _trendsKey,
+                firstGame: _firstGameKey,
+                replay: _replayKey,
+              ),
+            ),
           ),
         ],
       ),
@@ -228,7 +249,12 @@ class _GameCard extends StatefulWidget {
   /// « Rejouer » : pré-remplit joueurs, équipes et réglages de cette partie.
   final VoidCallback? onReplay;
 
+  /// Cible de l'aide sur le bouton « Rejouer » (première carte seulement).
+  final GlobalKey? replayKey;
+
   const _GameCard({
+    super.key,
+    this.replayKey,
     required this.game,
     required this.colorFor,
     this.onReplay,
@@ -324,6 +350,7 @@ class _GameCardState extends State<_GameCard> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: AppButton(
+                key: widget.replayKey,
                 text: 'Rejouer',
                 variant: AppButtonVariant.secondary,
                 size: AppButtonSize.small,
