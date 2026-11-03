@@ -51,6 +51,25 @@ class TeamResult {
       );
 }
 
+/// Une ligne du récap « Modificateurs de la partie » (story 2-7), archivée
+/// TELLE QU'AFFICHÉE : titre et détail déjà formés.
+@immutable
+class ModifierRecapLine {
+  final String title;
+  final String detail;
+
+  const ModifierRecapLine({required this.title, required this.detail});
+
+  Map<String, dynamic> toJson() => {'title': title, 'detail': detail};
+
+  static ModifierRecapLine? tryFromJson(Map<String, dynamic> json) {
+    final title = json['title'];
+    final detail = json['detail'];
+    if (title is! String || detail is! String) return null;
+    return ModifierRecapLine(title: title, detail: detail);
+  }
+}
+
 /// Une partie terminée, archivée pour l'historique.
 ///
 /// 🔴 **Cette donnée n'existait pas.** `GameAnalytics` archivait la
@@ -73,6 +92,13 @@ class GameResult {
   final int turnDuration;
   final int roundsPlayed;
 
+  /// `'fiesta_auto'` / `'fiesta_custom'` (story 2-7). `null` = Classique, ou
+  /// partie archivée par une version antérieure : clé ABSENTE du JSON.
+  final String? mode;
+
+  /// Récap des modificateurs, `null` en Classique (clé absente).
+  final List<ModifierRecapLine>? modifierRecap;
+
   const GameResult({
     required this.gameId,
     required this.playedAt,
@@ -80,6 +106,8 @@ class GameResult {
     required this.totalWords,
     required this.turnDuration,
     required this.roundsPlayed,
+    this.mode,
+    this.modifierRecap,
   });
 
   /// Équipes triées par score décroissant.
@@ -111,6 +139,10 @@ class GameResult {
         'totalWords': totalWords,
         'turnDuration': turnDuration,
         'roundsPlayed': roundsPlayed,
+        // Additifs : une partie Classique archive exactement l'ancienne forme.
+        if (mode != null) 'mode': mode,
+        if (modifierRecap != null)
+          'modifierRecap': modifierRecap!.map((l) => l.toJson()).toList(),
       };
 
   /// Rend `null` si l'entrée est inexploitable, plutôt que de lever : une
@@ -141,6 +173,14 @@ class GameResult {
       totalWords: json['totalWords'] as int? ?? 0,
       turnDuration: json['turnDuration'] as int? ?? 0,
       roundsPlayed: json['roundsPlayed'] as int? ?? 0,
+      mode: json['mode'] is String ? json['mode'] as String : null,
+      modifierRecap: json['modifierRecap'] is List
+          ? (json['modifierRecap'] as List<dynamic>)
+              .whereType<Map<String, dynamic>>()
+              .map(ModifierRecapLine.tryFromJson)
+              .whereType<ModifierRecapLine>()
+              .toList()
+          : null,
     );
   }
 }

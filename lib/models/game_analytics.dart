@@ -60,6 +60,15 @@ class GameAnalytics {
   final List<String> selectedCategories;
   final List<int> selectedDifficultyLevels;
 
+  /// Mode de la partie (story 2-7) : `'fiesta_auto'` ou `'fiesta_custom'`.
+  /// `null` = Classique, ou partie écrite par une version antérieure : la clé
+  /// est alors ABSENTE du JSON (et du document Firestore), pas `null`.
+  final String? gameMode;
+
+  /// Règles Fiesta gelées au lancement (`FiestaRules.toJson()`), pour
+  /// recalibrer les poids. `null` = Classique.
+  final Map<String, dynamic>? fiestaRules;
+
   // Événements bruts (pour replay/debug/recalcul)
   final List<WordEvent> events;
 
@@ -84,6 +93,8 @@ class GameAnalytics {
     required this.turnDuration,
     required this.selectedCategories,
     required this.selectedDifficultyLevels,
+    this.gameMode,
+    this.fiestaRules,
     required this.events,
     required this.wordMetadata,
     required this.wordStats,
@@ -101,6 +112,8 @@ class GameAnalytics {
     required List<String> selectedCategories,
     required List<int> selectedDifficultyLevels,
     required Map<String, WordMetadata> wordMetadata,
+    String? gameMode,
+    Map<String, dynamic>? fiestaRules,
   }) {
     return GameAnalytics(
       gameId: gameId,
@@ -117,6 +130,8 @@ class GameAnalytics {
       turnDuration: turnDuration,
       selectedCategories: selectedCategories,
       selectedDifficultyLevels: selectedDifficultyLevels,
+      gameMode: gameMode,
+      fiestaRules: fiestaRules,
       events: [],
       wordMetadata: wordMetadata,
       wordStats: {},
@@ -233,6 +248,10 @@ class GameAnalytics {
       selectedCategories: selectedCategories ?? this.selectedCategories,
       selectedDifficultyLevels:
           selectedDifficultyLevels ?? this.selectedDifficultyLevels,
+      // 🔴 Recopiés sans paramètre : `addEvent` passe par `copyWith`, un champ
+      // oublié ici disparaîtrait en silence au premier événement.
+      gameMode: gameMode,
+      fiestaRules: fiestaRules,
       events: events ?? this.events,
       wordMetadata: wordMetadata ?? this.wordMetadata,
       wordStats: wordStats ?? this.wordStats,
@@ -254,6 +273,9 @@ class GameAnalytics {
         'turnDuration': turnDuration,
         'selectedCategories': selectedCategories,
         'selectedDifficultyLevels': selectedDifficultyLevels,
+        // Additifs : une partie Classique écrit exactement l'ancienne forme.
+        if (gameMode != null) 'gameMode': gameMode,
+        if (fiestaRules != null) 'fiestaRules': fiestaRules,
         'events': events.map((e) => e.toJson()).toList(),
         'wordMetadata': wordMetadata.map((k, v) => MapEntry(k, v.toJson())),
         'wordStats': wordStats.map((k, v) => MapEntry(k, v.toJson())),
@@ -277,6 +299,13 @@ class GameAnalytics {
         selectedCategories: (json['selectedCategories'] as List).cast<String>(),
         selectedDifficultyLevels:
             (json['selectedDifficultyLevels'] as List).cast<int>(),
+        // Lecture tolérante, sans cast dur : un champ additif illisible ne doit
+        // pas rendre la partie entière illisible.
+        gameMode:
+            json['gameMode'] is String ? json['gameMode'] as String : null,
+        fiestaRules: json['fiestaRules'] is Map
+            ? Map<String, dynamic>.from(json['fiestaRules'] as Map)
+            : null,
         // Les events illisibles sont ABANDONNÉS un par un, jamais propagés en
         // exception : un seul event d'un type inconnu rendait auparavant la
         // partie archivée entière illisible — et, faute de quarantaine, l'échec
