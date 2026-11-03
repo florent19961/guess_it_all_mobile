@@ -174,7 +174,10 @@ tag sur `main`.
 2. Bump `pubspec.yaml` → `version: X.Y.Z+N` (**le build number `+N` doit STRICTEMENT augmenter** —
    les stores refusent un build déjà soumis).
 3. Commit `chore(release): vX.Y.Z+N`, tag `git tag -a vX.Y.Z+N -m "..."`, `git push --follow-tags`.
-4. `flutter build appbundle` / `flutter build ipa` → soumission.
+4. Le push du tag lance le workflow Codemagic **`release`** (`codemagic.yaml`) : garde tag =
+   version pubspec, puis AAB + IPA signés en artefacts. 🔴 **Publication désactivée** jusqu'à la
+   1re release post-Fiesta (go Florent) — d'ici là, soumission manuelle des artefacts. Secrets,
+   `dry-run` et activation : `docs/releases-stores.md` §Codemagic.
 5. Entrée datée dans `docs/tracking_evolution.md`.
 
 ⚠️ **`upgrader` force la mise à jour** des clients depuis les stores : une version publiée devient
