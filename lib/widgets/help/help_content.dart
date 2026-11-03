@@ -283,6 +283,7 @@ List<CoachStep> verificationHelp({
 // ========== ENTRE DEUX MANCHES (transition_screen) ==========
 
 List<CoachStep> transitionHelp({
+  required GlobalKey nextRound,
   required GlobalKey previousTurn,
   required GlobalKey next,
   required GlobalKey back,
@@ -290,17 +291,24 @@ List<CoachStep> transitionHelp({
 }) =>
     [
       CoachStep(
+        target: nextRound,
+        title: 'La manche suivante',
+        text: 'Sa nouvelle règle, le nombre de mots qui reviennent dans le '
+            'chapeau, le temps reporté s\'il en reste, et qui commence. Ce '
+            'sont exactement les mêmes mots qu\'à la manche d\'avant.',
+      ),
+      CoachStep(
         target: previousTurn,
         title: 'Mots du dernier tour',
         text: 'Revois les mots trouvés pendant le dernier tour.',
       ),
       CoachStep(
         target: next,
-        title: 'Manche suivante',
-        text: 'Lance la manche suivante : tous les mots retournent dans le '
-            'chapeau, avec une nouvelle règle. Après la dernière manche, ce '
-            'bouton devient « Voir les résultats ». En Fiesta, il attend que '
-            'chaque équipe menée ait choisi sa carte.',
+        title: 'Lancer la manche',
+        text: 'Lance la manche suivante. Après la dernière manche, ce bouton '
+            'devient « Découvrir le podium » : les scores, cachés pendant la '
+            'partie, s\'affichent enfin. En Fiesta, il attend que chaque '
+            'équipe menée ait choisi sa carte.',
       ),
       CoachStep(
         target: back,
