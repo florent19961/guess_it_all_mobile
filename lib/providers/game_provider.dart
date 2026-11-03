@@ -1081,6 +1081,7 @@ class GameProvider extends ChangeNotifier {
         wordsPassed: passedWordsThisTurn,
         timeSpent: currentTimeSpent,
         isBonusContinuation: true, // Marquer comme continuation
+        pointsScored: pointsScored,
       );
       // Ajouter l'entrée (pas de remplacement)
       newHistory = [..._game.history, bonusEntry];
@@ -1097,6 +1098,7 @@ class GameProvider extends ChangeNotifier {
         wordsInvalidated: allInvalidatedWords,
         wordsPassed: passedWordsThisTurn,
         timeSpent: currentTimeSpent,
+        pointsScored: pointsScored,
       );
       newHistory = [..._game.history, historyEntry];
       nextTurn = _game.currentTurn + 1;

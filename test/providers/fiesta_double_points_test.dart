@@ -181,6 +181,41 @@ void main() {
   });
 
   test(
+      'Évolution des scores : le dernier point de chaque équipe = son score, '
+      'avec ×2 et continuation ; la clé n\'est écrite que si elle diffère '
+      'du nombre de mots (epic fix B3)', () async {
+    final provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
+    await provider.startGame(fiesta: doubleEveryRound);
+    provider.setDoublePoints(true);
+    provider.startTurn();
+    provider.startTurnTimer();
+    while (provider.game.currentWord != null) {
+      provider.markWordAsGuessed();
+    }
+    final guessed = List<String>.from(provider.game.wordsGuessedThisTurn);
+    provider.savePreValidationState(guessed);
+    provider.validateWords(guessed);
+    provider.nextRound();
+    provider.startTurn(); // continuation, toujours ×2
+    provider.startTurnTimer();
+    provider.markWordAsGuessed();
+    provider.endTurn();
+    final word = List<String>.from(provider.game.wordsGuessedThisTurn);
+    provider.savePreValidationState(word);
+    provider.validateWords(word);
+
+    for (final team in provider.teams) {
+      final lastPoint = provider.game.history
+          .where((h) => h.teamId == team.id)
+          .fold(0, (sum, h) => sum + h.points);
+      expect(lastPoint, team.score, reason: team.name);
+    }
+    final json = provider.game.history.map((h) => h.toJson()).toList();
+    expect(json.every((h) => h['pointsScored'] == 2 * h['wordsGuessed'].length),
+        isTrue);
+  });
+
+  test(
       'Classique : l\'interrupteur est sans effet, 1 mot = 1 point, aucune '
       'clé Fiesta écrite', () async {
     final provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
@@ -198,5 +233,7 @@ void main() {
     provider.validateWords(guessed);
     expect(teamScore(provider, teamId), 2);
     expect(provider.game.toJson().containsKey('fiesta'), isFalse);
+    expect(provider.game.history.single.toJson().containsKey('pointsScored'),
+        isFalse);
   });
 }

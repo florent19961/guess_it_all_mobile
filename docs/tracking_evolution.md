@@ -601,3 +601,15 @@ tirages de N+1 (4 effets, Codex MAJOR-1), et un `block_guesser` choisi pour N+1 
 qui avait fini N était brûlé par sa continuation, parfois de 0 s (Opus M3). Une seule règle
 (« la manche logique du tour ») supprime toute la famille de cas particuliers (m1, m2, m3, m8).
 Le blob Fiesta n'a jamais été publié : aucune migration.
+
+## 2026-11-03 — Fiesta, fin d'epic : « Évolution des scores » compte les points, pas les mots
+
+**Ce qui change.** `HistoryEntry.pointsScored`, optionnel, écrit **seulement** quand il diffère du
+nombre de mots validés (×2). Absent = un point par mot (`HistoryEntry.points`). Le graphe
+« Évolution des scores » cumule `points` : son dernier point égale `Team.score`.
+
+**Pourquoi.** Le graphe ajoutait le nombre de mots : un tour à ×2 y valait moitié moins que dans
+le score affiché (Codex MAJOR-3). Ajout dans `guessItAll_gameState` approuvé par Florent
+(règle 7) : additif, optionnel, lecture tolérante. Une partie Classique n'écrit jamais la clé
+(points = mots), et un blob antérieur se relit à l'identique. Pas de migration ni de bump de
+schéma.
