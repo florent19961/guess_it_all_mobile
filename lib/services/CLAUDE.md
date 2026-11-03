@@ -14,6 +14,7 @@
 | `connectivity_service.dart` | `ConnectivityService` | Detection reseau (wifi/mobile/ethernet) via connectivity_plus |
 | `firebase_sync_service.dart` | `FirebaseSyncService` | Sync offline-first vers Firestore. Queue de games en attente, sync auto quand online |
 | `audio_service.dart` | `AudioService` | Sons : ding (mot devine), whoosh (mot passe), klaxon (fin de tour) via audioplayers |
+| `fiesta_ensemble_service.dart` | `FiestaEnsembleService` | Ensembles Fiesta (mode Personnalise) : `load` / `create` / `update` (sur place) / `duplicate` / `delete` / `markUsed`. **Borne 10 tenue par le service**, modifications serialisees (file interne), quarantaine du blob illisible ou venu du futur, ensemble illisible ignore seul |
 
 ## Cles SharedPreferences
 
@@ -27,3 +28,4 @@
 | `guessItAll_analytics_{gameId}` | Analytics | JSON GameAnalytics |
 | `guessItAll_pending_sync` | FirebaseSync | Liste gameIds en attente |
 | `guessItAll_word_history` | WordHistory | Map mot→seenCount |
+| `guessItAll_fiestaEnsembles` | FiestaEnsemble | Enveloppe versionnee `{ensembles: [{id, rules}], lastUsedId}` (story 2-3) |

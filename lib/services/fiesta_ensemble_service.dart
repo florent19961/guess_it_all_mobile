@@ -63,8 +63,10 @@ class FiestaEnsembleService {
   Future<FiestaEnsemble?> create(FiestaRules rules) => _mutate((store) {
         if (store.ensembles.length >= maxEnsembles) return null;
         final created = FiestaEnsemble(id: const Uuid().v4(), rules: rules);
-        return (EnsembleStore([...store.ensembles, created], store.lastUsedId),
-            created);
+        return (
+          EnsembleStore([...store.ensembles, created], store.lastUsedId),
+          created
+        );
       });
 
   /// Remplace SUR PLACE (même id, même position). `false` si l'id a disparu.
@@ -86,8 +88,7 @@ class FiestaEnsembleService {
         final source = store.ensembles[index];
         final copy = FiestaEnsemble(
           id: const Uuid().v4(),
-          rules: source.rules
-              .copyWith(ensembleName: copyName(source.name)),
+          rules: source.rules.copyWith(ensembleName: copyName(source.name)),
         );
         final list = [...store.ensembles]..insert(index + 1, copy);
         return (EnsembleStore(list, store.lastUsedId), copy);
@@ -156,8 +157,8 @@ class FiestaEnsembleService {
     final ensembles = entries is List
         ? entries
             .whereType<Map>()
-            .map((e) =>
-                FiestaEnsemble.tryFromJson(Map<String, dynamic>.from(e)))
+            .map(
+                (e) => FiestaEnsemble.tryFromJson(Map<String, dynamic>.from(e)))
             .whereType<FiestaEnsemble>()
             .toList()
         : <FiestaEnsemble>[];

@@ -46,7 +46,8 @@ void main() {
 
     test('blob venu du futur → quarantaine', () async {
       await givenPrefs({
-        key: jsonEncode({'schemaVersion': kCurrentSchemaVersion + 1, 'data': {}}),
+        key: jsonEncode(
+            {'schemaVersion': kCurrentSchemaVersion + 1, 'data': {}}),
       });
 
       expect((await service.load()).ensembles, isEmpty);
@@ -55,8 +56,8 @@ void main() {
 
     test('ensemble illisible ignoré seul, modificateur inconnu ignoré seul',
         () async {
-      final good = FiestaEnsemble(id: 'a', rules: defaultEnsembleRules('A'))
-          .toJson();
+      final good =
+          FiestaEnsemble(id: 'a', rules: defaultEnsembleRules('A')).toJson();
       (good['rules'] as Map)['modifiers']['from_the_future'] =
           (good['rules'] as Map)['modifiers']['no_pass'];
       await givenPrefs({

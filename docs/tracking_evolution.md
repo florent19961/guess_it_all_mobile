@@ -364,4 +364,22 @@ dans `GameProvider` (`pendingFiesta`), passé par `TeamsScreen` à `startGame`. 
   trivial, et ça garde le parcours Classique identique).
 - **Retour système Android** géré par `PopScope` sur les nouveaux écrans seulement : les écrans
   existants gardent leur comportement.
+## 2026-11-03 — Fiesta 2-3 : ensembles sur une clé versionnée, validation pure, liste et éditeur
+
+**Quoi.** Nouvelle clé `guessItAll_fiestaEnsembles` (`FiestaEnsembleService`), enveloppe
+`persisted_schema` dès la première écriture, `kCurrentSchemaVersion` inchangé (clé neuve). Un
+ensemble = `{id, rules}` : le nom vit dans `rules.ensembleName` (une seule source), donc
+l'ensemble choisi se gèle tel quel. `validateEnsemble(FiestaRules)` (pure) bloque
+l'enregistrement. Écrans « Mes ensembles » et éditeur.
+
+**Pourquoi.**
+- **Borne de 10 dans le service, modifications sérialisées** : les écritures sont asynchrones ;
+  sans file, deux taps rapides liraient 9 et passeraient la borne, ou l'un écraserait l'autre.
+- **Une lecture en panne fait échouer la modification** au lieu de réécrire une liste vide par
+  dessus des ensembles qu'on n'a pas pu lire ; `load()` seul rend vide sans effacer.
+- **Pas d'interrupteur de rattrapage** : la story demande 5 curseurs, `CatchUpRules` n'a pas de
+  champ « actif » ; tout à 0 = coupé. **Tirage pour tous d'un ensemble = `symmetric` ET
+  `drawCount > 0`** (interrupteur + compteur de la maquette) : 2-5 doit lire les deux.
+- `copyWith` posés en **extensions** dans `fiesta_ensemble.dart` : les types de 2-2 ne changent
+  pas.
 

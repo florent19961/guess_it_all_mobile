@@ -115,3 +115,18 @@ tous les curseurs à chaque partie.
 4. Éditeur : vider le nom, mettre le tirage à 0 avec un modificateur « tiré pour tous » : le
    bouton est grisé et le message s'affiche. Vérifier le clavier et la zone sûre (encoche iOS,
    barre de gestes Android).
+
+## Notes d'implémentation (lane B, 2026-11-03)
+
+- **Point d'entrée pour 2-4** : `FiestaEnsemblesScreen(onBack: …, onUse: (FiestaEnsemble e) …)`
+  (`lib/screens/fiesta_ensembles_screen.dart`). `onUse` reçoit l'ensemble déjà marqué
+  `lastUsedId` ; `e.rules` (mode `custom`, `ensembleName` = nom) se passe tel quel à
+  `startGame(fiesta: …)`. En attendant 2-4, la route `AppConstants.screenFiestaEnsembles` existe
+  dans `app.dart` (aucun bouton n'y mène) et les deux callbacks renvoient à l'accueil.
+  Contrat détaillé : `lib/screens/CLAUDE.md`.
+- **Recette device** : faute de bouton avant 2-4, elle se joue après 2-4 (ou en appelant la
+  route à la main).
+- **Interprétations** : rattrapage sans interrupteur (5 curseurs, tout à 0 = coupé) ; le tirage
+  pour tous d'un ensemble est actif si `symmetric` **et** `drawCount > 0` ; les modificateurs
+  « manche 3 seulement » ont leur manche verrouillée à 3 dans l'éditeur (comme la maquette) ;
+  un nouvel ensemble part du `mkSet` de la maquette (`defaultEnsembleRules`).

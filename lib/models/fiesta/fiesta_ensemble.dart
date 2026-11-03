@@ -82,3 +82,21 @@ extension FiestaRulesCopy on FiestaRules {
         carryOver: carryOver ?? this.carryOver,
       );
 }
+
+/// Copie modifiée d'un réglage, pour l'éditeur (même raison que ci-dessus).
+extension ModifierSettingCopy on ModifierSetting {
+  ModifierSetting copyWith({
+    bool? active,
+    ModifierArrival? arrival,
+    int? startRound,
+    int? fixedRound,
+    int? charges,
+  }) =>
+      ModifierSetting(
+        active: active ?? this.active,
+        arrival: arrival ?? this.arrival,
+        startRound: startRound ?? this.startRound,
+        fixedRound: fixedRound ?? this.fixedRound,
+        charges: charges ?? this.charges,
+      );
+}
