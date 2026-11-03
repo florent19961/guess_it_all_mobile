@@ -277,8 +277,9 @@ stories:
   2-11-deux-mots-a-la-fois:
     epic: epic-2-mode-fiesta
     title: "Deux mots à la fois (deux cartes, N mots expirés, analytics par carte)"
-    status: in-progress
+    status: done
     depends: [2-7-analytics-archive-recap, 2-9-mot-compte-double]
     spec: _bmad-output/specs/fiesta/2-11-deux-mots-a-la-fois.md
     note: >-
+      ✅ MERGÉ PR #19 (squash 583bd83, mode délégué). Revue Codex statique r1 READY (MINOR Q8 → test).
       R ①②⑤⑥ · GP + GS + AN + turn_resolution · Fable. Dernière : casse le modèle un mot courant / un mot expiré.
