@@ -410,3 +410,36 @@ le tour des badges sous le chrono, et `MalusReveal` révèle les malus au premie
   fixés. Q8 (« le tirage d'abord ») vise les offres et cadeaux, qui viennent après.
 - **`block_guesser` jamais tiré pour tous** : il vise un joueur choisi par les adversaires, une
   cible « toutes les équipes » n'a pas de sens.
+
+## 2026-11-03 — Fiesta 2-6 : une seule source pour la durée du tour, rattrapage, durée réelle
+
+**Quoi.** `lib/models/fiesta/turn_time.dart` (pur) : `composeTurnSeconds` rend la durée de
+départ d'un tour et son détail (base + rattrapage − malus du leader − 10 s × `minus_10s`,
+plancher 10 s ; une continuation garde exactement ses secondes reportées) ; `computeCatchUp`
+rend le rattrapage dû par équipe à la fin d'une manche (menée : `min(cap, k × écart avec la
+tête)`, leader : `−min(malCap, mal × écart avec la 2ᵉ)`, co-leaders tous en tête, égalité =
+rien). `GameProvider.turnTime` est la **seule** source de la durée : `startTurn` (aperçu) et
+`startTurnTimer` (chrono) la lisent tous deux. `nextRound` pose le dû dans
+`FiestaState.catchUpDue` ; `startTurnTimer` le consomme au premier tour non-continuation de
+l'équipe et écrit `GameState.turnAllottedSeconds`, sur lequel `timeSpent` se mesure désormais.
+Cartes « Temps du tour » (avant-tour, Fiesta) et « Rattrapage » (transition).
+
+**Pourquoi ces choix.**
+- **Le dû est stocké, pas dérivé de l'historique.** Dériver « consommé » de « l'équipe a une
+  entrée non-continuation dans la manche » rate un cas réel : fin de manche avec des mots
+  refusés → le temps est reporté (`turnBonusTime`) mais l'entrée n'est pas marquée continuation,
+  et l'équipe aurait perdu son rattrapage. Le stocker et l'effacer suit le principe de
+  `turnBonusTime` (consommé une fois, effacé). Champ **additif** dans `fiesta` seulement : le
+  blob Classique ne change pas de forme.
+- **Posé à `nextRound`, pas à `validateWords`.** Les scores ne bougent pas entre les deux, la
+  transition montre un aperçu recalculé (`catchUpPreview`, comme `nextRoundModifiers`), et le
+  retour arrière depuis la transition n'a rien à défaire.
+- **Continuation = `turnBonusTime` posé**, pas `pendingBonusTurnId` : c'est le champ qui fait
+  la durée du tour, et il couvre aussi le cas des mots refusés en fin de manche.
+- **`turnAllottedSeconds` écrit en Classique aussi** : le bug `timeSpent` (une continuation de
+  7 s finie à 2 s comptait 28 s) touche le mode Classique. Champ nullable, relu en `as int?` ;
+  absent sur une partie reprise d'une version antérieure → comportement d'avant.
+- **Plancher appliqué dans la composition** (`max(10, somme)`), sans cas spécial Classique : la
+  base est ≥ 20 s (`minTurnDuration`), donc la durée Classique est la base, seconde pour seconde.
+- **Co-leaders sans départage par l'ordre de jeu** (Q3) : `getTeamsSortedByScore` départage
+  pour l'affichage, pas pour le rattrapage — à égalité en tête, personne n'est « menée ».
