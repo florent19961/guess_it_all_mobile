@@ -1,0 +1,910 @@
+diff --git a/docs/ANALYTICS.md b/docs/ANALYTICS.md
+index e7e4c73..d530337 100644
+--- a/docs/ANALYTICS.md
++++ b/docs/ANALYTICS.md
+@@ -37,9 +37,23 @@ class WordEvent {
+   final String playerId;      // Joueur qui jouait
+   final String gameId;        // ID de la partie
+   final int? durationMs;      // Temps depuis affichage (null pour 'shown')
++  final List<String>? modifiers; // Fiesta (2-7) : ids actifs pour l'equipe qui joue
+ }
+ ```
+ 
++**`modifiers` (Fiesta, story 2-7)** : ids du catalogue (`minus_10s`, `no_pass`...) actifs pour
++l'equipe qui joue quand l'evenement a lieu. Cle **absente** (pas `null`) en Classique et sur les
++evenements ecrits avant 2-7 ; `[]` = Fiesta sans modificateur ce tour. Un id peut apparaitre deux
++fois (deux instances cumulees). Le provider les relit de l'etat **persiste** a chaque mot
++affiche : apres un kill, le mot suivant est de nouveau etiquete. `guessed`/`passed`/`expired` et
++`invalidated`/validation a posteriori reprennent ceux du dernier `shown` (contexte du tour, comme
++`round`/`turn`). Rien n'est exclu des stats : `computeStats` et la difficulte initiale du mot
++sont inchanges.
++
++⚠️ **Contrat « un seul mot a l'ecran »** (`AnalyticsService._recordEventWithDuration`) : un
++evenement sur un mot qui n'est pas le dernier `shown` est abandonne en silence. La story 2-11
++(deux mots) remplace le bloc « mot affiche » du service ; le contexte du tour ne bouge pas.
++
+ **Types d'evenements :**
+ 
+ | Type | Description |
+@@ -142,9 +156,18 @@ class GameAnalytics {
+ 
+   // Stats agregees (calculees a la fin)
+   final Map<String, WordStats> wordStats;
++
++  // Fiesta (story 2-7) : cles ABSENTES en Classique
++  final String? gameMode;                 // 'fiesta_auto' | 'fiesta_custom'
++  final Map<String, dynamic>? fiestaRules; // FiestaRules.toJson() gelees au lancement
+ }
+ ```
+ 
++**Firestore** : le document `games/<gameId>` est `GameAnalytics.toJson()` + `syncedAt`. Les champs
++Fiesta sont **additifs** : une partie Classique envoie exactement le document d'avant 2-7 ; les
++regles Firestore (`FIREBASE.md`) ne valident que `userId` et `gameId`. Absence de `gameMode` =
++Classique (ou partie d'une version anterieure).
++
+ ---
+ 
+ ## Services
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index fa9f93d..04d19d5 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -416,3 +416,31 @@ Cartes « Temps du tour » (avant-tour, Fiesta) et « Rattrapage » (transition)
+   base est ≥ 20 s (`minTurnDuration`), donc la durée Classique est la base, seconde pour seconde.
+ - **Co-leaders sans départage par l'ordre de jeu** (Q3) : `getTeamsSortedByScore` départage
+   pour l'affichage, pas pour le rattrapage — à égalité en tête, personne n'est « menée ».
++
++## 2026-11-03 — Fiesta 2-7 : modificateurs dans les analytics, l'archive et les résultats
++
++**Quoi.** `WordEvent.modifiers` (ids actifs pour l'équipe qui joue), `GameAnalytics.gameMode` /
++`fiestaRules`, `GameResult.mode` / `modifierRecap` : champs **additifs**, clé absente en Classique.
++Carte « Modificateurs de la partie » sur l'écran Résultats (Fiesta) : tirage par manche,
++rattrapages. Les sections 1 parmi 3, bonus utilisés et joueurs bloqués arrivent avec leurs
++stories.
++
++**Pourquoi ces choix.**
++- **Clé absente, pas `null`, en Classique** : le blob `guessItAll_analytics_*` (non enveloppé),
++  l'historique et le document Firestore d'une partie Classique sont ceux d'avant. Lecture
++  tolérante (`is List` / `is String` / `is Map`), aucun cast dur ajouté. `kCurrentSchemaVersion`
++  inchangé.
++- **Modificateurs = contexte du TOUR, pas du mot** : mémorisés à côté de `_lastRound`, jamais
++  remis à zéro par `_recordEventWithDuration`, donc `invalidated` (vérification, après le tour)
++  garde l'étiquette. Le provider les relit de l'état persisté à chaque mot : après un kill, le mot
++  suivant est ré-étiqueté. Le bloc « mot affiché » du service est isolé et son contrat (un seul mot
++  à l'écran) écrit : 2-11 le remplace sans toucher au reste.
++- **Liste vide ≠ absente** : `[]` = Fiesta sans modificateur ce tour, distinguable du Classique
++  pour le recalibrage.
++- **Récap recalculé, pas journalisé** : le tirage vient de la graine `(gameId, manche)` (comme
++  `nextRoundModifiers`), le rattrapage des scores cumulés en fin de manche (= ce que la transition
++  a montré). Pas de `HistoryEntry.modifiers` ni d'autre champ dans `GameState` : rien à persister,
++  aucune nouvelle forme sur la clé de partie en cours. Limite assumée : le récap montre le
++  rattrapage **accordé**, même si l'équipe n'a pas joué dans la manche suivante.
++- **Archivé tel qu'affiché** (`ModifierRecapLine` = titre + détail formés), comme les scores de
++  `GameResult`.
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index cba738c..007d272 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -10,8 +10,9 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `team.dart` | `Team` | Equipe (id, name, playerIds, score, scoreByRound[3]) |
+ | `game_settings.dart` | `GameSettings` | Config partie : nb equipes/joueurs, wordChoice, totalWords, turnDuration, passPenalty, categories, difficultes |
+ | `game_state.dart` | `GameState`, `HistoryEntry` | Etat complet de la partie en cours : ecran, round, tour, pools de mots, scores, timestamps, snapshots de validation. `turnAllottedSeconds` = durée de **départ** réelle du tour (continuation, rattrapage, malus), base de `HistoryEntry.timeSpent` ; nul = partie d'une version antérieure → `turnDuration` |
+-| `game_analytics.dart` | `GameAnalytics`, `DeviceInfo` | Analytics completes d'une partie pour Firebase (gameId, events, wordMetadata, wordStats) |
+-| `word_event.dart` | `WordEvent`, `WordEventType`, `PassEvent` | Evenement atomique : shown/guessed/passed/expired/invalidated avec contexte (round, turn, team, player) |
++| `game_analytics.dart` | `GameAnalytics`, `DeviceInfo` | Analytics completes d'une partie pour Firebase (gameId, events, wordMetadata, wordStats). Fiesta : `gameMode`, `fiestaRules` (clés absentes en Classique ; recopiés par `copyWith`, sinon perdus au 1er event) |
++| `word_event.dart` | `WordEvent`, `WordEventType`, `PassEvent` | Evenement atomique : shown/guessed/passed/expired/invalidated avec contexte (round, turn, team, player). Fiesta : `modifiers` (clé absente en Classique) |
++| `game_result.dart` | `GameResult`, `TeamResult`, `ModifierRecapLine` | Partie archivée pour l'historique. Fiesta : `mode`, `modifierRecap` (clés absentes en Classique) |
+ | `word_stats.dart` | `WordMetadata`, `WordRoundStats`, `WordStats` | Metadonnees mot (category, difficulty, language), stats par manche et agregees |
+ | `category_metadata.dart` | `CategoryMetadata` | Metadonnees categorie multilingue (id, icon, noms, locales) |
+ | `fiesta/modifier_catalog.dart` | `ModifierDef`, `kModifierCatalog`, `kModifierIncompatibilities`, enums `ModifierNature/Scope/Target` | Catalogue Fiesta V1 (11 ids **figés**, du code, jamais persisté), `modifierById`, `areCompatible` |
+@@ -19,6 +20,7 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, `CatchUpRules`, enums `FiestaMode`, `ModifierArrival` | Configuration Fiesta **immuable** (Auto / Personnalisé, réglage par modificateur, rattrapage, tirage, règles communes). `CatchUpRules.auto` = constantes du mode Auto. `tryFromJson` : structure illisible → `null`, réglage d'id inconnu ignoré seul |
+ | `fiesta/symmetric_draw.dart` | fonctions pures | Modificateurs d'une manche pour toutes les équipes : `fixedForRound` puis `drawSymmetric`, réunis par `roundModifiers(rules, gameId:, round:)`. Graine `drawSeed(gameId, round)` (FNV-1a, stable entre exécutions) |
+ | `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn, catchUpDue}`. `turn` est vide pour l'instant (compteurs des stories d'effets). `catchUpDue` : id d'équipe → secondes dues (négatives = malus du leader), posé par `nextRound`, consommé au premier tour non-continuation |
++| `fiesta/modifier_recap.dart` | fonctions pures | `fiestaModeId` (`fiesta_auto`/`fiesta_custom`), `fiestaModeLabel`, `buildModifierRecap` : récap « Modificateurs de la partie » **recalculé** (tirage par graine, rattrapage sur les scores cumulés par manche), rien de persisté pendant la partie |
+ | `fiesta/turn_time.dart` | fonctions pures | `composeTurnSeconds` (base + rattrapage − malus du leader − 10 s × `minus_10s`, plancher `kTurnFloorSeconds` = 10 ; continuation = ses secondes, sans modificateur) ; `computeCatchUp` (k × écart avec la tête, plafonds, co-leaders tous en tête, égalité = rien) ; `effectiveCatchUp` (Auto → auto-calibrage, Personnalisé → curseurs) |
+ 
+ ## Fiesta — invariants (epic-2)
+diff --git a/lib/models/fiesta/modifier_recap.dart b/lib/models/fiesta/modifier_recap.dart
+new file mode 100644
+index 0000000..3006918
+--- /dev/null
++++ b/lib/models/fiesta/modifier_recap.dart
+@@ -0,0 +1,75 @@
++import '../../utils/constants.dart';
++import '../game_result.dart';
++import '../team.dart';
++import 'fiesta_rules.dart';
++import 'modifier_catalog.dart';
++import 'symmetric_draw.dart';
++import 'turn_time.dart';
++
++/// Id du mode Fiesta pour les analytics et l'historique (story 2-7).
++String fiestaModeId(FiestaRules rules) =>
++    rules.mode == FiestaMode.auto ? 'fiesta_auto' : 'fiesta_custom';
++
++/// Libellé du mode pour la carte des résultats (maquette `results`).
++String fiestaModeLabel(FiestaRules rules) => rules.mode == FiestaMode.auto
++    ? 'Fiesta · Auto'
++    : 'Fiesta · ${rules.ensembleName ?? 'Personnalisé'}';
++
++/// Récap « Modificateurs de la partie » en fin de partie : tirage par manche,
++/// rattrapages.
++///
++/// RECALCULÉ, pas relu d'un journal : le tirage vient de la graine
++/// `(gameId, manche)` (comme `nextRoundModifiers`) et le rattrapage des
++/// scores cumulés en fin de manche, soit ce que la transition a montré. Rien à
++/// persister pendant la partie. Les sections choix 1 parmi 3, bonus utilisés
++/// et joueurs bloqués arrivent avec les stories qui les remplissent.
++List<ModifierRecapLine> buildModifierRecap({
++  required FiestaRules rules,
++  required String gameId,
++  required List<Team> teams,
++  required int roundsPlayed,
++}) {
++  final lines = <ModifierRecapLine>[];
++
++  for (var round = 1; round <= roundsPlayed; round++) {
++    final names = roundModifiers(rules, gameId: gameId, round: round)
++        .map((m) => modifierById(m.catalogId)?.name ?? m.catalogId)
++        .toList();
++    if (names.isEmpty) continue;
++    lines.add(ModifierRecapLine(
++      title: 'Manche $round · ${AppConstants.roundModes[round] ?? ''}',
++      detail: names.join(' + '),
++    ));
++  }
++
++  final catchUp = effectiveCatchUp(rules);
++  if (catchUp != null) {
++    final byTeam = <String, List<String>>{};
++    // Après M1 et après M2 seulement, et seulement si la manche suivante a
++    // été jouée.
++    for (var round = 1; round <= 2 && round < roundsPlayed; round++) {
++      final scores = {
++        for (final t in teams)
++          t.id: t.scoreByRound.take(round).fold(0, (a, b) => a + b),
++      };
++      for (final e
++          in computeCatchUp(rules: catchUp, round: round, scores: scores)) {
++        final sign = e.seconds < 0 ? '−' : '+';
++        byTeam
++            .putIfAbsent(e.teamId, () => [])
++            .add('$sign${e.seconds.abs()} s (M${round + 1})');
++      }
++    }
++    if (byTeam.isNotEmpty) {
++      lines.add(ModifierRecapLine(
++        title: 'Rattrapage',
++        detail: teams
++            .where((t) => byTeam.containsKey(t.id))
++            .map((t) => '${t.name} ${byTeam[t.id]!.join(', ')}')
++            .join(' · '),
++      ));
++    }
++  }
++
++  return lines;
++}
+diff --git a/lib/models/game_analytics.dart b/lib/models/game_analytics.dart
+index 1a19196..24b6e01 100644
+--- a/lib/models/game_analytics.dart
++++ b/lib/models/game_analytics.dart
+@@ -60,6 +60,15 @@ class GameAnalytics {
+   final List<String> selectedCategories;
+   final List<int> selectedDifficultyLevels;
+ 
++  /// Mode de la partie (story 2-7) : `'fiesta_auto'` ou `'fiesta_custom'`.
++  /// `null` = Classique, ou partie écrite par une version antérieure : la clé
++  /// est alors ABSENTE du JSON (et du document Firestore), pas `null`.
++  final String? gameMode;
++
++  /// Règles Fiesta gelées au lancement (`FiestaRules.toJson()`), pour
++  /// recalibrer les poids. `null` = Classique.
++  final Map<String, dynamic>? fiestaRules;
++
+   // Événements bruts (pour replay/debug/recalcul)
+   final List<WordEvent> events;
+ 
+@@ -84,6 +93,8 @@ class GameAnalytics {
+     required this.turnDuration,
+     required this.selectedCategories,
+     required this.selectedDifficultyLevels,
++    this.gameMode,
++    this.fiestaRules,
+     required this.events,
+     required this.wordMetadata,
+     required this.wordStats,
+@@ -101,6 +112,8 @@ class GameAnalytics {
+     required List<String> selectedCategories,
+     required List<int> selectedDifficultyLevels,
+     required Map<String, WordMetadata> wordMetadata,
++    String? gameMode,
++    Map<String, dynamic>? fiestaRules,
+   }) {
+     return GameAnalytics(
+       gameId: gameId,
+@@ -117,6 +130,8 @@ class GameAnalytics {
+       turnDuration: turnDuration,
+       selectedCategories: selectedCategories,
+       selectedDifficultyLevels: selectedDifficultyLevels,
++      gameMode: gameMode,
++      fiestaRules: fiestaRules,
+       events: [],
+       wordMetadata: wordMetadata,
+       wordStats: {},
+@@ -233,6 +248,10 @@ class GameAnalytics {
+       selectedCategories: selectedCategories ?? this.selectedCategories,
+       selectedDifficultyLevels:
+           selectedDifficultyLevels ?? this.selectedDifficultyLevels,
++      // 🔴 Recopiés sans paramètre : `addEvent` passe par `copyWith`, un champ
++      // oublié ici disparaîtrait en silence au premier événement.
++      gameMode: gameMode,
++      fiestaRules: fiestaRules,
+       events: events ?? this.events,
+       wordMetadata: wordMetadata ?? this.wordMetadata,
+       wordStats: wordStats ?? this.wordStats,
+@@ -254,6 +273,9 @@ class GameAnalytics {
+         'turnDuration': turnDuration,
+         'selectedCategories': selectedCategories,
+         'selectedDifficultyLevels': selectedDifficultyLevels,
++        // Additifs : une partie Classique écrit exactement l'ancienne forme.
++        if (gameMode != null) 'gameMode': gameMode,
++        if (fiestaRules != null) 'fiestaRules': fiestaRules,
+         'events': events.map((e) => e.toJson()).toList(),
+         'wordMetadata': wordMetadata.map((k, v) => MapEntry(k, v.toJson())),
+         'wordStats': wordStats.map((k, v) => MapEntry(k, v.toJson())),
+@@ -277,6 +299,13 @@ class GameAnalytics {
+         selectedCategories: (json['selectedCategories'] as List).cast<String>(),
+         selectedDifficultyLevels:
+             (json['selectedDifficultyLevels'] as List).cast<int>(),
++        // Lecture tolérante, sans cast dur : un champ additif illisible ne doit
++        // pas rendre la partie entière illisible.
++        gameMode:
++            json['gameMode'] is String ? json['gameMode'] as String : null,
++        fiestaRules: json['fiestaRules'] is Map
++            ? Map<String, dynamic>.from(json['fiestaRules'] as Map)
++            : null,
+         // Les events illisibles sont ABANDONNÉS un par un, jamais propagés en
+         // exception : un seul event d'un type inconnu rendait auparavant la
+         // partie archivée entière illisible — et, faute de quarantaine, l'échec
+diff --git a/lib/models/game_result.dart b/lib/models/game_result.dart
+index aebc428..99239b4 100644
+--- a/lib/models/game_result.dart
++++ b/lib/models/game_result.dart
+@@ -51,6 +51,25 @@ class TeamResult {
+       );
+ }
+ 
++/// Une ligne du récap « Modificateurs de la partie » (story 2-7), archivée
++/// TELLE QU'AFFICHÉE : titre et détail déjà formés.
++@immutable
++class ModifierRecapLine {
++  final String title;
++  final String detail;
++
++  const ModifierRecapLine({required this.title, required this.detail});
++
++  Map<String, dynamic> toJson() => {'title': title, 'detail': detail};
++
++  static ModifierRecapLine? tryFromJson(Map<String, dynamic> json) {
++    final title = json['title'];
++    final detail = json['detail'];
++    if (title is! String || detail is! String) return null;
++    return ModifierRecapLine(title: title, detail: detail);
++  }
++}
++
+ /// Une partie terminée, archivée pour l'historique.
+ ///
+ /// 🔴 **Cette donnée n'existait pas.** `GameAnalytics` archivait la
+@@ -73,6 +92,13 @@ class GameResult {
+   final int turnDuration;
+   final int roundsPlayed;
+ 
++  /// `'fiesta_auto'` / `'fiesta_custom'` (story 2-7). `null` = Classique, ou
++  /// partie archivée par une version antérieure : clé ABSENTE du JSON.
++  final String? mode;
++
++  /// Récap des modificateurs, `null` en Classique (clé absente).
++  final List<ModifierRecapLine>? modifierRecap;
++
+   const GameResult({
+     required this.gameId,
+     required this.playedAt,
+@@ -80,6 +106,8 @@ class GameResult {
+     required this.totalWords,
+     required this.turnDuration,
+     required this.roundsPlayed,
++    this.mode,
++    this.modifierRecap,
+   });
+ 
+   /// Équipes triées par score décroissant.
+@@ -111,6 +139,10 @@ class GameResult {
+         'totalWords': totalWords,
+         'turnDuration': turnDuration,
+         'roundsPlayed': roundsPlayed,
++        // Additifs : une partie Classique archive exactement l'ancienne forme.
++        if (mode != null) 'mode': mode,
++        if (modifierRecap != null)
++          'modifierRecap': modifierRecap!.map((l) => l.toJson()).toList(),
+       };
+ 
+   /// Rend `null` si l'entrée est inexploitable, plutôt que de lever : une
+@@ -141,6 +173,14 @@ class GameResult {
+       totalWords: json['totalWords'] as int? ?? 0,
+       turnDuration: json['turnDuration'] as int? ?? 0,
+       roundsPlayed: json['roundsPlayed'] as int? ?? 0,
++      mode: json['mode'] is String ? json['mode'] as String : null,
++      modifierRecap: json['modifierRecap'] is List
++          ? (json['modifierRecap'] as List<dynamic>)
++              .whereType<Map<String, dynamic>>()
++              .map(ModifierRecapLine.tryFromJson)
++              .whereType<ModifierRecapLine>()
++              .toList()
++          : null,
+     );
+   }
+ }
+diff --git a/lib/models/word_event.dart b/lib/models/word_event.dart
+index ac620a6..1b85236 100644
+--- a/lib/models/word_event.dart
++++ b/lib/models/word_event.dart
+@@ -25,6 +25,12 @@ class WordEvent {
+   final String gameId;
+   final int? durationMs; // Temps depuis 'shown' (null pour 'shown')
+ 
++  /// Ids du catalogue Fiesta actifs pour l'équipe qui joue, au moment de
++  /// l'événement (story 2-7). `null` = partie Classique, ou événement écrit
++  /// par une version antérieure : la clé est alors ABSENTE du JSON, pas
++  /// `null`. Une liste vide = Fiesta sans modificateur actif ce tour.
++  final List<String>? modifiers;
++
+   WordEvent({
+     String? eventId,
+     required this.word,
+@@ -36,6 +42,7 @@ class WordEvent {
+     required this.playerId,
+     required this.gameId,
+     this.durationMs,
++    this.modifiers,
+   }) : eventId = eventId ?? const Uuid().v4();
+ 
+   /// Factory pour créer un événement 'shown'
+@@ -46,6 +53,7 @@ class WordEvent {
+     required String teamId,
+     required String playerId,
+     required String gameId,
++    List<String>? modifiers,
+   }) {
+     return WordEvent(
+       word: word,
+@@ -57,6 +65,7 @@ class WordEvent {
+       playerId: playerId,
+       gameId: gameId,
+       durationMs: null,
++      modifiers: modifiers,
+     );
+   }
+ 
+@@ -70,6 +79,7 @@ class WordEvent {
+     required String playerId,
+     required String gameId,
+     required int shownTimestamp,
++    List<String>? modifiers,
+   }) {
+     final now = DateTime.now().millisecondsSinceEpoch;
+     return WordEvent(
+@@ -82,6 +92,7 @@ class WordEvent {
+       playerId: playerId,
+       gameId: gameId,
+       durationMs: now - shownTimestamp,
++      modifiers: modifiers,
+     );
+   }
+ 
+@@ -96,6 +107,8 @@ class WordEvent {
+         'playerId': playerId,
+         'gameId': gameId,
+         'durationMs': durationMs,
++        // Additif : une partie Classique écrit exactement l'ancienne forme.
++        if (modifiers != null) 'modifiers': modifiers,
+       };
+ 
+   factory WordEvent.fromJson(Map<String, dynamic> json) {
+@@ -143,6 +156,11 @@ class WordEvent {
+       playerId: json['playerId'] as String? ?? '',
+       gameId: json['gameId'] as String? ?? '',
+       durationMs: json['durationMs'] as int?,
++      // `whereType` et non `cast` : un cast est paresseux et lèverait à la
++      // lecture, pas ici. Autre chose qu'une liste = absent.
++      modifiers: json['modifiers'] is List
++          ? (json['modifiers'] as List).whereType<String>().toList()
++          : null,
+     );
+   }
+ 
+diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
+index c0726ec..09cd9f4 100644
+--- a/lib/providers/game_provider.dart
++++ b/lib/providers/game_provider.dart
+@@ -8,6 +8,7 @@ import '../models/fiesta/fiesta_rules.dart';
+ import '../models/fiesta/fiesta_state.dart';
+ import '../models/fiesta/modifier_catalog.dart';
+ import '../models/fiesta/modifier_instance.dart';
++import '../models/fiesta/modifier_recap.dart';
+ import '../models/fiesta/symmetric_draw.dart';
+ import '../models/fiesta/turn_time.dart';
+ import '../models/game_settings.dart';
+@@ -515,6 +516,9 @@ class GameProvider extends ChangeNotifier {
+       selectedCategories: _settings.selectedCategories,
+       selectedDifficultyLevels: _settings.selectedDifficultyLevels,
+       wordMetadata: wordMetadata,
++      // `_game.fiesta` est déjà gelé par `startGame` ; nul en Classique.
++      gameMode: _game.fiesta == null ? null : fiestaModeId(_game.fiesta!.rules),
++      fiestaRules: _game.fiesta?.rules.toJson(),
+     );
+   }
+ 
+@@ -623,6 +627,11 @@ class GameProvider extends ChangeNotifier {
+       turn: _game.currentTurn,
+       teamId: currentTeam?.id ?? '',
+       playerId: currentPlayer?.id ?? '',
++      // Relus de l'état PERSISTÉ à chaque mot (survit à un kill). Nul en
++      // Classique : l'événement garde alors exactement l'ancienne forme.
++      modifiers: isFiesta
++          ? currentTeamModifiers.map((m) => m.catalogId).toList()
++          : null,
+     );
+   }
+ 
+@@ -1167,6 +1176,19 @@ class GameProvider extends ChangeNotifier {
+         .toList();
+   }
+ 
++  /// Récap « Modificateurs de la partie » (écran Résultats, archive). Vide en
++  /// Classique.
++  List<ModifierRecapLine> get modifierRecap {
++    final fiesta = _game.fiesta;
++    if (fiesta == null) return const [];
++    return buildModifierRecap(
++      rules: fiesta.rules,
++      gameId: _game.gameId ?? '',
++      teams: _teams,
++      roundsPlayed: _game.currentRound,
++    );
++  }
++
+   /// Archive la partie terminée pour l'écran d'historique.
+   ///
+   /// On enregistre le résultat **tel qu'il a été montré aux joueurs**, pas une
+@@ -1199,6 +1221,8 @@ class GameProvider extends ChangeNotifier {
+       totalWords: _game.allWords.length,
+       turnDuration: _settings.turnDuration,
+       roundsPlayed: _game.currentRound,
++      mode: _game.fiesta == null ? null : fiestaModeId(_game.fiesta!.rules),
++      modifierRecap: _game.fiesta == null ? null : modifierRecap,
+     );
+ 
+     unawaited(_history.record(result));
+diff --git a/lib/screens/CLAUDE.md b/lib/screens/CLAUDE.md
+index 175498a..8053ed5 100644
+--- a/lib/screens/CLAUDE.md
++++ b/lib/screens/CLAUDE.md
+@@ -27,7 +27,7 @@ SettingsScreen → (CategoriesScreen) → PlayersScreen → (WordsScreen) → Te
+ | `turn_screen.dart` | Jeu actif : timer, mot courant (auto-size), boutons Passer/Valider, pause, sons, haptic |
+ | `verification_screen.dart` | Validation post-tour : toggle valid/invalide par mot, sauvegarde snapshot |
+ | `transition_screen.dart` | Entre manches : scores, medailles, indicateur bonus |
+-| `results_screen.dart` | Podium anime, tableau scores par manche, boutons Rejouer/Stats |
++| `results_screen.dart` | Podium anime, tableau scores par manche, carte « Modificateurs de la partie » (Fiesta seulement), boutons Rejouer/Stats |
+ | `stats_screen.dart` | Stats detaillees : graphique evolution scores (fl_chart), top joueurs, temps moyen |
+ | `rules_screen.dart` | Regles completes du jeu (3 manches) |
+ | `game_mode_screen.dart` | Nouvelle partie : Classique ou Fiesta |
+diff --git a/lib/screens/results_screen.dart b/lib/screens/results_screen.dart
+index cdc164e..4196717 100644
+--- a/lib/screens/results_screen.dart
++++ b/lib/screens/results_screen.dart
+@@ -8,6 +8,8 @@ import '../widgets/common/game_dialogs.dart';
+ import '../widgets/common/home_button.dart';
+ import '../widgets/common/back_button.dart';
+ import '../widgets/effects/shooting_stars.dart';
++import '../widgets/fiesta/fiesta_setup_widgets.dart';
++import '../models/fiesta/modifier_recap.dart';
+ 
+ class ResultsScreen extends StatelessWidget {
+   const ResultsScreen({super.key});
+@@ -40,6 +42,12 @@ class ResultsScreen extends StatelessWidget {
+                   // Detailed scores
+                   _buildDetailedScores(context, provider, sortedTeams),
+ 
++                  // Fiesta seulement (maquette `results`).
++                  if (provider.isFiesta) ...[
++                    const SizedBox(height: 16),
++                    _buildModifierRecap(provider),
++                  ],
++
+                   const SizedBox(height: 32),
+ 
+                   // Action buttons
+@@ -341,6 +349,29 @@ class ResultsScreen extends StatelessWidget {
+     );
+   }
+ 
++  Widget _buildModifierRecap(GameProvider provider) {
++    final rules = provider.pendingFiesta;
++    final lines = provider.modifierRecap;
++    return FiestaCard(
++      title: 'Modificateurs de la partie',
++      trailing: rules == null
++          ? null
++          : Text(
++              fiestaModeLabel(rules),
++              style: AppTextStyles.bodySmall.copyWith(
++                fontSize: 11,
++                color: AppColors.gray400,
++              ),
++            ),
++      children: [
++        if (lines.isEmpty)
++          const FiestaHint('Aucun modificateur pendant cette partie.'),
++        for (final line in lines)
++          FiestaLine(label: line.title, detail: line.detail),
++      ],
++    );
++  }
++
+   void _showTeamMembersDialog(BuildContext context, dynamic team,
+       GameProvider provider, Color teamColor) {
+     if (team == null) return;
+diff --git a/lib/services/CLAUDE.md b/lib/services/CLAUDE.md
+index babe51c..202459a 100644
+--- a/lib/services/CLAUDE.md
++++ b/lib/services/CLAUDE.md
+@@ -7,7 +7,7 @@
+ | Service | Classe | Role |
+ |---------|--------|------|
+ | `storage_service.dart` | `StorageService` | Wrapper SharedPreferences : persistance settings, gameSession, gameState |
+-| `analytics_service.dart` | `AnalyticsService` | Tracking temps reel WordEvents, calcul stats, persistance locale. Retention 50 parties. Recovery des parties orphelines (crash) |
++| `analytics_service.dart` | `AnalyticsService` | Tracking temps reel WordEvents, calcul stats, persistance locale. Retention 50 parties. Recovery des parties orphelines (crash). Fiesta : `modifiers` par event (contexte du tour), contrat « un seul mot à l'écran » documenté pour 2-11 (`docs/ANALYTICS.md`) |
+ | `user_service.dart` | `UserService` | userId persistant (UUID v4) + DeviceInfo (appVersion, platform, locale, deviceModel) |
+ | `word_history_service.dart` | `WordHistoryService` | Historique mots joues (mot→seenCount). Priorise les mots jamais vus via `selectWordsByPriority()` |
+ | `word_loader_service.dart` | `WordLoaderService` | Charge categories depuis JSON (assets/translations/). Cache en memoire. Methodes : `loadCategory()`, `getCategoriesMetadata()` |
+diff --git a/lib/services/analytics_service.dart b/lib/services/analytics_service.dart
+index d227671..2df11b0 100644
+--- a/lib/services/analytics_service.dart
++++ b/lib/services/analytics_service.dart
+@@ -29,12 +29,21 @@ class AnalyticsService {
+ 
+   // État du tracking
+   GameAnalytics? _currentGame;
++
++  // Mot affiché : vit le temps d'UN mot, remis à zéro par
++  // `_recordEventWithDuration`. 🔴 Contrat « un seul mot à l'écran » : voir
++  // `_recordEventWithDuration`. Story 2-11 (deux mots) remplace CE bloc seul.
+   int? _lastShownTimestamp;
+   String? _lastShownWord;
++
++  // Contexte du tour : survit aux mots, relu par `onWordInvalidated` et
++  // `onWordValidatedAsGuessed` (vérification, après le tour). Ne dépend pas du
++  // nombre de mots à l'écran.
+   int? _lastRound;
+   int? _lastTurn;
+   String? _lastTeamId;
+   String? _lastPlayerId;
++  List<String>? _lastModifiers;
+ 
+   /// Vérifie si une partie est en cours de tracking
+   bool get isTracking => _currentGame != null;
+@@ -54,6 +63,8 @@ class AnalyticsService {
+     required List<String> selectedCategories,
+     required List<int> selectedDifficultyLevels,
+     required Map<String, WordMetadata> wordMetadata,
++    String? gameMode,
++    Map<String, dynamic>? fiestaRules,
+   }) async {
+     final userService = UserService();
+     final userId = await userService.getUserId();
+@@ -70,6 +81,8 @@ class AnalyticsService {
+       selectedCategories: selectedCategories,
+       selectedDifficultyLevels: selectedDifficultyLevels,
+       wordMetadata: wordMetadata,
++      gameMode: gameMode,
++      fiestaRules: fiestaRules,
+     );
+ 
+     _clearTrackingState();
+@@ -142,17 +155,23 @@ class AnalyticsService {
+     _lastTurn = null;
+     _lastTeamId = null;
+     _lastPlayerId = null;
++    _lastModifiers = null;
+   }
+ 
+   // ========== TRACKING EN TEMPS RÉEL ==========
+ 
+-  /// Appelé quand un nouveau mot est affiché à un joueur
++  /// Appelé quand un nouveau mot est affiché à un joueur.
++  ///
++  /// [modifiers] : ids Fiesta actifs pour l'équipe qui joue, `null` en
++  /// Classique. L'appelant les relit à CHAQUE mot depuis l'état persisté de la
++  /// partie : après un kill, le mot suivant est donc de nouveau étiqueté.
+   void onWordShown({
+     required String word,
+     required int round,
+     required int turn,
+     required String teamId,
+     required String playerId,
++    List<String>? modifiers,
+   }) {
+     if (_currentGame == null) return;
+ 
+@@ -163,6 +182,7 @@ class AnalyticsService {
+     _lastTurn = turn;
+     _lastTeamId = teamId;
+     _lastPlayerId = playerId;
++    _lastModifiers = modifiers;
+ 
+     // Enregistrer l'événement 'shown'
+     final event = WordEvent.shown(
+@@ -172,6 +192,7 @@ class AnalyticsService {
+       teamId: teamId,
+       playerId: playerId,
+       gameId: _currentGame!.gameId,
++      modifiers: modifiers,
+     );
+ 
+     _currentGame = _currentGame!.addEvent(event);
+@@ -207,6 +228,7 @@ class AnalyticsService {
+       playerId: _lastPlayerId ?? '',
+       gameId: _currentGame!.gameId,
+       durationMs: null,
++      modifiers: _lastModifiers,
+     );
+ 
+     _currentGame = _currentGame!.addEvent(event);
+@@ -227,12 +249,19 @@ class AnalyticsService {
+       playerId: _lastPlayerId ?? '',
+       gameId: _currentGame!.gameId,
+       durationMs: null, // Pas de durée car validation a posteriori
++      modifiers: _lastModifiers,
+     );
+ 
+     _currentGame = _currentGame!.addEvent(event);
+   }
+ 
+-  /// Enregistre un événement avec calcul de durée
++  /// Enregistre un événement avec calcul de durée.
++  ///
++  /// 🔴 Contrat « un seul mot à l'écran » : un événement sur un mot qui n'est
++  /// PAS le dernier affiché est abandonné en silence (pas de `shown`, donc pas
++  /// de durée). Vrai tant qu'un seul mot est affiché ; la story 2-11 (deux
++  /// mots) doit remplacer le bloc « mot affiché » par un suivi par mot. Le
++  /// contexte du tour (dont `_lastModifiers`) n'a pas à bouger.
+   void _recordEventWithDuration(String word, WordEventType eventType) {
+     if (_currentGame == null) return;
+     if (_lastShownTimestamp == null || word != _lastShownWord) return;
+@@ -246,11 +275,13 @@ class AnalyticsService {
+       playerId: _lastPlayerId ?? '',
+       gameId: _currentGame!.gameId,
+       shownTimestamp: _lastShownTimestamp!,
++      modifiers: _lastModifiers,
+     );
+ 
+     _currentGame = _currentGame!.addEvent(event);
+ 
+-    // Reset après l'événement (sauf pour 'shown' qui reste en mémoire)
++    // Reset du mot seulement : le contexte du tour sert encore à la
++    // vérification (`onWordInvalidated`).
+     _lastShownTimestamp = null;
+     _lastShownWord = null;
+   }
+diff --git a/test/services/fiesta_analytics_test.dart b/test/services/fiesta_analytics_test.dart
+new file mode 100644
+index 0000000..e778473
+--- /dev/null
++++ b/test/services/fiesta_analytics_test.dart
+@@ -0,0 +1,203 @@
++import 'dart:convert';
++
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/game_result.dart';
++import 'package:guess_it_all_mobile/models/word_event.dart';
++import 'package:guess_it_all_mobile/models/word_stats.dart';
++import 'package:guess_it_all_mobile/services/analytics_service.dart';
++
++import '../helpers/test_prefs.dart';
++
++/// Story 2-7 : les modificateurs Fiesta dans les analytics et l'historique.
++/// Règle 7 : tout ce que la version en store a écrit se relit, et une partie
++/// Classique écrit exactement l'ancienne forme (le document Firestore est
++/// `GameAnalytics.toJson()` tel quel).
++
++const _newAnalyticsKeys = ['gameMode', 'fiestaRules'];
++
++Future<void> _start(AnalyticsService a, String id, {bool fiesta = false}) =>
++    a.startGame(
++      gameId: id,
++      numberOfPlayers: 4,
++      numberOfTeams: 2,
++      totalWords: 2,
++      turnDuration: 30,
++      selectedCategories: const ['nature'],
++      selectedDifficultyLevels: const [1],
++      wordMetadata: const {
++        'chat': WordMetadata(word: 'chat', categoryId: 'nature', difficulty: 1),
++        'chien':
++            WordMetadata(word: 'chien', categoryId: 'nature', difficulty: 1),
++      },
++      gameMode: fiesta ? 'fiesta_auto' : null,
++      fiestaRules: fiesta ? const {'mode': 'auto'} : null,
++    );
++
++void _show(AnalyticsService a, String word, {List<String>? modifiers}) =>
++    a.onWordShown(
++      word: word,
++      round: 2,
++      turn: 3,
++      teamId: 't1',
++      playerId: 'p1',
++      modifiers: modifiers,
++    );
++
++/// Blob `guessItAll_analytics_<id>` tel que l'écrit la version en store :
++/// ni `gameMode`, ni `fiestaRules`, ni `modifiers` sur les events. Partie non
++/// terminée (orpheline).
++Map<String, dynamic> _storeBlob(String id) => {
++      'gameId': id,
++      'userId': 'u',
++      'appVersion': '1.0.0',
++      'platform': 'android',
++      'locale': 'fr',
++      'deviceModel': null,
++      'startedAt': '2026-10-01T20:00:00.000',
++      'endedAt': null,
++      'numberOfPlayers': 4,
++      'numberOfTeams': 2,
++      'totalWords': 1,
++      'turnDuration': 30,
++      'selectedCategories': ['nature'],
++      'selectedDifficultyLevels': [1],
++      'events': [
++        for (final type in ['shown', 'guessed'])
++          {
++            'eventId': 'e-$type',
++            'word': 'chat',
++            'eventType': type,
++            'timestamp': 1000,
++            'round': 1,
++            'turn': 1,
++            'teamId': 't1',
++            'playerId': 'p1',
++            'gameId': id,
++            'durationMs': type == 'shown' ? null : 500,
++          },
++      ],
++      'wordMetadata': {
++        'chat': {'word': 'chat', 'categoryId': 'nature', 'difficulty': 1},
++      },
++      'wordStats': <String, dynamic>{},
++    };
++
++void main() {
++  late AnalyticsService analytics;
++
++  setUp(() async {
++    await givenPrefs();
++    givenFakePlatformPlugins();
++    analytics = AnalyticsService();
++    analytics.forgetCurrentGame();
++  });
++
++  test('un blob analytics de la version en store se relit et se finalise',
++      () async {
++    await givenPrefs({
++      'guessItAll_analytics_index': jsonEncode(['old']),
++      'guessItAll_analytics_old': jsonEncode(_storeBlob('old')),
++    });
++
++    final loaded = await analytics.loadAllGames();
++    expect(loaded.single.events, hasLength(2));
++    expect(loaded.single.gameMode, isNull);
++    expect(loaded.single.events.every((e) => e.modifiers == null), isTrue);
++
++    expect(await analytics.finalizeOrphanedGames(), 1);
++    final rewritten = jsonDecode((await rawString('guessItAll_analytics_old'))!)
++        as Map<String, dynamic>;
++    expect(rewritten['endedAt'], isNotNull);
++    expect((await analytics.loadGameAnalytics('old'))!.wordStats['chat'],
++        isNotNull,
++        reason: 'le mot compte dans les stats comme avant');
++    // Relue puis réécrite : toujours aucune clé nouvelle.
++    expect(rewritten.keys, isNot(contains(anyOf(_newAnalyticsKeys))));
++    expect((rewritten['events'] as List).cast<Map>().first.keys,
++        isNot(contains('modifiers')));
++  });
++
++  test('une partie Classique n\'écrit aucune clé nouvelle (Firestore compris)',
++      () async {
++    await _start(analytics, 'classic');
++    _show(analytics, 'chat');
++    analytics.onWordGuessed('chat');
++    analytics.onWordInvalidated('chat');
++
++    // `toJson()` est exactement le document envoyé à Firestore.
++    final json = analytics.currentGame!.toJson();
++    expect(json.keys, isNot(contains(anyOf(_newAnalyticsKeys))));
++    for (final e in json['events'] as List) {
++      expect((e as Map).keys, isNot(contains('modifiers')));
++    }
++  });
++
++  test(
++      'Fiesta : shown, guessed et invalidated portent les modificateurs, '
++      'y compris après un kill, et survivent à la relecture', () async {
++    await _start(analytics, 'fiesta', fiesta: true);
++    _show(analytics, 'chat', modifiers: ['minus_10s']);
++    analytics.onWordGuessed('chat');
++    // Vérification après le tour : `_lastShownWord` est déjà remis à zéro.
++    analytics.onWordInvalidated('chat');
++    await analytics.saveCurrentGame();
++
++    // Kill : la mémoire est perdue, le disque reste. Le mot suivant est
++    // ré-étiqueté par l'appelant depuis l'état persisté de la partie.
++    analytics.forgetCurrentGame();
++    expect(await analytics.resumeGame('fiesta'), isTrue);
++    _show(analytics, 'chien', modifiers: ['minus_10s']);
++    analytics.onWordPassed('chien');
++    await analytics.saveCurrentGame();
++
++    final reread = (await analytics.loadGameAnalytics('fiesta'))!;
++    expect(reread.gameMode, 'fiesta_auto');
++    expect(reread.fiestaRules, {'mode': 'auto'});
++    expect(reread.events.map((e) => e.eventType), [
++      WordEventType.shown,
++      WordEventType.guessed,
++      WordEventType.invalidated,
++      WordEventType.shown,
++      WordEventType.passed,
++    ]);
++    for (final e in reread.events) {
++      expect(e.modifiers, ['minus_10s'], reason: '${e.eventType}');
++    }
++  });
++
++  group('GameResult (historique)', () {
++    test('une entrée de la version en store se relit, sans mode', () {
++      final legacy = GameResult.tryFromJson({
++        'gameId': 'old',
++        'playedAt': '2026-10-01T20:00:00.000',
++        'teams': [],
++        'totalWords': 40,
++        'turnDuration': 30,
++        'roundsPlayed': 3,
++      })!;
++      expect(legacy.mode, isNull);
++      expect(legacy.modifierRecap, isNull);
++      expect(legacy.toJson().keys,
++          isNot(contains(anyOf('mode', 'modifierRecap'))));
++    });
++
++    test('une partie Fiesta archive son mode et son récap', () {
++      final result = GameResult(
++        gameId: 'f',
++        playedAt: DateTime(2026, 11, 3),
++        teams: const [],
++        totalWords: 40,
++        turnDuration: 30,
++        roundsPlayed: 3,
++        mode: 'fiesta_custom',
++        modifierRecap: const [
++          ModifierRecapLine(title: 'Rattrapage', detail: 'Bleue +18 s (M2)'),
++        ],
++      );
++      final reread =
++          GameResult.tryFromJson(jsonDecode(jsonEncode(result.toJson())))!;
++      expect(reread.mode, 'fiesta_custom');
++      expect(reread.modifierRecap!.single.detail, 'Bleue +18 s (M2)');
++    });
++  });
++}
