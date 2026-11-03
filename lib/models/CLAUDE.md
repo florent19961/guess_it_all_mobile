@@ -25,10 +25,20 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
   d'une partie Classique est octet pour octet celui d'avant. `kCurrentSchemaVersion` inchangé.
 - **Relecture tolérante** : `fiesta` non-objet ou règles illisibles → Classique ; instance ou
   réglage illisible → ignoré seul (règle `WordEvent.tryFromJson`).
+- 🔴 **Champ ajouté après la 1ʳᵉ release Fiesta** : il se lit **clé absente = défaut documenté**
+  (`readOr`, `fiesta_rules.dart`) ; seule une valeur présente et mal typée invalide. Sinon une
+  mise à jour ferait retomber en Classique toute partie Fiesta en cours.
+- `ModifierInstance` : une cible `team` / `player` porte **toujours** son `teamId` (assert +
+  `tryFromJson`). `canAdd` plafonne **par équipe** : « pour tous » + les siennes.
 - **Gel au lancement** : `GameProvider.startGame({FiestaRules? fiesta})` pose une `FiestaState`
   neuve ; `FiestaRules` copie ses collections en lecture seule. Sans argument, `clearFiesta`.
 - Tout l'état Fiesta vit ici, jamais dans le provider : persisté par `_saveGameState` et
   restauré par le retour arrière (`savePreValidationState` = `GameState.toJson()`).
+- ⚠️ Pour 2-4 : `teams_screen.dart` appelle `startGame()` sans argument, ce qui **efface**
+  `fiesta`. Le mode choisi avant le lancement doit être porté jusqu'à cet appel (Q10 : en
+  mémoire, hors `GameState`).
+- `FiestaState.turn` est un sac `Map<String, dynamic>` non validé (choix de spec). Les stories
+  d'effets devraient préférer des champs typés dans `FiestaState` à des clés dans cette map.
 - Forme JSON : `fiesta: {rules: {mode, symmetric, autoCalibrate, ensembleName?, modifiers:
   {id: {active, arrival, startRound, fixedRound?, charges}}, oneOfThree, catchUp: {b1, b2, cap,
   mal, malCap}, drawCount, oneAnswer, carryOver}, active: [{catalogId, scope, target, teamId?,

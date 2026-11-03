@@ -36,14 +36,14 @@ class ModifierSetting {
   static ModifierSetting? tryFromJson(Map<String, dynamic> json) {
     final active = json['active'];
     final arrival = enumFromJson(ModifierArrival.values, json['arrival']);
-    final startRound = json['startRound'];
+    final startRound = readOr(json, 'startRound', 1);
     final fixedRound = json['fixedRound'];
-    final charges = json['charges'];
+    final charges = readOr(json, 'charges', 0);
     if (active is! bool ||
         arrival == null ||
-        startRound is! int ||
+        startRound == null ||
         fixedRound is! int? ||
-        charges is! int) {
+        charges == null) {
       return null;
     }
     return ModifierSetting(
@@ -83,22 +83,32 @@ class CatchUpRules {
       {'b1': b1, 'b2': b2, 'cap': cap, 'mal': mal, 'malCap': malCap};
 
   static CatchUpRules? tryFromJson(Map<String, dynamic> json) {
-    final values = [
-      json['b1'],
-      json['b2'],
-      json['cap'],
-      json['mal'],
-      json['malCap'],
-    ];
-    if (values.any((v) => v is! int)) return null;
-    return CatchUpRules(
-      b1: values[0] as int,
-      b2: values[1] as int,
-      cap: values[2] as int,
-      mal: values[3] as int,
-      malCap: values[4] as int,
-    );
+    final b1 = readOr(json, 'b1', auto.b1);
+    final b2 = readOr(json, 'b2', auto.b2);
+    final cap = readOr(json, 'cap', auto.cap);
+    final mal = readOr(json, 'mal', auto.mal);
+    final malCap = readOr(json, 'malCap', auto.malCap);
+    if (b1 == null ||
+        b2 == null ||
+        cap == null ||
+        mal == null ||
+        malCap == null) {
+      return null;
+    }
+    return CatchUpRules(b1: b1, b2: b2, cap: cap, mal: mal, malCap: malCap);
   }
+}
+
+/// Lit [key] en tolérant son ABSENCE : absent (ou `null`) → [fallback] ;
+/// présent et mal typé → `null` (blob illisible).
+///
+/// 🔴 Règle 7 : un champ ajouté à ces types après la 1ʳᵉ release Fiesta doit se
+/// relire « clé absente = défaut documenté », sinon toute partie Fiesta en cours
+/// au moment de la mise à jour retomberait silencieusement en Classique.
+T? readOr<T extends Object>(Map<String, dynamic> json, String key, T fallback) {
+  final raw = json[key];
+  if (raw == null) return fallback;
+  return raw is T ? raw : null;
 }
 
 /// La configuration Fiesta d'une partie, GELÉE dans `GameState` au lancement.
@@ -154,29 +164,31 @@ class FiestaRules {
         'carryOver': carryOver,
       };
 
-  /// Variante tolérante : `null` si la structure est illisible. Un réglage de
-  /// modificateur d'id inconnu ou mal formé est ignoré seul, pas l'ensemble.
+  /// Variante tolérante : `null` si la structure est illisible (`mode` inconnu,
+  /// champ présent mais mal typé). Un champ ABSENT prend la valeur par défaut
+  /// du constructeur ([readOr], règle 7). Un réglage de modificateur d'id
+  /// inconnu ou mal formé est ignoré seul, pas l'ensemble.
   static FiestaRules? tryFromJson(Map<String, dynamic> json) {
     final mode = enumFromJson(FiestaMode.values, json['mode']);
-    final symmetric = json['symmetric'];
-    final autoCalibrate = json['autoCalibrate'];
+    final symmetric = readOr(json, 'symmetric', true);
+    final autoCalibrate = readOr(json, 'autoCalibrate', true);
     final ensembleName = json['ensembleName'];
-    final rawModifiers = json['modifiers'];
-    final oneOfThree = json['oneOfThree'];
-    final rawCatchUp = json['catchUp'];
-    final drawCount = json['drawCount'];
-    final oneAnswer = json['oneAnswer'];
-    final carryOver = json['carryOver'];
+    final rawModifiers = readOr<Map>(json, 'modifiers', const {});
+    final oneOfThree = readOr(json, 'oneOfThree', false);
+    final rawCatchUp = readOr<Map>(json, 'catchUp', const {});
+    final drawCount = readOr(json, 'drawCount', 1);
+    final oneAnswer = readOr(json, 'oneAnswer', true);
+    final carryOver = readOr(json, 'carryOver', true);
     if (mode == null ||
-        symmetric is! bool ||
-        autoCalibrate is! bool ||
+        symmetric == null ||
+        autoCalibrate == null ||
         ensembleName is! String? ||
-        rawModifiers is! Map ||
-        oneOfThree is! bool ||
-        rawCatchUp is! Map ||
-        drawCount is! int ||
-        oneAnswer is! bool ||
-        carryOver is! bool) {
+        rawModifiers == null ||
+        oneOfThree == null ||
+        rawCatchUp == null ||
+        drawCount == null ||
+        oneAnswer == null ||
+        carryOver == null) {
       return null;
     }
     final catchUp =

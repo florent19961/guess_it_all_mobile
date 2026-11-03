@@ -12,6 +12,7 @@ Gestion d'etat centralisee via Provider.
 - **Joueurs/Equipes** : ajout, suppression, formation des equipes (manuelle/aleatoire)
 - **Generation de mots** : mode aleatoire (avec cache metadata `_wordMetadataCache`) ou personnalise
 - **Flux de jeu** : startGame, startTurn, markWordAsGuessed, passWord, validateWords, nextRound
+- **Fiesta** : `startGame({FiestaRules? fiesta})` gele la config dans `GameState.fiesta` ; `startGame()` sans argument l'EFFACE (`clearFiesta`, le `copyWith` part de `_game`). Getter `isFiesta`. Tout l'etat Fiesta vit dans `GameState`, jamais dans des champs du provider (persistance + retour arriere)
 - **Navigation** : changement d'ecran via `GameState.currentScreen`
 - **Analytics** : tracking des evenements via `AnalyticsService`
 - **Persistance** : sauvegarde/restauration etat via `StorageService`

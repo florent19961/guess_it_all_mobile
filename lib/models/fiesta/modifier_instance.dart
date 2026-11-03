@@ -13,6 +13,8 @@ class ModifierInstance {
   /// Manche dans laquelle l'instance a été posée.
   final int round;
 
+  /// Contrat : une cible `team` ou `player` porte toujours son [teamId] (le
+  /// joueur est repéré par son équipe pour le plafond par équipe).
   const ModifierInstance({
     required this.catalogId,
     required this.scope,
@@ -22,7 +24,8 @@ class ModifierInstance {
     required this.charges,
     required this.nature,
     required this.round,
-  });
+  }) : assert(target == ModifierTarget.both || teamId != null,
+            'une cible team/player exige un teamId');
 
   /// Vrai si les deux instances pèsent sur la même équipe : une cible `both`
   /// touche toutes les équipes, sinon c'est le même `teamId`.
@@ -66,7 +69,8 @@ class ModifierInstance {
         charges is! int ||
         round is! int ||
         teamId is! String? ||
-        playerId is! String?) {
+        playerId is! String? ||
+        (target != ModifierTarget.both && teamId == null)) {
       return null;
     }
     return ModifierInstance(
@@ -83,14 +87,31 @@ class ModifierInstance {
 }
 
 /// Peut-on poser [candidate] à côté des instances [active] (celles du tour en
-/// cours) ? Non si l'équipe concernée atteindrait [maxPerTurn] modificateurs,
-/// ou si une instance active de la même équipe lui est incompatible.
+/// cours) ? Non si UNE équipe qu'elle touche atteindrait [maxPerTurn]
+/// modificateurs, ou si une instance active d'une équipe qu'elle touche lui
+/// est incompatible.
+///
+/// Le plafond est PAR ÉQUIPE (epic, Q8) : la charge d'une équipe = les
+/// instances « pour tous » + les siennes. Une candidate `both` est jugée sur
+/// l'équipe la plus chargée.
 bool canAdd(
   List<ModifierInstance> active,
   ModifierInstance candidate, {
   int maxPerTurn = 2,
 }) {
-  final sameTeam = active.where(candidate.concernsSameTeamAs);
-  if (sameTeam.length >= maxPerTurn) return false;
-  return sameTeam.every((a) => areCompatible(a.catalogId, candidate.catalogId));
+  final shared = active.where(candidate.concernsSameTeamAs).toList();
+  if (!shared.every((a) => areCompatible(a.catalogId, candidate.catalogId))) {
+    return false;
+  }
+  var forAll = 0;
+  final perTeam = <String?, int>{};
+  for (final a in shared) {
+    if (a.target == ModifierTarget.both) {
+      forAll++;
+    } else {
+      perTeam[a.teamId] = (perTeam[a.teamId] ?? 0) + 1;
+    }
+  }
+  final heaviest = perTeam.values.fold(0, (m, n) => n > m ? n : m);
+  return forAll + heaviest < maxPerTurn;
 }

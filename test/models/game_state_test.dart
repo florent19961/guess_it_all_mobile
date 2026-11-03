@@ -151,17 +151,81 @@ void main() {
         );
 
     test('un blob Classique (sans `fiesta`) reste Classique, sans bruit', () {
-      // Le blob de la version en store : toJson() d'avant la story, sans
-      // la clé. C'est ce qui est sur les téléphones des joueurs.
-      final legacy = GameState(gameId: 'abc', currentRound: 2).toJson()
-        ..remove('fiesta');
+      // 🔴 Littéral FIGÉ : la forme écrite par la version en store
+      // (`toJson()` au commit 51c0b78), telle qu'elle est sur les téléphones
+      // des joueurs. Ne pas le régénérer depuis le code courant.
+      final legacy = <String, dynamic>{
+        'gameId': 'abc',
+        'currentScreen': 'turn',
+        'currentRound': 2,
+        'currentTurn': 5,
+        'currentTeamIndex': 1,
+        'currentPlayerIndexInTeam': 0,
+        'teamPlayOrder': [1, 0],
+        'playerOrderByTeam': {
+          'team-0': [0, 1],
+          'team-1': [1, 0],
+        },
+        'currentTurnIndex': 3,
+        'allWords': ['chat', 'chien'],
+        'remainingWords': ['chien'],
+        'currentWord': 'chien',
+        'wordsGuessedThisTurn': ['chat'],
+        'passedWordsThisTurn': [],
+        'expiredWord': null,
+        'timeRemaining': 12,
+        'turnBonusTime': 7,
+        'turnStartTimestamp': 1000,
+        'turnEndTimestamp': 31000,
+        'pausedTimeRemaining': null,
+        'pausedRemainingMs': null,
+        'isGameSuspended': false,
+        'suspendedScreen': null,
+        'history': [
+          {
+            'round': 1,
+            'turn': 1,
+            'teamId': 'team-0',
+            'playerId': 'player-0',
+            'wordsGuessed': ['chat'],
+            'wordsInvalidated': [],
+            'wordsPassed': ['chien'],
+            'timeSpent': 30,
+            'isBonusContinuation': false,
+          },
+        ],
+        'pendingBonusTurnId': null,
+        'preValidationSnapshot': null,
+        'restoredValidatedWords': null,
+      };
 
       final restored = GameState.fromJson(legacy);
 
       expect(restored.fiesta, isNull);
       expect(restored.toJson(), equals(legacy),
-          reason: 'une partie Classique ne doit pas écrire `fiesta: null`');
-      expect(restored.toJson().containsKey('fiesta'), isFalse);
+          reason: 'le blob Classique ne doit pas changer, ni `fiesta: null`');
+    });
+
+    test(
+        'un champ de règles ABSENT prend sa valeur par défaut, un champ mal '
+        'typé invalide (règle 7 : champ ajouté après la 1ʳᵉ release)', () {
+      final json = GameState(gameId: 'abc', fiesta: fiestaState()).toJson();
+      final rules = (json['fiesta'] as Map<String, dynamic>)['rules']
+          as Map<String, dynamic>;
+      rules.remove('carryOver');
+      rules['fromTheFuture'] = 42;
+      (rules['catchUp'] as Map<String, dynamic>).remove('malCap');
+
+      final restored = GameState.fromJson(json);
+
+      expect(restored.fiesta, isNotNull);
+      expect(restored.fiesta!.rules.carryOver, isTrue);
+      expect(restored.fiesta!.rules.catchUp.malCap, CatchUpRules.auto.malCap);
+      expect(restored.fiesta!.rules.catchUp.b1, 2,
+          reason: 'les présents restent');
+
+      rules['carryOver'] = 'oui';
+      expect(GameState.fromJson(json).fiesta, isNull);
     });
 
     test('un aller-retour JSON préserve rules et active à l\'identique', () {

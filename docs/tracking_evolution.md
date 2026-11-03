@@ -327,12 +327,17 @@ nul. `GameProvider.startGame({FiestaRules? fiesta})` gèle la config ; sans argu
 - **Relecture tolérante à deux niveaux** : `fiesta` structurellement illisible → Classique (la
   partie reste jouable) ; une instance ou un réglage illisible → ignoré seul, jamais de valeur
   par défaut inventée (même règle que `WordEvent.tryFromJson`). Les ids sont donc figés : en
-  renommer un rendrait invisibles les instances en cours.
-- **Catalogue en code** : seuls des ids et des réglages sont persistés ; nom, description et
-  nature se relisent depuis le code courant, donc un libellé se corrige sans migration.
+  renommer un rendrait invisibles les instances en cours. `nature` est persistée avec
+  l'instance (exigé par la spec) : une instance dont la nature est illisible tombe, elle aussi.
+- **Catalogue en code** : seuls des ids, réglages et instances sont persistés ; nom et description
+  se relisent depuis le code courant, donc un libellé se corrige sans migration.
 - **Gel par immutabilité** plutôt que par copie profonde à chaque `startGame` : `FiestaRules`
   copie ses collections en lecture seule à la construction, le test de 2-2 le prouve en mutant
   la map source après le lancement.
 - **`CatchUpRules.auto`** porte les constantes du mode Auto (+3/+5 s, plafond 30 s, −1 s,
   plafond 15 s) et est la valeur par défaut de `FiestaRules.catchUp` : 2-6 lit un seul champ,
   quel que soit le mode.
+- **Champ absent = défaut, champ mal typé = illisible** (`readOr`, revue r1) : après la 1ʳᵉ
+  release Fiesta, une story qui ajoute un champ à `FiestaRules` ne doit pas faire retomber en
+  Classique les parties Fiesta en cours au moment de la mise à jour. Seule une valeur présente
+  et mal typée invalide le blob. Un `mode` inconnu reste bloquant : c'est la clé de structure.

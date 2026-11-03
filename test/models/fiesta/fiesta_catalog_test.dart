@@ -19,9 +19,22 @@ void main() {
     test(
         '11 ids uniques, et la table d\'incompatibilités ne cite que des ids '
         'du catalogue', () {
+      // 🔴 Ids FIGÉS : ils sont persistés dans les parties en cours et les
+      // ensembles enregistrés. En renommer un rend ces données illisibles.
       final ids = kModifierCatalog.map((d) => d.id).toList();
-      expect(ids, hasLength(11));
-      expect(ids.toSet(), hasLength(11));
+      expect(ids, [
+        'mime_no_arms',
+        'mime_no_fists',
+        'mime_eyes_closed',
+        'draw',
+        'no_pass',
+        'free_pass',
+        'minus_10s',
+        'double_points',
+        'two_words',
+        'reversed',
+        'block_guesser',
+      ]);
 
       for (final (a, b) in kModifierIncompatibilities) {
         expect(modifierById(a), isNotNull, reason: '$a hors catalogue');
@@ -62,6 +75,30 @@ void main() {
           isTrue);
       // Une instance « pour tous » pèse sur A, qui est déjà pleine.
       expect(canAdd(active, _instance('no_pass')), isFalse);
+    });
+
+    test('le plafond est par équipe, pas la somme des équipes touchées', () {
+      // A et B ont chacune 1 instance : un tirage pour tous les porte à 2,
+      // c'est autorisé.
+      final active = [
+        _instance('reversed', target: ModifierTarget.team, teamId: 'A'),
+        _instance('minus_10s', target: ModifierTarget.team, teamId: 'B'),
+      ];
+      expect(canAdd(active, _instance('two_words')), isTrue);
+    });
+
+    test(
+        'une instance pour tous compte pour chaque équipe, compatibilité '
+        'comprise', () {
+      final active = [_instance('no_pass')];
+      expect(
+          canAdd(active,
+              _instance('two_words', target: ModifierTarget.team, teamId: 'B')),
+          isFalse);
+      expect(
+          canAdd(active,
+              _instance('reversed', target: ModifierTarget.team, teamId: 'B')),
+          isTrue);
     });
 
     test('refuse une instance incompatible avec une instance active', () {

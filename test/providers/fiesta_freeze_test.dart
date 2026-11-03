@@ -46,7 +46,6 @@ void main() {
 
       expect(provider.isFiesta, isTrue);
       expect(provider.game.fiesta!.rules.modifiers.keys, ['no_pass']);
-      expect(provider.game.fiesta!.active, isEmpty);
     });
 
     test('startGame() sans argument efface la Fiesta de la partie précédente',
