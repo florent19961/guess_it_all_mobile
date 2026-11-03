@@ -247,7 +247,11 @@ class _SettingsScreenState extends State<SettingsScreen>
             ),
           ),
           AppBackButton(
-            onPressed: () => provider.goToScreen(AppConstants.screenHome),
+            onPressed: () => provider.goToScreen(
+              provider.pendingFiesta != null
+                  ? AppConstants.screenFiestaRecap
+                  : AppConstants.screenHome,
+            ),
           ),
           // Boutons en haut à droite : Réinitialiser + Paramètres avancés
           Positioned(

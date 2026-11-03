@@ -39,7 +39,18 @@ class GameProvider extends ChangeNotifier {
   List<Team> get teams => _teams;
   GameState get game => _game;
   bool get isFiesta => _game.fiesta != null;
+
+  /// Choix Fiesta fait sur les écrans de mode, en attente de `startGame` (Q10) :
+  /// en mémoire seulement, jamais persisté. Nul = Classique. Une app tuée avant
+  /// le lancement repart donc d'un choix vide.
+  FiestaRules? _pendingFiesta;
+  FiestaRules? get pendingFiesta => _pendingFiesta;
   String? get currentEditingPlayerId => _currentEditingPlayerId;
+
+  void setPendingFiesta(FiestaRules? rules) {
+    _pendingFiesta = rules;
+    notifyListeners();
+  }
 
   // Setter pour le joueur en cours d'édition
   void setCurrentEditingPlayer(String? playerId) {
@@ -91,6 +102,10 @@ class GameProvider extends ChangeNotifier {
                 .toList() ??
             _teams;
         _game = GameState.fromJson(savedState['game'] ?? {});
+        // Partie Fiesta reprise après un kill : remettre sa config gelée en
+        // attente, sinon « Retour aux équipes » + « Lancer » la relancerait en
+        // Classique. Invariant : en partie, `pendingFiesta` = `fiesta?.rules`.
+        _pendingFiesta = _game.fiesta?.rules;
 
         // 🔴 Reprendre AUSSI le tracking, pas seulement l'état de jeu. Sans ça,
         // une partie rouverte après un kill terminait sans jamais incrémenter
@@ -1148,6 +1163,7 @@ class GameProvider extends ChangeNotifier {
     await _analytics.endGame();
 
     await _storage.clearGameState();
+    // `_pendingFiesta` n'est PAS effacé : le « Rejouer » de l'accueil le relit.
     _game = GameState.initial();
     notifyListeners();
   }
@@ -1164,11 +1180,18 @@ class GameProvider extends ChangeNotifier {
     _players = [];
     _teams = [];
     _game = GameState.initial();
+    _pendingFiesta = null;
     notifyListeners();
   }
 
   // Rejouer avec mêmes joueurs → efface mots, reset scores, va aux paramètres
+  // (ou au Récap Fiesta, avec la config gelée de la partie finie : Q12).
   Future<void> restartWithSamePlayers() async {
+    // 🔴 Lire AVANT `GameState.initial()` ci-dessous, qui efface `fiesta`.
+    // Sans partie jouée (Rejouer de l'accueil, après `endGameAndGoHome`), la
+    // config déjà en mémoire fait foi.
+    if (_game.allWords.isNotEmpty) _pendingFiesta = _game.fiesta?.rules;
+
     // Terminer et sauvegarder les analytics si une partie était en cours
     if (_analytics.isTracking) {
       await _analytics.endGame();
@@ -1189,8 +1212,11 @@ class GameProvider extends ChangeNotifier {
       );
     }
 
-    _game = GameState.initial()
-        .copyWith(currentScreen: AppConstants.screenSettings);
+    _game = GameState.initial().copyWith(
+      currentScreen: _pendingFiesta != null
+          ? AppConstants.screenFiestaRecap
+          : AppConstants.screenSettings,
+    );
     await _saveGameSession();
     notifyListeners();
   }

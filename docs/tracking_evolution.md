@@ -341,3 +341,27 @@ nul. `GameProvider.startGame({FiestaRules? fiesta})` gèle la config ; sans argu
   release Fiesta, une story qui ajoute un champ à `FiestaRules` ne doit pas faire retomber en
   Classique les parties Fiesta en cours au moment de la mise à jour. Seule une valeur présente
   et mal typée invalide le blob. Un `mode` inconnu reste bloquant : c'est la clé de structure.
+
+---
+
+## 2026-11-03 — Fiesta 2-4 : choix du mode en mémoire, Rejouer par le Récap
+
+**Quoi.** « Nouvelle partie » ouvre **Mode de jeu** : Classique va aux Paramètres comme avant ;
+Fiesta → Auto ou Personnalisé → **Récap** → Paramètres. Le choix est un `FiestaRules?` en attente
+dans `GameProvider` (`pendingFiesta`), passé par `TeamsScreen` à `startGame`. « Rejouer »
+(résultats et accueil) remet la config gelée de la partie finie en attente et passe par le Récap.
+
+**Pourquoi ces choix.**
+- **En mémoire, pas persisté** (Q10) : aucune clé `guessItAll_*` ne change ; une app tuée avant le
+  lancement repart d'un choix vide. `startNewGame` efface l'attente.
+- **Invariant : en partie, `pendingFiesta` = `fiesta?.rules`.** `startGame` reçoit l'attente, et
+  `_loadFromStorage` la restaure depuis la partie reprise après un kill (sans ça, « Retour aux
+  équipes » + « Lancer » repartait en Classique). `endGameAndGoHome` n'efface pas l'attente, donc
+  le « Rejouer » de l'accueil la retrouve. `restartWithSamePlayers` relit la partie si elle a été
+  jouée (`allWords` non vide), sinon garde l'attente.
+- **Retour des Paramètres** : vers le Récap si une config Fiesta est en attente, sinon vers
+  l'accueil comme avant (pas vers Mode de jeu en Classique : la story ne l'exigeait que si
+  trivial, et ça garde le parcours Classique identique).
+- **Retour système Android** géré par `PopScope` sur les nouveaux écrans seulement : les écrans
+  existants gardent leur comportement.
+

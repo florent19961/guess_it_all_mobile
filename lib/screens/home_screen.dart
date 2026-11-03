@@ -73,7 +73,7 @@ class HomeScreen extends StatelessWidget {
                     // chaque partie. La remise à zéro explicite reste disponible
                     // depuis le bouton « Réinitialiser » de l'écran de réglages.
                     await provider.startNewGame();
-                    provider.goToScreen(AppConstants.screenSettings);
+                    provider.goToScreen(AppConstants.screenGameMode);
                   },
                 ),
               ]
@@ -91,7 +91,7 @@ class HomeScreen extends StatelessWidget {
                     // chaque partie. La remise à zéro explicite reste disponible
                     // depuis le bouton « Réinitialiser » de l'écran de réglages.
                     await provider.startNewGame();
-                    provider.goToScreen(AppConstants.screenSettings);
+                    provider.goToScreen(AppConstants.screenGameMode);
                   },
                 ),
               ],
@@ -152,7 +152,7 @@ class HomeScreen extends StatelessWidget {
                     // Idem : abandonner la partie en cours ne doit pas effacer
                     // les réglages du joueur.
                     await provider.startNewGame();
-                    provider.goToScreen(AppConstants.screenSettings);
+                    provider.goToScreen(AppConstants.screenGameMode);
                   },
                 ),
               ),

@@ -112,3 +112,23 @@ correction), puis `withOpacity` → `withValues(alpha:)` en un sweep mécanique 
 pour `avoid_print` (un `debugPrint` conditionnel, ou une exclusion assumée dans
 `analysis_options.yaml` pour `tools/`). Une fois à zéro, durcir `run-full-suite.sh` en
 `--fatal-infos` pour que la baisse soit un cliquet.
+
+---
+
+## 2026-11-03 — « Rejouer » de l'accueil après un kill : la config Fiesta est perdue
+
+**Contexte.** Story 2-4. Après une partie Fiesta, le bouton maison des résultats efface l'état de
+jeu (`endGameAndGoHome` → `clearGameState`). La config reste en mémoire seulement (Q10). Si l'app
+est tuée ensuite, le « Rejouer » de l'accueil repart en Classique (Paramètres).
+
+**Décision reportée.** Persister la dernière config Fiesta pour « Rejouer ».
+
+**Raison.** Q10 interdit de persister le choix du mode ; le cas exige fin de partie + kill +
+Rejouer, et le joueur retrouve la Fiesta en deux écrans. Pas de crash, pas de donnée corrompue.
+
+**Signal déclencheur.** Un retour joueur « Rejouer a perdu mes réglages Fiesta », ou une story qui
+persiste déjà quelque chose de voisin (le `lastUsedId` des ensembles de 2-3).
+
+**Esquisse.** En Personnalisé, retrouver l'ensemble via `lastUsedId` (clé des ensembles, déjà
+persistée) ; en Auto, les deux interrupteurs dans cette même clé ou dans la session.
+

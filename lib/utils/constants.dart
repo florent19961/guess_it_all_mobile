@@ -45,6 +45,11 @@ class AppConstants {
   static const String screenStats = 'stats';
   static const String screenCategories = 'categories';
   static const String screenHistory = 'history';
+  static const String screenGameMode = 'gameMode';
+  static const String screenFiestaChoice = 'fiestaChoice';
+  static const String screenFiestaAuto = 'fiestaAuto';
+  static const String screenFiestaRecap = 'fiestaRecap';
+  static const String screenFiestaEnsembles = 'fiestaEnsembles';
 
   // Word choice modes
   static const String wordChoiceCustom = 'Personnalisé';

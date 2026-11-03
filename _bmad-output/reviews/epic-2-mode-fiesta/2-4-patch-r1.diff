@@ -1,0 +1,1115 @@
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index cb3747c..87351f7 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -336,3 +336,22 @@ nul. `GameProvider.startGame({FiestaRules? fiesta})` gèle la config ; sans argu
+ - **`CatchUpRules.auto`** porte les constantes du mode Auto (+3/+5 s, plafond 30 s, −1 s,
+   plafond 15 s) et est la valeur par défaut de `FiestaRules.catchUp` : 2-6 lit un seul champ,
+   quel que soit le mode.
++
++---
++
++## 2026-11-03 — Fiesta 2-4 : choix du mode en mémoire, Rejouer par le Récap
++
++**Quoi.** « Nouvelle partie » ouvre **Mode de jeu** : Classique va aux Paramètres comme avant ;
++Fiesta → Auto ou Personnalisé → **Récap** → Paramètres. Le choix est un `FiestaRules?` en attente
++dans `GameProvider` (`pendingFiesta`), passé par `TeamsScreen` à `startGame`. « Rejouer »
++(résultats et accueil) remet la config gelée de la partie finie en attente et passe par le Récap.
++
++**Pourquoi ces choix.**
++- **En mémoire, pas persisté** (Q10) : aucune clé `guessItAll_*` ne change ; une app tuée avant le
++  lancement repart d'un choix vide. `startNewGame` efface l'attente.
++- **`endGameAndGoHome` garde la config en mémoire** : sinon le « Rejouer » de l'accueil, après le
++  bouton maison des résultats, aurait relancé en Classique. `restartWithSamePlayers` relit la
++  partie si elle a été jouée (`allWords` non vide), sinon garde l'attente.
++- **Retour système Android** géré par `PopScope` sur les nouveaux écrans seulement : les écrans
++  existants gardent leur comportement.
++
+diff --git a/lib/app.dart b/lib/app.dart
+index f251e8c..d76a635 100644
+--- a/lib/app.dart
++++ b/lib/app.dart
+@@ -20,6 +20,11 @@ import 'screens/results_screen.dart';
+ import 'screens/stats_screen.dart';
+ import 'screens/categories_screen.dart';
+ import 'screens/history_screen.dart';
++import 'screens/game_mode_screen.dart';
++import 'screens/fiesta_choice_screen.dart';
++import 'screens/fiesta_auto_screen.dart';
++import 'screens/fiesta_recap_screen.dart';
++import 'screens/fiesta_ensembles_stub_screen.dart';
+ 
+ class GuessItAllApp extends StatelessWidget {
+   const GuessItAllApp({super.key});
+@@ -85,6 +90,16 @@ class GuessItAllApp extends StatelessWidget {
+         return const CategoriesScreen();
+       case AppConstants.screenHistory:
+         return const HistoryScreen();
++      case AppConstants.screenGameMode:
++        return const GameModeScreen();
++      case AppConstants.screenFiestaChoice:
++        return const FiestaChoiceScreen();
++      case AppConstants.screenFiestaAuto:
++        return const FiestaAutoScreen();
++      case AppConstants.screenFiestaRecap:
++        return const FiestaRecapScreen();
++      case AppConstants.screenFiestaEnsembles:
++        return const FiestaEnsemblesStubScreen(); // BOUCHON 2-4 → écran de 2-3
+       default:
+         return const HomeScreen();
+     }
+diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
+index e2a2d75..295772e 100644
+--- a/lib/providers/game_provider.dart
++++ b/lib/providers/game_provider.dart
+@@ -39,8 +39,19 @@ class GameProvider extends ChangeNotifier {
+   List<Team> get teams => _teams;
+   GameState get game => _game;
+   bool get isFiesta => _game.fiesta != null;
++
++  /// Choix Fiesta fait sur les écrans de mode, en attente de `startGame` (Q10) :
++  /// en mémoire seulement, jamais persisté. Nul = Classique. Une app tuée avant
++  /// le lancement repart donc d'un choix vide.
++  FiestaRules? _pendingFiesta;
++  FiestaRules? get pendingFiesta => _pendingFiesta;
+   String? get currentEditingPlayerId => _currentEditingPlayerId;
+ 
++  void setPendingFiesta(FiestaRules? rules) {
++    _pendingFiesta = rules;
++    notifyListeners();
++  }
++
+   // Setter pour le joueur en cours d'édition
+   void setCurrentEditingPlayer(String? playerId) {
+     _currentEditingPlayerId = playerId;
+@@ -1148,6 +1159,8 @@ class GameProvider extends ChangeNotifier {
+     await _analytics.endGame();
+ 
+     await _storage.clearGameState();
++    // Garde la config Fiesta en mémoire pour le « Rejouer » de l'accueil.
++    _pendingFiesta = _game.fiesta?.rules;
+     _game = GameState.initial();
+     notifyListeners();
+   }
+@@ -1164,11 +1177,18 @@ class GameProvider extends ChangeNotifier {
+     _players = [];
+     _teams = [];
+     _game = GameState.initial();
++    _pendingFiesta = null;
+     notifyListeners();
+   }
+ 
+   // Rejouer avec mêmes joueurs → efface mots, reset scores, va aux paramètres
++  // (ou au Récap Fiesta, avec la config gelée de la partie finie : Q12).
+   Future<void> restartWithSamePlayers() async {
++    // 🔴 Lire AVANT `GameState.initial()` ci-dessous, qui efface `fiesta`.
++    // Sans partie jouée (Rejouer de l'accueil, après `endGameAndGoHome`), la
++    // config déjà en mémoire fait foi.
++    if (_game.allWords.isNotEmpty) _pendingFiesta = _game.fiesta?.rules;
++
+     // Terminer et sauvegarder les analytics si une partie était en cours
+     if (_analytics.isTracking) {
+       await _analytics.endGame();
+@@ -1189,8 +1209,11 @@ class GameProvider extends ChangeNotifier {
+       );
+     }
+ 
+-    _game = GameState.initial()
+-        .copyWith(currentScreen: AppConstants.screenSettings);
++    _game = GameState.initial().copyWith(
++      currentScreen: _pendingFiesta != null
++          ? AppConstants.screenFiestaRecap
++          : AppConstants.screenSettings,
++    );
+     await _saveGameSession();
+     notifyListeners();
+   }
+diff --git a/lib/screens/CLAUDE.md b/lib/screens/CLAUDE.md
+index 79d220a..175498a 100644
+--- a/lib/screens/CLAUDE.md
++++ b/lib/screens/CLAUDE.md
+@@ -5,7 +5,9 @@
+ ## Flux de navigation
+ 
+ ```
+-HomeScreen → SettingsScreen → (CategoriesScreen) → PlayersScreen → (WordsScreen) → TeamsScreen
++HomeScreen → GameModeScreen ─ Classique ─────────────────────────────────────► SettingsScreen
++                            └ Fiesta → FiestaChoiceScreen → Auto | Ensembles → FiestaRecapScreen ─┘
++SettingsScreen → (CategoriesScreen) → PlayersScreen → (WordsScreen) → TeamsScreen
+   → GameScreen → CountdownScreen → TurnScreen → VerificationScreen
+   → TransitionScreen (entre manches) → ResultsScreen → StatsScreen
+ ```
+@@ -28,3 +30,12 @@ HomeScreen → SettingsScreen → (CategoriesScreen) → PlayersScreen → (Word
+ | `results_screen.dart` | Podium anime, tableau scores par manche, boutons Rejouer/Stats |
+ | `stats_screen.dart` | Stats detaillees : graphique evolution scores (fl_chart), top joueurs, temps moyen |
+ | `rules_screen.dart` | Regles completes du jeu (3 manches) |
++| `game_mode_screen.dart` | Nouvelle partie : Classique ou Fiesta |
++| `fiesta_choice_screen.dart` | Fiesta : Mode Auto ou Personnalise |
++| `fiesta_auto_screen.dart` | Mode Auto : 2 interrupteurs (au moins un) + regles communes |
++| `fiesta_recap_screen.dart` | Recap Fiesta avant les Parametres ; cible de « Rejouer » apres une partie Fiesta |
++| `fiesta_ensembles_stub_screen.dart` | 🔴 Bouchon de 2-4, remplace par la liste d'ensembles de 2-3 au merge |
++
++Invariant Fiesta : le choix du mode vit dans `GameProvider.pendingFiesta`, **en memoire
++seulement** (Q10), et `TeamsScreen` le passe a `startGame`. Le chemin « Reprendre » de l'accueil
++ne traverse jamais les ecrans de mode.
+diff --git a/lib/screens/fiesta_auto_screen.dart b/lib/screens/fiesta_auto_screen.dart
+new file mode 100644
+index 0000000..cf2469e
+--- /dev/null
++++ b/lib/screens/fiesta_auto_screen.dart
+@@ -0,0 +1,133 @@
++import 'package:flutter/material.dart';
++import 'package:provider/provider.dart';
++
++import '../models/fiesta/fiesta_rules.dart';
++import '../providers/game_provider.dart';
++import '../theme/app_theme.dart';
++import '../utils/constants.dart';
++import '../widgets/common/app_button.dart';
++import '../widgets/fiesta/fiesta_setup_widgets.dart';
++
++/// Mode Auto : deux interrupteurs cumulables (au moins un allumé) et les
++/// règles communes.
++class FiestaAutoScreen extends StatefulWidget {
++  const FiestaAutoScreen({super.key});
++
++  @override
++  State<FiestaAutoScreen> createState() => _FiestaAutoScreenState();
++}
++
++class _FiestaAutoScreenState extends State<FiestaAutoScreen> {
++  // Revenir du Récap par « Modifier » retrouve les réglages en attente.
++  late final FiestaRules? _previous = () {
++    final pending = context.read<GameProvider>().pendingFiesta;
++    return pending?.mode == FiestaMode.auto ? pending : null;
++  }();
++  late bool _symmetric = _previous?.symmetric ?? true;
++  late bool _autoCalibrate = _previous?.autoCalibrate ?? true;
++  late bool _oneAnswer = _previous?.oneAnswer ?? true;
++  late bool _carryOver = _previous?.carryOver ?? true;
++
++  @override
++  Widget build(BuildContext context) {
++    final provider = context.read<GameProvider>();
++    final none = !_symmetric && !_autoCalibrate;
++    const auto = CatchUpRules.auto;
++    return FiestaSetupScaffold(
++      title: 'Mode Auto',
++      subtitle: 'Aucun choix pendant la partie : l\'app s\'occupe de tout.',
++      onBack: () => provider.goToScreen(AppConstants.screenFiestaChoice),
++      content: [
++        FiestaCard(
++          title: 'Symétrique',
++          trailing: _switch(_symmetric, (v) => _symmetric = v),
++          children: const [
++            _Hint(
++              'Au début de chaque manche, l\'app tire 1 à 2 modificateurs qui '
++              's\'appliquent à toutes les équipes. Pas de relance.',
++            ),
++          ],
++        ),
++        FiestaCard(
++          title: 'Auto-calibrage (rattrapage)',
++          trailing: _switch(_autoCalibrate, (v) => _autoCalibrate = v),
++          children: [
++            const _Hint(
++              'L\'app aide automatiquement l\'équipe qui est derrière. L\'écart '
++              'se mesure par rapport à l\'équipe en tête.',
++            ),
++            if (_autoCalibrate) ...[
++              const SizedBox(height: 8),
++              _Hint(
++                'Équipes menées : +${auto.b1} s × écart après M1, '
++                '+${auto.b2} s × écart après M2 (max +${auto.cap} s).\n'
++                'Équipe en tête : −${auto.mal} s × écart sur son 1ᵉʳ tour '
++                '(max −${auto.malCap} s).\n'
++                'Selon l\'écart, l\'app peut aussi donner un bonus aux équipes '
++                'menées et un malus à l\'équipe en tête.',
++              ),
++            ],
++          ],
++        ),
++        FiestaCommonRulesCard(
++          oneAnswer: _oneAnswer,
++          carryOver: _carryOver,
++          onChanged: ({oneAnswer, carryOver}) => setState(() {
++            _oneAnswer = oneAnswer ?? _oneAnswer;
++            _carryOver = carryOver ?? _carryOver;
++          }),
++        ),
++      ],
++      bottom: Column(
++        children: [
++          if (none) ...[
++            Text(
++              'Active au moins un des deux interrupteurs pour continuer.',
++              textAlign: TextAlign.center,
++              style: AppTextStyles.bodySmall.copyWith(color: AppColors.warning),
++            ),
++            const SizedBox(height: 8),
++          ],
++          AppButton(
++            text: 'Continuer',
++            size: AppButtonSize.large,
++            fullWidth: true,
++            disabled: none,
++            onPressed: none
++                ? null
++                : () {
++                    provider.setPendingFiesta(
++                      FiestaRules(
++                        mode: FiestaMode.auto,
++                        symmetric: _symmetric,
++                        autoCalibrate: _autoCalibrate,
++                        oneAnswer: _oneAnswer,
++                        carryOver: _carryOver,
++                      ),
++                    );
++                    provider.goToScreen(AppConstants.screenFiestaRecap);
++                  },
++          ),
++        ],
++      ),
++    );
++  }
++
++  Widget _switch(bool value, void Function(bool) set) => Switch(
++        value: value,
++        onChanged: (v) => setState(() => set(v)),
++        activeTrackColor: AppColors.secondaryCyan,
++      );
++}
++
++class _Hint extends StatelessWidget {
++  final String text;
++  const _Hint(this.text);
++
++  @override
++  Widget build(BuildContext context) => Text(
++        text,
++        style: AppTextStyles.bodySmall
++            .copyWith(fontSize: 12, color: AppColors.gray400),
++      );
++}
+diff --git a/lib/screens/fiesta_choice_screen.dart b/lib/screens/fiesta_choice_screen.dart
+new file mode 100644
+index 0000000..c82c8e5
+--- /dev/null
++++ b/lib/screens/fiesta_choice_screen.dart
+@@ -0,0 +1,59 @@
++import 'package:flutter/material.dart';
++import 'package:provider/provider.dart';
++
++import '../models/fiesta/fiesta_rules.dart';
++import '../providers/game_provider.dart';
++import '../utils/constants.dart';
++import '../widgets/common/app_button.dart';
++import '../widgets/fiesta/fiesta_setup_widgets.dart';
++
++/// Fiesta : Mode Auto (l'app décide) ou Personnalisé (ensembles enregistrés).
++class FiestaChoiceScreen extends StatefulWidget {
++  const FiestaChoiceScreen({super.key});
++
++  @override
++  State<FiestaChoiceScreen> createState() => _FiestaChoiceScreenState();
++}
++
++class _FiestaChoiceScreenState extends State<FiestaChoiceScreen> {
++  late FiestaMode _mode =
++      context.read<GameProvider>().pendingFiesta?.mode ?? FiestaMode.auto;
++
++  @override
++  Widget build(BuildContext context) {
++    final provider = context.read<GameProvider>();
++    return FiestaSetupScaffold(
++      title: 'Fiesta',
++      subtitle: 'Comment veux-tu jouer ?',
++      onBack: () => provider.goToScreen(AppConstants.screenGameMode),
++      content: [
++        FiestaPickCard(
++          icon: 'A',
++          title: 'Mode Auto',
++          description: 'Personne ne choisit de bonus ni de malus : l\'app tire '
++              'au sort pour tous et/ou aide l\'équipe menée.',
++          selected: _mode == FiestaMode.auto,
++          onTap: () => setState(() => _mode = FiestaMode.auto),
++        ),
++        FiestaPickCard(
++          icon: '⚙',
++          title: 'Mode Personnalisé',
++          description: 'Tous les curseurs de la partie, enregistrés dans des '
++              'ensembles réutilisables.',
++          selected: _mode == FiestaMode.custom,
++          onTap: () => setState(() => _mode = FiestaMode.custom),
++        ),
++      ],
++      bottom: AppButton(
++        text: 'Continuer',
++        size: AppButtonSize.large,
++        fullWidth: true,
++        onPressed: () => provider.goToScreen(
++          _mode == FiestaMode.auto
++              ? AppConstants.screenFiestaAuto
++              : AppConstants.screenFiestaEnsembles,
++        ),
++      ),
++    );
++  }
++}
+diff --git a/lib/screens/fiesta_ensembles_stub_screen.dart b/lib/screens/fiesta_ensembles_stub_screen.dart
+new file mode 100644
+index 0000000..c7ec6d0
+--- /dev/null
++++ b/lib/screens/fiesta_ensembles_stub_screen.dart
+@@ -0,0 +1,38 @@
++import 'package:flutter/material.dart';
++import 'package:provider/provider.dart';
++
++import '../models/fiesta/fiesta_rules.dart';
++import '../providers/game_provider.dart';
++import '../utils/constants.dart';
++import '../widgets/common/app_button.dart';
++import '../widgets/fiesta/fiesta_setup_widgets.dart';
++
++/// 🔴 BOUCHON de la story 2-4, à SUPPRIMER au merge de la story 2-3 : la vraie
++/// liste « Mes ensembles » prend la route `screenFiestaEnsembles` dans
++/// `lib/app.dart`. Son « Utiliser » fait la même chose que le bouton
++/// ci-dessous : `setPendingFiesta(rules)` puis le Récap.
++class FiestaEnsemblesStubScreen extends StatelessWidget {
++  const FiestaEnsemblesStubScreen({super.key});
++
++  @override
++  Widget build(BuildContext context) {
++    final provider = context.read<GameProvider>();
++    return FiestaSetupScaffold(
++      title: 'Mes ensembles',
++      subtitle: 'Bientôt disponible.',
++      onBack: () => provider.goToScreen(AppConstants.screenFiestaChoice),
++      content: const [],
++      bottom: AppButton(
++        text: 'Utiliser un ensemble d\'essai',
++        size: AppButtonSize.large,
++        fullWidth: true,
++        onPressed: () {
++          provider.setPendingFiesta(
++            FiestaRules(mode: FiestaMode.custom, ensembleName: 'Essai'),
++          );
++          provider.goToScreen(AppConstants.screenFiestaRecap);
++        },
++      ),
++    );
++  }
++}
+diff --git a/lib/screens/fiesta_recap_screen.dart b/lib/screens/fiesta_recap_screen.dart
+new file mode 100644
+index 0000000..0a6683e
+--- /dev/null
++++ b/lib/screens/fiesta_recap_screen.dart
+@@ -0,0 +1,148 @@
++import 'package:flutter/material.dart';
++import 'package:provider/provider.dart';
++
++import '../models/fiesta/fiesta_rules.dart';
++import '../models/fiesta/modifier_catalog.dart';
++import '../providers/game_provider.dart';
++import '../theme/app_theme.dart';
++import '../utils/constants.dart';
++import '../widgets/common/app_button.dart';
++import '../widgets/fiesta/fiesta_setup_widgets.dart';
++
++/// Récapitulatif avant les Paramètres : la config Fiesta en attente, les
++/// règles communes et les réglages de base (lus dans `GameSettings`).
++class FiestaRecapScreen extends StatelessWidget {
++  const FiestaRecapScreen({super.key});
++
++  static const _arrivalLabels = {
++    ModifierArrival.draw: 'tirage pour tous',
++    ModifierArrival.offer: 'choix 1 parmi 3',
++  };
++
++  @override
++  Widget build(BuildContext context) {
++    final provider = context.watch<GameProvider>();
++    final rules = provider.pendingFiesta;
++    // Rien en attente (ne devrait pas arriver) : retour au choix du mode.
++    if (rules == null) {
++      WidgetsBinding.instance.addPostFrameCallback(
++        (_) => provider.goToScreen(AppConstants.screenGameMode),
++      );
++      return const SizedBox.shrink();
++    }
++    final auto = rules.mode == FiestaMode.auto;
++    final editScreen = auto
++        ? AppConstants.screenFiestaAuto
++        : AppConstants.screenFiestaEnsembles;
++    final settings = provider.settings;
++
++    return FiestaSetupScaffold(
++      title: 'Prêts ?',
++      onBack: () => provider.goToScreen(editScreen),
++      content: [
++        FiestaCard(
++          title: 'Mode',
++          trailing: AppButton(
++            text: 'Modifier',
++            variant: AppButtonVariant.ghost,
++            size: AppButtonSize.small,
++            onPressed: () => provider.goToScreen(editScreen),
++          ),
++          children: [
++            Text(
++              auto
++                  ? 'Fiesta · Auto'
++                  : 'Fiesta · ${rules.ensembleName ?? 'Personnalisé'}',
++              style: AppTextStyles.subtitle(fontSize: 26),
++            ),
++            const SizedBox(height: 4),
++            ...auto ? _autoLines(rules) : _customLines(rules),
++          ],
++        ),
++        FiestaCommonRulesCard(
++          oneAnswer: rules.oneAnswer,
++          carryOver: rules.carryOver,
++        ),
++        FiestaCard(
++          title: 'Réglages de base',
++          children: [
++            _value('Équipes', '${settings.numberOfTeams}'),
++            _value('Nombre total de mots', '${settings.totalWords}'),
++            _value('Durée du tour', '${settings.turnDuration} s'),
++            _value('Pénalité pour passer', '−${settings.passPenalty} s'),
++          ],
++        ),
++      ],
++      bottom: AppButton(
++        text: 'Continuer',
++        size: AppButtonSize.large,
++        fullWidth: true,
++        onPressed: () => provider.goToScreen(AppConstants.screenSettings),
++      ),
++    );
++  }
++
++  List<Widget> _autoLines(FiestaRules rules) {
++    const c = CatchUpRules.auto;
++    return [
++      FiestaLine(
++        label: 'Symétrique',
++        detail: '1 à 2 modificateurs tirés par manche',
++        value: rules.symmetric,
++      ),
++      FiestaLine(
++        label: 'Auto-calibrage',
++        detail: '+${c.b1} s / +${c.b2} s × écart (max +${c.cap} s) · '
++            'leader −${c.mal} s × écart (max −${c.malCap} s) · '
++            'coup de pouce du catalogue',
++        value: rules.autoCalibrate,
++      ),
++    ];
++  }
++
++  List<Widget> _customLines(FiestaRules rules) {
++    final c = rules.catchUp;
++    final active = [
++      for (final def in kModifierCatalog)
++        if (rules.modifiers[def.id]?.active ?? false)
++          (def, rules.modifiers[def.id]!),
++    ];
++    return [
++      FiestaLine(
++        label: 'Choix 1 parmi 3',
++        detail: 'Équipe menée, à chaque fin de manche',
++        value: rules.oneOfThree,
++      ),
++      FiestaLine(
++        label: 'Rattrapage',
++        detail: '+${c.b1} s / +${c.b2} s × écart (max +${c.cap} s) · '
++            'leader −${c.mal} s × écart (max −${c.malCap} s)',
++      ),
++      FiestaLine(
++        label: 'Tirage symétrique',
++        detail:
++            rules.drawCount > 0 ? '${rules.drawCount} par manche' : 'Désactivé',
++        value: rules.drawCount > 0,
++      ),
++      FiestaLine(
++        label: 'Modificateurs actifs (${active.length})',
++        detail: active.isEmpty
++            ? 'Aucun'
++            : active
++                .map((e) => '${e.$1.name} · '
++                    '${e.$2.arrival == ModifierArrival.fixed ? 'manche ${e.$2.fixedRound ?? 3}' : _arrivalLabels[e.$2.arrival]}')
++                .join('\n'),
++      ),
++    ];
++  }
++
++  Widget _value(String label, String value) => Padding(
++        padding: const EdgeInsets.symmetric(vertical: 4),
++        child: Row(
++          children: [
++            Expanded(child: Text(label, style: AppTextStyles.bodySmall)),
++            Text(value, style: AppTextStyles.label),
++          ],
++        ),
++      );
++}
+diff --git a/lib/screens/game_mode_screen.dart b/lib/screens/game_mode_screen.dart
+new file mode 100644
+index 0000000..3693d6b
+--- /dev/null
++++ b/lib/screens/game_mode_screen.dart
+@@ -0,0 +1,60 @@
++import 'package:flutter/material.dart';
++import 'package:provider/provider.dart';
++
++import '../providers/game_provider.dart';
++import '../utils/constants.dart';
++import '../widgets/common/app_button.dart';
++import '../widgets/fiesta/fiesta_setup_widgets.dart';
++
++/// Premier choix d'une nouvelle partie : Classique (la partie d'aujourd'hui,
++/// inchangée) ou Fiesta.
++class GameModeScreen extends StatefulWidget {
++  const GameModeScreen({super.key});
++
++  @override
++  State<GameModeScreen> createState() => _GameModeScreenState();
++}
++
++class _GameModeScreenState extends State<GameModeScreen> {
++  late bool _fiesta = context.read<GameProvider>().pendingFiesta != null;
++
++  @override
++  Widget build(BuildContext context) {
++    final provider = context.read<GameProvider>();
++    return FiestaSetupScaffold(
++      title: 'Mode de jeu',
++      onBack: () => provider.goToScreen(AppConstants.screenHome),
++      content: [
++        FiestaPickCard(
++          icon: '3',
++          title: 'Classique',
++          description: 'Les 3 manches habituelles, sans modificateur. '
++              'Rien ne change.',
++          selected: !_fiesta,
++          onTap: () => setState(() => _fiesta = false),
++        ),
++        FiestaPickCard(
++          icon: '✦',
++          title: 'Fiesta',
++          description: 'Les mêmes 3 manches, avec des bonus et malus qui '
++              'pimentent la partie.',
++          selected: _fiesta,
++          onTap: () => setState(() => _fiesta = true),
++        ),
++      ],
++      bottom: AppButton(
++        text: 'Continuer',
++        size: AppButtonSize.large,
++        fullWidth: true,
++        onPressed: () {
++          if (_fiesta) {
++            provider.goToScreen(AppConstants.screenFiestaChoice);
++          } else {
++            provider.setPendingFiesta(null);
++            provider.goToScreen(AppConstants.screenSettings);
++          }
++        },
++      ),
++    );
++  }
++}
+diff --git a/lib/screens/home_screen.dart b/lib/screens/home_screen.dart
+index cb46b97..46861fd 100644
+--- a/lib/screens/home_screen.dart
++++ b/lib/screens/home_screen.dart
+@@ -73,7 +73,7 @@ class HomeScreen extends StatelessWidget {
+                     // chaque partie. La remise à zéro explicite reste disponible
+                     // depuis le bouton « Réinitialiser » de l'écran de réglages.
+                     await provider.startNewGame();
+-                    provider.goToScreen(AppConstants.screenSettings);
++                    provider.goToScreen(AppConstants.screenGameMode);
+                   },
+                 ),
+               ]
+@@ -91,7 +91,7 @@ class HomeScreen extends StatelessWidget {
+                     // chaque partie. La remise à zéro explicite reste disponible
+                     // depuis le bouton « Réinitialiser » de l'écran de réglages.
+                     await provider.startNewGame();
+-                    provider.goToScreen(AppConstants.screenSettings);
++                    provider.goToScreen(AppConstants.screenGameMode);
+                   },
+                 ),
+               ],
+@@ -152,7 +152,7 @@ class HomeScreen extends StatelessWidget {
+                     // Idem : abandonner la partie en cours ne doit pas effacer
+                     // les réglages du joueur.
+                     await provider.startNewGame();
+-                    provider.goToScreen(AppConstants.screenSettings);
++                    provider.goToScreen(AppConstants.screenGameMode);
+                   },
+                 ),
+               ),
+diff --git a/lib/screens/settings_screen.dart b/lib/screens/settings_screen.dart
+index 86613b9..56b1be2 100644
+--- a/lib/screens/settings_screen.dart
++++ b/lib/screens/settings_screen.dart
+@@ -247,7 +247,11 @@ class _SettingsScreenState extends State<SettingsScreen>
+             ),
+           ),
+           AppBackButton(
+-            onPressed: () => provider.goToScreen(AppConstants.screenHome),
++            onPressed: () => provider.goToScreen(
++              provider.pendingFiesta != null
++                  ? AppConstants.screenFiestaRecap
++                  : AppConstants.screenHome,
++            ),
+           ),
+           // Boutons en haut à droite : Réinitialiser + Paramètres avancés
+           Positioned(
+diff --git a/lib/screens/teams_screen.dart b/lib/screens/teams_screen.dart
+index 6007fdd..bafa86f 100644
+--- a/lib/screens/teams_screen.dart
++++ b/lib/screens/teams_screen.dart
+@@ -75,8 +75,11 @@ class TeamsScreen extends StatelessWidget {
+                         size: AppButtonSize.large,
+                         fullWidth: true,
+                         disabled: !allTeamsValid,
+-                        onPressed:
+-                            allTeamsValid ? () => provider.startGame() : null,
++                        onPressed: allTeamsValid
++                            ? () => provider.startGame(
++                                  fiesta: provider.pendingFiesta,
++                                )
++                            : null,
+                       ),
+                     ],
+                   ),
+diff --git a/lib/utils/constants.dart b/lib/utils/constants.dart
+index da9b466..7777848 100644
+--- a/lib/utils/constants.dart
++++ b/lib/utils/constants.dart
+@@ -45,6 +45,11 @@ class AppConstants {
+   static const String screenStats = 'stats';
+   static const String screenCategories = 'categories';
+   static const String screenHistory = 'history';
++  static const String screenGameMode = 'gameMode';
++  static const String screenFiestaChoice = 'fiestaChoice';
++  static const String screenFiestaAuto = 'fiestaAuto';
++  static const String screenFiestaRecap = 'fiestaRecap';
++  static const String screenFiestaEnsembles = 'fiestaEnsembles';
+ 
+   // Word choice modes
+   static const String wordChoiceCustom = 'Personnalisé';
+diff --git a/lib/widgets/CLAUDE.md b/lib/widgets/CLAUDE.md
+index deea9d3..fabe6de 100644
+--- a/lib/widgets/CLAUDE.md
++++ b/lib/widgets/CLAUDE.md
+@@ -8,3 +8,4 @@ Widgets reutilisables organises en deux sous-repertoires.
+ |------------|------|
+ | `common/` | Composants UI reutilisables (boutons, inputs, modals, sliders, toggles) |
+ | `effects/` | Effets visuels et animations de fond |
++| `fiesta/` | Squelette et cartes des ecrans de choix du mode Fiesta (retour systeme Android gere) |
+diff --git a/lib/widgets/fiesta/fiesta_setup_widgets.dart b/lib/widgets/fiesta/fiesta_setup_widgets.dart
+new file mode 100644
+index 0000000..2badfac
+--- /dev/null
++++ b/lib/widgets/fiesta/fiesta_setup_widgets.dart
+@@ -0,0 +1,304 @@
++import 'package:flutter/material.dart';
++
++import '../../theme/app_theme.dart';
++import '../common/app_back_button.dart';
++import '../effects/shooting_stars.dart';
++
++/// Squelette commun des écrans de choix du mode (Mode de jeu, Fiesta, Auto,
++/// Récap) : titre, contenu défilant, bouton bas, et retour — bouton ET geste
++/// système (Android) — vers [onBack], pour ne pas quitter l'app par surprise.
++class FiestaSetupScaffold extends StatelessWidget {
++  final String title;
++  final String? subtitle;
++  final VoidCallback onBack;
++  final List<Widget> content;
++  final Widget bottom;
++
++  const FiestaSetupScaffold({
++    required this.title,
++    this.subtitle,
++    required this.onBack,
++    required this.content,
++    required this.bottom,
++    super.key,
++  });
++
++  @override
++  Widget build(BuildContext context) {
++    return PopScope(
++      canPop: false,
++      onPopInvokedWithResult: (didPop, _) {
++        if (!didPop) onBack();
++      },
++      child: ShootingStars(
++        child: Stack(
++          children: [
++            SafeArea(
++              child: Padding(
++                padding: const EdgeInsets.all(24),
++                child: Column(
++                  children: [
++                    Expanded(
++                      child: SingleChildScrollView(
++                        child: Column(
++                          crossAxisAlignment: CrossAxisAlignment.stretch,
++                          children: [
++                            const SizedBox(height: 48),
++                            Text(
++                              title,
++                              textAlign: TextAlign.center,
++                              style: AppTextStyles.subtitle(fontSize: 40),
++                            ),
++                            if (subtitle != null) ...[
++                              const SizedBox(height: 4),
++                              Text(
++                                subtitle!,
++                                textAlign: TextAlign.center,
++                                style: AppTextStyles.bodySmall
++                                    .copyWith(color: AppColors.gray400),
++                              ),
++                            ],
++                            const SizedBox(height: 24),
++                            ...content,
++                          ],
++                        ),
++                      ),
++                    ),
++                    const SizedBox(height: 16),
++                    bottom,
++                  ],
++                ),
++              ),
++            ),
++            AppBackButton(onPressed: onBack),
++          ],
++        ),
++      ),
++    );
++  }
++}
++
++/// Carte sélectionnable (maquette `.pick`).
++class FiestaPickCard extends StatelessWidget {
++  final String icon;
++  final String title;
++  final String description;
++  final bool selected;
++  final VoidCallback onTap;
++
++  const FiestaPickCard({
++    required this.icon,
++    required this.title,
++    required this.description,
++    required this.selected,
++    required this.onTap,
++    super.key,
++  });
++
++  @override
++  Widget build(BuildContext context) {
++    return Padding(
++      padding: const EdgeInsets.only(bottom: 12),
++      child: GestureDetector(
++        onTap: onTap,
++        child: Container(
++          padding: const EdgeInsets.all(14),
++          decoration: BoxDecoration(
++            color: AppColors.backgroundCard,
++            borderRadius: BorderRadius.circular(16),
++            border: Border.all(
++              color: selected ? AppColors.secondaryCyan : AppColors.gray600,
++              width: 2,
++            ),
++          ),
++          child: Row(
++            crossAxisAlignment: CrossAxisAlignment.start,
++            children: [
++              Container(
++                width: 44,
++                height: 44,
++                alignment: Alignment.center,
++                decoration: BoxDecoration(
++                  color: AppColors.secondaryCyan.withValues(alpha: 0.18),
++                  borderRadius: BorderRadius.circular(14),
++                ),
++                child: Text(
++                  icon,
++                  style: const TextStyle(
++                    fontFamily: 'Bangers',
++                    fontSize: 22,
++                    color: AppColors.secondaryCyan,
++                  ),
++                ),
++              ),
++              const SizedBox(width: 12),
++              Expanded(
++                child: Column(
++                  crossAxisAlignment: CrossAxisAlignment.start,
++                  children: [
++                    Text(title, style: AppTextStyles.label),
++                    const SizedBox(height: 2),
++                    Text(
++                      description,
++                      style: AppTextStyles.bodySmall.copyWith(
++                        fontSize: 12,
++                        color: AppColors.gray400,
++                      ),
++                    ),
++                  ],
++                ),
++              ),
++            ],
++          ),
++        ),
++      ),
++    );
++  }
++}
++
++/// Carte à titre en capitales (maquette `.card`), [trailing] à droite du titre.
++class FiestaCard extends StatelessWidget {
++  final String title;
++  final Widget? trailing;
++  final List<Widget> children;
++
++  const FiestaCard({
++    required this.title,
++    this.trailing,
++    this.children = const [],
++    super.key,
++  });
++
++  @override
++  Widget build(BuildContext context) {
++    return Container(
++      margin: const EdgeInsets.only(bottom: 12),
++      padding: const EdgeInsets.all(14),
++      decoration: BoxDecoration(
++        color: AppColors.backgroundCard,
++        borderRadius: BorderRadius.circular(18),
++        border: Border.all(color: AppColors.gray700),
++      ),
++      child: Column(
++        crossAxisAlignment: CrossAxisAlignment.stretch,
++        children: [
++          Row(
++            children: [
++              Expanded(
++                child: Text(
++                  title.toUpperCase(),
++                  style: AppTextStyles.label.copyWith(
++                    fontSize: 12,
++                    letterSpacing: 1.2,
++                    color: AppColors.gray400,
++                  ),
++                ),
++              ),
++              if (trailing != null) trailing!,
++            ],
++          ),
++          if (children.isNotEmpty) const SizedBox(height: 8),
++          ...children,
++        ],
++      ),
++    );
++  }
++}
++
++/// Ligne libellé + détail, avec un interrupteur si [onChanged] est donné,
++/// sinon « Oui / Non » en lecture seule (Récap).
++class FiestaLine extends StatelessWidget {
++  final String label;
++  final String? detail;
++  final bool? value;
++  final ValueChanged<bool>? onChanged;
++
++  const FiestaLine({
++    required this.label,
++    this.detail,
++    this.value,
++    this.onChanged,
++    super.key,
++  });
++
++  @override
++  Widget build(BuildContext context) {
++    final v = value;
++    return Padding(
++      padding: const EdgeInsets.symmetric(vertical: 6),
++      child: Row(
++        children: [
++          Expanded(
++            child: Column(
++              crossAxisAlignment: CrossAxisAlignment.start,
++              children: [
++                Text(label, style: AppTextStyles.bodySmall),
++                if (detail != null)
++                  Text(
++                    detail!,
++                    style: AppTextStyles.bodySmall.copyWith(
++                      fontSize: 12,
++                      color: AppColors.gray400,
++                    ),
++                  ),
++              ],
++            ),
++          ),
++          if (v != null && onChanged != null)
++            Switch(
++              value: v,
++              onChanged: onChanged,
++              activeTrackColor: AppColors.secondaryCyan,
++            )
++          else if (v != null)
++            Text(
++              v ? 'Oui' : 'Non',
++              style: AppTextStyles.label.copyWith(
++                color: v ? AppColors.secondaryCyan : AppColors.gray500,
++              ),
++            ),
++        ],
++      ),
++    );
++  }
++}
++
++/// Les deux règles communes Fiesta (maquette `commonCard`).
++class FiestaCommonRulesCard extends StatelessWidget {
++  final bool oneAnswer;
++  final bool carryOver;
++
++  /// Nul = lecture seule (Récap).
++  final void Function({bool? oneAnswer, bool? carryOver})? onChanged;
++
++  const FiestaCommonRulesCard({
++    required this.oneAnswer,
++    required this.carryOver,
++    this.onChanged,
++    super.key,
++  });
++
++  @override
++  Widget build(BuildContext context) {
++    final edit = onChanged;
++    return FiestaCard(
++      title: 'Règles communes Fiesta',
++      children: [
++        FiestaLine(
++          label: 'Une seule réponse',
++          detail: 'Une proposition par mot. Mauvaise réponse → il faut passer '
++              '(pénalité de passe). Simple annonce, l\'app ne vérifie pas.',
++          value: oneAnswer,
++          onChanged: edit == null ? null : (v) => edit(oneAnswer: v),
++        ),
++        FiestaLine(
++          label: 'Temps reporté de fin de manche',
++          detail: 'Le temps restant à la fin d\'une manche est rendu à '
++              'l\'équipe au début de la suivante.',
++          value: carryOver,
++          onChanged: edit == null ? null : (v) => edit(carryOver: v),
++        ),
++      ],
++    );
++  }
++}
+diff --git a/test/providers/fiesta_replay_test.dart b/test/providers/fiesta_replay_test.dart
+new file mode 100644
+index 0000000..57ebb71
+--- /dev/null
++++ b/test/providers/fiesta_replay_test.dart
+@@ -0,0 +1,65 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/providers/game_provider.dart';
++import 'package:guess_it_all_mobile/utils/constants.dart';
++
++import '../helpers/test_prefs.dart';
++
++/// Un provider prêt à lancer une partie : 2 joueurs, 2 équipes, 1 mot chacun.
++Future<GameProvider> givenReadyProvider() async {
++  await givenPrefs();
++  givenFakePlatformPlugins();
++  final provider = GameProvider();
++  await pumpEventQueue();
++  for (final name in ['Ana', 'Bob']) {
++    provider.addPlayer(name);
++  }
++  givenWords(provider);
++  provider.createTeams();
++  provider.randomizeTeams();
++  return provider;
++}
++
++/// « Rejouer » efface les mots : on les ressaisit avant chaque lancement.
++void givenWords(GameProvider provider) {
++  for (final player in provider.players) {
++    provider.updatePlayerWords(player.id, ['mot-${player.name}']);
++  }
++}
++
++void main() {
++  test(
++      '« Rejouer » remet la config Fiesta gelée en attente et passe par le '
++      'Récap ; après une partie Classique, rien en attente', () async {
++    final provider = await givenReadyProvider();
++    provider.setPendingFiesta(
++      FiestaRules(mode: FiestaMode.auto, symmetric: false),
++    );
++    await provider.startGame(fiesta: provider.pendingFiesta);
++
++    await provider.restartWithSamePlayers();
++
++    expect(provider.game.currentScreen, AppConstants.screenFiestaRecap);
++    expect(provider.pendingFiesta!.mode, FiestaMode.auto);
++    expect(provider.pendingFiesta!.symmetric, isFalse);
++
++    // Même chose via l'accueil : fin de partie, puis « Rejouer » de l'accueil.
++    givenWords(provider);
++    await provider.startGame(fiesta: provider.pendingFiesta);
++    await provider.endGameAndGoHome();
++    await provider.restartWithSamePlayers();
++
++    expect(provider.game.currentScreen, AppConstants.screenFiestaRecap);
++    expect(provider.pendingFiesta!.symmetric, isFalse);
++
++    // Partie Classique lancée alors qu'une config traîne en attente : Rejouer
++    // suit la partie jouée, pas l'attente.
++    givenWords(provider);
++    await provider.startGame();
++
++    await provider.restartWithSamePlayers();
++
++    expect(provider.game.currentScreen, AppConstants.screenSettings);
++    expect(provider.pendingFiesta, isNull);
++  });
++}
+diff --git a/test/screens/home_screen_new_game_test.dart b/test/screens/home_screen_new_game_test.dart
+index 56e24ad..4edbed1 100644
+--- a/test/screens/home_screen_new_game_test.dart
++++ b/test/screens/home_screen_new_game_test.dart
+@@ -54,7 +54,7 @@ void main() {
+     expect(disk['passPenalty'], 2);
+   });
+ 
+-  testWidgets('« Jouer » mène bien à l\'écran de réglages', (tester) async {
++  testWidgets('« Jouer » mène bien au choix du mode de jeu', (tester) async {
+     // Pendant du test précédent : préserver les réglages ne doit pas se faire en
+     // ne faisant plus rien du tout.
+     final provider = await pumpHome(tester);
+@@ -63,6 +63,6 @@ void main() {
+     await tester.runAsync(() => pumpEventQueue());
+     await tester.pump();
+ 
+-    expect(provider.game.currentScreen, AppConstants.screenSettings);
++    expect(provider.game.currentScreen, AppConstants.screenGameMode);
+   });
+ }
