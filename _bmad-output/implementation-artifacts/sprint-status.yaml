@@ -57,6 +57,8 @@ epics:
     title: "Release cloud (builds iOS/Android hors poste local)"
     status: done   # ✅ PR #4 (squash a282bde)
     note: >-
+      ✅ 2026-11-03 : dry-run Codemagic VERT (AAB + IPA signés), après fix analyze --no-fatal-infos et SPM désactivé.
+      Build Android Windows validé. Reste : commiter ios/Podfile.lock (artefact du dry-run).
       PR #4 mergée (squash a282bde). Publication désactivée jusqu'au build unique
       post-Fiesta. Reste : 1er dry-run Codemagic (signature iOS), un build Windows
       pour valider Gradle, commit de Podfile.lock. Team ID Apple P86JMJ3R72, clé
