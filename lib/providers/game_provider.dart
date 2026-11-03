@@ -586,7 +586,8 @@ class GameProvider extends ChangeNotifier {
     final durationSeconds = turnTime.total;
     final durationMs = durationSeconds * 1000;
     var fiesta = _game.fiesta;
-    final teamId = _teams[_game.currentTeamIndex].id;
+    // Lu seulement en Fiesta : en Classique, rien n'exige une équipe ici.
+    final teamId = fiesta == null ? '' : _teams[_game.currentTeamIndex].id;
     if (fiesta != null &&
         _game.turnBonusTime == null &&
         fiesta.catchUpDue.containsKey(teamId)) {
