@@ -1,0 +1,1016 @@
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index 4c47eab..fa9f93d 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -383,3 +383,36 @@ le tour des badges sous le chrono, et `MalusReveal` révèle les malus au premie
+   fixés. Q8 (« le tirage d'abord ») vise les offres et cadeaux, qui viennent après.
+ - **`block_guesser` jamais tiré pour tous** : il vise un joueur choisi par les adversaires, une
+   cible « toutes les équipes » n'a pas de sens.
++
++## 2026-11-03 — Fiesta 2-6 : une seule source pour la durée du tour, rattrapage, durée réelle
++
++**Quoi.** `lib/models/fiesta/turn_time.dart` (pur) : `composeTurnSeconds` rend la durée de
++départ d'un tour et son détail (base + rattrapage − malus du leader − 10 s × `minus_10s`,
++plancher 10 s ; une continuation garde exactement ses secondes reportées) ; `computeCatchUp`
++rend le rattrapage dû par équipe à la fin d'une manche (menée : `min(cap, k × écart avec la
++tête)`, leader : `−min(malCap, mal × écart avec la 2ᵉ)`, co-leaders tous en tête, égalité =
++rien). `GameProvider.turnTime` est la **seule** source de la durée : `startTurn` (aperçu) et
++`startTurnTimer` (chrono) la lisent tous deux. `nextRound` pose le dû dans
++`FiestaState.catchUpDue` ; `startTurnTimer` le consomme au premier tour non-continuation de
++l'équipe et écrit `GameState.turnAllottedSeconds`, sur lequel `timeSpent` se mesure désormais.
++Cartes « Temps du tour » (avant-tour, Fiesta) et « Rattrapage » (transition).
++
++**Pourquoi ces choix.**
++- **Le dû est stocké, pas dérivé de l'historique.** Dériver « consommé » de « l'équipe a une
++  entrée non-continuation dans la manche » rate un cas réel : fin de manche avec des mots
++  refusés → le temps est reporté (`turnBonusTime`) mais l'entrée n'est pas marquée continuation,
++  et l'équipe aurait perdu son rattrapage. Le stocker et l'effacer suit le principe de
++  `turnBonusTime` (consommé une fois, effacé). Champ **additif** dans `fiesta` seulement : le
++  blob Classique ne change pas de forme.
++- **Posé à `nextRound`, pas à `validateWords`.** Les scores ne bougent pas entre les deux, la
++  transition montre un aperçu recalculé (`catchUpPreview`, comme `nextRoundModifiers`), et le
++  retour arrière depuis la transition n'a rien à défaire.
++- **Continuation = `turnBonusTime` posé**, pas `pendingBonusTurnId` : c'est le champ qui fait
++  la durée du tour, et il couvre aussi le cas des mots refusés en fin de manche.
++- **`turnAllottedSeconds` écrit en Classique aussi** : le bug `timeSpent` (une continuation de
++  7 s finie à 2 s comptait 28 s) touche le mode Classique. Champ nullable, relu en `as int?` ;
++  absent sur une partie reprise d'une version antérieure → comportement d'avant.
++- **Plancher appliqué dans la composition** (`max(10, somme)`), sans cas spécial Classique : la
++  base est ≥ 20 s (`minTurnDuration`), donc la durée Classique est la base, seconde pour seconde.
++- **Co-leaders sans départage par l'ordre de jeu** (Q3) : `getTeamsSortedByScore` départage
++  pour l'affichage, pas pour le rattrapage — à égalité en tête, personne n'est « menée ».
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index 2abcedd..cba738c 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -9,7 +9,7 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `player.dart` | `Player` | Joueur (id, name, words). Factory `Player.create()` |
+ | `team.dart` | `Team` | Equipe (id, name, playerIds, score, scoreByRound[3]) |
+ | `game_settings.dart` | `GameSettings` | Config partie : nb equipes/joueurs, wordChoice, totalWords, turnDuration, passPenalty, categories, difficultes |
+-| `game_state.dart` | `GameState`, `HistoryEntry` | Etat complet de la partie en cours : ecran, round, tour, pools de mots, scores, timestamps, snapshots de validation |
++| `game_state.dart` | `GameState`, `HistoryEntry` | Etat complet de la partie en cours : ecran, round, tour, pools de mots, scores, timestamps, snapshots de validation. `turnAllottedSeconds` = durée de **départ** réelle du tour (continuation, rattrapage, malus), base de `HistoryEntry.timeSpent` ; nul = partie d'une version antérieure → `turnDuration` |
+ | `game_analytics.dart` | `GameAnalytics`, `DeviceInfo` | Analytics completes d'une partie pour Firebase (gameId, events, wordMetadata, wordStats) |
+ | `word_event.dart` | `WordEvent`, `WordEventType`, `PassEvent` | Evenement atomique : shown/guessed/passed/expired/invalidated avec contexte (round, turn, team, player) |
+ | `word_stats.dart` | `WordMetadata`, `WordRoundStats`, `WordStats` | Metadonnees mot (category, difficulty, language), stats par manche et agregees |
+@@ -18,7 +18,8 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `fiesta/modifier_instance.dart` | `ModifierInstance` | Modificateur actif dans une partie. `tryFromJson` tolérant (id inconnu → `null`, jamais de défaut inventé). `canAdd(active, candidate, {maxPerTurn: 2})` |
+ | `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, `CatchUpRules`, enums `FiestaMode`, `ModifierArrival` | Configuration Fiesta **immuable** (Auto / Personnalisé, réglage par modificateur, rattrapage, tirage, règles communes). `CatchUpRules.auto` = constantes du mode Auto. `tryFromJson` : structure illisible → `null`, réglage d'id inconnu ignoré seul |
+ | `fiesta/symmetric_draw.dart` | fonctions pures | Modificateurs d'une manche pour toutes les équipes : `fixedForRound` puis `drawSymmetric`, réunis par `roundModifiers(rules, gameId:, round:)`. Graine `drawSeed(gameId, round)` (FNV-1a, stable entre exécutions) |
+-| `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn}`. `turn` est vide pour l'instant (compteurs des stories d'effets) |
++| `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn, catchUpDue}`. `turn` est vide pour l'instant (compteurs des stories d'effets). `catchUpDue` : id d'équipe → secondes dues (négatives = malus du leader), posé par `nextRound`, consommé au premier tour non-continuation |
++| `fiesta/turn_time.dart` | fonctions pures | `composeTurnSeconds` (base + rattrapage − malus du leader − 10 s × `minus_10s`, plancher `kTurnFloorSeconds` = 10 ; continuation = ses secondes, sans modificateur) ; `computeCatchUp` (k × écart avec la tête, plafonds, co-leaders tous en tête, égalité = rien) ; `effectiveCatchUp` (Auto → auto-calibrage, Personnalisé → curseurs) |
+ 
+ ## Fiesta — invariants (epic-2)
+ 
+@@ -38,7 +39,12 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ - Forme JSON : `fiesta: {rules: {mode, symmetric, autoCalibrate, ensembleName?, modifiers:
+   {id: {active, arrival, startRound, fixedRound?, charges}}, oneOfThree, catchUp: {b1, b2, cap,
+   mal, malCap}, drawCount, oneAnswer, carryOver}, active: [{catalogId, scope, target, teamId?,
+-  playerId?, charges, nature, round}], turn: {}}`.
++  playerId?, charges, nature, round}], turn: {}, catchUpDue: {teamId: int}}`.
++- **Temps du tour** (2-6) : `GameProvider.turnTime` est la **seule** source de la durée de
++  départ ; `startTurn` (aperçu) et `startTurnTimer` (chrono, qui écrit `turnAllottedSeconds` et
++  consomme `catchUpDue`) la lisent tous deux. `TurnClock` reste la seule autorité sur le temps
++  qui court. Les modificateurs de temps ne touchent jamais une continuation (`turnBonusTime`
++  posé). En Classique la durée est `turnBonusTime ?? turnDuration`, inchangée.
+ 
+ ## Relations
+ 
+diff --git a/lib/models/fiesta/fiesta_state.dart b/lib/models/fiesta/fiesta_state.dart
+index 01afa76..a00aab4 100644
+--- a/lib/models/fiesta/fiesta_state.dart
++++ b/lib/models/fiesta/fiesta_state.dart
+@@ -17,17 +17,36 @@ class FiestaState {
+   /// d'effets y ajoutent les leurs.
+   final Map<String, dynamic> turn;
+ 
++  /// Rattrapage DÛ par équipe (id → secondes, négatives pour le malus du
++  /// leader), posé à l'entrée de la manche et consommé par l'équipe à son
++  /// premier tour non-continuation (story 2-6). Une équipe absente n'a rien.
++  final Map<String, int> catchUpDue;
++
+   FiestaState({
+     required this.rules,
+     List<ModifierInstance> active = const [],
+     Map<String, dynamic> turn = const {},
++    Map<String, int> catchUpDue = const {},
+   })  : active = List.unmodifiable(active),
+-        turn = Map.unmodifiable(turn);
++        turn = Map.unmodifiable(turn),
++        catchUpDue = Map.unmodifiable(catchUpDue);
++
++  FiestaState copyWith({
++    List<ModifierInstance>? active,
++    Map<String, int>? catchUpDue,
++  }) =>
++      FiestaState(
++        rules: rules,
++        active: active ?? this.active,
++        turn: turn,
++        catchUpDue: catchUpDue ?? this.catchUpDue,
++      );
+ 
+   Map<String, dynamic> toJson() => {
+         'rules': rules.toJson(),
+         'active': active.map((e) => e.toJson()).toList(),
+         'turn': turn,
++        'catchUpDue': catchUpDue,
+       };
+ 
+   /// Variante tolérante : `null` (= Classique) si les règles sont illisibles.
+@@ -51,10 +70,18 @@ class FiestaState {
+         : <ModifierInstance>[];
+ 
+     final rawTurn = json['turn'];
++    final rawDue = json['catchUpDue'];
+     return FiestaState(
+       rules: rules,
+       active: active,
+       turn: rawTurn is Map ? Map<String, dynamic>.from(rawTurn) : const {},
++      catchUpDue: rawDue is Map
++          ? {
++              for (final e in rawDue.entries)
++                if (e.key is String && e.value is int)
++                  e.key as String: e.value as int,
++            }
++          : const {},
+     );
+   }
+ }
+diff --git a/lib/models/fiesta/turn_time.dart b/lib/models/fiesta/turn_time.dart
+new file mode 100644
+index 0000000..e8f90d6
+--- /dev/null
++++ b/lib/models/fiesta/turn_time.dart
+@@ -0,0 +1,139 @@
++import 'dart:math';
++
++import 'fiesta_rules.dart';
++
++/// Temps du tour (story 2-6) : rattrapage, malus de temps, composition de la
++/// durée de départ. Tout est pur ; le provider ne fait que brancher.
++
++/// Plancher de la durée de départ d'un tour, après tous les malus (Q4).
++const int kTurnFloorSeconds = 10;
++
++/// Une composante de la durée du tour, pour la carte « Temps du tour ».
++class TurnTimeLine {
++  final String label;
++
++  /// Signé : négatif pour un malus.
++  final int seconds;
++
++  const TurnTimeLine(this.label, this.seconds);
++}
++
++class TurnTime {
++  /// Durée de départ du tour, en secondes.
++  final int total;
++  final List<TurnTimeLine> lines;
++
++  const TurnTime({required this.total, required this.lines});
++}
++
++/// Durée de départ d'un tour et son détail.
++///
++/// 🔴 Seule source de la durée : l'aperçu d'avant-tour (`startTurn`) et le
++/// chrono (`startTurnTimer`) passent tous deux par ici.
++///
++/// - [carriedSeconds] non nul = tour de continuation : exactement ces
++///   secondes, sans aucun modificateur de temps (Q1, Q5).
++/// - Sinon : base + rattrapage − malus du leader − 10 s par [minus10sCount],
++///   jamais sous [kTurnFloorSeconds] (Q4). Sans modificateur (Classique),
++///   c'est la base.
++TurnTime composeTurnSeconds({
++  required int baseSeconds,
++  int? carriedSeconds,
++  int catchUpSeconds = 0,
++  int leaderMalusSeconds = 0,
++  int minus10sCount = 0,
++}) {
++  if (carriedSeconds != null) {
++    return TurnTime(
++      total: carriedSeconds,
++      lines: [TurnTimeLine('Temps reporté', carriedSeconds)],
++    );
++  }
++  final lines = [
++    TurnTimeLine('Durée de base', baseSeconds),
++    if (catchUpSeconds > 0) TurnTimeLine('Rattrapage', catchUpSeconds),
++    if (leaderMalusSeconds > 0)
++      TurnTimeLine('Malus du leader', -leaderMalusSeconds),
++    if (minus10sCount > 0)
++      TurnTimeLine(
++        minus10sCount == 1 ? 'Malus de 10 s' : 'Malus de 10 s × $minus10sCount',
++        -10 * minus10sCount,
++      ),
++  ];
++  final sum = lines.fold(0, (acc, l) => acc + l.seconds);
++  return TurnTime(total: max(kTurnFloorSeconds, sum), lines: lines);
++}
++
++/// Le rattrapage d'une équipe à la fin d'une manche (carte « Rattrapage »).
++class CatchUpEntry {
++  final String teamId;
++  final bool isLeader;
++
++  /// Écart mesuré : avec l'équipe en tête (menée) ou avec la 2ᵉ (leader).
++  final int gap;
++
++  /// Secondes par point d'écart, avant plafond.
++  final int perPoint;
++
++  /// Secondes dues : positives (bonus) ou négatives (malus du leader).
++  final int seconds;
++
++  const CatchUpEntry({
++    required this.teamId,
++    required this.isLeader,
++    required this.gap,
++    required this.perPoint,
++    required this.seconds,
++  });
++}
++
++/// Les curseurs de rattrapage qui s'appliquent à la partie, ou `null` si le
++/// rattrapage est éteint : Auto → « Auto-calibrage » ; Personnalisé → ceux de
++/// l'ensemble (tous à 0 = éteint, par construction de [computeCatchUp]).
++CatchUpRules? effectiveCatchUp(FiestaRules rules) {
++  if (rules.mode == FiestaMode.auto) {
++    return rules.autoCalibrate ? CatchUpRules.auto : null;
++  }
++  return rules.catchUp;
++}
++
++/// Rattrapage dû à chaque équipe après la manche [round] (1 ou 2), sur
++/// [scores] (id d'équipe → score à ce moment-là).
++///
++/// - Égalité générale : rien (Q3).
++/// - Co-leaders : tous « en tête », malus mesuré sur la meilleure équipe non
++///   leader (Q2, Q3). Jamais de rattrapage pour un leader.
++/// - Menée : `min(cap, k × écart avec la tête)`, `k = b1` après M1, `b2`
++///   après M2. Leader : `min(malCap, mal × écart avec la 2ᵉ)`.
++///
++/// Les équipes à 0 s n'apparaissent pas.
++List<CatchUpEntry> computeCatchUp({
++  required CatchUpRules rules,
++  required int round,
++  required Map<String, int> scores,
++}) {
++  if (scores.length < 2) return const [];
++  final top = scores.values.reduce(max);
++  final others = scores.values.where((s) => s < top);
++  if (others.isEmpty) return const [];
++  final second = others.reduce(max);
++  final k = round == 1 ? rules.b1 : rules.b2;
++
++  final entries = <CatchUpEntry>[];
++  for (final entry in scores.entries) {
++    final isLeader = entry.value == top;
++    final gap = isLeader ? top - second : top - entry.value;
++    final perPoint = isLeader ? rules.mal : k;
++    final cap = isLeader ? rules.malCap : rules.cap;
++    final seconds = min(cap, perPoint * gap);
++    if (seconds <= 0) continue;
++    entries.add(CatchUpEntry(
++      teamId: entry.key,
++      isLeader: isLeader,
++      gap: gap,
++      perPoint: perPoint,
++      seconds: isLeader ? -seconds : seconds,
++    ));
++  }
++  return entries;
++}
+diff --git a/lib/models/game_state.dart b/lib/models/game_state.dart
+index e7c7b80..c71abc7 100644
+--- a/lib/models/game_state.dart
++++ b/lib/models/game_state.dart
+@@ -80,6 +80,12 @@ class GameState {
+   int timeRemaining;
+   int? turnBonusTime;
+ 
++  /// Durée de DÉPART du tour en cours, telle que composée au `startTurnTimer`
++  /// (continuation, rattrapage, malus). C'est elle qui mesure le temps passé
++  /// d'un tour, pas le réglage. Nul = partie reprise d'une version antérieure :
++  /// on retombe sur le réglage, comme avant.
++  int? turnAllottedSeconds;
++
+   int? turnStartTimestamp;
+   int? turnEndTimestamp;
+ 
+@@ -131,6 +137,7 @@ class GameState {
+     this.expiredWord,
+     this.timeRemaining = AppConstants.defaultTurnDuration,
+     this.turnBonusTime,
++    this.turnAllottedSeconds,
+     this.turnStartTimestamp,
+     this.turnEndTimestamp,
+     this.pausedTimeRemaining,
+@@ -176,6 +183,7 @@ class GameState {
+     int? timeRemaining,
+     int? turnBonusTime,
+     bool clearTurnBonusTime = false,
++    int? turnAllottedSeconds,
+     int? turnStartTimestamp,
+     bool clearTurnStartTimestamp = false,
+     int? turnEndTimestamp,
+@@ -222,6 +230,7 @@ class GameState {
+       timeRemaining: timeRemaining ?? this.timeRemaining,
+       turnBonusTime:
+           clearTurnBonusTime ? null : (turnBonusTime ?? this.turnBonusTime),
++      turnAllottedSeconds: turnAllottedSeconds ?? this.turnAllottedSeconds,
+       turnStartTimestamp: clearTurnStartTimestamp
+           ? null
+           : (turnStartTimestamp ?? this.turnStartTimestamp),
+@@ -271,6 +280,7 @@ class GameState {
+       'expiredWord': expiredWord,
+       'timeRemaining': timeRemaining,
+       'turnBonusTime': turnBonusTime,
++      'turnAllottedSeconds': turnAllottedSeconds,
+       'turnStartTimestamp': turnStartTimestamp,
+       'turnEndTimestamp': turnEndTimestamp,
+       'pausedTimeRemaining': pausedTimeRemaining,
+@@ -318,6 +328,7 @@ class GameState {
+       timeRemaining:
+           json['timeRemaining'] as int? ?? AppConstants.defaultTurnDuration,
+       turnBonusTime: json['turnBonusTime'] as int?,
++      turnAllottedSeconds: json['turnAllottedSeconds'] as int?,
+       turnStartTimestamp: json['turnStartTimestamp'] as int?,
+       turnEndTimestamp: json['turnEndTimestamp'] as int?,
+       pausedTimeRemaining: json['pausedTimeRemaining'] as int?,
+diff --git a/lib/providers/CLAUDE.md b/lib/providers/CLAUDE.md
+index 7493eeb..28119b1 100644
+--- a/lib/providers/CLAUDE.md
++++ b/lib/providers/CLAUDE.md
+@@ -21,6 +21,8 @@ Gestion d'etat centralisee via Provider.
+ - `_wordMetadataCache` est en memoire (non persiste). Si l'app est tuee, il est `null` au redemarrage. Un fallback `lookupWordsMetadata()` reconstitue les metadonnees depuis les categories.
+ - La navigation arriere est complexe : depend de l'ecran courant, du tour, et de l'existence de snapshots de validation.
+ - `_ensureWordsForPlayer()` conserve les mots existants d'un joueur si le compte est suffisant (meme apres changement de categories).
++- **Durée du tour** : `turnTime` (composée par `composeTurnSeconds`) est lue par `startTurn` ET `startTurnTimer`. Ne jamais recalculer la durée ailleurs : l'avant-tour et le chrono divergeraient. `timeSpent` se mesure sur `turnAllottedSeconds`, pas sur le réglage.
++- **Rattrapage Fiesta** : `catchUpPreview` (transition, calculé sur les scores) → `nextRound` le pose dans `fiesta.catchUpDue` → `startTurnTimer` le consomme au premier tour non-continuation de l'équipe.
+ 
+ ### Dependances
+ 
+diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
+index ff69741..c0726ec 100644
+--- a/lib/providers/game_provider.dart
++++ b/lib/providers/game_provider.dart
+@@ -9,6 +9,7 @@ import '../models/fiesta/fiesta_state.dart';
+ import '../models/fiesta/modifier_catalog.dart';
+ import '../models/fiesta/modifier_instance.dart';
+ import '../models/fiesta/symmetric_draw.dart';
++import '../models/fiesta/turn_time.dart';
+ import '../models/game_settings.dart';
+ import '../models/game_state.dart';
+ import '../models/turn_clock.dart';
+@@ -539,12 +540,34 @@ class GameProvider extends ChangeNotifier {
+     };
+   }
+ 
++  /// Durée de départ du tour à venir et son détail (carte « Temps du tour »).
++  ///
++  /// 🔴 SEULE source de la durée : `startTurn` (aperçu) et `startTurnTimer`
++  /// (chrono) la lisent tous deux, sinon l'avant-tour annonce 30 s et le chrono
++  /// part à 48. Continuation (`turnBonusTime` posé) = ses secondes, sans
++  /// modificateur (Q5). En Classique : `turnBonusTime ?? turnDuration`, comme
++  /// avant.
++  TurnTime get turnTime {
++    final fiesta = _game.fiesta;
++    final due = fiesta == null || _teams.isEmpty
++        ? 0
++        : fiesta.catchUpDue[_teams[_game.currentTeamIndex].id] ?? 0;
++    return composeTurnSeconds(
++      baseSeconds: _settings.turnDuration,
++      carriedSeconds: _game.turnBonusTime,
++      catchUpSeconds: max(0, due),
++      leaderMalusSeconds: max(0, -due),
++      minus10sCount:
++          currentTeamModifiers.where((m) => m.catalogId == 'minus_10s').length,
++    );
++  }
++
+   void startTurn() {
+     _game = _game.copyWith(
+       currentScreen: AppConstants.screenCountdown,
+       wordsGuessedThisTurn: [],
+       passedWordsThisTurn: [],
+-      timeRemaining: _game.turnBonusTime ?? _settings.turnDuration,
++      timeRemaining: turnTime.total,
+     );
+ 
+     notifyListeners();
+@@ -553,8 +576,14 @@ class GameProvider extends ChangeNotifier {
+ 
+   void startTurnTimer() {
+     final now = DateTime.now().millisecondsSinceEpoch;
+-    final durationSeconds = _game.turnBonusTime ?? _settings.turnDuration;
++    // À lire AVANT d'effacer `turnBonusTime` : c'est lui qui dit si ce tour est
++    // une continuation, donc si le rattrapage s'applique et se consomme.
++    final durationSeconds = turnTime.total;
+     final durationMs = durationSeconds * 1000;
++    final fiesta = _game.fiesta;
++    final consumesCatchUp = fiesta != null &&
++        _game.turnBonusTime == null &&
++        fiesta.catchUpDue.containsKey(_teams[_game.currentTeamIndex].id);
+ 
+     _game = _game.copyWith(
+       currentScreen: AppConstants.screenTurn,
+@@ -563,7 +592,14 @@ class GameProvider extends ChangeNotifier {
+       clearPausedTimeRemaining: true,
+       clearPausedRemainingMs: true,
+       timeRemaining: durationSeconds,
++      turnAllottedSeconds: durationSeconds,
+       clearTurnBonusTime: true,
++      // Consommé une fois, effacé : même principe que `turnBonusTime`.
++      fiesta: consumesCatchUp
++          ? fiesta.copyWith(
++              catchUpDue: Map.of(fiesta.catchUpDue)
++                ..remove(_teams[_game.currentTeamIndex].id))
++          : null,
+     );
+ 
+     // Tracker l'affichage du premier mot
+@@ -897,8 +933,12 @@ class GameProvider extends ChangeNotifier {
+     final hasBonusPending = _game.pendingBonusTurnId != null;
+     final shouldMergeWithPrevious = hasBonusPending && _game.history.isNotEmpty;
+ 
+-    // Calculer le temps passé pour ce segment
+-    final currentTimeSpent = _settings.turnDuration - _game.timeRemaining;
++    // Temps passé sur ce tour : sur sa durée de DÉPART réelle, pas sur le
++    // réglage — une continuation de 7 s finie à 2 s comptait 28 s. Nul sur une
++    // partie reprise d'une version antérieure : comportement d'alors.
++    final currentTimeSpent =
++        (_game.turnAllottedSeconds ?? _settings.turnDuration) -
++            _game.timeRemaining;
+ 
+     List<HistoryEntry> newHistory;
+     int nextTurn;
+@@ -1058,20 +1098,37 @@ class GameProvider extends ChangeNotifier {
+   }
+ 
+   /// Fiesta à l'entrée de la manche [round] : les instances de portée manche
+-  /// de la manche finie partent, celles de [round] (fixés + tirage) arrivent.
++  /// de la manche finie partent, celles de [round] (fixés + tirage) arrivent,
++  /// et le rattrapage dû est posé sur les scores de la manche finie.
+   /// Nul en Classique (et `copyWith(fiesta: null)` laisse alors `fiesta` nul).
+   FiestaState? _fiestaForRound(int round) {
+     final fiesta = _game.fiesta;
+     if (fiesta == null) return null;
+-    return FiestaState(
+-      rules: fiesta.rules,
++    return fiesta.copyWith(
+       active: [
+         ...fiesta.active
+             .where((m) => !(m.scope == ModifierScope.round && m.round < round)),
+         ...roundModifiers(fiesta.rules,
+             gameId: _game.gameId ?? '', round: round),
+       ],
+-      turn: fiesta.turn,
++      catchUpDue: {for (final e in catchUpPreview) e.teamId: e.seconds},
++    );
++  }
++
++  /// Rattrapage qui s'appliquera à la manche suivante, calculé sur les scores
++  /// actuels : montré sur la transition, posé par `nextRound`. Calculé et non
++  /// stocké sur la transition (comme [nextRoundModifiers]) : le retour arrière
++  /// restaure les scores, la revalidation redonne le même. Vide en Classique,
++  /// rattrapage éteint, après M3, ou à égalité.
++  List<CatchUpEntry> get catchUpPreview {
++    final fiesta = _game.fiesta;
++    if (fiesta == null || _game.currentRound >= 3) return const [];
++    final rules = effectiveCatchUp(fiesta.rules);
++    if (rules == null) return const [];
++    return computeCatchUp(
++      rules: rules,
++      round: _game.currentRound,
++      scores: {for (final t in _teams) t.id: t.score},
+     );
+   }
+ 
+diff --git a/lib/screens/game_screen.dart b/lib/screens/game_screen.dart
+index 44d9d76..fc2a65d 100644
+--- a/lib/screens/game_screen.dart
++++ b/lib/screens/game_screen.dart
+@@ -13,6 +13,7 @@ import '../widgets/fiesta/fiesta_setup_widgets.dart';
+ import '../widgets/fiesta/malus_reveal.dart';
+ import '../widgets/fiesta/modifier_badge.dart';
+ import '../widgets/fiesta/modifier_card.dart';
++import '../widgets/fiesta/turn_time_cards.dart';
+ import '../models/fiesta/modifier_catalog.dart';
+ 
+ class GameScreen extends StatelessWidget {
+@@ -204,8 +205,10 @@ class GameScreen extends StatelessWidget {
+                       ),
+                     ),
+ 
+-                  // Time bonus indicator
+-                  if (provider.game.turnBonusTime != null) ...[
++                  // Time bonus indicator (Classique : en Fiesta, la carte
++                  // « Temps du tour » porte déjà la ligne « Temps reporté »)
++                  if (provider.game.turnBonusTime != null &&
++                      !provider.isFiesta) ...[
+                     Container(
+                       padding: const EdgeInsets.symmetric(
+                           horizontal: 16, vertical: 8),
+@@ -591,6 +594,7 @@ class GameScreen extends StatelessWidget {
+ 
+ /// Avant le tout premier tour : tirage de la manche 1 et annonce « Une seule
+ /// réponse » (maquette `r1`). Ensuite : « Actif ce tour » (maquette `cd`).
++/// Dans les deux cas, la carte « Temps du tour » dessous.
+ class _FiestaAnnouncements extends StatelessWidget {
+   final GameProvider provider;
+ 
+@@ -598,6 +602,16 @@ class _FiestaAnnouncements extends StatelessWidget {
+ 
+   @override
+   Widget build(BuildContext context) {
++    return Column(
++      crossAxisAlignment: CrossAxisAlignment.stretch,
++      children: [
++        _modifiers(),
++        TurnTimeCard(provider.turnTime),
++      ],
++    );
++  }
++
++  Widget _modifiers() {
+     final rules = provider.game.fiesta!.rules;
+     final modifiers = provider.currentTeamModifiers;
+ 
+diff --git a/lib/screens/transition_screen.dart b/lib/screens/transition_screen.dart
+index 135ac80..b9f3b2f 100644
+--- a/lib/screens/transition_screen.dart
++++ b/lib/screens/transition_screen.dart
+@@ -7,6 +7,8 @@ import '../widgets/common/game_dialogs.dart';
+ import '../widgets/common/home_button.dart';
+ import '../widgets/common/back_button.dart';
+ import '../widgets/fiesta/modifier_card.dart';
++import '../widgets/fiesta/turn_time_cards.dart';
++import '../models/fiesta/turn_time.dart';
+ 
+ class TransitionScreen extends StatelessWidget {
+   const TransitionScreen({super.key});
+@@ -17,6 +19,9 @@ class TransitionScreen extends StatelessWidget {
+     final currentRound = provider.game.currentRound;
+     final isLastRound = currentRound >= 3;
+     final sortedTeams = provider.getTeamsSortedByScore();
++    final fiestaRules = provider.game.fiesta?.rules;
++    final catchUpRules =
++        fiestaRules == null ? null : effectiveCatchUp(fiestaRules);
+ 
+     return Material(
+       color: AppColors.backgroundMain,
+@@ -154,6 +159,13 @@ class TransitionScreen extends StatelessWidget {
+                               round: currentRound + 1,
+                               modifiers: provider.nextRoundModifiers,
+                             ),
++                          // Fiesta : rattrapage de la manche suivante.
++                          if (catchUpRules != null && !isLastRound)
++                            CatchUpCard(
++                              entries: provider.catchUpPreview,
++                              rules: catchUpRules,
++                              teams: provider.teams,
++                            ),
+                         ]).toList(),
+                       ),
+                     ),
+diff --git a/lib/widgets/CLAUDE.md b/lib/widgets/CLAUDE.md
+index c3e0e54..09d06ea 100644
+--- a/lib/widgets/CLAUDE.md
++++ b/lib/widgets/CLAUDE.md
+@@ -8,4 +8,4 @@ Widgets reutilisables organises en deux sous-repertoires.
+ |------------|------|
+ | `common/` | Composants UI reutilisables (boutons, inputs, modals, sliders, toggles) |
+ | `effects/` | Effets visuels et animations de fond |
+-| `fiesta/` | Squelette et cartes des ecrans de choix du mode Fiesta (retour systeme Android gere) ; en partie : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawCard` (« Tirage de la manche N »), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10) |
++| `fiesta/` | Squelette et cartes des ecrans de choix du mode Fiesta (retour systeme Android gere) ; en partie : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawCard` (« Tirage de la manche N »), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `TurnTimeCard` (« Temps du tour », detail + total, avant-tour) et `CatchUpCard` (« Rattrapage », transition) |
+diff --git a/lib/widgets/fiesta/turn_time_cards.dart b/lib/widgets/fiesta/turn_time_cards.dart
+new file mode 100644
+index 0000000..16cb9e9
+--- /dev/null
++++ b/lib/widgets/fiesta/turn_time_cards.dart
+@@ -0,0 +1,113 @@
++import 'package:flutter/material.dart';
++import '../../models/fiesta/fiesta_rules.dart';
++import '../../models/fiesta/turn_time.dart';
++import '../../models/team.dart';
++import '../../theme/app_theme.dart';
++import 'fiesta_setup_widgets.dart';
++
++String _signed(int seconds) => '${seconds < 0 ? '−' : '+'}${seconds.abs()} s';
++
++/// « Temps du tour » (maquette `cd` / `cd2`) : une ligne par composante, le
++/// total. Avant le tour, sous les annonces Fiesta.
++class TurnTimeCard extends StatelessWidget {
++  final TurnTime time;
++
++  const TurnTimeCard(this.time, {super.key});
++
++  @override
++  Widget build(BuildContext context) {
++    final floored = time.total > time.lines.fold(0, (s, l) => s + l.seconds);
++    return FiestaCard(
++      title: 'Temps du tour',
++      trailing: Text(
++        '${time.total} s',
++        style: const TextStyle(
++            fontFamily: 'Bangers', fontSize: 24, color: AppColors.warning),
++      ),
++      children: [
++        for (final line in time.lines)
++          Padding(
++            padding: const EdgeInsets.only(bottom: 4),
++            child: Row(
++              mainAxisAlignment: MainAxisAlignment.spaceBetween,
++              children: [
++                Text(line.label, style: AppTextStyles.bodySmall),
++                Text(
++                  line == time.lines.first
++                      ? '${line.seconds} s'
++                      : _signed(line.seconds),
++                  style: AppTextStyles.bodySmall.copyWith(
++                    color: line.seconds < 0
++                        ? AppColors.error
++                        : line == time.lines.first
++                            ? AppColors.gray400
++                            : AppColors.success,
++                  ),
++                ),
++              ],
++            ),
++          ),
++        if (floored)
++          const FiestaHint('Plancher : un tour ne descend pas sous 10 s.'),
++      ],
++    );
++  }
++}
++
++/// « Rattrapage » (maquette `r2`) sur la transition : ce que chaque équipe
++/// aura en plus ou en moins à son premier tour de la manche suivante.
++class CatchUpCard extends StatelessWidget {
++  final List<CatchUpEntry> entries;
++  final CatchUpRules rules;
++  final List<Team> teams;
++
++  const CatchUpCard({
++    required this.entries,
++    required this.rules,
++    required this.teams,
++    super.key,
++  });
++
++  @override
++  Widget build(BuildContext context) {
++    if (entries.isEmpty) return const SizedBox.shrink();
++    return FiestaCard(
++      title: 'Rattrapage',
++      children: [
++        const FiestaHint('Appliqué au premier tour de chaque équipe dans la '
++            'manche (pas à une continuation).'),
++        const SizedBox(height: 6),
++        for (final e in entries)
++          Builder(builder: (context) {
++            final index = teams.indexWhere((t) => t.id == e.teamId);
++            final color = AppColors.getTeamColor(index < 0 ? 0 : index);
++            final name = index < 0 ? e.teamId : teams[index].name;
++            return Padding(
++              padding: const EdgeInsets.only(bottom: 4),
++              child: Row(
++                mainAxisAlignment: MainAxisAlignment.spaceBetween,
++                children: [
++                  Expanded(
++                    child: Text(
++                      '$name (${e.isLeader ? 'en tête' : 'menée'}) · '
++                      '${e.perPoint} s × ${e.gap}',
++                      style: AppTextStyles.bodySmall.copyWith(color: color),
++                    ),
++                  ),
++                  Text(
++                    _signed(e.seconds),
++                    style: AppTextStyles.bodySmall.copyWith(
++                      color: e.isLeader ? AppColors.error : AppColors.success,
++                      fontWeight: FontWeight.w600,
++                    ),
++                  ),
++                ],
++              ),
++            );
++          }),
++        FiestaHint('Plafonds : +${rules.cap} s pour les menées, '
++            '−${rules.malCap} s pour le leader.'),
++      ],
++    );
++  }
++}
+diff --git a/test/models/fiesta/turn_time_test.dart b/test/models/fiesta/turn_time_test.dart
+new file mode 100644
+index 0000000..e88d02c
+--- /dev/null
++++ b/test/models/fiesta/turn_time_test.dart
+@@ -0,0 +1,106 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/models/fiesta/turn_time.dart';
++
++Map<String, int> due(List<CatchUpEntry> entries) =>
++    {for (final e in entries) e.teamId: e.seconds};
++
++void main() {
++  group('Rattrapage — formule et plafonds', () {
++    test('Auto, 14–8 après M1 : +3 s × 6 à la menée, −1 s × 6 au leader', () {
++      final entries = computeCatchUp(
++        rules: CatchUpRules.auto,
++        round: 1,
++        scores: {'rose': 14, 'bleue': 8},
++      );
++      expect(due(entries), {'rose': -6, 'bleue': 18});
++      final leader = entries.singleWhere((e) => e.isLeader);
++      expect((leader.gap, leader.perPoint), (6, 1));
++
++      // AC2 : 30 + 18 = 48 s pour la menée, 30 − 6 = 24 s pour le leader.
++      expect(composeTurnSeconds(baseSeconds: 30, catchUpSeconds: 18).total, 48);
++      expect(
++          composeTurnSeconds(baseSeconds: 30, leaderMalusSeconds: 6).total, 24);
++    });
++
++    test('après M2, k = 5 et le bonus plafonne à 30 ; le malus à 15', () {
++      final entries = computeCatchUp(
++        rules: CatchUpRules.auto,
++        round: 2,
++        scores: {'rose': 20, 'bleue': 8, 'verte': 2},
++      );
++      // Écart 12 → 5 × 12 = 60, plafonné ; écart 18 → plafonné aussi.
++      // Leader : écart avec la 2ᵉ (12) → 1 × 12 = 12 (sous le plafond).
++      expect(due(entries), {'rose': -12, 'bleue': 30, 'verte': 30});
++
++      final capped = computeCatchUp(
++        rules: CatchUpRules.auto,
++        round: 2,
++        scores: {'rose': 30, 'bleue': 0},
++      );
++      expect(due(capped), {'rose': -15, 'bleue': 30});
++    });
++
++    test(
++        'égalité générale : rien ; co-leaders : tous en tête, malus sur la '
++        'meilleure non-leader', () {
++      expect(
++          computeCatchUp(
++            rules: CatchUpRules.auto,
++            round: 1,
++            scores: {'a': 7, 'b': 7, 'c': 7},
++          ),
++          isEmpty);
++
++      final entries = computeCatchUp(
++        rules: CatchUpRules.auto,
++        round: 1,
++        scores: {'a': 10, 'b': 10, 'c': 4},
++      );
++      expect(due(entries), {'a': -6, 'b': -6, 'c': 18});
++    });
++
++    test('Personnalisé tout à 0 = éteint ; Auto sans auto-calibrage = éteint',
++        () {
++      const off = CatchUpRules(b1: 0, b2: 0, cap: 0, mal: 0, malCap: 0);
++      expect(computeCatchUp(rules: off, round: 1, scores: {'a': 9, 'b': 1}),
++          isEmpty);
++      expect(
++          effectiveCatchUp(
++              FiestaRules(mode: FiestaMode.auto, autoCalibrate: false)),
++          isNull);
++      expect(
++          effectiveCatchUp(FiestaRules(mode: FiestaMode.custom, catchUp: off)),
++          same(off));
++    });
++  });
++
++  group('Durée du tour — composition', () {
++    test('plancher de 10 s après tous les malus (AC6)', () {
++      final time = composeTurnSeconds(
++        baseSeconds: 20,
++        leaderMalusSeconds: 15,
++        minus10sCount: 1,
++      );
++      expect(time.total, 10);
++      expect(time.lines.map((l) => l.seconds), [20, -15, -10]);
++    });
++
++    test(
++        'une continuation garde exactement ses secondes, sans modificateur '
++        '(Q5)', () {
++      final time = composeTurnSeconds(
++        baseSeconds: 30,
++        carriedSeconds: 7,
++        catchUpSeconds: 18,
++        leaderMalusSeconds: 6,
++        minus10sCount: 2,
++      );
++      expect(time.total, 7);
++      expect(time.lines.map((l) => l.seconds), [7]);
++
++      // Et sous le plancher aussi : 3 s reportées restent 3 s.
++      expect(composeTurnSeconds(baseSeconds: 30, carriedSeconds: 3).total, 3);
++    });
++  });
++}
+diff --git a/test/models/game_state_test.dart b/test/models/game_state_test.dart
+index 76f6c2e..ed9c7c8 100644
+--- a/test/models/game_state_test.dart
++++ b/test/models/game_state_test.dart
+@@ -41,6 +41,7 @@ void main() {
+         expiredWord: 'souris',
+         timeRemaining: 12,
+         turnBonusTime: 7,
++        turnAllottedSeconds: 26,
+         turnStartTimestamp: 1000,
+         turnEndTimestamp: 31000,
+         pausedTimeRemaining: 12,
+diff --git a/test/providers/turn_time_fiesta_test.dart b/test/providers/turn_time_fiesta_test.dart
+new file mode 100644
+index 0000000..3a9c5a7
+--- /dev/null
++++ b/test/providers/turn_time_fiesta_test.dart
+@@ -0,0 +1,180 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/providers/game_provider.dart';
++
++import '../helpers/test_prefs.dart';
++
++/// Un provider prêt à lancer une partie : 2 joueurs, 2 équipes, 1 mot chacun,
++/// réglages par défaut (30 s, pénalité de passe 5 s).
++Future<GameProvider> givenReadyProvider() async {
++  await givenPrefs();
++  givenFakePlatformPlugins();
++  final provider = GameProvider();
++  await pumpEventQueue();
++  for (final name in ['Ana', 'Bob']) {
++    final id = (provider.addPlayer(name)['player'] as dynamic).id as String;
++    provider.updatePlayerWords(id, ['mot-$name']);
++  }
++  provider.createTeams();
++  provider.randomizeTeams();
++  return provider;
++}
++
++/// Une passe (−5 s) puis les 2 mots devinés : fin de manche avec 25 s
++/// reportées, puis validation → transition.
++void finishRoundWithCarryOver(GameProvider provider) {
++  provider.startTurn();
++  provider.startTurnTimer();
++  provider.passWord();
++  provider.markWordAsGuessed();
++  provider.markWordAsGuessed();
++  final guessed = List<String>.from(provider.game.wordsGuessedThisTurn);
++  provider.savePreValidationState(guessed);
++  provider.validateWords(guessed);
++}
++
++/// Un tour sans rien deviner, validé vide : passe la main.
++void playEmptyTurn(GameProvider provider) {
++  provider.startTurn();
++  provider.startTurnTimer();
++  provider.endTurn();
++  provider.savePreValidationState(const []);
++  provider.validateWords(const []);
++}
++
++int allotted(GameProvider p) =>
++    (p.game.turnEndTimestamp! - p.game.turnStartTimestamp!) ~/ 1000;
++
++void main() {
++  test(
++      'Classique : durée inchangée seconde pour seconde, et le temps passé '
++      'd\'une continuation est mesuré sur ses secondes reportées (AC1, AC7)',
++      () async {
++    final provider = await givenReadyProvider();
++    await provider.startGame();
++    expect(provider.turnTime.total, 30);
++
++    finishRoundWithCarryOver(provider);
++    expect(provider.game.turnBonusTime, 25);
++    expect(provider.game.history.last.timeSpent, 5);
++
++    provider.nextRound();
++    // Continuation : exactement les 25 s reportées, aperçu et chrono d'accord.
++    expect(provider.turnTime.total, 25);
++    provider.startTurn();
++    expect(provider.game.timeRemaining, 25);
++    provider.startTurnTimer();
++    expect(allotted(provider), 25);
++    expect(provider.game.turnAllottedSeconds, 25);
++
++    provider.passWord(); // 25 → 20
++    provider.endTurn();
++    provider.savePreValidationState(const []);
++    provider.validateWords(const []);
++    final continuation = provider.game.history.last;
++    expect(continuation.isBonusContinuation, isTrue);
++    // Bug reproduit : 30 − 20 = 10 avant, 25 − 20 = 5 maintenant.
++    expect(continuation.timeSpent, 5);
++
++    // L'équipe suivante repart de la base.
++    expect(provider.turnTime.total, 30);
++  });
++
++  test(
++      'Fiesta : rattrapage calculé en fin de manche, consommé au premier tour '
++      'non-continuation, jamais sur la continuation ; malus de 10 s ; même '
++      'temps après un kill et après un retour arrière', () async {
++    final provider = await givenReadyProvider();
++    await provider.startGame(
++      fiesta: FiestaRules(
++        mode: FiestaMode.custom,
++        catchUp: CatchUpRules.auto,
++        modifiers: const {
++          'minus_10s': ModifierSetting(
++            active: true,
++            arrival: ModifierArrival.fixed,
++            startRound: 1,
++            fixedRound: 2,
++            charges: 1,
++          ),
++        },
++      ),
++    );
++    expect(provider.turnTime.total, 30);
++    final leader = provider.getCurrentTeam()!.id;
++    final trailing = provider.teams.singleWhere((t) => t.id != leader).id;
++
++    finishRoundWithCarryOver(provider); // leader 2 – trailing 0
++    Map<String, int> preview() =>
++        {for (final e in provider.catchUpPreview) e.teamId: e.seconds};
++    expect(preview(), {leader: -2, trailing: 6});
++
++    // Retour arrière depuis la transition, puis revalidation : identique.
++    provider.restorePreValidationState();
++    expect(provider.catchUpPreview, isEmpty);
++    final guessed = List<String>.from(provider.game.wordsGuessedThisTurn);
++    provider.savePreValidationState(guessed);
++    provider.validateWords(guessed);
++    expect(preview(), {leader: -2, trailing: 6});
++
++    provider.nextRound();
++    expect(provider.game.fiesta!.catchUpDue, {leader: -2, trailing: 6});
++    expect(
++        provider.currentTeamModifiers.map((m) => m.catalogId), ['minus_10s']);
++
++    // Continuation du leader : 25 s reportées, ni malus du leader ni −10 s,
++    // et son dû n'est pas consommé.
++    expect(provider.turnTime.total, 25);
++    provider.startTurn();
++    provider.startTurnTimer();
++    expect(allotted(provider), 25);
++    expect(provider.game.fiesta!.catchUpDue, {leader: -2, trailing: 6});
++    provider.endTurn();
++    provider.savePreValidationState(const []);
++    provider.validateWords(const []);
++
++    // Premier tour non-continuation de la menée : 30 + 6 − 10.
++    expect(provider.getCurrentTeam()!.id, trailing);
++    expect(provider.turnTime.total, 26);
++    expect(provider.turnTime.lines.map((l) => l.seconds), [30, 6, -10]);
++    provider.startTurn();
++    expect(provider.game.timeRemaining, 26);
++    provider.startTurnTimer();
++    expect(allotted(provider), 26);
++    expect(provider.game.turnAllottedSeconds, 26);
++    expect(provider.game.fiesta!.catchUpDue, {leader: -2});
++
++    // App tuée en plein tour : reste gelé et durée allouée retrouvés.
++    provider.pauseTurn();
++    final frozen = provider.turnClock.frozenRemainingMs;
++    await pumpEventQueue();
++    final reloaded = GameProvider();
++    await pumpEventQueue();
++    expect(reloaded.turnClock.frozenRemainingMs, frozen);
++    expect(reloaded.game.turnAllottedSeconds, 26);
++    expect(reloaded.game.fiesta!.catchUpDue, {leader: -2});
++    reloaded.resumeTurn();
++    reloaded.endTurn();
++    reloaded.savePreValidationState(const []);
++    reloaded.validateWords(const []);
++    expect(
++        reloaded.game.history.last.timeSpent, 26 - reloaded.game.timeRemaining);
++
++    // Leader, premier tour non-continuation : 30 − 2 − 10.
++    expect(reloaded.getCurrentTeam()!.id, leader);
++    expect(reloaded.turnTime.total, 18);
++
++    // Retour arrière depuis cet avant-tour : le tour de la menée a eu lieu,
++    // son rattrapage reste consommé après revalidation.
++    reloaded.restorePreValidationState();
++    reloaded.savePreValidationState(const []);
++    reloaded.validateWords(const []);
++    expect(reloaded.game.fiesta!.catchUpDue, {leader: -2});
++    expect(reloaded.turnTime.total, 18);
++
++    playEmptyTurn(reloaded);
++    expect(reloaded.game.fiesta!.catchUpDue, isEmpty);
++    // Les tours suivants de la manche : base − 10 s seulement.
++    expect(reloaded.turnTime.total, 20);
++  });
++}

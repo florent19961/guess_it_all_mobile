@@ -17,17 +17,36 @@ class FiestaState {
   /// d'effets y ajoutent les leurs.
   final Map<String, dynamic> turn;
 
+  /// Rattrapage DÛ par équipe (id → secondes, négatives pour le malus du
+  /// leader), posé à l'entrée de la manche et consommé par l'équipe à son
+  /// premier tour non-continuation (story 2-6). Une équipe absente n'a rien.
+  final Map<String, int> catchUpDue;
+
   FiestaState({
     required this.rules,
     List<ModifierInstance> active = const [],
     Map<String, dynamic> turn = const {},
+    Map<String, int> catchUpDue = const {},
   })  : active = List.unmodifiable(active),
-        turn = Map.unmodifiable(turn);
+        turn = Map.unmodifiable(turn),
+        catchUpDue = Map.unmodifiable(catchUpDue);
+
+  FiestaState copyWith({
+    List<ModifierInstance>? active,
+    Map<String, int>? catchUpDue,
+  }) =>
+      FiestaState(
+        rules: rules,
+        active: active ?? this.active,
+        turn: turn,
+        catchUpDue: catchUpDue ?? this.catchUpDue,
+      );
 
   Map<String, dynamic> toJson() => {
         'rules': rules.toJson(),
         'active': active.map((e) => e.toJson()).toList(),
         'turn': turn,
+        'catchUpDue': catchUpDue,
       };
 
   /// Variante tolérante : `null` (= Classique) si les règles sont illisibles.
@@ -51,10 +70,18 @@ class FiestaState {
         : <ModifierInstance>[];
 
     final rawTurn = json['turn'];
+    final rawDue = json['catchUpDue'];
     return FiestaState(
       rules: rules,
       active: active,
       turn: rawTurn is Map ? Map<String, dynamic>.from(rawTurn) : const {},
+      catchUpDue: rawDue is Map
+          ? {
+              for (final e in rawDue.entries)
+                if (e.key is String && e.value is int)
+                  e.key as String: e.value as int,
+            }
+          : const {},
     );
   }
 }

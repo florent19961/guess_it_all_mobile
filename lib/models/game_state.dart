@@ -80,6 +80,12 @@ class GameState {
   int timeRemaining;
   int? turnBonusTime;
 
+  /// Durée de DÉPART du tour en cours, telle que composée au `startTurnTimer`
+  /// (continuation, rattrapage, malus). C'est elle qui mesure le temps passé
+  /// d'un tour, pas le réglage. Nul = partie reprise d'une version antérieure :
+  /// on retombe sur le réglage, comme avant.
+  int? turnAllottedSeconds;
+
   int? turnStartTimestamp;
   int? turnEndTimestamp;
 
@@ -131,6 +137,7 @@ class GameState {
     this.expiredWord,
     this.timeRemaining = AppConstants.defaultTurnDuration,
     this.turnBonusTime,
+    this.turnAllottedSeconds,
     this.turnStartTimestamp,
     this.turnEndTimestamp,
     this.pausedTimeRemaining,
@@ -176,6 +183,7 @@ class GameState {
     int? timeRemaining,
     int? turnBonusTime,
     bool clearTurnBonusTime = false,
+    int? turnAllottedSeconds,
     int? turnStartTimestamp,
     bool clearTurnStartTimestamp = false,
     int? turnEndTimestamp,
@@ -222,6 +230,7 @@ class GameState {
       timeRemaining: timeRemaining ?? this.timeRemaining,
       turnBonusTime:
           clearTurnBonusTime ? null : (turnBonusTime ?? this.turnBonusTime),
+      turnAllottedSeconds: turnAllottedSeconds ?? this.turnAllottedSeconds,
       turnStartTimestamp: clearTurnStartTimestamp
           ? null
           : (turnStartTimestamp ?? this.turnStartTimestamp),
@@ -281,8 +290,11 @@ class GameState {
       'pendingBonusTurnId': pendingBonusTurnId,
       'preValidationSnapshot': preValidationSnapshot,
       'restoredValidatedWords': restoredValidatedWords,
-      // Pas de clé `fiesta: null` : absent = Classique, et le blob d'une
-      // partie Classique reste octet pour octet celui d'avant.
+      // Pas de clé `fiesta: null` ni `turnAllottedSeconds: null` : absent =
+      // Classique / version antérieure, et le blob d'une partie Classique
+      // reprise reste octet pour octet celui d'avant.
+      if (turnAllottedSeconds != null)
+        'turnAllottedSeconds': turnAllottedSeconds,
       if (fiesta != null) 'fiesta': fiesta!.toJson(),
     };
   }
@@ -318,6 +330,7 @@ class GameState {
       timeRemaining:
           json['timeRemaining'] as int? ?? AppConstants.defaultTurnDuration,
       turnBonusTime: json['turnBonusTime'] as int?,
+      turnAllottedSeconds: json['turnAllottedSeconds'] as int?,
       turnStartTimestamp: json['turnStartTimestamp'] as int?,
       turnEndTimestamp: json['turnEndTimestamp'] as int?,
       pausedTimeRemaining: json['pausedTimeRemaining'] as int?,

@@ -7,6 +7,8 @@ import '../widgets/common/game_dialogs.dart';
 import '../widgets/common/home_button.dart';
 import '../widgets/common/back_button.dart';
 import '../widgets/fiesta/modifier_card.dart';
+import '../widgets/fiesta/turn_time_cards.dart';
+import '../models/fiesta/turn_time.dart';
 
 class TransitionScreen extends StatelessWidget {
   const TransitionScreen({super.key});
@@ -17,6 +19,9 @@ class TransitionScreen extends StatelessWidget {
     final currentRound = provider.game.currentRound;
     final isLastRound = currentRound >= 3;
     final sortedTeams = provider.getTeamsSortedByScore();
+    final fiestaRules = provider.game.fiesta?.rules;
+    final catchUpRules =
+        fiestaRules == null ? null : effectiveCatchUp(fiestaRules);
 
     return Material(
       color: AppColors.backgroundMain,
@@ -153,6 +158,13 @@ class TransitionScreen extends StatelessWidget {
                             RoundDrawCard(
                               round: currentRound + 1,
                               modifiers: provider.nextRoundModifiers,
+                            ),
+                          // Fiesta : rattrapage de la manche suivante.
+                          if (catchUpRules != null && !isLastRound)
+                            CatchUpCard(
+                              entries: provider.catchUpPreview,
+                              rules: catchUpRules,
+                              teams: provider.teams,
                             ),
                         ]).toList(),
                       ),

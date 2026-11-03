@@ -13,6 +13,7 @@ import '../widgets/fiesta/fiesta_setup_widgets.dart';
 import '../widgets/fiesta/malus_reveal.dart';
 import '../widgets/fiesta/modifier_badge.dart';
 import '../widgets/fiesta/modifier_card.dart';
+import '../widgets/fiesta/turn_time_cards.dart';
 import '../models/fiesta/modifier_catalog.dart';
 
 class GameScreen extends StatelessWidget {
@@ -209,8 +210,10 @@ class GameScreen extends StatelessWidget {
                       ),
                     ),
 
-                  // Time bonus indicator
-                  if (provider.game.turnBonusTime != null) ...[
+                  // Time bonus indicator (Classique : en Fiesta, la carte
+                  // « Temps du tour » porte déjà la ligne « Temps reporté »)
+                  if (provider.game.turnBonusTime != null &&
+                      !provider.isFiesta) ...[
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
@@ -607,6 +610,7 @@ class GameScreen extends StatelessWidget {
 
 /// Avant le tout premier tour : tirage de la manche 1 et annonce « Une seule
 /// réponse » (maquette `r1`). Ensuite : « Actif ce tour » (maquette `cd`).
+/// Dans les deux cas, la carte « Temps du tour » dessous.
 class _FiestaAnnouncements extends StatelessWidget {
   final GameProvider provider;
 
@@ -614,6 +618,16 @@ class _FiestaAnnouncements extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _modifiers(),
+        TurnTimeCard(provider.turnTime),
+      ],
+    );
+  }
+
+  Widget _modifiers() {
     final rules = provider.game.fiesta!.rules;
     final modifiers = provider.currentTeamModifiers;
 

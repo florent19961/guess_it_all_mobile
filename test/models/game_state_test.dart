@@ -41,6 +41,7 @@ void main() {
         expiredWord: 'souris',
         timeRemaining: 12,
         turnBonusTime: 7,
+        turnAllottedSeconds: 26,
         turnStartTimestamp: 1000,
         turnEndTimestamp: 31000,
         pausedTimeRemaining: 12,
@@ -256,10 +257,20 @@ void main() {
         'startRound': 1,
         'charges': 0,
       };
+      // Un dû de rattrapage mal typé est ignoré seul, lui aussi.
+      fiesta['catchUpDue'] = {'a': 'x', 'b': 3};
 
       final restored = GameState.fromJson(json);
 
       expect(restored.gameId, 'abc');
+      expect(restored.fiesta!.catchUpDue, {'b': 3});
+      expect(
+          FiestaState.tryFromJson({
+            ...fiesta,
+            'catchUpDue': [1]
+          })!
+              .catchUpDue,
+          isEmpty);
       expect(restored.fiesta!.active.map((e) => e.catalogId), ['no_pass']);
       expect(restored.fiesta!.rules.modifiers.keys, ['free_pass', 'draw']);
     });
