@@ -130,6 +130,24 @@ void main() {
     expect(stepped, hasLength(3));
     expect(stepped.map((o) => kOfferStrength[o.catalogId]),
         everyElement(OfferStrength.medium));
+
+    // Cran vide APRÈS exclusions : Rose a déjà 2 modificateurs, donc
+    // `block_guesser` (forte) est exclu et l'on descend quand même.
+    ModifierInstance againstRose(String id) => ModifierInstance(
+          catalogId: id,
+          scope: ModifierScope.round,
+          target: ModifierTarget.team,
+          teamId: 'rose',
+          charges: 0,
+          nature: ModifierNature.malus,
+          round: 2,
+        );
+    expect(
+        ids(offersFor(s, 'bleue', choices: {
+          'verte': againstRose('reversed'),
+          'jaune': againstRose('no_pass'),
+        })),
+        unorderedEquals(['double_points', 'two_words']));
   });
 
   test(
@@ -162,8 +180,9 @@ void main() {
 
     // Écart 10 après M1 : rien de « forte » possible en Auto avant M3, on
     // descend d'un cran au lieu de ne rien donner.
-    expect(boost(const Standings({'rose': 20, 'bleue': 10}), 1, 'g'),
-        hasLength(2));
+    final wide = boost(const Standings({'rose': 20, 'bleue': 10}), 1, 'g');
+    expect(wide, hasLength(2));
+    expect(ids(wide), isNot(contains('block_guesser')));
 
     for (var i = 0; i < 50; i++) {
       final g = boost(

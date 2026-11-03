@@ -212,7 +212,8 @@ List<ModifierInstance> _offer({
 /// Liste vide = l'équipe est sautée.
 ///
 /// - [roundDraw] = le tirage de la manche N+1 (`roundModifiers`).
-/// - [choices] = les choix déjà faits, par id de l'équipe QUI a choisi (un
+/// - [choices] = les choix des équipes passées AVANT [teamId] dans la file
+///   (jamais le sien ni ceux des suivantes), par id de l'équipe QUI a choisi (un
 ///   malus choisi vise le leader : sans cette clé, on ne saurait plus qui l'a
 ///   choisi, ni qui désigne le devineur de « Bloquer un devineur »).
 /// - [blockImmuneTeamIds] : équipes qui ne peuvent pas recevoir « Bloquer un
