@@ -7,6 +7,7 @@ import '../widgets/common/game_dialogs.dart';
 import '../widgets/common/home_button.dart';
 import '../widgets/common/back_button.dart';
 import '../widgets/fiesta/modifier_card.dart';
+import '../widgets/fiesta/offer_widgets.dart';
 import '../widgets/fiesta/turn_time_cards.dart';
 import '../models/fiesta/turn_time.dart';
 
@@ -22,6 +23,10 @@ class TransitionScreen extends StatelessWidget {
     final fiestaRules = provider.game.fiesta?.rules;
     final catchUpRules =
         fiestaRules == null ? null : effectiveCatchUp(fiestaRules);
+    // 1 parmi 3 : « Manche suivante » attend la fin de la file (le provider
+    // refuse aussi, cf. `nextRound`).
+    final chooserId = provider.nextChooserId;
+    final chooser = chooserId == null ? null : provider.getTeamById(chooserId);
 
     return Material(
       color: AppColors.backgroundMain,
@@ -166,6 +171,20 @@ class TransitionScreen extends StatelessWidget {
                               rules: catchUpRules,
                               teams: provider.teams,
                             ),
+                          // Fiesta Auto : coup de pouce de l'app.
+                          AppBoostCard(
+                            teams: provider.teams,
+                            gifts: provider.appBoostPreview,
+                          ),
+                          // Fiesta Personnalisé : choix 1 parmi 3.
+                          if (provider.hasPickThree)
+                            PickThreeCard(
+                              teams: provider.teams,
+                              standings: provider.standings,
+                              nextTeamId: chooserId,
+                              onPassPhone: () =>
+                                  _PickThreeFlow.open(context, chooserId!),
+                            ),
                         ]).toList(),
                       ),
                     ),
@@ -239,12 +258,17 @@ class TransitionScreen extends StatelessWidget {
                   ],
 
                   AppButton(
-                    text:
-                        isLastRound ? 'Voir les résultats' : 'Manche suivante',
+                    text: chooser != null
+                        ? 'En attente du choix de ${chooser.name}'
+                        : isLastRound
+                            ? 'Voir les résultats'
+                            : 'Manche suivante',
                     variant: AppButtonVariant.primary,
                     size: AppButtonSize.large,
                     fullWidth: true,
-                    onPressed: () => provider.nextRound(),
+                    disabled: chooser != null,
+                    onPressed:
+                        chooser != null ? null : () => provider.nextRound(),
                   ),
 
                   const SizedBox(height: 24),
@@ -420,6 +444,60 @@ class TransitionScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 1 parmi 3 d'UNE équipe : « Passe le téléphone » (rien des offres n'est
+/// visible), puis le choix. Route au-dessus de la transition, non persistée :
+/// une app tuée revient sur la transition, qui montre l'équipe suivante.
+class _PickThreeFlow extends StatefulWidget {
+  final String teamId;
+
+  const _PickThreeFlow({required this.teamId});
+
+  static Future<void> open(BuildContext context, String teamId) =>
+      Navigator.of(context).push(MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (_) => _PickThreeFlow(teamId: teamId),
+      ));
+
+  @override
+  State<_PickThreeFlow> createState() => _PickThreeFlowState();
+}
+
+class _PickThreeFlowState extends State<_PickThreeFlow> {
+  bool _revealed = false;
+  int? _selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<GameProvider>();
+    final teamIndex = provider.teams.indexWhere((t) => t.id == widget.teamId);
+    if (!_revealed) {
+      return PassPhonePanel(
+        teamName: provider.getTeamById(widget.teamId)?.name ?? '',
+        teamColor: AppColors.getTeamColor(teamIndex < 0 ? 0 : teamIndex),
+        onReady: () => setState(() => _revealed = true),
+      );
+    }
+    return Material(
+      color: AppColors.backgroundMain,
+      child: OfferChoiceBody(
+        round: provider.game.currentRound,
+        teams: provider.teams,
+        standings: provider.standings,
+        chooserId: widget.teamId,
+        offers: provider.offersFor(widget.teamId),
+        selected: _selected,
+        onSelect: (i) => setState(() => _selected = i),
+        // Fermer AVANT de choisir : sinon la route qui se ferme se
+        // reconstruit avec les offres recalculées après ce choix.
+        onConfirm: () {
+          Navigator.of(context).pop();
+          provider.chooseOffer(widget.teamId, _selected!);
+        },
       ),
     );
   }

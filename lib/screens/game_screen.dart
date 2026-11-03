@@ -299,14 +299,18 @@ class GameScreen extends StatelessWidget {
     }
     if (provider.needsBlockedGuesser) {
       if (!context.mounted) return;
-      final blocked =
-          await BlockedGuesser.pick(context, provider.blockableGuessers);
+      // 2-10 : la carte vient du 1 parmi 3, l'équipe qui l'a choisie désigne.
+      final chooserName = provider.blockingTeam?.name;
+      final blocked = await BlockedGuesser.pick(
+          context, provider.blockableGuessers,
+          chooserName: chooserName);
       if (blocked == null || !context.mounted) return;
       await BlockedGuesser.announce(
         context,
         player: blocked,
         teamName: provider.getCurrentTeam()?.name ?? '',
         teamColor: teamColor,
+        chooserName: chooserName,
       );
       if (!context.mounted ||
           provider.game.currentScreen != AppConstants.screenGame) {
