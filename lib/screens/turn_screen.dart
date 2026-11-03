@@ -25,6 +25,9 @@ class TurnScreen extends StatefulWidget {
 class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
   Timer? _timer;
 
+  /// Posé par le cycle de vie : l'app a quitté le premier plan.
+  bool _wentBackground = false;
+
   final _timerKey = GlobalKey();
   final _wordKey = GlobalKey();
   final _guessedKey = GlobalKey();
@@ -53,6 +56,7 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed && mounted) {
+      _wentBackground = true;
       context.read<GameProvider>().pauseTurn();
     }
   }
@@ -86,12 +90,17 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
 
   /// Gèle le chrono pendant [show] (aide, fiche d'un badge), puis le relance
   /// seulement s'il tournait : une pause du joueur reste une pause.
+  ///
+  /// App passée en arrière-plan pendant la fiche : pas de reprise
+  /// automatique, c'est au joueur de relancer (même règle que le gel du
+  /// cycle de vie).
   Future<void> _whilePaused(
       GameProvider provider, Future<void> Function() show) async {
     final wasRunning = provider.turnClock.isRunning;
+    _wentBackground = false;
     provider.pauseTurn();
     await show();
-    if (wasRunning && mounted) provider.resumeTurn();
+    if (wasRunning && !_wentBackground && mounted) provider.resumeTurn();
   }
 
   void _togglePause(BuildContext context, GameProvider provider) {

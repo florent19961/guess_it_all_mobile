@@ -39,6 +39,10 @@ class _GameScreenState extends State<GameScreen> {
   final _doublePointsKey = GlobalKey();
   final _turnTimeKey = GlobalKey();
 
+  /// Vrai tant que l'aide automatique n'est pas tranchée : « Commencer le
+  /// tour » est ignoré, sinon l'aide serait consommée sans être vue.
+  bool _helpPending = true;
+
   @override
   void initState() {
     super.initState();
@@ -49,9 +53,10 @@ class _GameScreenState extends State<GameScreen> {
   /// de chaque joueur (jamais l'aide Fiesta, qui reste derrière le « ? »).
   Future<void> _firstGameHelp() async {
     final player = context.read<GameProvider>().getCurrentPlayer();
-    if (player == null) return;
-    if (await FirstGameHelp.claim(FirstGameHelp.preTurn, player.id) &&
-        mounted) {
+    final show = player != null &&
+        await FirstGameHelp.claim(FirstGameHelp.preTurn, player.id);
+    _helpPending = false;
+    if (show && mounted) {
       await CoachMarks.show(context, _preTurnSteps(player.name));
     }
   }
@@ -285,7 +290,10 @@ class _GameScreenState extends State<GameScreen> {
                     variant: AppButtonVariant.primary,
                     size: AppButtonSize.large,
                     fullWidth: true,
-                    onPressed: () => _startTurn(context, provider, teamColor),
+                    onPressed: () {
+                      if (_helpPending) return;
+                      _startTurn(context, provider, teamColor);
+                    },
                   ),
 
                   const SizedBox(height: 24),
@@ -780,12 +788,17 @@ class _FiestaAnnouncements extends StatelessWidget {
                 ModifierBadge.catalog('double_points',
                     nature: ModifierNature.bonus),
               if (rules.oneAnswer)
-                const ModifierBadge(
+                ModifierBadge(
                   icon: '☝',
                   label: 'Une seule réponse',
                   nature: ModifierNature.bonus,
-                  description: 'Une seule réponse par mot. Une mauvaise '
-                      'réponse : il faut passer (pénalité de passe).',
+                  // Même règle que `_constraints` : sans passe possible, le
+                  // mot est grillé ; sinon il faut le passer.
+                  description: modifiers.any((m) => m.catalogId == 'no_pass')
+                      ? 'Une seule réponse par mot. Mauvaise réponse : le '
+                          'mot est grillé jusqu\'à la fin du tour.'
+                      : 'Une seule réponse par mot. Mauvaise réponse : il '
+                          'faut passer le mot.',
                 ),
             ],
           ),

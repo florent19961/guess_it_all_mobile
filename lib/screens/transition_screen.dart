@@ -32,26 +32,24 @@ class _TransitionScreenState extends State<TransitionScreen> {
   final _pickThreeKey = GlobalKey();
   final _appBoostKey = GlobalKey();
 
-  /// Dans l'ordre de l'écran : héros et mots du dernier tour, cartes Fiesta
-  /// (sous le héros), puis les boutons.
   void _showHelp(GameProvider provider) {
-    final steps = transitionHelp(
-      nextRound: _nextRoundKey,
-      previousTurn: _previousTurnKey,
-      next: _nextKey,
-      back: _backKey,
-      home: _homeKey,
+    CoachMarks.show(
+      context,
+      transitionHelp(
+        nextRound: _nextRoundKey,
+        previousTurn: _previousTurnKey,
+        next: _nextKey,
+        back: _backKey,
+        home: _homeKey,
+        fiesta: provider.isFiesta
+            ? fiestaTransitionHelp(
+                catchUp: _catchUpKey,
+                pickThree: _pickThreeKey,
+                appBoost: _appBoostKey,
+              )
+            : const [],
+      ),
     );
-    CoachMarks.show(context, [
-      ...steps.take(2),
-      if (provider.isFiesta)
-        ...fiestaTransitionHelp(
-          catchUp: _catchUpKey,
-          pickThree: _pickThreeKey,
-          appBoost: _appBoostKey,
-        ),
-      ...steps.skip(2),
-    ]);
   }
 
   @override
@@ -112,7 +110,9 @@ class _TransitionScreenState extends State<TransitionScreen> {
                               _HeroBig('$nextRound'),
                               _HeroTitle(
                                   AppConstants.roundModes[nextRound] ?? ''),
-                              _HeroText(_roundRule[nextRound] ?? ''),
+                              _HeroText(
+                                  AppConstants.roundDescriptions[nextRound] ??
+                                      ''),
                             ],
                           ),
                           const SizedBox(height: 12),
@@ -409,14 +409,6 @@ class _PickThreeFlowState extends State<_PickThreeFlow> {
 
 const Map<int, String> _roundEmoji = {2: '🤐', 3: '🤸'};
 
-/// Règle courte de la manche, même sens que `AppConstants.roundDescriptions`.
-const Map<int, String> _roundRule = {
-  2: 'Un seul mot d\'indice, pas un de plus. Choisis-le bien : les mots de '
-      'la même famille sont interdits.',
-  3: 'Plus un son : tout passe par les gestes. Les mots, vous les connaissez '
-      'déjà !',
-};
-
 /// Piste des 3 manches : ✓ pour les manches jouées, la suivante en avant.
 class _RoundTrack extends StatelessWidget {
   final int done;
@@ -450,13 +442,13 @@ class _RoundTrack extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isDone ? AppColors.success : const Color(0xFF0F172A),
+        color: isDone ? AppColors.success : AppColors.gray700,
         border: Border.all(
           color: isDone
               ? AppColors.success
               : isNext
                   ? AppColors.primaryPink
-                  : AppColors.gray700,
+                  : AppColors.gray600,
           width: 2,
         ),
         boxShadow: isNext
@@ -474,7 +466,7 @@ class _RoundTrack extends StatelessWidget {
           fontFamily: 'Bangers',
           fontSize: 18,
           color: isDone
-              ? const Color(0xFF06281C)
+              ? Colors.white
               : isNext
                   ? AppColors.primaryPink
                   : AppColors.gray400,
@@ -585,8 +577,11 @@ class _HeroBig extends StatelessWidget {
           fontSize: 84,
           height: 1,
           color: AppColors.primaryPink,
-          shadows: const [
-            Shadow(offset: Offset(4, 4), color: Color(0x407F1D1D)),
+          shadows: [
+            Shadow(
+              offset: const Offset(4, 4),
+              color: AppColors.primaryPinkDark.withValues(alpha: 0.4),
+            ),
           ],
         ),
       );
@@ -627,7 +622,7 @@ class _HeroText extends StatelessWidget {
           style: const TextStyle(
             fontFamily: 'Poppins',
             fontSize: 13.5,
-            color: Color(0xFFE2E8F0),
+            color: Colors.white,
           ),
         ),
       );
@@ -658,7 +653,7 @@ class _FactTiles extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0F172A),
+                  color: AppColors.gray700,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
@@ -762,7 +757,7 @@ class _MemoryTip extends StatelessWidget {
               style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 12.5,
-                color: Color(0xFFFDE68A),
+                color: AppColors.warning,
               ),
             ),
           ),

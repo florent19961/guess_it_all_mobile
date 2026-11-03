@@ -282,12 +282,15 @@ List<CoachStep> verificationHelp({
 
 // ========== ENTRE DEUX MANCHES (transition_screen) ==========
 
+/// [fiesta] (`fiestaTransitionHelp`) se place à l'ordre de l'écran : sous le
+/// héros et les mots du dernier tour, avant les boutons.
 List<CoachStep> transitionHelp({
   required GlobalKey nextRound,
   required GlobalKey previousTurn,
   required GlobalKey next,
   required GlobalKey back,
   required GlobalKey home,
+  List<CoachStep> fiesta = const [],
 }) =>
     [
       CoachStep(
@@ -302,6 +305,7 @@ List<CoachStep> transitionHelp({
         title: 'Mots du dernier tour',
         text: 'Revois les mots trouvés pendant le dernier tour.',
       ),
+      ...fiesta,
       CoachStep(
         target: next,
         title: 'Lancer la manche',

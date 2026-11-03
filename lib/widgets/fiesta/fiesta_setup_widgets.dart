@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../models/fiesta/fiesta_rules.dart';
-import '../../screens/fiesta_tutorial_screen.dart';
 import '../../theme/app_theme.dart';
 import '../common/app_back_button.dart';
 import '../effects/shooting_stars.dart';
@@ -14,6 +13,9 @@ class FiestaSetupScaffold extends StatelessWidget {
   final String title;
   final String? subtitle;
   final VoidCallback onBack;
+
+  /// Le « ? » en haut à droite (les écrans Fiesta rouvrent le tuto Fiesta).
+  final VoidCallback onHelp;
   final List<Widget> content;
   final Widget bottom;
 
@@ -21,6 +23,7 @@ class FiestaSetupScaffold extends StatelessWidget {
     required this.title,
     this.subtitle,
     required this.onBack,
+    required this.onHelp,
     required this.content,
     required this.bottom,
     super.key,
@@ -74,8 +77,7 @@ class FiestaSetupScaffold extends StatelessWidget {
               ),
             ),
             AppBackButton(onPressed: onBack),
-            // Écrans de préparation Fiesta : le « ? » rouvre le tuto Fiesta.
-            HelpButton(onPressed: () => FiestaTutorialScreen.show(context)),
+            HelpButton(onPressed: onHelp),
           ],
         ),
       ),

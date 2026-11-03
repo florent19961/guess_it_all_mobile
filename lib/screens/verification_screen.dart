@@ -28,11 +28,16 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
   /// Première partie sur ce téléphone : l'aide s'ouvre seule à la première
   /// vérification de chaque joueur.
+  /// Vrai tant que l'aide automatique n'est pas tranchée : « Valider » est
+  /// ignoré, sinon l'aide serait consommée sans être vue.
+  bool _helpPending = true;
+
   Future<void> _firstGameHelp() async {
     final player = context.read<GameProvider>().getCurrentPlayer();
-    if (player == null) return;
-    if (await FirstGameHelp.claim(FirstGameHelp.verification, player.id) &&
-        mounted) {
+    final show = player != null &&
+        await FirstGameHelp.claim(FirstGameHelp.verification, player.id);
+    _helpPending = false;
+    if (show && mounted) {
       await CoachMarks.show(context, _helpSteps);
     }
   }
@@ -267,6 +272,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                     size: AppButtonSize.large,
                     fullWidth: true,
                     onPressed: () {
+                      if (_helpPending) return;
                       provider.savePreValidationState(_validatedWords.toList());
                       provider.validateWords(_validatedWords.toList());
                     },

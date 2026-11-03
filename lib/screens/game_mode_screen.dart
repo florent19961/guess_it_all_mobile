@@ -20,12 +20,16 @@ class GameModeScreen extends StatefulWidget {
 class _GameModeScreenState extends State<GameModeScreen> {
   late bool _fiesta = context.read<GameProvider>().pendingFiesta != null;
 
+  /// Garde contre le double tap : un seul tuto Fiesta, une seule navigation.
+  bool _busy = false;
+
   @override
   Widget build(BuildContext context) {
     final provider = context.read<GameProvider>();
     return FiestaSetupScaffold(
       title: 'Mode de jeu',
       onBack: () => provider.goToScreen(AppConstants.screenHome),
+      onHelp: () => FiestaTutorialScreen.show(context),
       content: [
         FiestaPickCard(
           icon: '3',
@@ -50,10 +54,16 @@ class _GameModeScreenState extends State<GameModeScreen> {
         fullWidth: true,
         onPressed: () async {
           if (_fiesta) {
-            // Première partie Fiesta : le tuto (3 cartes) s'ouvre une fois.
-            if (!await StorageService().hasSeenFiestaTutorial()) {
-              if (!context.mounted) return;
-              await FiestaTutorialScreen.show(context);
+            if (_busy) return;
+            _busy = true;
+            try {
+              // Première partie Fiesta : le tuto (3 cartes) s'ouvre une fois.
+              if (!await StorageService().hasSeenFiestaTutorial()) {
+                if (!context.mounted) return;
+                await FiestaTutorialScreen.show(context);
+              }
+            } finally {
+              _busy = false;
             }
             provider.goToScreen(AppConstants.screenFiestaChoice);
           } else {
