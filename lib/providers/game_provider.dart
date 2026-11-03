@@ -1014,6 +1014,10 @@ class GameProvider extends ChangeNotifier {
   }
 
   void validateWords(List<String> validatedWords) {
+    // Double tap sur « Valider » : le second appel recréditait les mots à
+    // l'équipe suivante et brûlait ses cartes de tour. Seul l'écran de
+    // vérification valide (même garde que `nextRound`).
+    if (_game.currentScreen != AppConstants.screenVerification) return;
     final currentTeam = _teams[_game.currentTeamIndex];
     final passedWordsThisTurn = _game.passedWordsThisTurn;
 
@@ -1983,6 +1987,8 @@ class GameProvider extends ChangeNotifier {
   // silencieusement incomplète. C'est exactement le piège que le mode Fiesta
   // aurait déclenché, lui qui ajoutera des champs d'état par construction.
   void savePreValidationState(List<String> validatedWords) {
+    // Double tap : ne pas écraser le snapshot par l'état déjà validé.
+    if (_game.currentScreen != AppConstants.screenVerification) return;
     _game = _game.copyWith(
       preValidationSnapshot: {
         // On retire le snapshot de lui-même : sans ça, chaque sauvegarde

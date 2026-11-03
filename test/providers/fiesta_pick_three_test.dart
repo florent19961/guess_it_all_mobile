@@ -35,7 +35,7 @@ String playTurn(GameProvider provider, int n) {
   for (var i = 0; i < n; i++) {
     provider.markWordAsGuessed();
   }
-  if (provider.game.currentScreen == AppConstants.screenGame) {
+  if (provider.game.currentScreen != AppConstants.screenVerification) {
     provider.endTurn();
   }
   final guessed = List<String>.from(provider.game.wordsGuessedThisTurn);
@@ -181,6 +181,48 @@ void main() {
     playTurn(provider, 0);
     expect(provider.getCurrentTeam()!.id, leader);
     expect(provider.needsBlockedGuesser, isFalse);
+  });
+
+  test(
+      'double tap sur « Valider » : les mots sont crédités une fois, le '
+      'retour arrière est gardé, la carte de tour de l\'équipe suivante '
+      'n\'est pas brûlée (bug antérieur à Fiesta)', () async {
+    final provider =
+        await givenProvider(['A', 'B', 'C', 'D', 'E'], wordsEach: 4, teams: 2);
+    await provider.startGame(fiesta: pickThree);
+    // L'équipe menée (2 joueurs) finit M1 : elle joue la continuation, puis
+    // vient le premier tour M2 du leader, bloqué.
+    final leader = provider.teams.firstWhere((t) => t.playerIds.length == 3).id;
+    final trailing = provider.teams.firstWhere((t) => t.id != leader).id;
+    if (provider.getCurrentTeam()!.id == trailing) playTurn(provider, 1);
+    playTurn(provider, 18);
+    expect(playTurn(provider, 20), trailing);
+    provider.chooseOffer(trailing, 0);
+    provider.nextRound();
+    expect(provider.getCurrentTeam()!.id, trailing);
+
+    provider.startTurn();
+    provider.startTurnTimer();
+    provider.markWordAsGuessed();
+    provider.endTurn();
+    final guessed = List<String>.from(provider.game.wordsGuessedThisTurn);
+    final scoreBefore = {for (final t in provider.teams) t.id: t.score};
+    for (var tap = 0; tap < 2; tap++) {
+      provider.savePreValidationState(guessed);
+      provider.validateWords(guessed);
+    }
+
+    expect(provider.teams.firstWhere((t) => t.id == trailing).score,
+        scoreBefore[trailing]! + 1);
+    expect(provider.teams.firstWhere((t) => t.id == leader).score,
+        scoreBefore[leader]);
+    expect(provider.getCurrentTeam()!.id, leader);
+    expect(ids(provider.game.fiesta!.active), ['block_guesser@2>$leader']);
+
+    provider.restorePreValidationState();
+    expect(provider.game.currentScreen, AppConstants.screenVerification);
+    expect(provider.getCurrentTeam()!.id, trailing);
+    expect(provider.game.wordsGuessedThisTurn, guessed);
   });
 
   test(

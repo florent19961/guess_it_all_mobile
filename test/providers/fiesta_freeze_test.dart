@@ -65,6 +65,9 @@ void main() {
     test('le retour arrière restaure l\'état Fiesta capturé', () async {
       final provider = await givenReadyProvider();
       await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
+      provider.startTurn();
+      provider.startTurnTimer();
+      provider.endTurn();
       final captured = provider.game.fiesta!.toJson();
 
       provider.savePreValidationState(const []);
