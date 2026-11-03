@@ -111,7 +111,8 @@ List<CoachStep> playersHelp({
         title: 'Les mots du joueur',
         text: 'En mode Personnalisé, chaque joueur écrit ici ses mots, sans '
             'les montrer aux autres. « Saisir mots » devient « Voir mots » '
-            'quand c\'est fait.',
+            'quand c\'est fait. En mode Aléatoire, « N mots prêts » : l\'app '
+            'a tiré les mots du joueur, ils restent cachés jusqu\'au jeu.',
       ),
       CoachStep(
         target: next,
@@ -144,6 +145,34 @@ List<CoachStep> teamsHelp({
         target: start,
         title: 'Commencer',
         text: 'Lance la partie. Il faut au moins 2 joueurs dans chaque équipe.',
+      ),
+    ];
+
+// ========== HISTORIQUE ==========
+
+List<CoachStep> historyHelp({
+  required GlobalKey trends,
+  required GlobalKey firstGame,
+  required GlobalKey replay,
+}) =>
+    [
+      CoachStep(
+        target: trends,
+        title: 'Tendances',
+        text: 'Quelques chiffres sur toutes les parties jouées sur ce '
+            'téléphone.',
+      ),
+      CoachStep(
+        target: firstGame,
+        title: 'Une partie',
+        text: 'Touche une partie pour voir le détail : les équipes, leurs '
+            'joueurs et les points.',
+      ),
+      CoachStep(
+        target: replay,
+        title: 'Rejouer',
+        text: 'Relance cette partie avec les mêmes joueurs, les mêmes équipes '
+            'et les mêmes réglages. Les mots, eux, sont nouveaux.',
       ),
     ];
 
