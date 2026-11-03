@@ -333,6 +333,10 @@ class _PlayersScreenState extends State<PlayersScreen> {
                             final playerName =
                                 _controllers[player.id]?.text.trim() ?? '';
                             final hasName = playerName.isNotEmpty;
+                            // Mode aléatoire : les mots tirés restent cachés,
+                            // la carte affiche un badge non cliquable.
+                            final isRandom = provider.settings.wordChoice ==
+                                AppConstants.wordChoiceRandom;
 
                             final isLastPlayer =
                                 index == provider.players.length - 1;
@@ -374,7 +378,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                                   ),
                                   const SizedBox(width: 12),
                                   GestureDetector(
-                                    onTap: hasName
+                                    onTap: hasName && !isRandom
                                         ? () {
                                             provider.setCurrentEditingPlayer(
                                                 player.id);
@@ -383,7 +387,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                                           }
                                         : null,
                                     child: Opacity(
-                                      opacity: hasName ? 1.0 : 0.4,
+                                      opacity: hasName || isRandom ? 1.0 : 0.4,
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 12, vertical: 10),
@@ -416,9 +420,11 @@ class _PlayersScreenState extends State<PlayersScreen> {
                                             ),
                                             const SizedBox(width: 6),
                                             Text(
-                                              isWordsFilled
-                                                  ? 'Voir mots'
-                                                  : 'Saisir mots',
+                                              isRandom
+                                                  ? '$wordsCount mots prêts'
+                                                  : isWordsFilled
+                                                      ? 'Voir mots'
+                                                      : 'Saisir mots',
                                               style: TextStyle(
                                                 fontFamily: 'Poppins',
                                                 fontSize: 12,
@@ -428,14 +434,16 @@ class _PlayersScreenState extends State<PlayersScreen> {
                                                     : AppColors.error,
                                               ),
                                             ),
-                                            const SizedBox(width: 4),
-                                            Icon(
-                                              Icons.chevron_right,
-                                              size: 16,
-                                              color: isWordsFilled
-                                                  ? AppColors.success
-                                                  : AppColors.error,
-                                            ),
+                                            if (!isRandom) ...[
+                                              const SizedBox(width: 4),
+                                              Icon(
+                                                Icons.chevron_right,
+                                                size: 16,
+                                                color: isWordsFilled
+                                                    ? AppColors.success
+                                                    : AppColors.error,
+                                              ),
+                                            ],
                                           ],
                                         ),
                                       ),

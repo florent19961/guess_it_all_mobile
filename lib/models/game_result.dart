@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import 'game_setup_snapshot.dart';
+
 /// Résultat d'une équipe sur une partie terminée.
 @immutable
 class TeamResult {
@@ -146,6 +148,10 @@ class GameResult {
   /// Récap des modificateurs, `null` en Classique (clé absente).
   final List<ModifierRecapItem>? modifierRecap;
 
+  /// Réglages de la partie, pour le « Rejouer » de l'historique. `null` =
+  /// archive antérieure (clé absente) ou snapshot illisible.
+  final GameSetupSnapshot? setup;
+
   const GameResult({
     required this.gameId,
     required this.playedAt,
@@ -155,6 +161,7 @@ class GameResult {
     required this.roundsPlayed,
     this.mode,
     this.modifierRecap,
+    this.setup,
   });
 
   /// Équipes triées par score décroissant.
@@ -190,6 +197,7 @@ class GameResult {
         if (mode != null) 'mode': mode,
         if (modifierRecap != null)
           'modifierRecap': modifierRecap!.map((l) => l.toJson()).toList(),
+        if (setup != null) 'setup': setup!.toJson(),
       };
 
   /// Rend `null` si l'entrée est inexploitable, plutôt que de lever : une
@@ -228,6 +236,7 @@ class GameResult {
               .whereType<ModifierRecapItem>()
               .toList()
           : null,
+      setup: GameSetupSnapshot.tryFromJson(json['setup']),
     );
   }
 }

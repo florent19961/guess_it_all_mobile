@@ -1,0 +1,781 @@
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index b2494a4..b4b560a 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -645,3 +645,25 @@ texte à l'affichage (carte des Résultats). Le récap recalcule rattrapage et c
+ prévue, epic-4). Le format Fiesta de `guessItAll_gameHistory` n'a jamais été publié, donc la
+ forme change sans migration. Une ligne `{title, detail}` écrite par une build de dev se relit
+ comme un fait illisible : elle est ignorée seule, sans crash.
++
++## 2026-11-03 — « Rejouer » depuis l'historique, mots aléatoires cachés
++
++**Ce qui change.** Chaque partie archivée garde un `setup` optionnel (`GameSetupSnapshot` :
++`GameSettings` + `FiestaRules?`, jamais les mots). « Rejouer » sur une carte de l'historique
++(`replayFromHistory`) recrée joueurs et équipes depuis les noms archivés, reprend les réglages,
++met les règles Fiesta en attente et termine par `restartWithSamePlayers` : on arrive aux
++Paramètres ou au Récap Fiesta, comme le « Rejouer » de fin de partie. Une partie suspendue est
++remplacée seulement après confirmation. En mode aléatoire, la carte joueur affiche un badge
++« N mots prêts » qu'on ne peut pas toucher : les mots tirés restent cachés.
++
++**Pourquoi.** Règle 7 : c'est un champ additif dans `guessItAll_game_results`, donc ni migration
++ni bump de `kCurrentSchemaVersion`. Une archive sans `setup` se rejoue avec ce qu'elle contient
++(équipes, joueurs, `totalWords`, `turnDuration`). Le reste vient des réglages courants, en
++Classique. Le nombre d'équipes et de joueurs suit toujours les joueurs recréés, et pas un réglage
++archivé qui pourrait les contredire. Des règles Fiesta illisibles invalident tout le snapshot,
++pour ne pas rejouer en Classique une partie qui était Fiesta.
++
++**Noms d'équipe.** `createTeams` tire maintenant des noms drôles et distincts dans
++`kFunnyTeamNames`, à la place de « Équipe N ». Il n'y a pas de bouton pour retirer d'autres noms :
++le renommage manuel suffit. Le nom est déjà une chaîne persistée, donc la forme ne change pas
++(règle 7). Les sessions existantes gardent « Équipe N ».
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index 7b51a7f..6a58b61 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -12,7 +12,8 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `game_state.dart` | `GameState`, `HistoryEntry` | Etat complet de la partie en cours : ecran, round, tour, pools de mots, scores, timestamps, snapshots de validation. `turnAllottedSeconds` = durée de **départ** réelle du tour (continuation, rattrapage, malus), base de `HistoryEntry.timeSpent` ; nul = partie d'une version antérieure → `turnDuration`. `HistoryEntry.pointsScored` (optionnel) : écrit seulement s'il diffère du nombre de mots (×2) ; absent = un point par mot ; `points` est la seule source de « Évolution des scores » |
+ | `game_analytics.dart` | `GameAnalytics`, `DeviceInfo` | Analytics completes d'une partie pour Firebase (gameId, events, wordMetadata, wordStats). Fiesta : `gameMode`, `fiestaRules` (clés absentes en Classique ; recopiés par `copyWith`, sinon perdus au 1er event) |
+ | `word_event.dart` | `WordEvent`, `WordEventType`, `PassEvent` | Evenement atomique : shown/guessed/passed/expired/invalidated avec contexte (round, turn, team, player). Fiesta : `modifiers` (clé absente en Classique) |
+-| `game_result.dart` | `GameResult`, `TeamResult`, `ModifierRecapItem` | Partie archivée pour l'historique. Fiesta : `mode`, `modifierRecap` (clés absentes en Classique) ; le récap est archivé en **faits** (`{kind, round, catalogId?, teamId?, chooserId?, seconds?}`), jamais en phrases ; fait illisible ignoré seul |
++| `game_result.dart` | `GameResult`, `TeamResult`, `ModifierRecapItem` | Partie archivée pour l'historique. Fiesta : `mode`, `modifierRecap` (clés absentes en Classique) ; le récap est archivé en **faits** (`{kind, round, catalogId?, teamId?, chooserId?, seconds?}`), jamais en phrases ; fait illisible ignoré seul. `setup` (optionnel) : `GameSetupSnapshot` pour « Rejouer » depuis l'historique ; absent des archives antérieures |
++| `game_setup_snapshot.dart` | `GameSetupSnapshot` | Réglages (`GameSettings`) + `FiestaRules?` d'une partie archivée, sans les mots. Lecture tolérante : illisible → `null` (Fiesta illisible invalide tout le snapshot) |
+ | `word_stats.dart` | `WordMetadata`, `WordRoundStats`, `WordStats` | Metadonnees mot (category, difficulty, language), stats par manche et agregees |
+ | `category_metadata.dart` | `CategoryMetadata` | Metadonnees categorie multilingue (id, icon, noms, locales) |
+ | `fiesta/modifier_catalog.dart` | `ModifierDef`, `kModifierCatalog`, `kModifierIncompatibilities`, enums `ModifierNature/Scope/Target` | Catalogue Fiesta V1 (11 ids **figés**, du code, jamais persisté), `modifierById`, `areCompatible` |
+diff --git a/lib/models/game_result.dart b/lib/models/game_result.dart
+index 5ec188b..40b3081 100644
+--- a/lib/models/game_result.dart
++++ b/lib/models/game_result.dart
+@@ -1,5 +1,7 @@
+ import 'package:flutter/foundation.dart';
+ 
++import 'game_setup_snapshot.dart';
++
+ /// Résultat d'une équipe sur une partie terminée.
+ @immutable
+ class TeamResult {
+@@ -146,6 +148,10 @@ class GameResult {
+   /// Récap des modificateurs, `null` en Classique (clé absente).
+   final List<ModifierRecapItem>? modifierRecap;
+ 
++  /// Réglages de la partie, pour le « Rejouer » de l'historique. `null` =
++  /// archive antérieure (clé absente) ou snapshot illisible.
++  final GameSetupSnapshot? setup;
++
+   const GameResult({
+     required this.gameId,
+     required this.playedAt,
+@@ -155,6 +161,7 @@ class GameResult {
+     required this.roundsPlayed,
+     this.mode,
+     this.modifierRecap,
++    this.setup,
+   });
+ 
+   /// Équipes triées par score décroissant.
+@@ -190,6 +197,7 @@ class GameResult {
+         if (mode != null) 'mode': mode,
+         if (modifierRecap != null)
+           'modifierRecap': modifierRecap!.map((l) => l.toJson()).toList(),
++        if (setup != null) 'setup': setup!.toJson(),
+       };
+ 
+   /// Rend `null` si l'entrée est inexploitable, plutôt que de lever : une
+@@ -228,6 +236,7 @@ class GameResult {
+               .whereType<ModifierRecapItem>()
+               .toList()
+           : null,
++      setup: GameSetupSnapshot.tryFromJson(json['setup']),
+     );
+   }
+ }
+diff --git a/lib/models/game_setup_snapshot.dart b/lib/models/game_setup_snapshot.dart
+new file mode 100644
+index 0000000..40be129
+--- /dev/null
++++ b/lib/models/game_setup_snapshot.dart
+@@ -0,0 +1,58 @@
++import 'package:flutter/foundation.dart';
++
++import 'fiesta/fiesta_rules.dart';
++import 'game_settings.dart';
++
++/// La configuration d'une partie, archivée avec son résultat pour le
++/// « Rejouer » de l'historique : les paramètres, plus les règles Fiesta si
++/// c'en était une. Jamais les mots — ils sont toujours retirés ou ressaisis.
++///
++/// 🔴 Règle 7 : champ OPTIONNEL d'une entrée de `guessItAll_game_results`.
++/// Absent des archives antérieures ; illisible → [tryFromJson] rend `null` et
++/// le « Rejouer » retombe sur ce que l'archive connaît déjà.
++@immutable
++class GameSetupSnapshot {
++  final GameSettings settings;
++
++  /// `null` = partie Classique.
++  final FiestaRules? fiesta;
++
++  const GameSetupSnapshot({required this.settings, this.fiesta});
++
++  Map<String, dynamic> toJson() => {
++        'settings': settings.toJson(),
++        if (fiesta != null) 'fiesta': fiesta!.toJson(),
++      };
++
++  /// Tolérant : `null` si la structure est inexploitable, jamais d'exception.
++  /// Des règles Fiesta présentes mais illisibles invalident tout le snapshot,
++  /// plutôt que de rejouer en Classique une partie qui était Fiesta.
++  static GameSetupSnapshot? tryFromJson(Object? json) {
++    if (json is! Map) return null;
++    final rawSettings = json['settings'];
++    final rawFiesta = json['fiesta'];
++    if (rawSettings is! Map) return null;
++
++    final GameSettings settings;
++    try {
++      final parsed =
++          GameSettings.fromJson(Map<String, dynamic>.from(rawSettings));
++      // `fromJson` fait des `cast` PARESSEUX : on force la lecture ici pour
++      // qu'un élément mal typé lève maintenant, pas au rendu d'un écran.
++      settings = parsed.copyWith(
++        selectedCategories: parsed.selectedCategories.toList(),
++        selectedDifficultyLevels: parsed.selectedDifficultyLevels.toList(),
++      );
++    } catch (_) {
++      return null;
++    }
++
++    FiestaRules? fiesta;
++    if (rawFiesta != null) {
++      if (rawFiesta is! Map) return null;
++      fiesta = FiestaRules.tryFromJson(Map<String, dynamic>.from(rawFiesta));
++      if (fiesta == null) return null;
++    }
++    return GameSetupSnapshot(settings: settings, fiesta: fiesta);
++  }
++}
+diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
+index c7addd1..c3f939f 100644
+--- a/lib/providers/game_provider.dart
++++ b/lib/providers/game_provider.dart
+@@ -15,6 +15,7 @@ import '../models/fiesta/symmetric_draw.dart';
+ import '../models/fiesta/turn_effects.dart';
+ import '../models/fiesta/turn_time.dart';
+ import '../models/game_settings.dart';
++import '../models/game_setup_snapshot.dart';
+ import '../models/game_state.dart';
+ import '../models/turn_clock.dart';
+ import '../models/game_result.dart';
+@@ -26,6 +27,7 @@ import '../services/storage_service.dart';
+ import '../services/analytics_service.dart';
+ import '../services/user_service.dart';
+ import '../utils/constants.dart';
++import '../utils/team_names.dart';
+ import '../utils/word_categories/utils.dart' show lookupWordsMetadata;
+ 
+ class GameProvider extends ChangeNotifier {
+@@ -296,9 +298,10 @@ class GameProvider extends ChangeNotifier {
+   // ========== ACTIONS - TEAMS ==========
+ 
+   void createTeams() {
++    final names = drawTeamNames(_settings.numberOfTeams);
+     _teams = List.generate(
+       _settings.numberOfTeams,
+-      (i) => Team.create(i),
++      (i) => Team.create(i).copyWith(name: names[i]),
+     );
+     notifyListeners();
+     _saveGameSession();
+@@ -1673,6 +1676,10 @@ class GameProvider extends ChangeNotifier {
+       roundsPlayed: _game.currentRound,
+       mode: _game.fiesta == null ? null : fiestaModeId(_game.fiesta!.rules),
+       modifierRecap: _game.fiesta == null ? null : _modifierRecapItems,
++      setup: GameSetupSnapshot(
++        settings: _settings.copyWith(),
++        fiesta: _game.fiesta?.rules,
++      ),
+     );
+ 
+     unawaited(_history.record(result));
+@@ -1814,6 +1821,49 @@ class GameProvider extends ChangeNotifier {
+     notifyListeners();
+   }
+ 
++  /// « Rejouer » depuis l'historique : recrée joueurs et équipes de [result],
++  /// reprend ses réglages (et ses règles Fiesta), puis atterrit comme le
++  /// « Rejouer » de fin de partie. Les mots ne sont jamais rejoués.
++  ///
++  /// Archive antérieure (sans `setup`) : seuls `totalWords` et `turnDuration`
++  /// viennent de l'archive, le reste des réglages courants, en Classique.
++  /// 🔴 Remplace une éventuelle partie suspendue : l'écran confirme avant.
++  Future<void> replayFromHistory(GameResult result) async {
++    final setup = result.setup;
++    final players = <Player>[];
++    final teams = <Team>[];
++    for (var i = 0; i < result.teams.length; i++) {
++      final archived = result.teams[i];
++      final teamPlayers = archived.playerNames.map(Player.create).toList();
++      players.addAll(teamPlayers);
++      final team = Team.create(i);
++      teams.add(team.copyWith(
++        name: archived.name.isEmpty ? team.name : archived.name,
++        playerIds: teamPlayers.map((p) => p.id).toList(),
++      ));
++    }
++
++    final base = setup?.settings ??
++        _settings.copyWith(
++          totalWords: result.totalWords > 0 ? result.totalWords : null,
++          turnDuration: result.turnDuration > 0 ? result.turnDuration : null,
++        );
++    // Les effectifs suivent les joueurs recréés, pas un réglage archivé qui
++    // pourrait les contredire.
++    _settings = base.copyWith(
++      numberOfTeams: teams.length,
++      numberOfPlayers: players.length,
++    );
++    _players = players;
++    _teams = teams;
++    _pendingFiesta = setup?.fiesta;
++    // Sans ce reset, `restartWithSamePlayers` relirait la Fiesta de la partie
++    // suspendue par-dessus celle de l'archive.
++    _game = GameState.initial();
++    await _saveSettings();
++    await restartWithSamePlayers();
++  }
++
+   // Réinitialise TOUT : paramètres, joueurs, mots, équipes, état de jeu
+   Future<void> clearLocalStorage() async {
+     await _storage.clearGameState();
+diff --git a/lib/screens/history_screen.dart b/lib/screens/history_screen.dart
+index 6d5ba80..a0f628a 100644
+--- a/lib/screens/history_screen.dart
++++ b/lib/screens/history_screen.dart
+@@ -7,6 +7,8 @@ import '../services/game_history_service.dart';
+ import '../theme/app_theme.dart';
+ import '../utils/constants.dart';
+ import '../widgets/common/app_back_button.dart';
++import '../widgets/common/app_button.dart';
++import '../widgets/common/app_modal.dart';
+ 
+ /// Historique des dernières parties : scores, détail par manche et tendances.
+ ///
+@@ -83,7 +85,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
+                       _buildTrends(computeTrends(games)),
+                       const SizedBox(height: 24),
+                       for (final g in games) ...[
+-                        _GameCard(game: g, colorFor: _colorFor),
++                        _GameCard(
++                          game: g,
++                          colorFor: _colorFor,
++                          onReplay: g.teams.isEmpty
++                              ? null
++                              : () => _replay(context, provider, g),
++                        ),
+                         const SizedBox(height: 12),
+                       ],
+                     ],
+@@ -100,6 +108,52 @@ class _HistoryScreenState extends State<HistoryScreen> {
+     );
+   }
+ 
++  /// Partie suspendue : confirmer avant de la remplacer (même modale que
++  /// « Nouvelle partie » de l'accueil). Sinon, rejouer directement.
++  void _replay(BuildContext context, GameProvider provider, GameResult game) {
++    if (!provider.game.isGameSuspended) {
++      provider.replayFromHistory(game);
++      return;
++    }
++    AppModal.show(
++      context,
++      title: 'Rejouer',
++      child: Column(
++        mainAxisSize: MainAxisSize.min,
++        children: [
++          const Text(
++            'Une partie est en cours. La remplacer par ce réglage ?',
++            style: TextStyle(fontFamily: 'Poppins', color: Colors.white),
++            textAlign: TextAlign.center,
++          ),
++          const SizedBox(height: 24),
++          Row(
++            children: [
++              Expanded(
++                child: AppButton(
++                  text: 'Annuler',
++                  variant: AppButtonVariant.ghost,
++                  onPressed: () => Navigator.of(context).pop(),
++                ),
++              ),
++              const SizedBox(width: 16),
++              Expanded(
++                child: AppButton(
++                  text: 'Valider',
++                  variant: AppButtonVariant.primary,
++                  onPressed: () {
++                    Navigator.of(context).pop();
++                    provider.replayFromHistory(game);
++                  },
++                ),
++              ),
++            ],
++          ),
++        ],
++      ),
++    );
++  }
++
+   Widget _buildEmpty() {
+     return Center(
+       child: Padding(
+@@ -201,7 +255,14 @@ class _GameCard extends StatefulWidget {
+   final GameResult game;
+   final Color Function(int) colorFor;
+ 
+-  const _GameCard({required this.game, required this.colorFor});
++  /// « Rejouer » : pré-remplit joueurs, équipes et réglages de cette partie.
++  final VoidCallback? onReplay;
++
++  const _GameCard({
++    required this.game,
++    required this.colorFor,
++    this.onReplay,
++  });
+ 
+   @override
+   State<_GameCard> createState() => _GameCardState();
+@@ -289,6 +350,18 @@ class _GameCardState extends State<_GameCard> {
+                 ],
+               ),
+             ),
++          if (widget.onReplay != null)
++            Padding(
++              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
++              child: AppButton(
++                text: 'Rejouer',
++                variant: AppButtonVariant.secondary,
++                size: AppButtonSize.small,
++                fullWidth: true,
++                icon: const Icon(Icons.replay, size: 18, color: Colors.white),
++                onPressed: widget.onReplay,
++              ),
++            ),
+         ],
+       ),
+     );
+diff --git a/lib/screens/players_screen.dart b/lib/screens/players_screen.dart
+index 779b820..e70c39a 100644
+--- a/lib/screens/players_screen.dart
++++ b/lib/screens/players_screen.dart
+@@ -333,6 +333,10 @@ class _PlayersScreenState extends State<PlayersScreen> {
+                             final playerName =
+                                 _controllers[player.id]?.text.trim() ?? '';
+                             final hasName = playerName.isNotEmpty;
++                            // Mode aléatoire : les mots tirés restent cachés,
++                            // la carte affiche un badge non cliquable.
++                            final isRandom = provider.settings.wordChoice ==
++                                AppConstants.wordChoiceRandom;
+ 
+                             final isLastPlayer =
+                                 index == provider.players.length - 1;
+@@ -374,7 +378,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
+                                   ),
+                                   const SizedBox(width: 12),
+                                   GestureDetector(
+-                                    onTap: hasName
++                                    onTap: hasName && !isRandom
+                                         ? () {
+                                             provider.setCurrentEditingPlayer(
+                                                 player.id);
+@@ -383,7 +387,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
+                                           }
+                                         : null,
+                                     child: Opacity(
+-                                      opacity: hasName ? 1.0 : 0.4,
++                                      opacity: hasName || isRandom ? 1.0 : 0.4,
+                                       child: Container(
+                                         padding: const EdgeInsets.symmetric(
+                                             horizontal: 12, vertical: 10),
+@@ -416,9 +420,11 @@ class _PlayersScreenState extends State<PlayersScreen> {
+                                             ),
+                                             const SizedBox(width: 6),
+                                             Text(
+-                                              isWordsFilled
+-                                                  ? 'Voir mots'
+-                                                  : 'Saisir mots',
++                                              isRandom
++                                                  ? '$wordsCount mots prêts'
++                                                  : isWordsFilled
++                                                      ? 'Voir mots'
++                                                      : 'Saisir mots',
+                                               style: TextStyle(
+                                                 fontFamily: 'Poppins',
+                                                 fontSize: 12,
+@@ -428,14 +434,16 @@ class _PlayersScreenState extends State<PlayersScreen> {
+                                                     : AppColors.error,
+                                               ),
+                                             ),
+-                                            const SizedBox(width: 4),
+-                                            Icon(
+-                                              Icons.chevron_right,
+-                                              size: 16,
+-                                              color: isWordsFilled
+-                                                  ? AppColors.success
+-                                                  : AppColors.error,
+-                                            ),
++                                            if (!isRandom) ...[
++                                              const SizedBox(width: 4),
++                                              Icon(
++                                                Icons.chevron_right,
++                                                size: 16,
++                                                color: isWordsFilled
++                                                    ? AppColors.success
++                                                    : AppColors.error,
++                                              ),
++                                            ],
+                                           ],
+                                         ),
+                                       ),
+diff --git a/lib/utils/CLAUDE.md b/lib/utils/CLAUDE.md
+index 8a7dce5..3e71611 100644
+--- a/lib/utils/CLAUDE.md
++++ b/lib/utils/CLAUDE.md
+@@ -8,6 +8,7 @@ Constantes et utilitaires.
+ |---------|------|
+ | `reversed_word.dart` | `reversedWordDisplay` : malus « Mot a l'envers » (2-8), MAJUSCULES inversees par graphemes |
+ | `constants.dart` | `AppConstants` : toutes les constantes du jeu (defauts, limites, cles stockage, noms d'ecrans, modes, niveaux difficulte avec emojis) |
++| `team_names.dart` | `kFunnyTeamNames`, `drawTeamNames` : ~30 noms d'équipe drôles, tirés distincts par `createTeams` (renommage manuel toujours possible ; le « Rejouer » de l'historique garde les noms archivés) |
+ 
+ ## Sous-repertoire
+ 
+diff --git a/lib/utils/team_names.dart b/lib/utils/team_names.dart
+new file mode 100644
+index 0000000..024a55f
+--- /dev/null
++++ b/lib/utils/team_names.dart
+@@ -0,0 +1,42 @@
++import 'dart:math';
++
++/// Noms d'équipe drôles, tirés à la création des équipes. Le joueur peut
++/// toujours renommer à la main. Tout public, sans nom de marque.
++const List<String> kFunnyTeamNames = [
++  'Les Mimes Fous',
++  'Les Devins du Dimanche',
++  'Les Tchatcheurs',
++  'Les Muets Sauvages',
++  'Les Langues Pendues',
++  'Les Cerveaux en Folie',
++  'Les Mots Croisés',
++  'Les Bavards Masqués',
++  'Les Devineurs Fous',
++  'Les Pros du Charabia',
++  'Les Rois du Mime',
++  'Les Moulins à Paroles',
++  'Les Têtes en l\'Air',
++  'Les Sabliers Pressés',
++  'Les Indices Foireux',
++  'Les Génies du Salon',
++  'Les Fous du Chrono',
++  'Les Gestes Barrés',
++  'Les Mains Baladeuses',
++  'Les Pipelettes',
++  'Les Supers Souffleurs',
++  'Les Lapins Pressés',
++  'Les Perroquets Malins',
++  'Les Chouettes Futées',
++  'Les Pingouins Bavards',
++  'Les Ninjas du Mot',
++  'Les Mystères Ambulants',
++  'Les Charades Vivantes',
++  'Les Écureuils Agités',
++  'Les Zèbres Rigolos',
++];
++
++/// [count] noms distincts, au hasard.
++List<String> drawTeamNames(int count, [Random? random]) {
++  assert(count <= kFunnyTeamNames.length);
++  return (List.of(kFunnyTeamNames)..shuffle(random)).take(count).toList();
++}
+diff --git a/test/models/game_setup_snapshot_test.dart b/test/models/game_setup_snapshot_test.dart
+new file mode 100644
+index 0000000..51a35ef
+--- /dev/null
++++ b/test/models/game_setup_snapshot_test.dart
+@@ -0,0 +1,78 @@
++import 'dart:convert';
++
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/models/game_settings.dart';
++import 'package:guess_it_all_mobile/models/game_setup_snapshot.dart';
++
++void main() {
++  test('round-trip JSON : paramètres et règles Fiesta survivent', () {
++    final snapshot = GameSetupSnapshot(
++      settings: GameSettings(
++        numberOfTeams: 3,
++        numberOfPlayers: 6,
++        wordChoice: 'custom',
++        totalWords: 42,
++        turnDuration: 45,
++        passPenalty: 2,
++        selectedCategories: const ['animaux', 'films'],
++        selectedDifficultyLevels: const [2, 3],
++      ),
++      fiesta: FiestaRules(
++        mode: FiestaMode.custom,
++        ensembleName: 'Soirée',
++        modifiers: const {
++          'no_pass': ModifierSetting(
++            active: true,
++            arrival: ModifierArrival.fixed,
++            startRound: 1,
++            fixedRound: 2,
++            charges: 1,
++          ),
++        },
++        drawCount: 2,
++        oneAnswer: false,
++      ),
++    );
++
++    // Passe par une vraie chaîne JSON, comme SharedPreferences.
++    final back = GameSetupSnapshot.tryFromJson(
++        jsonDecode(jsonEncode(snapshot.toJson())))!;
++
++    expect(back.settings.toJson(), snapshot.settings.toJson());
++    expect(back.fiesta!.toJson(), snapshot.fiesta!.toJson());
++    expect(
++      GameSetupSnapshot.tryFromJson(jsonDecode(jsonEncode(
++              GameSetupSnapshot(settings: GameSettings()).toJson())))!
++          .fiesta,
++      isNull,
++      reason: 'Classique : pas de clé fiesta, pas de règles relues',
++    );
++  });
++
++  test('lecture tolérante : tout ce qui est illisible rend null', () {
++    final okSettings = GameSettings().toJson();
++    for (final raw in <Object?>[
++      null,
++      'pas un objet',
++      <String, dynamic>{},
++      {'settings': 'x'},
++      {
++        'settings': {...okSettings, 'totalWords': 'beaucoup'},
++      },
++      {
++        'settings': {
++          ...okSettings,
++          'selectedCategories': [1, 2],
++        },
++      },
++      {'settings': okSettings, 'fiesta': 'x'},
++      {
++        'settings': okSettings,
++        'fiesta': {'mode': 'inconnu'},
++      },
++    ]) {
++      expect(GameSetupSnapshot.tryFromJson(raw), isNull, reason: '$raw');
++    }
++  });
++}
+diff --git a/test/providers/replay_from_history_test.dart b/test/providers/replay_from_history_test.dart
+new file mode 100644
+index 0000000..b392f9b
+--- /dev/null
++++ b/test/providers/replay_from_history_test.dart
+@@ -0,0 +1,172 @@
++import 'dart:convert';
++
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/models/game_result.dart';
++import 'package:guess_it_all_mobile/models/game_settings.dart';
++import 'package:guess_it_all_mobile/models/game_setup_snapshot.dart';
++import 'package:guess_it_all_mobile/providers/game_provider.dart';
++import 'package:guess_it_all_mobile/services/game_history_service.dart';
++import 'package:guess_it_all_mobile/utils/constants.dart';
++
++import '../helpers/test_prefs.dart';
++
++Future<GameProvider> givenProvider() async {
++  await givenPrefs();
++  givenFakePlatformPlugins();
++  final provider = GameProvider();
++  await pumpEventQueue();
++  return provider;
++}
++
++/// Équipes reconstruites, dans l'ordre : nom → noms des joueurs.
++Map<String, List<String>> lineup(GameProvider p) => {
++      for (final t in p.teams)
++        t.name: t.playerIds.map((id) => p.getPlayerById(id)!.name).toList(),
++    };
++
++/// Joue une partie Classique jusqu'au bout : chaque manche, un tour où
++/// l'équipe devine tout.
++Future<void> playToTheEnd(GameProvider p) async {
++  await p.startGame();
++  for (var round = 0; round < 3; round++) {
++    p.startTurn();
++    while (p.game.remainingWords.isNotEmpty) {
++      p.markWordAsGuessed();
++    }
++    p.endTurn();
++    p.validateWords(List.of(p.game.wordsGuessedThisTurn));
++    p.nextRound();
++  }
++  await pumpEventQueue();
++}
++
++void main() {
++  test(
++      '🔴 règle 7 — une archive d\'AVANT le snapshot (sans `setup`) se lit et '
++      'se rejoue : équipes et joueurs, totalWords et turnDuration archivés, le '
++      'reste des réglages courants, en Classique', () async {
++    final provider = await givenProvider();
++    provider.updateSettings(
++      wordChoice: AppConstants.wordChoiceCustom,
++      selectedCategories: const ['animaux'],
++      passPenalty: 2,
++    );
++
++    // Forme EXACTE écrite par la version en store : ne pas « moderniser ».
++    const frozen = '{"gameId":"g-old","playedAt":"2026-10-12T21:04:00.000",'
++        '"teams":[{"id":"team-1","name":"Les Rouges","score":12,'
++        '"scoreByRound":[5,4,3],"playerNames":["Ana","Bob"]},'
++        '{"id":"team-2","name":"Les Bleus","score":9,'
++        '"scoreByRound":[3,3,3],"playerNames":["Cid","Dan","Eve"]}],'
++        '"totalWords":25,"turnDuration":45,"roundsPlayed":3}';
++    final old = GameResult.tryFromJson(jsonDecode(frozen))!;
++    expect(old.setup, isNull);
++
++    await provider.replayFromHistory(old);
++
++    expect(lineup(provider), {
++      'Les Rouges': ['Ana', 'Bob'],
++      'Les Bleus': ['Cid', 'Dan', 'Eve'],
++    });
++    final s = provider.settings;
++    expect([s.totalWords, s.turnDuration], [25, 45]);
++    expect([s.numberOfTeams, s.numberOfPlayers], [2, 5]);
++    expect(s.wordChoice, AppConstants.wordChoiceCustom,
++        reason: 'pas archivé : réglage courant');
++    expect(s.selectedCategories, ['animaux']);
++    expect(s.passPenalty, 2);
++    expect(provider.pendingFiesta, isNull);
++    expect(provider.game.currentScreen, AppConstants.screenSettings);
++  });
++
++  test(
++      'une partie terminée archive son snapshot ; « Rejouer » reprend joueurs, '
++      'équipes et réglages, sans les mots', () async {
++    final provider = await givenProvider();
++    provider.updateSettings(
++      numberOfPlayers: 2,
++      turnDuration: 40,
++      passPenalty: 3,
++      wordChoice: AppConstants.wordChoiceCustom,
++    );
++    for (final name in ['Ana', 'Bob']) {
++      final id = (provider.addPlayer(name)['player'] as dynamic).id as String;
++      provider.updatePlayerWords(id, ['mot-$name']);
++    }
++    provider.createTeams();
++    provider.randomizeTeams();
++    final played = lineup(provider);
++    final playedSettings = provider.settings.toJson();
++    await playToTheEnd(provider);
++
++    final archived = (await GameHistoryService().load()).single;
++    expect(archived.setup!.settings.toJson(), playedSettings);
++
++    // On repart d'ailleurs : réglages changés, joueurs effacés.
++    await provider.startNewGame();
++    provider.updateSettings(turnDuration: 90, passPenalty: 0);
++
++    await provider.replayFromHistory(archived);
++
++    expect(lineup(provider), played);
++    expect(provider.settings.toJson(), playedSettings);
++    expect(provider.players.every((p) => p.words.isEmpty), isTrue);
++    expect(provider.pendingFiesta, isNull);
++    expect(provider.game.currentScreen, AppConstants.screenSettings);
++  });
++
++  test(
++      'Fiesta : les règles de l\'archive passent en attente (Récap), même par '
++      'dessus une partie suspendue', () async {
++    final provider = await givenProvider();
++    for (final name in ['X', 'Y']) {
++      final id = (provider.addPlayer(name)['player'] as dynamic).id as String;
++      provider.updatePlayerWords(id, ['mot-$name']);
++    }
++    provider.createTeams();
++    provider.randomizeTeams();
++    await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
++    await provider.suspendGame();
++
++    final rules = FiestaRules(
++      mode: FiestaMode.custom,
++      ensembleName: 'Soirée',
++      drawCount: 2,
++    );
++    final entry = GameResult(
++      gameId: 'g-fiesta',
++      playedAt: DateTime(2026, 11, 1),
++      teams: const [
++        TeamResult(
++            id: 'team-1',
++            name: 'A',
++            score: 1,
++            scoreByRound: [1, 0, 0],
++            playerNames: ['Ana']),
++        TeamResult(
++            id: 'team-2',
++            name: 'B',
++            score: 0,
++            scoreByRound: [0, 0, 0],
++            playerNames: ['Bob']),
++      ],
++      totalWords: 2,
++      turnDuration: 30,
++      roundsPlayed: 3,
++      mode: 'fiesta_custom',
++      setup: GameSetupSnapshot(settings: GameSettings(), fiesta: rules),
++    );
++    final back = GameResult.tryFromJson(jsonDecode(jsonEncode(entry)))!;
++
++    await provider.replayFromHistory(back);
++
++    expect(lineup(provider), {
++      'A': ['Ana'],
++      'B': ['Bob'],
++    });
++    expect(provider.pendingFiesta!.toJson(), rules.toJson());
++    expect(provider.game.isGameSuspended, isFalse);
++    expect(provider.game.currentScreen, AppConstants.screenFiestaRecap);
++  });
++}
+diff --git a/test/utils/team_names_test.dart b/test/utils/team_names_test.dart
+new file mode 100644
+index 0000000..77a4c3c
+--- /dev/null
++++ b/test/utils/team_names_test.dart
+@@ -0,0 +1,16 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/utils/constants.dart';
++import 'package:guess_it_all_mobile/utils/team_names.dart';
++
++void main() {
++  test('noms d\'équipe : le bon nombre, distincts, jamais vides', () {
++    expect(kFunnyTeamNames.toSet(), hasLength(kFunnyTeamNames.length));
++    expect(kFunnyTeamNames.length, greaterThanOrEqualTo(AppConstants.maxTeams));
++    for (var i = 0; i < 50; i++) {
++      final names = drawTeamNames(AppConstants.maxTeams);
++      expect(names, hasLength(AppConstants.maxTeams));
++      expect(names.toSet(), hasLength(names.length));
++      expect(names.every((n) => n.trim().isNotEmpty), isTrue);
++    }
++  });
++}

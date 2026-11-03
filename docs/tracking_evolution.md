@@ -645,3 +645,28 @@ texte à l'affichage (carte des Résultats). Le récap recalcule rattrapage et c
 prévue, epic-4). Le format Fiesta de `guessItAll_gameHistory` n'a jamais été publié, donc la
 forme change sans migration. Une ligne `{title, detail}` écrite par une build de dev se relit
 comme un fait illisible : elle est ignorée seule, sans crash.
+
+## 2026-11-03 — « Rejouer » depuis l'historique, mots aléatoires cachés
+
+**Ce qui change.** Chaque partie archivée garde un `setup` optionnel (`GameSetupSnapshot` :
+`GameSettings` + `FiestaRules?`, jamais les mots). « Rejouer » sur une carte de l'historique
+(`replayFromHistory`) recrée joueurs et équipes depuis les noms archivés, reprend les réglages,
+met les règles Fiesta en attente et termine par `restartWithSamePlayers` : on arrive aux
+Paramètres ou au Récap Fiesta, comme le « Rejouer » de fin de partie. Une partie suspendue est
+remplacée seulement après confirmation. En mode aléatoire, la carte joueur affiche un badge
+« N mots prêts » qu'on ne peut pas toucher : les mots tirés restent cachés.
+
+**Pourquoi.** Règle 7 : c'est un champ additif dans `guessItAll_game_results`, donc ni migration
+ni bump de `kCurrentSchemaVersion`. Une archive sans `setup` se rejoue avec ce qu'elle contient
+(équipes, joueurs, `totalWords`, `turnDuration`). Le reste vient des réglages courants, en
+Classique. Le nombre d'équipes et de joueurs suit toujours les joueurs recréés, et pas un réglage
+archivé qui pourrait les contredire. Des règles Fiesta illisibles invalident tout le snapshot,
+pour ne pas rejouer en Classique une partie qui était Fiesta.
+Revue Codex r1 : bien typé ne suffit pas. Un snapshot hors bornes des curseurs (`Slider` lève),
+ou dont le mode de mots est inconnu, est écarté. Les catégories disparues du catalogue sont filtrées
+au rejeu. `goToScreen` refuse l'écran des mots en mode Aléatoire.
+
+**Noms d'équipe.** `createTeams` tire maintenant des noms drôles et distincts dans
+`kFunnyTeamNames`, à la place de « Équipe N ». Il n'y a pas de bouton pour retirer d'autres noms :
+le renommage manuel suffit. Le nom est déjà une chaîne persistée, donc la forme ne change pas
+(règle 7). Les sessions existantes gardent « Équipe N ».
