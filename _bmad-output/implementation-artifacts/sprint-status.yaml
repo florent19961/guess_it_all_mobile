@@ -59,11 +59,9 @@ epics:
     note: >-
       PR #4 mergée (squash a282bde). Publication désactivée jusqu'au build unique
       post-Fiesta. Reste : 1er dry-run Codemagic (signature iOS), un build Windows
-      pour valider le Gradle, commit de Podfile.lock. Team ID Apple P86JMJ3R72.
-      Derniers builds en store (vérifiés par Florent le 2026-11-03) : iOS 1.1.3 (10),
-      uploadé le 2026-02-13 ; Android versionCode 8 (1.1.3). Le prochain build doit
-      être > 10 sur iOS et > 8 sur Android : avec le même +N des deux côtés, ≥ +11.
-      Clé API App Store Connect : ID 5S5JV42UPB (pas un secret).
+      pour valider Gradle, commit de Podfile.lock. Team ID Apple P86JMJ3R72, clé
+      ASC 5S5JV42UPB. Derniers builds en store : iOS 1.1.3 (10) du 2026-02-13,
+      Android versionCode 8 (1.1.3) → prochain build ≥ +11 sur les deux.
   epic-3-audit-remediation:
     title: "Remédiation de l'audit du 2026-08-02 (3 blockers, 20 majors)"
     status: done   # ✅ MERGÉ PR #2 (squash 8f689b2, 2026-11-03, sur instruction Florent). Gate ② clos.
