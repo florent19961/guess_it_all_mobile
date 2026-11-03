@@ -50,7 +50,8 @@ class AppModal extends StatelessWidget {
                 alignment: Alignment.topRight,
                 child: GestureDetector(
                   onTap: onClose,
-                  child: const Icon(Icons.close, color: AppColors.gray400, size: 24),
+                  child: const Icon(Icons.close,
+                      color: AppColors.gray400, size: 24),
                 ),
               ),
               if (title != null) ...[

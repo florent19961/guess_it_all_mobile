@@ -133,7 +133,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 12,
-                          color: hasCategorySelection ? AppColors.gray400 : AppColors.error,
+                          color: hasCategorySelection
+                              ? AppColors.gray400
+                              : AppColors.error,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -144,18 +146,22 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           if (allSelected) {
                             provider.updateSettings(selectedCategories: []);
                           } else {
-                            provider.updateSettings(selectedCategories: selectableCategories);
+                            provider.updateSettings(
+                                selectedCategories: selectableCategories);
                           }
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 14),
                           decoration: BoxDecoration(
                             color: allSelected
                                 ? AppColors.secondaryCyan.withOpacity(0.2)
                                 : AppColors.backgroundCard,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: allSelected ? AppColors.secondaryCyan : AppColors.gray600,
+                              color: allSelected
+                                  ? AppColors.secondaryCyan
+                                  : AppColors.gray600,
                               width: 2,
                             ),
                           ),
@@ -164,7 +170,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                               Icon(
                                 Icons.select_all,
                                 size: 24,
-                                color: allSelected ? AppColors.secondaryCyan : AppColors.gray400,
+                                color: allSelected
+                                    ? AppColors.secondaryCyan
+                                    : AppColors.gray400,
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -174,7 +182,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                     fontFamily: 'Poppins',
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
-                                    color: allSelected ? AppColors.secondaryCyan : AppColors.gray400,
+                                    color: allSelected
+                                        ? AppColors.secondaryCyan
+                                        : AppColors.gray400,
                                   ),
                                 ),
                               ),
@@ -187,26 +197,32 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
                       // Liste des catégories
                       ...categories.map((category) {
-                        final isSelected = settings.selectedCategories.contains(category.id);
+                        final isSelected =
+                            settings.selectedCategories.contains(category.id);
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: GestureDetector(
                             onTap: () {
-                              final newCategories = List<String>.from(settings.selectedCategories);
+                              final newCategories = List<String>.from(
+                                  settings.selectedCategories);
                               if (isSelected) {
                                 newCategories.remove(category.id);
                               } else {
                                 newCategories.add(category.id);
                               }
-                              provider.updateSettings(selectedCategories: newCategories);
+                              provider.updateSettings(
+                                  selectedCategories: newCategories);
                             },
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 14),
                               decoration: BoxDecoration(
                                 color: AppColors.backgroundCard,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: isSelected ? AppColors.secondaryCyan : AppColors.gray600,
+                                  color: isSelected
+                                      ? AppColors.secondaryCyan
+                                      : AppColors.gray600,
                                   width: 2,
                                 ),
                               ),
@@ -224,7 +240,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                         fontFamily: 'Poppins',
                                         fontSize: 16,
                                         fontWeight: FontWeight.w500,
-                                        color: isSelected ? Colors.white : AppColors.gray400,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : AppColors.gray400,
                                       ),
                                     ),
                                   ),
@@ -300,7 +318,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     );
   }
 
-  Widget _buildDifficultyCard(int level, bool isSelected, GameProvider provider) {
+  Widget _buildDifficultyCard(
+      int level, bool isSelected, GameProvider provider) {
     return GestureDetector(
       onTap: () => provider.toggleDifficultyLevel(level),
       child: Container(

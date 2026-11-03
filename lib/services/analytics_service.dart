@@ -1,4 +1,6 @@
 import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/game_analytics.dart';
 import '../models/word_event.dart';
@@ -70,6 +72,40 @@ class AnalyticsService {
       wordMetadata: wordMetadata,
     );
 
+    _clearTrackingState();
+  }
+
+  /// Reprend le tracking d'une partie déjà commencée, depuis le stockage local.
+  ///
+  /// 🔴 Sans ça, tuer l'app en pleine partie perdait le tracking DÉFINITIVEMENT :
+  /// `_currentGame` repartait à `null`, `isTracking` restait faux, et `endGame()`
+  /// sortait en early-return à la fin de partie. Or c'est `endGame()` qui
+  /// incrémente `WordHistoryService` — donc l'impact n'était pas seulement une
+  /// perte de télémétrie : la priorisation « mots jamais vus » ne s'appliquait
+  /// plus, et **les mêmes mots ressortaient à la partie suivante**.
+  ///
+  /// Rend `true` si une partie non terminée a été retrouvée et reprise.
+  Future<bool> resumeGame(String gameId) async {
+    if (_currentGame?.gameId == gameId) return true;
+
+    final saved = await loadGameAnalytics(gameId);
+    // Une partie déjà clôturée ne se reprend pas : la ré-ouvrir rejouerait son
+    // `endGame()`, donc un second `incrementWords` sur les mêmes mots.
+    if (saved == null || saved.endedAt != null) return false;
+
+    _currentGame = saved;
+    _clearTrackingState();
+    return true;
+  }
+
+  /// Oublie la partie en cours SANS la clôturer — simule un redémarrage.
+  ///
+  /// Le service est un singleton : sans ça, un test ne peut pas reproduire un
+  /// kill d'application, qui est précisément le scénario que [resumeGame] rend
+  /// survivable.
+  @visibleForTesting
+  void forgetCurrentGame() {
+    _currentGame = null;
     _clearTrackingState();
   }
 
@@ -338,9 +374,8 @@ class AnalyticsService {
         // Partie orpheline = pas de endedAt mais des events
         if (game.endedAt == null && game.events.isNotEmpty) {
           // Calculer les stats et marquer comme terminée
-          final finalizedGame = game
-              .copyWith(endedAt: DateTime.now())
-              .computeStats();
+          final finalizedGame =
+              game.copyWith(endedAt: DateTime.now()).computeStats();
 
           // Sauvegarder directement dans SharedPreferences
           final prefs = await SharedPreferences.getInstance();

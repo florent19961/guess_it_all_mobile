@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
@@ -5,7 +6,12 @@ import '../models/player.dart';
 import '../models/team.dart';
 import '../models/game_settings.dart';
 import '../models/game_state.dart';
+import '../models/turn_clock.dart';
+import '../models/game_result.dart';
+import '../models/play_rotation.dart';
+import '../models/turn_resolution.dart';
 import '../models/word_stats.dart';
+import '../services/game_history_service.dart';
 import '../services/storage_service.dart';
 import '../services/analytics_service.dart';
 import '../services/user_service.dart';
@@ -16,6 +22,7 @@ class GameProvider extends ChangeNotifier {
   final StorageService _storage = StorageService();
   final AnalyticsService _analytics = AnalyticsService();
   final UserService _userService = UserService();
+  final GameHistoryService _history = GameHistoryService();
 
   GameSettings _settings = GameSettings.initial();
   List<Player> _players = [];
@@ -81,6 +88,15 @@ class GameProvider extends ChangeNotifier {
                 .toList() ??
             _teams;
         _game = GameState.fromJson(savedState['game'] ?? {});
+
+        // 🔴 Reprendre AUSSI le tracking, pas seulement l'état de jeu. Sans ça,
+        // une partie rouverte après un kill terminait sans jamais incrémenter
+        // l'historique des mots — donc les mêmes mots ressortaient ensuite.
+        // Durcir la boucle ne suffisait pas : il fallait durcir la REPRISE.
+        final gameId = _game.gameId;
+        if (gameId != null && _game.allWords.isNotEmpty) {
+          await _analytics.resumeGame(gameId);
+        }
       }
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -154,13 +170,14 @@ class GameProvider extends ChangeNotifier {
     // 1. On change de mode (Aléatoire ↔ Personnalisé)
     // 2. OU on est en Aléatoire ET catégories/difficultés changent
     if (modeChanged ||
-        (_settings.wordChoice == 'Aléatoire' && (categoriesChanged || difficultiesChanged))) {
+        (_settings.wordChoice == 'Aléatoire' &&
+            (categoriesChanged || difficultiesChanged))) {
       _clearAllPlayersWords();
     }
 
     // Détecter le changement de nombre d'équipes
-    final teamCountChanged = numberOfTeams != null &&
-        numberOfTeams != oldNumberOfTeams;
+    final teamCountChanged =
+        numberOfTeams != null && numberOfTeams != oldNumberOfTeams;
 
     // Recréer les équipes si le nombre change
     if (teamCountChanged && _teams.isNotEmpty) {
@@ -336,7 +353,8 @@ class GameProvider extends ChangeNotifier {
 
     // 2. Trouver les joueurs non assignés (avec un nom)
     final unassignedPlayers = _players
-        .where((p) => p.name.trim().isNotEmpty && !playersInTeams.contains(p.id))
+        .where(
+            (p) => p.name.trim().isNotEmpty && !playersInTeams.contains(p.id))
         .toList();
 
     // 3. Distribuer les nouveaux joueurs aléatoirement dans l'équipe la plus petite
@@ -433,7 +451,8 @@ class GameProvider extends ChangeNotifier {
       }
 
       for (final word in words) {
-        if (_wordMetadataCache != null && _wordMetadataCache!.containsKey(word)) {
+        if (_wordMetadataCache != null &&
+            _wordMetadataCache!.containsKey(word)) {
           wordMetadata[word] = _wordMetadataCache![word]!;
         } else if (lookedUp.containsKey(word)) {
           wordMetadata[word] = lookedUp[word]!;
@@ -471,29 +490,19 @@ class GameProvider extends ChangeNotifier {
     final shuffledTeamIndices = List<int>.generate(_teams.length, (i) => i)
       ..shuffle(Random());
 
-    // Créer un cycle (répéter 1000 fois)
-    final List<int> teamPlayOrder = [];
-    for (int i = 0; i < 1000; i++) {
-      teamPlayOrder.addAll(shuffledTeamIndices);
-    }
-
-    // Pour chaque équipe, mélanger l'ordre de ses joueurs
+    // On ne stocke que LE CYCLE, pas ses répétitions : l'ordre est périodique,
+    // donc il se dérive (voir play_rotation.dart). Avant, la permutation était
+    // recopiée 1000 fois — ~24 000 entiers pour 4 équipes et 20 joueurs,
+    // ré-écrits sur disque à chaque mot deviné.
     final Map<String, List<int>> playerOrderByTeam = {};
     for (final team in _teams) {
-      final playerIndices = List<int>.generate(team.playerIds.length, (i) => i)
-        ..shuffle(Random());
-
-      // Créer un cycle pour les joueurs
-      final List<int> cycledPlayerOrder = [];
-      for (int i = 0; i < 1000; i++) {
-        cycledPlayerOrder.addAll(playerIndices);
-      }
-
-      playerOrderByTeam[team.id] = cycledPlayerOrder;
+      playerOrderByTeam[team.id] =
+          List<int>.generate(team.playerIds.length, (i) => i)
+            ..shuffle(Random());
     }
 
     return {
-      'teamPlayOrder': teamPlayOrder,
+      'teamPlayOrder': shuffledTeamIndices,
       'playerOrderByTeam': playerOrderByTeam,
     };
   }
@@ -520,6 +529,7 @@ class GameProvider extends ChangeNotifier {
       turnStartTimestamp: now,
       turnEndTimestamp: now + durationMs,
       clearPausedTimeRemaining: true,
+      clearPausedRemainingMs: true,
       timeRemaining: durationSeconds,
       clearTurnBonusTime: true,
     );
@@ -574,7 +584,8 @@ class GameProvider extends ChangeNotifier {
       // Vérifier s'il reste des mots passés à recycler
       if (newPassedWords.isNotEmpty) {
         // Remettre les mots passés dans la pile
-        final restoredWords = List<String>.from(newPassedWords)..shuffle(Random());
+        final restoredWords = List<String>.from(newPassedWords)
+          ..shuffle(Random());
         final nextCurrentWord = restoredWords[0];
 
         _game = _game.copyWith(
@@ -587,13 +598,29 @@ class GameProvider extends ChangeNotifier {
         // Tracker le nouveau mot affiché
         _trackWordShown();
       } else {
-        // Vraie fin de manche (plus aucun mot disponible ni passé)
+        // Vraie fin de manche (plus aucun mot disponible ni passé).
+        //
+        // 🔴 Ce chemin doit ARRÊTER l'horloge et reporter le temps restant en
+        // bonus, exactement comme `endTurn`. Sans ça : la deadline restait
+        // vivante pendant l'écran de vérification (le ticker pouvait encore
+        // déclencher `endTurn`), et le temps gagné en finissant la manche en
+        // avance était simplement perdu. C'était le seul des deux chemins vers
+        // l'écran de vérification à ne pas le faire.
+        final now = DateTime.now().millisecondsSinceEpoch;
+        final bonusSeconds = turnClock.displayedSecondsAt(now);
+
         _game = _game.copyWith(
           wordsGuessedThisTurn: newGuessedWords,
           passedWordsThisTurn: newPassedWords,
           remainingWords: newRemainingWords,
           clearCurrentWord: true,
           currentScreen: AppConstants.screenVerification,
+          turnBonusTime: bonusSeconds,
+          timeRemaining: bonusSeconds,
+          clearTurnStartTimestamp: true,
+          clearTurnEndTimestamp: true,
+          clearPausedTimeRemaining: true,
+          clearPausedRemainingMs: true,
         );
       }
     } else {
@@ -617,24 +644,25 @@ class GameProvider extends ChangeNotifier {
   void passWord() {
     final passPenalty = _settings.passPenalty;
     final currentWord = _game.currentWord;
-    final turnEndTimestamp = _game.turnEndTimestamp;
+    final clock = turnClock;
 
-    if (currentWord == null || turnEndTimestamp == null) return;
+    if (currentWord == null || !clock.isRunning) return;
 
-    // Calculer le temps réel restant
     final now = DateTime.now().millisecondsSinceEpoch;
-    final currentRemaining =
-        ((turnEndTimestamp - now) / 1000).ceil().clamp(0, 999);
 
-    // Vérifier qu'il y a assez de temps
-    if (currentRemaining < passPenalty) return;
+    // Garde inchangée : elle porte sur la seconde AFFICHÉE, pas sur les ms.
+    // C'est délibéré — passer avec « 5 » à l'écran et une pénalité de 5 reste
+    // autorisé et met le chrono à zéro, comme avant. Comparer les ms refuserait
+    // ce cas et changerait la règle du jeu en douce.
+    if (clock.displayedSecondsAt(now) < passPenalty) return;
 
     // Tracker le pass AVANT de changer l'état
     _analytics.onWordPassed(currentWord);
 
-    // Calculer le nouveau timestamp
-    final newRemainingSeconds = currentRemaining - passPenalty;
-    final newEndTimestamp = now + (newRemainingSeconds * 1000);
+    // La pénalité est retirée à la deadline, en ms exactes : plus de ré-ancrage
+    // sur une seconde arrondie au supérieur (qui rendait du temps à chaque passe
+    // et faisait remonter le chrono à pénalité 0).
+    final newClock = clock.applyPenalty(passPenalty, now);
 
     final newPassedWords = List<String>.from(_game.passedWordsThisTurn);
     if (!newPassedWords.contains(currentWord)) {
@@ -652,12 +680,14 @@ class GameProvider extends ChangeNotifier {
     final newCurrentWord =
         newRemainingWords.isNotEmpty ? newRemainingWords[0] : null;
 
-    _game = _game.copyWith(
-      currentWord: newCurrentWord,
-      passedWordsThisTurn: newPassedWords,
-      remainingWords: newRemainingWords,
-      turnEndTimestamp: newEndTimestamp,
-      timeRemaining: newRemainingSeconds,
+    _game = _withClock(
+      _game.copyWith(
+        currentWord: newCurrentWord,
+        passedWordsThisTurn: newPassedWords,
+        remainingWords: newRemainingWords,
+      ),
+      newClock,
+      nowMs: now,
     );
 
     // Tracker le nouveau mot affiché
@@ -671,9 +701,9 @@ class GameProvider extends ChangeNotifier {
 
   void endTurn() {
     final now = DateTime.now().millisecondsSinceEpoch;
-    final timeRemaining = _game.turnEndTimestamp != null
-        ? ((_game.turnEndTimestamp! - now) / 1000).ceil().clamp(0, 999)
-        : 0;
+    // Passe par l'horloge : si le tour était GELÉ (app en arrière-plan, dialogue
+    // ouvert), c'est le reste gelé qui compte — pas une deadline périmée.
+    final timeRemaining = turnClock.displayedSecondsAt(now);
 
     // Si la manche n'est pas finie et qu'il y avait un mot en cours, le sauvegarder comme "expiré"
     final isRoundFinished = _game.remainingWords.isEmpty;
@@ -692,45 +722,119 @@ class GameProvider extends ChangeNotifier {
       clearExpiredWord: isRoundFinished,
       clearTurnStartTimestamp: true,
       clearTurnEndTimestamp: true,
+      // Purger AUSSI le gel : sinon l'horloge reste « en pause » après la fin du
+      // tour, et le `then` du dialogue « Terminer le tour » la reprend — ce qui
+      // ré-arme une deadline sur l'écran de vérification.
+      clearPausedTimeRemaining: true,
+      clearPausedRemainingMs: true,
     );
 
     notifyListeners();
     _saveGameState();
   }
 
-  void updateTimeRemaining(int time) {
-    _game = _game.copyWith(timeRemaining: time);
-    notifyListeners();
+  // ========== TEMPS DU TOUR ==========
+  //
+  // 🔴 `TurnClock` est la SEULE autorité sur le temps de jeu. `turnEndTimestamp`
+  // et `pausedTimeRemaining` ne sont que sa forme persistée : on ne les écrit
+  // jamais à la main, on passe par [_applyClock].
+
+  /// Reconstruit l'horloge depuis l'état persisté.
+  TurnClock get turnClock {
+    final end = _game.turnEndTimestamp;
+    if (end != null) return TurnClock.endingAt(end);
+
+    // Les millisecondes exactes font foi. Le champ en secondes n'est relu que
+    // pour une partie mise en pause par une version ANTÉRIEURE de l'app, qui
+    // ne l'écrivait pas — sinon on rendrait au joueur l'arrondi au supérieur.
+    final pausedMs = _game.pausedRemainingMs;
+    if (pausedMs != null) return TurnClock.frozen(pausedMs);
+
+    final pausedSeconds = _game.pausedTimeRemaining;
+    if (pausedSeconds != null) return TurnClock.frozen(pausedSeconds * 1000);
+
+    return const TurnClock.stopped();
   }
 
-  void updateTurnEndTimestamp(int timestamp) {
-    _game = _game.copyWith(turnEndTimestamp: timestamp);
+  /// Écrit [clock] dans l'état, en gardant les deux champs persistés cohérents.
+  ///
+  /// L'un exclut l'autre : une deadline vivante ET un reste gelé, c'est
+  /// exactement l'incohérence qui faisait terminer un tour au retour d'un
+  /// dialogue.
+  GameState _withClock(GameState state, TurnClock clock, {required int nowMs}) {
+    return state.copyWith(
+      turnEndTimestamp: clock.endTimestampMs,
+      clearTurnEndTimestamp: clock.endTimestampMs == null,
+      // Les ms exactes sont l'autorité ; la version en secondes reste écrite
+      // pour qu'un downgrade éventuel retrouve un champ qu'il sait lire.
+      pausedRemainingMs: clock.frozenRemainingMs,
+      clearPausedRemainingMs: !clock.isPaused,
+      pausedTimeRemaining:
+          clock.isPaused ? (clock.frozenRemainingMs! / 1000).ceil() : null,
+      clearPausedTimeRemaining: !clock.isPaused,
+      timeRemaining: clock.displayedSecondsAt(nowMs),
+    );
+  }
+
+  void _applyClock(TurnClock clock, {required int nowMs, bool persist = true}) {
+    _game = _withClock(_game, clock, nowMs: nowMs);
+    notifyListeners();
+    if (persist) _saveGameState();
+  }
+
+  /// Gèle le tour en cours (dialogue ouvert, app en arrière-plan, appel entrant).
+  ///
+  /// Idempotent : appelable depuis plusieurs sources sans risque de double gel.
+  void pauseTurn() {
+    final clock = turnClock;
+    if (!clock.isRunning) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    _applyClock(clock.pauseAt(now), nowMs: now);
+  }
+
+  /// Reprend le tour là où il avait été gelé.
+  void resumeTurn() {
+    final clock = turnClock;
+    if (!clock.isPaused) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    _applyClock(clock.resumeAt(now), nowMs: now);
+  }
+
+  /// Rafraîchit la seconde affichée depuis l'horloge.
+  ///
+  /// ⚠️ N'émet une notification que lorsque la seconde CHANGE. L'ancien code
+  /// poussait une valeur dix fois par seconde et notifiait à chaque tick, ce qui
+  /// reconstruisait tout l'arbre sous le `Consumer` racine 10 fois/s.
+  void refreshDisplayedTime() {
+    final clock = turnClock;
+    if (!clock.isRunning) return;
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final seconds = clock.displayedSecondsAt(now);
+    if (seconds == _game.timeRemaining) return;
+
+    _game = _game.copyWith(timeRemaining: seconds);
     notifyListeners();
   }
 
   void validateWords(List<String> validatedWords) {
     final currentTeam = _teams[_game.currentTeamIndex];
-    final wordsGuessedThisTurn = _game.wordsGuessedThisTurn;
     final passedWordsThisTurn = _game.passedWordsThisTurn;
-    final expiredWord = _game.expiredWord;
 
-    // Mots invalidés
-    final invalidatedGuessedWords =
-        wordsGuessedThisTurn.where((w) => !validatedWords.contains(w)).toList();
-    final invalidatedPassedWords =
-        passedWordsThisTurn.where((w) => !validatedWords.contains(w)).toList();
+    // Tout le CALCUL (classification, pool, score) vit dans `resolveTurn`, une
+    // fonction pure et testée. Ne reste ici que ce qui a des effets de bord :
+    // tracking analytics, mutation des équipes, avancement du tour.
+    final resolution = resolveTurn(
+      validatedWords: validatedWords,
+      guessedThisTurn: _game.wordsGuessedThisTurn,
+      passedThisTurn: passedWordsThisTurn,
+      expiredWord: _game.expiredWord,
+      currentPool: _game.remainingWords,
+    );
 
-    // Gérer le mot expiré
-    final isExpiredWordValidated =
-        expiredWord != null && validatedWords.contains(expiredWord);
-    final isExpiredWordInvalidated =
-        expiredWord != null && !validatedWords.contains(expiredWord);
-
-    final allInvalidatedWords = [
-      ...invalidatedGuessedWords,
-      ...invalidatedPassedWords,
-      if (isExpiredWordInvalidated) expiredWord,
-    ];
+    final allInvalidatedWords = resolution.allInvalidated;
+    final newRemainingWords = resolution.remainingPool;
+    final pointsScored = resolution.pointsScored;
 
     // Tracker les mots invalidés pour les analytics
     for (final word in allInvalidatedWords) {
@@ -738,34 +842,12 @@ class GameProvider extends ChangeNotifier {
     }
 
     // Tracker les mots passed/expired qui sont validés comme guessed
-    final validatedPassedWords =
-        passedWordsThisTurn.where((w) => validatedWords.contains(w)).toList();
-    for (final word in validatedPassedWords) {
+    for (final word in resolution.validatedPassed) {
       _analytics.onWordValidatedAsGuessed(word);
     }
-    if (isExpiredWordValidated) {
-      _analytics.onWordValidatedAsGuessed(expiredWord!);
+    if (resolution.expiredValidated) {
+      _analytics.onWordValidatedAsGuessed(resolution.expiredWord!);
     }
-
-    // Remettre les mots invalidés dans le pool (Set garantit l'unicité)
-    final newRemainingWords = <String>{
-      ..._game.remainingWords,
-      ...invalidatedGuessedWords,
-      ...invalidatedPassedWords,
-    }.toList();
-
-    // Si le mot expiré est validé, le retirer du pool
-    if (isExpiredWordValidated) {
-      newRemainingWords.remove(expiredWord);
-    }
-
-    // Retirer les mots passés validés du pool (ils peuvent y être si recyclés pendant le tour)
-    for (final word in validatedPassedWords) {
-      newRemainingWords.remove(word);
-    }
-
-    // Calculer les points
-    final pointsScored = validatedWords.length;
 
     // Mettre à jour le score
     final teamIndex = _teams.indexWhere((t) => t.id == currentTeam.id);
@@ -781,8 +863,7 @@ class GameProvider extends ChangeNotifier {
     // Vérifier si on doit fusionner avec l'entrée précédente (bonus time)
     // La fusion se fait toujours quand il y a un bonus pending, même avec des mots invalidés
     final hasBonusPending = _game.pendingBonusTurnId != null;
-    final shouldMergeWithPrevious = hasBonusPending &&
-        _game.history.isNotEmpty;
+    final shouldMergeWithPrevious = hasBonusPending && _game.history.isNotEmpty;
 
     // Calculer le temps passé pour ce segment
     final currentTimeSpent = _settings.turnDuration - _game.timeRemaining;
@@ -839,12 +920,17 @@ class GameProvider extends ChangeNotifier {
       _game = _game.copyWith(
         history: newHistory,
         remainingWords: newRemainingWords,
-        currentScreen: isLastRound ? AppConstants.screenResults : AppConstants.screenTransition,
+        currentScreen: isLastRound
+            ? AppConstants.screenResults
+            : AppConstants.screenTransition,
         turnBonusTime: _game.timeRemaining,
         clearExpiredWord: true,
         pendingBonusTurnId: shouldPrepareBonusFusion ? _game.currentTurn : null,
         clearPendingBonusTurnId: !shouldPrepareBonusFusion,
       );
+
+      // Dernière manche terminée : la partie est finie, on l'archive.
+      if (isLastRound) _archiveGameResult();
     } else {
       // Mélanger les mots restants
       newRemainingWords.shuffle(Random());
@@ -874,25 +960,34 @@ class GameProvider extends ChangeNotifier {
 
     notifyListeners();
     _saveGameState();
+
+    // Point de reprise du tracking : la fin d'un tour est le moment où un lot
+    // d'événements est complet. On ne le fait PAS à chaque `_saveGameState()`
+    // (appelé au moindre changement d'écran) — ce serait doubler l'écriture la
+    // plus lourde de l'app pour rien.
+    unawaited(_analytics.saveCurrentGame());
   }
 
   Map<String, int> _getNextPlayerWithRotation() {
     final nextTurnIndex = _game.currentTurnIndex + 1;
-    final nextTeamIndex = _game.teamPlayOrder[nextTurnIndex];
+
+    // La longueur du cycle est le NOMBRE D'ÉQUIPES, pas la longueur de la liste
+    // stockée : c'est ce qui rend le calcul identique sur une partie sauvegardée
+    // à l'ancien format (permutation répétée 1000 fois) et sur le nouveau.
+    final cycleLength = _teams.length;
+
+    final nextTeamIndex = teamIndexAtTurn(
+      teamPlayOrder: _game.teamPlayOrder,
+      cycleLength: cycleLength,
+      turnIndex: nextTurnIndex,
+    );
     final nextTeam = _teams[nextTeamIndex];
 
-    // Compter combien de fois cette équipe a joué
-    int teamPlayCount = 0;
-    for (int i = 0; i <= nextTurnIndex; i++) {
-      if (_game.teamPlayOrder[i] == nextTeamIndex) {
-        teamPlayCount++;
-      }
-    }
-
-    // Index du joueur
-    final playerOrderForTeam = _game.playerOrderByTeam[nextTeam.id]!;
-    final nextPlayerIndexInTeam =
-        playerOrderForTeam[(teamPlayCount - 1) % playerOrderForTeam.length];
+    final nextPlayerIndexInTeam = playerIndexAtTurn(
+      playerOrderForTeam: _game.playerOrderByTeam[nextTeam.id] ?? const [],
+      cycleLength: cycleLength,
+      turnIndex: nextTurnIndex,
+    );
 
     return {
       'nextTurnIndex': nextTurnIndex,
@@ -908,6 +1003,7 @@ class GameProvider extends ChangeNotifier {
       _game = _game.copyWith(
         currentScreen: AppConstants.screenResults,
       );
+      _archiveGameResult();
     } else {
       // Réinitialiser le pool de mots
       final shuffledWords = List<String>.from(_game.allWords)
@@ -928,6 +1024,43 @@ class GameProvider extends ChangeNotifier {
     _saveGameState();
   }
 
+  /// Archive la partie terminée pour l'écran d'historique.
+  ///
+  /// On enregistre le résultat **tel qu'il a été montré aux joueurs**, pas une
+  /// reconstruction depuis les events : la validation manuelle de fin de tour
+  /// invalide des mots, les mots passés sont recyclés, et ces règles évolueront
+  /// (mode Fiesta). Un score recalculé après coup finirait par diverger de celui
+  /// affiché — et c'est le score affiché qui fait foi pour les joueurs.
+  ///
+  /// Volontairement fire-and-forget et enveloppé : l'archivage est une commodité,
+  /// il ne doit jamais empêcher l'écran de résultats de s'afficher.
+  void _archiveGameResult() {
+    final gameId = _game.gameId;
+    if (gameId == null || _teams.isEmpty) return;
+
+    final result = GameResult(
+      gameId: gameId,
+      playedAt: DateTime.now(),
+      teams: _teams
+          .map((team) => TeamResult(
+                id: team.id,
+                name: team.name,
+                score: team.score,
+                scoreByRound: List<int>.from(team.scoreByRound),
+                playerNames: team.playerIds
+                    .map((id) => getPlayerById(id)?.name)
+                    .whereType<String>()
+                    .toList(),
+              ))
+          .toList(),
+      totalWords: _game.allWords.length,
+      turnDuration: _settings.turnDuration,
+      roundsPlayed: _game.currentRound,
+    );
+
+    unawaited(_history.record(result));
+  }
+
   // ========== ACTIONS - NAVIGATION ==========
 
   void goToScreen(String screenName) {
@@ -944,16 +1077,28 @@ class GameProvider extends ChangeNotifier {
     await _analytics.saveCurrentGame();
 
     final now = DateTime.now().millisecondsSinceEpoch;
-    final pausedTime = _game.turnEndTimestamp != null
-        ? ((_game.turnEndTimestamp! - now) / 1000).ceil().clamp(0, 999)
-        : _game.timeRemaining;
 
-    _game = _game.copyWith(
+    // 🔴 On GÈLE l'horloge au lieu de relire une deadline restée vivante.
+    // Avant : l'écran mettait `_isPaused = true` sans toucher à la deadline,
+    // puis cette méthode recalculait le reste depuis cette deadline périmée —
+    // donc tout le temps passé dans le dialogue était décompté, et au-delà du
+    // temps restant le `clamp` donnait 0, ce qui terminait le tour au retour.
+    // La valeur correcte était pourtant déjà capturée par le widget, et ignorée.
+    // `pauseAt` est idempotent : si l'écran a déjà gelé, on garde son reste.
+    final frozen = turnClock.pauseAt(now);
+
+    // Suspendre hors d'un tour (écran équipes, réglages…) : il n'y a pas
+    // d'horloge à geler, mais l'ancien code posait quand même un reste égal au
+    // temps affiché. On conserve ce comportement au lieu de le changer au
+    // passage — ce n'est pas l'objet de ce correctif.
+    final clock = frozen.isStopped
+        ? TurnClock.frozen(_game.timeRemaining * 1000)
+        : frozen;
+
+    _game = _withClock(_game, clock, nowMs: now).copyWith(
       isGameSuspended: true,
       suspendedScreen: _game.currentScreen,
       currentScreen: AppConstants.screenHome,
-      pausedTimeRemaining: pausedTime,
-      timeRemaining: pausedTime,
     );
 
     notifyListeners();
@@ -962,14 +1107,16 @@ class GameProvider extends ChangeNotifier {
 
   void resumeGame() {
     final now = DateTime.now().millisecondsSinceEpoch;
-    final pausedTime = _game.pausedTimeRemaining ?? _game.timeRemaining;
-    final newEndTimestamp = now + (pausedTime * 1000);
 
-    _game = _game.copyWith(
+    // 🔴 Passer par `_withClock`, et non écrire les champs à la main : c'est CE
+    // contournement qui rendait du temps au joueur. `suspendGame` écrivait un
+    // reste arrondi à la seconde SUPÉRIEURE, `resumeGame` le relisait comme
+    // exact — donc chaque aller-retour par l'accueil allongeait le tour de
+    // jusqu'à 999 ms, autant de fois qu'on le répétait.
+    _game = _withClock(_game, turnClock.resumeAt(now), nowMs: now).copyWith(
       currentScreen: _game.suspendedScreen ?? AppConstants.screenGame,
       isGameSuspended: false,
       clearSuspendedScreen: true,
-      turnEndTimestamp: newEndTimestamp,
     );
 
     notifyListeners();
@@ -1172,33 +1319,31 @@ class GameProvider extends ChangeNotifier {
       _game.history.isEmpty && _game.currentRound == 1;
 
   // Vérifie si on peut revenir à l'écran de vérification
-  bool get canGoBackToVerification =>
-      _game.preValidationSnapshot != null;
+  bool get canGoBackToVerification => _game.preValidationSnapshot != null;
 
   // Sauvegarde l'état avant validation (appelé dans verification_screen)
   // validatedWords = les mots que l'utilisateur a choisi de valider
+  //
+  // 🔴 Le snapshot réutilise `GameState.toJson()`, la sérialisation CANONIQUE.
+  // Avant, c'était une SECONDE sérialisation écrite à la main : 15 champs
+  // recopiés, à re-synchroniser à chaque ajout de champ — et relus avec des
+  // casts durs (`as int`, `as List`) qui levaient sur la moindre absence.
+  // Un champ ajouté à GameState et oublié ici se traduisait par une restauration
+  // silencieusement incomplète. C'est exactement le piège que le mode Fiesta
+  // aurait déclenché, lui qui ajoutera des champs d'état par construction.
   void savePreValidationState(List<String> validatedWords) {
     _game = _game.copyWith(
       preValidationSnapshot: {
-        'currentRound': _game.currentRound,
-        'currentTeamIndex': _game.currentTeamIndex,
-        'currentPlayerIndexInTeam': _game.currentPlayerIndexInTeam,
-        'currentTurn': _game.currentTurn,
-        'currentTurnIndex': _game.currentTurnIndex,
-        'wordsGuessedThisTurn': List<String>.from(_game.wordsGuessedThisTurn),
-        'passedWordsThisTurn': List<String>.from(_game.passedWordsThisTurn),
-        'expiredWord': _game.expiredWord,
-        'remainingWords': List<String>.from(_game.remainingWords),
-        'currentWord': _game.currentWord,
-        'timeRemaining': _game.timeRemaining,
-        'turnBonusTime': _game.turnBonusTime,
-        'history': _game.history.map((e) => e.toJson()).toList(),
-        'teamScores': _teams.map((t) => {
-          'id': t.id,
-          'score': t.score,
-          'scoreByRound': List<int>.from(t.scoreByRound),
-        }).toList(),
-        'pendingBonusTurnId': _game.pendingBonusTurnId,
+        // On retire le snapshot de lui-même : sans ça, chaque sauvegarde
+        // imbriquerait la précédente et le blob grossirait sans fin.
+        'game': _game.copyWith(clearPreValidationSnapshot: true).toJson(),
+        'teamScores': _teams
+            .map((t) => {
+                  'id': t.id,
+                  'score': t.score,
+                  'scoreByRound': List<int>.from(t.scoreByRound),
+                })
+            .toList(),
         'validatedWords': List<String>.from(validatedWords),
       },
     );
@@ -1211,50 +1356,35 @@ class GameProvider extends ChangeNotifier {
     final snapshot = _game.preValidationSnapshot;
     if (snapshot == null) return;
 
+    final gameJson = snapshot['game'];
+    // Un snapshot écrit par l'ancienne version (format à plat) ou corrompu :
+    // on renonce au retour arrière plutôt que de crasher. L'utilisateur perd la
+    // possibilité de revenir sur CE tour, rien d'autre.
+    if (gameJson is! Map<String, dynamic>) return;
+
     // Restaurer les scores des équipes
-    final teamScores = snapshot['teamScores'] as List;
-    for (final ts in teamScores) {
-      final idx = _teams.indexWhere((t) => t.id == ts['id']);
-      if (idx != -1) {
-        _teams[idx] = _teams[idx].copyWith(
-          score: ts['score'] as int,
-          scoreByRound: List<int>.from(ts['scoreByRound'] as List),
-        );
+    final teamScores = snapshot['teamScores'];
+    if (teamScores is List) {
+      for (final ts in teamScores) {
+        if (ts is! Map) continue;
+        final idx = _teams.indexWhere((t) => t.id == ts['id']);
+        if (idx != -1) {
+          _teams[idx] = _teams[idx].copyWith(
+            score: ts['score'] as int? ?? _teams[idx].score,
+            scoreByRound: (ts['scoreByRound'] as List?)?.cast<int>() ??
+                _teams[idx].scoreByRound,
+          );
+        }
       }
     }
 
-    // Restaurer l'historique
-    final historyJson = snapshot['history'] as List;
-    final restoredHistory = historyJson
-        .map((e) => HistoryEntry.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final validatedWords = snapshot['validatedWords'];
 
-    // Restaurer les mots validés par l'utilisateur
-    final validatedWords = snapshot['validatedWords'] as List?;
-
-    // Restaurer l'état du jeu
-    _game = _game.copyWith(
+    _game = GameState.fromJson(gameJson).copyWith(
       currentScreen: AppConstants.screenVerification,
-      currentRound: snapshot['currentRound'] as int,
-      currentTeamIndex: snapshot['currentTeamIndex'] as int,
-      currentPlayerIndexInTeam: snapshot['currentPlayerIndexInTeam'] as int,
-      currentTurn: snapshot['currentTurn'] as int,
-      currentTurnIndex: snapshot['currentTurnIndex'] as int,
-      wordsGuessedThisTurn: List<String>.from(snapshot['wordsGuessedThisTurn'] as List),
-      passedWordsThisTurn: List<String>.from(snapshot['passedWordsThisTurn'] as List),
-      expiredWord: snapshot['expiredWord'] as String?,
-      clearExpiredWord: snapshot['expiredWord'] == null,
-      remainingWords: List<String>.from(snapshot['remainingWords'] as List),
-      currentWord: snapshot['currentWord'] as String?,
-      clearCurrentWord: snapshot['currentWord'] == null,
-      timeRemaining: snapshot['timeRemaining'] as int,
-      turnBonusTime: snapshot['turnBonusTime'] as int?,
-      clearTurnBonusTime: snapshot['turnBonusTime'] == null,
-      history: restoredHistory,
-      pendingBonusTurnId: snapshot['pendingBonusTurnId'] as int?,
-      clearPendingBonusTurnId: snapshot['pendingBonusTurnId'] == null,
       clearPreValidationSnapshot: true,
-      restoredValidatedWords: validatedWords != null ? List<String>.from(validatedWords) : null,
+      restoredValidatedWords:
+          validatedWords is List ? validatedWords.cast<String>() : null,
     );
 
     notifyListeners();

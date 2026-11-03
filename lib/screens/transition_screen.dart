@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
 import '../widgets/common/app_button.dart';
+import '../widgets/common/game_dialogs.dart';
 import '../widgets/common/home_button.dart';
 import '../widgets/common/back_button.dart';
 
@@ -29,7 +30,8 @@ class TransitionScreen extends StatelessWidget {
 
                   // Round completed badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 22, vertical: 10),
                     decoration: BoxDecoration(
                       color: AppColors.success.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(18),
@@ -48,7 +50,8 @@ class TransitionScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Icon(Icons.check_circle, color: AppColors.success, size: 22),
+                        const Icon(Icons.check_circle,
+                            color: AppColors.success, size: 22),
                       ],
                     ),
                   ),
@@ -69,7 +72,8 @@ class TransitionScreen extends StatelessWidget {
                           final index = entry.key;
                           final team = entry.value;
                           final originalIndex = provider.teams.indexOf(team);
-                          final teamColor = AppColors.getTeamColor(originalIndex);
+                          final teamColor =
+                              AppColors.getTeamColor(originalIndex);
 
                           // Calculer le rang réel en tenant compte des ex æquo
                           int rank = 0;
@@ -90,7 +94,8 @@ class TransitionScreen extends StatelessWidget {
                                           : '';
 
                           return GestureDetector(
-                            onTap: () => _showTeamMembersDialog(context, team, provider, teamColor),
+                            onTap: () => _showTeamMembersDialog(
+                                context, team, provider, teamColor),
                             child: Container(
                               margin: const EdgeInsets.only(bottom: 12),
                               padding: const EdgeInsets.all(12),
@@ -106,7 +111,8 @@ class TransitionScreen extends StatelessWidget {
                                       medal,
                                       style: const TextStyle(fontSize: 20),
                                     ),
-                                  if (medal.isNotEmpty) const SizedBox(width: 8),
+                                  if (medal.isNotEmpty)
+                                    const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
                                       team.name,
@@ -150,7 +156,8 @@ class TransitionScreen extends StatelessWidget {
                       provider.game.turnBonusTime! > 0 &&
                       currentRound < 3) ...[
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         color: AppColors.warning.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
@@ -158,7 +165,8 @@ class TransitionScreen extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.timer, color: AppColors.warning, size: 18),
+                          const Icon(Icons.timer,
+                              color: AppColors.warning, size: 18),
                           const SizedBox(width: 8),
                           Text(
                             'Temps bonus conservé : ${provider.game.turnBonusTime}s',
@@ -180,7 +188,8 @@ class TransitionScreen extends StatelessWidget {
                       child: GestureDetector(
                         onTap: () => _showGuessedWordsDialog(context, provider),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: AppColors.gray600,
                             borderRadius: BorderRadius.circular(12),
@@ -188,7 +197,8 @@ class TransitionScreen extends StatelessWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.checklist, size: 16, color: Colors.white70),
+                              const Icon(Icons.checklist,
+                                  size: 16, color: Colors.white70),
                               const SizedBox(width: 6),
                               Text(
                                 'Voir les ${provider.game.history.last.wordsGuessed.length} mots devinés',
@@ -207,7 +217,8 @@ class TransitionScreen extends StatelessWidget {
                   ],
 
                   AppButton(
-                    text: isLastRound ? 'Voir les résultats' : 'Manche suivante',
+                    text:
+                        isLastRound ? 'Voir les résultats' : 'Manche suivante',
                     variant: AppButtonVariant.primary,
                     size: AppButtonSize.large,
                     fullWidth: true,
@@ -223,59 +234,15 @@ class TransitionScreen extends StatelessWidget {
           // Back button pour revenir à l'écran de vérification
           if (provider.canGoBackToVerification)
             GameBackButton(
-              onPressed: () => _showBackToVerificationDialog(context, provider),
+              onPressed: () => showBackToVerificationDialog(context, provider),
             ),
         ],
       ),
     );
   }
 
-  void _showBackToVerificationDialog(BuildContext context, GameProvider provider) {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withOpacity(0.7),
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.backgroundMain,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: AppColors.gray500, width: 2),
-        ),
-        title: Text(
-          'Modifier la validation',
-          style: AppTextStyles.subtitle(fontSize: 24),
-          textAlign: TextAlign.center,
-        ),
-        content: const Text(
-          'Voulez-vous revenir à l\'écran de vérification pour corriger les mots validés ?',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            color: Colors.white,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        actionsAlignment: MainAxisAlignment.spaceEvenly,
-        actions: [
-          AppButton(
-            text: 'Annuler',
-            variant: AppButtonVariant.ghost,
-            size: AppButtonSize.small,
-            onPressed: () => Navigator.of(dialogContext).pop(),
-          ),
-          AppButton(
-            text: 'Retour',
-            variant: AppButtonVariant.secondary,
-            size: AppButtonSize.small,
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              provider.restorePreValidationState();
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showTeamMembersDialog(BuildContext context, dynamic team, GameProvider provider, Color teamColor) {
+  void _showTeamMembersDialog(BuildContext context, dynamic team,
+      GameProvider provider, Color teamColor) {
     if (team == null) return;
 
     final players = team.playerIds
@@ -307,16 +274,16 @@ class TransitionScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               ...players.map((p) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  p!.name,
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
-              )),
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      p!.name,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )),
             ],
           ),
         ),
@@ -396,7 +363,8 @@ class TransitionScreen extends StatelessWidget {
                       runSpacing: 8,
                       children: lastEntry.wordsGuessed.map((word) {
                         return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: AppColors.secondaryCyan.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(16),

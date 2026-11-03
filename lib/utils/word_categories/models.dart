@@ -3,7 +3,8 @@ class WordWithDifficulty {
   final int difficulty; // 1=facile, 2=moyen, 3=difficile, 4=astronomique
   final String language; // 'international', 'fr', 'en', etc.
 
-  const WordWithDifficulty(this.word, {this.difficulty = 2, this.language = 'international'});
+  const WordWithDifficulty(this.word,
+      {this.difficulty = 2, this.language = 'international'});
 
   // Factory constructor depuis JSON
   factory WordWithDifficulty.fromJson(Map<String, dynamic> json) {
@@ -16,10 +17,10 @@ class WordWithDifficulty {
 
   // Conversion vers JSON
   Map<String, dynamic> toJson() => {
-    'word': word,
-    'difficulty': difficulty,
-    'language': language,
-  };
+        'word': word,
+        'difficulty': difficulty,
+        'language': language,
+      };
 }
 
 class WordCategory {
@@ -49,9 +50,9 @@ class WordCategory {
 
   // Conversion vers JSON
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'icon': icon,
-    'words': words.map((w) => w.toJson()).toList(),
-  };
+        'id': id,
+        'name': name,
+        'icon': icon,
+        'words': words.map((w) => w.toJson()).toList(),
+      };
 }

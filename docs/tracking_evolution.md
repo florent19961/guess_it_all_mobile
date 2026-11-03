@@ -63,3 +63,143 @@ que le Flutter Linux. Chaque `flutter pub get` depuis WSL réécrivait ~30 ligne
 **Conséquence.** `pubspec.lock` se re-résout une fois proprement. Gotcha inscrit dans
 `guessitall-pr-closeout` : un `pubspec.lock` qui apparaît dans un diff **sans** changement de
 `pubspec.yaml` est un artefact de SDK, pas un changement de story → le restaurer.
+
+---
+
+## 2026-08-02 — Remédiation de l'audit : 6 chantiers + réglages persistés + historique
+
+**Quoi.** Le lot issu de l'audit du 2026-08-02 (`_bmad-output/reviews/audit-code-2026-08-02.md`),
+livré en 8 commits sur `feat/audit-remediation`. Il transforme un dépôt à zéro test en une base
+testée (97 tests), et pose les invariants dont le mode Fiesta a besoin.
+
+**Les décisions structurantes, et pourquoi.**
+
+1. **`runApp()` avant tout réseau** (`app_bootstrap.dart`). Le démarrage `await`-ait Firebase et la
+   sync avant de peindre quoi que ce soit : sur un réseau capricieux, l'app restait sur l'écran
+   noir de lancement. La distinction posée est **local (attendu) vs réseau (fire-and-forget)** —
+   pas « init rapide vs lente » : c'est la *nature* de la dépendance qui décide, une init locale
+   lente reste bloquante parce que l'UI en dépend.
+
+2. **Un seul propriétaire du temps** (`turn_clock.dart` + `GameProvider`). Le temps restant vivait
+   en trois exemplaires : une deadline dans le widget, un `pausedTimeRemaining` dans l'état, un
+   `Timer` local. Ouvrir un dialogue gelait l'affichage mais **pas** la deadline — le joueur perdait
+   les secondes passées dans la confirmation. `TurnClock` est immuable et rend `_endMs` et
+   `_frozenMs` **mutuellement exclusifs** : il n'existe plus d'état où « en cours » et « gelé »
+   sont vrais en même temps, donc plus de désynchronisation possible à réconcilier.
+   Corollaire : `didChangeAppLifecycleState` met en pause quand l'app passe en arrière-plan —
+   auparavant le chrono continuait de tourner pendant un appel entrant.
+
+3. **Enveloppe de version + quarantaine** (`persisted_schema.dart`). L'app est **publiée** et
+   `upgrader` force la mise à jour : un blob écrit par une version future ou corrompu ne doit ni
+   crasher au boot, ni se rejouer à chaque ouverture. Un blob **sans** `schemaVersion` est le
+   format actuellement en production et se lit tel quel — ce n'est pas une corruption.
+   Règle dure : une panne de la *couche de stockage* n'efface rien ; seule une donnée
+   effectivement illisible est mise en quarantaine.
+
+4. **Machine à états extraite en fonctions pures** (`turn_resolution.dart`, `play_rotation.dart`).
+   La résolution d'un tour et la rotation des joueurs étaient enfouies dans un provider de
+   ~1 500 lignes, donc non testables sans monter l'app. `teamIndexAtTurn`/`playerIndexAtTurn`
+   remplacent un ordre de jeu pré-calculé et stocké : c'est le pré-requis du mode Fiesta, qui
+   devra insérer des tours bonus sans réécrire l'ordre.
+   ⚠️ Précondition documentée : le cycle de base doit être une **permutation** des équipes.
+
+5. **Les réglages survivent au démarrage d'une partie.** `startNewGame()` remplace
+   `clearLocalStorage()` sur les trois entrées « Jouer / Nouvelle partie ». L'ancien chemin
+   réécrivait `GameSettings.initial()` sur le disque : le joueur reperdait ses réglages avancés à
+   chaque partie. Le bug ne vivait pas dans le provider (les tests provider passaient **avant
+   comme après** le fix) mais chez l'appelant — d'où un test **widget** sur l'écran d'accueil.
+   La remise à zéro explicite reste offerte par le bouton « Réinitialiser » des réglages.
+
+6. **Historique des 10 dernières parties** (`game_result.dart`, `game_history_service.dart`,
+   `history_screen.dart`). `GameAnalytics` ne portait ni scores, ni équipes, ni joueurs : la donnée
+   n'existait pas, elle est **archivée à la fin de partie** (les deux chemins de fin y mènent).
+   Elle est écrite dans sa **propre clé**, bornée à 10 entrées, et stocke les **noms** des joueurs
+   plutôt que leurs ids — un id ne survit pas à la partie qui l'a créé. Dédoublonnage par `gameId`,
+   parce que la fin de partie est atteignable plusieurs fois (retour arrière, reprise).
+
+7. **Un dialogue de confirmation au lieu de six copies** (`app_confirm_dialog.dart`,
+   `game_dialogs.dart`). `AppConfirmDialog.show()` rend un `bool` et **jamais `null`** : fermer en
+   tapant à côté vaut refus. Sans ce défaut, un appelant écrivant `if (confirme)` sur un `bool?`
+   abandonnerait une partie sur un tap malencontreux.
+
+**Ce qui a été volontairement laissé de côté.** La sortie des analytics hors de
+`SharedPreferences` — voir `notes_pour_plus_tard.md` (2026-08-02).
+
+**Effet de bord sur la doc.** Deux fichiers d'instructions agent affirmaient des choses fausses et
+ont été corrigés : `lib/theme/CLAUDE.md` décrivait une palette inexistante (noir `#0A0A0A`, rose
+`#FF3B7F`, cyan `#00E5FF`) là où le code est en ardoise / rose poudré / vert d'eau ; et
+`docs/word-categories.md` annonçait des comptes de mots inventés ainsi que **deux IDs de catégorie
+qui n'existent pas** (`arcade`, `metro` — au lieu de `univers_arcade`, `metro_parisien`).
+Les deux pointent désormais vers la commande qui re-mesure, plutôt que de recopier des valeurs qui
+dérivent en silence.
+
+---
+
+## 2026-08-02 — Gate ② : la pause rendait du temps, et une entrée abîmée vidait l'historique
+
+**Quoi.** Le lot de remédiation a été passé au gate ② (relecture adverse + Codex en
+cross-LLM). Cinq défauts en sont sortis, tous vérifiés à la main dans le code avant
+correction, tous couverts par un test qui échoue sur le code d'avant.
+
+**Les deux qui comptent, et ce qu'ils apprennent.**
+
+1. **Une correction peut survivre… dans le chemin de persistance.** Le chantier 2 avait
+   tué le motif « arrondir le reste puis ré-ancrer la deadline dessus » sur la pénalité de
+   passe. Le même motif est resté intact dans l'aller-retour disque : `_withClock`
+   persistait le temps gelé arrondi **à la seconde supérieure**, et le getter `turnClock`
+   le relisait comme des millisecondes. Une pause à 29 001 ms repartait à 30 000 ms —
+   **le joueur gagnait jusqu'à 999 ms par pause, autant de fois qu'il ouvrait un
+   dialogue**. Et `suspendGame`/`resumeGame` aggravaient le cas en écrivant les champs
+   d'horloge à la main, alors que le commentaire du provider affirme qu'on passe toujours
+   par `_withClock`. Ils y passent désormais : il n'existe plus qu'un seul écrivain.
+   ⚠️ `pausedTimeRemaining` est en secondes et c'est **le format en production** : on ne
+   peut pas changer son unité. D'où un champ `pausedRemainingMs` qui fait autorité, avec
+   repli sur l'ancien pour les parties héritées.
+
+2. **Un invariant affirmé en commentaire n'est pas un invariant.** `load()` de
+   l'historique porte « une seule entrée abîmée ne doit pas effacer tout l'historique ».
+   Or `GameResult.tryFromJson` castait `teams` en dur : un objet là où un tableau est
+   attendu levait, l'exception remontait hors du `.map()` (paresseux), tombait dans le
+   `catch` générique, `load()` rendait vide **sans quarantaine** — et le `record()` suivant
+   réécrivait la clé avec la seule partie nouvelle. Toutes les parties saines détruites.
+   Même famille dans `TeamResult.fromJson`, où `.cast<int>()` est paresseux et ne levait
+   qu'au **rendu**, pas au parsing.
+
+**Les trois autres.** Un blob de forme invalide (`[]`) dans l'historique des mots était
+classé « panne transitoire » et non « corruption », ce qui armait `_degraded` à vie sans
+jamais nettoyer la clé ; le test de reprise du chrono n'assertait que la seconde
+*affichée*, donc il ne pouvait pas voir le défaut n°1 ; et `TurnClock.fromJson`
+contournait l'invariant de sa propre classe en passant les deux champs bruts au
+constructeur privé.
+
+**Méthode retenue.** Les gates sortent leurs meilleurs findings sur les chemins de
+**reprise** et de **persistance**, pas sur la boucle nominale — c'est cohérent avec le
+reste du projet. Et un finding « le test ne prouve rien » vaut un finding de code : c'est
+lui qui explique pourquoi le défaut avait survécu au chantier qui devait le tuer.
+
+---
+
+## 2026-08-02 — Les trois `[major]` d'audit que les 6 chantiers ne couvraient pas
+
+**Quoi.** En construisant la table de couverture de l'audit, trois findings `[major]` se
+sont révélés orphelins. Ils sont traités.
+
+1. **Le tracking analytics n'était jamais réhydraté.** Après un kill, la partie reprenait
+   mais `isTracking` restait faux, donc `endGame()` sortait en early-return — or c'est lui
+   qui appelle `incrementWords()`. L'impact n'est pas de la télémétrie : la priorisation
+   « mots jamais vus » ne s'appliquait plus, donc **les mêmes mots ressortaient à la partie
+   suivante**. `AnalyticsService.resumeGame()` recharge la partie depuis le disque, et
+   **refuse une partie déjà clôturée** — la rouvrir rejouerait son `endGame()`, donc un
+   second comptage sur les mêmes mots. Les analytics sont sauvegardés à chaque **fin de
+   tour**, pas à chaque `_saveGameState()` (qui part au moindre changement d'écran).
+
+2. **Tirer un mot scannait tout le corpus.** `_fillAllEmptyWords` bouclait jusqu'à 100 fois
+   *par champ vide* : jusqu'à 1 000 scans des ~5 800 entrées sur l'isolate de l'UI, sans
+   frame intercalée. Le générateur accepte désormais un paramètre d'exclusion, donc un
+   appel unique suffit — et les deux boucles à 100 tentatives disparaissent, y compris le
+   copier-coller de `players_screen`.
+
+3. **`stats_screen.dart` : 987 → 573 lignes.** Quatre builders identiques à l'octet près
+   au titre et à deux tailles de police. Le filtre « manche N » était le seul axe de
+   variation : il devient un paramètre `int? round` sur deux fonctions **pures**, les
+   premières du dépôt à porter des règles de classement testables.

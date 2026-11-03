@@ -33,11 +33,11 @@ class CategoryMetadata {
   });
 
   Map<String, dynamic> toJson() => {
-    'description': description,
-    'sections': sections,
-    'enrichmentIdeas': enrichmentIdeas,
-    'difficultyCriteria': difficultyCriteria,
-  };
+        'description': description,
+        'sections': sections,
+        'enrichmentIdeas': enrichmentIdeas,
+        'difficultyCriteria': difficultyCriteria,
+      };
 }
 
 void main() async {
@@ -55,7 +55,8 @@ void main() async {
   int totalWords = 0;
 
   // Traiter chaque fichier .dart
-  final dartFiles = categoriesDir.listSync()
+  final dartFiles = categoriesDir
+      .listSync()
       .whereType<File>()
       .where((f) => f.path.endsWith('.dart'))
       .toList();
@@ -80,7 +81,8 @@ void main() async {
   print('\n=== Conversion terminée avec succès ===');
   print('Fichiers générés:');
   print('  - assets/translations/categories.json');
-  print('  - assets/translations/words/fr/*.json (${dartFiles.length} fichiers)');
+  print(
+      '  - assets/translations/words/fr/*.json (${dartFiles.length} fichiers)');
   print('\nStatistiques:');
   print('  - Catégories: ${categories.length}');
   print('  - Mots totaux: $totalWords');
@@ -159,14 +161,16 @@ CategoryMetadata parseHeaderMetadata(List<String> lines, String categoryId) {
       inDifficulty = false;
       continue;
     }
-    if (trimmed.contains('IDÉES D\'ENRICHISSEMENT') || trimmed.contains('IDEES D\'ENRICHISSEMENT')) {
+    if (trimmed.contains('IDÉES D\'ENRICHISSEMENT') ||
+        trimmed.contains('IDEES D\'ENRICHISSEMENT')) {
       inDescription = false;
       inSections = false;
       inEnrichment = true;
       inDifficulty = false;
       continue;
     }
-    if (trimmed.contains('CRITÈRES DE DIFFICULTÉ') || trimmed.contains('CRITERES DE DIFFICULTE')) {
+    if (trimmed.contains('CRITÈRES DE DIFFICULTÉ') ||
+        trimmed.contains('CRITERES DE DIFFICULTE')) {
       inDescription = false;
       inSections = false;
       inEnrichment = false;
@@ -190,7 +194,8 @@ CategoryMetadata parseHeaderMetadata(List<String> lines, String categoryId) {
     } else if (inDifficulty && trimmed.startsWith('// -')) {
       final content = trimmed.substring(4).trim();
       // Parser "1 (Facile) : Description" ou "1 (Facile): Description"
-      final match = RegExp(r'(\d+)\s*\(([^)]+)\)\s*:?\s*(.+)').firstMatch(content);
+      final match =
+          RegExp(r'(\d+)\s*\(([^)]+)\)\s*:?\s*(.+)').firstMatch(content);
       if (match != null) {
         difficultyCriteria[match.group(1)!] = match.group(3)!;
       }
@@ -220,8 +225,8 @@ List<Map<String, dynamic>> parseWords(List<String> lines) {
     // Chercher les lignes WordWithDifficulty avec language
     // Pattern : WordWithDifficulty('Mot', difficulty: 1, language: 'international')
     final matchWithLang = RegExp(
-      "WordWithDifficulty\\(['\"](.+?)['\"]\\s*,\\s*difficulty:\\s*(\\d+)\\s*,\\s*language:\\s*['\"](.+?)['\"]\\)"
-    ).firstMatch(trimmed);
+            "WordWithDifficulty\\(['\"](.+?)['\"]\\s*,\\s*difficulty:\\s*(\\d+)\\s*,\\s*language:\\s*['\"](.+?)['\"]\\)")
+        .firstMatch(trimmed);
 
     if (matchWithLang != null) {
       var word = matchWithLang.group(1)!;
@@ -235,8 +240,8 @@ List<Map<String, dynamic>> parseWords(List<String> lines) {
     } else {
       // Fallback: ancien format sans language
       final match = RegExp(
-        "WordWithDifficulty\\(['\"](.+?)['\"]\\s*,\\s*difficulty:\\s*(\\d+)\\)"
-      ).firstMatch(trimmed);
+              "WordWithDifficulty\\(['\"](.+?)['\"]\\s*,\\s*difficulty:\\s*(\\d+)\\)")
+          .firstMatch(trimmed);
 
       if (match != null) {
         var word = match.group(1)!;

@@ -10,58 +10,44 @@ import 'services/word_history_service.dart';
 import 'services/connectivity_service.dart';
 import 'services/firebase_sync_service.dart';
 import 'app.dart';
-
-/// Indique si Firebase a été initialisé avec succès
-bool _firebaseInitialized = false;
+import 'app_bootstrap.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialiser Firebase
+  // Initialiser Firebase. C'est un appel local (lecture de la config embarquée),
+  // pas un aller-retour réseau : il peut rester sur le chemin de démarrage.
+  bool firebaseReady = false;
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    _firebaseInitialized = true;
+    firebaseReady = true;
   } catch (e) {
     // Firebase non disponible, mode offline
   }
 
-  // Initialiser les services de connectivité et sync (si Firebase OK)
-  if (_firebaseInitialized) {
-    try {
-      await ConnectivityService().initialize();
-    } catch (e) {
-      // Erreur silencieuse
-    }
-
-    try {
-      await FirebaseSyncService().initialize();
-    } catch (e) {
-      // Erreur silencieuse
-    }
-  }
-
-  // Initialiser le service de chargement de mots
-  try {
-    await WordLoaderService().initialize(locale: 'fr');
-  } catch (e) {
-    // Erreur silencieuse
-  }
-
-  // Initialiser le service d'historique des mots
-  try {
-    await WordHistoryService().initialize();
-  } catch (e) {
-    // Erreur silencieuse
-  }
-
-  // Récupérer les parties orphelines (après un kill)
-  try {
-    await AnalyticsService().finalizeOrphanedGames();
-  } catch (e) {
-    // Erreur silencieuse
-  }
+  // 🔴 La séparation local / réseau est un INVARIANT, pas un détail
+  // d'organisation : voir app_bootstrap.dart. Ne jamais déplacer une tâche
+  // réseau dans `localTasks` — c'est la splash figée à vie derrière un portail
+  // captif.
+  await runStartupTasks(
+    localTasks: [
+      () => WordLoaderService().initialize(locale: 'fr'),
+      () => WordHistoryService().initialize(),
+      () async {
+        await AnalyticsService().finalizeOrphanedGames();
+      },
+    ],
+    networkTasks: firebaseReady
+        ? [
+            () async {
+              await ConnectivityService().initialize();
+              await FirebaseSyncService().initialize();
+            },
+          ]
+        : const [],
+  );
 
   // Force portrait mode
   SystemChrome.setPreferredOrientations([

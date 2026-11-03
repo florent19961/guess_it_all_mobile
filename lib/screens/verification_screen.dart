@@ -80,11 +80,13 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
                 // Score preview
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   decoration: BoxDecoration(
                     color: AppColors.secondaryCyan.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.secondaryCyan, width: 2),
+                    border:
+                        Border.all(color: AppColors.secondaryCyan, width: 2),
                   ),
                   child: Text(
                     'Score : ${_validatedWords.length} ${_validatedWords.length <= 1 ? 'point' : 'points'}',
@@ -233,7 +235,8 @@ class _VerificationScreenState extends State<VerificationScreen> {
     );
   }
 
-  Widget _buildWordCard(String word, {required bool isGuessed, bool isExpired = false}) {
+  Widget _buildWordCard(String word,
+      {required bool isGuessed, bool isExpired = false}) {
     final isValidated = _validatedWords.contains(word);
 
     return GestureDetector(

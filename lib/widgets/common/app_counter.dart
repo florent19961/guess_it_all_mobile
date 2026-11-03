@@ -77,7 +77,8 @@ class AppCounter extends StatelessWidget {
         width: 48,
         height: 48,
         decoration: BoxDecoration(
-          color: onPressed != null ? AppColors.secondaryCyan : AppColors.gray700,
+          color:
+              onPressed != null ? AppColors.secondaryCyan : AppColors.gray700,
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: Colors.white, size: 24),

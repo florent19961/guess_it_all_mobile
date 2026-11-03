@@ -96,60 +96,69 @@ class _AppInputState extends State<AppInput> {
         Material(
           color: Colors.transparent,
           child: TextField(
-          controller: _controller,
-          focusNode: _focusNode,
-          onChanged: widget.onChanged,
-          autofocus: widget.autofocus,
-          autocorrect: false,
-          enableSuggestions: false,
-          textCapitalization: widget.textCapitalization,
-          spellCheckConfiguration: const SpellCheckConfiguration.disabled(),
-          textInputAction: widget.textInputAction,
-          onSubmitted: widget.onSubmitted != null ? (_) => widget.onSubmitted!() : null,
-          maxLength: widget.maxLength,
-          maxLengthEnforcement: widget.maxLength != null ? MaxLengthEnforcement.enforced : MaxLengthEnforcement.none,
-          inputFormatters: widget.maxLength != null
-              ? [LengthLimitingTextInputFormatter(widget.maxLength)]
-              : null,
-          buildCounter: widget.maxLength != null
-              ? (context, {required currentLength, required isFocused, maxLength}) => null
-              : null,
-          style: const TextStyle(
-            fontFamily: 'Poppins',
-            color: Colors.white,
-            fontSize: 16,
-          ),
-          decoration: InputDecoration(
-            hintText: widget.placeholder,
-            hintStyle: TextStyle(color: AppColors.gray400),
-            prefixIcon: widget.prefixIcon,
-            suffixIcon: widget.showClearButton && _controller.text.isNotEmpty
-                ? GestureDetector(
-                    onTap: () {
-                      _controller.clear();
-                      widget.onChanged?.call('');
-                      widget.onClear?.call();
-                    },
-                    child: const Icon(Icons.close, color: AppColors.gray400),
-                  )
+            controller: _controller,
+            focusNode: _focusNode,
+            onChanged: widget.onChanged,
+            autofocus: widget.autofocus,
+            autocorrect: false,
+            enableSuggestions: false,
+            textCapitalization: widget.textCapitalization,
+            spellCheckConfiguration: const SpellCheckConfiguration.disabled(),
+            textInputAction: widget.textInputAction,
+            onSubmitted: widget.onSubmitted != null
+                ? (_) => widget.onSubmitted!()
                 : null,
-            filled: true,
-            fillColor: AppColors.backgroundCard,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: borderColor, width: 2),
+            maxLength: widget.maxLength,
+            maxLengthEnforcement: widget.maxLength != null
+                ? MaxLengthEnforcement.enforced
+                : MaxLengthEnforcement.none,
+            inputFormatters: widget.maxLength != null
+                ? [LengthLimitingTextInputFormatter(widget.maxLength)]
+                : null,
+            buildCounter: widget.maxLength != null
+                ? (context,
+                        {required currentLength,
+                        required isFocused,
+                        maxLength}) =>
+                    null
+                : null,
+            style: const TextStyle(
+              fontFamily: 'Poppins',
+              color: Colors.white,
+              fontSize: 16,
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: borderColor, width: 2),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: borderColor, width: 2),
+            decoration: InputDecoration(
+              hintText: widget.placeholder,
+              hintStyle: TextStyle(color: AppColors.gray400),
+              prefixIcon: widget.prefixIcon,
+              suffixIcon: widget.showClearButton && _controller.text.isNotEmpty
+                  ? GestureDetector(
+                      onTap: () {
+                        _controller.clear();
+                        widget.onChanged?.call('');
+                        widget.onClear?.call();
+                      },
+                      child: const Icon(Icons.close, color: AppColors.gray400),
+                    )
+                  : null,
+              filled: true,
+              fillColor: AppColors.backgroundCard,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: borderColor, width: 2),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: borderColor, width: 2),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: borderColor, width: 2),
+              ),
             ),
           ),
-        ),
         ),
         if (hasError) ...[
           const SizedBox(height: 8),

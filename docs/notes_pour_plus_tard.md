@@ -53,3 +53,62 @@ demande pourquoi `word_categories/` a un jumeau.
 
 **Esquisse.** Vérifier que les JSON de `assets/translations/words/fr/` couvrent bien tout ce que
 `backup/` contient, puis `rm -rf` et retirer l'exclusion de `analysis_options.yaml`.
+
+---
+
+## 2026-08-02 — Les analytics restent dans SharedPreferences
+
+**Contexte.** L'audit reprochait à `SharedPreferences` de porter des blobs qui n'ont rien à y
+faire : l'état de partie, l'historique des mots, **et l'historique analytique complet**
+(`GameAnalytics`, un événement par mot joué). SharedPreferences relit et réécrit **tout le
+fichier** à chaque `setString` — le coût croît donc avec la taille du blob, sur le thread de
+plateforme. Le chantier 5 devait alléger le persisté *et* sortir les analytics.
+
+**Décision reportée.** La seconde moitié : déplacer `GameAnalytics` vers un stockage adapté
+(fichier JSON Lines en append, ou `sqflite`).
+
+**Raison.** Sortir les analytics change le **format d'une donnée déjà installée chez les joueurs**
+— et `upgrader` force la mise à jour, donc il n'y a pas de version antérieure vers laquelle
+revenir. Ça mérite sa propre story avec sa propre migration, pas un passage en marge d'un lot de
+remédiation. Ce qui a été fait à la place et qui suffisait au besoin : le compactage du snapshot
+de partie (`clearPreValidationSnapshot`), l'enveloppe de version + quarantaine (`persisted_schema`)
+qui rend le format *migrable*, et l'historique des parties écrit dans **sa propre clé** bornée à
+10 entrées — donc sans faire grossir le blob analytics.
+
+**Signal déclencheur.** Un joueur régulier qui voit l'app ralentir au fil des parties, **ou** le
+premier modificateur Fiesta qui veut journaliser un événement par mot (le mode multiplie
+mécaniquement le volume d'événements). Mesure à faire avant de trancher : la taille réelle de
+`guessItAll_analytics` après ~30 parties.
+
+**Esquisse.** (a) `AnalyticsService` écrit en append dans un fichier via `path_provider` plutôt que
+`prefs.setString` ; (b) borner par nombre de parties, comme `GameHistoryService.maxEntries` ;
+(c) la lecture passe par le même `unwrapSchema`/quarantaine que le reste — le contrat de robustesse
+est déjà posé, il ne resterait que le support.
+
+---
+
+## 2026-08-02 — Les 66 `info` de `flutter analyze` restent en l'état
+
+**Contexte.** `flutter analyze` sort **non-zero dès le premier `info`**. Le dépôt en a 66,
+tous antérieurs au harness, en trois familles : `withOpacity` déprécié (~40 sites d'écrans),
+`avoid_print` (loaders de mots, outil de conversion), `use_build_context_synchronously`
+(3 sites dans `words_screen.dart`).
+
+**Décision reportée.** Les solder. `run-full-suite.sh` gate donc sur **error + warning** et se
+contente d'**afficher** le compte d'infos.
+
+**Raison.** Les trois familles sont de nature différente et deux ne sont pas cosmétiques :
+`use_build_context_synchronously` est un vrai risque (utiliser un `BuildContext` après un `await`
+sur un widget démonté), tandis que `withOpacity` est une migration mécanique mais qui touche ~40
+sites d'écrans sans rapport avec ce lot. Les mélanger dans un lot de remédiation aurait noyé les
+changements de comportement sous un diff de style.
+
+**Signal déclencheur.** (a) La montée de version Flutter où `withOpacity` passe de *deprecated* à
+*supprimé* — le build casse alors d'un coup ; (b) tout bug d'écran blanc / `setState` après
+démontage sur `words_screen.dart`, qui pointerait droit sur les 3 `use_build_context_synchronously`.
+
+**Esquisse.** Traiter `use_build_context_synchronously` **d'abord et séparément** (3 sites, vraie
+correction), puis `withOpacity` → `withValues(alpha:)` en un sweep mécanique isolé, puis décider
+pour `avoid_print` (un `debugPrint` conditionnel, ou une exclusion assumée dans
+`analysis_options.yaml` pour `tools/`). Une fois à zéro, durcir `run-full-suite.sh` en
+`--fatal-infos` pour que la baisse soit un cliquet.

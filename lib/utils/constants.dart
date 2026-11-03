@@ -26,7 +26,8 @@ class AppConstants {
   static const String settingsKey = 'guessItAll_settings';
   static const String gameSessionKey = 'guessItAll_gameSession';
   static const String gameStateKey = 'guessItAll_gameState';
-  static const String advancedSettingsSeenKey = 'guessItAll_advancedSettingsSeen';
+  static const String advancedSettingsSeenKey =
+      'guessItAll_advancedSettingsSeen';
 
   // Screen names
   static const String screenHome = 'home';
@@ -43,6 +44,7 @@ class AppConstants {
   static const String screenResults = 'results';
   static const String screenStats = 'stats';
   static const String screenCategories = 'categories';
+  static const String screenHistory = 'history';
 
   // Word choice modes
   static const String wordChoiceCustom = 'Personnalisé';

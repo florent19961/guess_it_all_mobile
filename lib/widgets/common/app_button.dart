@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 
 enum AppButtonVariant { primary, secondary, danger, ghost }
+
 enum AppButtonSize { small, medium, large }
 
 class AppButton extends StatefulWidget {
@@ -34,9 +35,12 @@ class _AppButtonState extends State<AppButton> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: widget.disabled ? null : (_) => setState(() => _isPressed = true),
-      onTapUp: widget.disabled ? null : (_) => setState(() => _isPressed = false),
-      onTapCancel: widget.disabled ? null : () => setState(() => _isPressed = false),
+      onTapDown:
+          widget.disabled ? null : (_) => setState(() => _isPressed = true),
+      onTapUp:
+          widget.disabled ? null : (_) => setState(() => _isPressed = false),
+      onTapCancel:
+          widget.disabled ? null : () => setState(() => _isPressed = false),
       onTap: widget.disabled ? null : widget.onPressed,
       child: AnimatedScale(
         scale: _isPressed ? 0.95 : 1.0,
@@ -52,7 +56,8 @@ class _AppButtonState extends State<AppButton> {
                 : null,
           ),
           child: Row(
-            mainAxisSize: widget.fullWidth ? MainAxisSize.max : MainAxisSize.min,
+            mainAxisSize:
+                widget.fullWidth ? MainAxisSize.max : MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (widget.icon != null) ...[

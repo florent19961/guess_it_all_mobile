@@ -42,8 +42,10 @@ class Player {
 
   factory Player.fromJson(Map<String, dynamic> json) {
     return Player(
-      id: json['id'] as String,
-      name: json['name'] as String,
+      // Défauts plutôt que cast dur : un champ manquant rendait TOUTE la
+      // session illisible, alors qu'un joueur dégradé reste récupérable.
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
       words: (json['words'] as List<dynamic>?)?.cast<String>() ?? [],
     );
   }

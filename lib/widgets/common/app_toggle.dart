@@ -25,10 +25,13 @@ class AppToggle extends StatelessWidget {
               margin: const EdgeInsets.symmetric(horizontal: 8),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.secondaryCyan : AppColors.backgroundCard,
+                color: isSelected
+                    ? AppColors.secondaryCyan
+                    : AppColors.backgroundCard,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isSelected ? AppColors.secondaryCyan : AppColors.gray600,
+                  color:
+                      isSelected ? AppColors.secondaryCyan : AppColors.gray600,
                   width: 2,
                 ),
               ),

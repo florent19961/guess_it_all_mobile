@@ -67,7 +67,12 @@ class HomeScreen extends StatelessWidget {
                   size: AppButtonSize.large,
                   fullWidth: true,
                   onPressed: () async {
-                    await provider.clearLocalStorage();
+                    // startNewGame() : efface session + état, GARDE les réglages.
+                    // clearLocalStorage() remettait GameSettings.initial() et le
+                    // réécrivait sur disque — le joueur reperdait ses réglages à
+                    // chaque partie. La remise à zéro explicite reste disponible
+                    // depuis le bouton « Réinitialiser » de l'écran de réglages.
+                    await provider.startNewGame();
                     provider.goToScreen(AppConstants.screenSettings);
                   },
                 ),
@@ -80,7 +85,12 @@ class HomeScreen extends StatelessWidget {
                   size: AppButtonSize.large,
                   fullWidth: true,
                   onPressed: () async {
-                    await provider.clearLocalStorage();
+                    // startNewGame() : efface session + état, GARDE les réglages.
+                    // clearLocalStorage() remettait GameSettings.initial() et le
+                    // réécrivait sur disque — le joueur reperdait ses réglages à
+                    // chaque partie. La remise à zéro explicite reste disponible
+                    // depuis le bouton « Réinitialiser » de l'écran de réglages.
+                    await provider.startNewGame();
                     provider.goToScreen(AppConstants.screenSettings);
                   },
                 ),
@@ -92,6 +102,14 @@ class HomeScreen extends StatelessWidget {
                 variant: AppButtonVariant.ghost,
                 size: AppButtonSize.medium,
                 onPressed: () => provider.goToScreen(AppConstants.screenRules),
+              ),
+              const SizedBox(height: 8),
+              AppButton(
+                text: 'Historique',
+                variant: AppButtonVariant.ghost,
+                size: AppButtonSize.medium,
+                onPressed: () =>
+                    provider.goToScreen(AppConstants.screenHistory),
               ),
               const Spacer(),
               const SizedBox(height: 16),
@@ -131,7 +149,9 @@ class HomeScreen extends StatelessWidget {
                   variant: AppButtonVariant.primary,
                   onPressed: () async {
                     Navigator.of(context).pop();
-                    await provider.clearLocalStorage();
+                    // Idem : abandonner la partie en cours ne doit pas effacer
+                    // les réglages du joueur.
+                    await provider.startNewGame();
                     provider.goToScreen(AppConstants.screenSettings);
                   },
                 ),

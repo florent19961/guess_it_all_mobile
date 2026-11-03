@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
 import '../services/audio_service.dart';
-import '../widgets/common/app_button.dart';
+import '../widgets/common/app_confirm_dialog.dart';
 
 class TurnScreen extends StatefulWidget {
   const TurnScreen({super.key});
@@ -15,64 +15,67 @@ class TurnScreen extends StatefulWidget {
   State<TurnScreen> createState() => _TurnScreenState();
 }
 
-class _TurnScreenState extends State<TurnScreen> {
+class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
   Timer? _timer;
-  int _timeRemaining = 30;
-  bool _isPaused = false;
-  int? _pausedTimeRemaining;
+
+  /// L'écran n'est plus l'autorité sur le temps : il lit `provider.turnClock` et
+  /// demande au provider de geler / reprendre. Avant, la pause n'était qu'un
+  /// booléen local — l'affichage se figeait pendant que la deadline continuait
+  /// de courir, et tout le temps passé dans un dialogue était volé au joueur.
+  bool _isPausedOf(GameProvider provider) => provider.turnClock.isPaused;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _startTimer();
+  }
+
+  /// Gèle le tour dès que l'app quitte le premier plan.
+  ///
+  /// Appel entrant, notification plein écran, verrouillage d'écran, bascule
+  /// d'application : la deadline est en horloge murale, donc sans ce gel elle
+  /// continue de courir et le tour se termine tout seul au retour.
+  /// On ne reprend PAS automatiquement — c'est au joueur de relancer.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed && mounted) {
+      context.read<GameProvider>().pauseTurn();
+    }
   }
 
   void _startTimer() {
     final provider = context.read<GameProvider>();
 
     _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-      if (_isPaused) return;
-
-      // Lire turnEndTimestamp à chaque tick pour avoir la valeur mise à jour (après pénalité)
-      final endTimestamp = provider.game.turnEndTimestamp;
-      if (endTimestamp == null) return;
-
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final remainingMs = endTimestamp - now;
-      final remaining = (remainingMs / 1000).ceil();
-
-      if (remainingMs <= 0) {
+      if (!mounted) {
         timer.cancel();
-        setState(() {
-          _timeRemaining = 0;
-        });
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          provider.endTurn();
-        });
-      } else {
-        setState(() {
-          _timeRemaining = remaining > 0 ? remaining : 0;
-        });
-        provider.updateTimeRemaining(remaining);
+        return;
       }
+
+      final clock = provider.turnClock;
+      // Gelée ou arrêtée : il n'y a rien à décompter. C'est le type qui porte la
+      // garantie, plus un booléen que chaque chemin devait penser à poser.
+      if (!clock.isRunning) return;
+
+      if (clock.isExpiredAt(DateTime.now().millisecondsSinceEpoch)) {
+        timer.cancel();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) provider.endTurn();
+        });
+        return;
+      }
+
+      // Ne notifie que si la seconde AFFICHÉE change (et non 10 fois/s).
+      provider.refreshDisplayedTime();
     });
   }
 
   void _togglePause(BuildContext context, GameProvider provider) {
-    if (_isPaused) {
-      // Resume - recalculer turnEndTimestamp basé sur le temps pausé
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final newEndTimestamp = now + ((_pausedTimeRemaining ?? _timeRemaining) * 1000);
-      provider.updateTurnEndTimestamp(newEndTimestamp);
-      setState(() {
-        _isPaused = false;
-      });
+    if (_isPausedOf(provider)) {
+      provider.resumeTurn();
     } else {
-      // Pause - sauvegarder le temps restant et afficher popup
-      setState(() {
-        _pausedTimeRemaining = _timeRemaining;
-        _isPaused = true;
-      });
+      provider.pauseTurn();
       _showPauseDialog(context, provider);
     }
   }
@@ -134,142 +137,58 @@ class _TurnScreenState extends State<TurnScreen> {
         ),
       ),
     ).then((_) {
-      // Reprendre le timer quand le dialog est fermé
-      if (_isPaused) {
-        _togglePause(context, provider);
-      }
+      // Reprendre le timer quand le dialog est fermé.
+      // `resumeTurn` est idempotent : inutile de tester l'état avant.
+      if (mounted) provider.resumeTurn();
     });
   }
 
   void _handleHomePress(BuildContext context, GameProvider provider) {
-    // Mettre en pause immédiatement
-    if (!_isPaused) {
-      setState(() {
-        _pausedTimeRemaining = _timeRemaining;
-        _isPaused = true;
-      });
-    }
+    // Geler le tour immédiatement. C'est le provider qui détient le temps, donc
+    // le temps passé dans ce dialogue ne peut plus être décompté au joueur —
+    // c'était le bug : le widget capturait le bon reste, et `suspendGame` le
+    // recalculait ensuite depuis une deadline restée vivante.
+    provider.pauseTurn();
 
-    // Afficher le dialog
-    showDialog<bool>(
-      context: context,
-      barrierColor: Colors.black.withOpacity(0.7),
-      barrierDismissible: true,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.backgroundMain,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: AppColors.secondaryCyan, width: 2),
-        ),
-        title: Text(
-          'Interrompre la partie',
-          style: AppTextStyles.subtitle(fontSize: 24),
-          textAlign: TextAlign.center,
-        ),
-        content: const Text(
-          'La partie sera mise en pause et sauvegardée automatiquement.',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            color: Colors.white,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        actionsAlignment: MainAxisAlignment.spaceEvenly,
-        actions: [
-          AppButton(
-            text: 'Annuler',
-            variant: AppButtonVariant.ghost,
-            size: AppButtonSize.small,
-            onPressed: () {
-              Navigator.of(dialogContext).pop(false); // false = ne pas aller à l'accueil
-            },
-          ),
-          AppButton(
-            text: 'Accueil',
-            variant: AppButtonVariant.secondary,
-            size: AppButtonSize.small,
-            onPressed: () {
-              Navigator.of(dialogContext).pop(true); // true = aller à l'accueil
-            },
-          ),
-        ],
-      ),
+    AppConfirmDialog.show(
+      context,
+      title: 'Interrompre la partie',
+      message: 'La partie sera mise en pause et sauvegardée automatiquement.',
+      confirmText: 'Accueil',
+      accentColor: AppColors.secondaryCyan,
     ).then((goHome) {
       // Si on a cliqué sur "Accueil", suspendre le jeu
       if (goHome == true) {
         provider.suspendGame();
       } else {
         // Sinon (Annuler ou clic en dehors), reprendre le timer
-        if (_isPaused) {
-          _togglePause(context, provider);
-        }
+        if (mounted) provider.resumeTurn();
       }
     });
   }
 
   void _handleEndTurnPress(BuildContext context, GameProvider provider) {
-    // Mettre en pause immédiatement
-    if (!_isPaused) {
-      setState(() {
-        _pausedTimeRemaining = _timeRemaining;
-        _isPaused = true;
-      });
-    }
+    // Geler le tour pendant la confirmation.
+    provider.pauseTurn();
 
-    // Afficher le dialog de confirmation
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withOpacity(0.7),
-      barrierDismissible: true,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.backgroundMain,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: AppColors.warning, width: 2),
-        ),
-        title: Text(
-          'Terminer le tour ?',
-          style: AppTextStyles.subtitle(fontSize: 24),
-          textAlign: TextAlign.center,
-        ),
-        content: const Text(
-          'Les secondes restantes seront perdues.',
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            color: Colors.white,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        actionsAlignment: MainAxisAlignment.spaceEvenly,
-        actions: [
-          AppButton(
-            text: 'Annuler',
-            variant: AppButtonVariant.ghost,
-            size: AppButtonSize.small,
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-            },
-          ),
-          AppButton(
-            text: 'Terminer',
-            variant: AppButtonVariant.secondary,
-            size: AppButtonSize.small,
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              provider.endTurn();
-            },
-          ),
-        ],
-      ),
-    ).then((_) {
-      // Reprendre le timer quand le dialog est fermé (sauf si le tour est terminé)
-      if (_isPaused && mounted) {
-        _togglePause(context, provider);
-      }
+    AppConfirmDialog.show(
+      context,
+      title: 'Terminer le tour ?',
+      message: 'Les secondes restantes seront perdues.',
+      confirmText: 'Terminer',
+      accentColor: AppColors.warning,
+    ).then((confirme) {
+      if (confirme) provider.endTurn();
+
+      // Reprendre le timer quand le dialog est fermé. Si « Terminer » a été
+      // choisi, `endTurn` a ARRÊTÉ l'horloge : `resumeTurn` est alors un no-op
+      // et ne peut donc pas ré-armer une deadline sur l'écran de vérification.
+      if (mounted) provider.resumeTurn();
     });
   }
 
-  void _showTeamMembersDialog(BuildContext context, dynamic team, GameProvider provider, Color teamColor) {
+  void _showTeamMembersDialog(BuildContext context, dynamic team,
+      GameProvider provider, Color teamColor) {
     if (team == null) return;
 
     final players = team.playerIds
@@ -301,16 +220,16 @@ class _TurnScreenState extends State<TurnScreen> {
               ),
               const SizedBox(height: 16),
               ...players.map((p) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  p!.name,
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                ),
-              )),
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      p!.name,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )),
             ],
           ),
         ),
@@ -320,6 +239,7 @@ class _TurnScreenState extends State<TurnScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     super.dispose();
   }
@@ -330,10 +250,12 @@ class _TurnScreenState extends State<TurnScreen> {
     final currentWord = provider.game.currentWord;
     final currentTeam = provider.getCurrentTeam();
     final currentPlayer = provider.getCurrentPlayer();
-    final isLowTime = _timeRemaining <= 10;
+    final timeRemaining = provider.game.timeRemaining;
+    final isPaused = _isPausedOf(provider);
+    final isLowTime = timeRemaining <= 10;
     final passPenalty = provider.settings.passPenalty;
     final hasWordsToPassTo = provider.effectiveRemainingWordsCount > 0;
-    final canPass = _timeRemaining >= passPenalty && hasWordsToPassTo;
+    final canPass = timeRemaining >= passPenalty && hasWordsToPassTo;
 
     return Material(
       color: AppColors.backgroundMain,
@@ -346,7 +268,11 @@ class _TurnScreenState extends State<TurnScreen> {
                 children: [
                   // Player and team info (fixe en haut, cliquable pour voir l'équipe)
                   GestureDetector(
-                    onTap: () => _showTeamMembersDialog(context, currentTeam, provider, AppColors.getTeamColor(provider.game.currentTeamIndex)),
+                    onTap: () => _showTeamMembersDialog(
+                        context,
+                        currentTeam,
+                        provider,
+                        AppColors.getTeamColor(provider.game.currentTeamIndex)),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -360,7 +286,8 @@ class _TurnScreenState extends State<TurnScreen> {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        const Icon(Icons.info_outline, size: 14, color: AppColors.gray400),
+                        const Icon(Icons.info_outline,
+                            size: 14, color: AppColors.gray400),
                       ],
                     ),
                   ),
@@ -380,11 +307,13 @@ class _TurnScreenState extends State<TurnScreen> {
                             return Transform.scale(
                               scale: isLowTime ? scale : 1.0,
                               child: Text(
-                                '${_timeRemaining}s',
+                                '${timeRemaining}s',
                                 style: TextStyle(
                                   fontFamily: 'Bangers',
                                   fontSize: 64,
-                                  color: isLowTime ? AppColors.error : AppColors.secondaryCyan,
+                                  color: isLowTime
+                                      ? AppColors.error
+                                      : AppColors.secondaryCyan,
                                 ),
                               ),
                             );
@@ -425,7 +354,8 @@ class _TurnScreenState extends State<TurnScreen> {
                         // Words remaining (incluant passés recyclables, sans le mot actuel)
                         Builder(
                           builder: (context) {
-                            final remaining = provider.effectiveRemainingWordsCount;
+                            final remaining =
+                                provider.effectiveRemainingWordsCount;
                             final count = remaining < 0 ? 0 : remaining;
                             return Text(
                               '$count ${count <= 1 ? 'mot restant' : 'mots restants'}',
@@ -449,7 +379,7 @@ class _TurnScreenState extends State<TurnScreen> {
                       // Pass button
                       Expanded(
                         child: GestureDetector(
-                          onTap: canPass && !_isPaused
+                          onTap: canPass && !isPaused
                               ? () {
                                   HapticFeedback.mediumImpact();
                                   AudioService.playWhoosh();
@@ -459,7 +389,7 @@ class _TurnScreenState extends State<TurnScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 20),
                             decoration: BoxDecoration(
-                              color: canPass && !_isPaused
+                              color: canPass && !isPaused
                                   ? AppColors.error
                                   : AppColors.gray700,
                               borderRadius: BorderRadius.circular(20),
@@ -468,7 +398,7 @@ class _TurnScreenState extends State<TurnScreen> {
                               children: [
                                 Icon(
                                   Icons.skip_next,
-                                  color: canPass && !_isPaused
+                                  color: canPass && !isPaused
                                       ? Colors.white
                                       : AppColors.gray500,
                                   size: 32,
@@ -480,7 +410,7 @@ class _TurnScreenState extends State<TurnScreen> {
                                     fontFamily: 'Poppins',
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: canPass && !_isPaused
+                                    color: canPass && !isPaused
                                         ? Colors.white
                                         : AppColors.gray500,
                                   ),
@@ -491,8 +421,8 @@ class _TurnScreenState extends State<TurnScreen> {
                                     style: TextStyle(
                                       fontFamily: 'Poppins',
                                       fontSize: 12,
-                                      color: canPass && !_isPaused
-                                          ? Colors.white.withOpacity( 0.7)
+                                      color: canPass && !isPaused
+                                          ? Colors.white.withOpacity(0.7)
                                           : AppColors.gray600,
                                     ),
                                   ),
@@ -508,24 +438,25 @@ class _TurnScreenState extends State<TurnScreen> {
                       Expanded(
                         flex: 2,
                         child: GestureDetector(
-                          onTap: _isPaused ? null : () {
-                            HapticFeedback.lightImpact();
-                            AudioService.playDing();
-                            provider.markWordAsGuessed();
-                          },
+                          onTap: isPaused
+                              ? null
+                              : () {
+                                  HapticFeedback.lightImpact();
+                                  AudioService.playDing();
+                                  provider.markWordAsGuessed();
+                                },
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 33),
                             decoration: BoxDecoration(
-                              color: _isPaused
+                              color: isPaused
                                   ? AppColors.gray700
                                   : AppColors.secondaryCyan,
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Icon(
                               Icons.check,
-                              color: _isPaused
-                                  ? AppColors.gray500
-                                  : Colors.white,
+                              color:
+                                  isPaused ? AppColors.gray500 : Colors.white,
                               size: 48,
                             ),
                           ),
@@ -566,15 +497,15 @@ class _TurnScreenState extends State<TurnScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: _isPaused ? AppColors.warning : AppColors.gray700,
+                  color: isPaused ? AppColors.warning : AppColors.gray700,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: _isPaused ? AppColors.warning : AppColors.gray500,
+                    color: isPaused ? AppColors.warning : AppColors.gray500,
                     width: 2,
                   ),
                 ),
                 child: Icon(
-                  _isPaused ? Icons.play_arrow : Icons.pause,
+                  isPaused ? Icons.play_arrow : Icons.pause,
                   color: Colors.white,
                   size: 24,
                 ),
