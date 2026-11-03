@@ -46,6 +46,8 @@ void main() {
 
       expect(provider.isFiesta, isTrue);
       expect(provider.game.fiesta!.rules.modifiers.keys, ['no_pass']);
+      // Tirage de M1 (2-5) : pris dans la config gelée, seul `no_pass` y est.
+      expect(provider.game.fiesta!.active.map((m) => m.catalogId), ['no_pass']);
     });
 
     test('startGame() sans argument efface la Fiesta de la partie précédente',
