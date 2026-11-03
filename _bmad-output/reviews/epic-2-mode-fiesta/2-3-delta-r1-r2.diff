@@ -1,0 +1,400 @@
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index 7560814..3b28613 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -18,6 +18,8 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `fiesta/modifier_instance.dart` | `ModifierInstance` | Modificateur actif dans une partie. `tryFromJson` tolérant (id inconnu → `null`, jamais de défaut inventé). `canAdd(active, candidate, {maxPerTurn: 2})` |
+ | `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, `CatchUpRules`, enums `FiestaMode`, `ModifierArrival` | Configuration Fiesta **immuable** (Auto / Personnalisé, réglage par modificateur, rattrapage, tirage, règles communes). `CatchUpRules.auto` = constantes du mode Auto. `tryFromJson` : structure illisible → `null`, réglage d'id inconnu ignoré seul |
+ | `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn}`. `turn` est vide pour l'instant (compteurs des stories d'effets) |
++| `fiesta/fiesta_ensemble.dart` | `FiestaEnsemble`, `defaultEnsembleRules`, extensions `copyWith`, `catchUpOn` | Ensemble Personnalisé `{id, rules}` (nom = `rules.ensembleName`, mode toujours `custom`), défauts de la maquette (`mkSet`). Persisté par `FiestaEnsembleService` |
++| `fiesta/ensemble_validation.dart` | `validateEnsemble` | Validation **pure** d'un ensemble (messages FR) : bloque l'enregistrement d'une config impossible |
+ 
+ ## Fiesta — invariants (epic-2)
+ 
+@@ -28,6 +30,10 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ - 🔴 **Champ ajouté après la 1ʳᵉ release Fiesta** : il se lit **clé absente = défaut documenté**
+   (`readOr`, `fiesta_rules.dart`) ; seule une valeur présente et mal typée invalide. Sinon une
+   mise à jour ferait retomber en Classique toute partie Fiesta en cours.
++  🔴 Même règle pour les **ensembles** (`guessItAll_fiestaEnsembles`) : tout champ ajouté à
++  `FiestaRules` / `ModifierSetting` / `CatchUpRules` est **optionnel à la lecture**, sinon les
++  ensembles des joueurs deviennent illisibles. Le test de format figé
++  (`test/services/fiesta_ensemble_service_test.dart`, `frozenBlob`) tombe le cas échéant.
+ - `ModifierInstance` : une cible `team` / `player` porte **toujours** son `teamId` (assert +
+   `tryFromJson`). `canAdd` plafonne **par équipe** : « pour tous » + les siennes.
+ - **Gel au lancement** : `GameProvider.startGame({FiestaRules? fiesta})` pose une `FiestaState`
+diff --git a/lib/models/fiesta/fiesta_ensemble.dart b/lib/models/fiesta/fiesta_ensemble.dart
+index 0f3289b..dc6d476 100644
+--- a/lib/models/fiesta/fiesta_ensemble.dart
++++ b/lib/models/fiesta/fiesta_ensemble.dart
+@@ -23,7 +23,9 @@ class FiestaEnsemble {
+     final rawRules = json['rules'];
+     if (id is! String || rawRules is! Map) return null;
+     final rules = FiestaRules.tryFromJson(Map<String, dynamic>.from(rawRules));
+-    if (rules == null) return null;
++    // Un ensemble est toujours Personnalisé : des règles Auto ici ne
++    // viennent pas de l'éditeur, on ne les rend pas à `onUse`.
++    if (rules == null || rules.mode != FiestaMode.custom) return null;
+     return FiestaEnsemble(id: id, rules: rules);
+   }
+ }
+@@ -83,6 +85,12 @@ extension FiestaRulesCopy on FiestaRules {
+       );
+ }
+ 
++/// Le rattrapage d'un ensemble est « actif » dès qu'un de ses curseurs est
++/// au-dessus de 0 : l'interrupteur de l'éditeur n'est pas un champ persisté
++/// (`CatchUpRules` n'en a pas), il met tout à 0 ou rend `CatchUpRules.auto`.
++bool catchUpOn(CatchUpRules c) =>
++    c.b1 > 0 || c.b2 > 0 || c.cap > 0 || c.mal > 0 || c.malCap > 0;
++
+ /// Copie modifiée d'un réglage, pour l'éditeur (même raison que ci-dessus).
+ extension ModifierSettingCopy on ModifierSetting {
+   ModifierSetting copyWith({
+diff --git a/lib/screens/fiesta_ensemble_editor_screen.dart b/lib/screens/fiesta_ensemble_editor_screen.dart
+index 59dc7b8..c0f74be 100644
+--- a/lib/screens/fiesta_ensemble_editor_screen.dart
++++ b/lib/screens/fiesta_ensemble_editor_screen.dart
+@@ -93,13 +93,18 @@ class _FiestaEnsembleEditorScreenState
+       Navigator.of(context).pop(true);
+       return;
+     }
++    // `create` rend aussi `null` sur une lecture en panne : on ne parle de la
++    // limite que si la liste relue est vraiment pleine.
++    final full = (await service.load()).ensembles.length >=
++        FiestaEnsembleService.maxEnsembles;
++    if (!mounted) return;
+     setState(() => _saving = false);
+     ScaffoldMessenger.of(context).showSnackBar(
+       SnackBar(
+-        content: Text(initial == null
++        content: Text(initial == null && full
+             ? 'Limite de ${FiestaEnsembleService.maxEnsembles} ensembles '
+                 'atteinte : rien n\'a été enregistré.'
+-            : 'Enregistrement impossible : cet ensemble n\'existe plus.'),
++            : 'Enregistrement impossible, réessaie.'),
+       ),
+     );
+   }
+@@ -302,7 +307,6 @@ class _FiestaEnsembleEditorScreenState
+ 
+   Widget _buildCatchUp() {
+     final c = _rules.catchUp;
+-    // Pas d'interrupteur : le rattrapage est coupé quand ses curseurs sont à 0.
+     Widget slider(String label, int value, int max, int step,
+             void Function(int) set) =>
+         AppSlider(
+@@ -313,26 +317,40 @@ class _FiestaEnsembleEditorScreenState
+           unit: ' s',
+           onChanged: (v) => set((v / step).round() * step),
+         );
++    final on = catchUpOn(c);
+     return _Card(
+       title: 'Rattrapage',
+-      child: Column(
+-        crossAxisAlignment: CrossAxisAlignment.stretch,
+-        children: [
+-          slider('Bonus après M1 (par point d\'écart)', c.b1, 10, 1,
+-              (v) => _setCatchUp(b1: v)),
+-          slider('Bonus après M2 (par point d\'écart)', c.b2, 10, 1,
+-              (v) => _setCatchUp(b2: v)),
+-          slider('Plafond du bonus', c.cap, 60, 5, (v) => _setCatchUp(cap: v)),
+-          slider('Malus du leader (par point d\'écart)', c.mal, 5, 1,
+-              (v) => _setCatchUp(mal: v)),
+-          slider('Plafond du malus', c.malCap, 30, 5,
+-              (v) => _setCatchUp(malCap: v)),
+-          const _Hint(
+-            'Le malus du leader s\'applique sur son 1er tour de la manche. '
+-            'Écart mesuré par rapport à l\'équipe en tête.',
+-          ),
+-        ],
++      // Interrupteur d'interface (maquette) : off = tout à 0, on = valeurs
++      // du mode Auto. Rien de plus n'est persisté.
++      trailing: _switch(
++        on,
++        (v) => setState(() => _rules = _rules.copyWith(
++              catchUp: v
++                  ? CatchUpRules.auto
++                  : const CatchUpRules(b1: 0, b2: 0, cap: 0, mal: 0, malCap: 0),
++            )),
+       ),
++      child: !on
++          ? const _Hint('Pas de temps en plus ni en moins selon le score.')
++          : Column(
++              crossAxisAlignment: CrossAxisAlignment.stretch,
++              children: [
++                slider('Bonus après M1 (par point d\'écart)', c.b1, 10, 1,
++                    (v) => _setCatchUp(b1: v)),
++                slider('Bonus après M2 (par point d\'écart)', c.b2, 10, 1,
++                    (v) => _setCatchUp(b2: v)),
++                slider('Plafond du bonus', c.cap, 60, 5,
++                    (v) => _setCatchUp(cap: v)),
++                slider('Malus du leader (par point d\'écart)', c.mal, 5, 1,
++                    (v) => _setCatchUp(mal: v)),
++                slider('Plafond du malus', c.malCap, 30, 5,
++                    (v) => _setCatchUp(malCap: v)),
++                const _Hint(
++                  'Le malus du leader s\'applique sur son 1er tour de la manche. '
++                  'Écart mesuré par rapport à l\'équipe en tête.',
++                ),
++              ],
++            ),
+     );
+   }
+ 
+diff --git a/lib/screens/fiesta_ensembles_screen.dart b/lib/screens/fiesta_ensembles_screen.dart
+index 4541788..39f6520 100644
+--- a/lib/screens/fiesta_ensembles_screen.dart
++++ b/lib/screens/fiesta_ensembles_screen.dart
+@@ -31,6 +31,9 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
+   final _service = FiestaEnsembleService();
+   EnsembleStore? _store;
+ 
++  /// Un double tap sur « Utiliser » ne doit pas naviguer deux fois.
++  bool _using = false;
++
+   @override
+   void initState() {
+     super.initState();
+@@ -55,8 +58,14 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
+   }
+ 
+   Future<void> _use(FiestaEnsemble ensemble) async {
+-    await _service.markUsed(ensemble.id);
+-    widget.onUse(ensemble);
++    if (_using) return;
++    _using = true;
++    try {
++      await _service.markUsed(ensemble.id);
++      if (mounted) widget.onUse(ensemble);
++    } finally {
++      _using = false;
++    }
+   }
+ 
+   Future<void> _duplicate(FiestaEnsemble ensemble) async {
+@@ -179,7 +188,8 @@ class _EnsembleCard extends StatelessWidget {
+         ? 'tirage ${rules.drawCount}/manche'
+         : 'sans tirage';
+     return '$active modificateurs · '
+-        '${rules.oneOfThree ? 'choix 1 parmi 3' : 'pas de choix'} · $draw';
++        '${rules.oneOfThree ? 'choix 1 parmi 3' : 'pas de choix'} · '
++        '${catchUpOn(rules.catchUp) ? 'rattrapage' : 'sans rattrapage'} · $draw';
+   }
+ 
+   @override
+diff --git a/lib/services/CLAUDE.md b/lib/services/CLAUDE.md
+index 308d71c..934534a 100644
+--- a/lib/services/CLAUDE.md
++++ b/lib/services/CLAUDE.md
+@@ -14,7 +14,7 @@
+ | `connectivity_service.dart` | `ConnectivityService` | Detection reseau (wifi/mobile/ethernet) via connectivity_plus |
+ | `firebase_sync_service.dart` | `FirebaseSyncService` | Sync offline-first vers Firestore. Queue de games en attente, sync auto quand online |
+ | `audio_service.dart` | `AudioService` | Sons : ding (mot devine), whoosh (mot passe), klaxon (fin de tour) via audioplayers |
+-| `fiesta_ensemble_service.dart` | `FiestaEnsembleService` | Ensembles Fiesta (mode Personnalise) : `load` / `create` / `update` (sur place) / `duplicate` / `delete` / `markUsed`. **Borne 10 tenue par le service**, modifications serialisees (file interne), quarantaine du blob illisible ou venu du futur, ensemble illisible ignore seul |
++| `fiesta_ensemble_service.dart` | `FiestaEnsembleService` | Ensembles Fiesta (mode Personnalise) : `load` / `create` / `update` (sur place) / `duplicate` / `delete` / `markUsed`. **Borne 10 tenue par le service**, modifications serialisees (file interne), quarantaine du blob illisible ou venu du futur, ensemble illisible ignore seul a la lecture et **reecrit tel quel** a chaque modification (jamais detruit) |
+ 
+ ## Cles SharedPreferences
+ 
+diff --git a/lib/services/fiesta_ensemble_service.dart b/lib/services/fiesta_ensemble_service.dart
+index 1f69ba2..1ecd99f 100644
+--- a/lib/services/fiesta_ensemble_service.dart
++++ b/lib/services/fiesta_ensemble_service.dart
+@@ -1,6 +1,7 @@
+ import 'dart:convert';
+ 
+ import 'package:flutter/foundation.dart';
++import 'package:flutter/widgets.dart' show StringCharacters;
+ import 'package:shared_preferences/shared_preferences.dart';
+ import 'package:uuid/uuid.dart';
+ 
+@@ -51,7 +52,7 @@ class FiestaEnsembleService {
+   /// Les ensembles, dans l'ordre d'affichage. Ne lève jamais.
+   Future<EnsembleStore> load() async {
+     try {
+-      return await _read();
++      return (await _read()).$1;
+     } catch (e) {
+       // Panne transitoire : on n'efface rien, on rend simplement vide.
+       debugPrint('[FiestaEnsembles] Lecture impossible: $e');
+@@ -104,12 +105,15 @@ class FiestaEnsembleService {
+   Future<void> markUsed(String id) =>
+       _mutate((store) => (EnsembleStore(store.ensembles, id), null));
+ 
+-  /// Q13 : pas d'unicité imposée, tronqué à la longueur maximale.
++  /// Q13 : pas d'unicité imposée, 30 caractères au plus. C'est le nom de
++  /// BASE qu'on raccourcit, pas le suffixe : sinon la copie d'un nom de 30
++  /// caractères porterait exactement le nom de l'original. Coupe en
++  /// caractères visibles (comme le `maxLength` du champ), jamais au milieu
++  /// d'un emoji.
+   static String copyName(String name) {
+-    final copy = '$name (copie)';
+-    return copy.length <= maxNameLength
+-        ? copy
+-        : copy.substring(0, maxNameLength);
++    const suffix = ' (copie)';
++    final base = name.characters.take(maxNameLength - suffix.length);
++    return '$base$suffix';
+   }
+ 
+   /// Relit, applique [change], réécrit. [change] rend `null` pour ne rien
+@@ -120,9 +124,10 @@ class FiestaEnsembleService {
+   ) =>
+       _serialized(() async {
+         try {
+-          final result = change(await _read());
++          final (store, unreadable) = await _read();
++          final result = change(store);
+           if (result == null) return null;
+-          await _write(result.$1);
++          await _write(result.$1, unreadable);
+           return result.$2;
+         } catch (e) {
+           debugPrint('[FiestaEnsembles] Échec de modification: $e');
+@@ -130,10 +135,14 @@ class FiestaEnsembleService {
+         }
+       });
+ 
+-  Future<EnsembleStore> _read() async {
++  /// Rend aussi les entrées brutes illisibles : `_write` les réécrit telles
++  /// quelles. Un ensemble qu'une version donnée ne sait pas relire n'est
++  /// jamais détruit par la modification d'un autre (règle 7).
++  Future<(EnsembleStore, List<Object?>)> _read() async {
++    const nothing = (EnsembleStore.empty, <Object?>[]);
+     final prefs = await SharedPreferences.getInstance();
+     final raw = prefs.getString(storageKey);
+-    if (raw == null) return EnsembleStore.empty;
++    if (raw == null) return nothing;
+ 
+     PersistedRead read;
+     try {
+@@ -145,35 +154,38 @@ class FiestaEnsembleService {
+       debugPrint('[FiestaEnsembles] Blob illisible (${read.status}), '
+           'quarantaine');
+       await prefs.remove(storageKey);
+-      return EnsembleStore.empty;
++      return nothing;
+     }
+-    if (!read.isUsable) return EnsembleStore.empty;
++    if (!read.isUsable) return nothing;
+ 
+     final data = read.data!;
+     final entries = data['ensembles'];
+     final lastUsedId = data['lastUsedId'];
+     // Un ensemble illisible est ignoré seul : un seul abîmé ne doit pas
+     // effacer tous ceux de l'utilisateur.
+-    final ensembles = entries is List
+-        ? entries
+-            .whereType<Map>()
+-            .map(
+-                (e) => FiestaEnsemble.tryFromJson(Map<String, dynamic>.from(e)))
+-            .whereType<FiestaEnsemble>()
+-            .toList()
+-        : <FiestaEnsemble>[];
+-    return EnsembleStore(
+-      ensembles,
+-      lastUsedId is String ? lastUsedId : null,
++    final ensembles = <FiestaEnsemble>[];
++    final unreadable = <Object?>[];
++    for (final entry in entries is List ? entries : const []) {
++      final ensemble = entry is Map
++          ? FiestaEnsemble.tryFromJson(Map<String, dynamic>.from(entry))
++          : null;
++      ensemble == null ? unreadable.add(entry) : ensembles.add(ensemble);
++    }
++    return (
++      EnsembleStore(ensembles, lastUsedId is String ? lastUsedId : null),
++      unreadable,
+     );
+   }
+ 
+-  Future<void> _write(EnsembleStore store) async {
++  Future<void> _write(EnsembleStore store, List<Object?> unreadable) async {
+     final prefs = await SharedPreferences.getInstance();
+     await prefs.setString(
+       storageKey,
+       jsonEncode(wrapWithSchema({
+-        'ensembles': store.ensembles.map((e) => e.toJson()).toList(),
++        'ensembles': [
++          ...store.ensembles.map((e) => e.toJson()),
++          ...unreadable,
++        ],
+         'lastUsedId': store.lastUsedId,
+       })),
+     );
+diff --git a/test/services/fiesta_ensemble_service_test.dart b/test/services/fiesta_ensemble_service_test.dart
+index da3e83a..f8ccb68 100644
+--- a/test/services/fiesta_ensemble_service_test.dart
++++ b/test/services/fiesta_ensemble_service_test.dart
+@@ -10,6 +10,18 @@ import '../helpers/test_prefs.dart';
+ 
+ const key = FiestaEnsembleService.storageKey;
+ 
++/// Blob FIGÉ, tel qu'écrit par la version qui introduit les ensembles (2-3).
++/// 🔴 Ne jamais le régénérer : s'il ne se relit plus en entier, c'est qu'un
++/// changement de `FiestaRules` effacerait les ensembles des joueurs.
++const frozenBlob = '{"schemaVersion":1,"data":{"ensembles":[{"id":"e1",'
++    '"rules":{"mode":"custom","symmetric":true,"autoCalibrate":true,'
++    '"ensembleName":"Soirée chez Max","modifiers":{"no_pass":{"active":true,'
++    '"arrival":"draw","startRound":1,"fixedRound":3,"charges":0},'
++    '"free_pass":{"active":false,"arrival":"offer","startRound":2,'
++    '"fixedRound":3,"charges":2}},"oneOfThree":true,"catchUp":{"b1":3,'
++    '"b2":5,"cap":30,"mal":1,"malCap":15},"drawCount":2,"oneAnswer":false,'
++    '"carryOver":true}}],"lastUsedId":"e1"}}';
++
+ void main() {
+   final service = FiestaEnsembleService();
+ 
+@@ -36,6 +48,41 @@ void main() {
+     expect(jsonEncode(restored.rules.toJson()), jsonEncode(rules.toJson()));
+   });
+ 
++  test('format figé de la 1re version : relu en entier', () async {
++    await givenPrefs({key: frozenBlob});
++
++    final store = await service.load();
++    expect(store.lastUsedId, 'e1');
++    final rules = store.ensembles.single.rules;
++    expect(rules.ensembleName, 'Soirée chez Max');
++    expect(rules.modifiers.keys, ['no_pass', 'free_pass']);
++    expect(rules.modifiers['free_pass']!.charges, 2);
++    expect(rules.drawCount, 2);
++    expect(rules.oneAnswer, isFalse);
++    expect(rules.catchUp.b2, 5);
++  });
++
++  test('supprimer le dernier utilisé efface lastUsedId (AC6)', () async {
++    await givenPrefs();
++    final a = (await service.create(defaultEnsembleRules('A')))!;
++    final b = (await service.create(defaultEnsembleRules('B')))!;
++    await service.markUsed(a.id);
++
++    await service.delete(a.id);
++
++    final store = await service.load();
++    expect(store.ensembles.map((e) => e.id), [b.id]);
++    expect(store.lastUsedId, isNull, reason: 'sinon il pointe dans le vide');
++  });
++
++  test('la copie d\'un nom de 30 caractères reste distincte', () {
++    final name = 'x' * FiestaEnsembleService.maxNameLength;
++    final copy = FiestaEnsembleService.copyName(name);
++    expect(copy, isNot(name));
++    expect(copy, endsWith(' (copie)'));
++    expect(copy.length, FiestaEnsembleService.maxNameLength);
++  });
++
+   group('lecture tolérante', () {
+     test('blob illisible → quarantaine, liste vide, pas de crash', () async {
+       await givenPrefs({key: '{pas du json'});
+@@ -76,6 +123,11 @@ void main() {
+           isFalse);
+       expect(ensembles.single.rules.modifiers.containsKey('no_pass'), isTrue);
+       expect(await rawString(key), isNotNull, reason: 'pas de quarantaine');
++
++      // Modifier un AUTRE ensemble ne détruit pas celui qu'on ne sait pas lire.
++      await service.create(defaultEnsembleRules('C'));
++      final stored = (await persistedData(key))!['ensembles'] as List;
++      expect(stored, anyElement(equals({'id': 'b', 'rules': 'cassé'})));
+     });
+   });
+ 
