@@ -491,14 +491,17 @@ annoncés avant le tour. Règles pures dans `models/fiesta/turn_effects.dart`.
   `no_pass`, sortie **avant** `onWordPassed` : aucune passe fantôme dans les analytics.
 - **Compteurs dans `FiestaState.turn`** (`freePassesUsed`, `blockedPlayerId`) : la clé existait
   déjà (map vide, relue tolérante), donc **aucun changement de forme** de `guessItAll_*`. Persistés
-  (survivent à un kill) et restaurés par le retour arrière (snapshot `GameState`). Vidés par
-  `validateWords`, donc chaque tour (continuation comprise) repart à 0.
-- **Portée tour consommée à la fin du tour, pas de la manche** : `validateWords` retire les
-  instances de portée tour de l'équipe quand le tour est vraiment fini ; en fin de manche, la même
-  équipe poursuit en N+1, l'instance reste et tombe à la fin de la continuation (invariant noté
-  par 2-5). Personne n'en pose encore (2-10) : testé avec une instance injectée.
+  (survivent à un kill) et restaurés par le retour arrière (snapshot `GameState`).
+- **Une seule définition du tour** (revue r1, m1) : le tour de fin de manche ET sa continuation
+  en N+1 forment UN tour. Compteurs et instances de portée tour vivent jusqu'à sa vraie fin, où
+  `validateWords` vide les uns et consomme les autres (invariant noté par 2-5). Sinon un
+  `block_guesser` rouvrait le sélecteur en continuation et une `free_pass` de portée tour
+  rendait ses passes. Contrepartie acceptée : une `free_pass` de **manche** N+1 hérite du
+  compteur de N. Personne ne pose encore d'instance de portée tour (2-10) : testé avec une
+  instance injectée.
 - **Devineur bloqué choisi au début du tour**, pas au tirage : celui qui fait deviner tourne.
-  Sélecteur fermé sans choix → on reste sur l'avant-tour, le tour ne démarre pas.
+  Sélecteur fermé sans choix → on reste sur l'avant-tour, le tour ne démarre pas. Le choix est
+  persisté APRÈS l'annonce : une app tuée pendant l'annonce redemande le choix (r1, m2).
   Décision : `block_guesser` n'arrive QUE par offre (1 parmi 3 et coup de pouce Auto, 2-10),
   jamais tiré ni fixé pour tous (`isForAllTeams`, 2-5) ; Q15 ne s'applique pas. L'effet se
   déclenche sur toute instance qui vise l'équipe qui joue : c'est la couture que 2-10 utilisera.

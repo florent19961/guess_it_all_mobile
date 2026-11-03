@@ -143,34 +143,45 @@ void main() {
   });
 
   test(
-      'Une instance de portée tour franchit la fin de manche avec la '
-      'continuation, et tombe à la fin de CE tour', () async {
-    var provider = await givenReadyProvider();
+      'Un seul tour : la continuation de fin de manche garde instances de '
+      'portée tour, passes gratuites utilisées et devineur bloqué, puis tout '
+      'tombe à la fin de CE tour', () async {
+    var provider = await givenReadyProvider(['A', 'B', 'C', 'D', 'E', 'F']);
     await provider.startGame(fiesta: fixedOnRound1({}));
     final teamId = provider.getCurrentTeam()!.id;
     provider = await withTurnInstance(provider, 'free_pass');
+    provider = await withTurnInstance(provider, 'block_guesser');
     bool held() =>
         provider.game.fiesta!.active.any((m) => m.scope == ModifierScope.turn);
-    expect(held(), isTrue);
+    final blocked = provider.blockableGuessers.first;
+    provider.setBlockedGuesser(blocked.id);
 
-    // L'équipe fait deviner les 2 mots : fin de manche, elle poursuivra en M2.
+    // Une passe gratuite, puis l'équipe fait deviner les 6 mots : fin de
+    // manche, elle poursuivra en M2.
     provider.startTurn();
     provider.startTurnTimer();
-    provider.markWordAsGuessed();
-    provider.markWordAsGuessed();
+    provider.passWord();
+    while (provider.game.currentWord != null) {
+      provider.markWordAsGuessed();
+    }
     final guessed = List<String>.from(provider.game.wordsGuessedThisTurn);
     provider.savePreValidationState(guessed);
     provider.validateWords(guessed);
     provider.nextRound();
     expect(provider.getCurrentTeam()!.id, teamId);
     expect(held(), isTrue);
+    expect(provider.freePassesUsed, 1);
+    expect(provider.blockedGuesser?.id, blocked.id);
+    expect(provider.needsBlockedGuesser, isFalse);
 
-    // Fin du tour de continuation : consommée.
+    // Fin du tour de continuation : tout tombe.
     provider.startTurn();
     provider.startTurnTimer();
     provider.endTurn();
     provider.savePreValidationState(const []);
     provider.validateWords(const []);
     expect(held(), isFalse);
+    expect(provider.freePassesUsed, 0);
+    expect(provider.blockedGuesser, isNull);
   });
 }

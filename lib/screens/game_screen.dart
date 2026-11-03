@@ -299,10 +299,8 @@ class GameScreen extends StatelessWidget {
     }
     if (provider.needsBlockedGuesser) {
       if (!context.mounted) return;
-      final id = await BlockedGuesser.pick(context, provider.blockableGuessers);
-      if (id == null) return;
-      provider.setBlockedGuesser(id);
-      final blocked = provider.blockedGuesser;
+      final blocked =
+          await BlockedGuesser.pick(context, provider.blockableGuessers);
       if (blocked == null || !context.mounted) return;
       await BlockedGuesser.announce(
         context,
@@ -314,6 +312,9 @@ class GameScreen extends StatelessWidget {
           provider.game.currentScreen != AppConstants.screenGame) {
         return;
       }
+      // Persisté APRÈS l'annonce : une app tuée pendant l'annonce redemande
+      // le choix au lieu de démarrer sans l'avoir montrée.
+      provider.setBlockedGuesser(blocked.id);
     }
     provider.startTurn();
   }

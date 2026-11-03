@@ -23,7 +23,7 @@ Gestion d'etat centralisee via Provider.
 - La navigation arriere est complexe : depend de l'ecran courant, du tour, et de l'existence de snapshots de validation.
 - `_ensureWordsForPlayer()` conserve les mots existants d'un joueur si le compte est suffisant (meme apres changement de categories).
 - **Durée du tour** : `turnTime` (composée par `composeTurnSeconds`) est lue par `startTurn` ET `startTurnTimer`. Ne jamais recalculer la durée ailleurs : l'avant-tour et le chrono divergeraient. `timeSpent` se mesure sur `turnAllottedSeconds`, pas sur le réglage.
-- **Effets de tour Fiesta (2-8)** : `canPassWith(secondesAffichées)` est la **seule** garde de la passe (`passWord` ET le bouton de `turn_screen`), sur la pénalité **effective** (`currentPassPenalty`) ; sous `no_pass`, `passWord` sort avant `onWordPassed`. `validateWords` vide `fiesta.turn` et consomme les instances de portée **tour** de l'équipe — sauf en fin de manche, où la même équipe poursuit en N+1 (continuation) : consommées à la fin de ce tour-là.
+- **Effets de tour Fiesta (2-8)** : `canPassWith(secondesAffichées)` est la **seule** garde de la passe (`passWord` ET le bouton de `turn_screen`), sur la pénalité **effective** (`currentPassPenalty`, 0 si `hasFreePass`) ; sous `no_pass`, `passWord` sort avant `onWordPassed`. **Un seul tour** : fin de manche + continuation en N+1. `validateWords` vide `fiesta.turn` et consomme les instances de portée **tour** de l'équipe à la vraie fin seulement (pas dans la branche fin de manche).
 - **Rattrapage Fiesta** : `catchUpPreview` (transition, calculé sur les scores) → `nextRound` le pose dans `fiesta.catchUpDue` → `startTurnTimer` le consomme au premier tour non-continuation de l'équipe.
 
 ### Dependances

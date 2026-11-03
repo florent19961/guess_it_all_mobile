@@ -11,10 +11,10 @@ import '../common/app_modal.dart';
 class BlockedGuesser {
   BlockedGuesser._();
 
-  /// Sélecteur « Les adversaires choisissent ». Rend l'id choisi, ou `null` si
+  /// Sélecteur « Les adversaires choisissent ». Rend le joueur choisi, ou `null` si
   /// fermé sans choix : l'appelant reste alors sur l'écran d'avant-tour.
-  static Future<String?> pick(BuildContext context, List<Player> guessers) {
-    return AppModal.show<String>(
+  static Future<Player?> pick(BuildContext context, List<Player> guessers) {
+    return AppModal.show<Player>(
       context,
       title: 'Les adversaires choisissent',
       child: Column(
@@ -32,7 +32,7 @@ class BlockedGuesser {
                 text: player.name,
                 variant: AppButtonVariant.secondary,
                 fullWidth: true,
-                onPressed: () => Navigator.of(context).pop(player.id),
+                onPressed: () => Navigator.of(context).pop(player),
               ),
             ),
           ],

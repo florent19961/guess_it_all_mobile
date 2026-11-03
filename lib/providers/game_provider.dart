@@ -737,7 +737,7 @@ class GameProvider extends ChangeNotifier {
     // Pénalité EFFECTIVE : 0 tant qu'il reste une passe gratuite (2-8).
     final passPenalty = currentPassPenalty;
     final fiesta = _game.fiesta;
-    final usesFreePass = fiesta != null && freePassesUsed < freePasses;
+    final usesFreePass = fiesta != null && hasFreePass;
 
     // Tracker le pass AVANT de changer l'état
     _analytics.onWordPassed(currentWord);
@@ -1016,9 +1016,9 @@ class GameProvider extends ChangeNotifier {
             : AppConstants.screenTransition,
         turnBonusTime: _game.timeRemaining,
         clearExpiredWord: true,
-        // La même équipe poursuit ce tour en manche suivante : il n'est pas
-        // fini, ses instances de portée tour restent.
-        fiesta: _fiestaAfterTurn(turnOver: false),
+        // Pas de `_fiestaAfterTurn` ici : la même équipe poursuit CE tour en
+        // manche suivante (continuation). Compteurs et instances de portée
+        // tour vivent jusqu'à sa vraie fin.
         pendingBonusTurnId: shouldPrepareBonusFusion ? _game.currentTurn : null,
         clearPendingBonusTurnId: !shouldPrepareBonusFusion,
       );
@@ -1049,7 +1049,7 @@ class GameProvider extends ChangeNotifier {
         clearTurnBonusTime: nextTurnBonusTime == null,
         clearExpiredWord: true,
         clearPendingBonusTurnId: true, // Réinitialiser après usage
-        fiesta: _fiestaAfterTurn(turnOver: true),
+        fiesta: _fiestaAfterTurn(),
       );
     }
 
@@ -1184,8 +1184,11 @@ class GameProvider extends ChangeNotifier {
 
   Map<String, dynamic> get _turnCounters => _game.fiesta?.turn ?? const {};
 
+  bool _has(String catalogId) =>
+      currentTeamModifiers.any((m) => m.catalogId == catalogId);
+
   /// `no_pass` pèse sur l'équipe qui joue.
-  bool get passBlocked => isPassBlocked(currentTeamModifiers);
+  bool get passBlocked => _has('no_pass');
 
   /// Passes gratuites du tour (`free_pass` ×N), et celles déjà utilisées.
   int get freePasses => freePassAllowance(currentTeamModifiers);
@@ -1194,12 +1197,11 @@ class GameProvider extends ChangeNotifier {
     return used is int ? used : 0;
   }
 
-  /// Pénalité de la PROCHAINE passe. Classique : la pénalité réglée.
-  int get currentPassPenalty => effectivePassPenalty(
-        basePenalty: _settings.passPenalty,
-        allowance: freePasses,
-        used: freePassesUsed,
-      );
+  /// Il reste une passe gratuite ce tour. Toujours faux en Classique.
+  bool get hasFreePass => freePassesUsed < freePasses;
+
+  /// Pénalité EFFECTIVE de la prochaine passe. Classique : la pénalité réglée.
+  int get currentPassPenalty => hasFreePass ? 0 : _settings.passPenalty;
 
   /// 🔴 SEULE garde de la passe, sur la seconde affichée : `passWord` et le
   /// bouton de `turn_screen` la lisent tous deux, sinon le bouton s'affiche
@@ -1208,8 +1210,7 @@ class GameProvider extends ChangeNotifier {
       !passBlocked && displayedSeconds >= currentPassPenalty;
 
   /// `reversed` : le mot du tour s'affiche à l'envers (tour seulement).
-  bool get isWordReversed =>
-      currentTeamModifiers.any((m) => m.catalogId == 'reversed');
+  bool get isWordReversed => _has('reversed');
 
   /// Devineurs que les adversaires peuvent bloquer : l'équipe qui joue, sauf
   /// celui qui fait deviner. Vide si `block_guesser` ne la vise pas ou si elle
@@ -1217,7 +1218,7 @@ class GameProvider extends ChangeNotifier {
   List<Player> get blockableGuessers {
     final team = getCurrentTeam();
     if (team == null ||
-        !currentTeamModifiers.any((m) => m.catalogId == 'block_guesser') ||
+        !_has('block_guesser') ||
         !canBlockGuesser(team.playerIds.length)) {
       return const [];
     }
@@ -1251,24 +1252,20 @@ class GameProvider extends ChangeNotifier {
     _saveGameState();
   }
 
-  /// Fiesta à la fin d'un tour joué : les compteurs du tour repartent à zéro.
-  /// Si le tour est vraiment fini ([turnOver]), les instances de portée tour
-  /// de l'équipe sont consommées. 🔴 Une fin de manche n'est PAS une fin de
-  /// tour : la même équipe poursuit en manche suivante (continuation), et
-  /// l'instance doit tomber à la fin de CE tour-là, jamais franchir le tour
-  /// d'après. Nul en Classique.
-  FiestaState? _fiestaAfterTurn({required bool turnOver}) {
+  /// Fiesta à la VRAIE fin d'un tour : compteurs du tour vidés, instances
+  /// de portée tour de l'équipe consommées. 🔴 Un seul « tour » : une fin de
+  /// manche n'en est pas une, la continuation en N+1 est le même tour (elle
+  /// hérite donc aussi du compteur de passes gratuites). Nul en Classique.
+  FiestaState? _fiestaAfterTurn() {
     final fiesta = _game.fiesta;
     if (fiesta == null || _teams.isEmpty) return null;
     final teamId = _teams[_game.currentTeamIndex].id;
     return fiesta.copyWith(
       turn: const {},
-      active: turnOver
-          ? fiesta.active
-              .where((m) => !(m.scope == ModifierScope.turn &&
-                  (m.target == ModifierTarget.both || m.teamId == teamId)))
-              .toList()
-          : null,
+      active: fiesta.active
+          .where((m) => !(m.scope == ModifierScope.turn &&
+              (m.target == ModifierTarget.both || m.teamId == teamId)))
+          .toList(),
     );
   }
 

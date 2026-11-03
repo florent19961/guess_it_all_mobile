@@ -258,7 +258,7 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
     // Pénalité EFFECTIVE et garde partagée avec `passWord` (Fiesta 2-8) ; en
     // Classique, la pénalité réglée et la garde d'avant.
     final passPenalty = provider.currentPassPenalty;
-    final hasFreePass = provider.freePassesUsed < provider.freePasses;
+    final hasFreePass = provider.hasFreePass;
     final hasWordsToPassTo = provider.effectiveRemainingWordsCount > 0;
     final canPass = provider.canPassWith(timeRemaining) && hasWordsToPassTo;
 
