@@ -13,3 +13,7 @@ date · sujet · question · choix · raison · état
 | 2026-11-03 | scores masqués | Carte 1 parmi 3 de la transition | Pas de force d'offre affichée (« Menée · offre X » seulement sur l'écran de choix) | La force réelle peut être un cran en dessous | appliqué |
 | 2026-11-04 | transition | État « Qui a gagné ? » après M3 | Retiré : la fin de M3 va directement aux résultats, qui font la révélation | Pas de nouvel état dans la machine à états | appliqué |
 | 2026-11-04 | transition | « Commence : équipe · joueur » | Équipe et joueur courants (nextRound ne les change pas) | Même valeur que l'avant-tour suivant | appliqué |
+| 2026-11-04 | revues | Codex hors quota (jusqu'à 3 h) | Revues r1 du kit d'aide et du branchement faites par Opus | Consigne Florent : Opus en repli quand Codex est hors quota | appliqué |
+| 2026-11-04 | aides | Aide 1re partie si la 1re partie est abandonnée ou tuée | Liée au gameId de la 1re partie, état persisté ; une autre partie clôt la 1re partie | Aide automatique seulement pendant la vraie 1re partie, une fois par joueur | appliqué |
+| 2026-11-04 | aides | Détection « a déjà joué » | Décidée une seule fois au 1er lancement de cette version, puis figée | Une partie abandonnée écrit aussi l'historique de mots | appliqué |
+| 2026-11-04 | scores masqués | Le classement Fiesta reste déductible (ordre du 1 parmi 3, secondes de rattrapage) | Accepté | Inhérent au mécanisme de rattrapage | à valider |
