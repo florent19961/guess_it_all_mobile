@@ -28,22 +28,31 @@ class FiestaState {
   /// utilisés ». Clé omise tant que la liste est vide.
   final List<ChargeUse> chargesUsed;
 
+  /// Cartes « 1 parmi 3 » choisies dans la partie (story 2-10), dans l'ordre.
+  /// Celles de la transition en cours forment la file (déjà choisi = gardé
+  /// après un kill) ; `nextRound` les rend actives. Relues ensuite pour le
+  /// récap et pour savoir qui désigne le devineur bloqué. Clé omise si vide.
+  final List<OfferChoice> offerChoices;
+
   FiestaState({
     required this.rules,
     List<ModifierInstance> active = const [],
     Map<String, dynamic> turn = const {},
     Map<String, int> catchUpDue = const {},
     List<ChargeUse> chargesUsed = const [],
+    List<OfferChoice> offerChoices = const [],
   })  : active = List.unmodifiable(active),
         turn = Map.unmodifiable(turn),
         catchUpDue = Map.unmodifiable(catchUpDue),
-        chargesUsed = List.unmodifiable(chargesUsed);
+        chargesUsed = List.unmodifiable(chargesUsed),
+        offerChoices = List.unmodifiable(offerChoices);
 
   FiestaState copyWith({
     List<ModifierInstance>? active,
     Map<String, dynamic>? turn,
     Map<String, int>? catchUpDue,
     List<ChargeUse>? chargesUsed,
+    List<OfferChoice>? offerChoices,
   }) =>
       FiestaState(
         rules: rules,
@@ -51,6 +60,7 @@ class FiestaState {
         turn: turn ?? this.turn,
         catchUpDue: catchUpDue ?? this.catchUpDue,
         chargesUsed: chargesUsed ?? this.chargesUsed,
+        offerChoices: offerChoices ?? this.offerChoices,
       );
 
   Map<String, dynamic> toJson() => {
@@ -60,6 +70,8 @@ class FiestaState {
         'catchUpDue': catchUpDue,
         if (chargesUsed.isNotEmpty)
           'chargesUsed': chargesUsed.map((e) => e.toJson()).toList(),
+        if (offerChoices.isNotEmpty)
+          'offerChoices': offerChoices.map((e) => e.toJson()).toList(),
       };
 
   /// Variante tolérante : `null` (= Classique) si les règles sont illisibles.
@@ -85,6 +97,7 @@ class FiestaState {
     final rawTurn = json['turn'];
     final rawDue = json['catchUpDue'];
     final rawUsed = json['chargesUsed'];
+    final rawChoices = json['offerChoices'];
     return FiestaState(
       rules: rules,
       active: active,
@@ -101,6 +114,13 @@ class FiestaState {
               .whereType<Map>()
               .map((e) => ChargeUse.tryFromJson(Map<String, dynamic>.from(e)))
               .whereType<ChargeUse>()
+              .toList()
+          : const [],
+      offerChoices: rawChoices is List
+          ? rawChoices
+              .whereType<Map>()
+              .map((e) => OfferChoice.tryFromJson(Map<String, dynamic>.from(e)))
+              .whereType<OfferChoice>()
               .toList()
           : const [],
     );
@@ -131,5 +151,29 @@ class ChargeUse {
       return null;
     }
     return ChargeUse(catalogId: catalogId, teamId: teamId, round: round);
+  }
+}
+
+/// Une carte « 1 parmi 3 » : [chooserId] l'a choisie, [modifier] est
+/// l'instance de la manche suivante (un malus vise le leader, d'où la clé de
+/// celui qui a choisi).
+class OfferChoice {
+  final String chooserId;
+  final ModifierInstance modifier;
+
+  const OfferChoice({required this.chooserId, required this.modifier});
+
+  Map<String, dynamic> toJson() =>
+      {'chooserId': chooserId, 'modifier': modifier.toJson()};
+
+  /// Variante tolérante : une entrée illisible est ignorée seule.
+  static OfferChoice? tryFromJson(Map<String, dynamic> json) {
+    final chooserId = json['chooserId'];
+    final raw = json['modifier'];
+    if (chooserId is! String || raw is! Map) return null;
+    final modifier =
+        ModifierInstance.tryFromJson(Map<String, dynamic>.from(raw));
+    if (modifier == null) return null;
+    return OfferChoice(chooserId: chooserId, modifier: modifier);
   }
 }
