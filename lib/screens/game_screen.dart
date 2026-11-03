@@ -645,7 +645,41 @@ class _FiestaAnnouncements extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _modifiers(),
+        if (provider.isDoublePointsArmed || provider.doublePointsLeft > 0)
+          _doublePoints(),
         TurnTimeCard(provider.turnTime),
+      ],
+    );
+  }
+
+  /// Interrupteur « Mot compte double » (maquette `cd`). La charge ne se
+  /// dépense qu'au départ du tour ; ensuite l'interrupteur est figé.
+  Widget _doublePoints() {
+    final left = provider.doublePointsLeft;
+    final String label;
+    final String detail;
+    var editable = false;
+    if (provider.isDoublePointsOn) {
+      label = 'Mot compte double activé';
+      detail = 'Les points de ce tour comptent ×2.';
+    } else if (!provider.isDoublePointsArmed && provider.doublePointsCapped) {
+      label = 'Activer Mot compte double';
+      detail = 'Impossible : votre équipe a déjà 2 modificateurs ce tour.';
+    } else {
+      label = 'Activer Mot compte double';
+      detail = '$left charge${left > 1 ? 's' : ''} pour cette manche. '
+          'Les points du tour seront ×2.';
+      editable = true;
+    }
+    return FiestaCard(
+      title: 'Bonus',
+      children: [
+        FiestaLine(
+          label: label,
+          detail: detail,
+          value: provider.isDoublePointsArmed,
+          onChanged: editable ? provider.setDoublePoints : null,
+        ),
       ],
     );
   }
@@ -681,17 +715,27 @@ class _FiestaAnnouncements extends StatelessWidget {
       );
     }
 
+    // La charge de ×2 non dépensée est offerte par la carte « Bonus », pas
+    // affichée comme active ; dépensée (continuation), elle devient le badge ×2.
+    final inPlay = provider.turnModifiers;
+    final doubled = provider.isDoublePointsOn;
     return FiestaCard(
       title: 'Actif ce tour',
       children: [
         ..._constraints(rules.oneAnswer, modifiers),
-        if (modifiers.isEmpty && !rules.oneAnswer)
+        if (inPlay.isEmpty && !doubled && !rules.oneAnswer)
           const FiestaHint('Aucun modificateur')
         else
           ModifierBadges(
-            modifiers: modifiers,
+            modifiers: inPlay,
             alignment: WrapAlignment.start,
             extra: [
+              if (doubled)
+                const ModifierBadge(
+                  icon: '×2',
+                  label: 'Mot compte double',
+                  nature: ModifierNature.bonus,
+                ),
               if (rules.oneAnswer)
                 const ModifierBadge(
                   icon: '☝',

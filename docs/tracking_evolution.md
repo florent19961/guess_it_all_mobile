@@ -508,3 +508,25 @@ annoncés avant le tour. Règles pures dans `models/fiesta/turn_effects.dart`.
 
 **Conséquence.** Une partie Classique ne voit aucune différence : sans modificateur, pénalité
 effective = pénalité réglée, garde identique.
+
+## 2026-11-03 — Fiesta 2-9 : mot compte double
+
+**Quoi.** Une équipe qui a `double_points` (tiré, fixé, plus tard offert) active ×2 sur
+l'avant-tour ; les points du tour comptent double (`resolveTurn(pointsMultiplier:)`, pur). Badge
+« ×2 Mot compte double » pendant le tour, détail du calcul à la vérification, ligne « Bonus
+utilisés » au récap.
+
+**Pourquoi ces choix.**
+- **Dépense au départ** (`startTurnTimer`), pas à l'interrupteur : éteindre avant le départ
+  ou revenir à la vérification précédente n'a rien à rembourser, le snapshot efface l'armement.
+- **État dans `FiestaState`** : armement dans `turn` (survit au kill, vidé à la vraie fin du
+  tour) ; dépenses dans `chargesUsed`, une **clé optionnelle** de plus dans le blob Fiesta
+  (omise si vide, Classique intact, pas de bump de schéma). Une instance tirée pour tous est
+  partagée : le décompte par équipe ne peut pas vivre sur l'instance. Charges de la manche =
+  charges des instances − dépenses de CETTE manche : une charge non utilisée est perdue sans
+  remise à zéro.
+- **Un seul tour (2-8)** : la continuation en N+1 d'un tour joué à ×2 reste à ×2 sans dépenser
+  la charge de N+1 ; un tour non activé peut l'activer en continuation (charge de N+1).
+- **Q8** : activation refusée si l'équipe a déjà 2 autres modificateurs en jeu.
+- **Analytics** : `double_points` n'apparaît dans les `modifiers` d'un mot que si le ×2
+  s'applique à ce tour (une charge non activée n'est pas un modificateur en jeu).

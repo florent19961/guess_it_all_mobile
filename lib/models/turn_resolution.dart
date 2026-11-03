@@ -71,12 +71,16 @@ class TurnResolution {
 /// - [guessedThisTurn] / [passedThisTurn] : ce qui s'est passé pendant le tour.
 /// - [expiredWord] : le mot affiché quand le chrono est tombé, s'il y en a un.
 /// - [currentPool] : les mots encore à faire deviner avant dépouillement.
+/// - [pointsMultiplier] : ×2 pour « Mot compte double » (Fiesta 2-9). Vaut
+///   pour les POINTS seulement : [TurnResolution.validated] reste la liste
+///   des mots, et les stats « mots devinés » ne doublent pas.
 TurnResolution resolveTurn({
   required List<String> validatedWords,
   required List<String> guessedThisTurn,
   required List<String> passedThisTurn,
   required String? expiredWord,
   required List<String> currentPool,
+  int pointsMultiplier = 1,
 }) {
   final validatedSet = validatedWords.toSet();
 
@@ -116,6 +120,6 @@ TurnResolution resolveTurn({
     expiredInvalidated: expiredInvalidated,
     expiredWord: expiredWord,
     remainingPool: pool,
-    pointsScored: validatedWords.length,
+    pointsScored: validatedWords.length * pointsMultiplier,
   );
 }

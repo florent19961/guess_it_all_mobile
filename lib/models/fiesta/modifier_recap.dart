@@ -2,6 +2,7 @@ import '../../utils/constants.dart';
 import '../game_result.dart';
 import '../team.dart';
 import 'fiesta_rules.dart';
+import 'fiesta_state.dart';
 import 'modifier_catalog.dart';
 import 'symmetric_draw.dart';
 import 'turn_time.dart';
@@ -21,13 +22,15 @@ String fiestaModeLabel(FiestaRules rules) => rules.mode == FiestaMode.auto
 /// RECALCULÉ, pas relu d'un journal : le tirage vient de la graine
 /// `(gameId, manche)` (comme `nextRoundModifiers`) et le rattrapage des
 /// scores cumulés en fin de manche, soit ce que la transition a montré. Rien à
-/// persister pendant la partie. Les sections choix 1 parmi 3, bonus utilisés
-/// et joueurs bloqués arrivent avec les stories qui les remplissent.
+/// persister pendant la partie. Exception : les bonus utilisés (2-9) sont
+/// relus de [chargesUsed], seule trace d'une activation. Les sections choix
+/// 1 parmi 3 et joueurs bloqués arrivent avec les stories qui les remplissent.
 List<ModifierRecapLine> buildModifierRecap({
   required FiestaRules rules,
   required String gameId,
   required List<Team> teams,
   required int roundsPlayed,
+  List<ChargeUse> chargesUsed = const [],
 }) {
   final lines = <ModifierRecapLine>[];
 
@@ -69,6 +72,17 @@ List<ModifierRecapLine> buildModifierRecap({
             .join(' · '),
       ));
     }
+  }
+
+  if (chargesUsed.isNotEmpty) {
+    final teamName = {for (final t in teams) t.id: t.name};
+    lines.add(ModifierRecapLine(
+      title: 'Bonus utilisés',
+      detail: chargesUsed
+          .map((u) => '${modifierById(u.catalogId)?.name ?? u.catalogId}, '
+              '${teamName[u.teamId] ?? '?'} en M${u.round}')
+          .join(' · '),
+    ));
   }
 
   return lines;

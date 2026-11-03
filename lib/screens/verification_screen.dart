@@ -54,6 +54,9 @@ class _VerificationScreenState extends State<VerificationScreen> {
         .where((w) => w != provider.game.expiredWord)
         .toList();
     final expiredWord = provider.game.expiredWord;
+    // Fiesta 2-9 : même multiplicateur que `validateWords` (maquette `verif`).
+    final doubled = provider.isDoublePointsOn;
+    final points = _validatedWords.length * (doubled ? 2 : 1);
 
     return Material(
       color: AppColors.backgroundMain,
@@ -89,7 +92,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                         Border.all(color: AppColors.secondaryCyan, width: 2),
                   ),
                   child: Text(
-                    'Score : ${_validatedWords.length} ${_validatedWords.length <= 1 ? 'point' : 'points'}',
+                    'Score : $points ${points <= 1 ? 'point' : 'points'}',
                     style: const TextStyle(
                       fontFamily: 'Bangers',
                       fontSize: 24,
@@ -97,6 +100,18 @@ class _VerificationScreenState extends State<VerificationScreen> {
                     ),
                   ),
                 ),
+                if (doubled) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Mots devinés ${_validatedWords.length} · '
+                    'Mot compte double ×2 · Points du tour $points',
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 13,
+                      color: AppColors.secondaryCyan,
+                    ),
+                  ),
+                ],
 
                 const SizedBox(height: 24),
 
