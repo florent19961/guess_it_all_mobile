@@ -305,9 +305,7 @@ List<CoachStep> transitionHelp({
       CoachStep(
         target: next,
         title: 'Lancer la manche',
-        text: 'Lance la manche suivante. Après la dernière manche, ce bouton '
-            'devient « Découvrir le podium » : les scores, cachés pendant la '
-            'partie, s\'affichent enfin. En Fiesta, il attend que chaque '
+        text: 'Lance la manche suivante. En Fiesta, il attend que chaque '
             'équipe menée ait choisi sa carte.',
       ),
       CoachStep(

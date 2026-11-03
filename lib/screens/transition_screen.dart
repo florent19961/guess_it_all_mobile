@@ -58,7 +58,6 @@ class _TransitionScreenState extends State<TransitionScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<GameProvider>();
     final currentRound = provider.game.currentRound;
-    final isLastRound = currentRound >= 3;
     final nextRound = currentRound + 1;
     final fiestaRules = provider.game.fiesta?.rules;
     final catchUpRules =
@@ -105,55 +104,35 @@ class _TransitionScreenState extends State<TransitionScreen> {
                           const SizedBox(height: 14),
                           // Pas de score ici : il reste caché jusqu'aux
                           // résultats.
-                          if (isLastRound) ...[
-                            _Hero(
-                              key: _nextRoundKey,
-                              decoration: '🏆',
-                              children: [
-                                _HeroTitle('C\'est fini !'),
-                                _HeroBig('Qui a gagné ?', fontSize: 52),
-                                _HeroText('Les 3 manches sont jouées. Le '
-                                    'score n\'a jamais été affiché… place au '
-                                    'verdict.'),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            _FactTiles(tiles: [
-                              _Fact('$totalWords', 'mots, devinés 3 fois'),
-                              _Fact('${provider.game.history.length}',
-                                  'tours joués'),
-                            ]),
-                          ] else ...[
-                            _Hero(
-                              key: _nextRoundKey,
-                              decoration: _roundEmoji[nextRound] ?? '✦',
-                              children: [
-                                const _HeroEyebrow('Et maintenant'),
-                                _HeroBig('$nextRound'),
-                                _HeroTitle(
-                                    AppConstants.roundModes[nextRound] ?? ''),
-                                _HeroText(_roundRule[nextRound] ?? ''),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            _FactTiles(tiles: [
-                              _Fact('$totalWords',
-                                  'mots reviennent dans le chapeau'),
-                              if (bonus > 0)
-                                _Fact('+$bonus s',
-                                    'reportées pour ${starterTeam?.name ?? ''}'),
-                            ]),
-                            if (starterTeam != null) ...[
-                              const SizedBox(height: 14),
-                              _Starter(
-                                team: starterTeam.name,
-                                player: starterPlayer?.name,
-                                color: starterColor,
-                              ),
+                          _Hero(
+                            key: _nextRoundKey,
+                            decoration: _roundEmoji[nextRound] ?? '✦',
+                            children: [
+                              const _HeroEyebrow('Et maintenant'),
+                              _HeroBig('$nextRound'),
+                              _HeroTitle(
+                                  AppConstants.roundModes[nextRound] ?? ''),
+                              _HeroText(_roundRule[nextRound] ?? ''),
                             ],
+                          ),
+                          const SizedBox(height: 12),
+                          _FactTiles(tiles: [
+                            _Fact('$totalWords',
+                                'mots reviennent dans le chapeau'),
+                            if (bonus > 0)
+                              _Fact('+$bonus s',
+                                  'reportées pour ${starterTeam?.name ?? ''}'),
+                          ]),
+                          if (starterTeam != null) ...[
                             const SizedBox(height: 14),
-                            _MemoryTip(round: currentRound),
+                            _Starter(
+                              team: starterTeam.name,
+                              player: starterPlayer?.name,
+                              color: starterColor,
+                            ),
                           ],
+                          const SizedBox(height: 14),
+                          _MemoryTip(round: currentRound),
                           // Bouton pour consulter les mots devinés du tour
                           // précédent.
                           if (provider.game.history.isNotEmpty) ...[
@@ -192,12 +171,11 @@ class _TransitionScreenState extends State<TransitionScreen> {
                           ],
                           const SizedBox(height: 16),
                           // Fiesta : sous le héros. Vides en Classique.
-                          if (!isLastRound)
-                            RoundDrawCard(
-                              round: nextRound,
-                              modifiers: provider.nextRoundModifiers,
-                            ),
-                          if (catchUpRules != null && !isLastRound)
+                          RoundDrawCard(
+                            round: nextRound,
+                            modifiers: provider.nextRoundModifiers,
+                          ),
+                          if (catchUpRules != null)
                             CatchUpCard(
                               // Carte vide (aucun rattrapage) : pas d'aide.
                               key: provider.catchUpPreview.isEmpty
@@ -233,9 +211,7 @@ class _TransitionScreenState extends State<TransitionScreen> {
                     key: _nextKey,
                     text: chooser != null
                         ? 'En attente du choix de ${chooser.name}'
-                        : isLastRound
-                            ? 'Découvrir le podium'
-                            : 'Manche $nextRound',
+                        : 'Manche $nextRound',
                     variant: AppButtonVariant.primary,
                     size: AppButtonSize.large,
                     fullWidth: true,
@@ -597,9 +573,8 @@ class _HeroEyebrow extends StatelessWidget {
 
 class _HeroBig extends StatelessWidget {
   final String text;
-  final double fontSize;
 
-  const _HeroBig(this.text, {this.fontSize = 84});
+  const _HeroBig(this.text);
 
   @override
   Widget build(BuildContext context) => Text(
@@ -607,7 +582,7 @@ class _HeroBig extends StatelessWidget {
         textAlign: TextAlign.center,
         style: TextStyle(
           fontFamily: 'Bangers',
-          fontSize: fontSize,
+          fontSize: 84,
           height: 1,
           color: AppColors.primaryPink,
           shadows: const [
