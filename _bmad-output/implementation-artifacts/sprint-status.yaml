@@ -34,6 +34,8 @@ epics:
     title: "Mode Fiesta (Auto + Personnalisé) par-dessus le mode Classique"
     status: in-progress   # mode délégué depuis 2026-11-03 — journal : _bmad-output/reviews/epic-2-mode-fiesta/journal-arbitrages.md   # cadrage clos (grilling 2026-08-02 + 2026-11-03), 10 stories écrites
     note: >-
+      ✅ 2026-11-03 : toutes les stories 2-2…2-11 mergées (PR #8…#19). Revue de fin d'epic Opus + Codex faite ;
+      corrections mergées PR #20 (squash e298fd2). Reste : recettes device, bilan, build store.
       Epic : _bmad-output/specs/fiesta/epic-fiesta.md (cadrage figé, stories,
       lanes, 16 questions ouvertes avec recommandation). Maquette UX :
       https://claude.ai/artifact/N9w6ATfeJnXTkfq74AfAdj . Lanes : A séquentielle
