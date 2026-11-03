@@ -26,7 +26,7 @@ coup de pouce Auto (2-10) : l'effet ne dépend pas de la façon dont le modifica
 | `no_pass` | `passWord` refuse ; le bouton Passer est désactivé et affiche « Passer (bloqué) » | `game_provider.dart:644-700`, `turn_screen.dart:258`, `:382-430` |
 | `free_pass` ×N | les N premières passes du tour coûtent 0 s ; compteur « Passes gratuites : k / N » ; ensuite, la pénalité normale | idem + compteur dans l'état de tour de `fiesta` |
 | `block_guesser` | au début du tour de l'équipe visée, les adversaires choisissent un **devineur** (tous les joueurs de l'équipe sauf celui qui fait deviner). Écran d'annonce « X ne répond pas » (maquette `block`). Simple annonce, la rotation ne change pas | `game_screen.dart` + écran d'annonce de 2-5 |
-| `mime_no_arms`, `mime_eyes_closed`, `draw` | annonce seule : texte de la maquette, badge, révélation | 2-5 les affiche déjà ; ici les textes et l'annonce plein écran |
+| `mime_no_arms`, `mime_no_fists`, `mime_eyes_closed`, `draw` | annonce seule : texte de la maquette, badge, révélation | 2-5 les affiche déjà ; ici les textes et l'annonce plein écran |
 | `reversed` | pendant le tour, le mot s'affiche en MAJUSCULES et à l'envers, chaîne entière (« TITANIC » → « CINATIT », « STAR WARS » → « SRAW RATS ») ; vérification et résultats en clair | `turn_screen.dart:330` uniquement |
 
 Plus le texte de « Une seule réponse » sous « Interdit de passer » (Q6) : « Mauvaise réponse : le

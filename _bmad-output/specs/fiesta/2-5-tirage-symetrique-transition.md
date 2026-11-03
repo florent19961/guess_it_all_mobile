@@ -61,7 +61,7 @@ Hors périmètre : les **effets** (temps → 2-6, passes et annonces → 2-8, ×
    2 modificateurs compatibles sont tirés, affichés, et identiques pour toutes les équipes.
 3. **Étant donné** Personnalisé avec un tirage à 0, **alors** aucun tirage ; avec 2, au plus 2,
    pris seulement parmi les modificateurs « tiré pour tous » éligibles à cette manche.
-4. **Étant donné** M1 ou M2, **alors** `draw`, `mime_no_arms` et `mime_eyes_closed` ne sortent
+4. **Étant donné** M1 ou M2, **alors** `draw`, `mime_no_arms`, `mime_no_fists` et `mime_eyes_closed` ne sortent
    jamais.
 5. **Étant donné** la fin de M1, **quand** on arrive sur la transition, **alors** le tirage de M2
    est déjà visible. **Quand** on touche « Manche suivante », **alors** ces modificateurs

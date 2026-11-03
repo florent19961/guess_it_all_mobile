@@ -20,10 +20,11 @@ nouvelle, reste identique.
 ## Périmètre
 
 - `lib/models/fiesta/` (nouveau dossier, fichiers purs, sans dépendance à un service) :
-  - **catalogue** : les 10 entrées V1 de l'epic (id, nom FR, description FR, nature bonus/malus,
+  - **catalogue** : les 11 entrées V1 de l'epic (id, nom FR, description FR, nature bonus/malus,
     portée par défaut manche/tour, cible par défaut, charges par défaut, « manche 3 seulement »),
     plus la **table d'incompatibilités** (Q14 : `no_pass`✗`two_words`, `no_pass`✗`free_pass`,
-    `mime_no_arms`✗`mime_eyes_closed`, `mime_no_arms`✗`draw`, `mime_eyes_closed`✗`draw`) ;
+    `mime_no_arms`✗`mime_eyes_closed`, `mime_no_arms`✗`draw`, `mime_eyes_closed`✗`draw`,
+    `mime_no_fists`✗`mime_no_arms`, `mime_no_fists`✗`draw`) ;
   - **`ModifierInstance`** `{catalogId, scope: round|turn, target: both|team|player, teamId?,
     playerId?, charges, nature, round}` avec `toJson` et un `tryFromJson` tolérant ;
   - **`FiestaRules`** : la configuration gelée. Mode (`auto` | `custom`), interrupteurs Auto

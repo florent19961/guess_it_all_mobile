@@ -106,7 +106,8 @@ Les joueurs ne choisissent rien. Deux interrupteurs cumulables, au moins un des 
 
 | Id proposé | Nom | Nature | Notes |
 |---|---|---|---|
-| `mime_no_arms` | Mime sans les bras | malus | contrainte annoncée, manche 3 |
+| `mime_no_arms` | Mime sans les bras | malus | contrainte annoncée, manche 3 (très dur) |
+| `mime_no_fists` | Mime sans les poings | malus | contrainte annoncée, manche 3 : mains ouvertes, pas de poing fermé ; version adoucie de « sans les bras » (ajout Florent 2026-11-03) |
 | `mime_eyes_closed` | Mime les yeux fermés | malus | contrainte annoncée, manche 3 |
 | `draw` | Dessiner | malus | manche 3 seulement |
 | `no_pass` | Interdit de passer | malus | bouton Passer désactivé |
@@ -212,8 +213,8 @@ l'eau : elles changent le parcours d'entrée et le chrono.
 
 ## Questions ouvertes
 
-À trancher par Florent. Chacune porte une recommandation ; la story concernée l'applique **par
-défaut** et le signale dans sa PR. Un arbitrage différent coûte une retouche localisée.
+✅ **Toutes tranchées le 2026-11-03 : Florent valide chaque recommandation telle quelle.** Elles
+font désormais partie du cadrage figé ; la colonne « Recommandation » vaut décision.
 
 | # | Question | Story | Recommandation |
 |---|---|---|---|
@@ -230,7 +231,7 @@ défaut** et le signale dans sa PR. Un arbitrage différent coûte une retouche 
 | Q11 | Où se place l'écran Paramètres actuel dans le parcours ? Le bouton « Lancer : Joueurs → Équipes → Mots » de la maquette `recap` le saute, mais les réglages de base restent éditables. | 2-4 | Accueil → Mode de jeu → (Fiesta → Auto ou Personnalisé → Récap) → **Paramètres actuels** → Joueurs (et leurs mots) → Équipes → `startGame` (`teams_screen.dart:79`). Classique va directement aux Paramètres. |
 | Q12 | « Rejouer » garde-t-il la configuration Fiesta ? | 2-4 | Oui : on relit la config gelée de la partie finie, puis on passe par le Récap (la maquette `results` → `recap`). |
 | Q13 | Les noms d'ensembles doivent-ils être uniques ? Comment nommer un doublon ? | 2-3 | Pas d'unicité imposée. Doublon = « <nom> (copie) », tronqué à 30 caractères (`maxlength` de la maquette). |
-| Q14 | Table d'incompatibilités : la décision s'arrête à « … ». La maquette ajoute « interdit de passer » ✗ « passe gratuite » et « sans les bras » ✗ « yeux fermés ». | 2-2 | Adopter la table de la maquette : `no_pass`✗`two_words`, `no_pass`✗`free_pass`, `mime_no_arms`✗`mime_eyes_closed`, `mime_no_arms`✗`draw`, `mime_eyes_closed`✗`draw`. |
+| Q14 | Table d'incompatibilités : la décision s'arrête à « … ». La maquette ajoute « interdit de passer » ✗ « passe gratuite » et « sans les bras » ✗ « yeux fermés ». | 2-2 | Adopter la table de la maquette : `no_pass`✗`two_words`, `no_pass`✗`free_pass`, `mime_no_arms`✗`mime_eyes_closed`, `mime_no_arms`✗`draw`, `mime_eyes_closed`✗`draw`, `mime_no_fists`✗`mime_no_arms`, `mime_no_fists`✗`draw`. |
 | Q15 | « Bloquer un devineur » tiré pour tous : qui choisit pour chaque équipe à 3 ou 4 équipes ? | 2-8 | L'app affiche « Les adversaires choisissent » et la liste des devineurs. Personne n'est désigné : c'est une annonce. |
 | Q16 | « Fixé sur la manche N » (Personnalisé) : quelle cible ? | 2-5 | Toutes les équipes, pendant toute la manche N, en plus du tirage (lecture de la maquette `edit`). |
 
