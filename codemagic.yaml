@@ -27,7 +27,12 @@ definitions:
   scripts:
     - &pub_get
       name: flutter pub get
-      script: flutter pub get
+      # Swift Package Manager (activé par défaut en Flutter 3.44) casse le build iOS :
+      # flutter_native_splash n'a pas de paquet SPM valide (« public headers directory
+      # path ... is invalid »). On reste sur CocoaPods tant que le plugin n'est pas corrigé.
+      script: |
+        flutter config --no-enable-swift-package-manager
+        flutter pub get
     - &analyze
       name: flutter analyze
       # Même seuil que scripts/run-full-suite.sh : 0 error + 0 warning. Les `info`
