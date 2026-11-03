@@ -1,4 +1,4 @@
-# Sprint Status — Guess It All (colonne vertébrale BMad : US → epic → gate)
+# Sprint Status — Guess It All (colonne vertébrale BMad : US → epic → statut)
 # Créé 2026-08-01 lors du portage du harness. Maintenu par bmad-dev-story /
 # bmad-sprint-status / à la main.
 #
@@ -8,7 +8,7 @@
 #   needs-design   : design ouvert → grill-me / brainstorming / party-mode avant story
 #   ready-for-dev  : story écrite + figée → dev-story peut prendre
 #   in-progress    : dev-story en cours
-#   review         : implémenté + gate ② clos, en attente validation/merge Florent
+#   review         : implémenté + revue close, en attente validation/merge Florent
 #   done           : mergé sur main (accepté)
 #   wont-do        : story abandonnée (décision produit)
 #   deferred       : story ÉCRITE + décision figée, implémentation REPORTÉE
@@ -38,7 +38,7 @@ epics:
       lanes, 16 questions ouvertes avec recommandation). Maquette UX :
       https://claude.ai/artifact/N9w6ATfeJnXTkfq74AfAdj . Lanes : A séquentielle
       sur game_provider/game_state (2-2 → 2-5 → 2-6 → 2-7 → 2-8 → 2-9 → 2-10 →
-      2-11, 2-4 s'y insère après 2-5) ; B parallèle = 2-3 dès 2-2 mergée. Gate ③
+      2-11, 2-4 s'y insère après 2-5) ; B parallèle = 2-3 dès 2-2 mergée. Revue d'epic
       dû en fin d'epic. Un seul build store après Fiesta. i18n reportée (epic-4).
   epic-4-i18n:
     title: "Internationalisation (anglais)"

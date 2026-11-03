@@ -243,7 +243,7 @@ Florent (`CLAUDE.md` règle 7).
 
 **Quoi.** `codemagic.yaml` à la racine avec deux workflows sur `mac_mini_m2` : `dry-run`
 (manuel) et `release` (tag `v*`, garde « tag = `v` + version pubspec »). Les deux font pub get →
-analyze → test → AAB signé (keystore `gia_android_signing`, `google-services.json` depuis le
+analyze → test → AAB signé (keystore `gia-android-signing`, `google-services.json` depuis le
 groupe `gia-firebase`) → IPA en signature automatique (`gia_asc_key`), et gardent les artefacts
 (dont `ios/Podfile.lock`). `android/app/build.gradle.kts` ne crée la signature release que si
 `key.properties` existe.
@@ -293,3 +293,19 @@ Fiesta a deux modes, **Auto** (tirage symétrique et/ou auto-calibrage) et **Per
 sont listées dans l'epic pour arbitrage par Florent ; les plus structurantes : Q1 (report de temps
 = tour de continuation, la maquette `cd2` est à corriger), Q3 (définition de l'égalité à 3-4
 équipes), Q4 (plancher de 10 s), Q11 (place de l'écran Paramètres dans le parcours).
+
+---
+
+## 2026-11-03 — Workflow de lane calqué sur WasReal : plus de gates numérotés, 5 agents max
+
+**Quoi.** `guessitall-workflow` est réécrit sur la structure de `wasreal-workflow` (8 sections :
+tier, ouverture de lane, tests minimaux, quand tester, revue, boucle de correction, PR/closeout,
+release). Les gates ①②③ disparaissent du vocabulaire (`CLAUDE.md`, orchestration, teach-back,
+closeout, board, epic Fiesta). Le tier décide seul : **trivial → aucune revue ; standard et
+risqué → 1 reviewer Opus** (mutation testing obligatoire en risqué), boucle jusqu'à READY avec la
+garde « simplifier la racine ». **Au plus 5 agents en parallèle**, sous la sonde de 15 min.
+
+**Pourquoi.** Florent : « on s'emmerde pas à faire mille gates 1 et 2 ». La cérémonie numérotée
+coûtait plus qu'elle ne rapportait sur des changements simples ; WasReal a déjà convergé vers ce
+modèle par tier. Différence assumée avec WasReal : pas de jambe Codex en risqué (décision du même
+jour).

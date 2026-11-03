@@ -26,13 +26,13 @@ session's tracked WIP in the shared checkout left **untouched**).
 ## Key facts (be aware BEFORE you start)
 
 - 🎓 **Pre-flight : le `teach-back` a-t-il tourné ?** Avant tout merge, la skill `teach-back`
-  (gate de compréhension utilisateur) doit avoir tourné — sauf story triviale (skip auto au
+  (compréhension utilisateur) doit avoir tourné — sauf story triviale (skip auto au
   dosage) ou skip explicite de Florent. Pas encore fait → la lancer MAINTENANT.
 - 🔴 **Merge uniquement sur go explicite de Florent.** Tout préparer jusqu'à `gh pr create`
   inclus, puis STOP.
 - **Pas de CI GitHub sur ce dépôt** (aucun `.github/workflows`) → `mergeStateStatus` sera `CLEAN`
-  ou `BLOCKED` pour cause de review, jamais `UNSTABLE`-par-CI. Le vrai gate a tourné en local
-  (gate ②). Si une protection de branche est ajoutée un jour et bloque : `--admin`.
+  ou `BLOCKED` pour cause de review, jamais `UNSTABLE`-par-CI. La vraie revue a tourné en local
+  (`guessitall-workflow` §5). Si une protection de branche est ajoutée un jour et bloque : `--admin`.
 - `gh pr merge --delete-branch` **cannot delete the local branch** while a worktree holds it, and
   in practice may also **skip the remote deletion** → delete the remote branch **explicitly**
   afterward.
@@ -108,8 +108,8 @@ After merge, fix on `main` in **one small commit**:
 
 - **`_bmad-output/implementation-artifacts/sprint-status.yaml`** — flip the story to `done` (the
   branch left it `review`). `done` = merged **AND** accepted. Keep the existing note, prepend the
-  merge fact: `# ✅ MERGÉ PR #<N> (squash <sha>, sur instruction Florent). GATE ② CLOS ...`.
-- **`docs/notes_pour_plus_tard.md`** — any gate-② finding triaged as *pre-existing / out-of-scope*
+  merge fact: `# ✅ MERGÉ PR #<N> (squash <sha>, sur instruction Florent). REVUE CLOSE ...`.
+- **`docs/notes_pour_plus_tard.md`** — any review finding triaged as *pre-existing / out-of-scope*
   belongs here as a dated entry. Add it **on the branch** (so it ships with the PR), not after.
 - **`docs/tracking_evolution.md`** — one dated entry per significant story (what changed + why).
   Add on the branch.
