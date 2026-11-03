@@ -94,11 +94,11 @@ class BlockedGuesser {
                 const SizedBox(height: 8),
                 Text.rich(
                   TextSpan(children: [
-                    const TextSpan(text: 'Pendant ce tour de '),
+                    const TextSpan(text: 'Pendant ce tour ('),
                     TextSpan(
                         text: teamName, style: TextStyle(color: teamColor)),
                     TextSpan(
-                        text: ', ${player.name} n\'a pas le droit de proposer '
+                        text: '), ${player.name} n\'a pas le droit de proposer '
                             'de réponse. Les autres joueurs veillent.'),
                   ]),
                   textAlign: TextAlign.center,

@@ -57,10 +57,10 @@ class PickThreeCard extends StatelessWidget {
     return FiestaCard(
       title: 'Choix 1 parmi 3',
       children: [
-        FiestaHint('$name, menée, va choisir une carte.'),
+        FiestaHint('Au choix : $name'),
         const SizedBox(height: 10),
         AppButton(
-          text: 'Passer le téléphone à $name',
+          text: 'Passe le téléphone : $name',
           variant: AppButtonVariant.secondary,
           fullWidth: true,
           onPressed: onPassPhone,
@@ -97,7 +97,7 @@ class PassPhonePanel extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Passe le téléphone à',
+                  'Passe le téléphone :',
                   textAlign: TextAlign.center,
                   style: AppTextStyles.bodySmall
                       .copyWith(color: AppColors.gray400),
@@ -188,8 +188,8 @@ class OfferChoiceBody extends StatelessWidget {
                     // cachés jusqu'aux résultats).
                     Text(
                       offers.isEmpty
-                          ? 'Menée'
-                          : 'Menée · offre ${_strength(offers.first)}',
+                          ? 'En retard'
+                          : 'En retard · offre ${_strength(offers.first)}',
                       textAlign: TextAlign.center,
                       style: hint,
                     ),
@@ -380,15 +380,16 @@ class AppBoostCard extends StatelessWidget {
           Builder(builder: (context) {
             final id = gift.teamId!;
             final strength = _strength(gift);
-            final verb =
-                gift.nature == ModifierNature.bonus ? 'reçoit' : 'subit';
+            final label = gift.nature == ModifierNature.bonus
+                ? 'Coup de pouce pour'
+                : 'Malus pour';
             return Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
-                      '${_name(teams, id)} $verb · $strength',
+                      '$label : ${_name(teams, id)} · $strength',
                       style: AppTextStyles.bodySmall
                           .copyWith(color: _color(teams, id)),
                     ),

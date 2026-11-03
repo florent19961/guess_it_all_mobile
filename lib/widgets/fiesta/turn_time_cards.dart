@@ -91,7 +91,7 @@ class CatchUpCard extends StatelessWidget {
                     child: Text(
                       // Sans l'écart chiffré : scores cachés jusqu'aux
                       // résultats. Restent l'équipe et ses secondes.
-                      '$name (${e.isLeader ? 'en tête' : 'menée'})',
+                      '$name (${e.isLeader ? 'en tête' : 'en retard'})',
                       style: AppTextStyles.bodySmall.copyWith(color: color),
                     ),
                   ),

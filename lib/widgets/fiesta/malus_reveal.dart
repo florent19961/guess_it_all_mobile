@@ -58,7 +58,7 @@ class MalusReveal extends StatelessWidget {
               children: [
                 Text.rich(
                   TextSpan(children: [
-                    const TextSpan(text: 'Au tour de '),
+                    const TextSpan(text: 'Au tour : '),
                     TextSpan(
                         text: teamName, style: TextStyle(color: teamColor)),
                   ]),
