@@ -1349,6 +1349,9 @@ class GameProvider extends ChangeNotifier {
   /// Il reste une passe gratuite ce tour. Toujours faux en Classique.
   bool get hasFreePass => freePassesUsed < freePasses;
 
+  /// Cartouche Passe gratuite dépensée pour CE tour (badge du tour).
+  bool get isFreePassOn => _charge('free_pass') == ChargeState.spent;
+
   /// Pénalité EFFECTIVE de la prochaine passe. Classique : la pénalité réglée.
   int get currentPassPenalty => hasFreePass ? 0 : _settings.passPenalty;
 
