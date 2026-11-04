@@ -105,7 +105,9 @@ class _StartupIntroState extends State<StartupIntro>
   Widget _buildScene(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final logoSize = width * 0.52;
-    final fontSize = logoSize * 0.26;
+    // Même taille que le titre de l'accueil (home_screen.dart) ; le FittedBox
+    // plus bas le réduit seulement si l'écran est trop étroit.
+    const fontSize = 72.0;
     final titleHeight = fontSize * 1.3;
     final ms = _play.value * _play.duration!.inMilliseconds;
 
