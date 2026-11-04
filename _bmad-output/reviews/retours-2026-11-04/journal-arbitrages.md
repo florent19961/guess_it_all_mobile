@@ -18,3 +18,6 @@ date · story · question · choix · raison · état
 - 2026-11-04 · reglages-catalogue (#34) · 3ᵉ tour de revue pour une phrase de doc · corrigée par l'orchestrateur, READY · aucun code exécuté changé · appliqué
 - 2026-11-04 · reglages-catalogue (#34) · choix de l'implémenteur : « autre langue » compatible avec tout ; forces drap = forte, dos et langue = moyenne ; Dessiner seul mime actif par défaut ; icônes 🛏 ↩ 🌐 · relus par Codex · à valider
 - 2026-11-04 · reglages-catalogue (#34) · « Une seule réponse » par défaut dans un nouvel ensemble Personnalisé · décochée (inchangé) · question posée à Florent, sans réponse · À TRANCHER
+- 2026-11-04 · avances-fiesta (#35) · réglage Fiesta visible en Classique, Réinitialiser aéré · tier trivial, sans revue · demande Florent · appliqué
+- 2026-11-04 · ensembles-perso (#36) · brouillon de l'éditeur (2ᵉ finding sur le même mécanisme) · racine simplifiée : une seule porte `_leaveDraft` ; 3ᵉ tour relu par l'orchestrateur → READY · règle « simplifier la racine » · appliqué
+- 2026-11-04 · ensembles-perso (#36) · choix de l'implémenteur : pas de présélection de « Fiesta classique » ; Rejouer présélectionne l'ensemble identique sinon le dernier utilisé ; retour depuis Joueurs → ensembles ; confirmation aussi sur Suivant ; Supprimer pendant un brouillon = deux confirmations · jugés sains par Codex · à valider
