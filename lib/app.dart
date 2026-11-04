@@ -25,6 +25,7 @@ import 'screens/fiesta_choice_screen.dart';
 import 'screens/fiesta_auto_screen.dart';
 import 'screens/fiesta_recap_screen.dart';
 import 'screens/fiesta_ensembles_screen.dart';
+import 'widgets/effects/startup_intro.dart';
 
 class GuessItAllApp extends StatelessWidget {
   const GuessItAllApp({super.key});
@@ -46,6 +47,9 @@ class GuessItAllApp extends StatelessWidget {
           title: 'Guess It All',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.darkTheme,
+          // Au-dessus du Navigator : l'intro survit aux changements d'écran,
+          // donc ne joue qu'au démarrage à froid.
+          builder: (context, child) => StartupIntro(child: child!),
           home: UpgradeAlert(
             upgrader: _upgrader,
             dialogStyle: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS

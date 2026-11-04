@@ -39,19 +39,22 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "visuals/icone_guess_it_all.png"
-  adaptive_icon_background: "#1a2744"
-  adaptive_icon_foreground: "visuals/icone_guess_it_all.png"
+  image_path: "visuals/logo_bulle_chrono.png"
+  adaptive_icon_background: "#2B3848"
+  adaptive_icon_foreground: "visuals/logo_bulle_chrono_foreground.png"
+  # Le foreground est déjà cadré dans la zone sûre 66/108 par scripts/render_logo.py.
+  adaptive_icon_foreground_inset: 0
 
+# Splash = fond seul : l'animation de démarrage dessine le logo à partir de rien.
+# (image vide plutôt qu'absente : sans image, le package met un pixel noir sur iOS).
 flutter_native_splash:
-  color: "#1a2744"
-  image: visuals/icone_guess_it_all.png
+  color: "#2B3848"
+  image: visuals/splash_vide.png
   android: true
   ios: true
   android_12:
-    color: "#1a2744"
-    image: visuals/icone_guess_it_all.png
-    fullscreen: true
+    color: "#2B3848"
+    image: visuals/splash_vide.png
 
 flutter:
   uses-material-design: true

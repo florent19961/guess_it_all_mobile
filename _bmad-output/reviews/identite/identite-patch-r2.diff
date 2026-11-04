@@ -1,0 +1,879 @@
+diff --git a/_bmad-output/reviews/identite/identite-fix-r1.md b/_bmad-output/reviews/identite/identite-fix-r1.md
+new file mode 100644
+index 0000000..96b0589
+--- /dev/null
++++ b/_bmad-output/reviews/identite/identite-fix-r1.md
+@@ -0,0 +1,6 @@
++# Corrections — identité visuelle r1
++
++| Finding | Décision | Preuve |
++|---|---|---|
++| MAJOR — foreground adaptive rembourré deux fois | **Corrigé.** La clé existe dans `flutter_launcher_icons` 0.14.4 (`lib/config/config.dart:137`, utilisée dans `lib/android.dart:201`). Ajout de `adaptive_icon_foreground_inset: 0`, régénération. | `pubspec.yaml:46` ; `android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml:7` → `android:inset="0%"`. Mesure du dessin dans les foreground générés : 63,8 dp de diamètre sur 108 (xxxhdpi 432 px), 63,2 dp (mdpi) — dans le cercle sûr de 66 dp. |
++| MINOR — `fullscreen: true` sous `android_12` | **Corrigé.** Clé retirée. | `pubspec.yaml` section `android_12` (2 clés : `color`, `image`). `flutter_native_splash:create` relancé : aucune ressource modifiée, ce qui confirme que la clé était ignorée. |
+diff --git a/_bmad-output/reviews/identite/identite-prompt-r1.md b/_bmad-output/reviews/identite/identite-prompt-r1.md
+new file mode 100644
+index 0000000..e3834b6
+--- /dev/null
++++ b/_bmad-output/reviews/identite/identite-prompt-r1.md
+@@ -0,0 +1,94 @@
++# Prompt de revue — identité visuelle r1 (tier STANDARD : thème + outillage + ressources natives)
++
++Lire `identite-patch-r1.diff` (diff sur la merge-base avec `origin/main`, **images PNG exclues**, listées plus bas). Ne pas lancer `git diff`. Revue en lecture seule : écrire le rapport dans `identite-review-r1.md`, à côté de ce fichier. Les PNG peuvent être ouverts directement dans le worktree `/home/florent19961/guess-it-all-identite` (branche `feat/identite-visuelle`).
++
++## Objectif (choix validés par Florent le 2026-11-04)
++1. **Icône d'app + splash natif = logo « Bulle chrono »**, uniquement le duo de marque rose `#F19B9B` + teal `#7DD3C0` sur navy `#2B3848` (fond de l'accueil). Le fond icône/splash passe de `#1a2744` à `#2B3848` partout dans la config `flutter_launcher_icons` / `flutter_native_splash` du `pubspec.yaml`.
++2. **Couleurs d'équipe 3 et 4 → « Pastels accordés »** : `team3` `#A78BFA` → `#B6A6F5` (lavande), `team4` `#FBBF24` → `#F2D47C` (jaune beurre). Équipes 1/2 inchangées. `AppColors.warning` reste `#FBBF24` (but : l'équipe 4 ne ressemble plus à une alerte).
++3. **Hors périmètre** : aucune animation de démarrage (décision en attente).
++
++## Ce qui a été fait
++- `scripts/render_logo.py` (Pillow, rendu 4x puis LANCZOS) reproduit le SVG validé dans un canevas 1024 : fond `#2B3848` ; piste d'anneau r=345, trait 58, teal 22 % ; arc teal opaque 270° horaire du haut (512,167) à la gauche (167,512), bouts ronds ; point r=44 en (512,167) ; bulle rose r=215 en (512,490) + queue triangle (475,632)(368,748)(377,615) avec contour arrondi 18 px ; « ? » blanc Bangers 300 px, centré x=512, ligne de base y=600, rotation -6° autour de (512,600). Rayon du dessin mesuré : 388,6 px.
++- Sorties `visuals/` :
++  - `logo_bulle_chrono.png` 1024 **RGB sans alpha** (icône iOS + icône Android legacy) ;
++  - `logo_bulle_chrono_foreground.png` 1024 transparent, dessin ramené dans 97 % du cercle sûr 66/108 dp (adaptive icon) ;
++  - `logo_bulle_chrono_splash.png` 768 transparent (image 4x ≈ 192 pt/dp, iOS + Android < 12) ;
++  - `logo_bulle_chrono_android12.png` 1152 transparent, dessin dans 97 % du cercle de 768 (doc `flutter_native_splash` 2.4.4, cas « sans fond d'icône »).
++- Ressources régénérées : `dart run flutter_launcher_icons` puis `dart run flutter_native_splash:create`.
++- `visuals/icone_guess_it_all.png` supprimé : plus aucune référence (grep). Les `.jpg` de `visuals/` (déjà non référencés avant) sont laissés.
++- Tests : 0 ajouté, 0 retiré (UI/thème/ressources, aucune zone risquée). `scripts/run-full-suite.sh` vert (226 tests).
++
++## Points à challenger
++- `values-v31/styles.xml` et `values-night-v31/styles.xml` **gagnent** `windowSplashScreenBackground` + `windowSplashScreenAnimatedIcon` : sur `main`, ces entrées n'existaient pas (les ressources avaient été générées avant la section `android_12`, ou par une autre version). Effet attendu : sur Android 12+, splash navy + logo au lieu du comportement système par défaut. Est-ce cohérent et sans effet de bord (`windowBackground`, mode nuit) ?
++- La clé `fullscreen: true` sous `android_12` (préexistante, non touchée) : est-elle lue à cet endroit par le package ? Sinon c'est du mort préexistant à signaler, pas à corriger ici.
++- `LaunchScreen.storyboard` : `LaunchImage` passe de 1024 à 768 (taille de l'image 4x) — cohérent avec le rendu iOS (192 pt) ?
++
++## Questions précises
++1. **Deux plateformes** (règle 8) : icône Android (legacy + adaptive) et iOS, splash Android < 12, Android 12+ et iOS — chaque cible pointe-t-elle sur le bon visuel et la bonne couleur `#2B3848` ? Reste-t-il une trace de `#1a2744` côté icône/splash ?
++2. **Alpha / zones sûres** : icône iOS sans canal alpha (App Store) ? Foreground adaptive dans le cercle de 66 dp sur 108 ? Image Android 12 dans le cercle de 768 sur 1152 ? Le calcul d'échelle dans `render_logo.py` (`place`, `radius`) est-il juste ?
++3. **Couleurs du splash** : fond pré-12 / iOS (`color`) et 12+ (`android_12.color`) identiques ; pas de fond d'icône Android 12 → le visuel 1152 « sans fond » est-il le bon choix ?
++4. **Usages des couleurs d'équipe** : `team3`/`team4` utilisés dans `history_screen.dart` (palette) et `transition_screen.dart:501` (team3 à 14 % d'alpha) — rendu acceptable avec les nouvelles teintes ? Un usage de `AppColors.warning` qui voulait dire « équipe 4 », ou une valeur codée en dur `0xFFA78BFA` / `0xFFFBBF24` qui signifie une équipe, a-t-il été oublié ?
++5. **Résidus** : référence restante à `icone_guess_it_all.png`, à `#1a2744` (hors `docs/privacy-policy.html`, qui est la charte de la page web et volontairement non touchée) ou aux anciennes couleurs d'équipe ?
++6. **Script** : fidélité au SVG (sens de l'arc, rotation du « ? » — SVG `rotate(-6)` = anti-horaire à l'écran = PIL `rotate(+6)`), lisibilité, sur-dimensionnement.
++
++## Format attendu
++Findings classés BLOCKER / MAJOR / MINOR / NIT, chacun avec `fichier:ligne`, scénario, correction proposée. Terminer par un verdict READY / NOT READY.
++
++## Fichiers binaires (PNG) modifiés, non inclus dans le diff
++- `android/app/src/main/res/drawable-hdpi/android12splash.png`
++- `android/app/src/main/res/drawable-hdpi/ic_launcher_foreground.png`
++- `android/app/src/main/res/drawable-hdpi/splash.png`
++- `android/app/src/main/res/drawable-mdpi/android12splash.png`
++- `android/app/src/main/res/drawable-mdpi/ic_launcher_foreground.png`
++- `android/app/src/main/res/drawable-mdpi/splash.png`
++- `android/app/src/main/res/drawable-night-hdpi/android12splash.png`
++- `android/app/src/main/res/drawable-night-mdpi/android12splash.png`
++- `android/app/src/main/res/drawable-night-xhdpi/android12splash.png`
++- `android/app/src/main/res/drawable-night-xxhdpi/android12splash.png`
++- `android/app/src/main/res/drawable-night-xxxhdpi/android12splash.png`
++- `android/app/src/main/res/drawable-v21/background.png`
++- `android/app/src/main/res/drawable-xhdpi/android12splash.png`
++- `android/app/src/main/res/drawable-xhdpi/ic_launcher_foreground.png`
++- `android/app/src/main/res/drawable-xhdpi/splash.png`
++- `android/app/src/main/res/drawable-xxhdpi/android12splash.png`
++- `android/app/src/main/res/drawable-xxhdpi/ic_launcher_foreground.png`
++- `android/app/src/main/res/drawable-xxhdpi/splash.png`
++- `android/app/src/main/res/drawable-xxxhdpi/android12splash.png`
++- `android/app/src/main/res/drawable-xxxhdpi/ic_launcher_foreground.png`
++- `android/app/src/main/res/drawable-xxxhdpi/splash.png`
++- `android/app/src/main/res/drawable/background.png`
++- `android/app/src/main/res/mipmap-hdpi/ic_launcher.png`
++- `android/app/src/main/res/mipmap-mdpi/ic_launcher.png`
++- `android/app/src/main/res/mipmap-xhdpi/ic_launcher.png`
++- `android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png`
++- `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-50x50@1x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-50x50@2x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-57x57@1x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-57x57@2x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-72x72@1x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-72x72@2x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png`
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png`
++- `ios/Runner/Assets.xcassets/LaunchBackground.imageset/background.png`
++- `ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage.png`
++- `ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@2x.png`
++- `ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@3x.png`
++- `visuals/icone_guess_it_all.png`
++- `visuals/logo_bulle_chrono.png`
++- `visuals/logo_bulle_chrono_android12.png`
++- `visuals/logo_bulle_chrono_foreground.png`
++- `visuals/logo_bulle_chrono_splash.png`
+diff --git a/_bmad-output/reviews/identite/identite-prompt-r2.md b/_bmad-output/reviews/identite/identite-prompt-r2.md
+new file mode 100644
+index 0000000..3e4820d
+--- /dev/null
++++ b/_bmad-output/reviews/identite/identite-prompt-r2.md
+@@ -0,0 +1,97 @@
++# Prompt de revue — identité visuelle r2 (tier STANDARD)
++
++Lire `identite-patch-r2.diff` (diff complet sur la merge-base avec `origin/main`, **PNG exclus**, listés en bas ; les `.diff` de revue sont aussi exclus). Ne pas lancer `git diff`. Revue en lecture seule ; la lane recopiera le rapport dans `identite-review-r2.md`. Les PNG et le code peuvent être ouverts dans le worktree `/home/florent19961/guess-it-all-identite` (branche `feat/identite-visuelle`).
++
++Branche rebasée sur `origin/main` après #26 et #27 (#27 a remplacé `shooting_stars.dart` : le fond de l'accueil est maintenant un dégradé `#22304A` → `#2B3848` ; l'intro reste un fond plat `#2B3848`, identique au splash, puis fond vers l'accueil).
++
++Contexte r1 : objectif, décisions et questions dans `identite-prompt-r1.md` ; findings dans `identite-review-r1.md` ; corrections dans `identite-fix-r1.md`.
++
++## 1. Corrections r1 à vérifier
++- **MAJOR — double inset du foreground adaptive** : `adaptive_icon_foreground_inset: 0` (`pubspec.yaml`), `mipmap-anydpi-v26/ic_launcher.xml` → `android:inset="0%"`. Diamètre du dessin mesuré dans les foreground générés : 63,8 dp sur 108 (cercle sûr = 66 dp).
++- **MINOR — `fullscreen: true` sous `android_12`** : retiré ; la régénération n'a modifié aucune ressource (clé bien ignorée).
++
++## 2. Nouveau : splash natif sans logo
++Décision Florent 2026-11-04 : l'intro A dessine le logo à partir de rien, donc le splash natif = fond `#2B3848` seul sur iOS, Android < 12 et Android 12+.
++- Image `visuals/splash_vide.png` (4×4 transparente) pour `image` **et** `android_12.image`, plutôt qu'aucune image : sans image, `flutter_native_splash` 2.4.4 écrit pour iOS un `LaunchImage` 1×1 **RGB noir opaque** (`lib/ios.dart:72` du package, `Image(width: 1, height: 1)`) centré dans le storyboard → un point noir ; et Android 12+ retomberait sur l'icône du launcher. Vérifier que toutes les ressources générées (`splash.png`, `android12splash.png` dont `drawable-night-*`, `LaunchImage*.png`) sont transparentes et que `launch_background.xml` / `LaunchScreen.storyboard` n'affichent rien d'autre que le fond.
++- `visuals/logo_bulle_chrono_splash.png` et `logo_bulle_chrono_android12.png` sont retirés (plus référencés) ; `render_logo.py` écrit `splash_vide.png` à leur place.
++
++## 3. Nouveau : animation de démarrage « A · Le chrono se lance »
++`lib/widgets/effects/startup_intro.dart`, branchée par `builder:` dans `lib/app.dart`. Référence HTML : timeline en ms — piste 0–300 (fondu), arc 0–560 (tracé horaire depuis le haut), point 0–120, bulle pop 300–720 (`Cubic(.34,1.56,.64,1)`), « ? » -24°→+12°→0° 560–940, logo décalé de la moitié de la hauteur du titre puis remonté 820–1120, lettres 860 + 35·i ms, 260 ms chacune (translateY 18 → 0 + fondu), courbe par défaut `Cubic(.2,.8,.2,1)`. Fin du jeu à 1450 ms, puis fondu de sortie 250 ms → ~1,7 s.
++
++Choix d'implémentation à challenger :
++1. **Démarrage à froid seulement** : l'état de `StartupIntro` vit dans `MaterialApp.builder`, au-dessus du Navigator ; `GuessItAllApp` se reconstruit à chaque `notifyListeners` mais la position/type de l'élément ne change pas, donc l'état et le flag `_done` survivent. Retour d'arrière-plan : même process, pas de rejeu. Cas limite : Android recrée l'activité avec un nouveau moteur (option dev « Ne pas conserver les activités », process tué) → l'intro rejoue, ce qui est un vrai redémarrage. Acceptable ?
++2. **Structure stable** : `Stack([child, if (!_done) overlay])` — retirer le dernier enfant ne recrée pas l'app (Navigator, état de l'accueil). Vérifier.
++3. **Tap = passer** : `GestureDetector(opaque)` plein écran → arrêt de `_play` + fondu de sortie 250 ms. Les taps pendant l'intro ne traversent pas vers l'accueil.
++4. **Animations réduites** : `MediaQuery.disableAnimations` lu une fois dans `didChangeDependencies` → logo et titre à l'état final, fondu d'entrée 300 ms, sortie à 900 ms + 250 ms. Les deux contrôleurs sont en `AnimationBehavior.preserve` : sinon Flutter réduit leurs durées à 5 % dans ce mode (vérifié par un test jetable : sans `preserve`, l'intro réduite durait ~2 frames).
++5. **Titre** : `'Guess It All'` en `AppTextStyles.title(fontSize: 72)` — même style **et même taille** que `home_screen.dart` (retour Florent 2026-11-04), réduit seulement par le `FittedBox` sur écran étroit, mais une `Row` de `Text` par lettre (nécessaire pour l'animation par lettre) : perte de crénage entre lettres. `FittedBox(scaleDown)` sur `width - 48`. Le `Material` autour de la scène évite le soulignement jaune du `DefaultTextStyle` de `WidgetsApp` (on est au-dessus du Navigator). Acceptable ?
++6. **Logo peint** : `_StartupLogoPainter`, constantes recopiées de `render_logo.py` (renvoi documenté des deux côtés, pas de codegen). Pivot du pop = centre de la boîte bulle + queue (543, 516). Le « ? » : inclinaison fixe -6° autour de (512, 600) comme l'icône (la maquette HTML tournait autour de (512, 485) — choix : coller à l'icône), puis balancier autour du centre de la boîte du glyphe. `TextPainter` recréé à chaque frame (≈ 1,5 s une seule fois) : acceptable ?
++7. **Démarrage non retardé** : `main.dart` intact ; les tâches de démarrage restent avant `runApp`, l'intro joue après. Le splash natif couvre l'attente des tâches, puis l'intro.
++8. **Jointure splash → intro (Android 12+ surtout)** : le premier frame Flutter est un fond `#2B3848` vide (piste à opacité 0, arc non dessiné tant que sa progression vaut 0, point à opacité 0). Le splash Android 12 sans icône doit donc s'enchaîner sans saut. Y a-t-il un frame où l'app (accueil) apparaît avant l'overlay ?
++9. **Dialogue `UpgradeAlert`** : il s'ouvre dans le Navigator, donc sous l'intro ; il apparaît après le fondu (≤ 1,7 s). OK ?
++
++## Questions précises
++- **Tests qui pendent** : aucun test existant ne monte `GuessItAllApp` (grep `GuessItAllApp` dans `test/` : vide), donc aucun `pumpAndSettle` ne voit l'intro ; et l'intro se termine seule (pas d'animation en boucle) : un futur test qui monterait l'app avec `pumpAndSettle` finirait en ~1,7 s simulées. Confirmer. Aucun test ajouté (UI, hors zones risquées) ; comportement vérifié par des tests jetables non commités (tap → disparition en ≤ 400 ms ; mode réduit ≈ 1,15 s ; changement d'écran ne rejoue pas) et par des captures de frames.
++- **Deux plateformes** : rien de spécifique Android/iOS dans l'intro ; `disableAnimations` = « Supprimer les animations » Android / « Réduire les animations » iOS. Divergence possible ?
++- **Résidus** : référence restante aux visuels supprimés, à `#1a2744`, à une image de splash avec logo ?
++- `scripts/run-full-suite.sh` vert (226 tests).
++
++## Format attendu
++Findings classés BLOCKER / MAJOR / MINOR / NIT, chacun avec `fichier:ligne`, scénario, correction proposée. Verdict READY / NOT READY.
++
++## Fichiers binaires (PNG) ajoutés / modifiés / supprimés, non inclus dans le diff
++- `android/app/src/main/res/drawable-hdpi/android12splash.png` (M)
++- `android/app/src/main/res/drawable-hdpi/ic_launcher_foreground.png` (M)
++- `android/app/src/main/res/drawable-hdpi/splash.png` (M)
++- `android/app/src/main/res/drawable-mdpi/android12splash.png` (M)
++- `android/app/src/main/res/drawable-mdpi/ic_launcher_foreground.png` (M)
++- `android/app/src/main/res/drawable-mdpi/splash.png` (M)
++- `android/app/src/main/res/drawable-night-hdpi/android12splash.png` (M)
++- `android/app/src/main/res/drawable-night-mdpi/android12splash.png` (M)
++- `android/app/src/main/res/drawable-night-xhdpi/android12splash.png` (M)
++- `android/app/src/main/res/drawable-night-xxhdpi/android12splash.png` (M)
++- `android/app/src/main/res/drawable-night-xxxhdpi/android12splash.png` (M)
++- `android/app/src/main/res/drawable-v21/background.png` (M)
++- `android/app/src/main/res/drawable-xhdpi/android12splash.png` (M)
++- `android/app/src/main/res/drawable-xhdpi/ic_launcher_foreground.png` (M)
++- `android/app/src/main/res/drawable-xhdpi/splash.png` (M)
++- `android/app/src/main/res/drawable-xxhdpi/android12splash.png` (M)
++- `android/app/src/main/res/drawable-xxhdpi/ic_launcher_foreground.png` (M)
++- `android/app/src/main/res/drawable-xxhdpi/splash.png` (M)
++- `android/app/src/main/res/drawable-xxxhdpi/android12splash.png` (M)
++- `android/app/src/main/res/drawable-xxxhdpi/ic_launcher_foreground.png` (M)
++- `android/app/src/main/res/drawable-xxxhdpi/splash.png` (M)
++- `android/app/src/main/res/drawable/background.png` (M)
++- `android/app/src/main/res/mipmap-hdpi/ic_launcher.png` (M)
++- `android/app/src/main/res/mipmap-mdpi/ic_launcher.png` (M)
++- `android/app/src/main/res/mipmap-xhdpi/ic_launcher.png` (M)
++- `android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png` (M)
++- `android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-50x50@1x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-50x50@2x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-57x57@1x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-57x57@2x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-72x72@1x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-72x72@2x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png` (M)
++- `ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png` (M)
++- `ios/Runner/Assets.xcassets/LaunchBackground.imageset/background.png` (M)
++- `ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage.png` (M)
++- `ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@2x.png` (M)
++- `ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@3x.png` (M)
++- `visuals/icone_guess_it_all.png` (D)
++- `visuals/logo_bulle_chrono.png` (A)
++- `visuals/logo_bulle_chrono_foreground.png` (A)
++- `visuals/splash_vide.png` (A)
+diff --git a/_bmad-output/reviews/identite/identite-review-r1.md b/_bmad-output/reviews/identite/identite-review-r1.md
+new file mode 100644
+index 0000000..8d1dff2
+--- /dev/null
++++ b/_bmad-output/reviews/identite/identite-review-r1.md
+@@ -0,0 +1,11 @@
++# Revue Codex — identité visuelle r1
++
++Verdict : **NOT READY** (1 MAJOR, 1 MINOR). Rapport recopié par la lane : Codex ne peut pas écrire de fichier.
++
++## MAJOR — icône adaptive Android rembourrée deux fois
++`scripts/render_logo.py` cadre déjà le dessin dans la zone sûre de 66 dp, et `flutter_launcher_icons` ajoute son inset par défaut de 16 % (`mipmap-anydpi-v26/ic_launcher.xml`) : le dessin ne fait plus qu'environ 43 dp sur 108.
++Correction proposée : `adaptive_icon_foreground_inset: 0` dans la config `flutter_launcher_icons` (vérifier que la clé existe dans la version installée ; sinon agrandir seulement la source du foreground), régénérer, vérifier le ratio dans `ic_launcher.xml` et les PNG de foreground générés.
++
++## MINOR — `fullscreen: true` sous `android_12` ignoré
++`flutter_native_splash` ne lit pas `fullscreen` dans la section `android_12` : clé morte et trompeuse.
++Correction proposée : la retirer (garder le comportement actuel, non plein écran).
+diff --git a/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml b/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+index c79c58a..c0be12a 100644
+--- a/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
++++ b/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+@@ -4,6 +4,6 @@
+   <foreground>
+       <inset
+           android:drawable="@drawable/ic_launcher_foreground"
+-          android:inset="16%" />
++          android:inset="0%" />
+   </foreground>
+ </adaptive-icon>
+diff --git a/android/app/src/main/res/values-night-v31/styles.xml b/android/app/src/main/res/values-night-v31/styles.xml
+index 7e4dafe..016458d 100644
+--- a/android/app/src/main/res/values-night-v31/styles.xml
++++ b/android/app/src/main/res/values-night-v31/styles.xml
+@@ -7,6 +7,8 @@
+         <item name="android:windowFullscreen">false</item>
+         <item name="android:windowDrawsSystemBarBackgrounds">false</item>
+         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
++        <item name="android:windowSplashScreenBackground">#2B3848</item>
++        <item name="android:windowSplashScreenAnimatedIcon">@drawable/android12splash</item>
+     </style>
+     <!-- Theme applied to the Android Window as soon as the process has started.
+          This theme determines the color of the Android Window while your
+diff --git a/android/app/src/main/res/values-v31/styles.xml b/android/app/src/main/res/values-v31/styles.xml
+index af7e09a..809a300 100644
+--- a/android/app/src/main/res/values-v31/styles.xml
++++ b/android/app/src/main/res/values-v31/styles.xml
+@@ -7,6 +7,8 @@
+         <item name="android:windowFullscreen">false</item>
+         <item name="android:windowDrawsSystemBarBackgrounds">false</item>
+         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
++        <item name="android:windowSplashScreenBackground">#2B3848</item>
++        <item name="android:windowSplashScreenAnimatedIcon">@drawable/android12splash</item>
+     </style>
+     <!-- Theme applied to the Android Window as soon as the process has started.
+          This theme determines the color of the Android Window while your
+diff --git a/android/app/src/main/res/values/colors.xml b/android/app/src/main/res/values/colors.xml
+index dc3f72e..7601e61 100644
+--- a/android/app/src/main/res/values/colors.xml
++++ b/android/app/src/main/res/values/colors.xml
+@@ -1,4 +1,4 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <resources>
+-    <color name="ic_launcher_background">#1a2744</color>
++    <color name="ic_launcher_background">#2B3848</color>
+ </resources>
+\ No newline at end of file
+diff --git a/ios/Runner/Base.lproj/LaunchScreen.storyboard b/ios/Runner/Base.lproj/LaunchScreen.storyboard
+index 8d2b7d5..c0a4826 100644
+--- a/ios/Runner/Base.lproj/LaunchScreen.storyboard
++++ b/ios/Runner/Base.lproj/LaunchScreen.storyboard
+@@ -38,7 +38,7 @@
+         </scene>
+     </scenes>
+     <resources>
+-        <image name="LaunchImage" width="1024" height="1024"/>
++        <image name="LaunchImage" width="4" height="4"/>
+         <image name="LaunchBackground" width="1" height="1"/>
+     </resources>
+ </document>
+diff --git a/lib/CLAUDE.md b/lib/CLAUDE.md
+index 1dbca2b..6832c22 100644
+--- a/lib/CLAUDE.md
++++ b/lib/CLAUDE.md
+@@ -7,7 +7,7 @@ Point d'entree de l'application Flutter "Guess It All".
+ | Fichier | Role |
+ |---------|------|
+ | `main.dart` | Initialise Firebase, services singletons (WordLoader, WordHistory, Connectivity, FirebaseSync, Analytics), wrappe l'app avec `GameProvider` |
+-| `app.dart` | Widget racine `GuessItAllApp` : MaterialApp + `UpgradeAlert` (mise a jour forcee) + routing par `GameProvider.game.currentScreen` |
++| `app.dart` | Widget racine `GuessItAllApp` : MaterialApp + `StartupIntro` (animation de demarrage, `builder`) + `UpgradeAlert` (mise a jour forcee) + routing par `GameProvider.game.currentScreen` |
+ | `firebase_options.dart` | Config Firebase auto-generee par FlutterFire CLI (ne pas modifier manuellement) |
+ 
+ ## Architecture
+diff --git a/lib/app.dart b/lib/app.dart
+index 511caf2..99fd467 100644
+--- a/lib/app.dart
++++ b/lib/app.dart
+@@ -25,6 +25,7 @@ import 'screens/fiesta_choice_screen.dart';
+ import 'screens/fiesta_auto_screen.dart';
+ import 'screens/fiesta_recap_screen.dart';
+ import 'screens/fiesta_ensembles_screen.dart';
++import 'widgets/effects/startup_intro.dart';
+ 
+ class GuessItAllApp extends StatelessWidget {
+   const GuessItAllApp({super.key});
+@@ -46,6 +47,9 @@ class GuessItAllApp extends StatelessWidget {
+           title: 'Guess It All',
+           debugShowCheckedModeBanner: false,
+           theme: AppTheme.darkTheme,
++          // Au-dessus du Navigator : l'intro survit aux changements d'écran,
++          // donc ne joue qu'au démarrage à froid.
++          builder: (context, child) => StartupIntro(child: child!),
+           home: UpgradeAlert(
+             upgrader: _upgrader,
+             dialogStyle: !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+diff --git a/lib/theme/app_theme.dart b/lib/theme/app_theme.dart
+index d8e299f..47a46a9 100644
+--- a/lib/theme/app_theme.dart
++++ b/lib/theme/app_theme.dart
+@@ -27,8 +27,8 @@ class AppColors {
+   // Team colors
+   static const Color team1 = Color(0xFFF19B9B);
+   static const Color team2 = Color(0xFF7DD3C0);
+-  static const Color team3 = Color(0xFFA78BFA);
+-  static const Color team4 = Color(0xFFFBBF24);
++  static const Color team3 = Color(0xFFB6A6F5);
++  static const Color team4 = Color(0xFFF2D47C);
+ 
+   static Color getTeamColor(int teamIndex) {
+     switch (teamIndex) {
+diff --git a/lib/widgets/effects/CLAUDE.md b/lib/widgets/effects/CLAUDE.md
+index da730ab..26ccbca 100644
+--- a/lib/widgets/effects/CLAUDE.md
++++ b/lib/widgets/effects/CLAUDE.md
+@@ -2,7 +2,11 @@
+ 
+ Effets visuels et animations.
+ 
+-## Fichier unique : `shooting_stars.dart`
++## `startup_intro.dart`
++
++`StartupIntro` : animation de démarrage « Le chrono se lance » (logo dessiné par `CustomPainter`, même géométrie que `scripts/render_logo.py`, puis titre lettre par lettre). Posée dans `MaterialApp.builder` (`app.dart`) : joue une seule fois par process (démarrage à froid), un tap la saute, fondu simple si `MediaQuery.disableAnimations`. Le splash natif est un fond `#2B3848` seul.
++
++## `shooting_stars.dart`
+ 
+ `ShootingStars` : fond animé « ciel étoilé calme » via `CustomPainter` — étoiles qui scintillent sur 3 profondeurs en dérivant lentement, et une étoile filante toutes les 4 à 7 s. Un seul `Ticker` alimente un `ValueNotifier` : seul le painter se redessine (dans un `RepaintBoundary`), pas l'arbre.
+ 
+diff --git a/lib/widgets/effects/startup_intro.dart b/lib/widgets/effects/startup_intro.dart
+new file mode 100644
+index 0000000..9a125c0
+--- /dev/null
++++ b/lib/widgets/effects/startup_intro.dart
+@@ -0,0 +1,342 @@
++import 'dart:math' as math;
++
++import 'package:flutter/material.dart';
++
++import '../../theme/app_theme.dart';
++
++/// Animation de démarrage « Le chrono se lance » (choix Florent 2026-11-04).
++///
++/// Posée au-dessus de toute l'app (`MaterialApp.builder`) : son état vit aussi
++/// longtemps que le process, elle ne joue donc qu'au démarrage à froid — ni au
++/// retour d'arrière-plan, ni en revenant sur l'accueil. Un tap la saute. Si le
++/// système demande moins d'animations, logo et titre apparaissent en fondu.
++/// Le splash natif est un simple fond #2B3848 : le logo part de rien.
++class StartupIntro extends StatefulWidget {
++  final Widget child;
++
++  const StartupIntro({required this.child, super.key});
++
++  @override
++  State<StartupIntro> createState() => _StartupIntroState();
++}
++
++class _StartupIntroState extends State<StartupIntro>
++    with TickerProviderStateMixin {
++  static const _background = Color(0xFF2B3848);
++  static const _playMs = 1450;
++  static const _reducedMs = 900;
++
++  late final AnimationController _play;
++  // `preserve` : en « animations réduites », Flutter raccourcirait sinon les
++  // durées à 5 % — le fondu réduit est géré ici, il doit garder sa durée.
++  late final AnimationController _exit = AnimationController(
++    vsync: this,
++    duration: const Duration(milliseconds: 250),
++    animationBehavior: AnimationBehavior.preserve,
++  );
++  bool _started = false;
++  bool _reduced = false;
++  bool _done = false;
++
++  @override
++  void initState() {
++    super.initState();
++    _play = AnimationController(
++      vsync: this,
++      animationBehavior: AnimationBehavior.preserve,
++    );
++    _exit.addStatusListener((status) {
++      if (status == AnimationStatus.completed) setState(() => _done = true);
++    });
++  }
++
++  @override
++  void didChangeDependencies() {
++    super.didChangeDependencies();
++    if (_started) return;
++    _started = true;
++    _reduced = MediaQuery.of(context).disableAnimations;
++    _play.duration = Duration(milliseconds: _reduced ? _reducedMs : _playMs);
++    _play.forward().whenComplete(_leave);
++  }
++
++  void _leave() {
++    if (!mounted || _exit.isAnimating || _done) return;
++    _play.stop();
++    _exit.forward();
++  }
++
++  @override
++  void dispose() {
++    _play.dispose();
++    _exit.dispose();
++    super.dispose();
++  }
++
++  @override
++  Widget build(BuildContext context) {
++    // Structure stable : l'app reste le premier enfant, seule l'intro disparaît.
++    return Stack(
++      children: [
++        widget.child,
++        if (!_done)
++          Positioned.fill(
++            child: GestureDetector(
++              behavior: HitTestBehavior.opaque,
++              onTap: _leave,
++              child: AnimatedBuilder(
++                animation: Listenable.merge([_play, _exit]),
++                builder: (context, _) => Opacity(
++                  opacity: 1 - _exit.value,
++                  // Material : sans lui, le style de texte par défaut de
++                  // WidgetsApp (au-dessus du Navigator) souligne le titre.
++                  child: Material(
++                    color: _background,
++                    child: _buildScene(context),
++                  ),
++                ),
++              ),
++            ),
++          ),
++      ],
++    );
++  }
++
++  Widget _buildScene(BuildContext context) {
++    final width = MediaQuery.sizeOf(context).width;
++    final logoSize = width * 0.52;
++    // Même taille que le titre de l'accueil (home_screen.dart) ; le FittedBox
++    // plus bas le réduit seulement si l'écran est trop étroit.
++    const fontSize = 72.0;
++    final titleHeight = fontSize * 1.3;
++    final ms = _play.value * _play.duration!.inMilliseconds;
++
++    final double shift;
++    final _LogoFrame frame;
++    final double fade;
++    if (_reduced) {
++      shift = 0;
++      frame = const _LogoFrame.end();
++      fade = Curves.easeOut.transform((ms / 300).clamp(0.0, 1.0));
++    } else {
++      shift = titleHeight / 2 * (1 - _t(ms, 820, 300));
++      frame = _LogoFrame(
++        track: _t(ms, 0, 300),
++        arc: _t(ms, 0, 560),
++        dot: _t(ms, 0, 120),
++        pop: _t(ms, 300, 420, _back),
++        swing: _t(ms, 560, 380),
++      );
++      fade = 1;
++    }
++
++    var letterIndex = 0;
++    final letters = <Widget>[];
++    for (final char in 'Guess It All'.split('')) {
++      final style = AppTextStyles.title(fontSize: fontSize);
++      if (char == ' ') {
++        letters.add(Text(char, style: style));
++        continue;
++      }
++      final t = _reduced ? 1.0 : _t(ms, 860 + 35.0 * letterIndex, 260);
++      letterIndex++;
++      letters.add(Opacity(
++        opacity: t,
++        child: Transform.translate(
++          offset: Offset(0, 18 * (1 - t)),
++          child: Text(char, style: style),
++        ),
++      ));
++    }
++
++    return Center(
++      child: Opacity(
++        opacity: fade,
++        child: Column(
++          mainAxisSize: MainAxisSize.min,
++          children: [
++            Transform.translate(
++              offset: Offset(0, shift),
++              child: CustomPaint(
++                size: Size.square(logoSize),
++                painter: _StartupLogoPainter(frame),
++              ),
++            ),
++            SizedBox(
++              height: titleHeight,
++              width: width - 48,
++              child: FittedBox(
++                fit: BoxFit.scaleDown,
++                child: Row(mainAxisSize: MainAxisSize.min, children: letters),
++              ),
++            ),
++          ],
++        ),
++      ),
++    );
++  }
++
++  static const _out = Cubic(0.2, 0.8, 0.2, 1);
++  static const _back = Cubic(0.34, 1.56, 0.64, 1);
++
++  /// Progression 0→1 d'un segment [start, start + duration] (ms), courbée.
++  static double _t(double ms, double start, double duration,
++      [Curve curve = _out]) {
++    final raw = ((ms - start) / duration).clamp(0.0, 1.0);
++    return curve.transform(raw);
++  }
++}
++
++/// État de chaque élément du logo, 0 = absent, 1 = en place.
++class _LogoFrame {
++  final double track, arc, dot, pop, swing;
++
++  const _LogoFrame({
++    required this.track,
++    required this.arc,
++    required this.dot,
++    required this.pop,
++    required this.swing,
++  });
++
++  const _LogoFrame.end()
++      : track = 1,
++        arc = 1,
++        dot = 1,
++        pop = 1,
++        swing = 1;
++}
++
++/// Logo « Bulle chrono », mêmes constantes que `scripts/render_logo.py`
++/// (`artwork()`, canevas 1024) : toute modification se reporte à la main des
++/// deux côtés.
++class _StartupLogoPainter extends CustomPainter {
++  final _LogoFrame frame;
++
++  _StartupLogoPainter(this.frame);
++
++  static const _teal = AppColors.secondaryCyan; // #7DD3C0
++  static const _pink = AppColors.primaryPink; // #F19B9B
++  static const _center = Offset(512, 512);
++  static const _ringRadius = 345.0;
++  static const _ringWidth = 58.0;
++  static const _dot = Offset(512, 167);
++  static const _dotRadius = 44.0;
++  static const _bubble = Offset(512, 490);
++  static const _bubbleRadius = 215.0;
++  static const _tail = [Offset(475, 632), Offset(368, 748), Offset(377, 615)];
++  static const _tailStroke = 18.0;
++  // Centre de la boîte englobante bulle + queue : pivot du « pop ».
++  static const _popPivot = Offset(543, 516);
++  static const _questionBaseline = Offset(512, 600);
++  static const _questionSize = 300.0;
++  static const _questionTilt = -6 * math.pi / 180;
++
++  @override
++  void paint(Canvas canvas, Size size) {
++    canvas.save();
++    canvas.scale(size.width / 1024);
++
++    final ring = Rect.fromCircle(center: _center, radius: _ringRadius);
++    if (frame.track > 0) {
++      canvas.drawCircle(
++        _center,
++        _ringRadius,
++        Paint()
++          ..style = PaintingStyle.stroke
++          ..strokeWidth = _ringWidth
++          ..color = _teal.withValues(alpha: 0.22 * frame.track),
++      );
++    }
++    if (frame.arc > 0) {
++      // Du haut, sens horaire, 270° : le quart haut-gauche reste vide.
++      canvas.drawArc(
++        ring,
++        -math.pi / 2,
++        1.5 * math.pi * frame.arc,
++        false,
++        Paint()
++          ..style = PaintingStyle.stroke
++          ..strokeWidth = _ringWidth
++          ..strokeCap = StrokeCap.round
++          ..color = _teal,
++      );
++    }
++    if (frame.dot > 0) {
++      canvas.drawCircle(_dot, _dotRadius,
++          Paint()..color = _teal.withValues(alpha: frame.dot));
++    }
++
++    if (frame.pop > 0) {
++      canvas.save();
++      canvas.translate(_popPivot.dx, _popPivot.dy);
++      canvas.scale(frame.pop);
++      canvas.translate(-_popPivot.dx, -_popPivot.dy);
++      _paintBubble(canvas);
++      _paintQuestion(canvas);
++      canvas.restore();
++    }
++    canvas.restore();
++  }
++
++  void _paintBubble(Canvas canvas) {
++    final pink = Paint()..color = _pink;
++    canvas.drawCircle(_bubble, _bubbleRadius, pink);
++    final tail = Path()..addPolygon(_tail, true);
++    canvas.drawPath(tail, pink);
++    canvas.drawPath(
++      tail,
++      Paint()
++        ..color = _pink
++        ..style = PaintingStyle.stroke
++        ..strokeWidth = _tailStroke
++        ..strokeJoin = StrokeJoin.round,
++    );
++  }
++
++  void _paintQuestion(Canvas canvas) {
++    final text = TextPainter(
++      text: const TextSpan(
++        text: '?',
++        style: TextStyle(
++          fontFamily: 'Bangers',
++          fontSize: _questionSize,
++          color: Colors.white,
++          height: 1,
++        ),
++      ),
++      textDirection: TextDirection.ltr,
++    )..layout();
++    final baseline =
++        text.computeDistanceToActualBaseline(TextBaseline.alphabetic);
++    final topLeft = Offset(
++      _questionBaseline.dx - text.width / 2,
++      _questionBaseline.dy - baseline,
++    );
++
++    // Balancier -24° → +12° → 0° autour du centre du glyphe.
++    final s = frame.swing;
++    final swingDeg = s < 0.5 ? -24 + 72 * s : 12 - 24 * (s - 0.5);
++    final glyphCenter = topLeft + Offset(text.width / 2, text.height / 2);
++
++    canvas.save();
++    // Inclinaison fixe du logo : -6° autour du point de base.
++    canvas.translate(_questionBaseline.dx, _questionBaseline.dy);
++    canvas.rotate(_questionTilt);
++    canvas.translate(-_questionBaseline.dx, -_questionBaseline.dy);
++    canvas.translate(glyphCenter.dx, glyphCenter.dy);
++    canvas.rotate(swingDeg * math.pi / 180);
++    canvas.translate(-glyphCenter.dx, -glyphCenter.dy);
++    text.paint(canvas, topLeft);
++    canvas.restore();
++    text.dispose();
++  }
++
++  @override
++  bool shouldRepaint(_StartupLogoPainter old) =>
++      old.frame.track != frame.track ||
++      old.frame.arc != frame.arc ||
++      old.frame.dot != frame.dot ||
++      old.frame.pop != frame.pop ||
++      old.frame.swing != frame.swing;
++}
+diff --git a/pubspec.yaml b/pubspec.yaml
+index 52ff6b3..4cf1138 100644
+--- a/pubspec.yaml
++++ b/pubspec.yaml
+@@ -39,19 +39,22 @@ dev_dependencies:
+ flutter_launcher_icons:
+   android: true
+   ios: true
+-  image_path: "visuals/icone_guess_it_all.png"
+-  adaptive_icon_background: "#1a2744"
+-  adaptive_icon_foreground: "visuals/icone_guess_it_all.png"
++  image_path: "visuals/logo_bulle_chrono.png"
++  adaptive_icon_background: "#2B3848"
++  adaptive_icon_foreground: "visuals/logo_bulle_chrono_foreground.png"
++  # Le foreground est déjà cadré dans la zone sûre 66/108 par scripts/render_logo.py.
++  adaptive_icon_foreground_inset: 0
+ 
++# Splash = fond seul : l'animation de démarrage dessine le logo à partir de rien.
++# (image vide plutôt qu'absente : sans image, le package met un pixel noir sur iOS).
+ flutter_native_splash:
+-  color: "#1a2744"
+-  image: visuals/icone_guess_it_all.png
++  color: "#2B3848"
++  image: visuals/splash_vide.png
+   android: true
+   ios: true
+   android_12:
+-    color: "#1a2744"
+-    image: visuals/icone_guess_it_all.png
+-    fullscreen: true
++    color: "#2B3848"
++    image: visuals/splash_vide.png
+ 
+ flutter:
+   uses-material-design: true
+diff --git a/scripts/render_logo.py b/scripts/render_logo.py
+new file mode 100644
+index 0000000..b65be11
+--- /dev/null
++++ b/scripts/render_logo.py
+@@ -0,0 +1,129 @@
++#!/usr/bin/env python3
++"""Génère le logo « Bulle chrono » et ses déclinaisons (icône, splash vide).
++
++Géométrie = le SVG validé par Florent le 2026-11-04 (canevas 1024×1024),
++rendue en 4× puis réduite en LANCZOS pour l'anticrénelage.
++
++Usage : python3 scripts/render_logo.py   (depuis la racine du repo)
++Sorties dans visuals/ :
++  logo_bulle_chrono.png             1024 opaque (icône iOS / launcher, sans alpha)
++  logo_bulle_chrono_foreground.png  1024 transparent, dans la zone sûre 66/108 (adaptive icon Android)
++  splash_vide.png                   4×4 entièrement transparent (splash natif : fond seul)
++
++Le splash natif est un simple fond #2B3848 sans logo : l'animation de démarrage
++(lib/widgets/effects/startup_intro.dart) dessine le logo à partir de rien. Sa
++géométrie (_StartupLogoPainter) reprend les constantes de artwork() ci-dessous :
++toute modification ici doit y être reportée à la main.
++"""
++
++import math
++from pathlib import Path
++
++from PIL import Image, ImageDraw, ImageFont
++
++ROOT = Path(__file__).resolve().parent.parent
++OUT = ROOT / "visuals"
++FONT = ROOT / "assets" / "fonts" / "Bangers-Regular.ttf"
++
++NAVY = (0x2B, 0x38, 0x48)
++TEAL = (0x7D, 0xD3, 0xC0)
++PINK = (0xF1, 0x9B, 0x9B)
++WHITE = (255, 255, 255)
++
++SS = 4  # suréchantillonnage
++N = 1024 * SS
++
++
++def p(v):
++    return v * SS
++
++
++def layer():
++    return Image.new("RGBA", (N, N), (0, 0, 0, 0))
++
++
++def circle(draw, cx, cy, r, fill):
++    draw.ellipse((p(cx - r), p(cy - r), p(cx + r), p(cy + r)), fill=fill)
++
++
++def artwork():
++    """Le logo sans fond, transparent, en 4096×4096."""
++    img = layer()
++    cx = cy = 512
++    r, w = 345, 58
++    box = (p(cx - r - w / 2), p(cy - r - w / 2), p(cx + r + w / 2), p(cy + r + w / 2))
++
++    # Piste de l'anneau : teal à 22 %.
++    track = layer()
++    ImageDraw.Draw(track).ellipse(box, outline=TEAL + (round(255 * 0.22),), width=p(w))
++    img.alpha_composite(track)
++
++    # Arc 270° horaire, du haut (512,167) jusqu'à la gauche (167,512), bouts ronds.
++    d = ImageDraw.Draw(img)
++    d.arc(box, start=-90, end=180, fill=TEAL + (255,), width=p(w))
++    circle(d, 512, 167, w / 2, TEAL)
++    circle(d, 167, 512, w / 2, TEAL)
++
++    # Point en haut.
++    circle(d, 512, 167, 44, TEAL)
++
++    # Bulle rose + queue (triangle avec contour arrondi de 18 px).
++    circle(d, 512, 490, 215, PINK)
++    tail = [(475, 632), (368, 748), (377, 615)]
++    pts = [(p(x), p(y)) for x, y in tail]
++    d.polygon(pts, fill=PINK)
++    d.line(pts + [pts[0]], fill=PINK, width=p(18), joint="curve")
++    for x, y in tail:
++        circle(d, x, y, 9, PINK)
++
++    # « ? » Bangers 300 px, centré sur x=512, ligne de base y=600, tourné de -6° autour de (512,600).
++    q = layer()
++    font = ImageFont.truetype(str(FONT), p(300))
++    ImageDraw.Draw(q).text((p(512), p(600)), "?", font=font, fill=WHITE + (255,), anchor="ms")
++    # SVG rotate(-6) = anti-horaire à l'écran ; PIL rotate(+angle) = anti-horaire.
++    q = q.rotate(6, resample=Image.BICUBIC, center=(p(512), p(600)))
++    img.alpha_composite(q)
++    return img
++
++
++def radius(img):
++    """Rayon (en unités du canevas 1024) du plus petit cercle centré contenant le dessin."""
++    small = img.getchannel("A").resize((1024, 1024), Image.BOX)
++    px = small.load()
++    rmax = 0.0
++    for y in range(1024):
++        for x in range(1024):
++            if px[x, y] > 8:
++                rmax = max(rmax, math.hypot(x + 0.5 - 512, y + 0.5 - 512))
++    return rmax
++
++
++def place(art, size, scale, bg=None):
++    """Pose `art` (canevas 1024 en 4x) réduit de `scale`, centré sur un canevas `size`."""
++    canvas = Image.new("RGBA", (size * SS, size * SS), (bg + (255,)) if bg else (0, 0, 0, 0))
++    side = round(N * scale)
++    a = art.resize((side, side), Image.LANCZOS)
++    off = (size * SS - side) // 2
++    canvas.alpha_composite(a, (off, off))
++    return canvas.resize((size, size), Image.LANCZOS)
++
++
++def main():
++    art = artwork()
++    r = radius(art)
++    print(f"rayon du dessin : {r:.1f} px (canevas 1024)")
++
++    # Icône iOS / launcher : opaque, sans canal alpha (exigence App Store).
++    place(art, 1024, 1.0, NAVY).convert("RGB").save(OUT / "logo_bulle_chrono.png")
++
++    # Adaptive icon Android : canevas 108 dp, zone sûre = cercle de 66 dp.
++    safe = 1024 * 66 / 108 / 2
++    place(art, 1024, 0.97 * safe / r).save(OUT / "logo_bulle_chrono_foreground.png")
++
++    # Splash natif = fond seul. Android 12+ affiche toujours une icône, et sans image
++    # flutter_native_splash écrit pour iOS un pixel NOIR opaque : on lui donne une image vide.
++    Image.new("RGBA", (4, 4), (0, 0, 0, 0)).save(OUT / "splash_vide.png")
++
++
++if __name__ == "__main__":
++    main()

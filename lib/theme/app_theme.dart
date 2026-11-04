@@ -27,8 +27,8 @@ class AppColors {
   // Team colors
   static const Color team1 = Color(0xFFF19B9B);
   static const Color team2 = Color(0xFF7DD3C0);
-  static const Color team3 = Color(0xFFA78BFA);
-  static const Color team4 = Color(0xFFFBBF24);
+  static const Color team3 = Color(0xFFB6A6F5);
+  static const Color team4 = Color(0xFFF2D47C);
 
   static Color getTeamColor(int teamIndex) {
     switch (teamIndex) {
