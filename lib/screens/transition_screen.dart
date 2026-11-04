@@ -64,7 +64,6 @@ class _TransitionScreenState extends State<TransitionScreen> {
     // refuse aussi, cf. `nextRound`).
     final chooserId = provider.nextChooserId;
     final chooser = chooserId == null ? null : provider.getTeamById(chooserId);
-    final totalWords = provider.game.allWords.length;
     // `nextRound` ne touche pas à l'équipe ni au joueur courants : ce sont
     // ceux que l'avant-tour de la manche suivante affichera.
     final starterTeam = provider.getCurrentTeam();
@@ -86,8 +85,6 @@ class _TransitionScreenState extends State<TransitionScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _RoundTrack(done: currentRound),
-                          const SizedBox(height: 10),
                           Text(
                             'MANCHE $currentRound TERMINÉE',
                             textAlign: TextAlign.center,
@@ -104,25 +101,14 @@ class _TransitionScreenState extends State<TransitionScreen> {
                           // résultats.
                           _Hero(
                             key: _nextRoundKey,
-                            decoration: _roundEmoji[nextRound] ?? '✦',
                             children: [
-                              const _HeroEyebrow('Et maintenant'),
-                              _HeroBig('$nextRound'),
-                              _HeroTitle(
-                                  AppConstants.roundModes[nextRound] ?? ''),
+                              _HeroTitle('Manche $nextRound : '
+                                  '${AppConstants.roundModes[nextRound] ?? ''}'),
                               _HeroText(
                                   AppConstants.roundDescriptions[nextRound] ??
                                       ''),
                             ],
                           ),
-                          const SizedBox(height: 12),
-                          _FactTiles(tiles: [
-                            _Fact('$totalWords',
-                                'mots reviennent dans le chapeau'),
-                            if (bonus > 0)
-                              _Fact('+$bonus s',
-                                  'reportées pour ${starterTeam?.name ?? ''}'),
-                          ]),
                           if (starterTeam != null) ...[
                             const SizedBox(height: 14),
                             _Starter(
@@ -131,8 +117,18 @@ class _TransitionScreenState extends State<TransitionScreen> {
                               color: starterColor,
                             ),
                           ],
-                          const SizedBox(height: 14),
-                          _MemoryTip(round: currentRound),
+                          if (bonus > 0) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              'Temps bonus conservé : ${bonus}s',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                color: AppColors.warning,
+                              ),
+                            ),
+                          ],
                           // Bouton pour consulter les mots devinés du tour
                           // précédent.
                           if (provider.game.history.isNotEmpty) ...[
@@ -171,22 +167,21 @@ class _TransitionScreenState extends State<TransitionScreen> {
                           ],
                           const SizedBox(height: 16),
                           // Fiesta : sous le héros. Vides en Classique.
-                          RoundDrawCard(
+                          RoundDrawLine(
                             round: nextRound,
                             modifiers: provider.nextRoundModifiers,
                           ),
                           if (catchUpRules != null)
-                            CatchUpCard(
-                              // Carte vide (aucun rattrapage) : pas d'aide.
+                            CatchUpLine(
+                              // Ligne vide (aucun rattrapage) : pas d'aide.
                               key: provider.catchUpPreview.isEmpty
                                   ? null
                                   : _catchUpKey,
                               entries: provider.catchUpPreview,
-                              rules: catchUpRules,
                               teams: provider.teams,
                             ),
                           // Fiesta Auto : coup de pouce de l'app.
-                          AppBoostCard(
+                          AppBoostLine(
                             key: provider.appBoostPreview.isEmpty
                                 ? null
                                 : _appBoostKey,
@@ -405,90 +400,18 @@ class _PickThreeFlowState extends State<_PickThreeFlow> {
   }
 }
 
-// ========== Mise en scène de la manche suivante (sans aucun score) ==========
+// ========== La manche suivante (sans aucun score) ==========
 
-const Map<int, String> _roundEmoji = {2: '🤐', 3: '🤸'};
-
-/// Piste des 3 manches : ✓ pour les manches jouées, la suivante en avant.
-class _RoundTrack extends StatelessWidget {
-  final int done;
-
-  const _RoundTrack({required this.done});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (var i = 1; i <= 3; i++) ...[
-          if (i > 1)
-            Container(
-              width: 46,
-              height: 3,
-              color: i <= done ? AppColors.success : AppColors.gray700,
-            ),
-          _step(i),
-        ],
-      ],
-    );
-  }
-
-  Widget _step(int i) {
-    final isDone = i <= done;
-    final isNext = i == done + 1;
-    return Container(
-      width: 34,
-      height: 34,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isDone ? AppColors.success : AppColors.gray700,
-        border: Border.all(
-          color: isDone
-              ? AppColors.success
-              : isNext
-                  ? AppColors.primaryPink
-                  : AppColors.gray600,
-          width: 2,
-        ),
-        boxShadow: isNext
-            ? [
-                BoxShadow(
-                  color: AppColors.primaryPink.withValues(alpha: 0.15),
-                  spreadRadius: 6,
-                ),
-              ]
-            : null,
-      ),
-      child: Text(
-        isDone ? '✓' : '$i',
-        style: TextStyle(
-          fontFamily: 'Bangers',
-          fontSize: 18,
-          color: isDone
-              ? Colors.white
-              : isNext
-                  ? AppColors.primaryPink
-                  : AppColors.gray400,
-        ),
-      ),
-    );
-  }
-}
-
-/// Carte héros : dégradé, gros emoji pâle en décor, entrée légère (coupée si
-/// l'utilisateur a demandé moins d'animations, Android comme iOS).
+/// Carte sobre de la manche suivante : son titre et sa règle.
 class _Hero extends StatelessWidget {
-  final String decoration;
   final List<Widget> children;
 
-  const _Hero({required this.decoration, required this.children, super.key});
+  const _Hero({required this.children, super.key});
 
   @override
   Widget build(BuildContext context) {
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final card = Container(
-      clipBehavior: Clip.hardEdge,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         border:
@@ -502,89 +425,12 @@ class _Hero extends StatelessWidget {
           ],
         ),
       ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: -6,
-            top: -10,
-            child: ExcludeSemantics(
-              child: Transform.rotate(
-                angle: 0.2,
-                child: Opacity(
-                  opacity: 0.12,
-                  child: Text(decoration, style: const TextStyle(fontSize: 90)),
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: children,
-            ),
-          ),
-        ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
       ),
-    );
-    if (reduceMotion) return card;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeOut,
-      builder: (context, t, child) => Opacity(
-        opacity: 0.3 + 0.7 * t,
-        child: Transform.translate(
-          offset: Offset(0, 10 * (1 - t)),
-          child: child,
-        ),
-      ),
-      child: card,
     );
   }
-}
-
-class _HeroEyebrow extends StatelessWidget {
-  final String text;
-
-  const _HeroEyebrow(this.text);
-
-  @override
-  Widget build(BuildContext context) => Text(
-        text.toUpperCase(),
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          fontFamily: 'Poppins',
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 1.4,
-          color: AppColors.gray400,
-        ),
-      );
-}
-
-class _HeroBig extends StatelessWidget {
-  final String text;
-
-  const _HeroBig(this.text);
-
-  @override
-  Widget build(BuildContext context) => Text(
-        text,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontFamily: 'Bangers',
-          fontSize: 84,
-          height: 1,
-          color: AppColors.primaryPink,
-          shadows: [
-            Shadow(
-              offset: const Offset(4, 4),
-              color: AppColors.primaryPinkDark.withValues(alpha: 0.4),
-            ),
-          ],
-        ),
-      );
 }
 
 class _HeroTitle extends StatelessWidget {
@@ -628,65 +474,6 @@ class _HeroText extends StatelessWidget {
       );
 }
 
-class _Fact {
-  final String value;
-  final String label;
-
-  const _Fact(this.value, this.label);
-}
-
-/// Une ou deux tuiles côte à côte : jamais rien qui révèle le classement.
-class _FactTiles extends StatelessWidget {
-  final List<_Fact> tiles;
-
-  const _FactTiles({required this.tiles});
-
-  @override
-  Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final (i, f) in tiles.indexed) ...[
-            if (i > 0) const SizedBox(width: 10),
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.gray700,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      f.value,
-                      style: const TextStyle(
-                        fontFamily: 'Bangers',
-                        fontSize: 26,
-                        letterSpacing: 1,
-                        color: AppColors.secondaryCyan,
-                      ),
-                    ),
-                    Text(
-                      f.label,
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 12,
-                        color: AppColors.gray400,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
 /// « Commence : <équipe> · <joueur> fait deviner ».
 class _Starter extends StatelessWidget {
   final String team;
@@ -727,42 +514,6 @@ class _Starter extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-/// Astuce mémoire : les mêmes mots reviennent à chaque manche.
-class _MemoryTip extends StatelessWidget {
-  final int round;
-
-  const _MemoryTip({required this.round});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.warning.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.warning.withValues(alpha: 0.45)),
-      ),
-      child: Row(
-        children: [
-          const Text('🧠', style: TextStyle(fontSize: 20)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Ce sont exactement les mêmes mots : ceux qui se souviennent '
-              'de la manche $round ont un temps d\'avance.',
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 12.5,
-                color: AppColors.warning,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

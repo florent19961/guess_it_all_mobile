@@ -315,6 +315,43 @@ class FiestaHint extends StatelessWidget {
       );
 }
 
+/// Information Fiesta en une ligne (entre les manches) : « Libellé : … ».
+/// Le texte se replie si l'écran est étroit.
+class FiestaInfoLine extends StatelessWidget {
+  final String label;
+  final List<InlineSpan> spans;
+
+  const FiestaInfoLine({required this.label, required this.spans, super.key});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Text.rich(
+          TextSpan(
+            style: AppTextStyles.bodySmall
+                .copyWith(fontSize: 13, color: AppColors.gray400),
+            children: [
+              TextSpan(
+                  text: '$label : ',
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
+              ...spans,
+            ],
+          ),
+          textAlign: TextAlign.center,
+        ),
+      );
+}
+
+/// Pastille d'un modificateur au fil d'une [FiestaInfoLine] (un tap
+/// l'explique, comme partout ailleurs).
+WidgetSpan modifierBadgeSpan(Widget badge) => WidgetSpan(
+      alignment: PlaceholderAlignment.middle,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+        child: badge,
+      ),
+    );
+
 /// Résumé d'une ligne du rattrapage, pour le Récap (Auto et Personnalisé).
 String catchUpSummary(CatchUpRules c) =>
     '+${c.b1} s / +${c.b2} s × écart (max +${c.cap} s) · '

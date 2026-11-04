@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../models/fiesta/fiesta_rules.dart';
 import '../../models/fiesta/turn_time.dart';
 import '../../models/team.dart';
 import '../../theme/app_theme.dart';
@@ -54,16 +53,15 @@ class TurnTimeCard extends StatelessWidget {
   }
 }
 
-/// « Rattrapage » (maquette `r2`) sur la transition : ce que chaque équipe
-/// aura en plus ou en moins à son premier tour de la manche suivante.
-class CatchUpCard extends StatelessWidget {
+/// « Rattrapage : A +20 s · B −10 s » sur la transition : ce que chaque
+/// équipe aura en plus ou en moins à son premier tour de la manche suivante.
+/// Sans l'écart chiffré : scores cachés jusqu'aux résultats.
+class CatchUpLine extends StatelessWidget {
   final List<CatchUpEntry> entries;
-  final CatchUpRules rules;
   final List<Team> teams;
 
-  const CatchUpCard({
+  const CatchUpLine({
     required this.entries,
-    required this.rules,
     required this.teams,
     super.key,
   });
@@ -71,43 +69,38 @@ class CatchUpCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (entries.isEmpty) return const SizedBox.shrink();
-    return FiestaCard(
-      title: 'Rattrapage',
+    return FiestaInfoLine(
+      label: 'Rattrapage',
+      spans: [
+        for (final (i, e) in entries.indexed) ...[
+          if (i > 0) const TextSpan(text: ' · '),
+          _entry(e),
+        ],
+      ],
+    );
+  }
+
+  TextSpan _entry(CatchUpEntry e) {
+    final index = teams.indexWhere((t) => t.id == e.teamId);
+    final name = index < 0 ? e.teamId : teams[index].name;
+    return TextSpan(
       children: [
-        const FiestaHint('Appliqué au premier tour de chaque équipe dans la '
-            'manche (pas à une continuation).'),
-        const SizedBox(height: 6),
-        for (final e in entries)
-          Builder(builder: (context) {
-            final index = teams.indexWhere((t) => t.id == e.teamId);
-            final color = AppColors.getTeamColor(index < 0 ? 0 : index);
-            final name = index < 0 ? e.teamId : teams[index].name;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      // Sans l'écart chiffré : scores cachés jusqu'aux
-                      // résultats. Restent l'équipe et ses secondes.
-                      '$name (${e.isLeader ? 'en tête' : 'en retard'})',
-                      style: AppTextStyles.bodySmall.copyWith(color: color),
-                    ),
-                  ),
-                  Text(
-                    _signed(e.seconds),
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: e.isLeader ? AppColors.error : AppColors.success,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-        FiestaHint('Plafonds : +${rules.cap} s pour les menées, '
-            '−${rules.malCap} s pour le leader.'),
+        TextSpan(
+          text: '$name ',
+          // Le signe se lit à l'écran ; l'état est dit en toutes lettres aux
+          // lecteurs d'écran (la couleur seule ne le porte pas). Sur ce span
+          // à texte : un label posé sur le parent sans texte serait ignoré.
+          semanticsLabel: '$name ${e.isLeader ? 'en tête' : 'en retard'}, ',
+          style:
+              TextStyle(color: AppColors.getTeamColor(index < 0 ? 0 : index)),
+        ),
+        TextSpan(
+          text: _signed(e.seconds),
+          style: TextStyle(
+            color: e.isLeader ? AppColors.error : AppColors.success,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }

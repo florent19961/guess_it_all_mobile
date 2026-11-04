@@ -26,7 +26,7 @@ SettingsScreen → (CategoriesScreen) → PlayersScreen → (WordsScreen) → Te
 | `countdown_screen.dart` | Decompte 3-2-1-GO anime |
 | `turn_screen.dart` | Jeu actif : timer, mot courant (auto-size), boutons Passer/Valider, pause, sons, haptic |
 | `verification_screen.dart` | Validation post-tour : toggle valid/invalide par mot, sauvegarde snapshot |
-| `transition_screen.dart` | Entre manches : scores, medailles, indicateur bonus ; Fiesta : tirage, rattrapage, coup de pouce, 1 parmi 3 (route `_PickThreeFlow` : passer le telephone puis choisir, non persistee) |
+| `transition_screen.dart` | Entre manches, volontairement minimal (aucun score) : manche terminee, carte de la manche suivante (titre + regle), qui commence, temps bonus conserve, mots du dernier tour ; Fiesta : tirage, rattrapage, coup de pouce en une ligne chacun, 1 parmi 3 en carte (route `_PickThreeFlow` : passer le telephone puis choisir, non persistee) |
 | `results_screen.dart` | Podium anime, tableau scores par manche, carte « Modificateurs de la partie » (Fiesta seulement), boutons Rejouer/Stats |
 | `stats_screen.dart` | Stats detaillees : graphique evolution scores (fl_chart), top joueurs, temps moyen |
 | `rules_screen.dart` | Regles completes du jeu (3 manches) + Revoir le tuto / le tuto Fiesta / les aides |

@@ -296,9 +296,9 @@ List<CoachStep> transitionHelp({
       CoachStep(
         target: nextRound,
         title: 'La manche suivante',
-        text: 'Sa nouvelle règle, le nombre de mots qui reviennent dans le '
-            'chapeau, le temps reporté s\'il en reste, et qui commence. Ce '
-            'sont exactement les mêmes mots qu\'à la manche d\'avant.',
+        text: 'Sa nouvelle règle, puis qui commence et le temps reporté '
+            's\'il en reste. Ce sont exactement les mêmes mots qu\'à la '
+            'manche d\'avant.',
       ),
       CoachStep(
         target: previousTurn,
@@ -398,7 +398,8 @@ List<CoachStep> fiestaTransitionHelp({
         target: catchUp,
         title: 'Rattrapage',
         text: 'L\'équipe menée gagne du temps à la manche suivante, l\'équipe '
-            'en tête en perd un peu.',
+            'en tête en perd un peu. Seulement au premier tour de chaque '
+            'équipe dans la manche (pas quand un tour coupé se poursuit).',
       ),
       CoachStep(
         target: pickThree,
