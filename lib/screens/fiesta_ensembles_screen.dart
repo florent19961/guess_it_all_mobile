@@ -91,22 +91,29 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
   @override
   Widget build(BuildContext context) {
     final store = _store;
-    return Material(
-      color: AppColors.backgroundMain,
-      child: Stack(
-        children: [
-          SafeArea(
-            child: store == null
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.secondaryCyan,
-                    ),
-                  )
-                : _buildList(store),
-          ),
-          AppBackButton(onPressed: widget.onBack),
-          HelpButton(onPressed: () => FiestaTutorialScreen.show(context)),
-        ],
+    // Retour système (Android) = [onBack], pas la sortie de l'app.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) widget.onBack();
+      },
+      child: Material(
+        color: AppColors.backgroundMain,
+        child: Stack(
+          children: [
+            SafeArea(
+              child: store == null
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.secondaryCyan,
+                      ),
+                    )
+                  : _buildList(store),
+            ),
+            AppBackButton(onPressed: widget.onBack),
+            HelpButton(onPressed: () => FiestaTutorialScreen.show(context)),
+          ],
+        ),
       ),
     );
   }

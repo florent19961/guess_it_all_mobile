@@ -111,8 +111,30 @@ void main() {
   test(
       '« Une seule réponse » en Auto : déterministe par partie, environ 1 '
       'fois sur 4', () {
+    // Graine figée (« manche 0 », distincte des manches 1 à 3) : une app mise
+    // à jour retrouve le même tirage pour une partie suspendue.
+    expect(drawSeed('game-0', 0), 2787898305);
+    expect(drawSeed('game-1', 0), 286747006);
+    // Sorties épinglées : `Random(drawSeed(id, 0)).nextInt(4) == 0`.
+    expect([
+      for (var i = 0; i < 12; i++) drawsOneAnswer('game-$i')
+    ], [
+      true,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false
+    ]);
+
     final drawn = gameIds.where(drawsOneAnswer).length;
-    expect(drawn, inInclusiveRange(30, 70)); // 200 parties, attendu 50
+    expect(drawn, inInclusiveRange(35, 65)); // 200 parties, attendu 50
     for (final gameId in gameIds) {
       expect(drawsOneAnswer(gameId), drawsOneAnswer(gameId));
     }

@@ -1906,6 +1906,7 @@ class GameProvider extends ChangeNotifier {
     _players = [];
     _teams = [];
     _game = GameState.initial();
+    _pendingFiesta = null;
     notifyListeners();
   }
 
@@ -1914,6 +1915,7 @@ class GameProvider extends ChangeNotifier {
     _players = [];
     _teams = [];
     _game = GameState.initial();
+    _pendingFiesta = null;
     notifyListeners();
     _storage.clearGameSession();
     _storage.clearGameState();
