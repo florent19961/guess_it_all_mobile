@@ -774,8 +774,10 @@ enregistré avec plusieurs mimes actifs se relit via `oneMimeAtMost` — normali
 déterministe : le premier mime fixé dans l'ordre du catalogue, sinon le premier actif dans
 l'ordre du catalogue (ce n'est pas forcément le mime tiré auparavant) ; les autres passent
 `active: false` en gardant leurs réglages, et le blob est réécrit à la prochaine écriture du
-store (« Enregistrer », mais aussi « Jouer » via `markUsed`). Les règles gelées d'une partie
-en cours ne sont PAS normalisées : la règle de famille s'y applique à l'exécution.
+store (« Enregistrer », mais aussi « Jouer » via `markUsed`). Les règles et l'état gelés d'une
+partie en cours ne sont PAS normalisés : une partie Fiesta de dev déjà gelée avec deux mimes
+les garde et les applique tous les deux (couvert par la rupture pré-release ci-dessous) ; la
+règle de famille ne s'applique qu'aux nouveaux tirages.
 
 **Rupture pré-release assumée (revue r1).** La Fiesta n'a jamais été publiée (le dernier tag
 store ne contient aucun fichier Fiesta) ; une partie Fiesta suspendue sur une build de dev
