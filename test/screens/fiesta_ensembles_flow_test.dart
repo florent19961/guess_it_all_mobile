@@ -55,23 +55,38 @@ Future<GameProvider> pumpCustomFiesta(WidgetTester tester, String screen,
 }
 
 void main() {
-  // Bug Florent 2026-11-04 (Chrome) : aucun ensemble, « Créer un ensemble »
-  // ouvrait une page à part sans « Suivant » ; on n'en sortait que par le
-  // retour, qui jetait la saisie : cul-de-sac, liste toujours vide.
+  // Bug Florent 2026-11-04 : « Donne un nom à l'ensemble » affiché alors que
+  // le nom est saisi — l'éditeur en ligne montrait ses erreurs avant toute
+  // tentative, et repartait vierge (donc en erreur) juste après un
+  // enregistrement réussi. Reproduit sur origin/main avant correction.
   testWidgets(
-      'Personnalisé sans ensemble : créer, enregistrer, l\'ensemble est '
-      'sélectionné et « Suivant » mène aux joueurs avec lui', (tester) async {
+      'éditeur : « Donne un nom » seulement après Enregistrer avec un nom '
+      'vide, effacé dès la saisie ; enregistré, l\'ensemble est sélectionné '
+      'et « Suivant » mène aux joueurs avec lui', (tester) async {
     final provider =
         await pumpCustomFiesta(tester, AppConstants.screenFiestaEnsembles);
+    const nameError = 'Donne un nom à l\'ensemble.';
+    Finder error() => find.text(nameError, skipOffstage: false);
+
+    // Sous les 7 ensembles fournis : liste paresseuse, on y fait défiler.
+    await tester.scrollUntilVisible(find.text('Créer un ensemble'), 300,
+        scrollable: find.byType(Scrollable).first);
+    await tapText(tester, 'Créer un ensemble');
+    expect(find.text('Nouvel ensemble'), findsOneWidget);
+    expect(error(), findsNothing, reason: 'rien tenté : pas d\'erreur');
+
+    await tapText(tester, 'Enregistrer');
+    expect(error(), findsWidgets, reason: 'nom vide, Enregistrer tenté');
 
     await tester.enterText(find.byType(TextField), 'Soirée chez Max');
     await tester.pump();
-    await tapText(tester, 'Enregistrer');
+    expect(error(), findsNothing, reason: 'nom saisi : plus d\'erreur');
 
+    await tapText(tester, 'Enregistrer');
+    expect(find.text('Nouvel ensemble'), findsNothing, reason: 'retour liste');
+    expect(error(), findsNothing);
     final stored = await tester.runAsync(() => FiestaEnsembleService().load());
     expect(stored!.ensembles.map((e) => e.name), ['Soirée chez Max']);
-    expect(provider.game.currentScreen, AppConstants.screenFiestaEnsembles,
-        reason: 'on reste sur l\'écran, l\'ensemble apparaît dans la liste');
 
     await tapText(tester, 'Suivant');
     expect(provider.game.currentScreen, AppConstants.screenPlayers);

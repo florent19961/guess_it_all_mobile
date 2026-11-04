@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
+import 'package:guess_it_all_mobile/services/storage_service.dart';
+import 'package:guess_it_all_mobile/utils/constants.dart';
 
 import '../helpers/test_prefs.dart';
 
@@ -96,5 +98,35 @@ void main() {
       expect(provider.game.fiesta, isNotNull);
       expect(provider.game.fiesta!.toJson(), equals(captured));
     });
+  });
+
+  test(
+      'partie Fiesta suspendue de la forme v1 (avant Fiesta v2) : abandonnée '
+      'proprement au démarrage, jamais reprise en Classique ni de crash',
+      () async {
+    final provider = await givenReadyProvider();
+    await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
+    await pumpEventQueue();
+    final saved = (await StorageService().loadGameState())!;
+    // Les règles telles que les écrivait la forme v1.
+    saved['game']['fiesta']['rules'] = {
+      'mode': 'auto',
+      'symmetric': true,
+      'autoCalibrate': true,
+      'modifiers': {},
+      'oneOfThree': false,
+      'drawCount': 1,
+      'oneAnswer': true,
+    };
+    await StorageService().saveGameState(saved);
+
+    final reloaded = GameProvider();
+    await pumpEventQueue();
+    expect(reloaded.game.currentScreen, AppConstants.screenHome);
+    expect(reloaded.game.gameId, isNull);
+    expect(reloaded.isFiesta, isFalse);
+    expect(await StorageService().loadGameState(), isNull);
+    expect(reloaded.players.map((p) => p.name), ['Ana', 'Bob'],
+        reason: 'joueurs gardés');
   });
 }
