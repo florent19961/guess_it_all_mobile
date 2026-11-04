@@ -313,6 +313,16 @@ class GameState {
     };
   }
 
+  /// [json] (une `GameState.toJson()` relue) porte une partie Fiesta dont
+  /// l'état est illisible (ex. forme v1, avant Fiesta v2) : `fromJson` la
+  /// relirait en Classique. Les appelants (reprise au démarrage, retour
+  /// arrière) l'abandonnent ou la refusent au lieu de la jouer en Classique.
+  static bool hasUnreadableFiesta(Map json) {
+    final raw = json['fiesta'];
+    return raw is Map &&
+        FiestaState.tryFromJson(Map<String, dynamic>.from(raw)) == null;
+  }
+
   factory GameState.fromJson(Map<String, dynamic> json) {
     return GameState(
       gameId: json['gameId'] as String?,

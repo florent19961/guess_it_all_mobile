@@ -131,7 +131,9 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
       if (!mounted) return;
       switch (result) {
         case EnsembleSaved(:final ensemble):
-          FiestaEnsemblesScreen.draft = null;
+          // Seul le brouillon repris (donc enregistré) disparaît : celui d'un
+          // AUTRE ensemble reste.
+          if (resumed != null) FiestaEnsemblesScreen.draft = null;
           await _reload(select: ensemble.id);
         case EnsembleDraftKept(:final rules):
           setState(() =>

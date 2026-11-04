@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_state.dart';
 import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
+import 'package:guess_it_all_mobile/models/fiesta/round_transition.dart';
 import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
 
 ModifierSetting setting(ModifierMode mode,
@@ -197,22 +198,25 @@ void main() {
   });
 
   test(
-      'En stock : bonus seulement (lane 1), une instance par équipe sur les '
-      'manches cochées ; « pour la partie » = N moins ce qui est déjà dépensé',
-      () {
+      'En stock : une instance par équipe sur les manches cochées, malus en '
+      'réserve (sans effet, lane 2) ; « pour la partie » = N moins ce qui '
+      'est déjà dépensé, sauf Passe gratuite (toujours par manche)', () {
     final rules = FiestaRules(
       mode: FiestaMode.custom,
       modifiers: {
         'double_points':
             setting(ModifierMode.stock, rounds: {1, 3}, charges: 2),
         'two_words': setting(ModifierMode.stock, charges: 2, perGame: true),
-        'minus_10s': setting(ModifierMode.stock, charges: 2),
+        'minus_10s': setting(ModifierMode.stock, rounds: {1}, charges: 2),
+        'free_pass':
+            setting(ModifierMode.stock, rounds: {2}, charges: 3, perGame: true),
       },
     );
     Map<String, int> stock(int round, [List<ChargeUse> used = const []]) => {
           for (final m in stockForRound(rules,
               round: round, teamIds: ['a', 'b'], chargesUsed: used))
-            '${m.catalogId}/${m.teamId}': m.charges,
+            if (m.catalogId != 'minus_10s' && m.catalogId != 'free_pass')
+              '${m.catalogId}/${m.teamId}': m.charges,
         };
 
     expect(stock(1), {
@@ -221,6 +225,21 @@ void main() {
       'two_words/a': 2,
       'two_words/b': 2,
     });
+    // Malus en réserve : persistés pour chaque équipe, sans effet en jeu.
+    final malus = stockForRound(rules, round: 1, teamIds: ['a', 'b'])
+        .where((m) => m.catalogId == 'minus_10s')
+        .toList();
+    expect(malus.map((m) => (m.teamId, m.charges, m.reserve)),
+        [('a', 2, true), ('b', 2, true)]);
+    expect(modifiersForTurn(malus, teamId: 'a', logicalRound: 1), isEmpty);
+    // Passe gratuite « pour la partie » relue « par manche » (intérim lane 1).
+    expect(
+        stockForRound(rules, round: 2, teamIds: [
+          'a'
+        ], chargesUsed: [
+          const ChargeUse(catalogId: 'free_pass', teamId: 'a', round: 1),
+        ]).where((m) => m.catalogId == 'free_pass').single.charges,
+        3);
     final used = [
       const ChargeUse(catalogId: 'two_words', teamId: 'a', round: 1),
       const ChargeUse(catalogId: 'two_words', teamId: 'a', round: 2),

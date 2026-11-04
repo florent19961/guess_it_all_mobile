@@ -123,6 +123,35 @@ void main() {
   });
 
   test(
+      'pick3Choices 2 : deux rangées, une carte par rangée ; nextRound bloqué '
+      'après la 1re, pas deux cartes dans une rangée, les deux appliquées '
+      'en M2', () async {
+    final provider = await givenProvider(['Ana', 'Bob'], wordsEach: 11);
+    await provider.startGame(fiesta: pickThreeWith(pick3Choices: 2));
+    playTurn(provider, 14);
+    final trailing = playTurn(provider, 8);
+
+    final rows = provider.offersFor(trailing);
+    expect(rows, hasLength(2));
+    provider.chooseOffer(trailing, 0, 0);
+    expect(provider.nextChooserId, trailing, reason: 'rangée 2 à choisir');
+    provider.nextRound();
+    expect(provider.game.currentRound, 1, reason: 'bloqué après la 1re');
+
+    provider.chooseOffer(trailing, 0, 1); // même rangée : refusé
+    expect(provider.game.fiesta!.offerChoices, hasLength(1));
+    expect(provider.offersFor(trailing).map(ids), rows.map(ids),
+        reason: 'ses rangées ne bougent pas pendant qu\'elle choisit');
+
+    provider.chooseOffer(trailing, 1, 0);
+    expect(provider.nextChooserId, isNull);
+    provider.nextRound();
+    expect(provider.game.currentRound, 2);
+    expect(ids(provider.game.fiesta!.active.where((m) => m.round == 2)),
+        ids([rows[0][0], rows[1][0]]));
+  });
+
+  test(
       'app tuée au milieu de la file : le choix fait est gardé, la file '
       'reprend à l\'équipe suivante avec les mêmes offres (AC5)', () async {
     final provider = await givenProvider(['A', 'B', 'C'], wordsEach: 3);

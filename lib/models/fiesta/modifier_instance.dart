@@ -13,6 +13,12 @@ class ModifierInstance {
   /// Manche dans laquelle l'instance a été posée.
   final int round;
 
+  /// Cartouche de malus « En stock » détenue par l'équipe [teamId], en
+  /// RÉSERVE : sans aucun effet tant qu'elle n'est pas jouée contre une
+  /// équipe (écran « Ce tour / Réserve », lane 2). `modifiersForTurn` l'ignore.
+  /// Clé JSON omise si faux.
+  final bool reserve;
+
   /// Contrat : une cible `team` ou `player` porte toujours son [teamId] (le
   /// joueur est repéré par son équipe pour le plafond par équipe).
   const ModifierInstance({
@@ -24,6 +30,7 @@ class ModifierInstance {
     required this.charges,
     required this.nature,
     required this.round,
+    this.reserve = false,
   }) : assert(target == ModifierTarget.both || teamId != null,
             'une cible team/player exige un teamId');
 
@@ -45,6 +52,7 @@ class ModifierInstance {
         'charges': charges,
         'nature': nature.name,
         'round': round,
+        if (reserve) 'reserve': true,
       };
 
   /// Variante tolérante : rend `null` au lieu de lever.
@@ -63,7 +71,9 @@ class ModifierInstance {
     final round = json['round'];
     final teamId = json['teamId'];
     final playerId = json['playerId'];
-    if (scope == null ||
+    final reserve = json['reserve'] ?? false;
+    if (reserve is! bool ||
+        scope == null ||
         target == null ||
         nature == null ||
         charges is! int ||
@@ -82,6 +92,7 @@ class ModifierInstance {
       charges: charges,
       nature: nature,
       round: round,
+      reserve: reserve,
     );
   }
 }

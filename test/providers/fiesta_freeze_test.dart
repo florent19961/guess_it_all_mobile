@@ -129,4 +129,25 @@ void main() {
     expect(reloaded.players.map((p) => p.name), ['Ana', 'Bob'],
         reason: 'joueurs gardés');
   });
+
+  test(
+      'snapshot de retour arrière en forme v1 dans une partie v2 : retour '
+      'arrière refusé sans rien muter, jamais restauré en Classique', () async {
+    final provider = await givenReadyProvider();
+    await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
+    provider.startTurn();
+    provider.startTurnTimer();
+    provider.endTurn();
+    provider.savePreValidationState(const []);
+    final snapshot = provider.game.preValidationSnapshot!;
+    final rules =
+        (snapshot['game'] as Map<String, dynamic>)['fiesta']['rules'] as Map;
+    rules.remove('format'); // forme v1 : illisible
+    final before = provider.game.toJson();
+
+    expect(provider.canGoBackToVerification, isFalse);
+    provider.restorePreValidationState();
+    expect(provider.game.toJson(), before);
+    expect(provider.isFiesta, isTrue);
+  });
 }

@@ -858,8 +858,11 @@ abandonnée au démarrage (accueil, joueurs gardés), jamais reprise en Classiqu
 d'historique v1 → pas de « Rejouer » (snapshot illisible). `kCurrentSchemaVersion` inchangé
 (le marqueur `format` suffit). Classique intouché.
 
-**Résidus assumés jusqu'à la lane 2.** Malus « En stock » : persistés et éditables, **sans
-effet en jeu**. Bonus « En stock » = mécanisme de charges actuel (×2 et Deux mots s'allument
+**Résidus assumés jusqu'à la lane 2.** Malus « En stock » : instanciés par équipe en
+**réserve** (`ModifierInstance.reserve`, persistés, kill compris), **sans effet en jeu**.
+« Passe gratuite » : « par manche » seulement (option « pour la partie » masquée, ses passes ne
+laissent pas de `ChargeUse`). Revue r1 : « Deux mots » en règle de manche s'applique d'elle-même
+(deux cartes à chaque tour, sans activation ni charge) ; snapshot de retour arrière v1 refusé. Bonus « En stock » = mécanisme de charges actuel (×2 et Deux mots s'allument
 avant le tour ; Passe gratuite en stock = N passes gratuites par tour toute la manche). Une carte
 1 parmi 3 de malus vise encore le leader pour toute la manche N+1 (la cartouche ciblée d'un tour
 arrive avec l'écran « Ce tour / Réserve »).

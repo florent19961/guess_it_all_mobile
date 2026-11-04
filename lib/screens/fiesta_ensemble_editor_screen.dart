@@ -412,7 +412,9 @@ class _FiestaEnsembleEditorScreenState
         '(choix 1 parmi 3).',
   };
 
-  String _summary(ModifierSetting s) {
+  static bool _canBePerGame(ModifierDef def) => def.id != 'free_pass';
+
+  String _summary(ModifierDef def, ModifierSetting s) {
     if (!s.active) return 'Désactivé';
     final rounds = s.rounds.toList()..sort();
     return [
@@ -421,7 +423,7 @@ class _FiestaEnsembleEditorScreenState
           : '${rounds.length > 1 ? 'Manches' : 'Manche'} ${rounds.join(', ')}',
       if (s.mode == ModifierMode.stock)
         '${s.charges} cartouche${s.charges > 1 ? 's' : ''}'
-            '${s.perGame ? ' pour la partie' : ''}',
+            '${s.perGame && _canBePerGame(def) ? ' pour la partie' : ''}',
       _modeLabels[s.mode]!,
     ].join(' · ');
   }
@@ -476,7 +478,7 @@ class _FiestaEnsembleEditorScreenState
                       ),
                     ),
                     Text(
-                      _summary(s),
+                      _summary(def, s),
                       style: AppTextStyles.bodySmall
                           .copyWith(color: AppColors.gray400, fontSize: 11),
                     ),
@@ -555,14 +557,18 @@ class _FiestaEnsembleEditorScreenState
                   onChanged: (v) => _set(def, s.copyWith(charges: v)),
                 ),
               ),
-              _Choices<bool>(
-                values: const [false, true],
-                selected: s.perGame,
-                label: (perGame) => perGame ? 'pour la partie' : 'par manche',
-                onSelect: (perGame) => _set(def, s.copyWith(perGame: perGame)),
-              ),
+              // Passe gratuite : « par manche » seulement tant que ses passes
+              // ne sont pas décomptées comme des cartouches (lane 2).
+              if (_canBePerGame(def))
+                _Choices<bool>(
+                  values: const [false, true],
+                  selected: s.perGame,
+                  label: (perGame) => perGame ? 'pour la partie' : 'par manche',
+                  onSelect: (perGame) =>
+                      _set(def, s.copyWith(perGame: perGame)),
+                ),
               const SizedBox(height: 4),
-              _Hint(s.perGame
+              _Hint(s.perGame && _canBePerGame(def)
                   ? 'Les cartouches ne reviennent pas : elles servent pour '
                       'toute la partie.'
                   : 'Les cartouches reviennent à chaque manche.'),

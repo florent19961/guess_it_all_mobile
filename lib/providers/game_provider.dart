@@ -119,9 +119,7 @@ class GameProvider extends ChangeNotifier {
         // modèle des ensembles v2) : on ne la reprend pas en Classique, on
         // l'abandonne proprement (retour à l'accueil, joueurs et équipes
         // gardés). Jamais de crash.
-        if (rawGame is Map &&
-            rawGame['fiesta'] is Map &&
-            _game.fiesta == null) {
+        if (rawGame is Map && GameState.hasUnreadableFiesta(rawGame)) {
           debugPrint('[GameProvider] Partie Fiesta illisible, abandonnée');
           _game = GameState();
           await _storage.clearGameState();
@@ -653,7 +651,8 @@ class GameProvider extends ChangeNotifier {
     final currentWord = _game.currentWord;
     String? drawnSecond;
     if (fiesta != null &&
-        fiesta.turn.charges['two_words'] == ChargeState.spent &&
+        (fiesta.turn.charges['two_words'] == ChargeState.spent ||
+            _isRoundRule('two_words')) &&
         fiesta.turn.secondWord == null &&
         currentWord != null) {
       drawnSecond = drawOtherCard(
@@ -709,7 +708,7 @@ class GameProvider extends ChangeNotifier {
             ? [
                 ...turnModifiers.map((m) => m.catalogId),
                 if (isDoublePointsOn) 'double_points',
-                if (isTwoWordsOn) 'two_words',
+                if (_charge('two_words') == ChargeState.spent) 'two_words',
               ]
             : null,
       );
@@ -1401,10 +1400,23 @@ class GameProvider extends ChangeNotifier {
   // Une table (`kChargeBonusKeys`), une implémentation : chaque getter public
   // n'est qu'un id de catalogue.
 
+  /// Une instance « pour tous » (cible `both`) vient d'une règle de manche
+  /// (« Toujours » / « Au tirage ») : elle s'applique d'elle-même, sans
+  /// activation ni charge. Les cartouches (stock, 1 parmi 3, coup de pouce)
+  /// visent une équipe.
+  static bool _isCartridge(ModifierInstance m) =>
+      m.target != ModifierTarget.both;
+
+  /// [id] pèse sur l'équipe qui joue comme règle de manche.
+  bool _isRoundRule(String id) =>
+      currentTeamModifiers.any((m) => m.catalogId == id && !_isCartridge(m));
+
   /// Modificateurs EN JEU pendant le tour (badges du tour, tags analytics) :
-  /// une charge non activée n'en est pas un (activée : badge et tag à part).
+  /// une cartouche à charge non activée n'en est pas un (activée : badge et
+  /// tag à part) ; une règle de manche (ex. « Deux mots » Toujours) en est un.
   List<ModifierInstance> get turnModifiers => currentTeamModifiers
-      .where((m) => !kChargeBonusKeys.containsKey(m.catalogId))
+      .where((m) =>
+          !(kChargeBonusKeys.containsKey(m.catalogId) && _isCartridge(m)))
       .toList();
 
   ChargeState? _charge(String id) => _turn.charges[id];
@@ -1422,7 +1434,9 @@ class GameProvider extends ChangeNotifier {
             u.teamId == teamId &&
             u.round == _game.currentRound)
         .length;
-    return chargeAllowance(currentTeamModifiers, id) - used;
+    return chargeAllowance(
+            currentTeamModifiers.where(_isCartridge).toList(), id) -
+        used;
   }
 
   /// Allumer est refusé si le bonus est incompatible avec un modificateur en
@@ -1463,7 +1477,11 @@ class GameProvider extends ChangeNotifier {
 
   /// Deux mots à l'écran pendant CE tour (continuation comprise).
   bool get isTwoWordsArmed => _charge('two_words') != null;
-  bool get isTwoWordsOn => _charge('two_words') == ChargeState.spent;
+
+  /// Deux cartes à l'écran : cartouche dépensée, ou règle de manche (qui
+  /// s'applique d'elle-même à chaque tour).
+  bool get isTwoWordsOn =>
+      _charge('two_words') == ChargeState.spent || _isRoundRule('two_words');
   int get twoWordsLeft => _chargesLeft('two_words');
   bool get twoWordsBlocked => _blocked('two_words');
   void setTwoWords(bool on) => _setCharge('two_words', on);
@@ -2108,7 +2126,19 @@ class GameProvider extends ChangeNotifier {
       _game.history.isEmpty && _game.currentRound == 1;
 
   // Vérifie si on peut revenir à l'écran de vérification
-  bool get canGoBackToVerification => _game.preValidationSnapshot != null;
+  bool get canGoBackToVerification => _restorableSnapshot != null;
+
+  /// Le `game` du snapshot de retour arrière, s'il est restaurable : écrit à
+  /// plat par l'ancienne version, corrompu, ou Fiesta illisible (forme v1 :
+  /// il serait restauré en Classique) → `null`, on renonce au retour arrière.
+  Map<String, dynamic>? get _restorableSnapshot {
+    final gameJson = _game.preValidationSnapshot?['game'];
+    if (gameJson is! Map<String, dynamic> ||
+        GameState.hasUnreadableFiesta(gameJson)) {
+      return null;
+    }
+    return gameJson;
+  }
 
   // Sauvegarde l'état avant validation (appelé dans verification_screen)
   // validatedWords = les mots que l'utilisateur a choisi de valider
@@ -2145,13 +2175,11 @@ class GameProvider extends ChangeNotifier {
   // Restaure l'état avant validation (appelé quand on clique sur retour)
   void restorePreValidationState() {
     final snapshot = _game.preValidationSnapshot;
-    if (snapshot == null) return;
-
-    final gameJson = snapshot['game'];
-    // Un snapshot écrit par l'ancienne version (format à plat) ou corrompu :
-    // on renonce au retour arrière plutôt que de crasher. L'utilisateur perd la
-    // possibilité de revenir sur CE tour, rien d'autre.
-    if (gameJson is! Map<String, dynamic>) return;
+    // Snapshot non restaurable ([_restorableSnapshot]) : on renonce au retour
+    // arrière plutôt que de crasher ou de repartir en Classique, sans rien
+    // muter. L'utilisateur perd la possibilité de revenir sur CE tour.
+    final gameJson = _restorableSnapshot;
+    if (snapshot == null || gameJson == null) return;
 
     // Restaurer les scores des équipes
     final teamScores = snapshot['teamScores'];

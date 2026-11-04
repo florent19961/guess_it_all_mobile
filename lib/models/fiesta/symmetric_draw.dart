@@ -164,14 +164,16 @@ List<ModifierInstance> roundModifiers(
 }
 
 /// Cartouches « En stock » reçues par chaque équipe de [teamIds] au début de
-/// la manche [round] : une instance par équipe et par bonus, `charges` = N
-/// (« par manche ») ou N moins ce que l'équipe a déjà dépensé dans les
+/// la manche [round] : une instance par équipe et par modificateur, `charges`
+/// = N (« par manche ») ou N moins ce que l'équipe a déjà dépensé dans les
 /// manches d'avant (« pour la partie », [chargesUsed]).
 ///
-/// 🔴 Lane 1 : seuls les BONUS en stock jouent, par le mécanisme de charges
-/// existant (×2 et Deux mots s'allument avant le tour, Passe gratuite donne N
-/// passes gratuites par tour). Les malus en stock sont persistés mais sans
-/// effet en jeu jusqu'à l'écran « Ce tour / Réserve » (lane 2).
+/// 🔴 Lane 1 : les BONUS jouent par le mécanisme de charges existant (×2 et
+/// Deux mots s'allument avant le tour ; Passe gratuite = N passes gratuites
+/// par tour toute la manche, toujours « par manche » : ses passes ne
+/// laissent pas de `ChargeUse`). Les MALUS sont posés en réserve
+/// ([ModifierInstance.reserve]) : persistés, sans effet jusqu'à l'écran
+/// « Ce tour / Réserve » (lane 2).
 List<ModifierInstance> stockForRound(
   FiestaRules rules, {
   required int round,
@@ -180,13 +182,11 @@ List<ModifierInstance> stockForRound(
 }) {
   final stock = <ModifierInstance>[];
   for (final def in kModifierCatalog) {
-    if (def.nature != ModifierNature.bonus ||
-        !_plays(rules, def, ModifierMode.stock, round)) {
-      continue;
-    }
+    if (!_plays(rules, def, ModifierMode.stock, round)) continue;
     final setting = rules.activeSetting(def.id)!;
+    final perGame = setting.perGame && def.id != 'free_pass';
     for (final teamId in teamIds) {
-      final spent = setting.perGame
+      final spent = perGame
           ? chargesUsed
               .where((u) =>
                   u.catalogId == def.id &&
@@ -204,6 +204,7 @@ List<ModifierInstance> stockForRound(
         charges: charges,
         nature: def.nature,
         round: round,
+        reserve: def.nature == ModifierNature.malus,
       ));
     }
   }

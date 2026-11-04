@@ -99,7 +99,8 @@ RoundTransitionPlan? planRoundTransition({
 /// Instances qui pèsent sur [teamId] pendant son tour : celles de la manche
 /// LOGIQUE du tour. Une continuation (temps reporté en début de N+1) est le
 /// même tour que la fin de N : elle joue avec les effets de N, jamais ceux de
-/// N+1, qui commencent au premier vrai tour de chaque équipe.
+/// N+1, qui commencent au premier vrai tour de chaque équipe. Une cartouche
+/// en réserve ([ModifierInstance.reserve]) n'a aucun effet.
 List<ModifierInstance> modifiersForTurn(
   List<ModifierInstance> active, {
   required String teamId,
@@ -107,6 +108,7 @@ List<ModifierInstance> modifiersForTurn(
 }) =>
     active
         .where((m) =>
+            !m.reserve &&
             m.round == logicalRound &&
             (m.target == ModifierTarget.both || m.teamId == teamId))
         .toList();

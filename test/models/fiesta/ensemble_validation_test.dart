@@ -21,6 +21,17 @@ void main() {
       'cas nominaux : l\'ensemble par défaut et les 7 ensembles fournis sont '
       'valides, et deux à deux distincts (noms et réglages)', () {
     // Sans ce cas, une garde qui refuse TOUT passerait les tests ci-dessous.
+    expect([
+      for (final e in kProvidedEnsembles) (e.id, e.name)
+    ], [
+      ('provided_classic', 'Fiesta classique'),
+      ('provided_pro', 'Pro Player'),
+      ('provided_straight', 'Droit au but'),
+      ('provided_explosive', 'Explosif'),
+      ('provided_pictionary', 'Pictionnary'),
+      ('provided_bilingual', 'Bilingue'),
+      ('provided_injustice', 'L\'injustice'),
+    ]);
     expect(validateEnsemble(rulesWith(), others: kProvidedEnsembles), isEmpty);
     for (final e in kProvidedEnsembles) {
       expect(
