@@ -25,7 +25,7 @@ class FiestaEnsemble {
     if (id is! String || rawRules is! Map) return null;
     final rules = FiestaRules.tryFromJson(Map<String, dynamic>.from(rawRules));
     // Un ensemble est toujours Personnalisé : des règles Auto ici ne
-    // viennent pas de l'éditeur, on ne les rend pas à `onUse`.
+    // viennent pas de l'éditeur, on ne les propose pas au choix.
     if (rules == null || rules.mode != FiestaMode.custom) return null;
     return FiestaEnsemble(id: id, rules: oneMimeAtMost(rules));
   }

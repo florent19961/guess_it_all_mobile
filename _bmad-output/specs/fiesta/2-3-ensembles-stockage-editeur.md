@@ -1,13 +1,17 @@
 ---
 story: 2-3-ensembles-stockage-editeur
 epic: epic-2-mode-fiesta
-status: ready-for-dev
+status: superseded
 tier: "R ③ schéma persisté (nouvelle clé) + L écrans"
 collisions: ["nouvelle clé guessItAll_fiestaEnsembles", "lib/app.dart + constants.dart (routes, conflit textuel avec 2-4)"]
 depends: [2-2-fondation-modele-fiesta]
 model: Opus
 lane: B (parallèle de la lane A, ne touche ni game_provider.dart ni game_state.dart)
 ---
+
+> ⚠️ **Remplacé par `feat/ensembles-perso` (2026-11-04)** — parcours et contrat décrits dans
+> `lib/screens/CLAUDE.md`. Le stockage (`guessItAll_fiestaEnsembles`) décrit ici reste valable ;
+> les écrans (liste « Mes ensembles » + éditeur poussé, après les équipes) ne le sont plus.
 
 # 2-3 : Ensembles (clé versionnée, validation, liste et éditeur)
 
@@ -123,6 +127,7 @@ tous les curseurs à chaque partie.
 
 ## Notes d'implémentation (lane B, 2026-11-03)
 
+- Ancien contrat (remplacé, voir le bandeau en tête), pour mémoire :
 - **Point d'entrée pour 2-4** : `FiestaEnsemblesScreen(onBack: …, onUse: (FiestaEnsemble e) …)`
   (`lib/screens/fiesta_ensembles_screen.dart`). `onUse` reçoit l'ensemble déjà marqué
   `lastUsedId` ; `e.rules` (mode `custom`, `ensembleName` = nom) se passe tel quel à

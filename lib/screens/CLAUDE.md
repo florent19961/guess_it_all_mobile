@@ -1,13 +1,14 @@
 # screens/
 
-14 ecrans du jeu. Tous sont des StatefulWidget/StatelessWidget qui lisent le `GameProvider` via `Provider.of` ou `context.watch`.
+Les ecrans du jeu. Tous sont des StatefulWidget/StatelessWidget qui lisent le `GameProvider` via `Provider.of` ou `context.watch`.
 
 ## Flux de navigation
 
 ```
 HomeScreen → SettingsScreen (Classique / Fiesta ; Auto / Personnalisé dans « Avancés »)
-  → (CategoriesScreen) → PlayersScreen → (WordsScreen) → TeamsScreen
-  → [Fiesta Personnalisé seulement : FiestaEnsemblesScreen, « Jouer » lance la partie]
+  → (CategoriesScreen)
+  → [Fiesta Personnalisé seulement : FiestaEnsemblesScreen, « Suivant » → joueurs]
+  → PlayersScreen → (WordsScreen) → TeamsScreen (« Commencer » lance la partie)
   → GameScreen → CountdownScreen → TurnScreen → VerificationScreen
   → TransitionScreen (entre manches) → ResultsScreen → StatsScreen
 ```
@@ -19,9 +20,9 @@ HomeScreen → SettingsScreen (Classique / Fiesta ; Auto / Personnalisé dans «
 | `home_screen.dart` | Accueil : 3 etats (partie suspendue, session existante, nouveau jeu) |
 | `settings_screen.dart` | Premier ecran de toute partie, **sans defilement** (390 × 763 et 360 × 740 utiles) : sections Joueurs, Equipes, « Mode de jeu » (interrupteur Classique / Fiesta ; Classique par defaut ; 1er choix de Fiesta → tuto Fiesta une fois), Choix des mots, puis categories, parametres avances (modal sans defilement, curseurs `compact` ; en Fiesta, + Auto / Personnalise ; en bas, « Reinitialiser les parametres » avec confirmation). En haut a droite : « ? » et roue crantee seulement. Retour (bouton et retour systeme) → accueil |
 | `categories_screen.dart` | Selection categories et niveaux de difficulte (1-4) |
-| `players_screen.dart` | Saisie noms joueurs + generation mots aleatoires avec cache metadata |
-| `words_screen.dart` | Saisie mots par joueur (mode personnalise). Bouton "Grosse flemme" pour auto-remplir |
-| `teams_screen.dart` | Composition equipes par drag-and-drop, noms editables, bouton aleatoire. « Commencer » lance la partie ; en Fiesta Personnalise, « Suivant » mene aux ensembles |
+| `players_screen.dart` | Saisie noms joueurs + generation mots aleatoires avec cache metadata. Retour (bouton et systeme) → Parametres (Fiesta Personnalise : → ensembles) |
+| `words_screen.dart` | Saisie mots par joueur (mode personnalise). Bouton "Grosse flemme" pour auto-remplir. Retour (bouton et systeme) → joueurs, mots sauvegardes |
+| `teams_screen.dart` | Composition equipes par drag-and-drop, noms editables, bouton aleatoire. Retour (bouton et systeme) → joueurs. « Commencer » lance la partie (avec `pendingFiesta`, l'ensemble deja choisi en Personnalise) |
 | `game_screen.dart` | Pre-tour : affiche manche, equipe/joueur courant, scores, bouton jouer |
 | `countdown_screen.dart` | Decompte 3-2-1-GO anime |
 | `turn_screen.dart` | Jeu actif : timer, mot courant (auto-size), boutons Passer/Valider, pause, sons, haptic |
@@ -32,23 +33,23 @@ HomeScreen → SettingsScreen (Classique / Fiesta ; Auto / Personnalisé dans «
 | `rules_screen.dart` | Regles completes du jeu (3 manches) + Revoir le tuto / le tuto Fiesta / les aides |
 | `rules_tutorial_screen.dart` | Tuto des regles, 4 cartes (`Navigator.push` via `show`), pénalité de passe lue dans les reglages |
 | `fiesta_tutorial_screen.dart` | Tuto Fiesta, 3 cartes (`Navigator.push` via `show`) |
-| `fiesta_ensembles_screen.dart` | « Mes ensembles » (Fiesta Personnalise, apres les equipes ; retour bouton et systeme → equipes) : compteur n / 10, Creer, Jouer / Modifier / Dupliquer / Supprimer (confirmation) |
-| `fiesta_ensemble_editor_screen.dart` | Editeur d'un ensemble, ouvert par `Navigator.push` depuis la liste (rend `true` si enregistre). Catalogue en sections Malus (dont « Une seule reponse », toute la partie, et la sous-categorie Mimes : un seul a la fois, allumer l'un coupe les autres) puis Bonus, tirage 0 a 3. Bouton grise + explications tant que `validateEnsemble` rend des erreurs |
+| `fiesta_ensembles_screen.dart` | « Fiesta personnalisee » (Fiesta Personnalise, juste apres Parametres, avant les joueurs ; retour bouton et systeme → Parametres). Un seul ecran, aucune page poussee : en haut « Prets a jouer » (ensembles enregistres, n / 10 ; aucun → « Fiesta classique » fourni par l'app = `defaultEnsembleRules`, jamais stocke), un tap selectionne ; Modifier (charge l'ensemble dans l'editeur) / Dupliquer / Supprimer (confirmation). En dessous, l'editeur en ligne (`FiestaEnsembleEditor`, `lib/widgets/fiesta/`) : un ensemble enregistre apparait en haut, selectionne. Une seule porte (`_leaveDraft`) pour toute action qui change la selection ou l'editeur (selectionner, Modifier, Dupliquer, Supprimer, Annuler, Retour bouton et systeme, Suivant) : editeur modifie (brouillon neuf ou modification) → « Abandonner les modifications ? », puis l'editeur repart vierge (ou charge l'ensemble a modifier, qui est aussi selectionne) ; l'affichage ne contredit jamais la selection. « Suivant » (grise sans selection) → joueurs |
 
 Invariant Fiesta : le choix du mode vit dans `GameProvider.pendingFiesta`, **en memoire
 seulement** (Q10) : nul = Classique, `FiestaRules(mode: auto)` = Auto, mode `custom` =
-Personnalise (l'ensemble, choisi apres les equipes, le remplace). `TeamsScreen` le passe a
-`startGame` (ou mene aux ensembles en Personnalise). « Nouvelle partie » le vide (Classique par
+Personnalise (l'ensemble, choisi juste apres Parametres, le remplace). `TeamsScreen` le passe a
+`startGame`. « Nouvelle partie » le vide (Classique par
 defaut) ; « Rejouer » le garde et revient aux Parametres. Le chemin « Reprendre » de l'accueil
 ne traverse jamais ces ecrans. Les anciens ecrans « Mode de jeu », « Auto ou Personnalise »,
 « Mode Auto » et « Recap » sont supprimes (2026-11-04) : un `currentScreen` relu a leur nom
 tombe sur l'accueil.
 
-## Point d'entree des ensembles (contrat 2-3 → 2-4)
+## Point d'entree des ensembles
 
-`FiestaEnsemblesScreen({required VoidCallback onBack, required ValueChanged<FiestaEnsemble> onUse})`.
-L'ecran ne connait ni le provider ni la navigation : `onUse` recoit l'ensemble choisi, **deja
-marque `lastUsedId`** ; `ensemble.rules` est un `FiestaRules` (mode `custom`, `ensembleName` =
-nom) pret a etre gele par `startGame(fiesta: ...)`. Branchement (`app.dart`, route
-`AppConstants.screenFiestaEnsembles`) : `onBack` → `screenTeams` ; `onUse` →
-`setPendingFiesta(ensemble.rules)` puis `startGame(fiesta: ensemble.rules)`.
+`FiestaEnsemblesScreen({FiestaRules? selected, required VoidCallback onBack, required ValueChanged<FiestaRules> onNext})`.
+L'ecran ne connait ni le provider ni la navigation. `selected` = `pendingFiesta` : l'ensemble
+aux memes regles (JSON egal) est preselectionne, sinon le `lastUsedId` du stockage (« Rejouer »
+repasse par Parametres puis cet ecran, l'ensemble precedent selectionne). `onNext` recoit les
+regles choisies (mode `custom`, `ensembleName` = nom), apres `markUsed` pour un ensemble
+enregistre. Branchement (`app.dart`) : `onBack` → `screenSettings` ; `onNext` →
+`setPendingFiesta(rules)` puis `screenPlayers`.

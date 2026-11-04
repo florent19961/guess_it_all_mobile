@@ -79,7 +79,7 @@ List<CoachStep> settingsHelp({
         text: 'Classique : les 3 manches habituelles. Fiesta : les mêmes '
             'manches, pimentées de bonus et de malus. En Fiesta, la roue '
             'crantée choisit Auto (l\'app décide de tout) ou Personnalisé '
-            '(tes propres réglages, choisis après les équipes).',
+            '(tes propres réglages, choisis juste après cet écran).',
       ),
       CoachStep(
         target: wordChoice,
@@ -156,6 +156,34 @@ List<CoachStep> teamsHelp({
         target: start,
         title: 'Commencer',
         text: 'Lance la partie. Il faut au moins 2 joueurs dans chaque équipe.',
+      ),
+    ];
+
+// ========== FIESTA PERSONNALISÉE ==========
+
+List<CoachStep> fiestaEnsemblesHelp({
+  required GlobalKey ready,
+  required GlobalKey editor,
+  required GlobalKey next,
+}) =>
+    [
+      CoachStep(
+        target: ready,
+        title: 'Prêts à jouer',
+        text: 'Tes ensembles de règles Fiesta (sinon, celui fourni par '
+            'l\'app). Touche-en un pour le choisir. « Modifier » le charge '
+            'dans l\'éditeur en dessous.',
+      ),
+      CoachStep(
+        target: editor,
+        title: 'Créer un ensemble',
+        text: 'Donne-lui un nom, règle les malus et bonus, puis '
+            '« Enregistrer » : il apparaît en haut, déjà choisi.',
+      ),
+      CoachStep(
+        target: next,
+        title: 'Suivant',
+        text: 'Passe aux joueurs avec l\'ensemble choisi.',
       ),
     ];
 

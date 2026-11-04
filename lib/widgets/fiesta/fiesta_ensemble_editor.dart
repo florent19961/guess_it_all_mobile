@@ -1,39 +1,54 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
-import '../models/fiesta/ensemble_validation.dart';
-import '../models/fiesta/fiesta_ensemble.dart';
-import '../models/fiesta/fiesta_rules.dart';
-import '../models/fiesta/modifier_catalog.dart';
-import '../models/fiesta/symmetric_draw.dart';
-import '../services/fiesta_ensemble_service.dart';
-import '../theme/app_theme.dart';
-import '../widgets/common/app_back_button.dart';
-import '../widgets/common/app_button.dart';
-import '../widgets/common/app_input.dart';
-import '../widgets/common/app_slider.dart';
-import '../widgets/help/help_button.dart';
-import 'fiesta_tutorial_screen.dart';
+import '../../models/fiesta/ensemble_validation.dart';
+import '../../models/fiesta/fiesta_ensemble.dart';
+import '../../models/fiesta/fiesta_rules.dart';
+import '../../models/fiesta/modifier_catalog.dart';
+import '../../models/fiesta/symmetric_draw.dart';
+import '../../services/fiesta_ensemble_service.dart';
+import '../../theme/app_theme.dart';
+import '../common/app_button.dart';
+import '../common/app_input.dart';
+import '../common/app_slider.dart';
 
-/// Éditeur d'un ensemble (maquette `edit`). Ouvert par `Navigator.push` depuis
-/// « Mes ensembles » ; rend `true` à l'appelant quand il a enregistré.
+/// Éditeur d'un ensemble (maquette `edit`), posé EN LIGNE sous la liste de
+/// l'écran Fiesta personnalisée — plus une page poussée : une page à part
+/// sans « Suivant » était un cul-de-sac (retour Florent 2026-11-04).
 ///
-/// [initial] nul = création (valeurs par défaut de la maquette), sinon
-/// modification sur place. Le bouton reste grisé tant que
-/// `validateEnsemble` rend des erreurs, affichées sous lui.
-class FiestaEnsembleEditorScreen extends StatefulWidget {
+/// [initial] nul = création (valeurs par défaut), sinon modification sur
+/// place. [onSaved] reçoit l'ensemble enregistré. Le bouton reste grisé tant
+/// que `validateEnsemble` rend des erreurs, affichées sous lui. Le parent
+/// change la `key` pour repartir d'un éditeur vierge.
+class FiestaEnsembleEditor extends StatefulWidget {
   final FiestaEnsemble? initial;
+  final ValueChanged<FiestaEnsemble> onSaved;
 
-  const FiestaEnsembleEditorScreen({this.initial, super.key});
+  /// Modification en cours : « Annuler » rend un éditeur de création.
+  final VoidCallback? onCancel;
+
+  /// Appelé à chaque rendu : vrai si la saisie diffère de ce qui a été
+  /// chargé (le parent confirme avant de la jeter). Le parent ne doit pas
+  /// appeler `setState` ici.
+  final ValueChanged<bool>? onDirty;
+
+  const FiestaEnsembleEditor({
+    required this.onSaved,
+    this.initial,
+    this.onCancel,
+    this.onDirty,
+    super.key,
+  });
 
   @override
-  State<FiestaEnsembleEditorScreen> createState() =>
-      _FiestaEnsembleEditorScreenState();
+  State<FiestaEnsembleEditor> createState() => _FiestaEnsembleEditorState();
 }
 
-class _FiestaEnsembleEditorScreenState
-    extends State<FiestaEnsembleEditorScreen> {
+class _FiestaEnsembleEditorState extends State<FiestaEnsembleEditor> {
   late FiestaRules _rules;
   late final TextEditingController _name;
+  late final String _loaded;
   String? _openModifier;
   bool _saving = false;
 
@@ -48,6 +63,7 @@ class _FiestaEnsembleEditorScreenState
     super.initState();
     _rules = widget.initial?.rules ?? defaultEnsembleRules('');
     _name = TextEditingController(text: _rules.ensembleName ?? '');
+    _loaded = jsonEncode(_rules.toJson());
   }
 
   @override
@@ -88,12 +104,16 @@ class _FiestaEnsembleEditorScreenState
     final service = FiestaEnsembleService();
     final rules = _rules.copyWith(ensembleName: _name.text.trim());
     final initial = widget.initial;
-    final ok = initial == null
-        ? await service.create(rules) != null
-        : await service.update(FiestaEnsemble(id: initial.id, rules: rules));
+    final FiestaEnsemble? saved;
+    if (initial == null) {
+      saved = await service.create(rules);
+    } else {
+      final edited = FiestaEnsemble(id: initial.id, rules: rules);
+      saved = await service.update(edited) ? edited : null;
+    }
     if (!mounted) return;
-    if (ok) {
-      Navigator.of(context).pop(true);
+    if (saved != null) {
+      widget.onSaved(saved);
       return;
     }
     // `create` rend aussi `null` sur une lecture en panne : on ne parle de la
@@ -106,7 +126,7 @@ class _FiestaEnsembleEditorScreenState
       SnackBar(
         content: Text(initial == null && full
             ? 'Limite de ${FiestaEnsembleService.maxEnsembles} ensembles '
-                'atteinte : rien n\'a été enregistré.'
+                'atteinte : supprime un ensemble pour en créer un nouveau.'
             : 'Enregistrement impossible, réessaie.'),
       ),
     );
@@ -114,99 +134,91 @@ class _FiestaEnsembleEditorScreenState
 
   @override
   Widget build(BuildContext context) {
-    final errors = validateEnsemble(
-      _rules.copyWith(ensembleName: _name.text),
-    );
+    final current = _rules.copyWith(ensembleName: _name.text);
+    final errors = validateEnsemble(current);
+    widget.onDirty?.call(jsonEncode(current.toJson()) != _loaded);
 
-    return Scaffold(
-      backgroundColor: AppColors.backgroundMain,
-      body: Stack(
-        children: [
-          SafeArea(
-            child: Column(
-              children: [
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(20, 72, 20, 24),
-                    children: [
-                      Text(
-                        widget.initial == null
-                            ? 'Nouvel ensemble'
-                            : 'Modifier l\'ensemble',
-                        style: AppTextStyles.subtitle(fontSize: 32),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 20),
-                      _Card(
-                        title: 'Nom de l\'ensemble',
-                        child: AppInput(
-                          controller: _name,
-                          placeholder: 'ex. Soirée chez Max',
-                          maxLength: FiestaEnsembleService.maxNameLength,
-                          textCapitalization: TextCapitalization.sentences,
-                          onChanged: (_) => setState(() {}),
-                        ),
-                      ),
-                      _Card(
-                        title: 'Malus',
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            for (final def in kModifierCatalog)
-                              if (def.nature == ModifierNature.malus &&
-                                  !def.mimeFamily)
-                                _buildModifier(def),
-                            _buildOneAnswer(),
-                            const SizedBox(height: 12),
-                            Text(
-                              'MIMES · UN SEUL À LA FOIS',
-                              style: AppTextStyles.label.copyWith(
-                                  color: AppColors.gray400, fontSize: 11),
-                            ),
-                            const SizedBox(height: 6),
-                            for (final def in kModifierCatalog)
-                              if (def.mimeFamily) _buildModifier(def),
-                          ],
-                        ),
-                      ),
-                      _Card(
-                        title: 'Bonus',
-                        child: Column(
-                          children: [
-                            for (final def in kModifierCatalog)
-                              if (def.nature == ModifierNature.bonus)
-                                _buildModifier(def),
-                          ],
-                        ),
-                      ),
-                      _Card(
-                        title: 'Choix 1 parmi 3',
-                        trailing: _switch(
-                          _rules.oneOfThree,
-                          (v) => setState(
-                            () => _rules = _rules.copyWith(oneOfThree: v),
-                          ),
-                        ),
-                        child: const _Hint(
-                          'À chaque fin de manche, chaque équipe non en tête '
-                          'choisit 1 carte parmi 3 : un bonus pour elle ou un '
-                          'malus pour l\'équipe en tête. Plus l\'écart est '
-                          'grand, plus l\'offre est forte.',
-                        ),
-                      ),
-                      _buildCatchUp(),
-                      _buildDraw(),
-                    ],
-                  ),
-                ),
-                _buildSaveBar(errors),
-              ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                widget.initial == null
+                    ? 'Créer un ensemble'
+                    : 'Modifier « ${widget.initial!.name} »',
+                style: AppTextStyles.subtitle(fontSize: 26),
+              ),
             ),
+            if (widget.onCancel != null)
+              TextButton(
+                onPressed: widget.onCancel,
+                child: const Text(
+                  'Annuler',
+                  style: TextStyle(color: AppColors.secondaryCyan),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _Card(
+          title: 'Nom de l\'ensemble',
+          child: AppInput(
+            controller: _name,
+            placeholder: 'ex. Soirée chez Max',
+            maxLength: FiestaEnsembleService.maxNameLength,
+            textCapitalization: TextCapitalization.sentences,
+            onChanged: (_) => setState(() {}),
           ),
-          AppBackButton(onPressed: () => Navigator.of(context).pop(false)),
-          HelpButton(onPressed: () => FiestaTutorialScreen.show(context)),
-        ],
-      ),
+        ),
+        _Card(
+          title: 'Malus',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final def in kModifierCatalog)
+                if (def.nature == ModifierNature.malus && !def.mimeFamily)
+                  _buildModifier(def),
+              _buildOneAnswer(),
+              const SizedBox(height: 12),
+              Text(
+                'MIMES · UN SEUL À LA FOIS',
+                style: AppTextStyles.label
+                    .copyWith(color: AppColors.gray400, fontSize: 11),
+              ),
+              const SizedBox(height: 6),
+              for (final def in kModifierCatalog)
+                if (def.mimeFamily) _buildModifier(def),
+            ],
+          ),
+        ),
+        _Card(
+          title: 'Bonus',
+          child: Column(
+            children: [
+              for (final def in kModifierCatalog)
+                if (def.nature == ModifierNature.bonus) _buildModifier(def),
+            ],
+          ),
+        ),
+        _Card(
+          title: 'Choix 1 parmi 3',
+          trailing: _switch(
+            _rules.oneOfThree,
+            (v) => setState(() => _rules = _rules.copyWith(oneOfThree: v)),
+          ),
+          child: const _Hint(
+            'À chaque fin de manche, chaque équipe non en tête '
+            'choisit 1 carte parmi 3 : un bonus pour elle ou un '
+            'malus pour l\'équipe en tête. Plus l\'écart est '
+            'grand, plus l\'offre est forte.',
+          ),
+        ),
+        _buildCatchUp(),
+        _buildDraw(),
+        _buildSave(errors),
+      ],
     );
   }
 
@@ -453,40 +465,26 @@ class _FiestaEnsembleEditorScreenState
     );
   }
 
-  Widget _buildSaveBar(List<String> errors) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-      color: AppColors.backgroundMain,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AppButton(
-            text: 'Enregistrer',
-            fullWidth: true,
-            disabled: errors.isNotEmpty || _saving,
-            onPressed: _save,
-          ),
-          if (errors.isNotEmpty)
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 96),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.only(top: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (final error in errors)
-                      Text(
-                        error,
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.warning, fontSize: 12),
-                      ),
-                  ],
-                ),
-              ),
+  Widget _buildSave(List<String> errors) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppButton(
+          text: 'Enregistrer',
+          fullWidth: true,
+          disabled: errors.isNotEmpty || _saving,
+          onPressed: _save,
+        ),
+        for (final error in errors)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              error,
+              style: AppTextStyles.bodySmall
+                  .copyWith(color: AppColors.warning, fontSize: 12),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 

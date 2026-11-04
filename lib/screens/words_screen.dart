@@ -292,177 +292,186 @@ class _WordsScreenState extends State<WordsScreen> {
 
     final wordsForPlayer = provider.getWordsCountForPlayer(playerId);
 
-    return ShootingStars(
-      child: Stack(
-        children: [
-          SafeArea(
-            child: Column(
-              children: [
-                const SizedBox(height: 64),
-                // Titre
-                Text(
-                  'Mots de ${player.name}',
-                  style: AppTextStyles.subtitle(fontSize: 32),
-                ),
-                const SizedBox(height: 24),
-                // Bouton "Grosse flemme"
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: AppButton(
-                    text: 'Grosse flemme 😴',
-                    variant: AppButtonVariant.secondary,
-                    fullWidth: true,
-                    onPressed: () async =>
-                        await _fillAllEmptyWords(provider, playerId),
+    // Retour système (Android) = bouton retour (sauvegarde automatique).
+    void back() {
+      _saveWords();
+      provider.setCurrentEditingPlayer(null);
+      provider.goToScreen(AppConstants.screenPlayers);
+    }
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) back();
+      },
+      child: ShootingStars(
+        child: Stack(
+          children: [
+            SafeArea(
+              child: Column(
+                children: [
+                  const SizedBox(height: 64),
+                  // Titre
+                  Text(
+                    'Mots de ${player.name}',
+                    style: AppTextStyles.subtitle(fontSize: 32),
                   ),
-                ),
-                const SizedBox(height: 16),
-                // Liste des champs de mots
-                Expanded(
-                  child: _isInitialized
-                      ? ListView.builder(
-                          padding: EdgeInsets.only(
-                            left: 24,
-                            right: 24,
-                            bottom:
-                                MediaQuery.of(context).viewInsets.bottom + 100,
-                          ),
-                          itemCount: wordsForPlayer,
-                          itemBuilder: (context, index) {
-                            final error =
-                                _getWordError(index, provider, playerId);
-                            final otherPlayersWords =
-                                _getOtherPlayersWords(provider, playerId);
-                            final isLastWord = index == wordsForPlayer - 1;
+                  const SizedBox(height: 24),
+                  // Bouton "Grosse flemme"
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: AppButton(
+                      text: 'Grosse flemme 😴',
+                      variant: AppButtonVariant.secondary,
+                      fullWidth: true,
+                      onPressed: () async =>
+                          await _fillAllEmptyWords(provider, playerId),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Liste des champs de mots
+                  Expanded(
+                    child: _isInitialized
+                        ? ListView.builder(
+                            padding: EdgeInsets.only(
+                              left: 24,
+                              right: 24,
+                              bottom: MediaQuery.of(context).viewInsets.bottom +
+                                  100,
+                            ),
+                            itemCount: wordsForPlayer,
+                            itemBuilder: (context, index) {
+                              final error =
+                                  _getWordError(index, provider, playerId);
+                              final otherPlayersWords =
+                                  _getOtherPlayersWords(provider, playerId);
+                              final isLastWord = index == wordsForPlayer - 1;
 
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: AppInput(
-                                      controller: _wordControllers[index],
-                                      focusNode: _focusNodes[index],
-                                      placeholder: 'Mot ${index + 1}',
-                                      error: error,
-                                      textInputAction: isLastWord
-                                          ? TextInputAction.done
-                                          : TextInputAction.next,
-                                      onSubmitted: isLastWord
-                                          ? () =>
-                                              FocusScope.of(context).unfocus()
-                                          : () {
-                                              _focusNodes[index + 1]
-                                                  .requestFocus();
-                                            },
-                                      onChanged: (_) => setState(() {}),
-                                      maxLength: 36,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  // Bouton shuffle
-                                  GestureDetector(
-                                    onTap: () async {
-                                      final dejaPris = <String>{
-                                        ...otherPlayersWords,
-                                        ..._wordControllers
-                                            .asMap()
-                                            .entries
-                                            .where((e) => e.key != index)
-                                            .map((e) => e.value.text
-                                                .trim()
-                                                .toLowerCase())
-                                            .where((w) => w.isNotEmpty),
-                                      };
-
-                                      final tirage = await _generateUniqueWords(
-                                          provider, dejaPris, 1);
-                                      if (!mounted) return;
-
-                                      if (tirage.isNotEmpty) {
-                                        setState(() {
-                                          _wordControllers[index].text =
-                                              tirage.first;
-                                        });
-                                      } else {
-                                        _showNoWordsAvailableWarning(context);
-                                      }
-                                    },
-                                    child: Container(
-                                      width: 44,
-                                      height: 44,
-                                      decoration: BoxDecoration(
-                                        color: AppColors.secondaryCyan,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Icon(
-                                        Icons.shuffle,
-                                        color: Colors.white,
-                                        size: 20,
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: AppInput(
+                                        controller: _wordControllers[index],
+                                        focusNode: _focusNodes[index],
+                                        placeholder: 'Mot ${index + 1}',
+                                        error: error,
+                                        textInputAction: isLastWord
+                                            ? TextInputAction.done
+                                            : TextInputAction.next,
+                                        onSubmitted: isLastWord
+                                            ? () =>
+                                                FocusScope.of(context).unfocus()
+                                            : () {
+                                                _focusNodes[index + 1]
+                                                    .requestFocus();
+                                              },
+                                        onChanged: (_) => setState(() {}),
+                                        maxLength: 36,
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        )
-                      : const Center(
-                          child: CircularProgressIndicator(
-                            color: AppColors.secondaryCyan,
+                                    const SizedBox(width: 8),
+                                    // Bouton shuffle
+                                    GestureDetector(
+                                      onTap: () async {
+                                        final dejaPris = <String>{
+                                          ...otherPlayersWords,
+                                          ..._wordControllers
+                                              .asMap()
+                                              .entries
+                                              .where((e) => e.key != index)
+                                              .map((e) => e.value.text
+                                                  .trim()
+                                                  .toLowerCase())
+                                              .where((w) => w.isNotEmpty),
+                                        };
+
+                                        final tirage =
+                                            await _generateUniqueWords(
+                                                provider, dejaPris, 1);
+                                        if (!mounted) return;
+
+                                        if (tirage.isNotEmpty) {
+                                          setState(() {
+                                            _wordControllers[index].text =
+                                                tirage.first;
+                                          });
+                                        } else {
+                                          _showNoWordsAvailableWarning(context);
+                                        }
+                                      },
+                                      child: Container(
+                                        width: 44,
+                                        height: 44,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.secondaryCyan,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        child: const Icon(
+                                          Icons.shuffle,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          )
+                        : const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.secondaryCyan,
+                            ),
                           ),
-                        ),
-                ),
-                const SizedBox(height: 16),
-                // Bouton Sauvegarder
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: AppButton(
-                    text: 'Sauvegarder',
-                    variant: AppButtonVariant.primary,
-                    fullWidth: true,
-                    onPressed: () {
-                      _saveWords();
-                      provider.setCurrentEditingPlayer(null);
-                      provider.goToScreen(AppConstants.screenPlayers);
-                    },
                   ),
-                ),
-                const SizedBox(height: 24),
-              ],
+                  const SizedBox(height: 16),
+                  // Bouton Sauvegarder
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: AppButton(
+                      text: 'Sauvegarder',
+                      variant: AppButtonVariant.primary,
+                      fullWidth: true,
+                      onPressed: () {
+                        _saveWords();
+                        provider.setCurrentEditingPlayer(null);
+                        provider.goToScreen(AppConstants.screenPlayers);
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
             ),
-          ),
-          // Bouton retour (sauvegarde automatique)
-          AppBackButton(
-            onPressed: () {
-              _saveWords();
-              provider.setCurrentEditingPlayer(null);
-              provider.goToScreen(AppConstants.screenPlayers);
-            },
-          ),
-          // Bouton poubelle globale en haut à droite
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            right: 16,
-            child: GestureDetector(
-              onTap: () => _showClearAllConfirmation(context),
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.backgroundCard,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.gray600, width: 2),
-                ),
-                child: const Icon(
-                  Icons.delete_outline,
-                  color: AppColors.error,
-                  size: 24,
+            // Bouton retour (sauvegarde automatique)
+            AppBackButton(onPressed: back),
+            // Bouton poubelle globale en haut à droite
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 16,
+              right: 16,
+              child: GestureDetector(
+                onTap: () => _showClearAllConfirmation(context),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.backgroundCard,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.gray600, width: 2),
+                  ),
+                  child: const Icon(
+                    Icons.delete_outline,
+                    color: AppColors.error,
+                    size: 24,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
