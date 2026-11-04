@@ -241,7 +241,7 @@ class _GameScreenState extends State<GameScreen> {
                   if (provider.isFiesta) ...[
                     const SizedBox(height: 18),
                     Expanded(
-                      flex: 6,
+                      flex: 20,
                       child: FiestaTurnZone(
                         provider: provider,
                         thisTurnKey: _thisTurnKey,

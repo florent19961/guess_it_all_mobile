@@ -37,7 +37,10 @@ enum _Kind { rule, received, armed, reserve }
 
 const _gap = 6.0;
 const _maxSize = 50.0;
-const _minSize = 32.0;
+const _minSize = 36.0;
+
+/// Entre deux rangées de « Ce tour » : place pour l'étiquette « manche ».
+const _thisTurnRunSpacing = _gap + 6;
 const _ink = AppColors.backgroundMain;
 
 class _FiestaTurnZoneState extends State<FiestaTurnZone> {
@@ -271,17 +274,14 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
 
     return LayoutBuilder(builder: (context, box) {
       final thisTurnCount = rules.length + received.length + armed.length;
-      final size = _fit(
+      final (:size, :bonusWidth) = _fit(
         width: box.maxWidth,
         height: box.maxHeight,
         bonus: bonus.length,
         malus: malus.length,
         sent: sent.length,
+        thisTurn: thisTurnCount,
       );
-      final rowSize = thisTurnCount == 0
-          ? size
-          : min(size,
-              (box.maxWidth - 26 - _gap * (thisTurnCount - 1)) / thisTurnCount);
 
       final thisTurn = Container(
         key: widget.thisTurnKey,
@@ -298,7 +298,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
             const SizedBox(height: 10),
             if (thisTurnCount == 0)
               SizedBox(
-                height: rowSize,
+                height: size,
                 child: Center(
                   child: Text('Rien ce tour',
                       style: AppTextStyles.bodySmall
@@ -308,18 +308,16 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
             else
               Wrap(
                 spacing: _gap,
+                runSpacing: _thisTurnRunSpacing,
                 children: [
                   for (final m in rules)
                     _slot(
-                        _Circle(
-                            id: m.catalogId, kind: _Kind.rule, size: rowSize),
+                        _Circle(id: m.catalogId, kind: _Kind.rule, size: size),
                         onLongPress: () => _explain(m.catalogId, _Kind.rule)),
                   for (final m in received)
                     _slot(
                         _Circle(
-                            id: m.catalogId,
-                            kind: _Kind.received,
-                            size: rowSize),
+                            id: m.catalogId, kind: _Kind.received, size: size),
                         onLongPress: () => _explain(m.catalogId, _Kind.received,
                             from: m.fromTeamId == null
                                 ? null
@@ -331,8 +329,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                         key: _keyOf('on-$id'),
                         child: Opacity(
                           opacity: _flying == id ? 0 : 1,
-                          child:
-                              _Circle(id: id, kind: _Kind.armed, size: rowSize),
+                          child: _Circle(id: id, kind: _Kind.armed, size: size),
                         ),
                       ),
                       onTap: (circle) =>
@@ -416,7 +413,9 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: column('BONUS', bonus, AppColors.success)),
+                  SizedBox(
+                      width: bonusWidth,
+                      child: column('BONUS', bonus, AppColors.success)),
                   const SizedBox(width: 12),
                   Expanded(
                     child: column('MALUS', malus, AppColors.malus,
@@ -436,8 +435,8 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                   .copyWith(fontSize: 11, color: AppColors.gray500)),
         ],
       );
-      // Garde-fou seulement : [_fit] fait tenir la zone sans défiler.
-      return SingleChildScrollView(child: content);
+      // Pas de défilement (spec) : [_fit] choisit le diamètre qui tient.
+      return Align(alignment: Alignment.topCenter, child: content);
     });
   }
 
@@ -503,38 +502,55 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
         ),
       );
 
-  /// Plus grand diamètre (50 au plus, 32 au moins) qui fait tenir la zone
-  /// dans [height] : « Ce tour » (une rangée), « Réserve » (deux colonnes
-  /// repliées), lignes « Envoyé », aide.
-  static double _fit({
+  /// Plus grand diamètre (50 au plus, [_minSize] au moins) qui fait tenir la
+  /// zone dans [height] : « Ce tour » (repliée sur plusieurs rangées s'il le
+  /// faut), « Réserve » (deux colonnes repliées), lignes « Envoyé », aide.
+  /// La colonne Bonus (3 cartouches au plus) prend la largeur qui minimise le
+  /// nombre de rangées ; la colonne Malus, le reste.
+  static ({double size, double bonusWidth}) _fit({
     required double width,
     required double height,
     required int bonus,
     required int malus,
     required int sent,
+    required int thisTurn,
   }) {
-    final column = (width - 12) / 2;
+    const minColumn = 64.0; // l'en-tête « BONUS » / « MALUS »
+    int perRow(double space, double d) =>
+        max(1, ((space + _gap) / (d + _gap)).floor());
+    int rowsOf(int n, double space, double d) => (n / perRow(space, d)).ceil();
+    ({int rows, double bonusWidth}) columns(double d) {
+      var best = (rows: 1 << 30, bonusWidth: minColumn);
+      for (var k = 1; k <= max(1, bonus); k++) {
+        final w = max(minColumn, k * (d + _gap) - _gap);
+        final rows = max(rowsOf(bonus, w, d), rowsOf(malus, width - 12 - w, d));
+        if (rows < best.rows) best = (rows: rows, bonusWidth: w);
+      }
+      return best;
+    }
+
     double needed(double d) {
-      final perRow = max(1, ((column + _gap) / (d + _gap)).floor());
-      final rows = max((bonus / perRow).ceil(), (malus / perRow).ceil());
+      final thisTurnRows = max(1, rowsOf(thisTurn, width - 26, d));
       const thisTurnFixed = 12 + 18 + 10 + 12 + 2;
       const reserveTitle = 16 + 18 + 8;
       const columnTitle = 18 + 6;
       const help = 8 + 18;
       return thisTurnFixed +
-          d +
+          thisTurnRows * (d + _thisTurnRunSpacing) -
+          _thisTurnRunSpacing +
           reserveTitle +
           columnTitle +
-          rows * (d + _gap) -
+          columns(d).rows * (d + _gap) -
           _gap +
           sent * 30 +
           help;
     }
 
-    for (var d = _maxSize; d > _minSize; d -= 2) {
-      if (needed(d) <= height) return d;
+    var d = _maxSize;
+    while (d > _minSize && needed(d) > height) {
+      d -= 2;
     }
-    return _minSize;
+    return (size: d, bonusWidth: columns(d).bonusWidth);
   }
 }
 
