@@ -711,3 +711,33 @@ fixe (plafonds du rattrapage, « s'applique à toutes les équipes »).
 **Quoi.** Les bulles d'aide passent en bleu nuit, comme les cartes de l'app : le titre est en Bangers avec l'ombre rose, le texte en Poppins blanc, et le bouton est un `AppButton`. La cible est entourée d'un liseré blanc translucide. Le « ? » s'affiche seul, en gris clair, sans rond, et garde une zone tactile de 48×48. Au premier « Jouer » d'un téléphone neuf, le tuto des règles s'ouvre d'office, sans la question « Première partie ? » ; « Passer » permet de le fermer. `FiestaTutorialScreen.show` a maintenant une garde statique contre une double ouverture.
 
 **Pourquoi.** Sur Flutter web, la cible restait voilée. Le voile n'utilise plus `Path.combine(difference)` mais un seul chemin `PathFillType.evenOdd` (écran + cible), qui découpe le trou sans opération booléenne et se rend de la même façon sur tous les moteurs. La question « Première partie ? » ne commandait que le tuto des règles, car les bulles de la première partie étaient déjà automatiques ; elle est donc supprimée. Le critère « téléphone neuf » ne change pas : c'est `guessItAll_tutorialSeen`, posé par `initAtStartup`. Le sens de cette clé ne change pas non plus (revue r1, règle 7) : elle veut dire « onboarding des règles de première partie traité », que la question ait été posée (anciennes versions) ou que le tuto ait été ouvert. Un ancien `true` reste valable : qui a répondu « Je connais déjà » ne revoit rien, et c'est voulu. Un `false` sur un téléphone qui n'a jamais joué ouvre le tuto. Le drapeau s'écrit une fois la route du tuto poussée, pour qu'un kill avant l'affichage ne le saute pas pour toujours. Aucune clé n'est créée, aucune ne change de forme, aucune migration.
+
+## 2026-11-04 — Fiesta : le mode se choisit dans les Paramètres
+
+**Quoi.** Le parcours devient Accueil « Jouer » → Paramètres → Joueurs → Équipes → partie. Un
+`AppToggle` « Classique / Fiesta » sous le titre des Paramètres (Classique par défaut) ; en
+Fiesta, la fenêtre « Avancés » gagne « Fiesta : Auto / Personnalisé ». En Personnalisé
+seulement, « Mes ensembles » s'insère après les équipes et son « Jouer » lance la partie.
+Supprimés : écrans « Mode de jeu », « Auto ou Personnalisé », « Mode Auto » et « Récap »
+(et `FiestaSetupScaffold`, `FiestaPickCard`, `FiestaCommonRulesCard`). Le tuto Fiesta s'ouvre
+au premier passage de l'interrupteur sur Fiesta (même clé `guessItAll_fiestaTutorialSeen`).
+« Rejouer » revient aux Paramètres, config Fiesta en attente. Auto = symétrique +
+auto-calibrage toujours allumés. « Une seule réponse » n'est plus une règle commune : c'est un
+modificateur de toute la partie (`kOneAnswer`), coché dans l'ensemble en Personnalisé, tiré au
+lancement en Auto une fois sur 4 (`drawsOneAnswer`, graine du `gameId`) et annoncé avant le
+premier tour. « Dessiner » exclut tout mime (règle de groupe `mime` au lieu de trois paires).
+Personnalisé : jusqu'à 3 modificateurs par équipe et par manche (`maxModifiersPerTeam`, tirage
+réglable de 0 à 3).
+
+**Pourquoi.** Retours device de Florent (maquette « E ») : trois écrans de choix avant même les
+réglages, c'était trop. Le choix du mode reste en mémoire (`pendingFiesta`, Q10) : rien de neuf
+à persister.
+
+**Conséquence (règle 7).** Aucune forme persistée ne change : `FiestaRules` garde exactement ses
+clés. `oneAnswer` garde sa clé et son sens (« une seule réponse en vigueur pendant la partie ») ;
+une clé absente se relit toujours `true`, l'ancien défaut. Seul le défaut du constructeur passe
+à `false` (un nouvel ensemble ne la coche pas). Un `currentScreen` relu au nom d'un écran
+supprimé tombe sur l'accueil (cas par défaut de `app.dart`). Une partie Personnalisé suspendue
+avant la mise à jour peut tirer un 3ᵉ modificateur aux manches suivantes (plafond relevé), sans
+rien casser. Dans Firestore, `fiestaRules.oneAnswer` d'une partie Auto dit désormais ce qui a
+été tiré, et non plus un interrupteur.

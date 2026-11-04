@@ -29,7 +29,7 @@ résultats finaux en montrent.
 | Écran | Fonction | Clés à poser | Bouton « ? » |
 |---|---|---|---|
 | `home_screen` | `homeHelp` | `play` (« Jouer » **ou** « Nouvelle partie »), `resume` (« Reprendre »), `replay` (« Rejouer »), `rules`, `history` | `right: 16` |
-| `settings_screen` | `settingsHelp(passPenalty: provider.settings.passPenalty)` | `counts` (cartes Joueurs + Équipes), `wordChoice`, `categories` (bouton Catégories & Difficultés), `advanced` (bouton Avancés) | `HelpButton.inline` en tête de la `Row` Réinitialiser / Avancés |
+| `settings_screen` | `settingsHelp(passPenalty: provider.settings.passPenalty)` | `mode` (interrupteur Classique / Fiesta), `counts` (cartes Joueurs + Équipes), `wordChoice`, `categories` (bouton Catégories & Difficultés), `advanced` (bouton Avancés) | `HelpButton.inline` en tête de la `Row` Réinitialiser / Avancés |
 | `players_screen` | `playersHelp` | `firstPlayer` (ligne du joueur 1), `words` (bouton Saisir/Voir mots du joueur 1), `next` | `right: 16` |
 | `teams_screen` | `teamsHelp` | `firstTeam` (carte de la 1re équipe), `shuffle`, `start` (« Commencer ») | `right: 16` |
 | `game_screen` (avant-tour) | `preTurnHelp(playerName: …)` | `team` (nom d'équipe + joueur), `roundRules` (icône info de la manche), `previousTurn` (« Tour précédent »), `start` | `right: besideCornerButton` |
@@ -69,8 +69,8 @@ traîne pas sur les suivantes. Faux aussi dès que `guessItAll_firstGameDone` es
 `FirstGameHelp.reset()`. Rien d'autre ne s'affiche tout seul : pas de voile au premier
 affichage d'un écran.
 
-**Tuto Fiesta (3 cartes), automatique à la première partie Fiesta** — à brancher dans
-`game_mode_screen`, au choix de Fiesta, avant de naviguer :
+**Tuto Fiesta (3 cartes), automatique au premier choix de Fiesta** — branché dans
+`settings_screen` (`_setMode`), quand l'interrupteur passe sur Fiesta :
 `if (!await StorageService().hasSeenFiestaTutorial()) await FiestaTutorialScreen.show(context);`
 (`show` marque le flag).
 
