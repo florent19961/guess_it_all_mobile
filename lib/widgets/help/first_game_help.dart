@@ -18,7 +18,7 @@ class FirstGameHelp {
   /// Au démarrage (tâche locale de `main.dart`, après l'init de
   /// `WordHistoryService`) : un joueur déjà venu — historique des mots,
   /// présent depuis la version en store, ou historique des parties — ne revoit
-  /// ni le prompt ni les aides du premier tour. Décidé une seule fois.
+  /// ni le tuto des règles ni les aides du premier tour. Décidé une seule fois.
   static Future<void> initAtStartup() async {
     final playedBefore = WordHistoryService().hasHistory ||
         (await GameHistoryService().load()).isNotEmpty;

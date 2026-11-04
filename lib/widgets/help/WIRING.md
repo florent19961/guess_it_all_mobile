@@ -1,7 +1,7 @@
 # Brancher les aides sur un écran
 
 Le kit est branché partout (tous les écrans du tableau ci-dessous, plus **Règles** et le
-prompt « Première partie ? » de l'**Accueil**). Ce fichier décrit le geste et ce que porte
+tuto des règles ouvert d'office au premier « Jouer » de l'**Accueil**). Ce fichier décrit le geste et ce que porte
 chaque écran, pour en ajouter un ou vérifier un branchement.
 
 ## Le geste, partout pareil
@@ -82,7 +82,7 @@ chaque joueur).
 
 | Clé | Lecture / écriture | Sens |
 |---|---|---|
-| `guessItAll_tutorialSeen` | `hasSeenTutorial` / `markTutorialSeen` | prompt « Première partie ? » déjà posé |
+| `guessItAll_tutorialSeen` | `hasSeenTutorial` / `markTutorialSeen` | onboarding des règles de première partie traité : question « Première partie ? » posée (anciennes versions) **ou** tuto des règles ouvert. Faux → le premier « Jouer » ouvre le tuto d'office, sans question. Sens inchangé, pas de migration |
 | `guessItAll_fiestaTutorialSeen` | `hasSeenFiestaTutorial` / `markFiestaTutorialSeen` | tuto Fiesta déjà vu |
 | `guessItAll_firstGameDone` | `isFirstGameDone` / `markFirstGameDone` / `resetFirstGameDone` | première partie terminée |
 | `guessItAll_firstGameId` | `loadFirstGameId` / `saveFirstGameId` | `gameId` de la première partie (absent = pas encore enregistrée) |

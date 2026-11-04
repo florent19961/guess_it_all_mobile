@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../common/app_button.dart';
 
 /// Une étape d'aide : le contrôle mis en lumière ([target]) et sa bulle.
 class CoachStep {
@@ -145,8 +146,9 @@ class _CoachOverlayState extends State<_CoachOverlay> {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFFBEB),
+            color: AppColors.backgroundMain,
             borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.gray600),
             boxShadow: const [
               BoxShadow(
                   color: Colors.black45, blurRadius: 24, offset: Offset(0, 8)),
@@ -160,14 +162,8 @@ class _CoachOverlayState extends State<_CoachOverlay> {
                 children: [
                   Expanded(
                     child: Text(
-                      step.title.toUpperCase(),
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
-                        color: Color(0xFF92400E),
-                      ),
+                      step.title,
+                      style: AppTextStyles.title(fontSize: 24),
                     ),
                   ),
                   Text(
@@ -176,7 +172,7 @@ class _CoachOverlayState extends State<_CoachOverlay> {
                       fontFamily: 'Poppins',
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF92400E),
+                      color: AppColors.gray400,
                     ),
                   ),
                 ],
@@ -190,7 +186,7 @@ class _CoachOverlayState extends State<_CoachOverlay> {
                       fontFamily: 'Poppins',
                       fontSize: 15,
                       height: 1.4,
-                      color: Color(0xFF1C1917),
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -202,7 +198,7 @@ class _CoachOverlayState extends State<_CoachOverlay> {
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
                       style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFF78716C),
+                        foregroundColor: AppColors.gray400,
                       ),
                       child: const Text(
                         'Passer',
@@ -210,22 +206,9 @@ class _CoachOverlayState extends State<_CoachOverlay> {
                       ),
                     ),
                   const Spacer(),
-                  FilledButton(
+                  AppButton(
+                    text: isLast ? 'Compris' : 'Suivant',
                     onPressed: _next,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF1C1917),
-                      foregroundColor: const Color(0xFFFFFBEB),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 12),
-                    ),
-                    child: Text(
-                      isLast ? 'Compris' : 'Suivant',
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -244,26 +227,32 @@ class _VeilPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final veil = Path()..addRect(Offset.zero & size);
     final veilPaint = Paint()..color = const Color(0xC7020617);
+    final screen = Offset.zero & size;
     if (hole == null) {
-      canvas.drawPath(veil, veilPaint);
+      canvas.drawRect(screen, veilPaint);
       return;
     }
     final spot = RRect.fromRectAndRadius(
       hole!.inflate(6),
       const Radius.circular(16),
     );
+    // Un seul chemin pair-impair (écran + cible) : la cible est un trou net
+    // sur tous les moteurs de rendu. `Path.combine` laissait la cible voilée
+    // sur Flutter web.
     canvas.drawPath(
-      Path.combine(PathOperation.difference, veil, Path()..addRRect(spot)),
+      Path()
+        ..fillType = PathFillType.evenOdd
+        ..addRect(screen)
+        ..addRRect(spot),
       veilPaint,
     );
     canvas.drawRRect(
       spot,
       Paint()
-        ..color = AppColors.warning
+        ..color = Colors.white.withValues(alpha: 0.5)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 3,
+        ..strokeWidth = 1.5,
     );
   }
 
