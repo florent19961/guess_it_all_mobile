@@ -1,0 +1,1071 @@
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index 84be1a6..2438fe9 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -749,3 +749,36 @@ bouton retour (accueil, équipes) — les écrans supprimés le faisaient via `F
+ rond « Réinitialiser » quitte le coin haut droit des Paramètres pour le bas de la fenêtre
+ « Avancés » (« Réinitialiser les paramètres », même confirmation) ; en haut à droite ne restent
+ que le « ? » et la roue crantée.
++
++## 2026-11-04 — Paramètres sans défilement, famille « Mime », deux nouveautés au catalogue
++
++**Quoi.** Paramètres : ordre Joueurs, Équipes, « Mode de jeu » (section titrée, Classique /
++Fiesta), Choix des mots, puis Catégories ; espacements serrés et compteurs à 40 pt pour tenir
++sans défiler (mesuré : contenu 709 px, avertissement « partie longue » compris, pour 763 utiles
++sur iPhone 390 × 844 et 740 sur Android 360 × 780). « Avancés » : curseurs `compact` (valeur à
++droite du libellé) et espaces de 8 px, contenu 402 px en Fiesta. Catalogue : une **famille
++« Mime »** (`mimeFamily` : les 3 mimes, « Dessiner », « Mimer sous un drap », « Mime de dos »)
++dont deux membres s'excluent toujours, à la place des paires mime/mime et de la règle
++Dessiner/mimes ; « Faire deviner dans une autre langue » (malus, `notInRound3` : jamais en
++manche 3, compatible avec tout le reste). Éditeur Personnalisé : sections Malus puis Bonus,
++sous-catégorie Mimes à choix exclusif ; nouvel ensemble = rattrapage coupé, tirage symétrique
++allumé, seul « Dessiner » actif parmi les mimes.
++
++**Pourquoi.** Retours device de Florent. La règle de famille passe par `areCompatible`, donc
++par `canAdd` : tirage Auto et Personnalisé, fixés, 1 parmi 3, coup de pouce l'appliquent sans
++code propre. Les nouveaux ids sont ajoutés **en fin** de catalogue et dans `kOfferStrength`
++(drap : forte ; dos et autre langue : moyenne — au doigt mouillé, comme le reste).
++
++**Conséquence (règle 7).** Aucune forme persistée ne change (ids ajoutés seulement). Un ensemble
++enregistré avec plusieurs mimes actifs se relit via `oneMimeAtMost` — normalisation
++déterministe : le premier mime fixé dans l'ordre du catalogue, sinon le premier actif dans
++l'ordre du catalogue (ce n'est pas forcément le mime tiré auparavant) ; les autres passent
++`active: false` en gardant leurs réglages, et le blob est réécrit à la prochaine écriture du
++store (« Enregistrer », mais aussi « Jouer » via `markUsed`). Les règles gelées d'une partie
++en cours ne sont PAS normalisées : la règle de famille s'y applique à l'exécution.
++
++**Rupture pré-release assumée (revue r1).** La Fiesta n'a jamais été publiée (le dernier tag
++store ne contient aucun fichier Fiesta) ; une partie Fiesta suspendue sur une build de dev
++peut voir tirages/offres/récap recalculés, car les nouveaux ids allongent les listes de
++candidats mélangées par la même graine. Pas de versionnage du catalogue : sur-dimensionné pour
++un mode jamais publié. Règle pour l'après-publication → `lib/models/CLAUDE.md`.
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index bd4b744..f5bca63 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -16,7 +16,7 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `game_setup_snapshot.dart` | `GameSetupSnapshot` | Réglages (`GameSettings`) + `FiestaRules?` d'une partie archivée, sans les mots. Lecture tolérante : illisible → `null` (Fiesta illisible invalide tout le snapshot) |
+ | `word_stats.dart` | `WordMetadata`, `WordRoundStats`, `WordStats` | Metadonnees mot (category, difficulty, language), stats par manche et agregees |
+ | `category_metadata.dart` | `CategoryMetadata` | Metadonnees categorie multilingue (id, icon, noms, locales) |
+-| `fiesta/modifier_catalog.dart` | `ModifierDef`, `kModifierCatalog`, `kModifierIncompatibilities`, enums `ModifierNature/Scope/Target` | Catalogue Fiesta V1 (11 ids **figés**, du code, jamais persisté), `modifierById`, `areCompatible` (paires + règle de groupe : « Dessiner » exclut tout `mime`, et inversement). `kOneAnswer` : « Une seule réponse », modificateur de **toute la partie**, hors de la liste par manche ; son état = `FiestaRules.oneAnswer` |
++| `fiesta/modifier_catalog.dart` | `ModifierDef`, `kModifierCatalog`, `kModifierIncompatibilities`, enums `ModifierNature/Scope/Target` | Catalogue Fiesta (14 ids **figés**, du code, jamais persisté ; un ajout se fait **en fin de liste**), `modifierById`, `areCompatible` (paires + règle de famille : deux membres `mimeFamily` — les 3 mimes, « Dessiner », « Mimer sous un drap », « Mime de dos » — s'excluent toujours). `round3Only` = manche 3 seulement (mime) ; `notInRound3` = jamais en manche 3 (« Faire deviner dans une autre langue », parole), lus par `isEligibleForRound`. 🔴 Une fois la Fiesta publiée, tout ajout au catalogue change les tirages des parties suspendues (listes de candidats mélangées par graine) : persister les tirages ou versionner le catalogue avant d'ajouter un modificateur. `kOneAnswer` : « Une seule réponse », modificateur de **toute la partie**, hors de la liste par manche ; son état = `FiestaRules.oneAnswer` |
+ | `fiesta/modifier_instance.dart` | `ModifierInstance` | Modificateur actif dans une partie. `tryFromJson` tolérant (id inconnu → `null`, jamais de défaut inventé). `canAdd(active, candidate, {maxPerTurn: 2})` |
+ | `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, `CatchUpRules`, enums `FiestaMode`, `ModifierArrival` | Configuration Fiesta **immuable** (Auto / Personnalisé, réglage par modificateur, rattrapage, tirage 0-3, `oneAnswer` = « Une seule réponse » pour toute la partie : cochée en Personnalisé, tirée au lancement en Auto ; clé absente relue `true`, l'ancien défaut). `CatchUpRules.auto` = constantes du mode Auto. `tryFromJson` : structure illisible → `null`, réglage d'id inconnu ignoré seul |
+ | `fiesta/symmetric_draw.dart` | fonctions pures | Modificateurs d'une manche pour toutes les équipes : `fixedForRound` puis `drawSymmetric`, réunis par `roundModifiers(rules, gameId:, round:)`. Graine `drawSeed(gameId, round)` (FNV-1a, stable entre exécutions). `maxModifiersPerTeam` : plafond par équipe et par manche, 2 en Auto, 3 en Personnalisé (fixés, tirage, cartes). `drawsOneAnswer(gameId)` : Auto, 1 chance sur 4, graine de la « manche 0 », appelé par `startGame` |
+@@ -26,7 +26,7 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `fiesta/round_transition.dart` | fonctions pures | `planRoundTransition` → `RoundTransitionPlan` (tirage + cadeaux + choix + rattrapage de N+1 ; `apply` garde les instances de N pour la continuation) : SEULE source de l'aperçu et de `nextRound`. `modifiersForTurn` : effets d'un tour = instances de sa manche logique (N pour une continuation) |
+ | `fiesta/turn_time.dart` | fonctions pures | `composeTurnSeconds` (base + rattrapage − malus du leader − 10 s × `minus_10s`, plancher `kTurnFloorSeconds` = 10 ; continuation = ses secondes, sans modificateur) ; `computeCatchUp` (k × écart avec la tête, plafonds, co-leaders tous en tête, égalité = rien) ; `effectiveCatchUp` (Auto → auto-calibrage, Personnalisé → curseurs) |
+ | `fiesta/offers.dart` | `Standings`, `OfferStrength`, fonctions pures | 2-10 : `kOfferStrength` + `strengthForGap` (≤3 légère, ≤7 moyenne, >7 forte, **à recalibrer**), cran vide → cran inférieur ; `Standings` (leader unique ou `null`, `gapOf`, `choosingOrder` dernière → avant-dernière, vide si égalité ; map construite **dans l'ordre des équipes**) ; `pickThreeOffers(…, roundDraw:, choices:, blockImmuneTeamIds:)` (≤3 cartes utiles : compatibles, plafond `maxModifiersPerTeam`, pas un modificateur que la cible a déjà ; vide = équipe sautée) ; `appBoost(…, roundDraw:)` (Auto : 1 bonus par menée + 1 malus au leader, jamais `block_guesser`). Graine `offerSeed(gameId, round, teamId)` **figée par test**. 🔴 Lane cœur : persister les choix en `Map<chooserTeamId, ModifierInstance>` ; `choices` ne contient que les choix des équipes passées AVANT celle dont on calcule les offres (un malus vise le leader, la clé dit qui l'a choisi) ; prochaine équipe = 1ʳᵉ de `choosingOrder` absente de la map dont les offres ne sont pas vides |
+-| `fiesta/fiesta_ensemble.dart` | `FiestaEnsemble`, `defaultEnsembleRules`, extensions `copyWith`, `catchUpOn` | Ensemble Personnalisé `{id, rules}` (nom = `rules.ensembleName`, mode toujours `custom`), défauts de la maquette (`mkSet`). Persisté par `FiestaEnsembleService` |
++| `fiesta/fiesta_ensemble.dart` | `FiestaEnsemble`, `defaultEnsembleRules`, extensions `copyWith`, `catchUpOn` | Ensemble Personnalisé `{id, rules}` (nom = `rules.ensembleName`, mode toujours `custom`), défauts de la maquette (`mkSet`) : un seul mime actif (« Dessiner » fixé M3), rattrapage coupé (`kCatchUpOff`), tirage symétrique allumé. `tryFromJson` passe par `oneMimeAtMost` : un ancien ensemble à plusieurs mimes actifs n'en garde qu'un — normalisation déterministe : le premier mime fixé dans l'ordre du catalogue, sinon le premier actif dans l'ordre du catalogue (ce n'est pas forcément le mime tiré auparavant), même forme JSON. Persisté par `FiestaEnsembleService` |
+ | `fiesta/ensemble_validation.dart` | `validateEnsemble` | Validation **pure** d'un ensemble (messages FR) : bloque l'enregistrement d'une config impossible |
+ 
+ ## Fiesta — invariants (epic-2)
+diff --git a/lib/models/fiesta/ensemble_validation.dart b/lib/models/fiesta/ensemble_validation.dart
+index 8c3b2d1..f80f9f2 100644
+--- a/lib/models/fiesta/ensemble_validation.dart
++++ b/lib/models/fiesta/ensemble_validation.dart
+@@ -64,6 +64,17 @@ List<String> validateEnsemble(FiestaRules rules) {
+           : setting.startRound < 3;
+       if (tooEarly) errors.add('$name n\'existe qu\'en manche 3 (mime).');
+     }
++    if (def.notInRound3) {
++      // Manche 1 ou 2 (offre : 2, déjà exigé plus haut) ; une manche fixée
++      // absente a déjà son message.
++      final round = setting.arrival == ModifierArrival.fixed
++          ? setting.fixedRound
++          : setting.startRound;
++      if (round != null && (round < 1 || round > 2)) {
++        errors.add('$name n\'existe pas en manche 3 (mime) : '
++            'manche 1 ou 2 seulement.');
++      }
++    }
+   }
+ 
+   for (final MapEntry(key: round, value: ids) in fixedByRound.entries) {
+diff --git a/lib/models/fiesta/fiesta_ensemble.dart b/lib/models/fiesta/fiesta_ensemble.dart
+index 9a772d2..5ab72bd 100644
+--- a/lib/models/fiesta/fiesta_ensemble.dart
++++ b/lib/models/fiesta/fiesta_ensemble.dart
+@@ -27,22 +27,48 @@ class FiestaEnsemble {
+     // Un ensemble est toujours Personnalisé : des règles Auto ici ne
+     // viennent pas de l'éditeur, on ne les rend pas à `onUse`.
+     if (rules == null || rules.mode != FiestaMode.custom) return null;
+-    return FiestaEnsemble(id: id, rules: rules);
++    return FiestaEnsemble(id: id, rules: oneMimeAtMost(rules));
+   }
+ }
+ 
++/// Famille « Mime » : un ensemble n'en garde qu'UN actif (choix exclusif de
++/// l'éditeur). Un ensemble enregistré avant cette règle peut en avoir
++/// plusieurs. Normalisation déterministe : le premier mime FIXÉ dans l'ordre
++/// du catalogue, sinon le premier actif dans l'ordre du catalogue (ce n'est
++/// pas forcément le mime tiré auparavant) ; les autres sont désactivés,
++/// réglages conservés. Même forme JSON, réécrite à la prochaine écriture du
++/// store.
++FiestaRules oneMimeAtMost(FiestaRules rules) {
++  final active = [
++    for (final def in kModifierCatalog)
++      if (def.mimeFamily && (rules.modifiers[def.id]?.active ?? false)) def.id
++  ];
++  if (active.length < 2) return rules;
++  final keep = active.firstWhere(
++    (id) => rules.modifiers[id]!.arrival == ModifierArrival.fixed,
++    orElse: () => active.first,
++  );
++  return rules.copyWith(modifiers: {
++    for (final MapEntry(key: id, value: setting) in rules.modifiers.entries)
++      id: active.contains(id) && id != keep
++          ? setting.copyWith(active: false)
++          : setting,
++  });
++}
++
+ /// Règles d'un nouvel ensemble : les valeurs par défaut de la maquette
+-/// (`mkSet`). Tout le catalogue est actif ; les contraintes de mime arrivent en
+-/// manche 3 (« Dessiner » fixé dessus, les autres tirées), les bonus sont
+-/// proposés dès M2, les malus tirés dès M1 — sauf ceux à cible joueur
+-/// (« Bloquer un devineur »), jamais tirés : proposés dès M2.
++/// (`mkSet`), retouchées le 2026-11-04. Tout le catalogue est actif sauf la
++/// famille « Mime », dont seul « Dessiner » l'est (fixé en manche 3 : un seul
++/// mime à la fois) ; les bonus sont proposés dès M2, les malus tirés dès M1 —
++/// sauf ceux à cible joueur (« Bloquer un devineur »), jamais tirés : proposés
++/// dès M2. Rattrapage coupé, tirage symétrique allumé.
+ FiestaRules defaultEnsembleRules(String name) => FiestaRules(
+       mode: FiestaMode.custom,
+       ensembleName: name,
+       modifiers: {
+         for (final def in kModifierCatalog)
+           def.id: ModifierSetting(
+-            active: true,
++            active: !def.mimeFamily || def.id == 'draw',
+             arrival: def.id == 'draw'
+                 ? ModifierArrival.fixed
+                 : !isForAllTeams(def) ||
+@@ -54,15 +80,20 @@ FiestaRules defaultEnsembleRules(String name) => FiestaRules(
+                 : !isForAllTeams(def) || def.nature == ModifierNature.bonus
+                     ? 2
+                     : 1,
+-            fixedRound: 3,
++            fixedRound: def.notInRound3 ? 1 : 3,
+             charges: def.defaultCharges,
+           ),
+       },
+       oneOfThree: true,
++      symmetric: true,
++      catchUp: kCatchUpOff,
+       // « Une seule réponse » : à cocher pour toute la partie, pas d'office.
+       oneAnswer: false,
+     );
+ 
++/// Rattrapage coupé : tous les curseurs à 0 (voir [catchUpOn]).
++const kCatchUpOff = CatchUpRules(b1: 0, b2: 0, cap: 0, mal: 0, malCap: 0);
++
+ /// Copie modifiée, pour l'éditeur et la duplication. Extension plutôt qu'un
+ /// `copyWith` dans `FiestaRules` : le type appartient à la story 2-2.
+ extension FiestaRulesCopy on FiestaRules {
+diff --git a/lib/models/fiesta/modifier_catalog.dart b/lib/models/fiesta/modifier_catalog.dart
+index 730a8b6..b9fbf61 100644
+--- a/lib/models/fiesta/modifier_catalog.dart
++++ b/lib/models/fiesta/modifier_catalog.dart
+@@ -26,8 +26,12 @@ class ModifierDef {
+   /// Contrainte de la manche 3 (mime / dessin) : jamais avant.
+   final bool round3Only;
+ 
+-  /// Variante du mime : exclue de « Dessiner » (voir [areCompatible]).
+-  final bool mime;
++  /// Contrainte de la parole : jamais en manche 3 (on y mime).
++  final bool notInRound3;
++
++  /// Famille « Mime » : au plus UN de ses membres à la fois (voir
++  /// [areCompatible]).
++  final bool mimeFamily;
+ 
+   const ModifierDef({
+     required this.id,
+@@ -38,7 +42,8 @@ class ModifierDef {
+     this.defaultTarget = ModifierTarget.both,
+     this.defaultCharges = 0,
+     this.round3Only = false,
+-    this.mime = false,
++    this.notInRound3 = false,
++    this.mimeFamily = false,
+   });
+ }
+ 
+@@ -49,7 +54,7 @@ const List<ModifierDef> kModifierCatalog = [
+     description: 'Les bras restent le long du corps pendant tout le tour.',
+     nature: ModifierNature.malus,
+     round3Only: true,
+-    mime: true,
++    mimeFamily: true,
+   ),
+   ModifierDef(
+     id: 'mime_no_fists',
+@@ -57,7 +62,7 @@ const List<ModifierDef> kModifierCatalog = [
+     description: 'Mains ouvertes, jamais de poing fermé.',
+     nature: ModifierNature.malus,
+     round3Only: true,
+-    mime: true,
++    mimeFamily: true,
+   ),
+   ModifierDef(
+     id: 'mime_eyes_closed',
+@@ -65,7 +70,7 @@ const List<ModifierDef> kModifierCatalog = [
+     description: 'On mime les yeux fermés pendant tout le tour.',
+     nature: ModifierNature.malus,
+     round3Only: true,
+-    mime: true,
++    mimeFamily: true,
+   ),
+   ModifierDef(
+     id: 'draw',
+@@ -73,6 +78,7 @@ const List<ModifierDef> kModifierCatalog = [
+     description: 'On dessine au lieu de mimer.',
+     nature: ModifierNature.malus,
+     round3Only: true,
++    mimeFamily: true,
+   ),
+   ModifierDef(
+     id: 'no_pass',
+@@ -121,23 +127,42 @@ const List<ModifierDef> kModifierCatalog = [
+     defaultScope: ModifierScope.turn,
+     defaultTarget: ModifierTarget.player,
+   ),
++  // Ajouts du 2026-11-04 : EN FIN de liste (les ids et l'ordre des anciens
++  // ne bougent pas).
++  ModifierDef(
++    id: 'mime_under_sheet',
++    name: 'Mimer sous un drap',
++    description: 'On mime caché sous un drap (ou une couverture).',
++    nature: ModifierNature.malus,
++    round3Only: true,
++    mimeFamily: true,
++  ),
++  ModifierDef(
++    id: 'mime_back_turned',
++    name: 'Mime de dos',
++    description: 'On mime en tournant le dos à son équipe.',
++    nature: ModifierNature.malus,
++    round3Only: true,
++    mimeFamily: true,
++  ),
++  ModifierDef(
++    id: 'other_language',
++    name: 'Faire deviner dans une autre langue',
++    description: 'On fait deviner en parlant une autre langue que le '
++        'français.',
++    nature: ModifierNature.malus,
++    notInRound3: true,
++  ),
+ ];
+ 
+ /// Paires incompatibles (Q14 de l'epic). Chaque paire est écrite une fois :
+-/// [areCompatible] est symétrique par construction. « Dessiner » contre les
+-/// mimes n'y figure pas : c'est une règle de groupe ([kDrawId], `mime`).
++/// [areCompatible] est symétrique par construction. La famille « Mime » n'y
++/// figure pas : c'est une règle de groupe (`mimeFamily`).
+ const List<(String, String)> kModifierIncompatibilities = [
+   ('no_pass', 'two_words'),
+   ('no_pass', 'free_pass'),
+-  ('mime_no_arms', 'mime_eyes_closed'),
+-  ('mime_no_fists', 'mime_no_arms'),
+ ];
+ 
+-/// « Dessiner » remplace le mime : il exclut TOUT modificateur `mime`, et
+-/// inversement (retours device 2026-11-04) — un mime ajouté au catalogue
+-/// l'est d'office.
+-const String kDrawId = 'draw';
+-
+ /// « Une seule réponse » : modificateur de TOUTE la partie, hors de
+ /// [kModifierCatalog] (ni tiré par manche, ni proposé, ni fixé). Son état vit
+ /// dans `FiestaRules.oneAnswer` : coché en Personnalisé, tiré au lancement
+@@ -156,10 +181,12 @@ ModifierDef? modifierById(String id) {
+   return null;
+ }
+ 
++/// Deux membres de la famille « Mime » (`mimeFamily`, « Dessiner » compris)
++/// s'excluent toujours (retours device 2026-11-04) : un membre ajouté au
++/// catalogue l'est d'office.
+ bool areCompatible(String a, String b) {
+-  bool drawVsMime(String x, String y) =>
+-      x == kDrawId && (modifierById(y)?.mime ?? false);
+-  if (drawVsMime(a, b) || drawVsMime(b, a)) return false;
++  bool family(String id) => modifierById(id)?.mimeFamily ?? false;
++  if (family(a) && family(b)) return false;
+   for (final (x, y) in kModifierIncompatibilities) {
+     if ((x == a && y == b) || (x == b && y == a)) return false;
+   }
+diff --git a/lib/models/fiesta/offers.dart b/lib/models/fiesta/offers.dart
+index 9709985..ab57d5d 100644
+--- a/lib/models/fiesta/offers.dart
++++ b/lib/models/fiesta/offers.dart
+@@ -28,6 +28,9 @@ const Map<String, OfferStrength> kOfferStrength = {
+   'block_guesser': OfferStrength.heavy,
+   'mime_no_arms': OfferStrength.heavy,
+   'mime_eyes_closed': OfferStrength.heavy,
++  'mime_back_turned': OfferStrength.medium,
++  'other_language': OfferStrength.medium,
++  'mime_under_sheet': OfferStrength.heavy,
+ };
+ 
+ /// 🔴 À RECALIBRER : seuils de la maquette, écart ≤ 3 → légère, ≤ 7 →
+diff --git a/lib/models/fiesta/symmetric_draw.dart b/lib/models/fiesta/symmetric_draw.dart
+index 15694f8..f031498 100644
+--- a/lib/models/fiesta/symmetric_draw.dart
++++ b/lib/models/fiesta/symmetric_draw.dart
+@@ -21,9 +21,10 @@ int drawSeed(String gameId, int round) {
+   return hash;
+ }
+ 
+-/// Un modificateur peut-il sortir en manche [round] ?
++/// Un modificateur peut-il sortir en manche [round] ? (« manche 3
++/// seulement » pour le mime, jamais en manche 3 pour la parole.)
+ bool isEligibleForRound(ModifierDef def, int round) =>
+-    !def.round3Only || round == 3;
++    round == 3 ? !def.notInRound3 : !def.round3Only;
+ 
+ /// Un modificateur qui vise un joueur (`block_guesser`, choisi par les
+ /// adversaires) n'a pas de sens « pour toutes les équipes » : ni tiré, ni fixé.
+diff --git a/lib/screens/CLAUDE.md b/lib/screens/CLAUDE.md
+index e08b1fe..a588f0f 100644
+--- a/lib/screens/CLAUDE.md
++++ b/lib/screens/CLAUDE.md
+@@ -17,7 +17,7 @@ HomeScreen → SettingsScreen (Classique / Fiesta ; Auto / Personnalisé dans «
+ | Ecran | Role |
+ |-------|------|
+ | `home_screen.dart` | Accueil : 3 etats (partie suspendue, session existante, nouveau jeu) |
+-| `settings_screen.dart` | Premier ecran de toute partie : interrupteur Classique / Fiesta (Classique par defaut ; 1er choix de Fiesta → tuto Fiesta une fois), nb joueurs/equipes, mode mots, categories, parametres avances (modal ; en Fiesta, + Auto / Personnalise ; en bas, « Reinitialiser les parametres » avec confirmation). En haut a droite : « ? » et roue crantee seulement. Retour (bouton et retour systeme) → accueil |
++| `settings_screen.dart` | Premier ecran de toute partie, **sans defilement** (390 × 763 et 360 × 740 utiles) : sections Joueurs, Equipes, « Mode de jeu » (interrupteur Classique / Fiesta ; Classique par defaut ; 1er choix de Fiesta → tuto Fiesta une fois), Choix des mots, puis categories, parametres avances (modal sans defilement, curseurs `compact` ; en Fiesta, + Auto / Personnalise ; en bas, « Reinitialiser les parametres » avec confirmation). En haut a droite : « ? » et roue crantee seulement. Retour (bouton et retour systeme) → accueil |
+ | `categories_screen.dart` | Selection categories et niveaux de difficulte (1-4) |
+ | `players_screen.dart` | Saisie noms joueurs + generation mots aleatoires avec cache metadata |
+ | `words_screen.dart` | Saisie mots par joueur (mode personnalise). Bouton "Grosse flemme" pour auto-remplir |
+@@ -33,7 +33,7 @@ HomeScreen → SettingsScreen (Classique / Fiesta ; Auto / Personnalisé dans «
+ | `rules_tutorial_screen.dart` | Tuto des regles, 4 cartes (`Navigator.push` via `show`), pénalité de passe lue dans les reglages |
+ | `fiesta_tutorial_screen.dart` | Tuto Fiesta, 3 cartes (`Navigator.push` via `show`) |
+ | `fiesta_ensembles_screen.dart` | « Mes ensembles » (Fiesta Personnalise, apres les equipes ; retour bouton et systeme → equipes) : compteur n / 10, Creer, Jouer / Modifier / Dupliquer / Supprimer (confirmation) |
+-| `fiesta_ensemble_editor_screen.dart` | Editeur d'un ensemble, ouvert par `Navigator.push` depuis la liste (rend `true` si enregistre). Catalogue + « Une seule reponse » (toute la partie), tirage 0 a 3. Bouton grise + explications tant que `validateEnsemble` rend des erreurs |
++| `fiesta_ensemble_editor_screen.dart` | Editeur d'un ensemble, ouvert par `Navigator.push` depuis la liste (rend `true` si enregistre). Catalogue en sections Malus (dont « Une seule reponse », toute la partie, et la sous-categorie Mimes : un seul a la fois, allumer l'un coupe les autres) puis Bonus, tirage 0 a 3. Bouton grise + explications tant que `validateEnsemble` rend des erreurs |
+ 
+ Invariant Fiesta : le choix du mode vit dans `GameProvider.pendingFiesta`, **en memoire
+ seulement** (Q10) : nul = Classique, `FiestaRules(mode: auto)` = Auto, mode `custom` =
+diff --git a/lib/screens/fiesta_ensemble_editor_screen.dart b/lib/screens/fiesta_ensemble_editor_screen.dart
+index d93e34d..5318990 100644
+--- a/lib/screens/fiesta_ensemble_editor_screen.dart
++++ b/lib/screens/fiesta_ensemble_editor_screen.dart
+@@ -148,12 +148,34 @@ class _FiestaEnsembleEditorScreenState
+                         ),
+                       ),
+                       _Card(
+-                        title: 'Catalogue',
++                        title: 'Malus',
+                         child: Column(
++                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                           children: [
+                             for (final def in kModifierCatalog)
+-                              _buildModifier(def),
++                              if (def.nature == ModifierNature.malus &&
++                                  !def.mimeFamily)
++                                _buildModifier(def),
+                             _buildOneAnswer(),
++                            const SizedBox(height: 12),
++                            Text(
++                              'MIMES · UN SEUL À LA FOIS',
++                              style: AppTextStyles.label.copyWith(
++                                  color: AppColors.gray400, fontSize: 11),
++                            ),
++                            const SizedBox(height: 6),
++                            for (final def in kModifierCatalog)
++                              if (def.mimeFamily) _buildModifier(def),
++                          ],
++                        ),
++                      ),
++                      _Card(
++                        title: 'Bonus',
++                        child: Column(
++                          children: [
++                            for (final def in kModifierCatalog)
++                              if (def.nature == ModifierNature.bonus)
++                                _buildModifier(def),
+                           ],
+                         ),
+                       ),
+@@ -244,6 +266,16 @@ class _FiestaEnsembleEditorScreenState
+               _switch(s.active, (v) {
+                 if (v) _openModifier = def.id;
+                 _setModifier(def, s.copyWith(active: v));
++                // Famille « Mime » : choix exclusif, allumer l'un coupe les
++                // autres.
++                if (v && def.mimeFamily) {
++                  for (final other in kModifierCatalog) {
++                    if (other.mimeFamily && other.id != def.id) {
++                      _setModifier(
++                          other, _settingFor(other).copyWith(active: false));
++                    }
++                  }
++                }
+               }),
+             ],
+           ),
+@@ -275,7 +307,7 @@ class _FiestaEnsembleEditorScreenState
+                     : _Stepper(
+                         value: s.fixedRound ?? 3,
+                         min: 1,
+-                        max: 3,
++                        max: def.notInRound3 ? 2 : 3,
+                         onChanged: (v) =>
+                             _setModifier(def, s.copyWith(fixedRound: v)),
+                       ),
+@@ -288,12 +320,13 @@ class _FiestaEnsembleEditorScreenState
+                     : _Stepper(
+                         value: s.startRound,
+                         min: s.arrival == ModifierArrival.offer ? 2 : 1,
+-                        max: 3,
++                        max: def.notInRound3 ? 2 : 3,
+                         onChanged: (v) =>
+                             _setModifier(def, s.copyWith(startRound: v)),
+                       ),
+               ),
+             if (round3) const _Hint('Manche 3 seulement (mime).'),
++            if (def.notInRound3) const _Hint('Jamais en manche 3 (on y mime).'),
+             if (def.defaultCharges > 0)
+               _line(
+                 def.id == 'free_pass'
+@@ -332,9 +365,7 @@ class _FiestaEnsembleEditorScreenState
+       trailing: _switch(
+         on,
+         (v) => setState(() => _rules = _rules.copyWith(
+-              catchUp: v
+-                  ? CatchUpRules.auto
+-                  : const CatchUpRules(b1: 0, b2: 0, cap: 0, mal: 0, malCap: 0),
++              catchUp: v ? CatchUpRules.auto : kCatchUpOff,
+             )),
+       ),
+       child: !on
+diff --git a/lib/screens/settings_screen.dart b/lib/screens/settings_screen.dart
+index 4868d89..f5bb617 100644
+--- a/lib/screens/settings_screen.dart
++++ b/lib/screens/settings_screen.dart
+@@ -125,26 +125,20 @@ class _SettingsScreenState extends State<SettingsScreen>
+         child: Stack(
+           children: [
+             SafeArea(
++              // Tout tient sans défiler sur un iPhone 390 × 844 (763 px utiles)
++              // et un Android 360 × 780 (740 utiles), avertissement « partie
++              // longue » compris : espacements serrés (retours 2026-11-04).
+               child: SingleChildScrollView(
+-                padding: const EdgeInsets.all(24),
++                padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                 child: Column(
+                   children: [
++                    // Sous les boutons du haut (retour, aide, roue crantée).
+                     const SizedBox(height: 48),
+                     Text(
+                       'Paramètres',
+                       style: AppTextStyles.subtitle(fontSize: 40),
+                     ),
+-                    const SizedBox(height: 32),
+-
+-                    // Classique / Fiesta (Auto / Personnalisé : roue crantée)
+-                    AppToggle(
+-                      key: _modeKey,
+-                      options: const [_classic, _fiesta],
+-                      selected:
+-                          provider.pendingFiesta == null ? _classic : _fiesta,
+-                      onChange: (value) => _setMode(provider, value),
+-                    ),
+-                    const SizedBox(height: 24),
++                    const SizedBox(height: _sectionGap),
+ 
+                     // Nombre de joueurs et d'équipes (une seule cible d'aide)
+                     Column(
+@@ -161,7 +155,7 @@ class _SettingsScreenState extends State<SettingsScreen>
+                                 provider.updateSettings(numberOfPlayers: value),
+                           ),
+                         ),
+-                        const SizedBox(height: 24),
++                        const SizedBox(height: _sectionGap),
+ 
+                         // Nombre d'équipes (ajuste le minimum de joueurs)
+                         _buildSection(
+@@ -183,7 +177,20 @@ class _SettingsScreenState extends State<SettingsScreen>
+                         ),
+                       ],
+                     ),
+-                    const SizedBox(height: 24),
++                    const SizedBox(height: _sectionGap),
++
++                    // Classique / Fiesta (Auto / Personnalisé : roue crantée)
++                    _buildSection(
++                      title: 'Mode de jeu',
++                      child: AppToggle(
++                        key: _modeKey,
++                        options: const [_classic, _fiesta],
++                        selected:
++                            provider.pendingFiesta == null ? _classic : _fiesta,
++                        onChange: (value) => _setMode(provider, value),
++                      ),
++                    ),
++                    const SizedBox(height: _sectionGap),
+ 
+                     // Choix des mots
+                     KeyedSubtree(
+@@ -254,12 +261,12 @@ class _SettingsScreenState extends State<SettingsScreen>
+                       ),
+                     ),
+ 
+-                    const SizedBox(height: 32),
++                    const SizedBox(height: _sectionGap),
+ 
+                     // Avertissement si trop de mots
+                     if (settings.totalWords > 50)
+                       Padding(
+-                        padding: const EdgeInsets.only(bottom: 16),
++                        padding: const EdgeInsets.only(bottom: 12),
+                         child: Row(
+                           mainAxisAlignment: MainAxisAlignment.center,
+                           children: [
+@@ -321,7 +328,6 @@ class _SettingsScreenState extends State<SettingsScreen>
+                         provider.goToScreen(AppConstants.screenPlayers);
+                       },
+                     ),
+-                    const SizedBox(height: 24),
+                   ],
+                 ),
+               ),
+@@ -409,12 +415,15 @@ class _SettingsScreenState extends State<SettingsScreen>
+             color: Colors.white,
+           ),
+         ),
+-        const SizedBox(height: 16),
++        const SizedBox(height: 8),
+         child,
+       ],
+     );
+   }
+ 
++  /// Espace entre deux sections (serré : l'écran tient sans défiler).
++  static const double _sectionGap = 16;
++
+   void _showResetConfirmation(BuildContext context, GameProvider provider) {
+     AppModal.show(
+       context,
+@@ -519,6 +528,7 @@ class _SettingsScreenState extends State<SettingsScreen>
+           return SingleChildScrollView(
+             child: Column(
+               mainAxisSize: MainAxisSize.min,
++              // Serré : tout tient sans défiler (iPhone 390 × 844).
+               children: [
+                 // Nombre total de mots
+                 AppSlider(
+@@ -526,12 +536,13 @@ class _SettingsScreenState extends State<SettingsScreen>
+                   min: AppConstants.minTotalWords.toDouble(),
+                   max: AppConstants.maxTotalWords.toDouble(),
+                   value: settings.totalWords.toDouble(),
++                  compact: true,
+                   onChanged: (value) {
+                     provider.updateSettings(totalWords: value.toInt());
+                     setState(() {});
+                   },
+                 ),
+-                const SizedBox(height: 24),
++                const SizedBox(height: 8),
+ 
+                 // Durée du tour
+                 AppSlider(
+@@ -540,12 +551,13 @@ class _SettingsScreenState extends State<SettingsScreen>
+                   max: AppConstants.maxTurnDuration.toDouble(),
+                   value: settings.turnDuration.toDouble(),
+                   unit: 's',
++                  compact: true,
+                   onChanged: (value) {
+                     provider.updateSettings(turnDuration: value.toInt());
+                     setState(() {});
+                   },
+                 ),
+-                const SizedBox(height: 24),
++                const SizedBox(height: 8),
+ 
+                 // Pénalité de passe
+                 AppSlider(
+@@ -554,6 +566,7 @@ class _SettingsScreenState extends State<SettingsScreen>
+                   max: AppConstants.maxPassPenalty.toDouble(),
+                   value: settings.passPenalty.toDouble(),
+                   unit: 's',
++                  compact: true,
+                   onChanged: (value) {
+                     provider.updateSettings(passPenalty: value.toInt());
+                     setState(() {});
+@@ -562,7 +575,7 @@ class _SettingsScreenState extends State<SettingsScreen>
+ 
+                 // Fiesta : Auto / Personnalisé, seulement en mode Fiesta
+                 if (provider.pendingFiesta != null) ...[
+-                  const SizedBox(height: 24),
++                  const SizedBox(height: 8),
+                   const Align(
+                     alignment: Alignment.centerLeft,
+                     child: Text(
+@@ -574,7 +587,7 @@ class _SettingsScreenState extends State<SettingsScreen>
+                       ),
+                     ),
+                   ),
+-                  const SizedBox(height: 12),
++                  const SizedBox(height: 8),
+                   AppToggle(
+                     options: const [_auto, _custom],
+                     selected: provider.pendingFiesta!.mode == FiestaMode.custom
+@@ -589,11 +602,12 @@ class _SettingsScreenState extends State<SettingsScreen>
+ 
+                 // Réinitialiser (ancien bouton rond du coin haut droit) : ferme
+                 // « Avancés », puis la même confirmation qu'avant.
+-                const SizedBox(height: 24),
++                const SizedBox(height: 8),
+                 AppButton(
+                   text: 'Réinitialiser les paramètres',
+                   variant: AppButtonVariant.ghost,
+-                  size: AppButtonSize.small,
++                  // Medium : cible tactile ≥ 44 px (revue r1).
++                  size: AppButtonSize.medium,
+                   onPressed: () {
+                     Navigator.of(context).pop();
+                     _showResetConfirmation(screenContext, provider);
+diff --git a/lib/widgets/CLAUDE.md b/lib/widgets/CLAUDE.md
+index afc1827..93d8d2f 100644
+--- a/lib/widgets/CLAUDE.md
++++ b/lib/widgets/CLAUDE.md
+@@ -20,7 +20,7 @@ desactive). Pas encore branche : les stories du tour le cablent dans `turn_scree
+ |--------|--------------|-------------|
+ | `FiestaWordCard` | `({required String word, bool reversed = false, VoidCallback? onGuessed, VoidCallback? onPass, String passLabel = 'Passer', String? label, double fontSize = 56})` | 2-11 |
+ | `TwoWordsLayout` | `({required String firstWord, String? secondWord, bool reversed = false, onGuessedFirst, onPassFirst, onGuessedSecond, onPassSecond, String passLabel = 'Passer'})` | 2-11 |
+-| `MimeConstraintBanner` | `({required String modifierId})` ; ids acceptes = `MimeConstraintBanner.icons.keys` | 2-8 |
++| `MimeConstraintBanner` | `({required String modifierId})` ; ids acceptes = `MimeConstraintBanner.icons.keys` (famille Mime + `other_language`) | 2-8 |
+ 
+ - `FiestaWordCard` anime chaque nouveau mot et **ignore les taps pendant `kWordCardLock`
+   (300 ms)** (2-11 critere 9). Etat de widget seulement : rien de persiste, chrono intact.
+diff --git a/lib/widgets/common/app_counter.dart b/lib/widgets/common/app_counter.dart
+index 4b4d01d..7eaf756 100644
+--- a/lib/widgets/common/app_counter.dart
++++ b/lib/widgets/common/app_counter.dart
+@@ -44,7 +44,7 @@ class AppCounter extends StatelessWidget {
+             const SizedBox(width: 24),
+             Text(
+               '$value',
+-              style: AppTextStyles.title(fontSize: 48),
++              style: AppTextStyles.title(fontSize: 40),
+             ),
+             const SizedBox(width: 24),
+             _buildCircularButton(
+diff --git a/lib/widgets/common/app_slider.dart b/lib/widgets/common/app_slider.dart
+index 5cf40b1..92e5fd2 100644
+--- a/lib/widgets/common/app_slider.dart
++++ b/lib/widgets/common/app_slider.dart
+@@ -9,6 +9,10 @@ class AppSlider extends StatelessWidget {
+   final String? label;
+   final String unit;
+ 
++  /// Valeur à droite du libellé plutôt que sous le curseur (fenêtre
++  /// « Avancés », qui doit tenir sans défiler).
++  final bool compact;
++
+   const AppSlider({
+     required this.min,
+     required this.max,
+@@ -16,24 +20,41 @@ class AppSlider extends StatelessWidget {
+     this.onChanged,
+     this.label,
+     this.unit = '',
++    this.compact = false,
+     super.key,
+   });
+ 
+   @override
+   Widget build(BuildContext context) {
++    final valueText = Text(
++      '${value.toInt()}$unit',
++      style: const TextStyle(
++        fontFamily: 'Poppins',
++        fontSize: 20,
++        fontWeight: FontWeight.w600,
++        color: AppColors.secondaryCyan,
++      ),
++    );
+     return Column(
+       crossAxisAlignment: CrossAxisAlignment.start,
+       children: [
+         if (label != null) ...[
+-          Text(
+-            label!,
+-            style: const TextStyle(
+-              fontFamily: 'Poppins',
+-              color: Colors.white,
+-              fontSize: 16,
+-            ),
++          Row(
++            children: [
++              Expanded(
++                child: Text(
++                  label!,
++                  style: const TextStyle(
++                    fontFamily: 'Poppins',
++                    color: Colors.white,
++                    fontSize: 16,
++                  ),
++                ),
++              ),
++              if (compact) valueText,
++            ],
+           ),
+-          const SizedBox(height: 12),
++          if (!compact) const SizedBox(height: 12),
+         ],
+         Material(
+           color: Colors.transparent,
+@@ -54,17 +75,7 @@ class AppSlider extends StatelessWidget {
+             ),
+           ),
+         ),
+-        Center(
+-          child: Text(
+-            '${value.toInt()}$unit',
+-            style: const TextStyle(
+-              fontFamily: 'Poppins',
+-              fontSize: 20,
+-              fontWeight: FontWeight.w600,
+-              color: AppColors.secondaryCyan,
+-            ),
+-          ),
+-        ),
++        if (!compact || label == null) Center(child: valueText),
+       ],
+     );
+   }
+diff --git a/lib/widgets/fiesta/fiesta_turn_widgets.dart b/lib/widgets/fiesta/fiesta_turn_widgets.dart
+index 73a2b15..e7c65f2 100644
+--- a/lib/widgets/fiesta/fiesta_turn_widgets.dart
++++ b/lib/widgets/fiesta/fiesta_turn_widgets.dart
+@@ -267,15 +267,20 @@ class TwoWordsLayout extends StatelessWidget {
+   }
+ }
+ 
+-/// Bandeau statique d'une contrainte annoncée de la manche 3 (mime, dessin) :
+-/// nom et description du catalogue (2-8).
++/// Bandeau statique d'une contrainte annoncée (famille « Mime » de la
++/// manche 3, parole dans une autre langue) : nom et description du catalogue
++/// (2-8).
+ class MimeConstraintBanner extends StatelessWidget {
+-  /// Les ids du catalogue que ce bandeau sait afficher (= les `round3Only`).
++  /// Les ids du catalogue que ce bandeau sait afficher (les `round3Only` et
++  /// `other_language`).
+   static const Map<String, IconData> icons = {
+     'mime_no_arms': Icons.do_not_touch,
+     'mime_no_fists': Icons.back_hand,
+     'mime_eyes_closed': Icons.visibility_off,
+     'draw': Icons.edit,
++    'mime_under_sheet': Icons.bed,
++    'mime_back_turned': Icons.flip_camera_android,
++    'other_language': Icons.translate,
+   };
+ 
+   final String modifierId;
+diff --git a/lib/widgets/fiesta/modifier_badge.dart b/lib/widgets/fiesta/modifier_badge.dart
+index b35ab79..89bebb6 100644
+--- a/lib/widgets/fiesta/modifier_badge.dart
++++ b/lib/widgets/fiesta/modifier_badge.dart
+@@ -18,6 +18,9 @@ const Map<String, String> kModifierIcons = {
+   'two_words': '⧉',
+   'reversed': '⇄',
+   'block_guesser': '🔇',
++  'mime_under_sheet': '⛺',
++  'mime_back_turned': '↩',
++  'other_language': '🌐',
+ };
+ 
+ String modifierIcon(String id) => kModifierIcons[id] ?? '✦';
+diff --git a/lib/widgets/help/WIRING.md b/lib/widgets/help/WIRING.md
+index b4ba430..8687af5 100644
+--- a/lib/widgets/help/WIRING.md
++++ b/lib/widgets/help/WIRING.md
+@@ -29,7 +29,7 @@ résultats finaux en montrent.
+ | Écran | Fonction | Clés à poser | Bouton « ? » |
+ |---|---|---|---|
+ | `home_screen` | `homeHelp` | `play` (« Jouer » **ou** « Nouvelle partie »), `resume` (« Reprendre »), `replay` (« Rejouer »), `rules`, `history` | `right: 16` |
+-| `settings_screen` | `settingsHelp(passPenalty: provider.settings.passPenalty)` | `mode` (interrupteur Classique / Fiesta), `counts` (cartes Joueurs + Équipes), `wordChoice`, `categories` (bouton Catégories & Difficultés), `advanced` (bouton Avancés ; « Réinitialiser les paramètres » vit en bas de cette fenêtre) | `HelpButton.inline` en tête de la `Row` « ? » / Avancés |
++| `settings_screen` | `settingsHelp(passPenalty: provider.settings.passPenalty)` | `counts` (cartes Joueurs + Équipes), `mode` (interrupteur Classique / Fiesta de la section « Mode de jeu »), `wordChoice`, `categories` (bouton Catégories & Difficultés), `advanced` (bouton Avancés ; « Réinitialiser les paramètres » vit en bas de cette fenêtre) | `HelpButton.inline` en tête de la `Row` « ? » / Avancés |
+ | `players_screen` | `playersHelp` | `firstPlayer` (ligne du joueur 1), `words` (bouton Saisir/Voir mots du joueur 1), `next` | `right: 16` |
+ | `teams_screen` | `teamsHelp` | `firstTeam` (carte de la 1re équipe), `shuffle`, `start` (« Commencer ») | `right: 16` |
+ | `game_screen` (avant-tour) | `preTurnHelp(playerName: …)` | `team` (nom d'équipe + joueur), `roundRules` (icône info de la manche), `previousTurn` (« Tour précédent »), `start` | `right: besideCornerButton` |
+diff --git a/lib/widgets/help/help_content.dart b/lib/widgets/help/help_content.dart
+index d3f697b..92c7bdd 100644
+--- a/lib/widgets/help/help_content.dart
++++ b/lib/widgets/help/help_content.dart
+@@ -67,6 +67,12 @@ List<CoachStep> settingsHelp({
+   required int passPenalty,
+ }) =>
+     [
++      CoachStep(
++        target: counts,
++        title: 'Joueurs et équipes',
++        text: 'Le nombre de joueurs, et d\'équipes. Il faut au moins '
++            '2 joueurs par équipe.',
++      ),
+       CoachStep(
+         target: mode,
+         title: 'Classique ou Fiesta',
+@@ -75,12 +81,6 @@ List<CoachStep> settingsHelp({
+             'crantée choisit Auto (l\'app décide de tout) ou Personnalisé '
+             '(tes propres réglages, choisis après les équipes).',
+       ),
+-      CoachStep(
+-        target: counts,
+-        title: 'Joueurs et équipes',
+-        text: 'Le nombre de joueurs, et d\'équipes. Il faut au moins '
+-            '2 joueurs par équipe.',
+-      ),
+       CoachStep(
+         target: wordChoice,
+         title: 'Choix des mots',
+diff --git a/test/models/fiesta/ensemble_validation_test.dart b/test/models/fiesta/ensemble_validation_test.dart
+index 2134273..49dd92d 100644
+--- a/test/models/fiesta/ensemble_validation_test.dart
++++ b/test/models/fiesta/ensemble_validation_test.dart
+@@ -142,4 +142,35 @@ void main() {
+     expect(validateEnsemble(apart), isEmpty,
+         reason: 'sur deux manches différentes, ils ne se croisent pas');
+   });
++
++  test('« Autre langue » sur la manche 3 (mime) → refusé', () {
++    for (final s in [
++      setting(ModifierArrival.fixed, fixedRound: 3),
++      setting(ModifierArrival.draw, startRound: 3),
++      // Hors bornes : jamais atteint (revue r1).
++      setting(ModifierArrival.fixed, fixedRound: 4),
++      setting(ModifierArrival.fixed, fixedRound: 0),
++      setting(ModifierArrival.draw, startRound: 4),
++      setting(ModifierArrival.offer, startRound: 3),
++    ]) {
++      expect(
++        validateEnsemble(rulesWith(overrides: {'other_language': s})),
++        contains(startsWith('Faire deviner dans une autre langue n\'existe '
++            'pas en manche 3')),
++        reason: '${s.arrival} ${s.fixedRound} ${s.startRound}',
++      );
++    }
++    expect(
++      validateEnsemble(rulesWith(overrides: {
++        'other_language': setting(ModifierArrival.fixed, fixedRound: 2),
++      })),
++      isEmpty,
++    );
++    expect(
++      validateEnsemble(rulesWith(overrides: {
++        'other_language': setting(ModifierArrival.offer, startRound: 2),
++      })),
++      isEmpty,
++    );
++  });
+ }
+diff --git a/test/models/fiesta/fiesta_catalog_test.dart b/test/models/fiesta/fiesta_catalog_test.dart
+index ad144ab..c9d0975 100644
+--- a/test/models/fiesta/fiesta_catalog_test.dart
++++ b/test/models/fiesta/fiesta_catalog_test.dart
+@@ -17,7 +17,7 @@ ModifierInstance _instance(String id,
+ void main() {
+   group('Catalogue Fiesta', () {
+     test(
+-        '11 ids uniques, et la table d\'incompatibilités ne cite que des ids '
++        '14 ids uniques, et la table d\'incompatibilités ne cite que des ids '
+         'du catalogue', () {
+       // 🔴 Ids FIGÉS : ils sont persistés dans les parties en cours et les
+       // ensembles enregistrés. En renommer un rend ces données illisibles.
+@@ -34,6 +34,9 @@ void main() {
+         'two_words',
+         'reversed',
+         'block_guesser',
++        'mime_under_sheet',
++        'mime_back_turned',
++        'other_language',
+       ]);
+ 
+       for (final (a, b) in kModifierIncompatibilities) {
+@@ -52,11 +55,28 @@ void main() {
+       }
+       expect(areCompatible('no_pass', 'two_words'), isFalse);
+       expect(areCompatible('two_words', 'no_pass'), isFalse);
+-      // « Dessiner » exclut tout mime, et inversement.
+-      for (final def in kModifierCatalog.where((d) => d.mime)) {
+-        expect(areCompatible('draw', def.id), isFalse, reason: def.id);
++      // Famille « Mime » (« Dessiner » compris) : deux membres s'excluent
++      // toujours ; hors famille, les mimes ne gênent personne.
++      final family = kModifierCatalog.where((d) => d.mimeFamily).toList();
++      expect(family.map((d) => d.id), {
++        'mime_no_arms',
++        'mime_no_fists',
++        'mime_eyes_closed',
++        'draw',
++        'mime_under_sheet',
++        'mime_back_turned',
++      });
++      for (final a in family) {
++        for (final b in family) {
++          expect(areCompatible(a.id, b.id), isFalse, reason: '${a.id}/${b.id}');
++        }
++        expect(areCompatible(a.id, 'reversed'), isTrue, reason: a.id);
++      }
++      // « Autre langue » : compatible avec tout (jamais en M3, donc jamais
++      // avec un mime).
++      for (final id in ids) {
++        expect(areCompatible('other_language', id), isTrue, reason: id);
+       }
+-      expect(kModifierCatalog.where((d) => d.mime), hasLength(3));
+       expect(areCompatible('no_pass', 'reversed'), isTrue);
+     });
+   });
+diff --git a/test/models/fiesta/offers_test.dart b/test/models/fiesta/offers_test.dart
+index 4dea49a..e70608b 100644
+--- a/test/models/fiesta/offers_test.dart
++++ b/test/models/fiesta/offers_test.dart
+@@ -98,7 +98,7 @@ void main() {
+     // `no_pass` tiré pour tous : `two_words` (incompatible) et `no_pass`
+     // contre Rose (déjà subi, carte sans effet) disparaissent.
+     expect(ids(offersFor(s, 'bleue', roundDraw: [forAll('no_pass')])),
+-        ['double_points']);
++        ['other_language', 'double_points']);
+ 
+     // Rose a déjà 3 modificateurs (tirage + choix des équipes précédentes) :
+     // plus de malus contre elle, les bonus pour Bleue restent.
+@@ -171,7 +171,7 @@ void main() {
+       'retrouve les mêmes offres', () {
+     expect(offerSeed('g', 1, 'bleue'), 1610297326);
+     expect(ids(offersFor(const Standings({'rose': 14, 'bleue': 8}), 'bleue')),
+-        ['double_points', 'two_words', 'no_pass']);
++        ['no_pass', 'two_words', 'other_language']);
+   });
+ 
+   test(
+diff --git a/test/models/fiesta/symmetric_draw_test.dart b/test/models/fiesta/symmetric_draw_test.dart
+index 2bd3586..5417241 100644
+--- a/test/models/fiesta/symmetric_draw_test.dart
++++ b/test/models/fiesta/symmetric_draw_test.dart
+@@ -44,8 +44,9 @@ void main() {
+ 
+   test(
+       'pour toute config, manche et graine : plafond (2 en Auto, 3 en '
+-      'Personnalisé), aucune paire incompatible, jamais « Dessiner » avec un '
+-      'mime, rien de « manche 3 » avant M3, résultat déterministe', () {
++      'Personnalisé), aucune paire incompatible, au plus un de la famille '
++      '« Mime », rien de « manche 3 » avant M3 ni de « pas en M3 » en M3, '
++      'résultat déterministe', () {
+     final seen = <String, Set<int>>{};
+     configs.forEach((label, rulesFor) {
+       for (final round in [1, 2, 3]) {
+@@ -58,10 +59,9 @@ void main() {
+           final cap = label == 'Auto' ? 2 : 3;
+           expect(ids.length, lessThanOrEqualTo(cap), reason: why);
+           (seen[label] ??= {}).add(ids.length);
+-          if (ids.contains('draw')) {
+-            expect(ids.where((id) => modifierById(id)!.mime), isEmpty,
+-                reason: why);
+-          }
++          expect(ids.where((id) => modifierById(id)!.mimeFamily).length,
++              lessThanOrEqualTo(1),
++              reason: why);
+           expect(ids, isNot(contains('block_guesser')), reason: why);
+           expect(ids.toSet().length, ids.length, reason: why);
+           for (var i = 0; i < ids.length; i++) {
+@@ -75,6 +75,9 @@ void main() {
+           if (round < 3) {
+             expect(ids.where((id) => modifierById(id)!.round3Only), isEmpty,
+                 reason: why);
++          } else {
++            expect(ids.where((id) => modifierById(id)!.notInRound3), isEmpty,
++                reason: why);
+           }
+           // Même graine (retour arrière, app tuée) = même tirage.
+           final again = roundModifiers(rules, gameId: gameId, round: round)
+@@ -96,8 +99,9 @@ void main() {
+       drawCount: 3,
+       modifiers: {
+         'draw': setting(ModifierArrival.fixed, fixedRound: 3),
+-        for (final id in ['mime_no_arms', 'mime_no_fists', 'mime_eyes_closed'])
+-          id: setting(ModifierArrival.draw, startRound: 3),
++        for (final def in kModifierCatalog.where((d) => d.mimeFamily))
++          if (def.id != 'draw')
++            def.id: setting(ModifierArrival.draw, startRound: 3),
+       },
+     );
+     for (final gameId in gameIds) {
+diff --git a/test/providers/fiesta_pick_three_test.dart b/test/providers/fiesta_pick_three_test.dart
+index 066ad12..dee4a7f 100644
+--- a/test/providers/fiesta_pick_three_test.dart
++++ b/test/providers/fiesta_pick_three_test.dart
+@@ -45,7 +45,9 @@ String playTurn(GameProvider provider, int n) {
+ }
+ 
+ /// Personnalisé, 1 parmi 3 allumé, sans tirage : tout le catalogue proposé
+-/// à l'équipe menée dès M2.
++/// à l'équipe menée dès M2, sauf « autre langue » : coupée, elle laisse
++/// exactement 3 cartes « moyenne » (le `gameId` est aléatoire, les offres
++/// doivent donc être les mêmes quel qu'il soit).
+ final pickThree = FiestaRules(
+   mode: FiestaMode.custom,
+   oneOfThree: true,
+@@ -53,7 +55,7 @@ final pickThree = FiestaRules(
+   modifiers: {
+     for (final def in kModifierCatalog)
+       def.id: ModifierSetting(
+-        active: true,
++        active: def.id != 'other_language',
+         arrival: ModifierArrival.offer,
+         startRound: 2,
+         charges: def.defaultCharges,
+diff --git a/test/services/fiesta_ensemble_service_test.dart b/test/services/fiesta_ensemble_service_test.dart
+index a2638bf..2c2d300 100644
+--- a/test/services/fiesta_ensemble_service_test.dart
++++ b/test/services/fiesta_ensemble_service_test.dart
+@@ -1,6 +1,7 @@
+ import 'dart:convert';
+ 
+ import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/ensemble_validation.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/fiesta_state.dart';
+@@ -65,6 +66,38 @@ void main() {
+     expect(rules.catchUp.b2, 5);
+   });
+ 
++  test(
++      'ensemble d\'avant la famille « Mime » (deux mimes fixés sur M3) : '
++      'relu sans planter, un seul mime gardé : le 1er fixé dans l\'ordre du '
++      'catalogue', () async {
++    String mod(String arrival, {bool active = true}) =>
++        '{"active":$active,"arrival":"$arrival","startRound":3,'
++        '"fixedRound":3,"charges":0}';
++    await givenPrefs({
++      key: '{"schemaVersion":1,"data":{"ensembles":[{"id":"e1","rules":'
++          '{"mode":"custom","ensembleName":"Vieux","modifiers":{'
++          '"draw":${mod('fixed')},"mime_eyes_closed":${mod('fixed')},'
++          '"mime_no_arms":${mod('draw')},"no_pass":${mod('draw')}}}}]}}',
++    });
++
++    final rules = (await service.load()).ensembles.single.rules;
++    // Les fixés passaient avant le tirage, dans l'ordre du catalogue :
++    // `mime_eyes_closed` d'abord, puis « Dessiner » et `mime_no_arms` (tiré)
++    // étaient refusés comme incompatibles.
++    expect(
++      {for (final e in rules.modifiers.entries) e.key: e.value.active},
++      {
++        'draw': false,
++        'mime_eyes_closed': true,
++        'mime_no_arms': false,
++        'no_pass': true,
++      },
++    );
++    expect(rules.modifiers['draw']!.arrival, ModifierArrival.fixed,
++        reason: 'réglages conservés, seul `active` change');
++    expect(validateEnsemble(rules), isEmpty);
++  });
++
+   test(
+       'écriture figée : une clé vide ou nulle est omise (blob Fiesta et '
+       'ensembles), et l\'absence se relit comme le défaut', () async {
