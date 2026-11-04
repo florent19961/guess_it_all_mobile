@@ -50,10 +50,9 @@ class AppConstants {
   static const String screenStats = 'stats';
   static const String screenCategories = 'categories';
   static const String screenHistory = 'history';
-  static const String screenGameMode = 'gameMode';
-  static const String screenFiestaChoice = 'fiestaChoice';
-  static const String screenFiestaAuto = 'fiestaAuto';
-  static const String screenFiestaRecap = 'fiestaRecap';
+  // Les anciens écrans « gameMode », « fiestaChoice », « fiestaAuto » et
+  // « fiestaRecap » ont disparu (2026-11-04) : un nom relu d'une version
+  // d'avant tombe sur l'accueil (`_buildCurrentScreen`, cas par défaut).
   static const String screenFiestaEnsembles = 'fiestaEnsembles';
 
   // Word choice modes

@@ -170,10 +170,12 @@ List<ModifierInstance> _candidates({
 }
 
 /// Une carte a-t-elle un effet ? Non si elle est incompatible ou dépasse le
-/// plafond de 2 pour sa cible (Q8), ni si le même modificateur touche déjà
-/// sa cible (tirage, choix ou cadeau précédent : la carte serait vide).
-bool _useful(List<ModifierInstance> taken, ModifierInstance c) =>
-    canAdd(taken, c) &&
+/// plafond pour sa cible ([maxModifiersPerTeam]), ni si le même modificateur
+/// touche déjà sa cible (tirage, choix ou cadeau précédent : la carte serait
+/// vide).
+bool _useful(
+        FiestaRules rules, List<ModifierInstance> taken, ModifierInstance c) =>
+    canAdd(taken, c, maxPerTurn: maxModifiersPerTeam(rules)) &&
     !taken.any((t) => t.catalogId == c.catalogId && t.concernsSameTeamAs(c));
 
 /// Jusqu'à [count] cartes utiles (voir [_useful]) à la force de [gap],
@@ -204,7 +206,7 @@ List<ModifierInstance> _offer({
       blockImmuneTeamIds: blockImmuneTeamIds,
     )..shuffle(random);
     final picked =
-        candidates.where((c) => _useful(taken, c)).take(count).toList();
+        candidates.where((c) => _useful(rules, taken, c)).take(count).toList();
     if (picked.isNotEmpty) return picked;
   }
   return const [];

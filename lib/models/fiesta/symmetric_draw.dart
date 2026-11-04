@@ -29,8 +29,20 @@ bool isEligibleForRound(ModifierDef def, int round) =>
 /// adversaires) n'a pas de sens « pour toutes les équipes » : ni tiré, ni fixé.
 bool isForAllTeams(ModifierDef def) => def.defaultTarget == ModifierTarget.both;
 
+/// Plafond de modificateurs par équipe et par manche : 2 en Auto (Q8), 3 en
+/// Personnalisé (retours device 2026-11-04). Vaut pour les fixés, le tirage
+/// et les cartes de fin de manche.
+int maxModifiersPerTeam(FiestaRules rules) =>
+    rules.mode == FiestaMode.custom ? 3 : 2;
+
+/// Auto : « Une seule réponse » ([kOneAnswer]) vaut-elle pour la partie
+/// [gameId] ? Une chance sur 4, DÉTERMINISTE par partie (graine de la
+/// « manche 0 », distincte de celles du tirage des manches 1 à 3).
+bool drawsOneAnswer(String gameId) =>
+    Random(drawSeed(gameId, 0)).nextInt(4) == 0;
+
 /// Le tirage pour toutes les équipes est-il allumé ? (définition partagée
-/// avec 2-3 / le Récap : les DEUX drapeaux comptent).
+/// avec l'éditeur 2-3 : les DEUX drapeaux comptent).
 bool isSymmetricDrawOn(FiestaRules rules) =>
     rules.symmetric && rules.drawCount > 0;
 
@@ -46,7 +58,7 @@ ModifierInstance _forAll(ModifierDef def, int round, int charges) =>
 
 /// Modificateurs « fixés sur la manche N » (Personnalisé, Q16) : toutes les
 /// équipes, toute la manche. Ils passent avant le tirage, qui doit leur être
-/// compatible ; le plafond de 2 s'applique à eux aussi. Un fixé à cible joueur
+/// compatible ; le plafond ([maxModifiersPerTeam]) s'applique à eux aussi. Un fixé à cible joueur
 /// ou « manche 3 seulement » hors M3 est ignoré (l'éditeur de 2-3 devrait
 /// l'interdire).
 List<ModifierInstance> fixedForRound(FiestaRules rules, int round) {
@@ -63,13 +75,15 @@ List<ModifierInstance> fixedForRound(FiestaRules rules, int round) {
       continue;
     }
     final instance = _forAll(def, round, setting.charges);
-    if (canAdd(fixed, instance)) fixed.add(instance);
+    if (canAdd(fixed, instance, maxPerTurn: maxModifiersPerTeam(rules))) {
+      fixed.add(instance);
+    }
   }
   return fixed;
 }
 
 /// Tirage symétrique de la manche [round], compatible avec [alreadyFixed] et
-/// avec lui-même, plafond de 2 compris (Q8). Moins de candidats que demandé :
+/// avec lui-même, plafond compris ([maxModifiersPerTeam]). Moins de candidats que demandé :
 /// on en tire moins, sans erreur.
 ///
 /// - Auto : 1 ou 2 (50/50, Q9) dans tout le catalogue ;
@@ -86,8 +100,9 @@ List<ModifierInstance> drawSymmetric({
   if (!isSymmetricDrawOn(rules)) return const [];
 
   final auto = rules.mode == FiestaMode.auto;
+  final cap = maxModifiersPerTeam(rules);
   final count =
-      auto ? (random.nextBool() ? 2 : 1) : rules.drawCount.clamp(0, 2);
+      auto ? (random.nextBool() ? 2 : 1) : rules.drawCount.clamp(0, cap);
 
   // Ordre du catalogue, jamais celui d'une Map relue : le mélange doit partir
   // de la même liste pour donner le même tirage.
@@ -114,7 +129,9 @@ List<ModifierInstance> drawSymmetric({
   final drawn = <ModifierInstance>[];
   for (final candidate in candidates) {
     if (drawn.length >= count) break;
-    if (canAdd([...alreadyFixed, ...drawn], candidate)) drawn.add(candidate);
+    if (canAdd([...alreadyFixed, ...drawn], candidate, maxPerTurn: cap)) {
+      drawn.add(candidate);
+    }
   }
   return drawn;
 }

@@ -134,7 +134,7 @@ void main() {
   });
 
   test(
-      'Fiesta : les règles de l\'archive passent en attente (Récap), même par '
+      'Fiesta : les règles de l\'archive passent en attente (Paramètres), même par '
       'dessus une partie suspendue', () async {
     final provider = await givenProvider();
     for (final name in ['X', 'Y']) {
@@ -184,11 +184,11 @@ void main() {
     });
     expect(provider.pendingFiesta!.toJson(), rules.toJson());
     expect(provider.game.isGameSuspended, isFalse);
-    expect(provider.game.currentScreen, AppConstants.screenFiestaRecap);
+    expect(provider.game.currentScreen, AppConstants.screenSettings);
 
     // Aléatoire (réglage de l'archive) : l'écran des mots reste fermé.
     provider.goToScreen(AppConstants.screenWords);
-    expect(provider.game.currentScreen, AppConstants.screenFiestaRecap);
+    expect(provider.game.currentScreen, AppConstants.screenSettings);
   });
 
   test(

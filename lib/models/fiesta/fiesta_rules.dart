@@ -132,11 +132,16 @@ class FiestaRules {
   final bool oneOfThree;
   final CatchUpRules catchUp;
 
-  /// Nombre de modificateurs tirés pour tous à chaque manche, 0 à 2.
+  /// Nombre de modificateurs tirés pour tous à chaque manche, 0 à 3
+  /// (plafond `maxModifiersPerTeam`).
   final int drawCount;
 
-  // Règle commune. Le report du temps de fin de manche n'est PAS un réglage
-  // (epic : « conservé ») ; l'ancienne clé `carryOver` d'un blob est ignorée.
+  /// Modificateur « Une seule réponse » (`kOneAnswer`) pour TOUTE la partie :
+  /// coché dans l'ensemble en Personnalisé, tiré au lancement en Auto. Même
+  /// clé JSON qu'à l'époque où c'était une « règle commune » : un blob relu
+  /// garde son sens (absente = `true`, l'ancien défaut). Le report du temps
+  /// de fin de manche n'est PAS un réglage (epic : « conservé ») ; l'ancienne
+  /// clé `carryOver` d'un blob est ignorée.
   final bool oneAnswer;
 
   FiestaRules({

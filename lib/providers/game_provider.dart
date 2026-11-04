@@ -51,7 +51,8 @@ class GameProvider extends ChangeNotifier {
   GameState get game => _game;
   bool get isFiesta => _game.fiesta != null;
 
-  /// Choix Fiesta fait sur les écrans de mode, en attente de `startGame` (Q10) :
+  /// Choix Fiesta fait sur les Paramètres (et l'ensemble choisi en
+  /// Personnalisé), en attente de `startGame` (Q10) :
   /// en mémoire seulement, jamais persisté. Nul = Classique. Une app tuée avant
   /// le lancement repart donc d'un choix vide.
   FiestaRules? _pendingFiesta;
@@ -437,6 +438,17 @@ class GameProvider extends ChangeNotifier {
     // Générer un gameId unique pour cette partie
     final gameId = _userService.generateGameId();
 
+    // Auto : « Une seule réponse » (toute la partie) est tirée ici, une fois
+    // sur 4, et gelée avec le reste (relue telle quelle après un kill).
+    final rules = fiesta == null || fiesta.mode != FiestaMode.auto
+        ? fiesta
+        : FiestaRules(
+            mode: FiestaMode.auto,
+            symmetric: fiesta.symmetric,
+            autoCalibrate: fiesta.autoCalibrate,
+            oneAnswer: drawsOneAnswer(gameId),
+          );
+
     _game = _game.copyWith(
       gameId: gameId,
       currentScreen: AppConstants.screenGame,
@@ -455,13 +467,13 @@ class GameProvider extends ChangeNotifier {
       timeRemaining: _settings.turnDuration,
       clearTurnBonusTime: true,
       history: [],
-      fiesta: fiesta == null
+      fiesta: rules == null
           ? null
           : FiestaState(
-              rules: fiesta,
-              active: roundModifiers(fiesta, gameId: gameId, round: 1),
+              rules: rules,
+              active: roundModifiers(rules, gameId: gameId, round: 1),
             ),
-      clearFiesta: fiesta == null,
+      clearFiesta: rules == null,
     );
 
     // Initialiser le tracking analytics
@@ -1790,13 +1802,19 @@ class GameProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Rejouer avec mêmes joueurs → efface mots, reset scores, va aux paramètres
-  // (ou au Récap Fiesta, avec la config gelée de la partie finie : Q12).
+  // Rejouer avec mêmes joueurs → efface mots, reset scores, va aux paramètres,
+  // avec la config Fiesta de la partie finie en attente (Q12).
   Future<void> restartWithSamePlayers() async {
     // 🔴 Lire AVANT `GameState.initial()` ci-dessous, qui efface `fiesta`.
     // Sans partie jouée (Rejouer de l'accueil, après `endGameAndGoHome`), la
     // config déjà en mémoire fait foi.
     if (_game.allWords.isNotEmpty) _pendingFiesta = _game.fiesta?.rules;
+    // Auto = symétrique + auto-calibrage toujours allumés (plus d'écran pour
+    // les couper) : une partie d'avant la mise à jour qui en avait coupé un
+    // ne le transmet pas à la suivante.
+    if (_pendingFiesta?.mode == FiestaMode.auto) {
+      _pendingFiesta = FiestaRules(mode: FiestaMode.auto);
+    }
 
     // Terminer et sauvegarder les analytics si une partie était en cours
     if (_analytics.isTracking) {
@@ -1818,11 +1836,8 @@ class GameProvider extends ChangeNotifier {
       );
     }
 
-    _game = GameState.initial().copyWith(
-      currentScreen: _pendingFiesta != null
-          ? AppConstants.screenFiestaRecap
-          : AppConstants.screenSettings,
-    );
+    _game = GameState.initial()
+        .copyWith(currentScreen: AppConstants.screenSettings);
     await _saveGameSession();
     notifyListeners();
   }
@@ -1891,6 +1906,7 @@ class GameProvider extends ChangeNotifier {
     _players = [];
     _teams = [];
     _game = GameState.initial();
+    _pendingFiesta = null;
     notifyListeners();
   }
 
@@ -1899,6 +1915,7 @@ class GameProvider extends ChangeNotifier {
     _players = [];
     _teams = [];
     _game = GameState.initial();
+    _pendingFiesta = null;
     notifyListeners();
     _storage.clearGameSession();
     _storage.clearGameState();

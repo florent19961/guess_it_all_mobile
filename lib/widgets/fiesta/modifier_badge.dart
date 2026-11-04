@@ -33,7 +33,8 @@ typedef BadgeExplainWrapper = Future<void> Function(
     Future<void> Function() show);
 
 /// Pastille « icône + nom » (maquette `.badge`). [label] remplace le nom du
-/// catalogue (ex. « Une seule réponse », qui n'est pas un modificateur).
+/// catalogue par manche (ex. « Une seule réponse », modificateur de toute la
+/// partie, `kOneAnswer`).
 ///
 /// Avec une [description], un tap ouvre une petite fiche qui l'explique.
 class ModifierBadge extends StatelessWidget {

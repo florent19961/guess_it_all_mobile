@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import '../models/fiesta/fiesta_rules.dart';
 import '../providers/game_provider.dart';
 import '../services/storage_service.dart';
 import '../utils/constants.dart';
@@ -15,6 +16,7 @@ import '../widgets/effects/shooting_stars.dart';
 import '../widgets/help/coach_marks.dart';
 import '../widgets/help/help_button.dart';
 import '../widgets/help/help_content.dart';
+import 'fiesta_tutorial_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -29,6 +31,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   late Animation<double> _pulseAnimation;
   bool _showAdvancedAnimation = false;
 
+  final _modeKey = GlobalKey();
   final _countsKey = GlobalKey();
   final _wordChoiceKey = GlobalKey();
   final _categoriesKey = GlobalKey();
@@ -65,293 +68,331 @@ class _SettingsScreenState extends State<SettingsScreen>
     super.dispose();
   }
 
+  static const _classic = 'Classique';
+  static const _fiesta = 'Fiesta';
+  static const _auto = 'Auto';
+  static const _custom = 'Personnalisé';
+
+  /// Garde contre le double tap : un seul tuto Fiesta.
+  bool _tutorialBusy = false;
+
+  /// Classique / Fiesta. Fiesta part en Auto ; la première fois, le tuto
+  /// Fiesta s'ouvre (clé `guessItAll_fiestaTutorialSeen`).
+  Future<void> _setMode(GameProvider provider, String mode) async {
+    if (mode == _classic) {
+      provider.setPendingFiesta(null);
+      return;
+    }
+    if (provider.pendingFiesta != null) return;
+    provider.setPendingFiesta(FiestaRules(mode: FiestaMode.auto));
+    if (_tutorialBusy) return;
+    _tutorialBusy = true;
+    try {
+      if (!await StorageService().hasSeenFiestaTutorial() && mounted) {
+        await FiestaTutorialScreen.show(context);
+      }
+    } finally {
+      _tutorialBusy = false;
+    }
+  }
+
+  /// Auto / Personnalisé (fenêtre « Avancés »). Personnalisé garde l'ensemble
+  /// déjà en attente (Rejouer) ; l'ensemble se choisit après les équipes.
+  void _setFiestaMode(GameProvider provider, String value) {
+    final custom = value == _custom;
+    final pending = provider.pendingFiesta;
+    if (pending == null || (pending.mode == FiestaMode.custom) == custom) {
+      return;
+    }
+    provider.setPendingFiesta(
+      FiestaRules(mode: custom ? FiestaMode.custom : FiestaMode.auto),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<GameProvider>();
     final settings = provider.settings;
 
-    return ShootingStars(
-      child: Stack(
-        children: [
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  const SizedBox(height: 72),
-                  Text(
-                    'Paramètres',
-                    style: AppTextStyles.subtitle(fontSize: 40),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Nombre de joueurs et d'équipes (une seule cible d'aide)
-                  Column(
-                    key: _countsKey,
-                    children: [
-                      _buildSection(
-                        title: 'Joueurs',
-                        child: AppCounter(
-                          value: settings.numberOfPlayers,
-                          min: settings.numberOfTeams * 2, // Minimum dynamique
-                          max: AppConstants.maxPlayers,
-                          onChange: (value) =>
-                              provider.updateSettings(numberOfPlayers: value),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Nombre d'équipes (ajuste le minimum de joueurs)
-                      _buildSection(
-                        title: 'Équipes',
-                        child: AppCounter(
-                          value: settings.numberOfTeams,
-                          min: AppConstants.minTeams,
-                          max: AppConstants.maxTeams,
-                          onChange: (value) {
-                            provider.updateSettings(numberOfTeams: value);
-                            // Ajuster le nombre de joueurs si nécessaire (min 2 par équipe)
-                            final minPlayers = value * 2;
-                            if (settings.numberOfPlayers < minPlayers) {
-                              provider.updateSettings(
-                                  numberOfPlayers: minPlayers);
-                            }
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Choix des mots
-                  KeyedSubtree(
-                    key: _wordChoiceKey,
-                    child: _buildSection(
-                      title: 'Choix des mots',
-                      child: AppToggle(
-                        options: const [
-                          AppConstants.wordChoiceCustom,
-                          AppConstants.wordChoiceRandom
-                        ],
-                        selected: settings.wordChoice,
-                        onChange: (value) =>
-                            provider.updateSettings(wordChoice: value),
-                      ),
+    // Retour système (Android) = bouton retour : l'accueil, pas la sortie de
+    // l'app (écran racine du `MaterialApp`).
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) provider.goToScreen(AppConstants.screenHome);
+      },
+      child: ShootingStars(
+        child: Stack(
+          children: [
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 48),
+                    Text(
+                      'Paramètres',
+                      style: AppTextStyles.subtitle(fontSize: 40),
                     ),
-                  ),
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 32),
 
-                  // Choix des catégories (sous le toggle)
-                  GestureDetector(
-                    key: _categoriesKey,
-                    onTap: () =>
-                        provider.goToScreen(AppConstants.screenCategories),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 12, horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: AppColors.backgroundCard,
-                        borderRadius: BorderRadius.circular(12),
-                        border:
-                            Border.all(color: AppColors.gray600, width: 1.5),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AnimatedBuilder(
-                            animation: _pulseAnimation,
-                            builder: (context, child) {
-                              return Transform.scale(
-                                scale: _pulseAnimation.value,
-                                child: const Icon(
-                                  Icons.category,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              );
+                    // Classique / Fiesta (Auto / Personnalisé : roue crantée)
+                    AppToggle(
+                      key: _modeKey,
+                      options: const [_classic, _fiesta],
+                      selected:
+                          provider.pendingFiesta == null ? _classic : _fiesta,
+                      onChange: (value) => _setMode(provider, value),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Nombre de joueurs et d'équipes (une seule cible d'aide)
+                    Column(
+                      key: _countsKey,
+                      children: [
+                        _buildSection(
+                          title: 'Joueurs',
+                          child: AppCounter(
+                            value: settings.numberOfPlayers,
+                            min:
+                                settings.numberOfTeams * 2, // Minimum dynamique
+                            max: AppConstants.maxPlayers,
+                            onChange: (value) =>
+                                provider.updateSettings(numberOfPlayers: value),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Nombre d'équipes (ajuste le minimum de joueurs)
+                        _buildSection(
+                          title: 'Équipes',
+                          child: AppCounter(
+                            value: settings.numberOfTeams,
+                            min: AppConstants.minTeams,
+                            max: AppConstants.maxTeams,
+                            onChange: (value) {
+                              provider.updateSettings(numberOfTeams: value);
+                              // Ajuster le nombre de joueurs si nécessaire (min 2 par équipe)
+                              final minPlayers = value * 2;
+                              if (settings.numberOfPlayers < minPlayers) {
+                                provider.updateSettings(
+                                    numberOfPlayers: minPlayers);
+                              }
                             },
                           ),
-                          const SizedBox(width: 10),
-                          const Text(
-                            'Catégories & Difficultés',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(
-                            Icons.chevron_right,
-                            color: AppColors.gray400,
-                            size: 20,
-                          ),
-                        ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Choix des mots
+                    KeyedSubtree(
+                      key: _wordChoiceKey,
+                      child: _buildSection(
+                        title: 'Choix des mots',
+                        child: AppToggle(
+                          options: const [
+                            AppConstants.wordChoiceCustom,
+                            AppConstants.wordChoiceRandom
+                          ],
+                          selected: settings.wordChoice,
+                          onChange: (value) =>
+                              provider.updateSettings(wordChoice: value),
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 12),
 
-                  const SizedBox(height: 32),
-
-                  // Avertissement si trop de mots
-                  if (settings.totalWords > 50)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.info_outline,
-                            color: AppColors.warning,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 6),
-                          Text.rich(
-                            TextSpan(
-                              children: [
-                                TextSpan(
-                                  text:
-                                      '${settings.totalWords} mots : partie longue ! Réglable via ',
-                                ),
-                                const WidgetSpan(
-                                  alignment: PlaceholderAlignment.middle,
-                                  child: Icon(
-                                    Icons.settings,
-                                    color: AppColors.warning,
-                                    size: 14,
+                    // Choix des catégories (sous le toggle)
+                    GestureDetector(
+                      key: _categoriesKey,
+                      onTap: () =>
+                          provider.goToScreen(AppConstants.screenCategories),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.backgroundCard,
+                          borderRadius: BorderRadius.circular(12),
+                          border:
+                              Border.all(color: AppColors.gray600, width: 1.5),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AnimatedBuilder(
+                              animation: _pulseAnimation,
+                              builder: (context, child) {
+                                return Transform.scale(
+                                  scale: _pulseAnimation.value,
+                                  child: const Icon(
+                                    Icons.category,
+                                    color: Colors.white,
+                                    size: 20,
                                   ),
-                                ),
-                              ],
+                                );
+                              },
                             ),
-                            style: const TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 12,
-                              color: AppColors.warning,
+                            const SizedBox(width: 10),
+                            const Text(
+                              'Catégories & Difficultés',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            const Icon(
+                              Icons.chevron_right,
+                              color: AppColors.gray400,
+                              size: 20,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
 
-                  // Bouton suivant
-                  AppButton(
-                    text: 'Suivant',
-                    variant: AppButtonVariant.primary,
-                    size: AppButtonSize.large,
-                    fullWidth: true,
-                    onPressed: () async {
-                      // Si mode aléatoire, vérifier le nombre de mots disponibles
-                      if (settings.wordChoice ==
-                          AppConstants.wordChoiceRandom) {
-                        final totalWordsNeeded = settings.totalWords;
-                        final availableWords = await getTotalWordsCountAsync(
-                          settings.selectedCategories,
-                          difficultyLevels: settings.selectedDifficultyLevels,
-                        );
+                    const SizedBox(height: 32),
 
-                        if (availableWords < totalWordsNeeded) {
-                          _showNotEnoughWordsWarning(context, provider,
-                              availableWords, totalWordsNeeded);
-                          return;
+                    // Avertissement si trop de mots
+                    if (settings.totalWords > 50)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.info_outline,
+                              color: AppColors.warning,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 6),
+                            Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text:
+                                        '${settings.totalWords} mots : partie longue ! Réglable via ',
+                                  ),
+                                  const WidgetSpan(
+                                    alignment: PlaceholderAlignment.middle,
+                                    child: Icon(
+                                      Icons.settings,
+                                      color: AppColors.warning,
+                                      size: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 12,
+                                color: AppColors.warning,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    // Bouton suivant
+                    AppButton(
+                      text: 'Suivant',
+                      variant: AppButtonVariant.primary,
+                      size: AppButtonSize.large,
+                      fullWidth: true,
+                      onPressed: () async {
+                        // Si mode aléatoire, vérifier le nombre de mots disponibles
+                        if (settings.wordChoice ==
+                            AppConstants.wordChoiceRandom) {
+                          final totalWordsNeeded = settings.totalWords;
+                          final availableWords = await getTotalWordsCountAsync(
+                            settings.selectedCategories,
+                            difficultyLevels: settings.selectedDifficultyLevels,
+                          );
+
+                          if (availableWords < totalWordsNeeded) {
+                            _showNotEnoughWordsWarning(context, provider,
+                                availableWords, totalWordsNeeded);
+                            return;
+                          }
                         }
-                      }
-                      provider.goToScreen(AppConstants.screenPlayers);
-                    },
+                        provider.goToScreen(AppConstants.screenPlayers);
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
+            AppBackButton(
+              onPressed: () => provider.goToScreen(AppConstants.screenHome),
+            ),
+            // Boutons en haut à droite : aide + Paramètres avancés
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 16,
+              right: 16,
+              child: Row(
+                children: [
+                  HelpButton.inline(
+                    onPressed: () => CoachMarks.show(
+                      context,
+                      settingsHelp(
+                        mode: _modeKey,
+                        counts: _countsKey,
+                        wordChoice: _wordChoiceKey,
+                        categories: _categoriesKey,
+                        advanced: _advancedKey,
+                        passPenalty: provider.settings.passPenalty,
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(width: 12),
+                  // Bouton paramètres avancés
+                  GestureDetector(
+                    key: _advancedKey,
+                    onTap: () {
+                      // Marquer comme vu et arrêter l'animation
+                      if (_showAdvancedAnimation) {
+                        StorageService().markAdvancedSettingsSeen();
+                        setState(() {
+                          _showAdvancedAnimation = false;
+                        });
+                      }
+                      _showAdvancedSettings(context, provider);
+                    },
+                    child: AnimatedBuilder(
+                      animation: _pulseAnimation,
+                      builder: (context, child) {
+                        return Transform.scale(
+                          scale: _showAdvancedAnimation
+                              ? _pulseAnimation.value
+                              : 1.0,
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: AppColors.backgroundCard,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                  color: AppColors.gray600, width: 2),
+                            ),
+                            child: const Icon(
+                              Icons.settings,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-          AppBackButton(
-            onPressed: () => provider.goToScreen(
-              provider.pendingFiesta != null
-                  ? AppConstants.screenFiestaRecap
-                  : AppConstants.screenHome,
-            ),
-          ),
-          // Boutons en haut à droite : Réinitialiser + Paramètres avancés
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            right: 16,
-            child: Row(
-              children: [
-                HelpButton.inline(
-                  onPressed: () => CoachMarks.show(
-                    context,
-                    settingsHelp(
-                      counts: _countsKey,
-                      wordChoice: _wordChoiceKey,
-                      categories: _categoriesKey,
-                      advanced: _advancedKey,
-                      passPenalty: provider.settings.passPenalty,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Bouton réinitialiser
-                GestureDetector(
-                  onTap: () => _showResetConfirmation(context, provider),
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppColors.backgroundCard,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.gray600, width: 2),
-                    ),
-                    child: const Icon(
-                      Icons.refresh,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Bouton paramètres avancés
-                GestureDetector(
-                  key: _advancedKey,
-                  onTap: () {
-                    // Marquer comme vu et arrêter l'animation
-                    if (_showAdvancedAnimation) {
-                      StorageService().markAdvancedSettingsSeen();
-                      setState(() {
-                        _showAdvancedAnimation = false;
-                      });
-                    }
-                    _showAdvancedSettings(context, provider);
-                  },
-                  child: AnimatedBuilder(
-                    animation: _pulseAnimation,
-                    builder: (context, child) {
-                      return Transform.scale(
-                        scale: _showAdvancedAnimation
-                            ? _pulseAnimation.value
-                            : 1.0,
-                        child: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: AppColors.backgroundCard,
-                            shape: BoxShape.circle,
-                            border:
-                                Border.all(color: AppColors.gray600, width: 2),
-                          ),
-                          child: const Icon(
-                            Icons.settings,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -466,6 +507,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   void _showAdvancedSettings(BuildContext context, GameProvider provider) {
+    final screenContext = context;
     AppModal.show(
       context,
       title: 'Avancés',
@@ -515,6 +557,46 @@ class _SettingsScreenState extends State<SettingsScreen>
                   onChanged: (value) {
                     provider.updateSettings(passPenalty: value.toInt());
                     setState(() {});
+                  },
+                ),
+
+                // Fiesta : Auto / Personnalisé, seulement en mode Fiesta
+                if (provider.pendingFiesta != null) ...[
+                  const SizedBox(height: 24),
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Fiesta',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  AppToggle(
+                    options: const [_auto, _custom],
+                    selected: provider.pendingFiesta!.mode == FiestaMode.custom
+                        ? _custom
+                        : _auto,
+                    onChange: (value) {
+                      _setFiestaMode(provider, value);
+                      setState(() {});
+                    },
+                  ),
+                ],
+
+                // Réinitialiser (ancien bouton rond du coin haut droit) : ferme
+                // « Avancés », puis la même confirmation qu'avant.
+                const SizedBox(height: 24),
+                AppButton(
+                  text: 'Réinitialiser les paramètres',
+                  variant: AppButtonVariant.ghost,
+                  size: AppButtonSize.small,
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _showResetConfirmation(screenContext, provider);
                   },
                 ),
               ],

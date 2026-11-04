@@ -52,7 +52,11 @@ void main() {
       }
       expect(areCompatible('no_pass', 'two_words'), isFalse);
       expect(areCompatible('two_words', 'no_pass'), isFalse);
-      expect(areCompatible('mime_no_fists', 'draw'), isFalse);
+      // « Dessiner » exclut tout mime, et inversement.
+      for (final def in kModifierCatalog.where((d) => d.mime)) {
+        expect(areCompatible('draw', def.id), isFalse, reason: def.id);
+      }
+      expect(kModifierCatalog.where((d) => d.mime), hasLength(3));
       expect(areCompatible('no_pass', 'reversed'), isTrue);
     });
   });

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
 
@@ -88,6 +89,7 @@ void main() {
       final provider = await givenProvider();
 
       provider.updateSettings(turnDuration: 45, passPenalty: 2);
+      provider.setPendingFiesta(FiestaRules(mode: FiestaMode.auto));
       await pumpEventQueue();
 
       await provider.clearLocalStorage();
@@ -95,6 +97,8 @@ void main() {
 
       expect(provider.settings.turnDuration, AppConstants.defaultTurnDuration);
       expect(provider.settings.passPenalty, AppConstants.defaultPassPenalty);
+      // Tout réinitialiser = retour au Classique par défaut.
+      expect(provider.pendingFiesta, isNull);
 
       final disk = await persistedData(AppConstants.settingsKey);
       expect(disk!['turnDuration'], AppConstants.defaultTurnDuration);

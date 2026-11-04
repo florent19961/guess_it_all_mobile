@@ -29,8 +29,8 @@ void givenWords(GameProvider provider) {
 
 void main() {
   test(
-      '« Rejouer » remet la config Fiesta gelée en attente et passe par le '
-      'Récap ; après une partie Classique, rien en attente', () async {
+      '« Rejouer » remet la config Fiesta gelée en attente et revient aux '
+      'Paramètres ; après une partie Classique, rien en attente', () async {
     final provider = await givenReadyProvider();
     provider.setPendingFiesta(
       FiestaRules(mode: FiestaMode.auto, symmetric: false),
@@ -39,9 +39,11 @@ void main() {
 
     await provider.restartWithSamePlayers();
 
-    expect(provider.game.currentScreen, AppConstants.screenFiestaRecap);
+    expect(provider.game.currentScreen, AppConstants.screenSettings);
     expect(provider.pendingFiesta!.mode, FiestaMode.auto);
-    expect(provider.pendingFiesta!.symmetric, isFalse);
+    // Auto n'a plus d'interrupteurs : un « symétrique coupé » d'une partie
+    // d'avant la mise à jour n'est pas transmis à la suivante.
+    expect(provider.pendingFiesta!.symmetric, isTrue);
 
     // Même chose via l'accueil : fin de partie, puis « Rejouer » de l'accueil.
     givenWords(provider);
@@ -49,13 +51,14 @@ void main() {
     await provider.endGameAndGoHome();
     await provider.restartWithSamePlayers();
 
-    expect(provider.game.currentScreen, AppConstants.screenFiestaRecap);
-    expect(provider.pendingFiesta!.symmetric, isFalse);
+    expect(provider.game.currentScreen, AppConstants.screenSettings);
+    expect(provider.pendingFiesta!.mode, FiestaMode.auto);
 
     // App tuée en pleine partie Fiesta : la relance remet la config en attente,
     // sinon « Retour aux équipes » puis « Lancer » repartirait en Classique.
     givenWords(provider);
-    await provider.startGame(fiesta: provider.pendingFiesta);
+    await provider.startGame(
+        fiesta: FiestaRules(mode: FiestaMode.auto, symmetric: false));
     await pumpEventQueue();
     final reloaded = GameProvider();
     await pumpEventQueue();

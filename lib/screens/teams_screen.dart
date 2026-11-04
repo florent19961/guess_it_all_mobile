@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
 import '../models/player.dart';
+import '../models/fiesta/fiesta_rules.dart';
 import '../utils/constants.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/app_back_button.dart';
@@ -84,15 +85,27 @@ class _TeamsScreenState extends State<TeamsScreen> {
                         ),
                       AppButton(
                         key: _startKey,
-                        text: 'Commencer',
+                        text: provider.pendingFiesta?.mode == FiestaMode.custom
+                            ? 'Suivant'
+                            : 'Commencer',
                         variant: AppButtonVariant.primary,
                         size: AppButtonSize.large,
                         fullWidth: true,
                         disabled: !allTeamsValid,
                         onPressed: allTeamsValid
-                            ? () => provider.startGame(
-                                  fiesta: provider.pendingFiesta,
-                                )
+                            ? () {
+                                // Fiesta Personnalisé : on choisit d'abord
+                                // l'ensemble, qui lance la partie.
+                                if (provider.pendingFiesta?.mode ==
+                                    FiestaMode.custom) {
+                                  provider.goToScreen(
+                                      AppConstants.screenFiestaEnsembles);
+                                } else {
+                                  provider.startGame(
+                                    fiesta: provider.pendingFiesta,
+                                  );
+                                }
+                              }
                             : null,
                       ),
                     ],

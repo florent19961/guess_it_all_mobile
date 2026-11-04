@@ -59,6 +59,7 @@ List<CoachStep> homeHelp({
 // ========== PARAMÈTRES ==========
 
 List<CoachStep> settingsHelp({
+  required GlobalKey mode,
   required GlobalKey counts,
   required GlobalKey wordChoice,
   required GlobalKey categories,
@@ -66,6 +67,14 @@ List<CoachStep> settingsHelp({
   required int passPenalty,
 }) =>
     [
+      CoachStep(
+        target: mode,
+        title: 'Classique ou Fiesta',
+        text: 'Classique : les 3 manches habituelles. Fiesta : les mêmes '
+            'manches, pimentées de bonus et de malus. En Fiesta, la roue '
+            'crantée choisit Auto (l\'app décide de tout) ou Personnalisé '
+            '(tes propres réglages, choisis après les équipes).',
+      ),
       CoachStep(
         target: counts,
         title: 'Joueurs et équipes',
@@ -88,7 +97,9 @@ List<CoachStep> settingsHelp({
         title: 'Avancés',
         text: 'Le nombre de mots, la durée d\'un tour et la pénalité quand on '
             'passe un mot. Avec tes réglages : '
-            '${passPenaltySentence(passPenalty).toLowerCase()}',
+            '${passPenaltySentence(passPenalty).toLowerCase()} En Fiesta, '
+            'c\'est aussi là qu\'on passe d\'Auto à Personnalisé. Tout en '
+            'bas : réinitialiser les paramètres.',
       ),
     ];
 

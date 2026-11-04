@@ -1,167 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../models/fiesta/fiesta_rules.dart';
 import '../../theme/app_theme.dart';
-import '../common/app_back_button.dart';
-import '../effects/shooting_stars.dart';
-import '../help/help_button.dart';
-
-/// Squelette commun des écrans de choix du mode (Mode de jeu, Fiesta, Auto,
-/// Récap) : titre, contenu défilant, bouton bas, et retour — bouton ET geste
-/// système (Android) — vers [onBack], pour ne pas quitter l'app par surprise.
-class FiestaSetupScaffold extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  final VoidCallback onBack;
-
-  /// Le « ? » en haut à droite (les écrans Fiesta rouvrent le tuto Fiesta).
-  final VoidCallback onHelp;
-  final List<Widget> content;
-  final Widget bottom;
-
-  const FiestaSetupScaffold({
-    required this.title,
-    this.subtitle,
-    required this.onBack,
-    required this.onHelp,
-    required this.content,
-    required this.bottom,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) onBack();
-      },
-      child: ShootingStars(
-        child: Stack(
-          children: [
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            const SizedBox(height: 48),
-                            Text(
-                              title,
-                              textAlign: TextAlign.center,
-                              style: AppTextStyles.subtitle(fontSize: 40),
-                            ),
-                            if (subtitle != null) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                subtitle!,
-                                textAlign: TextAlign.center,
-                                style: AppTextStyles.bodySmall
-                                    .copyWith(color: AppColors.gray400),
-                              ),
-                            ],
-                            const SizedBox(height: 24),
-                            ...content,
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    bottom,
-                  ],
-                ),
-              ),
-            ),
-            AppBackButton(onPressed: onBack),
-            HelpButton(onPressed: onHelp),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Carte sélectionnable (maquette `.pick`).
-class FiestaPickCard extends StatelessWidget {
-  final String icon;
-  final String title;
-  final String description;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const FiestaPickCard({
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.selected,
-    required this.onTap,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColors.backgroundCard,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: selected ? AppColors.secondaryCyan : AppColors.gray600,
-              width: 2,
-            ),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryCyan.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Text(
-                  icon,
-                  style: const TextStyle(
-                    fontFamily: 'Bangers',
-                    fontSize: 22,
-                    color: AppColors.secondaryCyan,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: AppTextStyles.label),
-                    const SizedBox(height: 2),
-                    Text(
-                      description,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        fontSize: 12,
-                        color: AppColors.gray400,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 /// Carte à titre en capitales (maquette `.card`), [trailing] à droite du titre.
 class FiestaCard extends StatelessWidget {
@@ -213,7 +52,7 @@ class FiestaCard extends StatelessWidget {
 }
 
 /// Ligne libellé + détail, avec un interrupteur si [onChanged] est donné,
-/// sinon « Oui / Non » en lecture seule (Récap).
+/// sinon « Oui / Non » en lecture seule.
 class FiestaLine extends StatelessWidget {
   final String label;
   final String? detail;
@@ -270,38 +109,6 @@ class FiestaLine extends StatelessWidget {
   }
 }
 
-/// La règle commune Fiesta (maquette `commonCard`). Le temps reporté de fin
-/// de manche n'est pas un réglage : il est toujours conservé.
-class FiestaCommonRulesCard extends StatelessWidget {
-  final bool oneAnswer;
-
-  /// Nul = lecture seule (Récap).
-  final void Function({bool? oneAnswer})? onChanged;
-
-  const FiestaCommonRulesCard({
-    required this.oneAnswer,
-    this.onChanged,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final edit = onChanged;
-    return FiestaCard(
-      title: 'Règles communes Fiesta',
-      children: [
-        FiestaLine(
-          label: 'Une seule réponse',
-          detail: 'Une proposition par mot. Mauvaise réponse → il faut passer '
-              '(pénalité de passe). Simple annonce, l\'app ne vérifie pas.',
-          value: oneAnswer,
-          onChanged: edit == null ? null : (v) => edit(oneAnswer: v),
-        ),
-      ],
-    );
-  }
-}
-
 /// Texte d'explication gris (maquette `.hint`).
 class FiestaHint extends StatelessWidget {
   final String text;
@@ -351,8 +158,3 @@ WidgetSpan modifierBadgeSpan(Widget badge) => WidgetSpan(
         child: badge,
       ),
     );
-
-/// Résumé d'une ligne du rattrapage, pour le Récap (Auto et Personnalisé).
-String catchUpSummary(CatchUpRules c) =>
-    '+${c.b1} s / +${c.b2} s × écart (max +${c.cap} s) · '
-    'leader −${c.mal} s × écart (max −${c.malCap} s)';

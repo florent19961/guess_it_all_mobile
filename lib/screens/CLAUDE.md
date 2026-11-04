@@ -5,9 +5,9 @@
 ## Flux de navigation
 
 ```
-HomeScreen → GameModeScreen ─ Classique ─────────────────────────────────────► SettingsScreen
-                            └ Fiesta → FiestaChoiceScreen → Auto | Ensembles → FiestaRecapScreen ─┘
-SettingsScreen → (CategoriesScreen) → PlayersScreen → (WordsScreen) → TeamsScreen
+HomeScreen → SettingsScreen (Classique / Fiesta ; Auto / Personnalisé dans « Avancés »)
+  → (CategoriesScreen) → PlayersScreen → (WordsScreen) → TeamsScreen
+  → [Fiesta Personnalisé seulement : FiestaEnsemblesScreen, « Jouer » lance la partie]
   → GameScreen → CountdownScreen → TurnScreen → VerificationScreen
   → TransitionScreen (entre manches) → ResultsScreen → StatsScreen
 ```
@@ -17,11 +17,11 @@ SettingsScreen → (CategoriesScreen) → PlayersScreen → (WordsScreen) → Te
 | Ecran | Role |
 |-------|------|
 | `home_screen.dart` | Accueil : 3 etats (partie suspendue, session existante, nouveau jeu) |
-| `settings_screen.dart` | Config : nb joueurs/equipes, mode mots, categories, parametres avances (modal) |
+| `settings_screen.dart` | Premier ecran de toute partie : interrupteur Classique / Fiesta (Classique par defaut ; 1er choix de Fiesta → tuto Fiesta une fois), nb joueurs/equipes, mode mots, categories, parametres avances (modal ; en Fiesta, + Auto / Personnalise ; en bas, « Reinitialiser les parametres » avec confirmation). En haut a droite : « ? » et roue crantee seulement. Retour (bouton et retour systeme) → accueil |
 | `categories_screen.dart` | Selection categories et niveaux de difficulte (1-4) |
 | `players_screen.dart` | Saisie noms joueurs + generation mots aleatoires avec cache metadata |
 | `words_screen.dart` | Saisie mots par joueur (mode personnalise). Bouton "Grosse flemme" pour auto-remplir |
-| `teams_screen.dart` | Composition equipes par drag-and-drop, noms editables, bouton aleatoire |
+| `teams_screen.dart` | Composition equipes par drag-and-drop, noms editables, bouton aleatoire. « Commencer » lance la partie ; en Fiesta Personnalise, « Suivant » mene aux ensembles |
 | `game_screen.dart` | Pre-tour : affiche manche, equipe/joueur courant, scores, bouton jouer |
 | `countdown_screen.dart` | Decompte 3-2-1-GO anime |
 | `turn_screen.dart` | Jeu actif : timer, mot courant (auto-size), boutons Passer/Valider, pause, sons, haptic |
@@ -32,16 +32,17 @@ SettingsScreen → (CategoriesScreen) → PlayersScreen → (WordsScreen) → Te
 | `rules_screen.dart` | Regles completes du jeu (3 manches) + Revoir le tuto / le tuto Fiesta / les aides |
 | `rules_tutorial_screen.dart` | Tuto des regles, 4 cartes (`Navigator.push` via `show`), pénalité de passe lue dans les reglages |
 | `fiesta_tutorial_screen.dart` | Tuto Fiesta, 3 cartes (`Navigator.push` via `show`) |
-| `game_mode_screen.dart` | Nouvelle partie : Classique ou Fiesta |
-| `fiesta_choice_screen.dart` | Fiesta : Mode Auto ou Personnalise |
-| `fiesta_auto_screen.dart` | Mode Auto : 2 interrupteurs (au moins un) + regles communes |
-| `fiesta_recap_screen.dart` | Recap Fiesta avant les Parametres ; cible de « Rejouer » apres une partie Fiesta |
-| `fiesta_ensembles_screen.dart` | « Mes ensembles » (Fiesta Personnalise) : compteur n / 10, Creer, Utiliser / Modifier / Dupliquer / Supprimer (confirmation) |
-| `fiesta_ensemble_editor_screen.dart` | Editeur d'un ensemble, ouvert par `Navigator.push` depuis la liste (rend `true` si enregistre). Bouton grise + explications tant que `validateEnsemble` rend des erreurs |
+| `fiesta_ensembles_screen.dart` | « Mes ensembles » (Fiesta Personnalise, apres les equipes ; retour bouton et systeme → equipes) : compteur n / 10, Creer, Jouer / Modifier / Dupliquer / Supprimer (confirmation) |
+| `fiesta_ensemble_editor_screen.dart` | Editeur d'un ensemble, ouvert par `Navigator.push` depuis la liste (rend `true` si enregistre). Catalogue + « Une seule reponse » (toute la partie), tirage 0 a 3. Bouton grise + explications tant que `validateEnsemble` rend des erreurs |
 
 Invariant Fiesta : le choix du mode vit dans `GameProvider.pendingFiesta`, **en memoire
-seulement** (Q10), et `TeamsScreen` le passe a `startGame`. Le chemin « Reprendre » de l'accueil
-ne traverse jamais les ecrans de mode.
+seulement** (Q10) : nul = Classique, `FiestaRules(mode: auto)` = Auto, mode `custom` =
+Personnalise (l'ensemble, choisi apres les equipes, le remplace). `TeamsScreen` le passe a
+`startGame` (ou mene aux ensembles en Personnalise). « Nouvelle partie » le vide (Classique par
+defaut) ; « Rejouer » le garde et revient aux Parametres. Le chemin « Reprendre » de l'accueil
+ne traverse jamais ces ecrans. Les anciens ecrans « Mode de jeu », « Auto ou Personnalise »,
+« Mode Auto » et « Recap » sont supprimes (2026-11-04) : un `currentScreen` relu a leur nom
+tombe sur l'accueil.
 
 ## Point d'entree des ensembles (contrat 2-3 → 2-4)
 
@@ -49,6 +50,5 @@ ne traverse jamais les ecrans de mode.
 L'ecran ne connait ni le provider ni la navigation : `onUse` recoit l'ensemble choisi, **deja
 marque `lastUsedId`** ; `ensemble.rules` est un `FiestaRules` (mode `custom`, `ensembleName` =
 nom) pret a etre gele par `startGame(fiesta: ...)`. Branchement (`app.dart`, route
-`AppConstants.screenFiestaEnsembles`) : `onBack` → `screenFiestaChoice` ; `onUse` →
-`setPendingFiesta(ensemble.rules)` puis `screenFiestaRecap`. Le « Modifier » du recap en
-Personnalise revient a cette liste.
+`AppConstants.screenFiestaEnsembles`) : `onBack` → `screenTeams` ; `onUse` →
+`setPendingFiesta(ensemble.rules)` puis `startGame(fiesta: ensemble.rules)`.
