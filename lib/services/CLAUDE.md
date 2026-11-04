@@ -13,7 +13,7 @@
 | `word_loader_service.dart` | `WordLoaderService` | Charge categories depuis JSON (assets/translations/). Cache en memoire. Methodes : `loadCategory()`, `getCategoriesMetadata()` |
 | `connectivity_service.dart` | `ConnectivityService` | Detection reseau (wifi/mobile/ethernet) via connectivity_plus |
 | `firebase_sync_service.dart` | `FirebaseSyncService` | Sync offline-first vers Firestore. Queue de games en attente, sync auto quand online |
-| `audio_service.dart` | `AudioService` | Sons : ding (mot devine), whoosh (mot passe), klaxon (fin de tour) via audioplayers |
+| `audio_service.dart` | `AudioService` | Sons : ding (mot devine), whoosh (mot passe), gong (fin de tour, `end_of_turn.wav`) via audioplayers. `ding.wav` et `end_of_turn.wav` sont générés par `scripts/render_sounds.py` |
 | `fiesta_ensemble_service.dart` | `FiestaEnsembleService` | Ensembles Fiesta (mode Personnalise) : `load` / `create` / `update` (sur place) / `duplicate` / `delete` / `markUsed`. **Borne 10 tenue par le service**, modifications serialisees (file interne), quarantaine du blob illisible ou venu du futur, ensemble illisible ignore seul a la lecture et **reecrit tel quel** a chaque modification (jamais detruit) ; ces entrees illisibles **ne comptent pas** dans la borne de 10 (le blob peut en porter 10 + k) |
 
 ## Cles SharedPreferences
