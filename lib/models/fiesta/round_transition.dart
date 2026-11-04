@@ -48,7 +48,10 @@ class RoundTransitionPlan {
   /// mais ne s'appliquent qu'aux vrais tours de N+1.
   FiestaState apply(FiestaState fiesta) => fiesta.copyWith(
         active: [
-          ...fiesta.active.where((m) => m.round >= round - 1),
+          // Un malus infligé attend le prochain tour de sa cible, quelle que
+          // soit la manche.
+          ...fiesta.active
+              .where((m) => m.round >= round - 1 || m.fromTeamId != null),
           ...draw,
           ...stock,
           ...gifts,
@@ -100,7 +103,10 @@ RoundTransitionPlan? planRoundTransition({
 /// LOGIQUE du tour. Une continuation (temps reporté en début de N+1) est le
 /// même tour que la fin de N : elle joue avec les effets de N, jamais ceux de
 /// N+1, qui commencent au premier vrai tour de chaque équipe. Une cartouche
-/// en réserve ([ModifierInstance.reserve]) n'a aucun effet.
+/// en réserve ([ModifierInstance.reserve]) n'a aucun effet. Un malus infligé
+/// ([ModifierInstance.fromTeamId]) pèse sur le prochain tour de sa cible
+/// quelle que soit la manche d'envoi, s'il est permis dans la manche logique
+/// (sinon il part sans effet à la fin de ce tour).
 List<ModifierInstance> modifiersForTurn(
   List<ModifierInstance> active, {
   required String teamId,
@@ -109,6 +115,9 @@ List<ModifierInstance> modifiersForTurn(
     active
         .where((m) =>
             !m.reserve &&
-            m.round == logicalRound &&
-            (m.target == ModifierTarget.both || m.teamId == teamId))
+            (m.fromTeamId != null
+                ? m.teamId == teamId &&
+                    isEligibleForRound(modifierById(m.catalogId)!, logicalRound)
+                : m.round == logicalRound &&
+                    (m.target == ModifierTarget.both || m.teamId == teamId)))
         .toList();

@@ -168,12 +168,10 @@ List<ModifierInstance> roundModifiers(
 /// = N (« par manche ») ou N moins ce que l'équipe a déjà dépensé dans les
 /// manches d'avant (« pour la partie », [chargesUsed]).
 ///
-/// 🔴 Lane 1 : les BONUS jouent par le mécanisme de charges existant (×2 et
-/// Deux mots s'allument avant le tour ; Passe gratuite = N passes gratuites
-/// par tour toute la manche, toujours « par manche » : ses passes ne
-/// laissent pas de `ChargeUse`). Les MALUS sont posés en réserve
-/// ([ModifierInstance.reserve]) : persistés, sans effet jusqu'à l'écran
-/// « Ce tour / Réserve » (lane 2).
+/// Une cartouche = UN tour. Les BONUS s'activent avant le tour (mécanisme de
+/// charges, dépense au départ du chrono = un `ChargeUse`). Les MALUS sont
+/// posés en réserve ([ModifierInstance.reserve]) et s'infligent à une autre
+/// équipe depuis l'écran « Ce tour / Réserve » (un `ChargeUse` aussi).
 List<ModifierInstance> stockForRound(
   FiestaRules rules, {
   required int round,
@@ -184,7 +182,7 @@ List<ModifierInstance> stockForRound(
   for (final def in kModifierCatalog) {
     if (!_plays(rules, def, ModifierMode.stock, round)) continue;
     final setting = rules.activeSetting(def.id)!;
-    final perGame = setting.perGame && def.id != 'free_pass';
+    final perGame = setting.perGame;
     for (final teamId in teamIds) {
       final spent = perGame
           ? chargesUsed

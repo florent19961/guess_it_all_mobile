@@ -707,8 +707,8 @@ class GameProvider extends ChangeNotifier {
         modifiers: isFiesta
             ? [
                 ...turnModifiers.map((m) => m.catalogId),
-                if (isDoublePointsOn) 'double_points',
-                if (_charge('two_words') == ChargeState.spent) 'two_words',
+                for (final id in kChargeBonusKeys.keys)
+                  if (_charge(id) == ChargeState.spent) id,
               ]
             : null,
       );
@@ -1334,8 +1334,16 @@ class GameProvider extends ChangeNotifier {
   /// `no_pass` pèse sur l'équipe qui joue.
   bool get passBlocked => _has('no_pass');
 
-  /// Passes gratuites du tour (`free_pass` ×N), et celles déjà utilisées.
-  int get freePasses => chargeAllowance(currentTeamModifiers, 'free_pass');
+  /// Passes gratuites du tour, et celles déjà utilisées : celles d'une règle
+  /// de manche (`free_pass` ×N), plus celles d'une cartouche dépensée au
+  /// départ du tour (Fiesta v2 : une cartouche = un tour de N passes).
+  int get freePasses =>
+      chargeAllowance(
+          currentTeamModifiers.where((m) => !_isCartridge(m)).toList(),
+          'free_pass') +
+      (_charge('free_pass') == ChargeState.spent
+          ? modifierById('free_pass')!.defaultCharges
+          : 0);
   int get freePassesUsed => _turn.freePassesUsed;
 
   /// Il reste une passe gratuite ce tour. Toujours faux en Classique.
@@ -1421,9 +1429,23 @@ class GameProvider extends ChangeNotifier {
 
   ChargeState? _charge(String id) => _turn.charges[id];
 
-  /// Charges restantes de l'équipe qui joue pour la manche en cours (celles
-  /// des manches finies sont perdues). Aucune sur une continuation : c'est
-  /// le même tour que la fin de N, on n'y allume rien, et les charges de N+1
+  /// Cartouches de la manche en cours détenues par l'équipe qui joue : ses
+  /// bonus à charge, et ses malus en réserve (à infliger).
+  List<ModifierInstance> get _heldCartridges {
+    final teamId = getCurrentTeam()?.id;
+    return [
+      ...currentTeamModifiers.where((m) =>
+          _isCartridge(m) && kChargeBonusKeys.containsKey(m.catalogId)),
+      for (final m in _game.fiesta?.active ?? const <ModifierInstance>[])
+        if (m.reserve && m.teamId == teamId && m.round == _game.currentRound)
+          m,
+    ];
+  }
+
+  /// Cartouches [id] restantes de l'équipe qui joue pour la manche en cours
+  /// (celles des manches finies sont perdues ; un bonus allumé compte encore,
+  /// il se dépense au départ). Aucune sur une continuation : c'est le même
+  /// tour que la fin de N, on n'y joue rien, et les cartouches de N+1
   /// commencent au premier vrai tour.
   int _chargesLeft(String id) {
     if (isContinuation) return 0;
@@ -1434,19 +1456,28 @@ class GameProvider extends ChangeNotifier {
             u.teamId == teamId &&
             u.round == _game.currentRound)
         .length;
-    return chargeAllowance(
-            currentTeamModifiers.where(_isCartridge).toList(), id) -
-        used;
+    return chargeAllowance(_heldCartridges, id) - used;
   }
 
-  /// Allumer est refusé si le bonus est incompatible avec un modificateur en
-  /// jeu ou avec l'autre bonus allumé (Fiesta v2 : plus de plafond, seules
-  /// les incompatibilités limitent).
-  bool _blocked(String id) => [
-        ...turnModifiers.map((m) => m.catalogId),
-        ...kChargeBonusKeys.keys
-            .where((other) => other != id && _charge(other) != null),
-      ].any((other) => !areCompatible(other, id));
+  /// Pourquoi le bonus [id] ne peut pas s'allumer ce tour (`null` = il
+  /// peut) : déjà en jeu, ou incompatible avec un modificateur du tour (règle
+  /// de manche, malus reçu) ou un autre bonus allumé. Fiesta v2 : plus de
+  /// plafond, seules les incompatibilités limitent.
+  String? _conflict(String id) {
+    for (final other in [
+      ...turnModifiers.map((m) => m.catalogId),
+      ...kChargeBonusKeys.keys
+          .where((other) => other != id && _charge(other) != null),
+    ]) {
+      if (other == id) return 'déjà en jeu ce tour';
+      if (!areCompatible(other, id)) {
+        return 'incompatible avec ${modifierById(other)!.name} ce tour';
+      }
+    }
+    return null;
+  }
+
+  bool _blocked(String id) => _conflict(id) != null;
 
   /// Interrupteur d'un bonus à charge, avant le départ : seul `armed` est
   /// écrit ; la charge se dépense dans `startTurnTimer`.
@@ -1530,12 +1561,18 @@ class GameProvider extends ChangeNotifier {
     if (fiesta == null || _teams.isEmpty) return null;
     final applied = currentTeamModifiers;
     final continuation = isContinuation;
+    final teamId = _teams[_game.currentTeamIndex].id;
     return fiesta.copyWith(
       turn: FiestaTurnState.empty,
       active: fiesta.active
           .where((m) =>
               !(m.scope == ModifierScope.turn && applied.contains(m)) &&
-              !(continuation && m.round < _game.currentRound))
+              // Malus infligés à l'équipe : ils visaient CE tour (sans effet
+              // s'ils étaient interdits dans sa manche).
+              !(m.fromTeamId != null && m.teamId == teamId) &&
+              !(continuation &&
+                  m.fromTeamId == null &&
+                  m.round < _game.currentRound))
           .toList(),
     );
   }
@@ -1576,6 +1613,184 @@ class GameProvider extends ChangeNotifier {
             m.nature == ModifierNature.malus &&
             !(continuation && kTimeModifierIds.contains(m.catalogId)))
         .toList();
+  }
+
+  // ========== CE TOUR / RÉSERVE (Fiesta v2, lane 2) ==========
+  // Une cartouche = UN tour d'UNE équipe. Bonus : allumé avant le tour,
+  // dépensé au départ du chrono (`startTurnTimer`). Malus : infligé à une
+  // autre équipe pour SON prochain tour, dépensé tout de suite (`ChargeUse`
+  // avec cible), annulable tant que le tour de l'équipe qui l'envoie n'a pas
+  // commencé. Tout vit dans `GameState.fiesta` (kill, retour arrière).
+
+  /// Règles de manche qui pèsent sur ce tour (« Ce tour », cercles neutres).
+  List<ModifierInstance> get roundRulesThisTurn =>
+      currentTeamModifiers.where((m) => !_isCartridge(m)).toList();
+
+  /// Malus reçus pour ce tour : infligés par une équipe (`fromTeamId`), ou
+  /// coup de pouce de l'app (Auto) contre le leader.
+  List<ModifierInstance> get receivedThisTurn => currentTeamModifiers
+      .where((m) => _isCartridge(m) && m.nature == ModifierNature.malus)
+      .toList();
+
+  /// Bonus allumés pour ce tour (ou déjà dépensés), dans l'ordre d'allumage.
+  List<String> get bonusesThisTurn => _turn.charges.keys.toList();
+
+  /// Réserve de l'équipe qui joue, dans l'ordre du catalogue : ses
+  /// cartouches de la manche, bonus et malus, épuisées comprises (un bonus
+  /// allumé a quitté la réserve). Vide hors Fiesta et sur une continuation.
+  List<Cartridge> get reserve {
+    if (_game.fiesta == null || isContinuation) return const [];
+    final held = _heldCartridges.map((m) => m.catalogId).toSet();
+    return [
+      for (final def in kModifierCatalog)
+        if (held.contains(def.id))
+          Cartridge(
+            def.id,
+            left: _chargesLeft(def.id) - (_charge(def.id) != null ? 1 : 0),
+            blockedReason: def.nature == ModifierNature.bonus
+                ? (_charge(def.id) != null ? null : _conflict(def.id))
+                : _malusBlock(def),
+          ),
+    ];
+  }
+
+  /// Pourquoi le malus [def] ne peut pas être infligé ce tour : la règle de
+  /// manche le rend inutile (même modificateur, ou incompatible : un seul
+  /// mime à la fois), ou personne ne peut le recevoir.
+  String? _malusBlock(ModifierDef def) {
+    for (final rule in roundRulesThisTurn) {
+      if (rule.catalogId == def.id) return 'déjà en jeu pour tous cette manche';
+      if (!areCompatible(rule.catalogId, def.id)) {
+        return 'incompatible avec ${modifierById(rule.catalogId)!.name} '
+            'cette manche';
+      }
+    }
+    if (targetsFor(def.id).isEmpty) {
+      return 'aucune équipe adverse n\'a 3 joueurs';
+    }
+    return null;
+  }
+
+  /// Allume / éteint le bonus [id] de la réserve pour ce tour.
+  void toggleBonus(String id) => _setCharge(id, _charge(id) == null);
+
+  /// Équipes que l'équipe qui joue peut viser avec le malus [catalogId] :
+  /// toutes les autres (« Bloquer un devineur » : 3 joueurs ou plus).
+  List<Team> targetsFor(String catalogId) {
+    final me = getCurrentTeam()?.id;
+    final toPlayer =
+        modifierById(catalogId)?.defaultTarget == ModifierTarget.player;
+    return [
+      for (final t in _teams)
+        if (t.id != me && (!toPlayer || canBlockGuesser(t.playerIds.length)))
+          t,
+    ];
+  }
+
+  /// Avant-tour d'un vrai tour : seul moment où la réserve se joue.
+  bool get _inPreTurn =>
+      _game.fiesta != null &&
+      _game.currentScreen == AppConstants.screenGame &&
+      !isContinuation;
+
+  /// Inflige le malus [catalogId] de la réserve de l'équipe qui joue à
+  /// [targetTeamId], pour le PROCHAIN tour de celle-ci. Rend le message de
+  /// refus si ce malus (ou un malus qui ne s'y cumule pas) lui est déjà
+  /// infligé pour ce tour-là : rien n'est alors consommé. Hors avant-tour,
+  /// cartouche épuisée ou grisée, cible invalide : ignoré (`null`).
+  String? inflictMalus(String catalogId, String targetTeamId) {
+    final fiesta = _game.fiesta;
+    final me = getCurrentTeam();
+    final def = modifierById(catalogId);
+    final cartridge =
+        reserve.where((c) => c.catalogId == catalogId).firstOrNull;
+    if (!_inPreTurn ||
+        me == null ||
+        def == null ||
+        def.nature != ModifierNature.malus ||
+        cartridge == null ||
+        !cartridge.usable ||
+        !targetsFor(catalogId).any((t) => t.id == targetTeamId)) {
+      return null;
+    }
+    final target = getTeamById(targetTeamId)!.name;
+    for (final m in fiesta!.active) {
+      if (m.fromTeamId == null || m.teamId != targetTeamId) continue;
+      final by = getTeamById(m.fromTeamId!)?.name ?? '?';
+      if (m.catalogId == catalogId) {
+        return 'Impossible : ${def.name} est déjà infligé à l\'équipe $target '
+            'par l\'équipe $by pour son prochain tour. Choisis un autre malus '
+            'ou attends.';
+      }
+      if (!areCompatible(m.catalogId, catalogId)) {
+        return 'Impossible : ${def.name} ne se cumule pas avec '
+            '${modifierById(m.catalogId)!.name}, déjà infligé à l\'équipe '
+            '$target par l\'équipe $by pour son prochain tour. Choisis un '
+            'autre malus ou attends.';
+      }
+    }
+    final round = _game.currentRound;
+    _game = _game.copyWith(
+      fiesta: fiesta.copyWith(
+        active: [
+          ...fiesta.active,
+          ModifierInstance(
+            catalogId: catalogId,
+            scope: ModifierScope.turn,
+            target: def.defaultTarget == ModifierTarget.player
+                ? ModifierTarget.player
+                : ModifierTarget.team,
+            teamId: targetTeamId,
+            charges: def.defaultCharges,
+            nature: ModifierNature.malus,
+            round: round,
+            fromTeamId: me.id,
+          ),
+        ],
+        chargesUsed: [
+          ...fiesta.chargesUsed,
+          ChargeUse(
+              catalogId: catalogId,
+              teamId: me.id,
+              round: round,
+              targetTeamId: targetTeamId),
+        ],
+      ),
+    );
+    notifyListeners();
+    _saveGameState();
+    return null;
+  }
+
+  /// Malus envoyés par l'équipe qui joue, annulables tant que son tour n'a
+  /// pas commencé (ligne « Envoyé : … → X »). Vide hors avant-tour.
+  List<ModifierInstance> get sentThisTurn {
+    final me = getCurrentTeam()?.id;
+    if (!_inPreTurn || me == null) return const [];
+    return _game.fiesta!.active.where((m) => m.fromTeamId == me).toList();
+  }
+
+  /// Annule l'envoi de [sent] (une entrée de [sentThisTurn]) : le malus
+  /// quitte sa cible, la cartouche revient dans la réserve.
+  void cancelSent(ModifierInstance sent) {
+    final fiesta = _game.fiesta;
+    if (!sentThisTurn.contains(sent)) return;
+    final used = fiesta!.chargesUsed.lastIndexWhere((u) =>
+        u.catalogId == sent.catalogId &&
+        u.teamId == sent.fromTeamId &&
+        u.targetTeamId == sent.teamId &&
+        u.round == sent.round);
+    _game = _game.copyWith(
+      fiesta: fiesta.copyWith(
+        active: [...fiesta.active]..remove(sent),
+        chargesUsed: [
+          for (var i = 0; i < fiesta.chargesUsed.length; i++)
+            if (i != used) fiesta.chargesUsed[i],
+        ],
+      ),
+    );
+    notifyListeners();
+    _saveGameState();
   }
 
   // ========== 1 PARMI 3 / COUP DE POUCE (2-10) ==========
@@ -1709,21 +1924,14 @@ class GameProvider extends ChangeNotifier {
   List<ModifierInstance> get appBoostPreview =>
       _transitionPlan?.gifts ?? const [];
 
-  /// Équipe qui désigne le devineur bloqué de l'équipe qui joue : celle qui a
-  /// choisi « Bloquer un devineur » contre elle. `null` = les adversaires.
+  /// Équipe qui désigne le devineur bloqué de l'équipe qui joue : celle qui
+  /// lui a infligé « Bloquer un devineur ». `null` = les adversaires.
   Team? get blockingTeam {
-    final block = currentTeamModifiers
+    final from = currentTeamModifiers
         .where((m) => m.catalogId == 'block_guesser')
-        .firstOrNull;
-    if (block == null) return null;
-    for (final c in _game.fiesta?.offerChoices ?? const <OfferChoice>[]) {
-      if (c.modifier.catalogId == 'block_guesser' &&
-          c.modifier.teamId == block.teamId &&
-          c.modifier.round == block.round) {
-        return getTeamById(c.chooserId);
-      }
-    }
-    return null;
+        .firstOrNull
+        ?.fromTeamId;
+    return from == null ? null : getTeamById(from);
   }
 
   /// Récap « Modificateurs de la partie », en faits (archivés). Vide en

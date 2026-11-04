@@ -4,11 +4,13 @@ import 'modifier_instance.dart';
 /// Effets de tour (story 2-8) : règles pures sur les modificateurs qui pèsent
 /// sur l'équipe qui joue. Le provider ne fait que brancher.
 
-/// Bonus à charge activables avant le tour (stories 2-9, 2-11), par id de
-/// catalogue, avec leur clé JSON dans `fiesta.turn`. Une 3ᵉ charge = une ligne.
+/// Bonus à charge activables avant le tour (stories 2-9, 2-11 ; Fiesta v2 :
+/// tous les bonus en cartouche, Passe gratuite comprise), par id de
+/// catalogue, avec leur clé JSON dans `fiesta.turn`. Une cartouche = UN tour.
 const Map<String, String> kChargeBonusKeys = {
   'double_points': 'doublePoints',
   'two_words': 'twoWords',
+  'free_pass': 'freePass',
 };
 
 /// Une charge du tour : allumée à l'avant-tour ([armed]), puis dépensée au
@@ -133,3 +135,18 @@ int chargeAllowance(List<ModifierInstance> modifiers, String catalogId) =>
 /// `block_guesser` n'a d'effet que si l'équipe a au moins 3 joueurs : il faut
 /// un devineur à bloquer ET un autre qui puisse encore répondre.
 bool canBlockGuesser(int teamSize) => teamSize > 2;
+
+/// Une cartouche de la réserve de l'équipe qui joue (écran « Ce tour /
+/// Réserve », Fiesta v2) : [left] restantes pour la manche (0 = épuisée),
+/// [blockedReason] (« incompatible avec … ») si elle ne peut pas servir ce
+/// tour. Calculée par le provider, jamais persistée.
+class Cartridge {
+  final String catalogId;
+  final int left;
+  final String? blockedReason;
+
+  const Cartridge(this.catalogId, {required this.left, this.blockedReason});
+
+  ModifierNature get nature => modifierById(catalogId)!.nature;
+  bool get usable => left > 0 && blockedReason == null;
+}
