@@ -826,3 +826,12 @@ jamais autre chose que ce que « Suivant » lancera. Retour système Android bra
 (toute la partie), décochable dans l'éditeur. Remplace « les nouveaux ensembles partent
 décochés » plus haut. Les ensembles déjà enregistrés gardent leur valeur ; « Fiesta classique »
 (ensemble fourni par l'app) suit ce défaut. **Pourquoi.** Décision Florent : coché par défaut.
+
+## 2026-11-04 — Reclassement de mots FR (revue Florent)
+
+Difficulté seule (`assets/translations/words/fr/`), aucune forme persistée touchée.
+- Niveau 2 : Shape of You, Vice-Versa, Persil, Accrocher, Nerveux, Lancer franc, Pain, Harpe, Affamé, Sous-sol, Profiterole, Réparateur, Marche rapide, Nausée.
+- Niveau 3 : Ampli, Téléski, Mew.
+- « Chauffeur de camion » renommé « Chauffeur poids lourd » + niveau 2.
+- « Laurent Gerra » supprimé (celebrites).
+- « Dedans » laissé en niveau 1.

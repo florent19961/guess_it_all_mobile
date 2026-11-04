@@ -1683,7 +1683,7 @@
     },
     {
       "word": "Réparateur",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -1697,8 +1697,8 @@
       "language": "international"
     },
     {
-      "word": "Chauffeur de camion",
-      "difficulty": 1,
+      "word": "Chauffeur poids lourd",
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -2828,7 +2828,7 @@
     },
     {
       "word": "Marche rapide",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
@@ -3063,7 +3063,7 @@
     },
     {
       "word": "Téléski",
-      "difficulty": 1,
+      "difficulty": 3,
       "language": "international"
     },
     {
@@ -3163,7 +3163,7 @@
     },
     {
       "word": "Lancer franc",
-      "difficulty": 1,
+      "difficulty": 2,
       "language": "international"
     },
     {
