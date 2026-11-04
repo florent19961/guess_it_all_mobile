@@ -398,7 +398,8 @@ List<CoachStep> fiestaTransitionHelp({
         target: catchUp,
         title: 'Rattrapage',
         text: 'L\'équipe menée gagne du temps à la manche suivante, l\'équipe '
-            'en tête en perd un peu.',
+            'en tête en perd un peu. Seulement au premier tour de chaque '
+            'équipe dans la manche (pas quand un tour coupé se poursuit).',
       ),
       CoachStep(
         target: pickThree,

@@ -87,6 +87,10 @@ class CatchUpLine extends StatelessWidget {
       children: [
         TextSpan(
           text: '$name ',
+          // Le signe se lit à l'écran ; l'état est dit en toutes lettres aux
+          // lecteurs d'écran (la couleur seule ne le porte pas). Sur ce span
+          // à texte : un label posé sur le parent sans texte serait ignoré.
+          semanticsLabel: '$name ${e.isLeader ? 'en tête' : 'en retard'}, ',
           style:
               TextStyle(color: AppColors.getTeamColor(index < 0 ? 0 : index)),
         ),
