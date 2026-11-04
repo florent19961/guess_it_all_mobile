@@ -10,14 +10,8 @@ import '../widgets/common/home_button.dart';
 import '../widgets/common/back_button.dart';
 import '../widgets/effects/shooting_stars.dart';
 import '../widgets/fiesta/blocked_guesser.dart';
-import '../widgets/fiesta/fiesta_setup_widgets.dart';
-import '../widgets/fiesta/fiesta_turn_widgets.dart';
 import '../widgets/fiesta/malus_reveal.dart';
-import '../widgets/fiesta/modifier_badge.dart';
-import '../widgets/fiesta/modifier_card.dart';
-import '../widgets/fiesta/turn_time_cards.dart';
-import '../models/fiesta/modifier_catalog.dart';
-import '../models/fiesta/modifier_instance.dart';
+import '../widgets/fiesta/turn_cartridges.dart';
 import '../widgets/help/coach_marks.dart';
 import '../widgets/help/first_game_help.dart';
 import '../widgets/help/help_button.dart';
@@ -35,9 +29,8 @@ class _GameScreenState extends State<GameScreen> {
   final _roundRulesKey = GlobalKey();
   final _previousTurnKey = GlobalKey();
   final _startKey = GlobalKey();
-  final _badgesKey = GlobalKey();
-  final _doublePointsKey = GlobalKey();
-  final _turnTimeKey = GlobalKey();
+  final _thisTurnKey = GlobalKey();
+  final _reserveKey = GlobalKey();
 
   /// Vrai tant que l'aide automatique n'est pas tranchée : « Commencer le
   /// tour » est ignoré, sinon l'aide serait consommée sans être vue.
@@ -86,9 +79,8 @@ class _GameScreenState extends State<GameScreen> {
       ..._preTurnSteps(provider.getCurrentPlayer()?.name ?? ''),
       if (provider.isFiesta)
         ...fiestaPreTurnHelp(
-          badges: _badgesKey,
-          doublePoints: _doublePointsKey,
-          turnTime: _turnTimeKey,
+          thisTurn: _thisTurnKey,
+          reserve: _reserveKey,
         ),
     ]);
   }
@@ -243,27 +235,22 @@ class _GameScreenState extends State<GameScreen> {
                     ],
                   ),
 
-                  const Spacer(),
-
-                  // Fiesta : annonces avant le tour, posées juste au-dessus du
-                  // bouton. Défile si l'écran est petit plutôt que de déborder.
-                  // `Expanded` (et non `Flexible`) : l'espace non utilisé reste
-                  // au-dessus du bloc, pas sous le bouton.
-                  if (provider.isFiesta)
+                  // Fiesta : « Ce tour » et « Réserve » juste sous l'équipe,
+                  // sans défilement (les cercles s'adaptent à la place) ;
+                  // l'espace libre reste au-dessus du bouton.
+                  if (provider.isFiesta) ...[
+                    const SizedBox(height: 18),
                     Expanded(
-                      flex: 3,
-                      child: Align(
-                        alignment: Alignment.bottomCenter,
-                        child: SingleChildScrollView(
-                          child: _FiestaAnnouncements(
-                            provider: provider,
-                            badgesKey: _badgesKey,
-                            doublePointsKey: _doublePointsKey,
-                            turnTimeKey: _turnTimeKey,
-                          ),
-                        ),
+                      flex: 6,
+                      child: FiestaTurnZone(
+                        provider: provider,
+                        thisTurnKey: _thisTurnKey,
+                        reserveKey: _reserveKey,
                       ),
                     ),
+                    const SizedBox(height: 16),
+                  ] else
+                    const Spacer(),
 
                   // Time bonus indicator (Classique : en Fiesta, la carte
                   // « Temps du tour » porte déjà la ligne « Temps reporté »)
@@ -605,223 +592,5 @@ class _GameScreenState extends State<GameScreen> {
         ),
       ),
     );
-  }
-}
-
-/// Avant le tout premier tour : tirage de la manche 1 et annonce « Une seule
-/// réponse » (maquette `r1`). Ensuite : « Actif ce tour » (maquette `cd`).
-/// Dans les deux cas, la carte « Temps du tour » dessous.
-class _FiestaAnnouncements extends StatelessWidget {
-  final GameProvider provider;
-  final GlobalKey badgesKey;
-  final GlobalKey doublePointsKey;
-  final GlobalKey turnTimeKey;
-
-  const _FiestaAnnouncements({
-    required this.provider,
-    required this.badgesKey,
-    required this.doublePointsKey,
-    required this.turnTimeKey,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _modifiers(),
-        if (provider.isDoublePointsArmed || provider.doublePointsLeft > 0)
-          _doublePoints(),
-        if (provider.isTwoWordsArmed || provider.twoWordsLeft > 0) _twoWords(),
-        KeyedSubtree(key: turnTimeKey, child: TurnTimeCard(provider.turnTime)),
-      ],
-    );
-  }
-
-  /// Interrupteur « Mot compte double » (maquette `cd`). La charge ne se
-  /// dépense qu'au départ du tour ; ensuite l'interrupteur est figé.
-  Widget _doublePoints() {
-    final left = provider.doublePointsLeft;
-    final String label;
-    final String detail;
-    var editable = false;
-    if (provider.isDoublePointsOn) {
-      label = 'Mot compte double activé';
-      detail = 'Les points de ce tour comptent ×2.';
-    } else if (!provider.isDoublePointsArmed && provider.doublePointsBlocked) {
-      label = 'Activer Mot compte double';
-      detail = 'Impossible : incompatible avec un modificateur de ce tour.';
-    } else {
-      label = 'Activer Mot compte double';
-      detail = '$left charge${left > 1 ? 's' : ''} pour cette manche. '
-          'Les points du tour seront ×2.';
-      editable = true;
-    }
-    return FiestaCard(
-      key: doublePointsKey,
-      title: 'Bonus',
-      children: [
-        FiestaLine(
-          label: label,
-          detail: detail,
-          value: provider.isDoublePointsArmed,
-          onChanged: editable ? provider.setDoublePoints : null,
-        ),
-      ],
-    );
-  }
-
-  /// Interrupteur « Deux mots à la fois » puis, une fois allumé, son annonce
-  /// (maquette `two_cd`). Même règle de charge que le ×2.
-  Widget _twoWords() {
-    final left = provider.twoWordsLeft;
-    final String label;
-    final String detail;
-    var editable = false;
-    if (provider.isTwoWordsOn) {
-      label = 'Deux mots à la fois activé';
-      detail = 'Deux mots à l\'écran pendant ce tour.';
-    } else if (!provider.isTwoWordsArmed && provider.twoWordsBlocked) {
-      label = 'Activer Deux mots à la fois';
-      detail = 'Impossible : incompatible avec un modificateur de ce tour.';
-    } else {
-      label = 'Activer Deux mots à la fois';
-      detail = '$left charge${left > 1 ? 's' : ''} pour cette manche.';
-      editable = true;
-    }
-    final player = provider.getCurrentPlayer()?.name ?? 'Le joueur';
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        FiestaCard(
-          title: 'Bonus',
-          children: [
-            FiestaLine(
-              label: label,
-              detail: detail,
-              value: provider.isTwoWordsArmed,
-              onChanged: editable ? provider.setTwoWords : null,
-            ),
-          ],
-        ),
-        if (provider.isTwoWordsArmed)
-          Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.secondaryCyan.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                  color: AppColors.secondaryCyan.withValues(alpha: 0.5)),
-            ),
-            child: Column(
-              children: [
-                const Text(
-                  '⧉',
-                  style:
-                      TextStyle(fontSize: 38, color: AppColors.secondaryCyan),
-                ),
-                Text(
-                  'Deux mots à la fois !',
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.subtitle(fontSize: 26),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '$player voit deux mots et fait deviner celui de son choix. '
-                  'Un mot trouvé ou passé est remplacé, l\'autre reste à '
-                  'l\'écran.',
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.bodySmall
-                      .copyWith(fontSize: 13, color: AppColors.gray400),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Chaque passe coûte toujours la pénalité habituelle.',
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.bodySmall
-                      .copyWith(fontSize: 12, color: AppColors.gray400),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _modifiers() {
-    final modifiers = provider.currentTeamModifiers;
-    final oneAnswer = provider.isOneAnswer;
-
-    if (provider.isFirstTurnOfGame) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (oneAnswer)
-            Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.warning.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                    color: AppColors.warning.withValues(alpha: 0.35)),
-              ),
-              // Annonce avant le premier tour (en Auto, elle a été tirée au
-              // lancement : c'est ici que les joueurs l'apprennent).
-              child: Text(
-                'Une seule réponse par mot. Une mauvaise réponse → il faut '
-                'passer (pénalité de passe).',
-                style: AppTextStyles.bodySmall
-                    .copyWith(fontSize: 12.5, color: AppColors.warning),
-              ),
-            ),
-          RoundDrawCard(round: 1, modifiers: modifiers),
-          ..._constraints(oneAnswer, modifiers),
-        ],
-      );
-    }
-
-    // La charge de ×2 non dépensée est offerte par la carte « Bonus », pas
-    // affichée comme active ; dépensée (continuation), elle devient le badge ×2.
-    final inPlay = provider.turnModifiers;
-    final doubled = provider.isDoublePointsOn;
-    return FiestaCard(
-      key: badgesKey,
-      title: 'Actif ce tour',
-      children: [
-        ..._constraints(oneAnswer, modifiers),
-        if (inPlay.isEmpty && !doubled)
-          const FiestaHint('Aucun modificateur')
-        else
-          ModifierBadges(
-            modifiers: inPlay,
-            alignment: WrapAlignment.start,
-            extra: [
-              if (doubled)
-                ModifierBadge.catalog('double_points',
-                    nature: ModifierNature.bonus),
-            ],
-          ),
-      ],
-    );
-  }
-
-  /// Contraintes annoncées (2-8) : bandeaux de mime / dessin, et Q6 « Une
-  /// seule réponse » + « Interdit de passer ».
-  List<Widget> _constraints(bool oneAnswer, List<ModifierInstance> modifiers) {
-    final ids = modifiers.map((m) => m.catalogId).toSet();
-    return [
-      for (final id in MimeConstraintBanner.icons.keys)
-        if (ids.contains(id)) ...[
-          MimeConstraintBanner(modifierId: id),
-          const SizedBox(height: 12),
-        ],
-      if (oneAnswer && ids.contains('no_pass')) ...[
-        const FiestaHint(
-            'Mauvaise réponse : le mot est grillé jusqu\'à la fin du tour.'),
-        const SizedBox(height: 12),
-      ],
-    ];
   }
 }

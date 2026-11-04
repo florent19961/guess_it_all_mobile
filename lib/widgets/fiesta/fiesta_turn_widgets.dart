@@ -1,7 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 
-import '../../models/fiesta/modifier_catalog.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/reversed_word.dart';
 
@@ -263,67 +262,6 @@ class TwoWordsLayout extends StatelessWidget {
           ),
         ],
       ],
-    );
-  }
-}
-
-/// Bandeau statique d'une contrainte annoncée (famille « Mime » de la
-/// manche 3, parole dans une autre langue) : nom et description du catalogue
-/// (2-8).
-class MimeConstraintBanner extends StatelessWidget {
-  /// Les ids du catalogue que ce bandeau sait afficher (les `round3Only` et
-  /// `other_language`).
-  static const Map<String, IconData> icons = {
-    'mime_no_arms': Icons.do_not_touch,
-    'mime_no_fists': Icons.back_hand,
-    'mime_eyes_closed': Icons.visibility_off,
-    'draw': Icons.edit,
-    'mime_under_sheet': Icons.bed,
-    'mime_back_turned': Icons.flip_camera_android,
-    'other_language': Icons.translate,
-  };
-
-  final String modifierId;
-
-  MimeConstraintBanner({required this.modifierId, super.key})
-      : assert(icons.containsKey(modifierId));
-
-  @override
-  Widget build(BuildContext context) {
-    final def = modifierById(modifierId)!;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.warning.withValues(alpha: 0.1),
-        border: Border.all(color: AppColors.warning.withValues(alpha: 0.35)),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Icon(icons[modifierId], color: AppColors.warning, size: 28),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  def.name,
-                  style: AppTextStyles.bodySmall
-                      .copyWith(fontWeight: FontWeight.w700),
-                ),
-                Text(
-                  def.description,
-                  style: AppTextStyles.bodySmall.copyWith(
-                    fontSize: 12.5,
-                    color: AppColors.gray400,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

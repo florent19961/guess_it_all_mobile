@@ -6,53 +6,6 @@ import 'fiesta_setup_widgets.dart';
 
 String _signed(int seconds) => '${seconds < 0 ? '−' : '+'}${seconds.abs()} s';
 
-/// « Temps du tour » (maquette `cd` / `cd2`) : une ligne par composante, le
-/// total. Avant le tour, sous les annonces Fiesta.
-class TurnTimeCard extends StatelessWidget {
-  final TurnTime time;
-
-  const TurnTimeCard(this.time, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final floored = time.total > time.lines.fold(0, (s, l) => s + l.seconds);
-    return FiestaCard(
-      title: 'Temps du tour',
-      trailing: Text(
-        '${time.total} s',
-        style: const TextStyle(
-            fontFamily: 'Bangers', fontSize: 24, color: AppColors.warning),
-      ),
-      children: [
-        for (final line in time.lines)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(line.label, style: AppTextStyles.bodySmall),
-                Text(
-                  line == time.lines.first
-                      ? '${line.seconds} s'
-                      : _signed(line.seconds),
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: line.seconds < 0
-                        ? AppColors.error
-                        : line == time.lines.first
-                            ? AppColors.gray400
-                            : AppColors.success,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        if (floored)
-          const FiestaHint('Plancher : un tour ne descend pas sous 10 s.'),
-      ],
-    );
-  }
-}
-
 /// « Rattrapage : A +20 s · B −10 s » sur la transition : ce que chaque
 /// équipe aura en plus ou en moins à son premier tour de la manche suivante.
 /// Sans l'écart chiffré : scores cachés jusqu'aux résultats.
