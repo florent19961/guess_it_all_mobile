@@ -28,7 +28,7 @@ Choix d'implémentation à challenger :
 7. **Démarrage non retardé** : `main.dart` intact ; les tâches de démarrage restent avant `runApp`, l'intro joue après. Le splash natif couvre l'attente des tâches, puis l'intro.
 8. **Jointure splash → intro (Android 12+ surtout)** : le premier frame Flutter est un fond `#2B3848` vide (piste à opacité 0, arc non dessiné tant que sa progression vaut 0, point à opacité 0). Le splash Android 12 sans icône doit donc s'enchaîner sans saut. Y a-t-il un frame où l'app (accueil) apparaît avant l'overlay ?
 9. **Dialogue `UpgradeAlert`** : il s'ouvre dans le Navigator, donc sous l'intro ; il apparaît après le fondu (≤ 1,7 s). OK ?
-
+  _(Rectifié après revue r2 : faux — le fond étoilé de l'accueil tourne en boucle, un `pumpAndSettle()` au niveau de l'app ne se stabilise jamais ; les tests existants l'évitent.)_
 ## Questions précises
 - **Tests qui pendent** : aucun test existant ne monte `GuessItAllApp` (grep `GuessItAllApp` dans `test/` : vide), donc aucun `pumpAndSettle` ne voit l'intro ; et l'intro se termine seule (pas d'animation en boucle) : un futur test qui monterait l'app avec `pumpAndSettle` finirait en ~1,7 s simulées. Confirmer. Aucun test ajouté (UI, hors zones risquées) ; comportement vérifié par des tests jetables non commités (tap → disparition en ≤ 400 ms ; mode réduit ≈ 1,15 s ; changement d'écran ne rejoue pas) et par des captures de frames.
 - **Deux plateformes** : rien de spécifique Android/iOS dans l'intro ; `disableAnimations` = « Supprimer les animations » Android / « Réduire les animations » iOS. Divergence possible ?
