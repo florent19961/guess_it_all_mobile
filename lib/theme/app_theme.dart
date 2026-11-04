@@ -52,6 +52,60 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: AppColors.backgroundMain,
+      // Sans colorScheme, Material 3 peint en violet tout widget non stylé
+      // (Switch, effets de clic, curseur, sélection…). Constructeur nu :
+      // les rôles non fournis retombent sur primary/surface, jamais violet.
+      colorScheme: const ColorScheme(
+        brightness: Brightness.dark,
+        primary: AppColors.primaryPink,
+        onPrimary: AppColors.backgroundMain,
+        secondary: AppColors.secondaryCyan,
+        onSecondary: AppColors.backgroundMain,
+        error: AppColors.error,
+        onError: AppColors.backgroundMain,
+        surface: AppColors.backgroundMain,
+        onSurface: Colors.white,
+        onSurfaceVariant: AppColors.gray400,
+        surfaceContainerHighest: AppColors.gray700,
+        outline: AppColors.gray500,
+        outlineVariant: AppColors.gray700,
+      ),
+      switchTheme: SwitchThemeData(
+        // Pouce bleu nuit sur turquoise (8,33:1), blanc sur gray700 (10,31:1).
+        // Désactivé (onChanged null) : mêmes couleurs à 38 %, comme Material.
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          final c = states.contains(WidgetState.selected)
+              ? AppColors.backgroundMain
+              : Colors.white;
+          return states.contains(WidgetState.disabled)
+              ? c.withValues(alpha: 0.38)
+              : c;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          final c = states.contains(WidgetState.selected)
+              ? AppColors.secondaryCyan
+              : AppColors.gray700;
+          return states.contains(WidgetState.disabled)
+              ? c.withValues(alpha: 0.38)
+              : c;
+        }),
+        trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
+        overlayColor: WidgetStatePropertyAll(
+          AppColors.secondaryCyan.withValues(alpha: 0.2),
+        ),
+      ),
+      // Curseur, sélection et poignées (Android et iOS) : turquoise, comme
+      // la bordure des champs.
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: AppColors.secondaryCyan,
+        selectionColor: AppColors.secondaryCyan.withValues(alpha: 0.4),
+        selectionHandleColor: AppColors.secondaryCyan,
+      ),
+      snackBarTheme: const SnackBarThemeData(
+        backgroundColor: AppColors.gray700,
+        actionTextColor: AppColors.secondaryCyan,
+        contentTextStyle: TextStyle(fontFamily: 'Poppins', color: Colors.white),
+      ),
       fontFamily: 'Poppins',
       textTheme: const TextTheme(
         displayLarge: TextStyle(

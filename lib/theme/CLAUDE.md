@@ -28,6 +28,11 @@ grep -n "static const Color" lib/theme/app_theme.dart
 - Les 4 couleurs d'equipe reprennent primary/secondary puis ajoutent violet et
   ambre. Au-dela de 4 equipes, l'affichage **cycle** (`% length`) — c'est un
   choix, pas un oubli.
+- Le `colorScheme` est construit **a la main** depuis `AppColors` (constructeur
+  `ColorScheme(...)` nu, jamais `fromSeed` ni `ColorScheme.dark()`, qui
+  ramenent le violet Material). Un widget Material non style prend donc la
+  charte. Le `switchTheme` (pouce bleu nuit sur piste turquoise, blanc sur `gray700`, sans
+  contour) et le `textSelectionTheme` (turquoise) completent.
 
 ## Typographie
 
