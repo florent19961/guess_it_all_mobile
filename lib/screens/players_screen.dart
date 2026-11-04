@@ -307,211 +307,219 @@ class _PlayersScreenState extends State<PlayersScreen> {
     final provider = context.watch<GameProvider>();
     final canProceed = _canProceed(provider);
 
-    return ShootingStars(
-      child: Stack(
-        children: [
-          SafeArea(
-            child: Column(
-              children: [
-                const SizedBox(height: 64),
-                Text(
-                  'Joueurs',
-                  style: AppTextStyles.subtitle(fontSize: 40),
-                ),
-                const SizedBox(height: 24),
-                Expanded(
-                  child: _isInitialized
-                      ? ListView.builder(
-                          padding: EdgeInsets.only(
-                            left: 24,
-                            right: 24,
-                            bottom:
-                                MediaQuery.of(context).viewInsets.bottom + 100,
-                          ),
-                          itemCount: provider.players.length,
-                          itemBuilder: (context, index) {
-                            final player = provider.players[index];
-                            final error =
-                                _getErrorForPlayer(player.id, provider);
-                            final wordsCount = player.words.length;
-                            final wordsNeeded =
-                                provider.getWordsCountForPlayer(player.id);
-                            final isWordsFilled = wordsCount >= wordsNeeded;
-                            final playerName =
-                                _controllers[player.id]?.text.trim() ?? '';
-                            final hasName = playerName.isNotEmpty;
-                            // Mode aléatoire : les mots tirés restent cachés,
-                            // la carte affiche un badge non cliquable.
-                            final isRandom = provider.settings.wordChoice ==
-                                AppConstants.wordChoiceRandom;
+    // Retour système (Android) = bouton retour, pas la sortie de l'app.
+    void back() {
+      // Sauvegarder les noms actuels avant de partir
+      for (final player in provider.players) {
+        final name = _controllers[player.id]?.text.trim() ?? '';
+        if (name != player.name) {
+          provider.updatePlayer(player.id, name: name);
+        }
+      }
+      // Fiesta Personnalisé : retour à l'écran des ensembles.
+      provider.goToScreen(
+        provider.pendingFiesta?.mode == FiestaMode.custom
+            ? AppConstants.screenFiestaEnsembles
+            : AppConstants.screenSettings,
+      );
+    }
 
-                            final isLastPlayer =
-                                index == provider.players.length - 1;
-                            final nextPlayerId = isLastPlayer
-                                ? null
-                                : provider.players[index + 1].id;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) back();
+      },
+      child: ShootingStars(
+        child: Stack(
+          children: [
+            SafeArea(
+              child: Column(
+                children: [
+                  const SizedBox(height: 64),
+                  Text(
+                    'Joueurs',
+                    style: AppTextStyles.subtitle(fontSize: 40),
+                  ),
+                  const SizedBox(height: 24),
+                  Expanded(
+                    child: _isInitialized
+                        ? ListView.builder(
+                            padding: EdgeInsets.only(
+                              left: 24,
+                              right: 24,
+                              bottom: MediaQuery.of(context).viewInsets.bottom +
+                                  100,
+                            ),
+                            itemCount: provider.players.length,
+                            itemBuilder: (context, index) {
+                              final player = provider.players[index];
+                              final error =
+                                  _getErrorForPlayer(player.id, provider);
+                              final wordsCount = player.words.length;
+                              final wordsNeeded =
+                                  provider.getWordsCountForPlayer(player.id);
+                              final isWordsFilled = wordsCount >= wordsNeeded;
+                              final playerName =
+                                  _controllers[player.id]?.text.trim() ?? '';
+                              final hasName = playerName.isNotEmpty;
+                              // Mode aléatoire : les mots tirés restent cachés,
+                              // la carte affiche un badge non cliquable.
+                              final isRandom = provider.settings.wordChoice ==
+                                  AppConstants.wordChoiceRandom;
 
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    key: index == 0 ? _firstPlayerKey : null,
-                                    child: AppInput(
-                                      key: ValueKey('input_${player.id}'),
-                                      controller: _controllers[player.id],
-                                      focusNode: _focusNodes[player.id],
-                                      placeholder: 'Joueur ${index + 1}',
-                                      error: error,
-                                      textInputAction: isLastPlayer
-                                          ? TextInputAction.done
-                                          : TextInputAction.next,
-                                      onSubmitted: isLastPlayer
-                                          ? () =>
-                                              FocusScope.of(context).unfocus()
-                                          : () {
-                                              if (nextPlayerId != null) {
-                                                _focusNodes[nextPlayerId]
-                                                    ?.requestFocus();
-                                              }
-                                            },
-                                      onChanged: (value) {
-                                        setState(
-                                            () {}); // Rafraîchir pour vérifier les doublons
-                                        // Sauvegarder le nom immédiatement
-                                        provider.updatePlayer(player.id,
-                                            name: value.trim());
-                                      },
+                              final isLastPlayer =
+                                  index == provider.players.length - 1;
+                              final nextPlayerId = isLastPlayer
+                                  ? null
+                                  : provider.players[index + 1].id;
+
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      key: index == 0 ? _firstPlayerKey : null,
+                                      child: AppInput(
+                                        key: ValueKey('input_${player.id}'),
+                                        controller: _controllers[player.id],
+                                        focusNode: _focusNodes[player.id],
+                                        placeholder: 'Joueur ${index + 1}',
+                                        error: error,
+                                        textInputAction: isLastPlayer
+                                            ? TextInputAction.done
+                                            : TextInputAction.next,
+                                        onSubmitted: isLastPlayer
+                                            ? () =>
+                                                FocusScope.of(context).unfocus()
+                                            : () {
+                                                if (nextPlayerId != null) {
+                                                  _focusNodes[nextPlayerId]
+                                                      ?.requestFocus();
+                                                }
+                                              },
+                                        onChanged: (value) {
+                                          setState(
+                                              () {}); // Rafraîchir pour vérifier les doublons
+                                          // Sauvegarder le nom immédiatement
+                                          provider.updatePlayer(player.id,
+                                              name: value.trim());
+                                        },
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  GestureDetector(
-                                    key: index == 0 ? _wordsKey : null,
-                                    onTap: hasName && !isRandom
-                                        ? () {
-                                            provider.setCurrentEditingPlayer(
-                                                player.id);
-                                            provider.goToScreen(
-                                                AppConstants.screenWords);
-                                          }
-                                        : null,
-                                    child: Opacity(
-                                      opacity: hasName || isRandom ? 1.0 : 0.4,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 12, vertical: 10),
-                                        decoration: BoxDecoration(
-                                          color: isWordsFilled
-                                              ? AppColors.success
-                                                  .withOpacity(0.2)
-                                              : AppColors.error
-                                                  .withOpacity(0.2),
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          border: Border.all(
+                                    const SizedBox(width: 12),
+                                    GestureDetector(
+                                      key: index == 0 ? _wordsKey : null,
+                                      onTap: hasName && !isRandom
+                                          ? () {
+                                              provider.setCurrentEditingPlayer(
+                                                  player.id);
+                                              provider.goToScreen(
+                                                  AppConstants.screenWords);
+                                            }
+                                          : null,
+                                      child: Opacity(
+                                        opacity:
+                                            hasName || isRandom ? 1.0 : 0.4,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 10),
+                                          decoration: BoxDecoration(
                                             color: isWordsFilled
                                                 ? AppColors.success
-                                                : AppColors.error,
-                                            width: 2,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              isWordsFilled
-                                                  ? Icons.check_circle
-                                                  : Icons.edit_note,
-                                              size: 18,
+                                                    .withOpacity(0.2)
+                                                : AppColors.error
+                                                    .withOpacity(0.2),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            border: Border.all(
                                               color: isWordsFilled
                                                   ? AppColors.success
                                                   : AppColors.error,
+                                              width: 2,
                                             ),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              isRandom
-                                                  ? '$wordsCount mots prêts'
-                                                  : isWordsFilled
-                                                      ? 'Voir mots'
-                                                      : 'Saisir mots',
-                                              style: TextStyle(
-                                                fontFamily: 'Poppins',
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w600,
-                                                color: isWordsFilled
-                                                    ? AppColors.success
-                                                    : AppColors.error,
-                                              ),
-                                            ),
-                                            if (!isRandom) ...[
-                                              const SizedBox(width: 4),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
                                               Icon(
-                                                Icons.chevron_right,
-                                                size: 16,
+                                                isWordsFilled
+                                                    ? Icons.check_circle
+                                                    : Icons.edit_note,
+                                                size: 18,
                                                 color: isWordsFilled
                                                     ? AppColors.success
                                                     : AppColors.error,
                                               ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                isRandom
+                                                    ? '$wordsCount mots prêts'
+                                                    : isWordsFilled
+                                                        ? 'Voir mots'
+                                                        : 'Saisir mots',
+                                                style: TextStyle(
+                                                  fontFamily: 'Poppins',
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: isWordsFilled
+                                                      ? AppColors.success
+                                                      : AppColors.error,
+                                                ),
+                                              ),
+                                              if (!isRandom) ...[
+                                                const SizedBox(width: 4),
+                                                Icon(
+                                                  Icons.chevron_right,
+                                                  size: 16,
+                                                  color: isWordsFilled
+                                                      ? AppColors.success
+                                                      : AppColors.error,
+                                                ),
+                                              ],
                                             ],
-                                          ],
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        )
-                      : const Center(
-                          child: CircularProgressIndicator(
-                              color: AppColors.secondaryCyan),
-                        ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: AppButton(
-                    key: _nextKey,
-                    text: 'Suivant',
-                    variant: AppButtonVariant.primary,
-                    size: AppButtonSize.large,
-                    fullWidth: true,
-                    disabled: !canProceed,
-                    onPressed:
-                        canProceed ? () => _saveAndContinue(provider) : null,
+                                  ],
+                                ),
+                              );
+                            },
+                          )
+                        : const Center(
+                            child: CircularProgressIndicator(
+                                color: AppColors.secondaryCyan),
+                          ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          AppBackButton(
-            onPressed: () {
-              // Sauvegarder les noms actuels avant de partir
-              for (final player in provider.players) {
-                final name = _controllers[player.id]?.text.trim() ?? '';
-                if (name != player.name) {
-                  provider.updatePlayer(player.id, name: name);
-                }
-              }
-              // Fiesta Personnalisé : retour à l'écran des ensembles.
-              provider.goToScreen(
-                provider.pendingFiesta?.mode == FiestaMode.custom
-                    ? AppConstants.screenFiestaEnsembles
-                    : AppConstants.screenSettings,
-              );
-            },
-          ),
-          HelpButton(
-            onPressed: () => CoachMarks.show(
-              context,
-              playersHelp(
-                firstPlayer: _firstPlayerKey,
-                words: _wordsKey,
-                next: _nextKey,
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: AppButton(
+                      key: _nextKey,
+                      text: 'Suivant',
+                      variant: AppButtonVariant.primary,
+                      size: AppButtonSize.large,
+                      fullWidth: true,
+                      disabled: !canProceed,
+                      onPressed:
+                          canProceed ? () => _saveAndContinue(provider) : null,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+            AppBackButton(onPressed: back),
+            HelpButton(
+              onPressed: () => CoachMarks.show(
+                context,
+                playersHelp(
+                  firstPlayer: _firstPlayerKey,
+                  words: _wordsKey,
+                  next: _nextKey,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

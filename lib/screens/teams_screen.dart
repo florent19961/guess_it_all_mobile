@@ -28,95 +28,104 @@ class _TeamsScreenState extends State<TeamsScreen> {
     final provider = context.watch<GameProvider>();
     final allTeamsValid = provider.allTeamsHaveMinPlayers;
 
-    return ShootingStars(
-      child: Stack(
-        children: [
-          SafeArea(
-            child: Column(
-              children: [
-                const SizedBox(height: 64),
-                Text(
-                  'Équipes',
-                  style: AppTextStyles.subtitle(fontSize: 40),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Glissez les joueurs pour changer les équipes',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 14,
-                    color: AppColors.gray400,
+    // Retour système (Android) = bouton retour, pas la sortie de l'app.
+    void back() {
+      provider.goToScreen(AppConstants.screenPlayers);
+    }
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) back();
+      },
+      child: ShootingStars(
+        child: Stack(
+          children: [
+            SafeArea(
+              child: Column(
+                children: [
+                  const SizedBox(height: 64),
+                  Text(
+                    'Équipes',
+                    style: AppTextStyles.subtitle(fontSize: 40),
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                AppButton(
-                  key: _shuffleKey,
-                  text: 'Mélanger',
-                  variant: AppButtonVariant.secondary,
-                  size: AppButtonSize.small,
-                  icon:
-                      const Icon(Icons.shuffle, color: Colors.white, size: 18),
-                  onPressed: () => provider.randomizeTeams(),
-                ),
-                const SizedBox(height: 24),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _buildTeamsGrid(context, provider),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Glissez les joueurs pour changer les équipes',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      color: AppColors.gray400,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      if (!allTeamsValid)
-                        const Padding(
-                          padding: EdgeInsets.only(bottom: 12),
-                          child: Text(
-                            'Chaque équipe doit avoir au moins 2 joueurs',
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 14,
-                              color: AppColors.error,
+                  const SizedBox(height: 16),
+                  AppButton(
+                    key: _shuffleKey,
+                    text: 'Mélanger',
+                    variant: AppButtonVariant.secondary,
+                    size: AppButtonSize.small,
+                    icon: const Icon(Icons.shuffle,
+                        color: Colors.white, size: 18),
+                    onPressed: () => provider.randomizeTeams(),
+                  ),
+                  const SizedBox(height: 24),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _buildTeamsGrid(context, provider),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        if (!allTeamsValid)
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: 12),
+                            child: Text(
+                              'Chaque équipe doit avoir au moins 2 joueurs',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                color: AppColors.error,
+                              ),
                             ),
                           ),
+                        AppButton(
+                          key: _startKey,
+                          text: 'Commencer',
+                          variant: AppButtonVariant.primary,
+                          size: AppButtonSize.large,
+                          fullWidth: true,
+                          disabled: !allTeamsValid,
+                          onPressed: allTeamsValid
+                              // Personnalisé : l'ensemble, choisi avant les
+                              // joueurs, attend dans `pendingFiesta`.
+                              ? () => provider.startGame(
+                                    fiesta: provider.pendingFiesta,
+                                  )
+                              : null,
                         ),
-                      AppButton(
-                        key: _startKey,
-                        text: 'Commencer',
-                        variant: AppButtonVariant.primary,
-                        size: AppButtonSize.large,
-                        fullWidth: true,
-                        disabled: !allTeamsValid,
-                        onPressed: allTeamsValid
-                            // Personnalisé : l'ensemble, choisi avant les
-                            // joueurs, attend dans `pendingFiesta`.
-                            ? () => provider.startGame(
-                                  fiesta: provider.pendingFiesta,
-                                )
-                            : null,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          AppBackButton(
-            onPressed: () => provider.goToScreen(AppConstants.screenPlayers),
-          ),
-          HelpButton(
-            onPressed: () => CoachMarks.show(
-              context,
-              teamsHelp(
-                firstTeam: _firstTeamKey,
-                shuffle: _shuffleKey,
-                start: _startKey,
+                ],
               ),
             ),
-          ),
-        ],
+            AppBackButton(onPressed: back),
+            HelpButton(
+              onPressed: () => CoachMarks.show(
+                context,
+                teamsHelp(
+                  firstTeam: _firstTeamKey,
+                  shuffle: _shuffleKey,
+                  start: _startKey,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
