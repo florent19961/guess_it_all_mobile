@@ -37,11 +37,16 @@ void main() {
     'Personnalisé, tirage 2': (_) => customAllDraw(),
     'Personnalisé, tirage 2 + fixé': (round) =>
         customAllDraw(fixedNoPassRound: round),
+    'Personnalisé, tirage 3': (_) => customAllDraw(drawCount: 3),
+    'Personnalisé, tirage 3 + fixé': (round) =>
+        customAllDraw(drawCount: 3, fixedNoPassRound: round),
   };
 
   test(
-      'pour toute config, manche et graine : plafond de 2, aucune paire '
-      'incompatible, rien de « manche 3 » avant M3, résultat déterministe', () {
+      'pour toute config, manche et graine : plafond (2 en Auto, 3 en '
+      'Personnalisé), aucune paire incompatible, jamais « Dessiner » avec un '
+      'mime, rien de « manche 3 » avant M3, résultat déterministe', () {
+    final seen = <String, Set<int>>{};
     configs.forEach((label, rulesFor) {
       for (final round in [1, 2, 3]) {
         for (final gameId in gameIds) {
@@ -50,7 +55,13 @@ void main() {
           final ids = mods.map((m) => m.catalogId).toList();
           final why = '$label, M$round, $gameId : $ids';
 
-          expect(ids.length, lessThanOrEqualTo(2), reason: why);
+          final cap = label == 'Auto' ? 2 : 3;
+          expect(ids.length, lessThanOrEqualTo(cap), reason: why);
+          (seen[label] ??= {}).add(ids.length);
+          if (ids.contains('draw')) {
+            expect(ids.where((id) => modifierById(id)!.mime), isEmpty,
+                reason: why);
+          }
           expect(ids, isNot(contains('block_guesser')), reason: why);
           expect(ids.toSet().length, ids.length, reason: why);
           for (var i = 0; i < ids.length; i++) {
@@ -73,6 +84,39 @@ void main() {
         }
       }
     });
+    // Le plafond de 3 est atteint en Personnalisé (sinon il ne prouve rien).
+    expect(seen['Personnalisé, tirage 3'], contains(3));
+    expect(seen['Personnalisé, tirage 3 + fixé'], contains(3));
+  });
+
+  test(
+      'M3 : « Dessiner » fixé, mimes tirés pour tous → aucun mime ne sort',
+      () {
+    final rules = FiestaRules(
+      mode: FiestaMode.custom,
+      drawCount: 3,
+      modifiers: {
+        'draw': setting(ModifierArrival.fixed, fixedRound: 3),
+        for (final id in ['mime_no_arms', 'mime_no_fists', 'mime_eyes_closed'])
+          id: setting(ModifierArrival.draw, startRound: 3),
+      },
+    );
+    for (final gameId in gameIds) {
+      expect(
+        roundModifiers(rules, gameId: gameId, round: 3).map((m) => m.catalogId),
+        ['draw'],
+      );
+    }
+  });
+
+  test(
+      '« Une seule réponse » en Auto : déterministe par partie, environ 1 '
+      'fois sur 4', () {
+    final drawn = gameIds.where(drawsOneAnswer).length;
+    expect(drawn, inInclusiveRange(30, 70)); // 200 parties, attendu 50
+    for (final gameId in gameIds) {
+      expect(drawsOneAnswer(gameId), drawsOneAnswer(gameId));
+    }
   });
 
   test('Auto : 1 ou 2 tirés, les deux cas arrivent', () {

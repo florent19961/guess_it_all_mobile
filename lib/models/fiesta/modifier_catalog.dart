@@ -26,6 +26,9 @@ class ModifierDef {
   /// Contrainte de la manche 3 (mime / dessin) : jamais avant.
   final bool round3Only;
 
+  /// Variante du mime : exclue de « Dessiner » (voir [areCompatible]).
+  final bool mime;
+
   const ModifierDef({
     required this.id,
     required this.name,
@@ -35,6 +38,7 @@ class ModifierDef {
     this.defaultTarget = ModifierTarget.both,
     this.defaultCharges = 0,
     this.round3Only = false,
+    this.mime = false,
   });
 }
 
@@ -45,6 +49,7 @@ const List<ModifierDef> kModifierCatalog = [
     description: 'Les bras restent le long du corps pendant tout le tour.',
     nature: ModifierNature.malus,
     round3Only: true,
+    mime: true,
   ),
   ModifierDef(
     id: 'mime_no_fists',
@@ -52,6 +57,7 @@ const List<ModifierDef> kModifierCatalog = [
     description: 'Mains ouvertes, jamais de poing fermé.',
     nature: ModifierNature.malus,
     round3Only: true,
+    mime: true,
   ),
   ModifierDef(
     id: 'mime_eyes_closed',
@@ -59,6 +65,7 @@ const List<ModifierDef> kModifierCatalog = [
     description: 'On mime les yeux fermés pendant tout le tour.',
     nature: ModifierNature.malus,
     round3Only: true,
+    mime: true,
   ),
   ModifierDef(
     id: 'draw',
@@ -117,16 +124,30 @@ const List<ModifierDef> kModifierCatalog = [
 ];
 
 /// Paires incompatibles (Q14 de l'epic). Chaque paire est écrite une fois :
-/// [areCompatible] est symétrique par construction.
+/// [areCompatible] est symétrique par construction. « Dessiner » contre les
+/// mimes n'y figure pas : c'est une règle de groupe ([kDrawId], `mime`).
 const List<(String, String)> kModifierIncompatibilities = [
   ('no_pass', 'two_words'),
   ('no_pass', 'free_pass'),
   ('mime_no_arms', 'mime_eyes_closed'),
-  ('mime_no_arms', 'draw'),
-  ('mime_eyes_closed', 'draw'),
   ('mime_no_fists', 'mime_no_arms'),
-  ('mime_no_fists', 'draw'),
 ];
+
+/// « Dessiner » remplace le mime : il exclut TOUT modificateur `mime`, et
+/// inversement (retours device 2026-11-04) — un mime ajouté au catalogue
+/// l'est d'office.
+const String kDrawId = 'draw';
+
+/// « Une seule réponse » : modificateur de TOUTE la partie, hors de
+/// [kModifierCatalog] (ni tiré par manche, ni proposé, ni fixé). Son état vit
+/// dans `FiestaRules.oneAnswer` : coché en Personnalisé, tiré au lancement
+/// en Auto (`drawsOneAnswer`).
+const ModifierDef kOneAnswer = ModifierDef(
+  id: 'one_answer',
+  name: 'Une seule réponse',
+  description: 'Toute la partie : une seule réponse par mot.',
+  nature: ModifierNature.malus,
+);
 
 ModifierDef? modifierById(String id) {
   for (final def in kModifierCatalog) {
@@ -136,6 +157,9 @@ ModifierDef? modifierById(String id) {
 }
 
 bool areCompatible(String a, String b) {
+  bool drawVsMime(String x, String y) =>
+      x == kDrawId && (modifierById(y)?.mime ?? false);
+  if (drawVsMime(a, b) || drawVsMime(b, a)) return false;
   for (final (x, y) in kModifierIncompatibilities) {
     if ((x == a && y == b) || (x == b && y == a)) return false;
   }

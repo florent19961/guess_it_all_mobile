@@ -92,15 +92,15 @@ void main() {
   });
 
   test(
-      'exclusions : incompatible avec le tirage, plafond de 2, aucune offre '
-      '→ équipe sautée', () {
+      'exclusions : incompatible avec le tirage, plafond de 3 (Personnalisé), '
+      'aucune offre → équipe sautée', () {
     const s = Standings({'rose': 14, 'bleue': 8});
     // `no_pass` tiré pour tous : `two_words` (incompatible) et `no_pass`
     // contre Rose (déjà subi, carte sans effet) disparaissent.
     expect(ids(offersFor(s, 'bleue', roundDraw: [forAll('no_pass')])),
         ['double_points']);
 
-    // Rose a déjà 2 modificateurs (tirage + choix d'une équipe précédente) :
+    // Rose a déjà 3 modificateurs (tirage + choix des équipes précédentes) :
     // plus de malus contre elle, les bonus pour Bleue restent.
     final roseChosen = ModifierInstance(
       catalogId: 'reversed',
@@ -113,13 +113,29 @@ void main() {
     );
     expect(
         ids(offersFor(s, 'bleue',
-            roundDraw: [forAll('minus_10s')], choices: {'verte': roseChosen})),
+            roundDraw: [forAll('minus_10s')],
+            choices: {
+              'verte': roseChosen,
+              'jaune': ModifierInstance(
+                catalogId: 'no_pass',
+                scope: ModifierScope.round,
+                target: ModifierTarget.team,
+                teamId: 'rose',
+                charges: 0,
+                nature: ModifierNature.malus,
+                round: 2,
+              ),
+            })),
         unorderedEquals(['double_points', 'two_words']));
 
     // Plafond atteint à tous les crans : aucune offre, l'équipe est sautée.
     expect(
         offersFor(s, 'bleue',
-            roundDraw: [forAll('minus_10s'), forAll('reversed')]),
+            roundDraw: [
+              forAll('minus_10s'),
+              forAll('reversed'),
+              forAll('free_pass'),
+            ]),
         isEmpty);
   });
 
@@ -131,7 +147,7 @@ void main() {
     expect(stepped.map((o) => kOfferStrength[o.catalogId]),
         everyElement(OfferStrength.medium));
 
-    // Cran vide APRÈS exclusions : Rose a déjà 2 modificateurs, donc
+    // Cran vide APRÈS exclusions : Rose a déjà 3 modificateurs, donc
     // `block_guesser` (forte) est exclu et l'on descend quand même.
     ModifierInstance againstRose(String id) => ModifierInstance(
           catalogId: id,
@@ -146,6 +162,7 @@ void main() {
         ids(offersFor(s, 'bleue', choices: {
           'verte': againstRose('reversed'),
           'jaune': againstRose('no_pass'),
+          'violette': againstRose('minus_10s'),
         })),
         unorderedEquals(['double_points', 'two_words']));
   });
