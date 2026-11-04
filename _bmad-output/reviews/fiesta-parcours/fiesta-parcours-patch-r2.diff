@@ -1,0 +1,2747 @@
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 49d6c01..9e9ef62 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -127,8 +127,9 @@ Hors cycle : bug / test rouge / comportement inattendu → `bmad-investigate` ;
+ 
+ ## Flux de jeu
+ 
+-1. **Configuration** — nombre d'équipes, joueurs, nombre total de mots (20-100, défaut 40), durée
+-   du tour, pénalité de passe.
++1. **Configuration** (Paramètres, premier écran de toute partie) — **Classique ou Fiesta**
++   (Classique par défaut ; en Fiesta, Auto ou Personnalisé dans « Avancés »), nombre d'équipes,
++   joueurs, nombre total de mots (20-100, défaut 40), durée du tour, pénalité de passe.
+ 2. **Inscription joueurs** — saisie des noms.
+ 3. **Formation des équipes** — manuelle ou aléatoire (composition mise en cache et persistée ; si
+    le nombre de joueurs change, les nouveaux sont ajoutés aléatoirement).
+@@ -137,8 +138,9 @@ Hors cycle : bug / test rouge / comportement inattendu → `bmad-investigate` ;
+ 5. **Partie** — 3 manches, tous les mots remis dans le pool à chaque manche.
+ 6. **Résultats** — scores par équipe et par manche.
+ 
+-> Un seul mode existe aujourd'hui (**mode libre**). Le **mode Fiesta** (modificateurs de jeu) est
+-> en cadrage — cf. `_bmad-output/implementation-artifacts/sprint-status.yaml`.
++> **Mode Fiesta** (modificateurs de jeu) : en **Personnalisé** seulement, le choix de l'ensemble
++> s'insère après les équipes et lance la partie ; Auto n'ajoute aucun écran. Détail →
++> `lib/screens/CLAUDE.md`.
+ 
+ ## Conventions de code
+ 
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index 962dd1d..84be1a6 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -711,3 +711,41 @@ fixe (plafonds du rattrapage, « s'applique à toutes les équipes »).
+ **Quoi.** Les bulles d'aide passent en bleu nuit, comme les cartes de l'app : le titre est en Bangers avec l'ombre rose, le texte en Poppins blanc, et le bouton est un `AppButton`. La cible est entourée d'un liseré blanc translucide. Le « ? » s'affiche seul, en gris clair, sans rond, et garde une zone tactile de 48×48. Au premier « Jouer » d'un téléphone neuf, le tuto des règles s'ouvre d'office, sans la question « Première partie ? » ; « Passer » permet de le fermer. `FiestaTutorialScreen.show` a maintenant une garde statique contre une double ouverture.
+ 
+ **Pourquoi.** Sur Flutter web, la cible restait voilée. Le voile n'utilise plus `Path.combine(difference)` mais un seul chemin `PathFillType.evenOdd` (écran + cible), qui découpe le trou sans opération booléenne et se rend de la même façon sur tous les moteurs. La question « Première partie ? » ne commandait que le tuto des règles, car les bulles de la première partie étaient déjà automatiques ; elle est donc supprimée. Le critère « téléphone neuf » ne change pas : c'est `guessItAll_tutorialSeen`, posé par `initAtStartup`. Le sens de cette clé ne change pas non plus (revue r1, règle 7) : elle veut dire « onboarding des règles de première partie traité », que la question ait été posée (anciennes versions) ou que le tuto ait été ouvert. Un ancien `true` reste valable : qui a répondu « Je connais déjà » ne revoit rien, et c'est voulu. Un `false` sur un téléphone qui n'a jamais joué ouvre le tuto. Le drapeau s'écrit une fois la route du tuto poussée, pour qu'un kill avant l'affichage ne le saute pas pour toujours. Aucune clé n'est créée, aucune ne change de forme, aucune migration.
++
++## 2026-11-04 — Fiesta : le mode se choisit dans les Paramètres
++
++**Quoi.** Le parcours devient Accueil « Jouer » → Paramètres → Joueurs → Équipes → partie. Un
++`AppToggle` « Classique / Fiesta » sous le titre des Paramètres (Classique par défaut) ; en
++Fiesta, la fenêtre « Avancés » gagne « Fiesta : Auto / Personnalisé ». En Personnalisé
++seulement, « Mes ensembles » s'insère après les équipes et son « Jouer » lance la partie.
++Supprimés : écrans « Mode de jeu », « Auto ou Personnalisé », « Mode Auto » et « Récap »
++(et `FiestaSetupScaffold`, `FiestaPickCard`, `FiestaCommonRulesCard`). Le tuto Fiesta s'ouvre
++au premier passage de l'interrupteur sur Fiesta (même clé `guessItAll_fiestaTutorialSeen`).
++« Rejouer » revient aux Paramètres, config Fiesta en attente. Auto = symétrique +
++auto-calibrage toujours allumés. « Une seule réponse » n'est plus une règle commune : c'est un
++modificateur de toute la partie (`kOneAnswer`), coché dans l'ensemble en Personnalisé, tiré au
++lancement en Auto une fois sur 4 (`drawsOneAnswer`, graine du `gameId`) et annoncé avant le
++premier tour. « Dessiner » exclut tout mime (règle de groupe `mime` au lieu de trois paires).
++Personnalisé : jusqu'à 3 modificateurs par équipe et par manche (`maxModifiersPerTeam`, tirage
++réglable de 0 à 3).
++
++**Pourquoi.** Retours device de Florent (maquette « E ») : trois écrans de choix avant même les
++réglages, c'était trop. Le choix du mode reste en mémoire (`pendingFiesta`, Q10) : rien de neuf
++à persister.
++
++**Conséquence (règle 7).** Aucune forme persistée ne change : `FiestaRules` garde exactement ses
++clés. `oneAnswer` garde sa clé et son sens (« une seule réponse en vigueur pendant la partie ») ;
++une clé absente se relit toujours `true`, l'ancien défaut. Seuls les nouveaux ensembles partent
++décochés (`defaultEnsembleRules`). Un `currentScreen` relu au nom d'un écran
++supprimé tombe sur l'accueil (cas par défaut de `app.dart`). Une partie Personnalisé suspendue
++avant la mise à jour peut tirer un 3ᵉ modificateur aux manches suivantes (plafond relevé), sans
++rien casser. Dans Firestore, `fiestaRules.oneAnswer` d'une partie Auto dit désormais ce qui a
++été tiré, et non plus un interrupteur.
++
++**Revue r1 (même jour).** Paramètres et « Mes ensembles » sont l'écran racine du `MaterialApp` :
++le retour système d'Android quittait l'app. Un `PopScope` les ramène à la destination de leur
++bouton retour (accueil, équipes) — les écrans supprimés le faisaient via `FiestaSetupScaffold`.
++« Tout réinitialiser » vide aussi la Fiesta en attente. Ajout demandé par Florent : le bouton
++rond « Réinitialiser » quitte le coin haut droit des Paramètres pour le bas de la fenêtre
++« Avancés » (« Réinitialiser les paramètres », même confirmation) ; en haut à droite ne restent
++que le « ? » et la roue crantée.
+diff --git a/lib/app.dart b/lib/app.dart
+index 99fd467..d332e71 100644
+--- a/lib/app.dart
++++ b/lib/app.dart
+@@ -20,10 +20,6 @@ import 'screens/results_screen.dart';
+ import 'screens/stats_screen.dart';
+ import 'screens/categories_screen.dart';
+ import 'screens/history_screen.dart';
+-import 'screens/game_mode_screen.dart';
+-import 'screens/fiesta_choice_screen.dart';
+-import 'screens/fiesta_auto_screen.dart';
+-import 'screens/fiesta_recap_screen.dart';
+ import 'screens/fiesta_ensembles_screen.dart';
+ import 'widgets/effects/startup_intro.dart';
+ 
+@@ -94,22 +90,16 @@ class GuessItAllApp extends StatelessWidget {
+         return const CategoriesScreen();
+       case AppConstants.screenHistory:
+         return const HistoryScreen();
+-      case AppConstants.screenGameMode:
+-        return const GameModeScreen();
+-      case AppConstants.screenFiestaChoice:
+-        return const FiestaChoiceScreen();
+-      case AppConstants.screenFiestaAuto:
+-        return const FiestaAutoScreen();
+-      case AppConstants.screenFiestaRecap:
+-        return const FiestaRecapScreen();
++      // Fiesta Personnalisé : après les équipes, le choix de l'ensemble lance
++      // la partie.
+       case AppConstants.screenFiestaEnsembles:
+         return Builder(builder: (context) {
+           final provider = context.read<GameProvider>();
+           return FiestaEnsemblesScreen(
+-            onBack: () => provider.goToScreen(AppConstants.screenFiestaChoice),
++            onBack: () => provider.goToScreen(AppConstants.screenTeams),
+             onUse: (ensemble) {
+               provider.setPendingFiesta(ensemble.rules);
+-              provider.goToScreen(AppConstants.screenFiestaRecap);
++              provider.startGame(fiesta: ensemble.rules);
+             },
+           );
+         });
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index 6a58b61..bd4b744 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -16,16 +16,16 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `game_setup_snapshot.dart` | `GameSetupSnapshot` | Réglages (`GameSettings`) + `FiestaRules?` d'une partie archivée, sans les mots. Lecture tolérante : illisible → `null` (Fiesta illisible invalide tout le snapshot) |
+ | `word_stats.dart` | `WordMetadata`, `WordRoundStats`, `WordStats` | Metadonnees mot (category, difficulty, language), stats par manche et agregees |
+ | `category_metadata.dart` | `CategoryMetadata` | Metadonnees categorie multilingue (id, icon, noms, locales) |
+-| `fiesta/modifier_catalog.dart` | `ModifierDef`, `kModifierCatalog`, `kModifierIncompatibilities`, enums `ModifierNature/Scope/Target` | Catalogue Fiesta V1 (11 ids **figés**, du code, jamais persisté), `modifierById`, `areCompatible` |
++| `fiesta/modifier_catalog.dart` | `ModifierDef`, `kModifierCatalog`, `kModifierIncompatibilities`, enums `ModifierNature/Scope/Target` | Catalogue Fiesta V1 (11 ids **figés**, du code, jamais persisté), `modifierById`, `areCompatible` (paires + règle de groupe : « Dessiner » exclut tout `mime`, et inversement). `kOneAnswer` : « Une seule réponse », modificateur de **toute la partie**, hors de la liste par manche ; son état = `FiestaRules.oneAnswer` |
+ | `fiesta/modifier_instance.dart` | `ModifierInstance` | Modificateur actif dans une partie. `tryFromJson` tolérant (id inconnu → `null`, jamais de défaut inventé). `canAdd(active, candidate, {maxPerTurn: 2})` |
+-| `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, `CatchUpRules`, enums `FiestaMode`, `ModifierArrival` | Configuration Fiesta **immuable** (Auto / Personnalisé, réglage par modificateur, rattrapage, tirage, règles communes). `CatchUpRules.auto` = constantes du mode Auto. `tryFromJson` : structure illisible → `null`, réglage d'id inconnu ignoré seul |
+-| `fiesta/symmetric_draw.dart` | fonctions pures | Modificateurs d'une manche pour toutes les équipes : `fixedForRound` puis `drawSymmetric`, réunis par `roundModifiers(rules, gameId:, round:)`. Graine `drawSeed(gameId, round)` (FNV-1a, stable entre exécutions) |
++| `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, `CatchUpRules`, enums `FiestaMode`, `ModifierArrival` | Configuration Fiesta **immuable** (Auto / Personnalisé, réglage par modificateur, rattrapage, tirage 0-3, `oneAnswer` = « Une seule réponse » pour toute la partie : cochée en Personnalisé, tirée au lancement en Auto ; clé absente relue `true`, l'ancien défaut). `CatchUpRules.auto` = constantes du mode Auto. `tryFromJson` : structure illisible → `null`, réglage d'id inconnu ignoré seul |
++| `fiesta/symmetric_draw.dart` | fonctions pures | Modificateurs d'une manche pour toutes les équipes : `fixedForRound` puis `drawSymmetric`, réunis par `roundModifiers(rules, gameId:, round:)`. Graine `drawSeed(gameId, round)` (FNV-1a, stable entre exécutions). `maxModifiersPerTeam` : plafond par équipe et par manche, 2 en Auto, 3 en Personnalisé (fixés, tirage, cartes). `drawsOneAnswer(gameId)` : Auto, 1 chance sur 4, graine de la « manche 0 », appelé par `startGame` |
+ | `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn, catchUpDue}`. `turn` : `FiestaTurnState` typé (`turn_effects.dart`), vidé à la vraie fin du tour (continuation de fin de manche comprise dans le tour). `catchUpDue` : id d'équipe → secondes dues (négatives = malus du leader), posé par `nextRound`, consommé au premier tour non-continuation. `chargesUsed` (2-9, clé omise si vide) : charges dépensées `{catalogId, teamId, round}`, décompte de la manche en cours + récap « Bonus utilisés » ; `offerChoices` (2-10, clé omise si vide) : cartes 1 parmi 3 choisies `{chooserId, modifier}` — celles dont `modifier.round` = manche suivante forment la file de la transition, `nextRound` les rend actives ; relues pour le récap et `blockingTeam` |
+ | `fiesta/modifier_recap.dart` | fonctions pures | `fiestaModeId` (`fiesta_auto`/`fiesta_custom`), `fiestaModeLabel`, `buildModifierRecap` : récap « Modificateurs de la partie » **recalculé** en faits (tirage par graine, rattrapage et coup de pouce par `planRoundTransition` sur les scores cumulés par manche), rien de persisté pendant la partie ; `formatModifierRecap` forme les lignes affichées (`ModifierRecapLine`, jamais persistée) |
+ | `fiesta/turn_effects.dart` | `FiestaTurnState` + fonctions pures | État du tour typé et immuable (`freePassesUsed`, `blockedPlayerId`, `charges` par id ↔ clés JSON `doublePoints`/`twoWords` via `kChargeBonusKeys`, valeurs `armed`/`spent`, `secondWord`, `secondExpiredWord`) : JSON conditionnel, lecture tolérante clé par clé, `afterRoundEnd()` (continuation) ; `chargeAllowance`, `canBlockGuesser` (équipe de 3+), `drawOtherCard` (remplaçant ≠ l'autre carte) |
+ | `fiesta/round_transition.dart` | fonctions pures | `planRoundTransition` → `RoundTransitionPlan` (tirage + cadeaux + choix + rattrapage de N+1 ; `apply` garde les instances de N pour la continuation) : SEULE source de l'aperçu et de `nextRound`. `modifiersForTurn` : effets d'un tour = instances de sa manche logique (N pour une continuation) |
+ | `fiesta/turn_time.dart` | fonctions pures | `composeTurnSeconds` (base + rattrapage − malus du leader − 10 s × `minus_10s`, plancher `kTurnFloorSeconds` = 10 ; continuation = ses secondes, sans modificateur) ; `computeCatchUp` (k × écart avec la tête, plafonds, co-leaders tous en tête, égalité = rien) ; `effectiveCatchUp` (Auto → auto-calibrage, Personnalisé → curseurs) |
+-| `fiesta/offers.dart` | `Standings`, `OfferStrength`, fonctions pures | 2-10 : `kOfferStrength` + `strengthForGap` (≤3 légère, ≤7 moyenne, >7 forte, **à recalibrer**), cran vide → cran inférieur ; `Standings` (leader unique ou `null`, `gapOf`, `choosingOrder` dernière → avant-dernière, vide si égalité ; map construite **dans l'ordre des équipes**) ; `pickThreeOffers(…, roundDraw:, choices:, blockImmuneTeamIds:)` (≤3 cartes utiles : compatibles, plafond 2, pas un modificateur que la cible a déjà ; vide = équipe sautée) ; `appBoost(…, roundDraw:)` (Auto : 1 bonus par menée + 1 malus au leader, jamais `block_guesser`). Graine `offerSeed(gameId, round, teamId)` **figée par test**. 🔴 Lane cœur : persister les choix en `Map<chooserTeamId, ModifierInstance>` ; `choices` ne contient que les choix des équipes passées AVANT celle dont on calcule les offres (un malus vise le leader, la clé dit qui l'a choisi) ; prochaine équipe = 1ʳᵉ de `choosingOrder` absente de la map dont les offres ne sont pas vides |
++| `fiesta/offers.dart` | `Standings`, `OfferStrength`, fonctions pures | 2-10 : `kOfferStrength` + `strengthForGap` (≤3 légère, ≤7 moyenne, >7 forte, **à recalibrer**), cran vide → cran inférieur ; `Standings` (leader unique ou `null`, `gapOf`, `choosingOrder` dernière → avant-dernière, vide si égalité ; map construite **dans l'ordre des équipes**) ; `pickThreeOffers(…, roundDraw:, choices:, blockImmuneTeamIds:)` (≤3 cartes utiles : compatibles, plafond `maxModifiersPerTeam`, pas un modificateur que la cible a déjà ; vide = équipe sautée) ; `appBoost(…, roundDraw:)` (Auto : 1 bonus par menée + 1 malus au leader, jamais `block_guesser`). Graine `offerSeed(gameId, round, teamId)` **figée par test**. 🔴 Lane cœur : persister les choix en `Map<chooserTeamId, ModifierInstance>` ; `choices` ne contient que les choix des équipes passées AVANT celle dont on calcule les offres (un malus vise le leader, la clé dit qui l'a choisi) ; prochaine équipe = 1ʳᵉ de `choosingOrder` absente de la map dont les offres ne sont pas vides |
+ | `fiesta/fiesta_ensemble.dart` | `FiestaEnsemble`, `defaultEnsembleRules`, extensions `copyWith`, `catchUpOn` | Ensemble Personnalisé `{id, rules}` (nom = `rules.ensembleName`, mode toujours `custom`), défauts de la maquette (`mkSet`). Persisté par `FiestaEnsembleService` |
+ | `fiesta/ensemble_validation.dart` | `validateEnsemble` | Validation **pure** d'un ensemble (messages FR) : bloque l'enregistrement d'une config impossible |
+ 
+diff --git a/lib/models/fiesta/fiesta_ensemble.dart b/lib/models/fiesta/fiesta_ensemble.dart
+index 5f9c80f..9a772d2 100644
+--- a/lib/models/fiesta/fiesta_ensemble.dart
++++ b/lib/models/fiesta/fiesta_ensemble.dart
+@@ -59,6 +59,8 @@ FiestaRules defaultEnsembleRules(String name) => FiestaRules(
+           ),
+       },
+       oneOfThree: true,
++      // « Une seule réponse » : à cocher pour toute la partie, pas d'office.
++      oneAnswer: false,
+     );
+ 
+ /// Copie modifiée, pour l'éditeur et la duplication. Extension plutôt qu'un
+diff --git a/lib/models/fiesta/fiesta_rules.dart b/lib/models/fiesta/fiesta_rules.dart
+index d9a6392..5de5044 100644
+--- a/lib/models/fiesta/fiesta_rules.dart
++++ b/lib/models/fiesta/fiesta_rules.dart
+@@ -132,11 +132,16 @@ class FiestaRules {
+   final bool oneOfThree;
+   final CatchUpRules catchUp;
+ 
+-  /// Nombre de modificateurs tirés pour tous à chaque manche, 0 à 2.
++  /// Nombre de modificateurs tirés pour tous à chaque manche, 0 à 3
++  /// (plafond `maxModifiersPerTeam`).
+   final int drawCount;
+ 
+-  // Règle commune. Le report du temps de fin de manche n'est PAS un réglage
+-  // (epic : « conservé ») ; l'ancienne clé `carryOver` d'un blob est ignorée.
++  /// Modificateur « Une seule réponse » (`kOneAnswer`) pour TOUTE la partie :
++  /// coché dans l'ensemble en Personnalisé, tiré au lancement en Auto. Même
++  /// clé JSON qu'à l'époque où c'était une « règle commune » : un blob relu
++  /// garde son sens (absente = `true`, l'ancien défaut). Le report du temps
++  /// de fin de manche n'est PAS un réglage (epic : « conservé ») ; l'ancienne
++  /// clé `carryOver` d'un blob est ignorée.
+   final bool oneAnswer;
+ 
+   FiestaRules({
+diff --git a/lib/models/fiesta/modifier_catalog.dart b/lib/models/fiesta/modifier_catalog.dart
+index 7709408..730a8b6 100644
+--- a/lib/models/fiesta/modifier_catalog.dart
++++ b/lib/models/fiesta/modifier_catalog.dart
+@@ -26,6 +26,9 @@ class ModifierDef {
+   /// Contrainte de la manche 3 (mime / dessin) : jamais avant.
+   final bool round3Only;
+ 
++  /// Variante du mime : exclue de « Dessiner » (voir [areCompatible]).
++  final bool mime;
++
+   const ModifierDef({
+     required this.id,
+     required this.name,
+@@ -35,6 +38,7 @@ class ModifierDef {
+     this.defaultTarget = ModifierTarget.both,
+     this.defaultCharges = 0,
+     this.round3Only = false,
++    this.mime = false,
+   });
+ }
+ 
+@@ -45,6 +49,7 @@ const List<ModifierDef> kModifierCatalog = [
+     description: 'Les bras restent le long du corps pendant tout le tour.',
+     nature: ModifierNature.malus,
+     round3Only: true,
++    mime: true,
+   ),
+   ModifierDef(
+     id: 'mime_no_fists',
+@@ -52,6 +57,7 @@ const List<ModifierDef> kModifierCatalog = [
+     description: 'Mains ouvertes, jamais de poing fermé.',
+     nature: ModifierNature.malus,
+     round3Only: true,
++    mime: true,
+   ),
+   ModifierDef(
+     id: 'mime_eyes_closed',
+@@ -59,6 +65,7 @@ const List<ModifierDef> kModifierCatalog = [
+     description: 'On mime les yeux fermés pendant tout le tour.',
+     nature: ModifierNature.malus,
+     round3Only: true,
++    mime: true,
+   ),
+   ModifierDef(
+     id: 'draw',
+@@ -117,17 +124,31 @@ const List<ModifierDef> kModifierCatalog = [
+ ];
+ 
+ /// Paires incompatibles (Q14 de l'epic). Chaque paire est écrite une fois :
+-/// [areCompatible] est symétrique par construction.
++/// [areCompatible] est symétrique par construction. « Dessiner » contre les
++/// mimes n'y figure pas : c'est une règle de groupe ([kDrawId], `mime`).
+ const List<(String, String)> kModifierIncompatibilities = [
+   ('no_pass', 'two_words'),
+   ('no_pass', 'free_pass'),
+   ('mime_no_arms', 'mime_eyes_closed'),
+-  ('mime_no_arms', 'draw'),
+-  ('mime_eyes_closed', 'draw'),
+   ('mime_no_fists', 'mime_no_arms'),
+-  ('mime_no_fists', 'draw'),
+ ];
+ 
++/// « Dessiner » remplace le mime : il exclut TOUT modificateur `mime`, et
++/// inversement (retours device 2026-11-04) — un mime ajouté au catalogue
++/// l'est d'office.
++const String kDrawId = 'draw';
++
++/// « Une seule réponse » : modificateur de TOUTE la partie, hors de
++/// [kModifierCatalog] (ni tiré par manche, ni proposé, ni fixé). Son état vit
++/// dans `FiestaRules.oneAnswer` : coché en Personnalisé, tiré au lancement
++/// en Auto (`drawsOneAnswer`).
++const ModifierDef kOneAnswer = ModifierDef(
++  id: 'one_answer',
++  name: 'Une seule réponse',
++  description: 'Toute la partie : une seule réponse par mot.',
++  nature: ModifierNature.malus,
++);
++
+ ModifierDef? modifierById(String id) {
+   for (final def in kModifierCatalog) {
+     if (def.id == id) return def;
+@@ -136,6 +157,9 @@ ModifierDef? modifierById(String id) {
+ }
+ 
+ bool areCompatible(String a, String b) {
++  bool drawVsMime(String x, String y) =>
++      x == kDrawId && (modifierById(y)?.mime ?? false);
++  if (drawVsMime(a, b) || drawVsMime(b, a)) return false;
+   for (final (x, y) in kModifierIncompatibilities) {
+     if ((x == a && y == b) || (x == b && y == a)) return false;
+   }
+diff --git a/lib/models/fiesta/offers.dart b/lib/models/fiesta/offers.dart
+index 9c41b20..9709985 100644
+--- a/lib/models/fiesta/offers.dart
++++ b/lib/models/fiesta/offers.dart
+@@ -170,10 +170,12 @@ List<ModifierInstance> _candidates({
+ }
+ 
+ /// Une carte a-t-elle un effet ? Non si elle est incompatible ou dépasse le
+-/// plafond de 2 pour sa cible (Q8), ni si le même modificateur touche déjà
+-/// sa cible (tirage, choix ou cadeau précédent : la carte serait vide).
+-bool _useful(List<ModifierInstance> taken, ModifierInstance c) =>
+-    canAdd(taken, c) &&
++/// plafond pour sa cible ([maxModifiersPerTeam]), ni si le même modificateur
++/// touche déjà sa cible (tirage, choix ou cadeau précédent : la carte serait
++/// vide).
++bool _useful(
++        FiestaRules rules, List<ModifierInstance> taken, ModifierInstance c) =>
++    canAdd(taken, c, maxPerTurn: maxModifiersPerTeam(rules)) &&
+     !taken.any((t) => t.catalogId == c.catalogId && t.concernsSameTeamAs(c));
+ 
+ /// Jusqu'à [count] cartes utiles (voir [_useful]) à la force de [gap],
+@@ -204,7 +206,7 @@ List<ModifierInstance> _offer({
+       blockImmuneTeamIds: blockImmuneTeamIds,
+     )..shuffle(random);
+     final picked =
+-        candidates.where((c) => _useful(taken, c)).take(count).toList();
++        candidates.where((c) => _useful(rules, taken, c)).take(count).toList();
+     if (picked.isNotEmpty) return picked;
+   }
+   return const [];
+diff --git a/lib/models/fiesta/symmetric_draw.dart b/lib/models/fiesta/symmetric_draw.dart
+index df64b5d..15694f8 100644
+--- a/lib/models/fiesta/symmetric_draw.dart
++++ b/lib/models/fiesta/symmetric_draw.dart
+@@ -29,8 +29,20 @@ bool isEligibleForRound(ModifierDef def, int round) =>
+ /// adversaires) n'a pas de sens « pour toutes les équipes » : ni tiré, ni fixé.
+ bool isForAllTeams(ModifierDef def) => def.defaultTarget == ModifierTarget.both;
+ 
++/// Plafond de modificateurs par équipe et par manche : 2 en Auto (Q8), 3 en
++/// Personnalisé (retours device 2026-11-04). Vaut pour les fixés, le tirage
++/// et les cartes de fin de manche.
++int maxModifiersPerTeam(FiestaRules rules) =>
++    rules.mode == FiestaMode.custom ? 3 : 2;
++
++/// Auto : « Une seule réponse » ([kOneAnswer]) vaut-elle pour la partie
++/// [gameId] ? Une chance sur 4, DÉTERMINISTE par partie (graine de la
++/// « manche 0 », distincte de celles du tirage des manches 1 à 3).
++bool drawsOneAnswer(String gameId) =>
++    Random(drawSeed(gameId, 0)).nextInt(4) == 0;
++
+ /// Le tirage pour toutes les équipes est-il allumé ? (définition partagée
+-/// avec 2-3 / le Récap : les DEUX drapeaux comptent).
++/// avec l'éditeur 2-3 : les DEUX drapeaux comptent).
+ bool isSymmetricDrawOn(FiestaRules rules) =>
+     rules.symmetric && rules.drawCount > 0;
+ 
+@@ -46,7 +58,7 @@ ModifierInstance _forAll(ModifierDef def, int round, int charges) =>
+ 
+ /// Modificateurs « fixés sur la manche N » (Personnalisé, Q16) : toutes les
+ /// équipes, toute la manche. Ils passent avant le tirage, qui doit leur être
+-/// compatible ; le plafond de 2 s'applique à eux aussi. Un fixé à cible joueur
++/// compatible ; le plafond ([maxModifiersPerTeam]) s'applique à eux aussi. Un fixé à cible joueur
+ /// ou « manche 3 seulement » hors M3 est ignoré (l'éditeur de 2-3 devrait
+ /// l'interdire).
+ List<ModifierInstance> fixedForRound(FiestaRules rules, int round) {
+@@ -63,13 +75,15 @@ List<ModifierInstance> fixedForRound(FiestaRules rules, int round) {
+       continue;
+     }
+     final instance = _forAll(def, round, setting.charges);
+-    if (canAdd(fixed, instance)) fixed.add(instance);
++    if (canAdd(fixed, instance, maxPerTurn: maxModifiersPerTeam(rules))) {
++      fixed.add(instance);
++    }
+   }
+   return fixed;
+ }
+ 
+ /// Tirage symétrique de la manche [round], compatible avec [alreadyFixed] et
+-/// avec lui-même, plafond de 2 compris (Q8). Moins de candidats que demandé :
++/// avec lui-même, plafond compris ([maxModifiersPerTeam]). Moins de candidats que demandé :
+ /// on en tire moins, sans erreur.
+ ///
+ /// - Auto : 1 ou 2 (50/50, Q9) dans tout le catalogue ;
+@@ -86,8 +100,9 @@ List<ModifierInstance> drawSymmetric({
+   if (!isSymmetricDrawOn(rules)) return const [];
+ 
+   final auto = rules.mode == FiestaMode.auto;
++  final cap = maxModifiersPerTeam(rules);
+   final count =
+-      auto ? (random.nextBool() ? 2 : 1) : rules.drawCount.clamp(0, 2);
++      auto ? (random.nextBool() ? 2 : 1) : rules.drawCount.clamp(0, cap);
+ 
+   // Ordre du catalogue, jamais celui d'une Map relue : le mélange doit partir
+   // de la même liste pour donner le même tirage.
+@@ -114,7 +129,9 @@ List<ModifierInstance> drawSymmetric({
+   final drawn = <ModifierInstance>[];
+   for (final candidate in candidates) {
+     if (drawn.length >= count) break;
+-    if (canAdd([...alreadyFixed, ...drawn], candidate)) drawn.add(candidate);
++    if (canAdd([...alreadyFixed, ...drawn], candidate, maxPerTurn: cap)) {
++      drawn.add(candidate);
++    }
+   }
+   return drawn;
+ }
+diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
+index ee66867..887fbaf 100644
+--- a/lib/providers/game_provider.dart
++++ b/lib/providers/game_provider.dart
+@@ -51,7 +51,8 @@ class GameProvider extends ChangeNotifier {
+   GameState get game => _game;
+   bool get isFiesta => _game.fiesta != null;
+ 
+-  /// Choix Fiesta fait sur les écrans de mode, en attente de `startGame` (Q10) :
++  /// Choix Fiesta fait sur les Paramètres (et l'ensemble choisi en
++  /// Personnalisé), en attente de `startGame` (Q10) :
+   /// en mémoire seulement, jamais persisté. Nul = Classique. Une app tuée avant
+   /// le lancement repart donc d'un choix vide.
+   FiestaRules? _pendingFiesta;
+@@ -437,6 +438,17 @@ class GameProvider extends ChangeNotifier {
+     // Générer un gameId unique pour cette partie
+     final gameId = _userService.generateGameId();
+ 
++    // Auto : « Une seule réponse » (toute la partie) est tirée ici, une fois
++    // sur 4, et gelée avec le reste (relue telle quelle après un kill).
++    final rules = fiesta == null || fiesta.mode != FiestaMode.auto
++        ? fiesta
++        : FiestaRules(
++            mode: FiestaMode.auto,
++            symmetric: fiesta.symmetric,
++            autoCalibrate: fiesta.autoCalibrate,
++            oneAnswer: drawsOneAnswer(gameId),
++          );
++
+     _game = _game.copyWith(
+       gameId: gameId,
+       currentScreen: AppConstants.screenGame,
+@@ -455,13 +467,13 @@ class GameProvider extends ChangeNotifier {
+       timeRemaining: _settings.turnDuration,
+       clearTurnBonusTime: true,
+       history: [],
+-      fiesta: fiesta == null
++      fiesta: rules == null
+           ? null
+           : FiestaState(
+-              rules: fiesta,
+-              active: roundModifiers(fiesta, gameId: gameId, round: 1),
++              rules: rules,
++              active: roundModifiers(rules, gameId: gameId, round: 1),
+             ),
+-      clearFiesta: fiesta == null,
++      clearFiesta: rules == null,
+     );
+ 
+     // Initialiser le tracking analytics
+@@ -1790,13 +1802,19 @@ class GameProvider extends ChangeNotifier {
+     notifyListeners();
+   }
+ 
+-  // Rejouer avec mêmes joueurs → efface mots, reset scores, va aux paramètres
+-  // (ou au Récap Fiesta, avec la config gelée de la partie finie : Q12).
++  // Rejouer avec mêmes joueurs → efface mots, reset scores, va aux paramètres,
++  // avec la config Fiesta de la partie finie en attente (Q12).
+   Future<void> restartWithSamePlayers() async {
+     // 🔴 Lire AVANT `GameState.initial()` ci-dessous, qui efface `fiesta`.
+     // Sans partie jouée (Rejouer de l'accueil, après `endGameAndGoHome`), la
+     // config déjà en mémoire fait foi.
+     if (_game.allWords.isNotEmpty) _pendingFiesta = _game.fiesta?.rules;
++    // Auto = symétrique + auto-calibrage toujours allumés (plus d'écran pour
++    // les couper) : une partie d'avant la mise à jour qui en avait coupé un
++    // ne le transmet pas à la suivante.
++    if (_pendingFiesta?.mode == FiestaMode.auto) {
++      _pendingFiesta = FiestaRules(mode: FiestaMode.auto);
++    }
+ 
+     // Terminer et sauvegarder les analytics si une partie était en cours
+     if (_analytics.isTracking) {
+@@ -1818,11 +1836,8 @@ class GameProvider extends ChangeNotifier {
+       );
+     }
+ 
+-    _game = GameState.initial().copyWith(
+-      currentScreen: _pendingFiesta != null
+-          ? AppConstants.screenFiestaRecap
+-          : AppConstants.screenSettings,
+-    );
++    _game = GameState.initial()
++        .copyWith(currentScreen: AppConstants.screenSettings);
+     await _saveGameSession();
+     notifyListeners();
+   }
+@@ -1891,6 +1906,7 @@ class GameProvider extends ChangeNotifier {
+     _players = [];
+     _teams = [];
+     _game = GameState.initial();
++    _pendingFiesta = null;
+     notifyListeners();
+   }
+ 
+@@ -1899,6 +1915,7 @@ class GameProvider extends ChangeNotifier {
+     _players = [];
+     _teams = [];
+     _game = GameState.initial();
++    _pendingFiesta = null;
+     notifyListeners();
+     _storage.clearGameSession();
+     _storage.clearGameState();
+diff --git a/lib/screens/CLAUDE.md b/lib/screens/CLAUDE.md
+index 70fc735..e08b1fe 100644
+--- a/lib/screens/CLAUDE.md
++++ b/lib/screens/CLAUDE.md
+@@ -5,9 +5,9 @@
+ ## Flux de navigation
+ 
+ ```
+-HomeScreen → GameModeScreen ─ Classique ─────────────────────────────────────► SettingsScreen
+-                            └ Fiesta → FiestaChoiceScreen → Auto | Ensembles → FiestaRecapScreen ─┘
+-SettingsScreen → (CategoriesScreen) → PlayersScreen → (WordsScreen) → TeamsScreen
++HomeScreen → SettingsScreen (Classique / Fiesta ; Auto / Personnalisé dans « Avancés »)
++  → (CategoriesScreen) → PlayersScreen → (WordsScreen) → TeamsScreen
++  → [Fiesta Personnalisé seulement : FiestaEnsemblesScreen, « Jouer » lance la partie]
+   → GameScreen → CountdownScreen → TurnScreen → VerificationScreen
+   → TransitionScreen (entre manches) → ResultsScreen → StatsScreen
+ ```
+@@ -17,11 +17,11 @@ SettingsScreen → (CategoriesScreen) → PlayersScreen → (WordsScreen) → Te
+ | Ecran | Role |
+ |-------|------|
+ | `home_screen.dart` | Accueil : 3 etats (partie suspendue, session existante, nouveau jeu) |
+-| `settings_screen.dart` | Config : nb joueurs/equipes, mode mots, categories, parametres avances (modal) |
++| `settings_screen.dart` | Premier ecran de toute partie : interrupteur Classique / Fiesta (Classique par defaut ; 1er choix de Fiesta → tuto Fiesta une fois), nb joueurs/equipes, mode mots, categories, parametres avances (modal ; en Fiesta, + Auto / Personnalise ; en bas, « Reinitialiser les parametres » avec confirmation). En haut a droite : « ? » et roue crantee seulement. Retour (bouton et retour systeme) → accueil |
+ | `categories_screen.dart` | Selection categories et niveaux de difficulte (1-4) |
+ | `players_screen.dart` | Saisie noms joueurs + generation mots aleatoires avec cache metadata |
+ | `words_screen.dart` | Saisie mots par joueur (mode personnalise). Bouton "Grosse flemme" pour auto-remplir |
+-| `teams_screen.dart` | Composition equipes par drag-and-drop, noms editables, bouton aleatoire |
++| `teams_screen.dart` | Composition equipes par drag-and-drop, noms editables, bouton aleatoire. « Commencer » lance la partie ; en Fiesta Personnalise, « Suivant » mene aux ensembles |
+ | `game_screen.dart` | Pre-tour : affiche manche, equipe/joueur courant, scores, bouton jouer |
+ | `countdown_screen.dart` | Decompte 3-2-1-GO anime |
+ | `turn_screen.dart` | Jeu actif : timer, mot courant (auto-size), boutons Passer/Valider, pause, sons, haptic |
+@@ -32,16 +32,17 @@ SettingsScreen → (CategoriesScreen) → PlayersScreen → (WordsScreen) → Te
+ | `rules_screen.dart` | Regles completes du jeu (3 manches) + Revoir le tuto / le tuto Fiesta / les aides |
+ | `rules_tutorial_screen.dart` | Tuto des regles, 4 cartes (`Navigator.push` via `show`), pénalité de passe lue dans les reglages |
+ | `fiesta_tutorial_screen.dart` | Tuto Fiesta, 3 cartes (`Navigator.push` via `show`) |
+-| `game_mode_screen.dart` | Nouvelle partie : Classique ou Fiesta |
+-| `fiesta_choice_screen.dart` | Fiesta : Mode Auto ou Personnalise |
+-| `fiesta_auto_screen.dart` | Mode Auto : 2 interrupteurs (au moins un) + regles communes |
+-| `fiesta_recap_screen.dart` | Recap Fiesta avant les Parametres ; cible de « Rejouer » apres une partie Fiesta |
+-| `fiesta_ensembles_screen.dart` | « Mes ensembles » (Fiesta Personnalise) : compteur n / 10, Creer, Utiliser / Modifier / Dupliquer / Supprimer (confirmation) |
+-| `fiesta_ensemble_editor_screen.dart` | Editeur d'un ensemble, ouvert par `Navigator.push` depuis la liste (rend `true` si enregistre). Bouton grise + explications tant que `validateEnsemble` rend des erreurs |
++| `fiesta_ensembles_screen.dart` | « Mes ensembles » (Fiesta Personnalise, apres les equipes ; retour bouton et systeme → equipes) : compteur n / 10, Creer, Jouer / Modifier / Dupliquer / Supprimer (confirmation) |
++| `fiesta_ensemble_editor_screen.dart` | Editeur d'un ensemble, ouvert par `Navigator.push` depuis la liste (rend `true` si enregistre). Catalogue + « Une seule reponse » (toute la partie), tirage 0 a 3. Bouton grise + explications tant que `validateEnsemble` rend des erreurs |
+ 
+ Invariant Fiesta : le choix du mode vit dans `GameProvider.pendingFiesta`, **en memoire
+-seulement** (Q10), et `TeamsScreen` le passe a `startGame`. Le chemin « Reprendre » de l'accueil
+-ne traverse jamais les ecrans de mode.
++seulement** (Q10) : nul = Classique, `FiestaRules(mode: auto)` = Auto, mode `custom` =
++Personnalise (l'ensemble, choisi apres les equipes, le remplace). `TeamsScreen` le passe a
++`startGame` (ou mene aux ensembles en Personnalise). « Nouvelle partie » le vide (Classique par
++defaut) ; « Rejouer » le garde et revient aux Parametres. Le chemin « Reprendre » de l'accueil
++ne traverse jamais ces ecrans. Les anciens ecrans « Mode de jeu », « Auto ou Personnalise »,
++« Mode Auto » et « Recap » sont supprimes (2026-11-04) : un `currentScreen` relu a leur nom
++tombe sur l'accueil.
+ 
+ ## Point d'entree des ensembles (contrat 2-3 → 2-4)
+ 
+@@ -49,6 +50,5 @@ ne traverse jamais les ecrans de mode.
+ L'ecran ne connait ni le provider ni la navigation : `onUse` recoit l'ensemble choisi, **deja
+ marque `lastUsedId`** ; `ensemble.rules` est un `FiestaRules` (mode `custom`, `ensembleName` =
+ nom) pret a etre gele par `startGame(fiesta: ...)`. Branchement (`app.dart`, route
+-`AppConstants.screenFiestaEnsembles`) : `onBack` → `screenFiestaChoice` ; `onUse` →
+-`setPendingFiesta(ensemble.rules)` puis `screenFiestaRecap`. Le « Modifier » du recap en
+-Personnalise revient a cette liste.
++`AppConstants.screenFiestaEnsembles`) : `onBack` → `screenTeams` ; `onUse` →
++`setPendingFiesta(ensemble.rules)` puis `startGame(fiesta: ensemble.rules)`.
+diff --git a/lib/screens/fiesta_auto_screen.dart b/lib/screens/fiesta_auto_screen.dart
+deleted file mode 100644
+index b95a901..0000000
+--- a/lib/screens/fiesta_auto_screen.dart
++++ /dev/null
+@@ -1,119 +0,0 @@
+-import 'package:flutter/material.dart';
+-import 'package:provider/provider.dart';
+-
+-import '../models/fiesta/fiesta_rules.dart';
+-import '../providers/game_provider.dart';
+-import '../theme/app_theme.dart';
+-import '../utils/constants.dart';
+-import '../widgets/common/app_button.dart';
+-import '../widgets/fiesta/fiesta_setup_widgets.dart';
+-import 'fiesta_tutorial_screen.dart';
+-
+-/// Mode Auto : deux interrupteurs cumulables (au moins un allumé) et les
+-/// règles communes.
+-class FiestaAutoScreen extends StatefulWidget {
+-  const FiestaAutoScreen({super.key});
+-
+-  @override
+-  State<FiestaAutoScreen> createState() => _FiestaAutoScreenState();
+-}
+-
+-class _FiestaAutoScreenState extends State<FiestaAutoScreen> {
+-  // Revenir du Récap par « Modifier » retrouve les réglages en attente.
+-  late final FiestaRules? _previous = () {
+-    final pending = context.read<GameProvider>().pendingFiesta;
+-    return pending?.mode == FiestaMode.auto ? pending : null;
+-  }();
+-  late bool _symmetric = _previous?.symmetric ?? true;
+-  late bool _autoCalibrate = _previous?.autoCalibrate ?? true;
+-  late bool _oneAnswer = _previous?.oneAnswer ?? true;
+-
+-  @override
+-  Widget build(BuildContext context) {
+-    final provider = context.read<GameProvider>();
+-    final none = !_symmetric && !_autoCalibrate;
+-    const auto = CatchUpRules.auto;
+-    return FiestaSetupScaffold(
+-      title: 'Mode Auto',
+-      subtitle: 'Aucun choix pendant la partie : l\'app s\'occupe de tout.',
+-      onBack: () => provider.goToScreen(AppConstants.screenFiestaChoice),
+-      onHelp: () => FiestaTutorialScreen.show(context),
+-      content: [
+-        FiestaCard(
+-          title: 'Symétrique',
+-          trailing: _switch(_symmetric, (v) => _symmetric = v),
+-          children: const [
+-            FiestaHint(
+-              'Au début de chaque manche, l\'app tire 1 à 2 modificateurs qui '
+-              's\'appliquent à toutes les équipes. Pas de relance.',
+-            ),
+-          ],
+-        ),
+-        FiestaCard(
+-          title: 'Auto-calibrage (rattrapage)',
+-          trailing: _switch(_autoCalibrate, (v) => _autoCalibrate = v),
+-          children: [
+-            const FiestaHint(
+-              'L\'app aide automatiquement l\'équipe qui est derrière. L\'écart '
+-              'se mesure par rapport à l\'équipe en tête.',
+-            ),
+-            if (_autoCalibrate) ...[
+-              const SizedBox(height: 8),
+-              FiestaHint(
+-                'Équipes menées : +${auto.b1} s × écart après M1, '
+-                '+${auto.b2} s × écart après M2 (max +${auto.cap} s).\n'
+-                'Équipe en tête : −${auto.mal} s × écart sur son 1ᵉʳ tour '
+-                '(max −${auto.malCap} s).\n'
+-                'Selon l\'écart, l\'app peut aussi donner un bonus aux équipes '
+-                'menées et un malus à l\'équipe en tête.',
+-              ),
+-            ],
+-          ],
+-        ),
+-        FiestaCommonRulesCard(
+-          oneAnswer: _oneAnswer,
+-          onChanged: ({oneAnswer}) => setState(() {
+-            _oneAnswer = oneAnswer ?? _oneAnswer;
+-          }),
+-        ),
+-      ],
+-      bottom: Column(
+-        children: [
+-          if (none) ...[
+-            Text(
+-              'Active au moins un des deux interrupteurs pour continuer.',
+-              textAlign: TextAlign.center,
+-              style: AppTextStyles.bodySmall.copyWith(color: AppColors.warning),
+-            ),
+-            const SizedBox(height: 8),
+-          ],
+-          AppButton(
+-            text: 'Continuer',
+-            size: AppButtonSize.large,
+-            fullWidth: true,
+-            disabled: none,
+-            onPressed: none
+-                ? null
+-                : () {
+-                    provider.setPendingFiesta(
+-                      FiestaRules(
+-                        mode: FiestaMode.auto,
+-                        symmetric: _symmetric,
+-                        autoCalibrate: _autoCalibrate,
+-                        oneAnswer: _oneAnswer,
+-                      ),
+-                    );
+-                    provider.goToScreen(AppConstants.screenFiestaRecap);
+-                  },
+-          ),
+-        ],
+-      ),
+-    );
+-  }
+-
+-  Widget _switch(bool value, void Function(bool) set) => Switch(
+-        value: value,
+-        onChanged: (v) => setState(() => set(v)),
+-        activeTrackColor: AppColors.secondaryCyan,
+-      );
+-}
+diff --git a/lib/screens/fiesta_choice_screen.dart b/lib/screens/fiesta_choice_screen.dart
+deleted file mode 100644
+index f351853..0000000
+--- a/lib/screens/fiesta_choice_screen.dart
++++ /dev/null
+@@ -1,61 +0,0 @@
+-import 'package:flutter/material.dart';
+-import 'package:provider/provider.dart';
+-
+-import '../models/fiesta/fiesta_rules.dart';
+-import '../providers/game_provider.dart';
+-import '../utils/constants.dart';
+-import '../widgets/common/app_button.dart';
+-import '../widgets/fiesta/fiesta_setup_widgets.dart';
+-import 'fiesta_tutorial_screen.dart';
+-
+-/// Fiesta : Mode Auto (l'app décide) ou Personnalisé (ensembles enregistrés).
+-class FiestaChoiceScreen extends StatefulWidget {
+-  const FiestaChoiceScreen({super.key});
+-
+-  @override
+-  State<FiestaChoiceScreen> createState() => _FiestaChoiceScreenState();
+-}
+-
+-class _FiestaChoiceScreenState extends State<FiestaChoiceScreen> {
+-  late FiestaMode _mode =
+-      context.read<GameProvider>().pendingFiesta?.mode ?? FiestaMode.auto;
+-
+-  @override
+-  Widget build(BuildContext context) {
+-    final provider = context.read<GameProvider>();
+-    return FiestaSetupScaffold(
+-      title: 'Fiesta',
+-      subtitle: 'Comment veux-tu jouer ?',
+-      onBack: () => provider.goToScreen(AppConstants.screenGameMode),
+-      onHelp: () => FiestaTutorialScreen.show(context),
+-      content: [
+-        FiestaPickCard(
+-          icon: 'A',
+-          title: 'Mode Auto',
+-          description: 'Personne ne choisit de bonus ni de malus : l\'app tire '
+-              'au sort pour tous et/ou aide l\'équipe menée.',
+-          selected: _mode == FiestaMode.auto,
+-          onTap: () => setState(() => _mode = FiestaMode.auto),
+-        ),
+-        FiestaPickCard(
+-          icon: '⚙',
+-          title: 'Mode Personnalisé',
+-          description: 'Tous les curseurs de la partie, enregistrés dans des '
+-              'ensembles réutilisables.',
+-          selected: _mode == FiestaMode.custom,
+-          onTap: () => setState(() => _mode = FiestaMode.custom),
+-        ),
+-      ],
+-      bottom: AppButton(
+-        text: 'Continuer',
+-        size: AppButtonSize.large,
+-        fullWidth: true,
+-        onPressed: () => provider.goToScreen(
+-          _mode == FiestaMode.auto
+-              ? AppConstants.screenFiestaAuto
+-              : AppConstants.screenFiestaEnsembles,
+-        ),
+-      ),
+-    );
+-  }
+-}
+diff --git a/lib/screens/fiesta_ensemble_editor_screen.dart b/lib/screens/fiesta_ensemble_editor_screen.dart
+index d554424..d93e34d 100644
+--- a/lib/screens/fiesta_ensemble_editor_screen.dart
++++ b/lib/screens/fiesta_ensemble_editor_screen.dart
+@@ -153,6 +153,7 @@ class _FiestaEnsembleEditorScreenState
+                           children: [
+                             for (final def in kModifierCatalog)
+                               _buildModifier(def),
++                            _buildOneAnswer(),
+                           ],
+                         ),
+                       ),
+@@ -173,7 +174,6 @@ class _FiestaEnsembleEditorScreenState
+                       ),
+                       _buildCatchUp(),
+                       _buildDraw(),
+-                      _buildCommon(),
+                     ],
+                   ),
+                 ),
+@@ -374,7 +374,7 @@ class _FiestaEnsembleEditorScreenState
+               _Stepper(
+                 value: _rules.drawCount,
+                 min: 0,
+-                max: 2,
++                max: maxModifiersPerTeam(_rules),
+                 onChanged: (v) =>
+                     setState(() => _rules = _rules.copyWith(drawCount: v)),
+               ),
+@@ -383,18 +383,40 @@ class _FiestaEnsembleEditorScreenState
+     );
+   }
+ 
+-  Widget _buildCommon() {
+-    return _Card(
+-      title: 'Règles communes',
+-      child: Column(
++  /// « Une seule réponse » : un modificateur du catalogue, mais pour TOUTE
++  /// la partie (ni tiré, ni proposé, ni fixé) — d'où un simple interrupteur.
++  Widget _buildOneAnswer() {
++    final on = _rules.oneAnswer;
++    return Container(
++      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
++      decoration: BoxDecoration(
++        color: AppColors.backgroundMain,
++        borderRadius: BorderRadius.circular(14),
++      ),
++      child: Row(
+         children: [
+-          _line(
+-            'Une seule réponse par mot',
+-            _switch(
+-              _rules.oneAnswer,
+-              (v) => setState(() => _rules = _rules.copyWith(oneAnswer: v)),
++          Expanded(
++            child: Column(
++              crossAxisAlignment: CrossAxisAlignment.start,
++              children: [
++                Text(
++                  kOneAnswer.name,
++                  style: AppTextStyles.label.copyWith(
++                    color: on ? Colors.white : AppColors.gray500,
++                  ),
++                ),
++                Text(
++                  on ? 'Toute la partie' : 'Désactivé',
++                  style: AppTextStyles.bodySmall
++                      .copyWith(color: AppColors.gray400, fontSize: 11),
++                ),
++              ],
+             ),
+           ),
++          _switch(
++            on,
++            (v) => setState(() => _rules = _rules.copyWith(oneAnswer: v)),
++          ),
+         ],
+       ),
+     );
+diff --git a/lib/screens/fiesta_ensembles_screen.dart b/lib/screens/fiesta_ensembles_screen.dart
+index 5f6c228..9a99ee8 100644
+--- a/lib/screens/fiesta_ensembles_screen.dart
++++ b/lib/screens/fiesta_ensembles_screen.dart
+@@ -33,7 +33,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
+   final _service = FiestaEnsembleService();
+   EnsembleStore? _store;
+ 
+-  /// Un double tap sur « Utiliser » ne doit pas naviguer deux fois.
++  /// Un double tap sur « Jouer » ne doit pas naviguer deux fois.
+   bool _using = false;
+ 
+   @override
+@@ -91,22 +91,29 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
+   @override
+   Widget build(BuildContext context) {
+     final store = _store;
+-    return Material(
+-      color: AppColors.backgroundMain,
+-      child: Stack(
+-        children: [
+-          SafeArea(
+-            child: store == null
+-                ? const Center(
+-                    child: CircularProgressIndicator(
+-                      color: AppColors.secondaryCyan,
+-                    ),
+-                  )
+-                : _buildList(store),
+-          ),
+-          AppBackButton(onPressed: widget.onBack),
+-          HelpButton(onPressed: () => FiestaTutorialScreen.show(context)),
+-        ],
++    // Retour système (Android) = [onBack], pas la sortie de l'app.
++    return PopScope(
++      canPop: false,
++      onPopInvokedWithResult: (didPop, _) {
++        if (!didPop) widget.onBack();
++      },
++      child: Material(
++        color: AppColors.backgroundMain,
++        child: Stack(
++          children: [
++            SafeArea(
++              child: store == null
++                  ? const Center(
++                      child: CircularProgressIndicator(
++                        color: AppColors.secondaryCyan,
++                      ),
++                    )
++                  : _buildList(store),
++            ),
++            AppBackButton(onPressed: widget.onBack),
++            HelpButton(onPressed: () => FiestaTutorialScreen.show(context)),
++          ],
++        ),
+       ),
+     );
+   }
+@@ -192,7 +199,8 @@ class _EnsembleCard extends StatelessWidget {
+         : 'sans tirage';
+     return '$active modificateurs · '
+         '${rules.oneOfThree ? 'choix 1 parmi 3' : 'pas de choix'} · '
+-        '${catchUpOn(rules.catchUp) ? 'rattrapage' : 'sans rattrapage'} · $draw';
++        '${catchUpOn(rules.catchUp) ? 'rattrapage' : 'sans rattrapage'} · $draw'
++        '${rules.oneAnswer ? ' · une seule réponse' : ''}';
+   }
+ 
+   @override
+@@ -238,7 +246,7 @@ class _EnsembleCard extends StatelessWidget {
+             runSpacing: 8,
+             children: [
+               AppButton(
+-                text: 'Utiliser',
++                text: 'Jouer',
+                 size: AppButtonSize.small,
+                 variant: AppButtonVariant.secondary,
+                 onPressed: onUse,
+diff --git a/lib/screens/fiesta_recap_screen.dart b/lib/screens/fiesta_recap_screen.dart
+deleted file mode 100644
+index 3d61fb2..0000000
+--- a/lib/screens/fiesta_recap_screen.dart
++++ /dev/null
+@@ -1,151 +0,0 @@
+-import 'package:flutter/material.dart';
+-import 'package:provider/provider.dart';
+-
+-import '../models/fiesta/fiesta_rules.dart';
+-import '../models/fiesta/modifier_catalog.dart';
+-import '../providers/game_provider.dart';
+-import '../theme/app_theme.dart';
+-import '../utils/constants.dart';
+-import '../widgets/common/app_button.dart';
+-import '../widgets/fiesta/fiesta_setup_widgets.dart';
+-import 'fiesta_tutorial_screen.dart';
+-
+-/// Récapitulatif avant les Paramètres : la config Fiesta en attente, les
+-/// règles communes et les réglages de base (lus dans `GameSettings`).
+-class FiestaRecapScreen extends StatelessWidget {
+-  const FiestaRecapScreen({super.key});
+-
+-  static const _arrivalLabels = {
+-    ModifierArrival.draw: 'tirage pour tous',
+-    ModifierArrival.offer: 'choix 1 parmi 3',
+-  };
+-
+-  @override
+-  Widget build(BuildContext context) {
+-    final provider = context.watch<GameProvider>();
+-    final rules = provider.pendingFiesta;
+-    // Rien en attente (ne devrait pas arriver) : retour au choix du mode.
+-    if (rules == null) {
+-      WidgetsBinding.instance.addPostFrameCallback(
+-        (_) => provider.goToScreen(AppConstants.screenGameMode),
+-      );
+-      return const SizedBox.shrink();
+-    }
+-    final auto = rules.mode == FiestaMode.auto;
+-    final editScreen = auto
+-        ? AppConstants.screenFiestaAuto
+-        : AppConstants.screenFiestaEnsembles;
+-    final settings = provider.settings;
+-
+-    return FiestaSetupScaffold(
+-      title: 'Prêts ?',
+-      onBack: () => provider.goToScreen(editScreen),
+-      onHelp: () => FiestaTutorialScreen.show(context),
+-      content: [
+-        FiestaCard(
+-          title: 'Mode',
+-          trailing: AppButton(
+-            text: 'Modifier',
+-            variant: AppButtonVariant.ghost,
+-            size: AppButtonSize.small,
+-            onPressed: () => provider.goToScreen(editScreen),
+-          ),
+-          children: [
+-            Text(
+-              auto
+-                  ? 'Fiesta · Auto'
+-                  : 'Fiesta · ${rules.ensembleName ?? 'Personnalisé'}',
+-              style: AppTextStyles.subtitle(fontSize: 26),
+-            ),
+-            const SizedBox(height: 4),
+-            ...auto ? _autoLines(rules) : _customLines(rules),
+-          ],
+-        ),
+-        FiestaCommonRulesCard(
+-          oneAnswer: rules.oneAnswer,
+-        ),
+-        FiestaCard(
+-          title: 'Réglages de base',
+-          children: [
+-            _value('Équipes', '${settings.numberOfTeams}'),
+-            _value('Nombre total de mots', '${settings.totalWords}'),
+-            _value('Durée du tour', '${settings.turnDuration} s'),
+-            _value('Pénalité pour passer', '−${settings.passPenalty} s'),
+-          ],
+-        ),
+-      ],
+-      bottom: AppButton(
+-        text: 'Continuer',
+-        size: AppButtonSize.large,
+-        fullWidth: true,
+-        onPressed: () => provider.goToScreen(AppConstants.screenSettings),
+-      ),
+-    );
+-  }
+-
+-  List<Widget> _autoLines(FiestaRules rules) {
+-    return [
+-      FiestaLine(
+-        label: 'Symétrique',
+-        detail: '1 à 2 modificateurs tirés par manche',
+-        value: rules.symmetric,
+-      ),
+-      FiestaLine(
+-        label: 'Auto-calibrage',
+-        detail: '${catchUpSummary(CatchUpRules.auto)} · '
+-            'coup de pouce du catalogue',
+-        value: rules.autoCalibrate,
+-      ),
+-    ];
+-  }
+-
+-  List<Widget> _customLines(FiestaRules rules) {
+-    // Même contrat que l'éditeur de 2-3 : interrupteur ET au moins 1 tirage.
+-    final draw = rules.symmetric && rules.drawCount > 0;
+-    final active = [
+-      for (final def in kModifierCatalog)
+-        if (rules.modifiers[def.id]?.active ?? false)
+-          (def, rules.modifiers[def.id]!),
+-    ];
+-    return [
+-      FiestaLine(
+-        label: 'Choix 1 parmi 3',
+-        detail: 'Équipe menée, à chaque fin de manche',
+-        value: rules.oneOfThree,
+-      ),
+-      FiestaLine(
+-        label: 'Rattrapage',
+-        detail: catchUpSummary(rules.catchUp),
+-      ),
+-      FiestaLine(
+-        label: 'Tirage symétrique',
+-        detail: draw ? '${rules.drawCount} par manche' : 'Désactivé',
+-        value: draw,
+-      ),
+-      FiestaLine(
+-        label: 'Modificateurs actifs (${active.length})',
+-        detail: active.isEmpty
+-            ? 'Aucun'
+-            : active
+-                .map((e) => '${e.$1.name} · '
+-                    '${e.$2.arrival == ModifierArrival.fixed ? _fixedLabel(e.$2.fixedRound) : _arrivalLabels[e.$2.arrival]}')
+-                .join('\n'),
+-      ),
+-    ];
+-  }
+-
+-  // `fixedRound` peut être nul (le modèle 2-2 ne l'impose pas) : on n'invente
+-  // pas de manche.
+-  static String _fixedLabel(int? round) =>
+-      round == null ? 'fixé' : 'fixé manche $round';
+-
+-  Widget _value(String label, String value) => Padding(
+-        padding: const EdgeInsets.symmetric(vertical: 4),
+-        child: Row(
+-          children: [
+-            Expanded(child: Text(label, style: AppTextStyles.bodySmall)),
+-            Text(value, style: AppTextStyles.label),
+-          ],
+-        ),
+-      );
+-}
+diff --git a/lib/screens/fiesta_tutorial_screen.dart b/lib/screens/fiesta_tutorial_screen.dart
+index f319224..2219a24 100644
+--- a/lib/screens/fiesta_tutorial_screen.dart
++++ b/lib/screens/fiesta_tutorial_screen.dart
+@@ -4,7 +4,8 @@ import '../theme/app_theme.dart';
+ import '../widgets/help/tutorial_pager.dart';
+ 
+ /// Tuto Fiesta, 3 cartes. Ouvert par `Navigator.push` (premier choix de
+-/// Fiesta, ou « Revoir le tuto Fiesta » dans Règles).
++/// Fiesta sur l'interrupteur des Paramètres, ou « Revoir le tuto Fiesta »
++/// dans Règles).
+ class FiestaTutorialScreen extends StatelessWidget {
+   const FiestaTutorialScreen({super.key});
+ 
+@@ -38,7 +39,8 @@ class FiestaTutorialScreen extends StatelessWidget {
+           text: 'Fiesta, ce sont les 3 manches habituelles avec des '
+               'modificateurs : des bonus (Mot compte double, Deux mots à la '
+               'fois, Passe gratuite) et des malus (Interdit de passer, Mot à '
+-              'l\'envers, mimes sans les bras…).',
++              'l\'envers, mimes sans les bras…). Parfois, pour toute la '
++              'partie : une seule réponse par mot.',
+         ),
+         TutorialCard(
+           symbol: '⇄',
+@@ -59,8 +61,9 @@ class FiestaTutorialScreen extends StatelessWidget {
+           symbol: 'A',
+           title: 'Auto ou Personnalisé',
+           text: 'Auto : l\'app décide de tout, personne ne choisit. '
+-              'Personnalisé : tu règles chaque modificateur et tu '
+-              'enregistres tes réglages sous un nom, pour les réutiliser.',
++              'Personnalisé (roue crantée des Paramètres) : après les '
++              'équipes, tu choisis tes réglages, enregistrés sous un nom '
++              'pour les réutiliser.',
+         ),
+       ],
+     );
+diff --git a/lib/screens/game_mode_screen.dart b/lib/screens/game_mode_screen.dart
+deleted file mode 100644
+index ebb303d..0000000
+--- a/lib/screens/game_mode_screen.dart
++++ /dev/null
+@@ -1,77 +0,0 @@
+-import 'package:flutter/material.dart';
+-import 'package:provider/provider.dart';
+-
+-import '../providers/game_provider.dart';
+-import '../services/storage_service.dart';
+-import '../utils/constants.dart';
+-import '../widgets/common/app_button.dart';
+-import '../widgets/fiesta/fiesta_setup_widgets.dart';
+-import 'fiesta_tutorial_screen.dart';
+-
+-/// Premier choix d'une nouvelle partie : Classique (la partie d'aujourd'hui,
+-/// inchangée) ou Fiesta.
+-class GameModeScreen extends StatefulWidget {
+-  const GameModeScreen({super.key});
+-
+-  @override
+-  State<GameModeScreen> createState() => _GameModeScreenState();
+-}
+-
+-class _GameModeScreenState extends State<GameModeScreen> {
+-  late bool _fiesta = context.read<GameProvider>().pendingFiesta != null;
+-
+-  /// Garde contre le double tap : un seul tuto Fiesta, une seule navigation.
+-  bool _busy = false;
+-
+-  @override
+-  Widget build(BuildContext context) {
+-    final provider = context.read<GameProvider>();
+-    return FiestaSetupScaffold(
+-      title: 'Mode de jeu',
+-      onBack: () => provider.goToScreen(AppConstants.screenHome),
+-      onHelp: () => FiestaTutorialScreen.show(context),
+-      content: [
+-        FiestaPickCard(
+-          icon: '3',
+-          title: 'Classique',
+-          description: 'Les 3 manches habituelles, sans modificateur. '
+-              'Rien ne change.',
+-          selected: !_fiesta,
+-          onTap: () => setState(() => _fiesta = false),
+-        ),
+-        FiestaPickCard(
+-          icon: '✦',
+-          title: 'Fiesta',
+-          description: 'Les mêmes 3 manches, avec des bonus et malus qui '
+-              'pimentent la partie.',
+-          selected: _fiesta,
+-          onTap: () => setState(() => _fiesta = true),
+-        ),
+-      ],
+-      bottom: AppButton(
+-        text: 'Continuer',
+-        size: AppButtonSize.large,
+-        fullWidth: true,
+-        onPressed: () async {
+-          if (_fiesta) {
+-            if (_busy) return;
+-            _busy = true;
+-            try {
+-              // Première partie Fiesta : le tuto (3 cartes) s'ouvre une fois.
+-              if (!await StorageService().hasSeenFiestaTutorial()) {
+-                if (!context.mounted) return;
+-                await FiestaTutorialScreen.show(context);
+-              }
+-            } finally {
+-              _busy = false;
+-            }
+-            provider.goToScreen(AppConstants.screenFiestaChoice);
+-          } else {
+-            provider.setPendingFiesta(null);
+-            provider.goToScreen(AppConstants.screenSettings);
+-          }
+-        },
+-      ),
+-    );
+-  }
+-}
+diff --git a/lib/screens/game_screen.dart b/lib/screens/game_screen.dart
+index a4323b7..08c3a58 100644
+--- a/lib/screens/game_screen.dart
++++ b/lib/screens/game_screen.dart
+@@ -767,8 +767,10 @@ class _FiestaAnnouncements extends StatelessWidget {
+                 border: Border.all(
+                     color: AppColors.warning.withValues(alpha: 0.35)),
+               ),
++              // Annonce avant le premier tour (en Auto, elle a été tirée au
++              // lancement : c'est ici que les joueurs l'apprennent).
+               child: Text(
+-                'Une seule réponse par mot. Une mauvaise réponse → il faut '
++                '${kOneAnswer.description} Une mauvaise réponse → il faut '
+                 'passer (pénalité de passe).',
+                 style: AppTextStyles.bodySmall
+                     .copyWith(fontSize: 12.5, color: AppColors.warning),
+@@ -802,14 +804,14 @@ class _FiestaAnnouncements extends StatelessWidget {
+               if (rules.oneAnswer)
+                 ModifierBadge(
+                   icon: '☝',
+-                  label: 'Une seule réponse',
+-                  nature: ModifierNature.bonus,
++                  label: kOneAnswer.name,
++                  nature: kOneAnswer.nature,
+                   // Même règle que `_constraints` : sans passe possible, le
+                   // mot est grillé ; sinon il faut le passer.
+                   description: modifiers.any((m) => m.catalogId == 'no_pass')
+-                      ? 'Une seule réponse par mot. Mauvaise réponse : le '
++                      ? '${kOneAnswer.description} Mauvaise réponse : le '
+                           'mot est grillé jusqu\'à la fin du tour.'
+-                      : 'Une seule réponse par mot. Mauvaise réponse : il '
++                      : '${kOneAnswer.description} Mauvaise réponse : il '
+                           'faut passer le mot.',
+                 ),
+             ],
+diff --git a/lib/screens/home_screen.dart b/lib/screens/home_screen.dart
+index bda9cef..030344b 100644
+--- a/lib/screens/home_screen.dart
++++ b/lib/screens/home_screen.dart
+@@ -95,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
+                         // chaque partie. La remise à zéro explicite reste disponible
+                         // depuis le bouton « Réinitialiser » de l'écran de réglages.
+                         await provider.startNewGame();
+-                        provider.goToScreen(AppConstants.screenGameMode);
++                        provider.goToScreen(AppConstants.screenSettings);
+                       },
+                     ),
+                   ]
+@@ -116,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
+                         // chaque partie. La remise à zéro explicite reste disponible
+                         // depuis le bouton « Réinitialiser » de l'écran de réglages.
+                         await provider.startNewGame();
+-                        provider.goToScreen(AppConstants.screenGameMode);
++                        provider.goToScreen(AppConstants.screenSettings);
+                       },
+                     ),
+                   ],
+@@ -194,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
+                     // Idem : abandonner la partie en cours ne doit pas effacer
+                     // les réglages du joueur.
+                     await provider.startNewGame();
+-                    provider.goToScreen(AppConstants.screenGameMode);
++                    provider.goToScreen(AppConstants.screenSettings);
+                   },
+                 ),
+               ),
+diff --git a/lib/screens/settings_screen.dart b/lib/screens/settings_screen.dart
+index dd14eed..4868d89 100644
+--- a/lib/screens/settings_screen.dart
++++ b/lib/screens/settings_screen.dart
+@@ -1,6 +1,7 @@
+ import 'package:flutter/material.dart';
+ import 'package:provider/provider.dart';
+ import '../theme/app_theme.dart';
++import '../models/fiesta/fiesta_rules.dart';
+ import '../providers/game_provider.dart';
+ import '../services/storage_service.dart';
+ import '../utils/constants.dart';
+@@ -15,6 +16,7 @@ import '../widgets/effects/shooting_stars.dart';
+ import '../widgets/help/coach_marks.dart';
+ import '../widgets/help/help_button.dart';
+ import '../widgets/help/help_content.dart';
++import 'fiesta_tutorial_screen.dart';
+ 
+ class SettingsScreen extends StatefulWidget {
+   const SettingsScreen({super.key});
+@@ -29,6 +31,7 @@ class _SettingsScreenState extends State<SettingsScreen>
+   late Animation<double> _pulseAnimation;
+   bool _showAdvancedAnimation = false;
+ 
++  final _modeKey = GlobalKey();
+   final _countsKey = GlobalKey();
+   final _wordChoiceKey = GlobalKey();
+   final _categoriesKey = GlobalKey();
+@@ -65,293 +68,331 @@ class _SettingsScreenState extends State<SettingsScreen>
+     super.dispose();
+   }
+ 
++  static const _classic = 'Classique';
++  static const _fiesta = 'Fiesta';
++  static const _auto = 'Auto';
++  static const _custom = 'Personnalisé';
++
++  /// Garde contre le double tap : un seul tuto Fiesta.
++  bool _tutorialBusy = false;
++
++  /// Classique / Fiesta. Fiesta part en Auto ; la première fois, le tuto
++  /// Fiesta s'ouvre (clé `guessItAll_fiestaTutorialSeen`).
++  Future<void> _setMode(GameProvider provider, String mode) async {
++    if (mode == _classic) {
++      provider.setPendingFiesta(null);
++      return;
++    }
++    if (provider.pendingFiesta != null) return;
++    provider.setPendingFiesta(FiestaRules(mode: FiestaMode.auto));
++    if (_tutorialBusy) return;
++    _tutorialBusy = true;
++    try {
++      if (!await StorageService().hasSeenFiestaTutorial() && mounted) {
++        await FiestaTutorialScreen.show(context);
++      }
++    } finally {
++      _tutorialBusy = false;
++    }
++  }
++
++  /// Auto / Personnalisé (fenêtre « Avancés »). Personnalisé garde l'ensemble
++  /// déjà en attente (Rejouer) ; l'ensemble se choisit après les équipes.
++  void _setFiestaMode(GameProvider provider, String value) {
++    final custom = value == _custom;
++    final pending = provider.pendingFiesta;
++    if (pending == null || (pending.mode == FiestaMode.custom) == custom) {
++      return;
++    }
++    provider.setPendingFiesta(
++      FiestaRules(mode: custom ? FiestaMode.custom : FiestaMode.auto),
++    );
++  }
++
+   @override
+   Widget build(BuildContext context) {
+     final provider = context.watch<GameProvider>();
+     final settings = provider.settings;
+ 
+-    return ShootingStars(
+-      child: Stack(
+-        children: [
+-          SafeArea(
+-            child: SingleChildScrollView(
+-              padding: const EdgeInsets.all(24),
+-              child: Column(
+-                children: [
+-                  const SizedBox(height: 72),
+-                  Text(
+-                    'Paramètres',
+-                    style: AppTextStyles.subtitle(fontSize: 40),
+-                  ),
+-                  const SizedBox(height: 32),
+-
+-                  // Nombre de joueurs et d'équipes (une seule cible d'aide)
+-                  Column(
+-                    key: _countsKey,
+-                    children: [
+-                      _buildSection(
+-                        title: 'Joueurs',
+-                        child: AppCounter(
+-                          value: settings.numberOfPlayers,
+-                          min: settings.numberOfTeams * 2, // Minimum dynamique
+-                          max: AppConstants.maxPlayers,
+-                          onChange: (value) =>
+-                              provider.updateSettings(numberOfPlayers: value),
+-                        ),
+-                      ),
+-                      const SizedBox(height: 24),
+-
+-                      // Nombre d'équipes (ajuste le minimum de joueurs)
+-                      _buildSection(
+-                        title: 'Équipes',
+-                        child: AppCounter(
+-                          value: settings.numberOfTeams,
+-                          min: AppConstants.minTeams,
+-                          max: AppConstants.maxTeams,
+-                          onChange: (value) {
+-                            provider.updateSettings(numberOfTeams: value);
+-                            // Ajuster le nombre de joueurs si nécessaire (min 2 par équipe)
+-                            final minPlayers = value * 2;
+-                            if (settings.numberOfPlayers < minPlayers) {
+-                              provider.updateSettings(
+-                                  numberOfPlayers: minPlayers);
+-                            }
+-                          },
+-                        ),
+-                      ),
+-                    ],
+-                  ),
+-                  const SizedBox(height: 24),
++    // Retour système (Android) = bouton retour : l'accueil, pas la sortie de
++    // l'app (écran racine du `MaterialApp`).
++    return PopScope(
++      canPop: false,
++      onPopInvokedWithResult: (didPop, _) {
++        if (!didPop) provider.goToScreen(AppConstants.screenHome);
++      },
++      child: ShootingStars(
++        child: Stack(
++          children: [
++            SafeArea(
++              child: SingleChildScrollView(
++                padding: const EdgeInsets.all(24),
++                child: Column(
++                  children: [
++                    const SizedBox(height: 48),
++                    Text(
++                      'Paramètres',
++                      style: AppTextStyles.subtitle(fontSize: 40),
++                    ),
++                    const SizedBox(height: 32),
+ 
+-                  // Choix des mots
+-                  KeyedSubtree(
+-                    key: _wordChoiceKey,
+-                    child: _buildSection(
+-                      title: 'Choix des mots',
+-                      child: AppToggle(
+-                        options: const [
+-                          AppConstants.wordChoiceCustom,
+-                          AppConstants.wordChoiceRandom
+-                        ],
+-                        selected: settings.wordChoice,
+-                        onChange: (value) =>
+-                            provider.updateSettings(wordChoice: value),
+-                      ),
++                    // Classique / Fiesta (Auto / Personnalisé : roue crantée)
++                    AppToggle(
++                      key: _modeKey,
++                      options: const [_classic, _fiesta],
++                      selected:
++                          provider.pendingFiesta == null ? _classic : _fiesta,
++                      onChange: (value) => _setMode(provider, value),
+                     ),
+-                  ),
+-                  const SizedBox(height: 12),
++                    const SizedBox(height: 24),
+ 
+-                  // Choix des catégories (sous le toggle)
+-                  GestureDetector(
+-                    key: _categoriesKey,
+-                    onTap: () =>
+-                        provider.goToScreen(AppConstants.screenCategories),
+-                    child: Container(
+-                      padding: const EdgeInsets.symmetric(
+-                          vertical: 12, horizontal: 16),
+-                      decoration: BoxDecoration(
+-                        color: AppColors.backgroundCard,
+-                        borderRadius: BorderRadius.circular(12),
+-                        border:
+-                            Border.all(color: AppColors.gray600, width: 1.5),
+-                      ),
+-                      child: Row(
+-                        mainAxisSize: MainAxisSize.min,
+-                        children: [
+-                          AnimatedBuilder(
+-                            animation: _pulseAnimation,
+-                            builder: (context, child) {
+-                              return Transform.scale(
+-                                scale: _pulseAnimation.value,
+-                                child: const Icon(
+-                                  Icons.category,
+-                                  color: Colors.white,
+-                                  size: 20,
+-                                ),
+-                              );
+-                            },
++                    // Nombre de joueurs et d'équipes (une seule cible d'aide)
++                    Column(
++                      key: _countsKey,
++                      children: [
++                        _buildSection(
++                          title: 'Joueurs',
++                          child: AppCounter(
++                            value: settings.numberOfPlayers,
++                            min:
++                                settings.numberOfTeams * 2, // Minimum dynamique
++                            max: AppConstants.maxPlayers,
++                            onChange: (value) =>
++                                provider.updateSettings(numberOfPlayers: value),
+                           ),
+-                          const SizedBox(width: 10),
+-                          const Text(
+-                            'Catégories & Difficultés',
+-                            style: TextStyle(
+-                              fontFamily: 'Poppins',
+-                              fontSize: 14,
+-                              fontWeight: FontWeight.w500,
+-                              color: Colors.white,
+-                            ),
+-                          ),
+-                          const SizedBox(width: 8),
+-                          const Icon(
+-                            Icons.chevron_right,
+-                            color: AppColors.gray400,
+-                            size: 20,
++                        ),
++                        const SizedBox(height: 24),
++
++                        // Nombre d'équipes (ajuste le minimum de joueurs)
++                        _buildSection(
++                          title: 'Équipes',
++                          child: AppCounter(
++                            value: settings.numberOfTeams,
++                            min: AppConstants.minTeams,
++                            max: AppConstants.maxTeams,
++                            onChange: (value) {
++                              provider.updateSettings(numberOfTeams: value);
++                              // Ajuster le nombre de joueurs si nécessaire (min 2 par équipe)
++                              final minPlayers = value * 2;
++                              if (settings.numberOfPlayers < minPlayers) {
++                                provider.updateSettings(
++                                    numberOfPlayers: minPlayers);
++                              }
++                            },
+                           ),
+-                        ],
++                        ),
++                      ],
++                    ),
++                    const SizedBox(height: 24),
++
++                    // Choix des mots
++                    KeyedSubtree(
++                      key: _wordChoiceKey,
++                      child: _buildSection(
++                        title: 'Choix des mots',
++                        child: AppToggle(
++                          options: const [
++                            AppConstants.wordChoiceCustom,
++                            AppConstants.wordChoiceRandom
++                          ],
++                          selected: settings.wordChoice,
++                          onChange: (value) =>
++                              provider.updateSettings(wordChoice: value),
++                        ),
+                       ),
+                     ),
+-                  ),
++                    const SizedBox(height: 12),
+ 
+-                  const SizedBox(height: 32),
+-
+-                  // Avertissement si trop de mots
+-                  if (settings.totalWords > 50)
+-                    Padding(
+-                      padding: const EdgeInsets.only(bottom: 16),
+-                      child: Row(
+-                        mainAxisAlignment: MainAxisAlignment.center,
+-                        children: [
+-                          const Icon(
+-                            Icons.info_outline,
+-                            color: AppColors.warning,
+-                            size: 16,
+-                          ),
+-                          const SizedBox(width: 6),
+-                          Text.rich(
+-                            TextSpan(
+-                              children: [
+-                                TextSpan(
+-                                  text:
+-                                      '${settings.totalWords} mots : partie longue ! Réglable via ',
+-                                ),
+-                                const WidgetSpan(
+-                                  alignment: PlaceholderAlignment.middle,
+-                                  child: Icon(
+-                                    Icons.settings,
+-                                    color: AppColors.warning,
+-                                    size: 14,
++                    // Choix des catégories (sous le toggle)
++                    GestureDetector(
++                      key: _categoriesKey,
++                      onTap: () =>
++                          provider.goToScreen(AppConstants.screenCategories),
++                      child: Container(
++                        padding: const EdgeInsets.symmetric(
++                            vertical: 12, horizontal: 16),
++                        decoration: BoxDecoration(
++                          color: AppColors.backgroundCard,
++                          borderRadius: BorderRadius.circular(12),
++                          border:
++                              Border.all(color: AppColors.gray600, width: 1.5),
++                        ),
++                        child: Row(
++                          mainAxisSize: MainAxisSize.min,
++                          children: [
++                            AnimatedBuilder(
++                              animation: _pulseAnimation,
++                              builder: (context, child) {
++                                return Transform.scale(
++                                  scale: _pulseAnimation.value,
++                                  child: const Icon(
++                                    Icons.category,
++                                    color: Colors.white,
++                                    size: 20,
+                                   ),
+-                                ),
+-                              ],
++                                );
++                              },
+                             ),
+-                            style: const TextStyle(
+-                              fontFamily: 'Poppins',
+-                              fontSize: 12,
+-                              color: AppColors.warning,
++                            const SizedBox(width: 10),
++                            const Text(
++                              'Catégories & Difficultés',
++                              style: TextStyle(
++                                fontFamily: 'Poppins',
++                                fontSize: 14,
++                                fontWeight: FontWeight.w500,
++                                color: Colors.white,
++                              ),
+                             ),
+-                          ),
+-                        ],
++                            const SizedBox(width: 8),
++                            const Icon(
++                              Icons.chevron_right,
++                              color: AppColors.gray400,
++                              size: 20,
++                            ),
++                          ],
++                        ),
+                       ),
+                     ),
+ 
+-                  // Bouton suivant
+-                  AppButton(
+-                    text: 'Suivant',
+-                    variant: AppButtonVariant.primary,
+-                    size: AppButtonSize.large,
+-                    fullWidth: true,
+-                    onPressed: () async {
+-                      // Si mode aléatoire, vérifier le nombre de mots disponibles
+-                      if (settings.wordChoice ==
+-                          AppConstants.wordChoiceRandom) {
+-                        final totalWordsNeeded = settings.totalWords;
+-                        final availableWords = await getTotalWordsCountAsync(
+-                          settings.selectedCategories,
+-                          difficultyLevels: settings.selectedDifficultyLevels,
+-                        );
++                    const SizedBox(height: 32),
++
++                    // Avertissement si trop de mots
++                    if (settings.totalWords > 50)
++                      Padding(
++                        padding: const EdgeInsets.only(bottom: 16),
++                        child: Row(
++                          mainAxisAlignment: MainAxisAlignment.center,
++                          children: [
++                            const Icon(
++                              Icons.info_outline,
++                              color: AppColors.warning,
++                              size: 16,
++                            ),
++                            const SizedBox(width: 6),
++                            Text.rich(
++                              TextSpan(
++                                children: [
++                                  TextSpan(
++                                    text:
++                                        '${settings.totalWords} mots : partie longue ! Réglable via ',
++                                  ),
++                                  const WidgetSpan(
++                                    alignment: PlaceholderAlignment.middle,
++                                    child: Icon(
++                                      Icons.settings,
++                                      color: AppColors.warning,
++                                      size: 14,
++                                    ),
++                                  ),
++                                ],
++                              ),
++                              style: const TextStyle(
++                                fontFamily: 'Poppins',
++                                fontSize: 12,
++                                color: AppColors.warning,
++                              ),
++                            ),
++                          ],
++                        ),
++                      ),
+ 
+-                        if (availableWords < totalWordsNeeded) {
+-                          _showNotEnoughWordsWarning(context, provider,
+-                              availableWords, totalWordsNeeded);
+-                          return;
++                    // Bouton suivant
++                    AppButton(
++                      text: 'Suivant',
++                      variant: AppButtonVariant.primary,
++                      size: AppButtonSize.large,
++                      fullWidth: true,
++                      onPressed: () async {
++                        // Si mode aléatoire, vérifier le nombre de mots disponibles
++                        if (settings.wordChoice ==
++                            AppConstants.wordChoiceRandom) {
++                          final totalWordsNeeded = settings.totalWords;
++                          final availableWords = await getTotalWordsCountAsync(
++                            settings.selectedCategories,
++                            difficultyLevels: settings.selectedDifficultyLevels,
++                          );
++
++                          if (availableWords < totalWordsNeeded) {
++                            _showNotEnoughWordsWarning(context, provider,
++                                availableWords, totalWordsNeeded);
++                            return;
++                          }
+                         }
+-                      }
+-                      provider.goToScreen(AppConstants.screenPlayers);
+-                    },
+-                  ),
+-                  const SizedBox(height: 24),
+-                ],
++                        provider.goToScreen(AppConstants.screenPlayers);
++                      },
++                    ),
++                    const SizedBox(height: 24),
++                  ],
++                ),
+               ),
+             ),
+-          ),
+-          AppBackButton(
+-            onPressed: () => provider.goToScreen(
+-              provider.pendingFiesta != null
+-                  ? AppConstants.screenFiestaRecap
+-                  : AppConstants.screenHome,
++            AppBackButton(
++              onPressed: () => provider.goToScreen(AppConstants.screenHome),
+             ),
+-          ),
+-          // Boutons en haut à droite : Réinitialiser + Paramètres avancés
+-          Positioned(
+-            top: MediaQuery.of(context).padding.top + 16,
+-            right: 16,
+-            child: Row(
+-              children: [
+-                HelpButton.inline(
+-                  onPressed: () => CoachMarks.show(
+-                    context,
+-                    settingsHelp(
+-                      counts: _countsKey,
+-                      wordChoice: _wordChoiceKey,
+-                      categories: _categoriesKey,
+-                      advanced: _advancedKey,
+-                      passPenalty: provider.settings.passPenalty,
+-                    ),
+-                  ),
+-                ),
+-                const SizedBox(width: 12),
+-                // Bouton réinitialiser
+-                GestureDetector(
+-                  onTap: () => _showResetConfirmation(context, provider),
+-                  child: Container(
+-                    width: 48,
+-                    height: 48,
+-                    decoration: BoxDecoration(
+-                      color: AppColors.backgroundCard,
+-                      shape: BoxShape.circle,
+-                      border: Border.all(color: AppColors.gray600, width: 2),
+-                    ),
+-                    child: const Icon(
+-                      Icons.refresh,
+-                      color: Colors.white,
+-                      size: 24,
++            // Boutons en haut à droite : aide + Paramètres avancés
++            Positioned(
++              top: MediaQuery.of(context).padding.top + 16,
++              right: 16,
++              child: Row(
++                children: [
++                  HelpButton.inline(
++                    onPressed: () => CoachMarks.show(
++                      context,
++                      settingsHelp(
++                        mode: _modeKey,
++                        counts: _countsKey,
++                        wordChoice: _wordChoiceKey,
++                        categories: _categoriesKey,
++                        advanced: _advancedKey,
++                        passPenalty: provider.settings.passPenalty,
++                      ),
+                     ),
+                   ),
+-                ),
+-                const SizedBox(width: 12),
+-                // Bouton paramètres avancés
+-                GestureDetector(
+-                  key: _advancedKey,
+-                  onTap: () {
+-                    // Marquer comme vu et arrêter l'animation
+-                    if (_showAdvancedAnimation) {
+-                      StorageService().markAdvancedSettingsSeen();
+-                      setState(() {
+-                        _showAdvancedAnimation = false;
+-                      });
+-                    }
+-                    _showAdvancedSettings(context, provider);
+-                  },
+-                  child: AnimatedBuilder(
+-                    animation: _pulseAnimation,
+-                    builder: (context, child) {
+-                      return Transform.scale(
+-                        scale: _showAdvancedAnimation
+-                            ? _pulseAnimation.value
+-                            : 1.0,
+-                        child: Container(
+-                          width: 48,
+-                          height: 48,
+-                          decoration: BoxDecoration(
+-                            color: AppColors.backgroundCard,
+-                            shape: BoxShape.circle,
+-                            border:
+-                                Border.all(color: AppColors.gray600, width: 2),
+-                          ),
+-                          child: const Icon(
+-                            Icons.settings,
+-                            color: Colors.white,
+-                            size: 24,
+-                          ),
+-                        ),
+-                      );
++                  const SizedBox(width: 12),
++                  // Bouton paramètres avancés
++                  GestureDetector(
++                    key: _advancedKey,
++                    onTap: () {
++                      // Marquer comme vu et arrêter l'animation
++                      if (_showAdvancedAnimation) {
++                        StorageService().markAdvancedSettingsSeen();
++                        setState(() {
++                          _showAdvancedAnimation = false;
++                        });
++                      }
++                      _showAdvancedSettings(context, provider);
+                     },
++                    child: AnimatedBuilder(
++                      animation: _pulseAnimation,
++                      builder: (context, child) {
++                        return Transform.scale(
++                          scale: _showAdvancedAnimation
++                              ? _pulseAnimation.value
++                              : 1.0,
++                          child: Container(
++                            width: 48,
++                            height: 48,
++                            decoration: BoxDecoration(
++                              color: AppColors.backgroundCard,
++                              shape: BoxShape.circle,
++                              border: Border.all(
++                                  color: AppColors.gray600, width: 2),
++                            ),
++                            child: const Icon(
++                              Icons.settings,
++                              color: Colors.white,
++                              size: 24,
++                            ),
++                          ),
++                        );
++                      },
++                    ),
+                   ),
+-                ),
+-              ],
++                ],
++              ),
+             ),
+-          ),
+-        ],
++          ],
++        ),
+       ),
+     );
+   }
+@@ -466,6 +507,7 @@ class _SettingsScreenState extends State<SettingsScreen>
+   }
+ 
+   void _showAdvancedSettings(BuildContext context, GameProvider provider) {
++    final screenContext = context;
+     AppModal.show(
+       context,
+       title: 'Avancés',
+@@ -517,6 +559,46 @@ class _SettingsScreenState extends State<SettingsScreen>
+                     setState(() {});
+                   },
+                 ),
++
++                // Fiesta : Auto / Personnalisé, seulement en mode Fiesta
++                if (provider.pendingFiesta != null) ...[
++                  const SizedBox(height: 24),
++                  const Align(
++                    alignment: Alignment.centerLeft,
++                    child: Text(
++                      'Fiesta',
++                      style: TextStyle(
++                        fontFamily: 'Poppins',
++                        fontSize: 16,
++                        color: Colors.white,
++                      ),
++                    ),
++                  ),
++                  const SizedBox(height: 12),
++                  AppToggle(
++                    options: const [_auto, _custom],
++                    selected: provider.pendingFiesta!.mode == FiestaMode.custom
++                        ? _custom
++                        : _auto,
++                    onChange: (value) {
++                      _setFiestaMode(provider, value);
++                      setState(() {});
++                    },
++                  ),
++                ],
++
++                // Réinitialiser (ancien bouton rond du coin haut droit) : ferme
++                // « Avancés », puis la même confirmation qu'avant.
++                const SizedBox(height: 24),
++                AppButton(
++                  text: 'Réinitialiser les paramètres',
++                  variant: AppButtonVariant.ghost,
++                  size: AppButtonSize.small,
++                  onPressed: () {
++                    Navigator.of(context).pop();
++                    _showResetConfirmation(screenContext, provider);
++                  },
++                ),
+               ],
+             ),
+           );
+diff --git a/lib/screens/teams_screen.dart b/lib/screens/teams_screen.dart
+index 9a18dd2..b3526e5 100644
+--- a/lib/screens/teams_screen.dart
++++ b/lib/screens/teams_screen.dart
+@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
+ import '../theme/app_theme.dart';
+ import '../providers/game_provider.dart';
+ import '../models/player.dart';
++import '../models/fiesta/fiesta_rules.dart';
+ import '../utils/constants.dart';
+ import '../widgets/common/app_button.dart';
+ import '../widgets/common/app_back_button.dart';
+@@ -84,15 +85,27 @@ class _TeamsScreenState extends State<TeamsScreen> {
+                         ),
+                       AppButton(
+                         key: _startKey,
+-                        text: 'Commencer',
++                        text: provider.pendingFiesta?.mode == FiestaMode.custom
++                            ? 'Suivant'
++                            : 'Commencer',
+                         variant: AppButtonVariant.primary,
+                         size: AppButtonSize.large,
+                         fullWidth: true,
+                         disabled: !allTeamsValid,
+                         onPressed: allTeamsValid
+-                            ? () => provider.startGame(
+-                                  fiesta: provider.pendingFiesta,
+-                                )
++                            ? () {
++                                // Fiesta Personnalisé : on choisit d'abord
++                                // l'ensemble, qui lance la partie.
++                                if (provider.pendingFiesta?.mode ==
++                                    FiestaMode.custom) {
++                                  provider.goToScreen(
++                                      AppConstants.screenFiestaEnsembles);
++                                } else {
++                                  provider.startGame(
++                                    fiesta: provider.pendingFiesta,
++                                  );
++                                }
++                              }
+                             : null,
+                       ),
+                     ],
+diff --git a/lib/utils/constants.dart b/lib/utils/constants.dart
+index 2e16086..7cf81bc 100644
+--- a/lib/utils/constants.dart
++++ b/lib/utils/constants.dart
+@@ -50,10 +50,9 @@ class AppConstants {
+   static const String screenStats = 'stats';
+   static const String screenCategories = 'categories';
+   static const String screenHistory = 'history';
+-  static const String screenGameMode = 'gameMode';
+-  static const String screenFiestaChoice = 'fiestaChoice';
+-  static const String screenFiestaAuto = 'fiestaAuto';
+-  static const String screenFiestaRecap = 'fiestaRecap';
++  // Les anciens écrans « gameMode », « fiestaChoice », « fiestaAuto » et
++  // « fiestaRecap » ont disparu (2026-11-04) : un nom relu d'une version
++  // d'avant tombe sur l'accueil (`_buildCurrentScreen`, cas par défaut).
+   static const String screenFiestaEnsembles = 'fiestaEnsembles';
+ 
+   // Word choice modes
+diff --git a/lib/widgets/CLAUDE.md b/lib/widgets/CLAUDE.md
+index 99da097..afc1827 100644
+--- a/lib/widgets/CLAUDE.md
++++ b/lib/widgets/CLAUDE.md
+@@ -8,7 +8,7 @@ Widgets reutilisables organises en deux sous-repertoires.
+ |------------|------|
+ | `common/` | Composants UI reutilisables (boutons, inputs, modals, sliders, toggles) |
+ | `effects/` | Effets visuels et animations de fond |
+-| `fiesta/` | Squelette et cartes des ecrans de choix du mode Fiesta (retour systeme Android gere) ; kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawCard` (« Tirage de la manche N », avant-tour M1) / `RoundDrawLine` (même tirage en une ligne, transition), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `TurnTimeCard` (« Temps du tour », detail + total, avant-tour) `CatchUpLine` (« Rattrapage » en une ligne, transition) et `BlockedGuesser` (selecteur « Les adversaires choisissent » + annonce « X ne repond pas », 2-8) ; kit 2-10 (`offer_widgets.dart`, sans Provider) : `PickThreeCard`, `PassPhonePanel`, `OfferChoiceBody` (sélection tenue par l'appelant), `AppBoostLine` (une ligne, transition) ; `FiestaInfoLine` (`fiesta_setup_widgets.dart`) = gabarit « Libellé : … » de ces lignes |
++| `fiesta/` | Cartes Fiesta (`FiestaCard`, `FiestaLine`, `FiestaHint`) ; kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawCard` (« Tirage de la manche N », avant-tour M1) / `RoundDrawLine` (même tirage en une ligne, transition), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `TurnTimeCard` (« Temps du tour », detail + total, avant-tour) `CatchUpLine` (« Rattrapage » en une ligne, transition) et `BlockedGuesser` (selecteur « Les adversaires choisissent » + annonce « X ne repond pas », 2-8) ; kit 2-10 (`offer_widgets.dart`, sans Provider) : `PickThreeCard`, `PassPhonePanel`, `OfferChoiceBody` (sélection tenue par l'appelant), `AppBoostLine` (une ligne, transition) ; `FiestaInfoLine` (`fiesta_setup_widgets.dart`) = gabarit « Libellé : … » de ces lignes |
+ | `help/` | Aides de prise en main : `HelpButton` (« ? »), `CoachMarks` (voile + bulle, étapes `CoachStep` ciblées par `GlobalKey`), textes par écran (`help_content.dart`), `TutorialPager`, `FirstGamePrompt` (tuto des règles d'office au 1er « Jouer »), `FirstGameHelp` (aides auto de la 1re partie). Branchement écran par écran → `help/WIRING.md` |
+ 
+ ## Kit visuel du tour Fiesta (`fiesta/fiesta_turn_widgets.dart`)
+diff --git a/lib/widgets/fiesta/fiesta_setup_widgets.dart b/lib/widgets/fiesta/fiesta_setup_widgets.dart
+index c315a8d..8ad54a0 100644
+--- a/lib/widgets/fiesta/fiesta_setup_widgets.dart
++++ b/lib/widgets/fiesta/fiesta_setup_widgets.dart
+@@ -1,167 +1,6 @@
+ import 'package:flutter/material.dart';
+ 
+-import '../../models/fiesta/fiesta_rules.dart';
+ import '../../theme/app_theme.dart';
+-import '../common/app_back_button.dart';
+-import '../effects/shooting_stars.dart';
+-import '../help/help_button.dart';
+-
+-/// Squelette commun des écrans de choix du mode (Mode de jeu, Fiesta, Auto,
+-/// Récap) : titre, contenu défilant, bouton bas, et retour — bouton ET geste
+-/// système (Android) — vers [onBack], pour ne pas quitter l'app par surprise.
+-class FiestaSetupScaffold extends StatelessWidget {
+-  final String title;
+-  final String? subtitle;
+-  final VoidCallback onBack;
+-
+-  /// Le « ? » en haut à droite (les écrans Fiesta rouvrent le tuto Fiesta).
+-  final VoidCallback onHelp;
+-  final List<Widget> content;
+-  final Widget bottom;
+-
+-  const FiestaSetupScaffold({
+-    required this.title,
+-    this.subtitle,
+-    required this.onBack,
+-    required this.onHelp,
+-    required this.content,
+-    required this.bottom,
+-    super.key,
+-  });
+-
+-  @override
+-  Widget build(BuildContext context) {
+-    return PopScope(
+-      canPop: false,
+-      onPopInvokedWithResult: (didPop, _) {
+-        if (!didPop) onBack();
+-      },
+-      child: ShootingStars(
+-        child: Stack(
+-          children: [
+-            SafeArea(
+-              child: Padding(
+-                padding: const EdgeInsets.all(24),
+-                child: Column(
+-                  children: [
+-                    Expanded(
+-                      child: SingleChildScrollView(
+-                        child: Column(
+-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+-                          children: [
+-                            const SizedBox(height: 48),
+-                            Text(
+-                              title,
+-                              textAlign: TextAlign.center,
+-                              style: AppTextStyles.subtitle(fontSize: 40),
+-                            ),
+-                            if (subtitle != null) ...[
+-                              const SizedBox(height: 4),
+-                              Text(
+-                                subtitle!,
+-                                textAlign: TextAlign.center,
+-                                style: AppTextStyles.bodySmall
+-                                    .copyWith(color: AppColors.gray400),
+-                              ),
+-                            ],
+-                            const SizedBox(height: 24),
+-                            ...content,
+-                          ],
+-                        ),
+-                      ),
+-                    ),
+-                    const SizedBox(height: 16),
+-                    bottom,
+-                  ],
+-                ),
+-              ),
+-            ),
+-            AppBackButton(onPressed: onBack),
+-            HelpButton(onPressed: onHelp),
+-          ],
+-        ),
+-      ),
+-    );
+-  }
+-}
+-
+-/// Carte sélectionnable (maquette `.pick`).
+-class FiestaPickCard extends StatelessWidget {
+-  final String icon;
+-  final String title;
+-  final String description;
+-  final bool selected;
+-  final VoidCallback onTap;
+-
+-  const FiestaPickCard({
+-    required this.icon,
+-    required this.title,
+-    required this.description,
+-    required this.selected,
+-    required this.onTap,
+-    super.key,
+-  });
+-
+-  @override
+-  Widget build(BuildContext context) {
+-    return Padding(
+-      padding: const EdgeInsets.only(bottom: 12),
+-      child: GestureDetector(
+-        onTap: onTap,
+-        child: Container(
+-          padding: const EdgeInsets.all(14),
+-          decoration: BoxDecoration(
+-            color: AppColors.backgroundCard,
+-            borderRadius: BorderRadius.circular(16),
+-            border: Border.all(
+-              color: selected ? AppColors.secondaryCyan : AppColors.gray600,
+-              width: 2,
+-            ),
+-          ),
+-          child: Row(
+-            crossAxisAlignment: CrossAxisAlignment.start,
+-            children: [
+-              Container(
+-                width: 44,
+-                height: 44,
+-                alignment: Alignment.center,
+-                decoration: BoxDecoration(
+-                  color: AppColors.secondaryCyan.withValues(alpha: 0.18),
+-                  borderRadius: BorderRadius.circular(14),
+-                ),
+-                child: Text(
+-                  icon,
+-                  style: const TextStyle(
+-                    fontFamily: 'Bangers',
+-                    fontSize: 22,
+-                    color: AppColors.secondaryCyan,
+-                  ),
+-                ),
+-              ),
+-              const SizedBox(width: 12),
+-              Expanded(
+-                child: Column(
+-                  crossAxisAlignment: CrossAxisAlignment.start,
+-                  children: [
+-                    Text(title, style: AppTextStyles.label),
+-                    const SizedBox(height: 2),
+-                    Text(
+-                      description,
+-                      style: AppTextStyles.bodySmall.copyWith(
+-                        fontSize: 12,
+-                        color: AppColors.gray400,
+-                      ),
+-                    ),
+-                  ],
+-                ),
+-              ),
+-            ],
+-          ),
+-        ),
+-      ),
+-    );
+-  }
+-}
+ 
+ /// Carte à titre en capitales (maquette `.card`), [trailing] à droite du titre.
+ class FiestaCard extends StatelessWidget {
+@@ -213,7 +52,7 @@ class FiestaCard extends StatelessWidget {
+ }
+ 
+ /// Ligne libellé + détail, avec un interrupteur si [onChanged] est donné,
+-/// sinon « Oui / Non » en lecture seule (Récap).
++/// sinon « Oui / Non » en lecture seule.
+ class FiestaLine extends StatelessWidget {
+   final String label;
+   final String? detail;
+@@ -270,38 +109,6 @@ class FiestaLine extends StatelessWidget {
+   }
+ }
+ 
+-/// La règle commune Fiesta (maquette `commonCard`). Le temps reporté de fin
+-/// de manche n'est pas un réglage : il est toujours conservé.
+-class FiestaCommonRulesCard extends StatelessWidget {
+-  final bool oneAnswer;
+-
+-  /// Nul = lecture seule (Récap).
+-  final void Function({bool? oneAnswer})? onChanged;
+-
+-  const FiestaCommonRulesCard({
+-    required this.oneAnswer,
+-    this.onChanged,
+-    super.key,
+-  });
+-
+-  @override
+-  Widget build(BuildContext context) {
+-    final edit = onChanged;
+-    return FiestaCard(
+-      title: 'Règles communes Fiesta',
+-      children: [
+-        FiestaLine(
+-          label: 'Une seule réponse',
+-          detail: 'Une proposition par mot. Mauvaise réponse → il faut passer '
+-              '(pénalité de passe). Simple annonce, l\'app ne vérifie pas.',
+-          value: oneAnswer,
+-          onChanged: edit == null ? null : (v) => edit(oneAnswer: v),
+-        ),
+-      ],
+-    );
+-  }
+-}
+-
+ /// Texte d'explication gris (maquette `.hint`).
+ class FiestaHint extends StatelessWidget {
+   final String text;
+@@ -351,8 +158,3 @@ WidgetSpan modifierBadgeSpan(Widget badge) => WidgetSpan(
+         child: badge,
+       ),
+     );
+-
+-/// Résumé d'une ligne du rattrapage, pour le Récap (Auto et Personnalisé).
+-String catchUpSummary(CatchUpRules c) =>
+-    '+${c.b1} s / +${c.b2} s × écart (max +${c.cap} s) · '
+-    'leader −${c.mal} s × écart (max −${c.malCap} s)';
+diff --git a/lib/widgets/fiesta/modifier_badge.dart b/lib/widgets/fiesta/modifier_badge.dart
+index d9827e3..b35ab79 100644
+--- a/lib/widgets/fiesta/modifier_badge.dart
++++ b/lib/widgets/fiesta/modifier_badge.dart
+@@ -33,7 +33,8 @@ typedef BadgeExplainWrapper = Future<void> Function(
+     Future<void> Function() show);
+ 
+ /// Pastille « icône + nom » (maquette `.badge`). [label] remplace le nom du
+-/// catalogue (ex. « Une seule réponse », qui n'est pas un modificateur).
++/// catalogue par manche (ex. « Une seule réponse », modificateur de toute la
++/// partie, `kOneAnswer`).
+ ///
+ /// Avec une [description], un tap ouvre une petite fiche qui l'explique.
+ class ModifierBadge extends StatelessWidget {
+diff --git a/lib/widgets/help/WIRING.md b/lib/widgets/help/WIRING.md
+index 620d220..b4ba430 100644
+--- a/lib/widgets/help/WIRING.md
++++ b/lib/widgets/help/WIRING.md
+@@ -29,7 +29,7 @@ résultats finaux en montrent.
+ | Écran | Fonction | Clés à poser | Bouton « ? » |
+ |---|---|---|---|
+ | `home_screen` | `homeHelp` | `play` (« Jouer » **ou** « Nouvelle partie »), `resume` (« Reprendre »), `replay` (« Rejouer »), `rules`, `history` | `right: 16` |
+-| `settings_screen` | `settingsHelp(passPenalty: provider.settings.passPenalty)` | `counts` (cartes Joueurs + Équipes), `wordChoice`, `categories` (bouton Catégories & Difficultés), `advanced` (bouton Avancés) | `HelpButton.inline` en tête de la `Row` Réinitialiser / Avancés |
++| `settings_screen` | `settingsHelp(passPenalty: provider.settings.passPenalty)` | `mode` (interrupteur Classique / Fiesta), `counts` (cartes Joueurs + Équipes), `wordChoice`, `categories` (bouton Catégories & Difficultés), `advanced` (bouton Avancés ; « Réinitialiser les paramètres » vit en bas de cette fenêtre) | `HelpButton.inline` en tête de la `Row` « ? » / Avancés |
+ | `players_screen` | `playersHelp` | `firstPlayer` (ligne du joueur 1), `words` (bouton Saisir/Voir mots du joueur 1), `next` | `right: 16` |
+ | `teams_screen` | `teamsHelp` | `firstTeam` (carte de la 1re équipe), `shuffle`, `start` (« Commencer ») | `right: 16` |
+ | `game_screen` (avant-tour) | `preTurnHelp(playerName: …)` | `team` (nom d'équipe + joueur), `roundRules` (icône info de la manche), `previousTurn` (« Tour précédent »), `start` | `right: besideCornerButton` |
+@@ -69,8 +69,8 @@ traîne pas sur les suivantes. Faux aussi dès que `guessItAll_firstGameDone` es
+ `FirstGameHelp.reset()`. Rien d'autre ne s'affiche tout seul : pas de voile au premier
+ affichage d'un écran.
+ 
+-**Tuto Fiesta (3 cartes), automatique à la première partie Fiesta** — à brancher dans
+-`game_mode_screen`, au choix de Fiesta, avant de naviguer :
++**Tuto Fiesta (3 cartes), automatique au premier choix de Fiesta** — branché dans
++`settings_screen` (`_setMode`), quand l'interrupteur passe sur Fiesta :
+ `if (!await StorageService().hasSeenFiestaTutorial()) await FiestaTutorialScreen.show(context);`
+ (`show` marque le flag).
+ 
+diff --git a/lib/widgets/help/help_content.dart b/lib/widgets/help/help_content.dart
+index e057abf..d3f697b 100644
+--- a/lib/widgets/help/help_content.dart
++++ b/lib/widgets/help/help_content.dart
+@@ -59,6 +59,7 @@ List<CoachStep> homeHelp({
+ // ========== PARAMÈTRES ==========
+ 
+ List<CoachStep> settingsHelp({
++  required GlobalKey mode,
+   required GlobalKey counts,
+   required GlobalKey wordChoice,
+   required GlobalKey categories,
+@@ -66,6 +67,14 @@ List<CoachStep> settingsHelp({
+   required int passPenalty,
+ }) =>
+     [
++      CoachStep(
++        target: mode,
++        title: 'Classique ou Fiesta',
++        text: 'Classique : les 3 manches habituelles. Fiesta : les mêmes '
++            'manches, pimentées de bonus et de malus. En Fiesta, la roue '
++            'crantée choisit Auto (l\'app décide de tout) ou Personnalisé '
++            '(tes propres réglages, choisis après les équipes).',
++      ),
+       CoachStep(
+         target: counts,
+         title: 'Joueurs et équipes',
+@@ -88,7 +97,9 @@ List<CoachStep> settingsHelp({
+         title: 'Avancés',
+         text: 'Le nombre de mots, la durée d\'un tour et la pénalité quand on '
+             'passe un mot. Avec tes réglages : '
+-            '${passPenaltySentence(passPenalty).toLowerCase()}',
++            '${passPenaltySentence(passPenalty).toLowerCase()} En Fiesta, '
++            'c\'est aussi là qu\'on passe d\'Auto à Personnalisé. Tout en '
++            'bas : réinitialiser les paramètres.',
+       ),
+     ];
+ 
+diff --git a/test/models/fiesta/fiesta_catalog_test.dart b/test/models/fiesta/fiesta_catalog_test.dart
+index 50419b1..ad144ab 100644
+--- a/test/models/fiesta/fiesta_catalog_test.dart
++++ b/test/models/fiesta/fiesta_catalog_test.dart
+@@ -52,7 +52,11 @@ void main() {
+       }
+       expect(areCompatible('no_pass', 'two_words'), isFalse);
+       expect(areCompatible('two_words', 'no_pass'), isFalse);
+-      expect(areCompatible('mime_no_fists', 'draw'), isFalse);
++      // « Dessiner » exclut tout mime, et inversement.
++      for (final def in kModifierCatalog.where((d) => d.mime)) {
++        expect(areCompatible('draw', def.id), isFalse, reason: def.id);
++      }
++      expect(kModifierCatalog.where((d) => d.mime), hasLength(3));
+       expect(areCompatible('no_pass', 'reversed'), isTrue);
+     });
+   });
+diff --git a/test/models/fiesta/offers_test.dart b/test/models/fiesta/offers_test.dart
+index 74afae0..4dea49a 100644
+--- a/test/models/fiesta/offers_test.dart
++++ b/test/models/fiesta/offers_test.dart
+@@ -92,15 +92,15 @@ void main() {
+   });
+ 
+   test(
+-      'exclusions : incompatible avec le tirage, plafond de 2, aucune offre '
+-      '→ équipe sautée', () {
++      'exclusions : incompatible avec le tirage, plafond de 3 (Personnalisé), '
++      'aucune offre → équipe sautée', () {
+     const s = Standings({'rose': 14, 'bleue': 8});
+     // `no_pass` tiré pour tous : `two_words` (incompatible) et `no_pass`
+     // contre Rose (déjà subi, carte sans effet) disparaissent.
+     expect(ids(offersFor(s, 'bleue', roundDraw: [forAll('no_pass')])),
+         ['double_points']);
+ 
+-    // Rose a déjà 2 modificateurs (tirage + choix d'une équipe précédente) :
++    // Rose a déjà 3 modificateurs (tirage + choix des équipes précédentes) :
+     // plus de malus contre elle, les bonus pour Bleue restent.
+     final roseChosen = ModifierInstance(
+       catalogId: 'reversed',
+@@ -112,14 +112,29 @@ void main() {
+       round: 2,
+     );
+     expect(
+-        ids(offersFor(s, 'bleue',
+-            roundDraw: [forAll('minus_10s')], choices: {'verte': roseChosen})),
++        ids(offersFor(s, 'bleue', roundDraw: [
++          forAll('minus_10s')
++        ], choices: {
++          'verte': roseChosen,
++          'jaune': ModifierInstance(
++            catalogId: 'no_pass',
++            scope: ModifierScope.round,
++            target: ModifierTarget.team,
++            teamId: 'rose',
++            charges: 0,
++            nature: ModifierNature.malus,
++            round: 2,
++          ),
++        })),
+         unorderedEquals(['double_points', 'two_words']));
+ 
+     // Plafond atteint à tous les crans : aucune offre, l'équipe est sautée.
+     expect(
+-        offersFor(s, 'bleue',
+-            roundDraw: [forAll('minus_10s'), forAll('reversed')]),
++        offersFor(s, 'bleue', roundDraw: [
++          forAll('minus_10s'),
++          forAll('reversed'),
++          forAll('free_pass'),
++        ]),
+         isEmpty);
+   });
+ 
+@@ -131,7 +146,7 @@ void main() {
+     expect(stepped.map((o) => kOfferStrength[o.catalogId]),
+         everyElement(OfferStrength.medium));
+ 
+-    // Cran vide APRÈS exclusions : Rose a déjà 2 modificateurs, donc
++    // Cran vide APRÈS exclusions : Rose a déjà 3 modificateurs, donc
+     // `block_guesser` (forte) est exclu et l'on descend quand même.
+     ModifierInstance againstRose(String id) => ModifierInstance(
+           catalogId: id,
+@@ -146,6 +161,7 @@ void main() {
+         ids(offersFor(s, 'bleue', choices: {
+           'verte': againstRose('reversed'),
+           'jaune': againstRose('no_pass'),
++          'violette': againstRose('minus_10s'),
+         })),
+         unorderedEquals(['double_points', 'two_words']));
+   });
+@@ -184,6 +200,17 @@ void main() {
+     expect(wide, hasLength(2));
+     expect(ids(wide), isNot(contains('block_guesser')));
+ 
++    // Plafond de 2 en Auto (3 en Personnalisé) : deux tirages pour tous
++    // remplissent chaque équipe, plus aucun cadeau.
++    expect(
++        appBoost(
++            rules: auto,
++            gameId: 'g',
++            round: 1,
++            standings: const Standings({'rose': 14, 'bleue': 8}),
++            roundDraw: [forAll('minus_10s'), forAll('reversed')]),
++        isEmpty);
++
+     for (var i = 0; i < 50; i++) {
+       final g = boost(
+           const Standings({'rose': 20, 'jaune': 18, 'bleue': 5}), 2, 'game-$i');
+diff --git a/test/models/fiesta/symmetric_draw_test.dart b/test/models/fiesta/symmetric_draw_test.dart
+index ccb4d6e..2bd3586 100644
+--- a/test/models/fiesta/symmetric_draw_test.dart
++++ b/test/models/fiesta/symmetric_draw_test.dart
+@@ -37,11 +37,16 @@ void main() {
+     'Personnalisé, tirage 2': (_) => customAllDraw(),
+     'Personnalisé, tirage 2 + fixé': (round) =>
+         customAllDraw(fixedNoPassRound: round),
++    'Personnalisé, tirage 3': (_) => customAllDraw(drawCount: 3),
++    'Personnalisé, tirage 3 + fixé': (round) =>
++        customAllDraw(drawCount: 3, fixedNoPassRound: round),
+   };
+ 
+   test(
+-      'pour toute config, manche et graine : plafond de 2, aucune paire '
+-      'incompatible, rien de « manche 3 » avant M3, résultat déterministe', () {
++      'pour toute config, manche et graine : plafond (2 en Auto, 3 en '
++      'Personnalisé), aucune paire incompatible, jamais « Dessiner » avec un '
++      'mime, rien de « manche 3 » avant M3, résultat déterministe', () {
++    final seen = <String, Set<int>>{};
+     configs.forEach((label, rulesFor) {
+       for (final round in [1, 2, 3]) {
+         for (final gameId in gameIds) {
+@@ -50,7 +55,13 @@ void main() {
+           final ids = mods.map((m) => m.catalogId).toList();
+           final why = '$label, M$round, $gameId : $ids';
+ 
+-          expect(ids.length, lessThanOrEqualTo(2), reason: why);
++          final cap = label == 'Auto' ? 2 : 3;
++          expect(ids.length, lessThanOrEqualTo(cap), reason: why);
++          (seen[label] ??= {}).add(ids.length);
++          if (ids.contains('draw')) {
++            expect(ids.where((id) => modifierById(id)!.mime), isEmpty,
++                reason: why);
++          }
+           expect(ids, isNot(contains('block_guesser')), reason: why);
+           expect(ids.toSet().length, ids.length, reason: why);
+           for (var i = 0; i < ids.length; i++) {
+@@ -73,6 +84,60 @@ void main() {
+         }
+       }
+     });
++    // Le plafond de 3 est atteint en Personnalisé (sinon il ne prouve rien).
++    expect(seen['Personnalisé, tirage 3'], contains(3));
++    expect(seen['Personnalisé, tirage 3 + fixé'], contains(3));
++  });
++
++  test('M3 : « Dessiner » fixé, mimes tirés pour tous → aucun mime ne sort',
++      () {
++    final rules = FiestaRules(
++      mode: FiestaMode.custom,
++      drawCount: 3,
++      modifiers: {
++        'draw': setting(ModifierArrival.fixed, fixedRound: 3),
++        for (final id in ['mime_no_arms', 'mime_no_fists', 'mime_eyes_closed'])
++          id: setting(ModifierArrival.draw, startRound: 3),
++      },
++    );
++    for (final gameId in gameIds) {
++      expect(
++        roundModifiers(rules, gameId: gameId, round: 3).map((m) => m.catalogId),
++        ['draw'],
++      );
++    }
++  });
++
++  test(
++      '« Une seule réponse » en Auto : déterministe par partie, environ 1 '
++      'fois sur 4', () {
++    // Graine figée (« manche 0 », distincte des manches 1 à 3) : une app mise
++    // à jour retrouve le même tirage pour une partie suspendue.
++    expect(drawSeed('game-0', 0), 2787898305);
++    expect(drawSeed('game-1', 0), 286747006);
++    // Sorties épinglées : `Random(drawSeed(id, 0)).nextInt(4) == 0`.
++    expect([
++      for (var i = 0; i < 12; i++) drawsOneAnswer('game-$i')
++    ], [
++      true,
++      false,
++      false,
++      true,
++      false,
++      false,
++      false,
++      false,
++      true,
++      false,
++      false,
++      false
++    ]);
++
++    final drawn = gameIds.where(drawsOneAnswer).length;
++    expect(drawn, inInclusiveRange(35, 65)); // 200 parties, attendu 50
++    for (final gameId in gameIds) {
++      expect(drawsOneAnswer(gameId), drawsOneAnswer(gameId));
++    }
+   });
+ 
+   test('Auto : 1 ou 2 tirés, les deux cas arrivent', () {
+diff --git a/test/providers/fiesta_freeze_test.dart b/test/providers/fiesta_freeze_test.dart
+index 7dcf0e1..ae80c82 100644
+--- a/test/providers/fiesta_freeze_test.dart
++++ b/test/providers/fiesta_freeze_test.dart
+@@ -1,5 +1,6 @@
+ import 'package:flutter_test/flutter_test.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
+ import 'package:guess_it_all_mobile/providers/game_provider.dart';
+ 
+ import '../helpers/test_prefs.dart';
+@@ -50,6 +51,26 @@ void main() {
+       expect(provider.game.fiesta!.active.map((m) => m.catalogId), ['no_pass']);
+     });
+ 
++    test(
++        '« Une seule réponse » : tirée par partie en Auto (graine du gameId), '
++        'reprise telle quelle de l\'ensemble en Personnalisé', () async {
++      final provider = await givenReadyProvider();
++      final outcomes = <bool>{};
++      for (var i = 0; i < 40; i++) {
++        await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
++        final oneAnswer = provider.game.fiesta!.rules.oneAnswer;
++        expect(oneAnswer, drawsOneAnswer(provider.game.gameId!));
++        outcomes.add(oneAnswer);
++      }
++      expect(outcomes, {true, false});
++
++      for (final chosen in [true, false]) {
++        await provider.startGame(
++            fiesta: FiestaRules(mode: FiestaMode.custom, oneAnswer: chosen));
++        expect(provider.game.fiesta!.rules.oneAnswer, chosen);
++      }
++    });
++
+     test('startGame() sans argument efface la Fiesta de la partie précédente',
+         () async {
+       final provider = await givenReadyProvider();
+diff --git a/test/providers/fiesta_pick_three_test.dart b/test/providers/fiesta_pick_three_test.dart
+index a8a1781..066ad12 100644
+--- a/test/providers/fiesta_pick_three_test.dart
++++ b/test/providers/fiesta_pick_three_test.dart
+@@ -193,8 +193,8 @@ void main() {
+   });
+ 
+   test(
+-      'M2 → M3 : ×2 + blocage de M2 sur le dernier tour, deux tirages en M3. '
+-      'La continuation garde ×2 et blocage, pas les tirages (2 effets, pas 4) ; '
++      'M2 → M3 : ×2 + blocage de M2 sur le dernier tour, trois tirages en M3. '
++      'La continuation garde ×2 et blocage, pas les tirages (2 effets, pas 5) ; '
+       'idem après un kill et un retour arrière ; les tirages de M3 commencent '
+       'au premier vrai tour (epic fix, Codex MAJOR-1)', () async {
+     final provider =
+@@ -210,12 +210,14 @@ void main() {
+       fiesta: FiestaRules(
+         mode: FiestaMode.custom,
+         oneOfThree: true,
+-        drawCount: 2,
++        // 3 tirages en M3 = le plafond du Personnalisé : rien à offrir.
++        drawCount: 3,
+         modifiers: {
+           'block_guesser': setting(ModifierArrival.offer, 2),
+           'double_points': setting(ModifierArrival.fixed, 2),
+           'no_pass': setting(ModifierArrival.draw, 3),
+           'reversed': setting(ModifierArrival.draw, 3),
++          'minus_10s': setting(ModifierArrival.draw, 3),
+         },
+       ),
+     );
+@@ -235,7 +237,7 @@ void main() {
+     provider.setDoublePoints(true);
+     playTurn(provider, 20);
+     expect(provider.nextRoundModifiers.map((m) => m.catalogId),
+-        unorderedEquals(['no_pass', 'reversed']));
++        unorderedEquals(['no_pass', 'reversed', 'minus_10s']));
+     expect(provider.nextChooserId, isNull, reason: 'plafond : rien à offrir');
+     provider.nextRound();
+ 
+@@ -280,9 +282,9 @@ void main() {
+     playTurn(reloaded, 0);
+     expect(reloaded.getCurrentTeam()!.id, leader);
+     expect(reloaded.turnModifiers.map((m) => m.catalogId),
+-        unorderedEquals(['no_pass', 'reversed']));
++        unorderedEquals(['no_pass', 'reversed', 'minus_10s']));
+     expect(reloaded.malusToReveal.map((m) => m.catalogId),
+-        unorderedEquals(['no_pass', 'reversed']));
++        unorderedEquals(['no_pass', 'reversed', 'minus_10s']));
+     expect([reloaded.isDoublePointsOn, reloaded.needsBlockedGuesser],
+         [false, false]);
+     expect(reloaded.game.fiesta!.active.every((m) => m.round == 3), isTrue);
+diff --git a/test/providers/fiesta_replay_test.dart b/test/providers/fiesta_replay_test.dart
+index c4165b0..ed9fecf 100644
+--- a/test/providers/fiesta_replay_test.dart
++++ b/test/providers/fiesta_replay_test.dart
+@@ -29,8 +29,8 @@ void givenWords(GameProvider provider) {
+ 
+ void main() {
+   test(
+-      '« Rejouer » remet la config Fiesta gelée en attente et passe par le '
+-      'Récap ; après une partie Classique, rien en attente', () async {
++      '« Rejouer » remet la config Fiesta gelée en attente et revient aux '
++      'Paramètres ; après une partie Classique, rien en attente', () async {
+     final provider = await givenReadyProvider();
+     provider.setPendingFiesta(
+       FiestaRules(mode: FiestaMode.auto, symmetric: false),
+@@ -39,9 +39,11 @@ void main() {
+ 
+     await provider.restartWithSamePlayers();
+ 
+-    expect(provider.game.currentScreen, AppConstants.screenFiestaRecap);
++    expect(provider.game.currentScreen, AppConstants.screenSettings);
+     expect(provider.pendingFiesta!.mode, FiestaMode.auto);
+-    expect(provider.pendingFiesta!.symmetric, isFalse);
++    // Auto n'a plus d'interrupteurs : un « symétrique coupé » d'une partie
++    // d'avant la mise à jour n'est pas transmis à la suivante.
++    expect(provider.pendingFiesta!.symmetric, isTrue);
+ 
+     // Même chose via l'accueil : fin de partie, puis « Rejouer » de l'accueil.
+     givenWords(provider);
+@@ -49,13 +51,14 @@ void main() {
+     await provider.endGameAndGoHome();
+     await provider.restartWithSamePlayers();
+ 
+-    expect(provider.game.currentScreen, AppConstants.screenFiestaRecap);
+-    expect(provider.pendingFiesta!.symmetric, isFalse);
++    expect(provider.game.currentScreen, AppConstants.screenSettings);
++    expect(provider.pendingFiesta!.mode, FiestaMode.auto);
+ 
+     // App tuée en pleine partie Fiesta : la relance remet la config en attente,
+     // sinon « Retour aux équipes » puis « Lancer » repartirait en Classique.
+     givenWords(provider);
+-    await provider.startGame(fiesta: provider.pendingFiesta);
++    await provider.startGame(
++        fiesta: FiestaRules(mode: FiestaMode.auto, symmetric: false));
+     await pumpEventQueue();
+     final reloaded = GameProvider();
+     await pumpEventQueue();
+diff --git a/test/providers/replay_from_history_test.dart b/test/providers/replay_from_history_test.dart
+index d952aff..453a5ed 100644
+--- a/test/providers/replay_from_history_test.dart
++++ b/test/providers/replay_from_history_test.dart
+@@ -134,7 +134,7 @@ void main() {
+   });
+ 
+   test(
+-      'Fiesta : les règles de l\'archive passent en attente (Récap), même par '
++      'Fiesta : les règles de l\'archive passent en attente (Paramètres), même par '
+       'dessus une partie suspendue', () async {
+     final provider = await givenProvider();
+     for (final name in ['X', 'Y']) {
+@@ -184,11 +184,11 @@ void main() {
+     });
+     expect(provider.pendingFiesta!.toJson(), rules.toJson());
+     expect(provider.game.isGameSuspended, isFalse);
+-    expect(provider.game.currentScreen, AppConstants.screenFiestaRecap);
++    expect(provider.game.currentScreen, AppConstants.screenSettings);
+ 
+     // Aléatoire (réglage de l'archive) : l'écran des mots reste fermé.
+     provider.goToScreen(AppConstants.screenWords);
+-    expect(provider.game.currentScreen, AppConstants.screenFiestaRecap);
++    expect(provider.game.currentScreen, AppConstants.screenSettings);
+   });
+ 
+   test(
+diff --git a/test/providers/settings_persistence_test.dart b/test/providers/settings_persistence_test.dart
+index 075f9c7..b782166 100644
+--- a/test/providers/settings_persistence_test.dart
++++ b/test/providers/settings_persistence_test.dart
+@@ -1,4 +1,5 @@
+ import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+ import 'package:guess_it_all_mobile/providers/game_provider.dart';
+ import 'package:guess_it_all_mobile/utils/constants.dart';
+ 
+@@ -88,6 +89,7 @@ void main() {
+       final provider = await givenProvider();
+ 
+       provider.updateSettings(turnDuration: 45, passPenalty: 2);
++      provider.setPendingFiesta(FiestaRules(mode: FiestaMode.auto));
+       await pumpEventQueue();
+ 
+       await provider.clearLocalStorage();
+@@ -95,6 +97,8 @@ void main() {
+ 
+       expect(provider.settings.turnDuration, AppConstants.defaultTurnDuration);
+       expect(provider.settings.passPenalty, AppConstants.defaultPassPenalty);
++      // Tout réinitialiser = retour au Classique par défaut.
++      expect(provider.pendingFiesta, isNull);
+ 
+       final disk = await persistedData(AppConstants.settingsKey);
+       expect(disk!['turnDuration'], AppConstants.defaultTurnDuration);
+diff --git a/test/screens/home_screen_new_game_test.dart b/test/screens/home_screen_new_game_test.dart
+index a99e808..dfad055 100644
+--- a/test/screens/home_screen_new_game_test.dart
++++ b/test/screens/home_screen_new_game_test.dart
+@@ -55,7 +55,7 @@ void main() {
+     expect(disk['passPenalty'], 2);
+   });
+ 
+-  testWidgets('« Jouer » mène bien au choix du mode de jeu', (tester) async {
++  testWidgets('« Jouer » mène bien aux Paramètres', (tester) async {
+     // Pendant du test précédent : préserver les réglages ne doit pas se faire en
+     // ne faisant plus rien du tout.
+     final provider = await pumpHome(tester);
+@@ -64,6 +64,6 @@ void main() {
+     await tester.runAsync(() => pumpEventQueue());
+     await tester.pump();
+ 
+-    expect(provider.game.currentScreen, AppConstants.screenGameMode);
++    expect(provider.game.currentScreen, AppConstants.screenSettings);
+   });
+ }
+diff --git a/test/screens/settings_system_back_test.dart b/test/screens/settings_system_back_test.dart
+new file mode 100644
+index 0000000..039085b
+--- /dev/null
++++ b/test/screens/settings_system_back_test.dart
+@@ -0,0 +1,34 @@
++import 'package:flutter/material.dart';
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/providers/game_provider.dart';
++import 'package:guess_it_all_mobile/screens/settings_screen.dart';
++import 'package:guess_it_all_mobile/utils/constants.dart';
++import 'package:provider/provider.dart';
++
++import '../helpers/test_prefs.dart';
++
++void main() {
++  // Revue r1 (MAJOR) : Paramètres est l'écran racine du `MaterialApp`, le
++  // retour système d'Android quittait l'app au lieu de revenir à l'accueil.
++  testWidgets('retour système sur Paramètres → accueil, l\'app reste ouverte',
++      (tester) async {
++    await givenPrefs();
++    final provider = GameProvider();
++    await tester.runAsync(() => pumpEventQueue());
++    provider.goToScreen(AppConstants.screenSettings);
++
++    await tester.pumpWidget(
++      ChangeNotifierProvider<GameProvider>.value(
++        value: provider,
++        child: const MaterialApp(home: SettingsScreen()),
++      ),
++    );
++    // pump() : animations en boucle, pumpAndSettle ne converge pas.
++    await tester.pump();
++
++    final handled = await tester.binding.handlePopRoute();
++
++    expect(handled, isTrue, reason: 'non géré = l\'app se ferme');
++    expect(provider.game.currentScreen, AppConstants.screenHome);
++  });
++}
