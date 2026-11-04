@@ -909,6 +909,12 @@ utilisés » devient « Cartouches utilisées » (un malus : « X contre Y »).
 cartouches (une Passe gratuite offerte = un tour, plus toute la manche) ; son malus frappe
 toujours le leader toute la manche (personne pour l'infliger). Un malus infligé interdit dans la
 manche où la cible rejoue (« Autre langue » envoyé en M2, cible qui rejoue en M3) part sans
-effet à la fin de ce tour. Ensembles fournis inchangés (Explosif, L'injustice). Si la zone ne
-tient pas même à 32 px (ensemble « Explosif », 3 équipes et plusieurs envois sur 360 × 740), elle
-défile en garde-fou.
+effet à la fin de ce tour. Ensembles fournis inchangés (Explosif, L'injustice).
+
+**Revue r1.** Les malus reçus se résolvent au tour de la cible (`modifiersForTurn`, seule
+résolution), contre les règles de manche de SA manche et les malus déjà retenus : un malus en
+double ou incompatible (ex. « Interdit de passer » envoyé en fin de M1, « Passe gratuite »
+Toujours en M2) est écarté sans effet, comme un malus interdit dans la manche. L'avant-tour ne
+défile plus : cercles de 50 à 36 px, « Ce tour » sur plusieurs rangées s'il le faut, colonne
+Bonus à la largeur qui minimise les rangées. Résidu : « Explosif » en M3 (11 malus en réserve)
+déborde encore sur 360 × 640, et sur 360 × 740 avec plusieurs malus reçus et envois.
