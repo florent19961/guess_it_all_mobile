@@ -688,3 +688,20 @@ Tutos en `Navigator.push` plutôt qu'en route `currentScreen` : pas de toucher �
 la machine d'écrans. Clés neuves, absentes = `false` : aucune migration (règle 7).
 
 **Conséquence.** Le branchement des autres écrans suit `lib/widgets/help/WIRING.md`.
+
+## 2026-11-04 — Écran entre les manches réduit à l'essentiel
+
+**Quoi.** `transition_screen` ne garde que : « Manche N terminée », une carte sobre « Manche N+1 :
+<mode> » + sa règle, qui commence, le temps bonus conservé (formulation d'avant la refonte #23),
+« Voir les N mots devinés », le bouton. Retirés : la frise des manches, la tuile « N mots
+reviennent dans le chapeau », l'astuce mémoire, l'emoji de fond et l'animation d'entrée. Fiesta :
+le 1 parmi 3 reste une carte (il demande une action) ; tirage, rattrapage et coup de pouce
+deviennent chacun une ligne (`RoundDrawLine`, `CatchUpLine`, `AppBoostLine`, gabarit
+`FiestaInfoLine`) ; `CatchUpCard` et `AppBoostCard` disparaissent.
+
+**Pourquoi.** Retour device de Florent : « Manche 1 terminée, manche 2, c'est ça la règle, et on
+clique sur suivant. » Le reste ralentissait la lecture. Les modificateurs restent des pastilles
+qu'un tap explique : rien de l'information Fiesta n'est perdu, seulement le texte d'explication
+fixe (plafonds du rattrapage, « s'applique à toutes les équipes »).
+
+**Conséquence.** Affichage seul : aucune logique de jeu ni forme persistée touchée.
