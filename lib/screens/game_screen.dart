@@ -648,9 +648,9 @@ class _FiestaAnnouncements extends StatelessWidget {
     if (provider.isDoublePointsOn) {
       label = 'Mot compte double activé';
       detail = 'Les points de ce tour comptent ×2.';
-    } else if (!provider.isDoublePointsArmed && provider.doublePointsCapped) {
+    } else if (!provider.isDoublePointsArmed && provider.doublePointsBlocked) {
       label = 'Activer Mot compte double';
-      detail = 'Impossible : votre équipe a déjà 2 modificateurs ce tour.';
+      detail = 'Impossible : incompatible avec un modificateur de ce tour.';
     } else {
       label = 'Activer Mot compte double';
       detail = '$left charge${left > 1 ? 's' : ''} pour cette manche. '
@@ -681,9 +681,9 @@ class _FiestaAnnouncements extends StatelessWidget {
     if (provider.isTwoWordsOn) {
       label = 'Deux mots à la fois activé';
       detail = 'Deux mots à l\'écran pendant ce tour.';
-    } else if (!provider.isTwoWordsArmed && provider.twoWordsCapped) {
+    } else if (!provider.isTwoWordsArmed && provider.twoWordsBlocked) {
       label = 'Activer Deux mots à la fois';
-      detail = 'Impossible : votre équipe a déjà 2 modificateurs ce tour.';
+      detail = 'Impossible : incompatible avec un modificateur de ce tour.';
     } else {
       label = 'Activer Deux mots à la fois';
       detail = '$left charge${left > 1 ? 's' : ''} pour cette manche.';
@@ -750,14 +750,14 @@ class _FiestaAnnouncements extends StatelessWidget {
   }
 
   Widget _modifiers() {
-    final rules = provider.game.fiesta!.rules;
     final modifiers = provider.currentTeamModifiers;
+    final oneAnswer = provider.isOneAnswer;
 
     if (provider.isFirstTurnOfGame) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (rules.oneAnswer)
+          if (oneAnswer)
             Container(
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(12),
@@ -770,14 +770,14 @@ class _FiestaAnnouncements extends StatelessWidget {
               // Annonce avant le premier tour (en Auto, elle a été tirée au
               // lancement : c'est ici que les joueurs l'apprennent).
               child: Text(
-                '${kOneAnswer.description} Une mauvaise réponse → il faut '
+                'Une seule réponse par mot. Une mauvaise réponse → il faut '
                 'passer (pénalité de passe).',
                 style: AppTextStyles.bodySmall
                     .copyWith(fontSize: 12.5, color: AppColors.warning),
               ),
             ),
           RoundDrawCard(round: 1, modifiers: modifiers),
-          ..._constraints(rules.oneAnswer, modifiers),
+          ..._constraints(oneAnswer, modifiers),
         ],
       );
     }
@@ -790,8 +790,8 @@ class _FiestaAnnouncements extends StatelessWidget {
       key: badgesKey,
       title: 'Actif ce tour',
       children: [
-        ..._constraints(rules.oneAnswer, modifiers),
-        if (inPlay.isEmpty && !doubled && !rules.oneAnswer)
+        ..._constraints(oneAnswer, modifiers),
+        if (inPlay.isEmpty && !doubled)
           const FiestaHint('Aucun modificateur')
         else
           ModifierBadges(
@@ -801,19 +801,6 @@ class _FiestaAnnouncements extends StatelessWidget {
               if (doubled)
                 ModifierBadge.catalog('double_points',
                     nature: ModifierNature.bonus),
-              if (rules.oneAnswer)
-                ModifierBadge(
-                  icon: '☝',
-                  label: kOneAnswer.name,
-                  nature: kOneAnswer.nature,
-                  // Même règle que `_constraints` : sans passe possible, le
-                  // mot est grillé ; sinon il faut le passer.
-                  description: modifiers.any((m) => m.catalogId == 'no_pass')
-                      ? '${kOneAnswer.description} Mauvaise réponse : le '
-                          'mot est grillé jusqu\'à la fin du tour.'
-                      : '${kOneAnswer.description} Mauvaise réponse : il '
-                          'faut passer le mot.',
-                ),
             ],
           ),
       ],

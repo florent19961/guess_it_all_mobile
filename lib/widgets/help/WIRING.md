@@ -31,7 +31,8 @@ résultats finaux en montrent.
 | `home_screen` | `homeHelp` | `play` (« Jouer » **ou** « Nouvelle partie »), `resume` (« Reprendre »), `replay` (« Rejouer »), `rules`, `history` | `right: 16` |
 | `settings_screen` | `settingsHelp(passPenalty: provider.settings.passPenalty)` | `counts` (cartes Joueurs + Équipes), `mode` (interrupteur Classique / Fiesta de la section « Mode de jeu »), `wordChoice`, `categories` (bouton Catégories & Difficultés), `advanced` (bouton Avancés ; « Réinitialiser les paramètres » vit en bas de cette fenêtre) | `HelpButton.inline` en tête de la `Row` « ? » / Avancés |
 | `players_screen` | `playersHelp` | `firstPlayer` (ligne du joueur 1), `words` (bouton Saisir/Voir mots du joueur 1), `next` | `right: 16` |
-| `fiesta_ensembles_screen` (Fiesta Personnalisé) | `fiestaEnsemblesHelp` | `ready` (liste « Prêts à jouer »), `editor` (éditeur en ligne), `next` (« Suivant ») | `right: 16` |
+| `fiesta_ensembles_screen` (Fiesta Personnalisé) | `fiestaEnsemblesHelp` | `ready` (liste « Prêts à jouer »), `create` (« Créer un ensemble » / « Reprendre le brouillon », ou l'alerte de limite), `next` (« Suivant ») | `right: 16` |
+| `fiesta_ensemble_editor_screen` | `fiestaEditorHelp` | `rules` (« Règles de la partie »), `modifiers` (carte Malus), `save` (« Enregistrer ») | `right: 16` |
 | `teams_screen` | `teamsHelp` | `firstTeam` (carte de la 1re équipe), `shuffle`, `start` (« Commencer ») | `right: 16` |
 | `game_screen` (avant-tour) | `preTurnHelp(playerName: …)` | `team` (nom d'équipe + joueur), `roundRules` (icône info de la manche), `previousTurn` (« Tour précédent »), `start` | `right: besideCornerButton` |
 | `game_screen` Fiesta | `fiestaPreTurnHelp` | `badges` (Actif ce tour), `doublePoints` (interrupteur Mot compte double), `turnTime` (`TurnTimeCard`) | même bouton : concaténer `preTurnHelp(...) + fiestaPreTurnHelp(...)` en Fiesta |

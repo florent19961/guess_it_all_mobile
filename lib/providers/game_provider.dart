@@ -113,7 +113,21 @@ class GameProvider extends ChangeNotifier {
                 ?.map((t) => Team.fromJson(t as Map<String, dynamic>))
                 .toList() ??
             _teams;
-        _game = GameState.fromJson(savedState['game'] ?? {});
+        final rawGame = savedState['game'] ?? {};
+        _game = GameState.fromJson(rawGame);
+        // Partie Fiesta d'une forme illisible (ex. Fiesta v1, avant le
+        // modèle des ensembles v2) : on ne la reprend pas en Classique, on
+        // l'abandonne proprement (retour à l'accueil, joueurs et équipes
+        // gardés). Jamais de crash.
+        if (rawGame is Map && GameState.hasUnreadableFiesta(rawGame)) {
+          debugPrint('[GameProvider] Partie Fiesta illisible, abandonnée');
+          _game = GameState();
+          await _storage.clearGameState();
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            notifyListeners();
+          });
+          return;
+        }
         // Partie Fiesta reprise après un kill : remettre sa config gelée en
         // attente, sinon « Retour aux équipes » + « Lancer » la relancerait en
         // Classique. Invariant : en partie, `pendingFiesta` = `fiesta?.rules`.
@@ -438,15 +452,14 @@ class GameProvider extends ChangeNotifier {
     // Générer un gameId unique pour cette partie
     final gameId = _userService.generateGameId();
 
-    // Auto : « Une seule réponse » (toute la partie) est tirée ici, une fois
-    // sur 4, et gelée avec le reste (relue telle quelle après un kill).
+    // Auto : règles exprimées dans le modèle des ensembles (`autoRules`) ;
+    // « Une seule réponse » (toute la partie) est tirée ici, une fois sur 4,
+    // et gelée avec le reste (relue telle quelle après un kill).
     final rules = fiesta == null || fiesta.mode != FiestaMode.auto
         ? fiesta
-        : FiestaRules(
-            mode: FiestaMode.auto,
-            symmetric: fiesta.symmetric,
-            autoCalibrate: fiesta.autoCalibrate,
+        : autoRules(
             oneAnswer: drawsOneAnswer(gameId),
+            autoCalibrate: fiesta.autoCalibrate,
           );
 
     _game = _game.copyWith(
@@ -471,7 +484,11 @@ class GameProvider extends ChangeNotifier {
           ? null
           : FiestaState(
               rules: rules,
-              active: roundModifiers(rules, gameId: gameId, round: 1),
+              active: [
+                ...roundModifiers(rules, gameId: gameId, round: 1),
+                ...stockForRound(rules,
+                    round: 1, teamIds: _teams.map((t) => t.id)),
+              ],
             ),
       clearFiesta: rules == null,
     );
@@ -634,7 +651,8 @@ class GameProvider extends ChangeNotifier {
     final currentWord = _game.currentWord;
     String? drawnSecond;
     if (fiesta != null &&
-        fiesta.turn.charges['two_words'] == ChargeState.spent &&
+        (fiesta.turn.charges['two_words'] == ChargeState.spent ||
+            _isRoundRule('two_words')) &&
         fiesta.turn.secondWord == null &&
         currentWord != null) {
       drawnSecond = drawOtherCard(
@@ -690,7 +708,7 @@ class GameProvider extends ChangeNotifier {
             ? [
                 ...turnModifiers.map((m) => m.catalogId),
                 if (isDoublePointsOn) 'double_points',
-                if (isTwoWordsOn) 'two_words',
+                if (_charge('two_words') == ChargeState.spent) 'two_words',
               ]
             : null,
       );
@@ -1332,6 +1350,9 @@ class GameProvider extends ChangeNotifier {
   bool canPassWith(int displayedSeconds) =>
       !passBlocked && displayedSeconds >= currentPassPenalty;
 
+  /// `one_answer` pèse sur l'équipe qui joue : une seule réponse par mot.
+  bool get isOneAnswer => _has('one_answer');
+
   /// `reversed` : le mot du tour s'affiche à l'envers (tour seulement).
   bool get isWordReversed => _has('reversed');
 
@@ -1379,10 +1400,23 @@ class GameProvider extends ChangeNotifier {
   // Une table (`kChargeBonusKeys`), une implémentation : chaque getter public
   // n'est qu'un id de catalogue.
 
+  /// Une instance « pour tous » (cible `both`) vient d'une règle de manche
+  /// (« Toujours » / « Au tirage ») : elle s'applique d'elle-même, sans
+  /// activation ni charge. Les cartouches (stock, 1 parmi 3, coup de pouce)
+  /// visent une équipe.
+  static bool _isCartridge(ModifierInstance m) =>
+      m.target != ModifierTarget.both;
+
+  /// [id] pèse sur l'équipe qui joue comme règle de manche.
+  bool _isRoundRule(String id) =>
+      currentTeamModifiers.any((m) => m.catalogId == id && !_isCartridge(m));
+
   /// Modificateurs EN JEU pendant le tour (badges du tour, tags analytics) :
-  /// une charge non activée n'en est pas un (activée : badge et tag à part).
+  /// une cartouche à charge non activée n'en est pas un (activée : badge et
+  /// tag à part) ; une règle de manche (ex. « Deux mots » Toujours) en est un.
   List<ModifierInstance> get turnModifiers => currentTeamModifiers
-      .where((m) => !kChargeBonusKeys.containsKey(m.catalogId))
+      .where((m) =>
+          !(kChargeBonusKeys.containsKey(m.catalogId) && _isCartridge(m)))
       .toList();
 
   ChargeState? _charge(String id) => _turn.charges[id];
@@ -1400,17 +1434,19 @@ class GameProvider extends ChangeNotifier {
             u.teamId == teamId &&
             u.round == _game.currentRound)
         .length;
-    return chargeAllowance(currentTeamModifiers, id) - used;
+    return chargeAllowance(
+            currentTeamModifiers.where(_isCartridge).toList(), id) -
+        used;
   }
 
-  /// Q8 : allumer est refusé si l'équipe a déjà 2 modificateurs en jeu, l'autre
-  /// bonus allumé compris.
-  bool _capped(String id) =>
-      turnModifiers.length +
-          kChargeBonusKeys.keys
-              .where((other) => other != id && _charge(other) != null)
-              .length >=
-      2;
+  /// Allumer est refusé si le bonus est incompatible avec un modificateur en
+  /// jeu ou avec l'autre bonus allumé (Fiesta v2 : plus de plafond, seules
+  /// les incompatibilités limitent).
+  bool _blocked(String id) => [
+        ...turnModifiers.map((m) => m.catalogId),
+        ...kChargeBonusKeys.keys
+            .where((other) => other != id && _charge(other) != null),
+      ].any((other) => !areCompatible(other, id));
 
   /// Interrupteur d'un bonus à charge, avant le départ : seul `armed` est
   /// écrit ; la charge se dépense dans `startTurnTimer`.
@@ -1418,7 +1454,7 @@ class GameProvider extends ChangeNotifier {
     final fiesta = _game.fiesta;
     if (fiesta == null ||
         _charge(id) == ChargeState.spent ||
-        (on && (_chargesLeft(id) <= 0 || _capped(id)))) {
+        (on && (_chargesLeft(id) <= 0 || _blocked(id)))) {
       return;
     }
     _game = _game.copyWith(
@@ -1436,14 +1472,18 @@ class GameProvider extends ChangeNotifier {
   /// pour la continuation de fin de manche, qui est le même tour.
   bool get isDoublePointsOn => _charge('double_points') == ChargeState.spent;
   int get doublePointsLeft => _chargesLeft('double_points');
-  bool get doublePointsCapped => _capped('double_points');
+  bool get doublePointsBlocked => _blocked('double_points');
   void setDoublePoints(bool on) => _setCharge('double_points', on);
 
   /// Deux mots à l'écran pendant CE tour (continuation comprise).
   bool get isTwoWordsArmed => _charge('two_words') != null;
-  bool get isTwoWordsOn => _charge('two_words') == ChargeState.spent;
+
+  /// Deux cartes à l'écran : cartouche dépensée, ou règle de manche (qui
+  /// s'applique d'elle-même à chaque tour).
+  bool get isTwoWordsOn =>
+      _charge('two_words') == ChargeState.spent || _isRoundRule('two_words');
   int get twoWordsLeft => _chargesLeft('two_words');
-  bool get twoWordsCapped => _capped('two_words');
+  bool get twoWordsBlocked => _blocked('two_words');
   void setTwoWords(bool on) => _setCharge('two_words', on);
 
   /// Carte B (la carte A est `game.currentWord`). Nulle = une seule carte.
@@ -1546,12 +1586,11 @@ class GameProvider extends ChangeNotifier {
   /// Classement de fin de manche (scores actuels, dans l'ordre des équipes).
   Standings get standings => Standings({for (final t in _teams) t.id: t.score});
 
-  /// Choix déjà faits sur la transition en cours, par équipe qui a choisi.
-  Map<String, ModifierInstance> get _pendingChoices => {
+  /// Choix déjà faits sur la transition en cours, dans l'ordre.
+  List<OfferChoice> get _pendingChoices => [
         for (final c in _game.fiesta?.offerChoices ?? const <OfferChoice>[])
-          if (c.modifier.round == _game.currentRound + 1)
-            c.chooserId: c.modifier,
-      };
+          if (c.modifier.round == _game.currentRound + 1) c,
+      ];
 
   bool get _isPickThreeOn {
     final fiesta = _game.fiesta;
@@ -1560,10 +1599,14 @@ class GameProvider extends ChangeNotifier {
         isPickThreeOn(fiesta.rules, _game.currentRound);
   }
 
-  /// Offres de [teamId] sur la transition, compte tenu du tirage de N+1 et
-  /// des choix déjà faits. Vide hors 1 parmi 3.
-  List<ModifierInstance> offersFor(String teamId) {
+  /// Rangées d'offres de [teamId] sur la transition (une carte à prendre par
+  /// rangée), compte tenu des règles de N+1 et des choix des équipes passées
+  /// AVANT elle dans la file : ses rangées ne bougent pas pendant qu'elle
+  /// choisit. Vide hors 1 parmi 3.
+  List<List<ModifierInstance>> offersFor(String teamId) {
     if (!_isPickThreeOn) return const [];
+    final order = standings.choosingOrder;
+    final before = order.takeWhile((id) => id != teamId).toSet();
     return pickThreeOffers(
       rules: _game.fiesta!.rules,
       gameId: _game.gameId ?? '',
@@ -1571,7 +1614,10 @@ class GameProvider extends ChangeNotifier {
       standings: standings,
       teamId: teamId,
       roundDraw: nextRoundModifiers,
-      choices: _pendingChoices,
+      earlierChoices: [
+        for (final c in _pendingChoices)
+          if (before.contains(c.chooserId)) c.modifier,
+      ],
       blockImmuneTeamIds: {
         for (final t in _teams)
           if (!canBlockGuesser(t.playerIds.length)) t.id,
@@ -1579,14 +1625,55 @@ class GameProvider extends ChangeNotifier {
     );
   }
 
+  /// Cartes déjà prises par [teamId] sur cette transition, par rangée.
+  Map<int, ModifierInstance> chosenBy(String teamId) => {
+        for (final c in _pendingChoices)
+          if (c.chooserId == teamId) c.row: c.modifier,
+      };
+
+  /// La carte n° [index] de la rangée [row] de [teamId] a-t-elle encore un
+  /// effet, compte tenu de ses propres choix dans les autres rangées (déjà
+  /// faits, plus [alsoTaken] : ceux sélectionnés à l'écran, pas encore
+  /// validés) ?
+  bool canChooseOffer(String teamId, int row, int index,
+      {List<ModifierInstance> alsoTaken = const []}) {
+    final rows = offersFor(teamId);
+    if (row < 0 || row >= rows.length) return false;
+    if (index < 0 || index >= rows[row].length) return false;
+    final mine = chosenBy(teamId);
+    if (mine.containsKey(row)) return false;
+    final order = standings.choosingOrder;
+    final before = order.takeWhile((id) => id != teamId).toSet();
+    return isUsefulOffer([
+      ...nextRoundModifiers,
+      for (final c in _pendingChoices)
+        if (before.contains(c.chooserId)) c.modifier,
+      ...mine.values,
+      ...alsoTaken,
+    ], rows[row][index]);
+  }
+
+  /// [teamId] a fini de choisir : une carte prise dans chaque rangée, ou plus
+  /// aucune carte utile dans les rangées restantes.
+  bool _doneChoosing(String teamId) {
+    final rows = offersFor(teamId);
+    final mine = chosenBy(teamId);
+    for (var r = 0; r < rows.length; r++) {
+      if (mine.containsKey(r)) continue;
+      for (var i = 0; i < rows[r].length; i++) {
+        if (canChooseOffer(teamId, r, i)) return false;
+      }
+    }
+    return true;
+  }
+
   /// Prochaine équipe de la file : la première de l'ordre de choix qui n'a
-  /// pas encore choisi et qui a des offres. `null` = file vide (ou pas de
-  /// 1 parmi 3) : « Manche suivante » est permis.
+  /// pas fini de choisir. `null` = file vide (ou pas de 1 parmi 3) :
+  /// « Manche suivante » est permis.
   String? get nextChooserId {
     if (!_isPickThreeOn) return null;
-    final made = _pendingChoices;
     for (final id in standings.choosingOrder) {
-      if (!made.containsKey(id) && offersFor(id).isNotEmpty) return id;
+      if (!_doneChoosing(id)) return id;
     }
     return null;
   }
@@ -1596,16 +1683,21 @@ class GameProvider extends ChangeNotifier {
   bool get hasPickThree =>
       nextChooserId != null || (_isPickThreeOn && _pendingChoices.isNotEmpty);
 
-  /// [teamId] choisit son offre n° [index]. Refusé si ce n'est pas son tour.
-  void chooseOffer(String teamId, int index) {
-    if (teamId != nextChooserId) return;
-    final offers = offersFor(teamId);
-    if (index < 0 || index >= offers.length) return;
+  /// [teamId] prend la carte n° [index] de sa rangée [row]. Refusé si ce
+  /// n'est pas son tour, si la rangée a déjà sa carte, ou si la carte n'a
+  /// plus d'effet.
+  void chooseOffer(String teamId, int row, int index) {
+    if (teamId != nextChooserId || !canChooseOffer(teamId, row, index)) {
+      return;
+    }
     final fiesta = _game.fiesta!;
     _game = _game.copyWith(
       fiesta: fiesta.copyWith(offerChoices: [
         ...fiesta.offerChoices,
-        OfferChoice(chooserId: teamId, modifier: offers[index]),
+        OfferChoice(
+            chooserId: teamId,
+            row: row,
+            modifier: offersFor(teamId)[row][index]),
       ]),
     );
     notifyListeners();
@@ -1809,9 +1901,9 @@ class GameProvider extends ChangeNotifier {
     // Sans partie jouée (Rejouer de l'accueil, après `endGameAndGoHome`), la
     // config déjà en mémoire fait foi.
     if (_game.allWords.isNotEmpty) _pendingFiesta = _game.fiesta?.rules;
-    // Auto = symétrique + auto-calibrage toujours allumés (plus d'écran pour
-    // les couper) : une partie d'avant la mise à jour qui en avait coupé un
-    // ne le transmet pas à la suivante.
+    // Auto = tirage + auto-calibrage toujours allumés (plus d'écran pour les
+    // couper), et « Une seule réponse » se retire à chaque partie : on ne
+    // transmet pas les règles gelées de la partie jouée.
     if (_pendingFiesta?.mode == FiestaMode.auto) {
       _pendingFiesta = FiestaRules(mode: FiestaMode.auto);
     }
@@ -2034,7 +2126,19 @@ class GameProvider extends ChangeNotifier {
       _game.history.isEmpty && _game.currentRound == 1;
 
   // Vérifie si on peut revenir à l'écran de vérification
-  bool get canGoBackToVerification => _game.preValidationSnapshot != null;
+  bool get canGoBackToVerification => _restorableSnapshot != null;
+
+  /// Le `game` du snapshot de retour arrière, s'il est restaurable : écrit à
+  /// plat par l'ancienne version, corrompu, ou Fiesta illisible (forme v1 :
+  /// il serait restauré en Classique) → `null`, on renonce au retour arrière.
+  Map<String, dynamic>? get _restorableSnapshot {
+    final gameJson = _game.preValidationSnapshot?['game'];
+    if (gameJson is! Map<String, dynamic> ||
+        GameState.hasUnreadableFiesta(gameJson)) {
+      return null;
+    }
+    return gameJson;
+  }
 
   // Sauvegarde l'état avant validation (appelé dans verification_screen)
   // validatedWords = les mots que l'utilisateur a choisi de valider
@@ -2071,13 +2175,11 @@ class GameProvider extends ChangeNotifier {
   // Restaure l'état avant validation (appelé quand on clique sur retour)
   void restorePreValidationState() {
     final snapshot = _game.preValidationSnapshot;
-    if (snapshot == null) return;
-
-    final gameJson = snapshot['game'];
-    // Un snapshot écrit par l'ancienne version (format à plat) ou corrompu :
-    // on renonce au retour arrière plutôt que de crasher. L'utilisateur perd la
-    // possibilité de revenir sur CE tour, rien d'autre.
-    if (gameJson is! Map<String, dynamic>) return;
+    // Snapshot non restaurable ([_restorableSnapshot]) : on renonce au retour
+    // arrière plutôt que de crasher ou de repartir en Classique, sans rien
+    // muter. L'utilisateur perd la possibilité de revenir sur CE tour.
+    final gameJson = _restorableSnapshot;
+    if (snapshot == null || gameJson == null) return;
 
     // Restaurer les scores des équipes
     final teamScores = snapshot['teamScores'];

@@ -157,26 +157,33 @@ class ChargeUse {
   }
 }
 
-/// Une carte « 1 parmi 3 » : [chooserId] l'a choisie, [modifier] est
-/// l'instance de la manche suivante (un malus vise le leader, d'où la clé de
-/// celui qui a choisi).
+/// Une carte « 1 parmi 3 » : [chooserId] l'a prise dans sa rangée [row]
+/// (0 à `pick3Choices` − 1), [modifier] est l'instance de la manche suivante
+/// (un malus vise le leader, d'où la clé de celui qui a choisi).
 class OfferChoice {
   final String chooserId;
+  final int row;
   final ModifierInstance modifier;
 
-  const OfferChoice({required this.chooserId, required this.modifier});
+  const OfferChoice({
+    required this.chooserId,
+    this.row = 0,
+    required this.modifier,
+  });
 
   Map<String, dynamic> toJson() =>
-      {'chooserId': chooserId, 'modifier': modifier.toJson()};
+      {'chooserId': chooserId, 'row': row, 'modifier': modifier.toJson()};
 
-  /// Variante tolérante : une entrée illisible est ignorée seule.
+  /// Variante tolérante : une entrée illisible est ignorée seule ; `row`
+  /// absent = 0.
   static OfferChoice? tryFromJson(Map<String, dynamic> json) {
     final chooserId = json['chooserId'];
+    final row = readOr(json, 'row', 0);
     final raw = json['modifier'];
-    if (chooserId is! String || raw is! Map) return null;
+    if (chooserId is! String || row == null || raw is! Map) return null;
     final modifier =
         ModifierInstance.tryFromJson(Map<String, dynamic>.from(raw));
     if (modifier == null) return null;
-    return OfferChoice(chooserId: chooserId, modifier: modifier);
+    return OfferChoice(chooserId: chooserId, row: row, modifier: modifier);
   }
 }

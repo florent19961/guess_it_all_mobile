@@ -3,43 +3,52 @@ import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
 import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
 import 'package:guess_it_all_mobile/models/fiesta/offers.dart';
+import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
 
-/// Personnalisé, 1 parmi 3 allumé, tout le catalogue « proposé » dès M1,
-/// sauf `minus_10s` (tiré pour tous) et `reversed` (dès M3).
-final rules = FiestaRules(
-  mode: FiestaMode.custom,
-  oneOfThree: true,
-  modifiers: {
-    for (final def in kModifierCatalog)
-      def.id: ModifierSetting(
-        active: true,
-        arrival: def.id == 'minus_10s'
-            ? ModifierArrival.draw
-            : ModifierArrival.offer,
-        startRound: def.id == 'reversed' ? 3 : 1,
-        charges: def.defaultCharges,
-      ),
-  },
-);
+/// Personnalisé, tout le catalogue en « 1 parmi 3 », sauf `minus_10s` (au
+/// tirage) et `reversed` (M3 seulement).
+FiestaRules rulesWith({int pick3Choices = 1}) => FiestaRules(
+      mode: FiestaMode.custom,
+      pick3Choices: pick3Choices,
+      modifiers: {
+        for (final def in kModifierCatalog)
+          def.id: ModifierSetting(
+            active: true,
+            rounds: def.id == 'reversed' ? {3} : {1, 2, 3},
+            mode:
+                def.id == 'minus_10s' ? ModifierMode.draw : ModifierMode.offer,
+          ),
+      },
+    );
 
-List<ModifierInstance> offersFor(
+List<List<ModifierInstance>> rowsFor(
   Standings s,
   String teamId, {
-  int round = 1,
-  String gameId = 'g',
+  int pick3Choices = 1,
   List<ModifierInstance> roundDraw = const [],
-  Map<String, ModifierInstance> choices = const {},
+  List<ModifierInstance> earlierChoices = const [],
   Set<String> blockImmuneTeamIds = const {},
 }) =>
     pickThreeOffers(
-        rules: rules,
-        gameId: gameId,
-        round: round,
+        rules: rulesWith(pick3Choices: pick3Choices),
+        gameId: 'g',
+        round: 1,
         standings: s,
         teamId: teamId,
         roundDraw: roundDraw,
-        choices: choices,
+        earlierChoices: earlierChoices,
         blockImmuneTeamIds: blockImmuneTeamIds);
+
+List<ModifierInstance> offersFor(Standings s, String teamId,
+        {List<ModifierInstance> roundDraw = const [],
+        List<ModifierInstance> earlierChoices = const [],
+        Set<String> blockImmuneTeamIds = const {}}) =>
+    rowsFor(s, teamId,
+            roundDraw: roundDraw,
+            earlierChoices: earlierChoices,
+            blockImmuneTeamIds: blockImmuneTeamIds)
+        .firstOrNull ??
+    const [];
 
 ModifierInstance forAll(String id) => ModifierInstance(
       catalogId: id,
@@ -47,6 +56,16 @@ ModifierInstance forAll(String id) => ModifierInstance(
       target: ModifierTarget.both,
       charges: 0,
       nature: modifierById(id)!.nature,
+      round: 2,
+    );
+
+ModifierInstance against(String id, String teamId) => ModifierInstance(
+      catalogId: id,
+      scope: ModifierScope.round,
+      target: ModifierTarget.team,
+      teamId: teamId,
+      charges: 0,
+      nature: ModifierNature.malus,
       round: 2,
     );
 
@@ -75,7 +94,7 @@ void main() {
 
   test(
       'critère 1 : 14–8 → 3 offres « moyennes », bonus pour moi, malus '
-      'contre la tête', () {
+      'contre la tête ; seuls les « 1 parmi 3 » cochés sur N+1', () {
     const s = Standings({'rose': 14, 'bleue': 8});
     final offers = offersFor(s, 'bleue');
     expect(offers, hasLength(3));
@@ -85,85 +104,52 @@ void main() {
       expect(o.round, 2);
     }
     expect(offersFor(s, 'rose'), isEmpty, reason: 'le leader ne choisit pas');
-    // Écart léger : `minus_10s` (tiré pour tous) et `reversed` (dès M3)
-    // ne sont jamais proposés.
+    // Écart léger : `minus_10s` (au tirage) et `reversed` (M3 seulement)
+    // ne sont jamais proposés en M2.
     expect(ids(offersFor(const Standings({'rose': 12, 'bleue': 10}), 'bleue')),
         ['free_pass']);
   });
 
   test(
-      'exclusions : incompatible avec le tirage, plafond de 3 (Personnalisé), '
-      'aucune offre → équipe sautée', () {
+      'exclusions : incompatible avec les règles de N+1, déjà subi ; pas de '
+      'plafond ; aucune offre → équipe sautée', () {
     const s = Standings({'rose': 14, 'bleue': 8});
-    // `no_pass` tiré pour tous : `two_words` (incompatible) et `no_pass`
-    // contre Rose (déjà subi, carte sans effet) disparaissent.
-    expect(ids(offersFor(s, 'bleue', roundDraw: [forAll('no_pass')])),
-        ['other_language', 'double_points']);
+    // `no_pass` pour tous : `two_words` (incompatible) et `no_pass` contre
+    // Rose (déjà subi, carte sans effet) disparaissent.
+    final withNoPass =
+        ids(offersFor(s, 'bleue', roundDraw: [forAll('no_pass')]));
+    expect(withNoPass, isNot(contains('two_words')));
+    expect(withNoPass, isNot(contains('no_pass')));
+    expect(withNoPass, hasLength(3));
 
-    // Rose a déjà 3 modificateurs (tirage + choix des équipes précédentes) :
-    // plus de malus contre elle, les bonus pour Bleue restent.
-    final roseChosen = ModifierInstance(
-      catalogId: 'reversed',
-      scope: ModifierScope.round,
-      target: ModifierTarget.team,
-      teamId: 'rose',
-      charges: 0,
-      nature: ModifierNature.malus,
-      round: 2,
-    );
-    expect(
-        ids(offersFor(s, 'bleue', roundDraw: [
-          forAll('minus_10s')
-        ], choices: {
-          'verte': roseChosen,
-          'jaune': ModifierInstance(
-            catalogId: 'no_pass',
-            scope: ModifierScope.round,
-            target: ModifierTarget.team,
-            teamId: 'rose',
-            charges: 0,
-            nature: ModifierNature.malus,
-            round: 2,
-          ),
-        })),
-        unorderedEquals(['double_points', 'two_words']));
+    // Rose a déjà 3 malus (règles + choix précédents) : plus de plafond, les
+    // malus restants contre elle sont encore proposés.
+    final loaded = offersFor(s, 'bleue', roundDraw: [
+      forAll('minus_10s')
+    ], earlierChoices: [
+      against('reversed', 'rose'),
+      against('no_pass', 'rose')
+    ]);
+    expect(loaded.where((o) => o.nature == ModifierNature.malus), isNotEmpty);
 
-    // Plafond atteint à tous les crans : aucune offre, l'équipe est sautée.
+    // Tout le cran léger déjà en jeu : aucune offre, l'équipe est sautée.
     expect(
-        offersFor(s, 'bleue', roundDraw: [
-          forAll('minus_10s'),
-          forAll('reversed'),
-          forAll('free_pass'),
-        ]),
+        offersFor(const Standings({'rose': 12, 'bleue': 10}), 'bleue',
+            roundDraw: [forAll('free_pass')]),
         isEmpty);
   });
 
   test('cran vide : on descend d\'un cran (forte → moyenne)', () {
     const s = Standings({'rose': 14, 'bleue': 5});
-    expect(ids(offersFor(s, 'bleue')), ['block_guesser']);
+    final heavy = offersFor(s, 'bleue');
+    expect(heavy.map((o) => kOfferStrength[o.catalogId]),
+        everyElement(OfferStrength.heavy));
+    // Rose immunisée contre « Bloquer un devineur » et mimes hors de M2 : le
+    // cran fort est vide, on descend.
     final stepped = offersFor(s, 'bleue', blockImmuneTeamIds: {'rose'});
     expect(stepped, hasLength(3));
     expect(stepped.map((o) => kOfferStrength[o.catalogId]),
         everyElement(OfferStrength.medium));
-
-    // Cran vide APRÈS exclusions : Rose a déjà 3 modificateurs, donc
-    // `block_guesser` (forte) est exclu et l'on descend quand même.
-    ModifierInstance againstRose(String id) => ModifierInstance(
-          catalogId: id,
-          scope: ModifierScope.round,
-          target: ModifierTarget.team,
-          teamId: 'rose',
-          charges: 0,
-          nature: ModifierNature.malus,
-          round: 2,
-        );
-    expect(
-        ids(offersFor(s, 'bleue', choices: {
-          'verte': againstRose('reversed'),
-          'jaune': againstRose('no_pass'),
-          'violette': againstRose('minus_10s'),
-        })),
-        unorderedEquals(['double_points', 'two_words']));
   });
 
   test(
@@ -171,20 +157,47 @@ void main() {
       'retrouve les mêmes offres', () {
     expect(offerSeed('g', 1, 'bleue'), 1610297326);
     expect(ids(offersFor(const Standings({'rose': 14, 'bleue': 8}), 'bleue')),
-        ['no_pass', 'two_words', 'other_language']);
+        ['double_points', 'one_answer', 'other_language']);
+  });
+
+  test(
+      'plusieurs rangées : pick3Choices rangées de 3 au plus, sans id repris '
+      'd\'une rangée à l\'autre, déterministes ; une rangée vide n\'est pas '
+      'rendue', () {
+    const s = Standings({'rose': 14, 'bleue': 8});
+    for (final n in [1, 2, 3]) {
+      final rows = rowsFor(s, 'bleue', pick3Choices: n);
+      final all = [for (final r in rows) ...ids(r)];
+      expect(rows.length, lessThanOrEqualTo(n));
+      expect(rows.every((r) => r.isNotEmpty && r.length <= 3), isTrue);
+      expect(all.toSet().length, all.length, reason: '$all');
+      expect([for (final r in rowsFor(s, 'bleue', pick3Choices: n)) ...ids(r)],
+          all);
+      // La rangée 0 ne dépend pas du nombre de rangées.
+      expect(
+          ids(rows.first), ['double_points', 'one_answer', 'other_language']);
+    }
+    expect(rowsFor(s, 'bleue', pick3Choices: 2), hasLength(2));
+    // Cran léger (écart 2) : une seule carte utile, la 2ᵉ rangée descend
+    // d'un cran sans rien trouver → une seule rangée.
+    expect(
+        rowsFor(const Standings({'rose': 12, 'bleue': 10}), 'bleue',
+            pick3Choices: 3),
+        hasLength(1));
   });
 
   test(
       'coup de pouce (Auto) : un bonus par menée, un malus pour la tête, '
       'jamais « Bloquer un devineur »', () {
-    final auto = FiestaRules(mode: FiestaMode.auto);
-    List<ModifierInstance> boost(Standings s, int round, String gameId) =>
+    final auto = autoRules(oneAnswer: false);
+    List<ModifierInstance> boost(Standings s, int round, String gameId,
+            [List<ModifierInstance> draw = const []]) =>
         appBoost(
             rules: auto,
             gameId: gameId,
             round: round,
             standings: s,
-            roundDraw: const []);
+            roundDraw: draw);
 
     final gifts = boost(const Standings({'rose': 14, 'bleue': 8}), 1, 'g');
     expect(gifts.map((g) => (g.teamId, g.nature)), [
@@ -199,17 +212,6 @@ void main() {
     final wide = boost(const Standings({'rose': 20, 'bleue': 10}), 1, 'g');
     expect(wide, hasLength(2));
     expect(ids(wide), isNot(contains('block_guesser')));
-
-    // Plafond de 2 en Auto (3 en Personnalisé) : deux tirages pour tous
-    // remplissent chaque équipe, plus aucun cadeau.
-    expect(
-        appBoost(
-            rules: auto,
-            gameId: 'g',
-            round: 1,
-            standings: const Standings({'rose': 14, 'bleue': 8}),
-            roundDraw: [forAll('minus_10s'), forAll('reversed')]),
-        isEmpty);
 
     for (var i = 0; i < 50; i++) {
       final g = boost(

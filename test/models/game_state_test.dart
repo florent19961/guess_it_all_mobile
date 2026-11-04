@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_state.dart';
 import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
 import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
+import 'package:guess_it_all_mobile/models/fiesta/round_transition.dart';
 import 'package:guess_it_all_mobile/models/game_state.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
 
@@ -127,26 +130,24 @@ void main() {
           rules: FiestaRules(
             mode: FiestaMode.custom,
             ensembleName: 'Soirée chez Max',
-            modifiers: const {
+            modifiers: {
               'free_pass': ModifierSetting(
                 active: true,
-                arrival: ModifierArrival.offer,
-                startRound: 2,
+                rounds: const {2, 3},
+                mode: ModifierMode.stock,
                 charges: 3,
+                perGame: true,
               ),
               'draw': ModifierSetting(
                 active: true,
-                arrival: ModifierArrival.fixed,
-                startRound: 3,
-                fixedRound: 3,
-                charges: 0,
+                rounds: const {3},
+                mode: ModifierMode.always,
               ),
             },
-            oneOfThree: true,
+            pick3Choices: 2,
             catchUp:
                 const CatchUpRules(b1: 2, b2: 4, cap: 20, mal: 1, malCap: 10),
             drawCount: 2,
-            oneAnswer: false,
           ),
           active: const [instance],
         );
@@ -214,20 +215,22 @@ void main() {
       final json = GameState(gameId: 'abc', fiesta: fiestaState()).toJson();
       final rules = (json['fiesta'] as Map<String, dynamic>)['rules']
           as Map<String, dynamic>;
-      rules.remove('oneAnswer');
+      rules.remove('pick3Choices');
       rules['fromTheFuture'] = 42;
       (rules['catchUp'] as Map<String, dynamic>).remove('malCap');
 
       final restored = GameState.fromJson(json);
 
       expect(restored.fiesta, isNotNull);
-      expect(restored.fiesta!.rules.oneAnswer, isTrue);
+      expect(restored.fiesta!.rules.pick3Choices, 1);
       expect(restored.fiesta!.rules.catchUp.malCap, CatchUpRules.auto.malCap);
       expect(restored.fiesta!.rules.catchUp.b1, 2,
           reason: 'les présents restent');
 
-      rules['oneAnswer'] = 'oui';
+      rules['pick3Choices'] = 'deux';
       expect(GameState.fromJson(json).fiesta, isNull);
+      rules['pick3Choices'] = 4;
+      expect(GameState.fromJson(json).fiesta, isNull, reason: 'hors bornes');
     });
 
     test('un aller-retour JSON préserve rules et active à l\'identique', () {
@@ -273,6 +276,30 @@ void main() {
       expect(FiestaState.tryFromJson(emptyFiesta)!.offerChoices, isEmpty);
     });
 
+    test(
+        'malus « En stock » en réserve : conservé à l\'aller-retour JSON, '
+        'sans effet en jeu (règle 7)', () {
+      const reserved = ModifierInstance(
+        catalogId: 'minus_10s',
+        scope: ModifierScope.round,
+        target: ModifierTarget.team,
+        teamId: 'a',
+        charges: 2,
+        nature: ModifierNature.malus,
+        round: 1,
+        reserve: true,
+      );
+      final original = GameState(
+          gameId: 'abc',
+          fiesta: fiestaState().copyWith(active: [instance, reserved]));
+      final json = jsonDecode(jsonEncode(original.toJson()));
+      final restored = GameState.fromJson(json).fiesta!;
+      expect(restored.active.map((m) => (m.catalogId, m.reserve)),
+          [('no_pass', false), ('minus_10s', true)]);
+      expect(modifiersForTurn(restored.active, teamId: 'a', logicalRound: 1),
+          isEmpty);
+    });
+
     test('une instance inconnue ou mal formée est ignorée, le reste se relit',
         () {
       final json = GameState(gameId: 'abc', fiesta: fiestaState()).toJson();
@@ -286,9 +313,14 @@ void main() {
       // Un réglage d'id inconnu dans les règles est ignoré seul, lui aussi.
       (fiesta['rules'] as Map<String, dynamic>)['modifiers']['unknown'] = {
         'active': true,
-        'arrival': 'draw',
-        'startRound': 1,
-        'charges': 0,
+        'rounds': [1],
+        'mode': 'draw',
+      };
+      // Un réglage aux manches hors 1-3 est ignoré seul, lui aussi.
+      (fiesta['rules'] as Map<String, dynamic>)['modifiers']['reversed'] = {
+        'active': true,
+        'rounds': [4],
+        'mode': 'draw',
       };
       // Un dû de rattrapage mal typé est ignoré seul, lui aussi.
       fiesta['catchUpDue'] = {'a': 'x', 'b': 3};
@@ -322,8 +354,25 @@ void main() {
           GameState.fromJson({
             ...base,
             'fiesta': {
-              'rules': {'mode': 'party'},
+              'rules': {'format': 2, 'mode': 'party'},
               'active': [],
+            },
+          }).fiesta,
+          isNull);
+      // Forme v1 (avant Fiesta v2, sans `format`) : illisible. Le provider
+      // abandonne alors la partie (`fiesta_v2_upgrade_test`).
+      expect(
+          GameState.fromJson({
+            ...base,
+            'fiesta': {
+              'rules': {
+                'mode': 'custom',
+                'symmetric': true,
+                'modifiers': {},
+                'oneOfThree': true,
+                'drawCount': 1,
+                'oneAnswer': true,
+              },
             },
           }).fiesta,
           isNull);

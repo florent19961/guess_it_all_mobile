@@ -15,6 +15,9 @@ class AppColors {
 
   // States
   static const Color success = Color(0xFF10B981);
+
+  /// Malus Fiesta (éditeur, badges) ; le bonus est [success].
+  static const Color malus = Color(0xFFF87171);
   static const Color error = Color(0xFFE88B8B);
   static const Color warning = Color(0xFFFBBF24);
 

@@ -1,92 +1,88 @@
+import 'fiesta_ensemble.dart';
 import 'fiesta_rules.dart';
 import 'modifier_catalog.dart';
 import 'symmetric_draw.dart';
 
-/// Pourquoi un ensemble ne peut pas être enregistré (messages affichés tels
-/// quels sous le bouton de l'éditeur). Vide = enregistrable.
-///
-/// Fonction PURE : l'éditeur l'appelle à chaque frappe, le test la couvre
-/// sans écran. Seuls les modificateurs ACTIFS sont jugés : un réglage
-/// incohérent sur un modificateur coupé ne gêne personne.
-///
-/// Le tirage pour tous d'un ensemble a lieu si `symmetric` ET
-/// `drawCount > 0` (l'interrupteur et le compteur de l'éditeur).
-List<String> validateEnsemble(FiestaRules rules) {
-  final errors = <String>[];
-  if ((rules.ensembleName ?? '').trim().isEmpty) {
-    errors.add('Donne un nom à l\'ensemble.');
+/// Erreur sur le nom de [rules], `null` s'il est bon. [others] : les autres
+/// ensembles (fournis et les miens, SANS celui qu'on modifie) ; un nom est
+/// pris s'il est égal à l'un des leurs, sans compter la casse ni les espaces
+/// autour.
+String? ensembleNameError(
+  FiestaRules rules, {
+  Iterable<FiestaEnsemble> others = const [],
+}) {
+  final name = nameKey(rules.ensembleName ?? '');
+  if (name.isEmpty) return 'Donne un nom à l\'ensemble.';
+  if (others.any((e) => nameKey(e.name) == name)) {
+    return 'Ce nom est déjà pris : choisis-en un autre.';
   }
+  return null;
+}
 
-  final drawOn = rules.symmetric && rules.drawCount > 0;
-  final fixedByRound = <int, List<String>>{};
+/// Pourquoi un ensemble ne peut pas être enregistré (messages affichés tels
+/// quels au-dessus du bouton de l'éditeur). Vide = enregistrable.
+///
+/// Fonction PURE : l'éditeur l'appelle à chaque rendu, le test la couvre sans
+/// écran. Seuls les modificateurs ACTIFS sont jugés : un réglage incohérent
+/// sur un modificateur coupé ne gêne personne. [others] : voir
+/// [ensembleNameError] ; sert aussi au refus d'un doublon de réglages.
+List<String> validateEnsemble(
+  FiestaRules rules, {
+  Iterable<FiestaEnsemble> others = const [],
+}) {
+  final errors = <String>[
+    if (ensembleNameError(rules, others: others) case final error?) error,
+  ];
 
-  for (final entry in rules.modifiers.entries) {
-    final setting = entry.value;
-    final def = modifierById(entry.key);
-    if (!setting.active || def == null) continue;
+  final alwaysByRound = <int, List<ModifierDef>>{};
+  for (final def in kModifierCatalog) {
+    final setting = rules.activeSetting(def.id);
+    if (setting == null) continue;
     final name = def.name;
 
-    // Un modificateur à cible joueur n'est ni tiré ni fixé (`isForAllTeams`) :
-    // il n'arriverait jamais.
-    if (!isForAllTeams(def) && setting.arrival != ModifierArrival.offer) {
-      errors.add('$name ne peut être que proposé à l\'équipe menée.');
+    if (setting.rounds.isEmpty) {
+      errors.add('$name : coche au moins une manche.');
+      continue;
     }
-
-    switch (setting.arrival) {
-      case ModifierArrival.draw:
-        if (!drawOn) {
-          errors.add('$name est tiré pour tous, mais le tirage symétrique '
-              'est coupé ou à 0.');
-        }
-      case ModifierArrival.offer:
-        if (!rules.oneOfThree) {
-          errors.add('$name est proposé à l\'équipe menée, mais le choix '
-              '1 parmi 3 est coupé.');
-        }
-        if (setting.startRound < 2) {
-          errors.add('$name est proposé dès la manche 1 : le choix a lieu '
-              'entre deux manches, M2 au plus tôt.');
-        }
-      case ModifierArrival.fixed:
-        final round = setting.fixedRound;
-        if (round == null) {
-          // L'éditeur pose toujours une manche, mais un blob relu peut ne pas
-          // en avoir : sans manche, le modificateur ne s'appliquerait jamais.
-          errors.add('$name est fixé, mais sur aucune manche.');
-        } else {
-          (fixedByRound[round] ??= []).add(def.id);
-        }
+    if (isRoundRuleMode(setting.mode) && !canBeRoundRule(def)) {
+      errors.add('$name : seulement en cartouche.');
     }
-
-    if (def.round3Only) {
-      final tooEarly = setting.arrival == ModifierArrival.fixed
-          ? setting.fixedRound != 3
-          : setting.startRound < 3;
-      if (tooEarly) errors.add('$name n\'existe qu\'en manche 3 (mime).');
+    if (def.round3Only && !setting.rounds.every((r) => r == 3)) {
+      errors.add('$name n\'existe qu\'en manche 3 (mime).');
     }
-    if (def.notInRound3) {
-      // Manche 1 ou 2 (offre : 2, déjà exigé plus haut) ; une manche fixée
-      // absente a déjà son message.
-      final round = setting.arrival == ModifierArrival.fixed
-          ? setting.fixedRound
-          : setting.startRound;
-      if (round != null && (round < 1 || round > 2)) {
-        errors.add('$name n\'existe pas en manche 3 (mime) : '
-            'manche 1 ou 2 seulement.');
+    if (def.notInRound3 && setting.rounds.contains(3)) {
+      errors.add('$name n\'existe pas en manche 3 (mime) : manche 1 ou 2 '
+          'seulement.');
+    }
+    if (setting.mode == ModifierMode.offer &&
+        setting.rounds.every((r) => r == 1)) {
+      errors.add('$name : en « 1 parmi 3 », la carte se gagne entre deux '
+          'manches. Coche la manche 2 ou 3.');
+    }
+    if (setting.mode == ModifierMode.always) {
+      for (final r in setting.rounds) {
+        (alwaysByRound[r] ??= []).add(def);
       }
     }
   }
 
-  for (final MapEntry(key: round, value: ids) in fixedByRound.entries) {
-    for (var i = 0; i < ids.length; i++) {
-      for (var j = i + 1; j < ids.length; j++) {
-        if (!areCompatible(ids[i], ids[j])) {
-          errors.add('${modifierById(ids[i])!.name} et '
-              '${modifierById(ids[j])!.name} sont incompatibles : pas sur '
-              'la même manche ($round).');
+  // Deux « Toujours » incompatibles sur une même manche : l'un des deux ne
+  // s'appliquerait pas.
+  for (final MapEntry(key: round, value: defs) in alwaysByRound.entries) {
+    for (var i = 0; i < defs.length; i++) {
+      for (var j = i + 1; j < defs.length; j++) {
+        if (!areCompatible(defs[i].id, defs[j].id)) {
+          errors.add('${defs[i].name} et ${defs[j].name} sont incompatibles : '
+              'pas « Toujours » tous les deux en manche $round.');
         }
       }
     }
+  }
+
+  final key = settingsKey(rules);
+  final twin = others.where((e) => settingsKey(e.rules) == key).firstOrNull;
+  if (twin != null) {
+    errors.add('L\'ensemble ${twin.name} a déjà ces paramètres.');
   }
   return errors;
 }

@@ -13,6 +13,12 @@ class ModifierInstance {
   /// Manche dans laquelle l'instance a été posée.
   final int round;
 
+  /// Cartouche de malus « En stock » détenue par l'équipe [teamId], en
+  /// RÉSERVE : sans aucun effet tant qu'elle n'est pas jouée contre une
+  /// équipe (écran « Ce tour / Réserve », lane 2). `modifiersForTurn` l'ignore.
+  /// Clé JSON omise si faux.
+  final bool reserve;
+
   /// Contrat : une cible `team` ou `player` porte toujours son [teamId] (le
   /// joueur est repéré par son équipe pour le plafond par équipe).
   const ModifierInstance({
@@ -24,6 +30,7 @@ class ModifierInstance {
     required this.charges,
     required this.nature,
     required this.round,
+    this.reserve = false,
   }) : assert(target == ModifierTarget.both || teamId != null,
             'une cible team/player exige un teamId');
 
@@ -45,6 +52,7 @@ class ModifierInstance {
         'charges': charges,
         'nature': nature.name,
         'round': round,
+        if (reserve) 'reserve': true,
       };
 
   /// Variante tolérante : rend `null` au lieu de lever.
@@ -63,7 +71,9 @@ class ModifierInstance {
     final round = json['round'];
     final teamId = json['teamId'];
     final playerId = json['playerId'];
-    if (scope == null ||
+    final reserve = json['reserve'] ?? false;
+    if (reserve is! bool ||
+        scope == null ||
         target == null ||
         nature == null ||
         charges is! int ||
@@ -82,36 +92,14 @@ class ModifierInstance {
       charges: charges,
       nature: nature,
       round: round,
+      reserve: reserve,
     );
   }
 }
 
-/// Peut-on poser [candidate] à côté des instances [active] (celles du tour en
-/// cours) ? Non si UNE équipe qu'elle touche atteindrait [maxPerTurn]
-/// modificateurs, ou si une instance active d'une équipe qu'elle touche lui
-/// est incompatible.
-///
-/// Le plafond est PAR ÉQUIPE (epic, Q8) : la charge d'une équipe = les
-/// instances « pour tous » + les siennes. Une candidate `both` est jugée sur
-/// l'équipe la plus chargée.
-bool canAdd(
-  List<ModifierInstance> active,
-  ModifierInstance candidate, {
-  int maxPerTurn = 2,
-}) {
-  final shared = active.where(candidate.concernsSameTeamAs).toList();
-  if (!shared.every((a) => areCompatible(a.catalogId, candidate.catalogId))) {
-    return false;
-  }
-  var forAll = 0;
-  final perTeam = <String?, int>{};
-  for (final a in shared) {
-    if (a.target == ModifierTarget.both) {
-      forAll++;
-    } else {
-      perTeam[a.teamId] = (perTeam[a.teamId] ?? 0) + 1;
-    }
-  }
-  final heaviest = perTeam.values.fold(0, (m, n) => n > m ? n : m);
-  return forAll + heaviest < maxPerTurn;
-}
+/// Peut-on poser [candidate] à côté des instances [active] ? Non si une
+/// instance active d'une équipe qu'elle touche lui est incompatible. Pas de
+/// plafond (Fiesta v2 : seules les incompatibilités limitent).
+bool canAdd(List<ModifierInstance> active, ModifierInstance candidate) => active
+    .where(candidate.concernsSameTeamAs)
+    .every((a) => areCompatible(a.catalogId, candidate.catalogId));

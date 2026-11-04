@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
+import 'package:guess_it_all_mobile/services/storage_service.dart';
+import 'package:guess_it_all_mobile/utils/constants.dart';
 
 import '../helpers/test_prefs.dart';
 
@@ -27,22 +29,20 @@ void main() {
         'ne change pas la partie', () async {
       final provider = await givenReadyProvider();
       final sourceModifiers = <String, ModifierSetting>{
-        'no_pass': const ModifierSetting(
+        'no_pass': ModifierSetting(
           active: true,
-          arrival: ModifierArrival.draw,
-          startRound: 1,
-          charges: 0,
+          rounds: const {1, 2, 3},
+          mode: ModifierMode.draw,
         ),
       };
       final rules =
           FiestaRules(mode: FiestaMode.custom, modifiers: sourceModifiers);
 
       await provider.startGame(fiesta: rules);
-      sourceModifiers['draw'] = const ModifierSetting(
+      sourceModifiers['draw'] = ModifierSetting(
         active: true,
-        arrival: ModifierArrival.fixed,
-        startRound: 3,
-        charges: 0,
+        rounds: const {3},
+        mode: ModifierMode.always,
       );
 
       expect(provider.isFiesta, isTrue);
@@ -52,23 +52,19 @@ void main() {
     });
 
     test(
-        '« Une seule réponse » : tirée par partie en Auto (graine du gameId), '
-        'reprise telle quelle de l\'ensemble en Personnalisé', () async {
+        '« Une seule réponse » en Auto : tirée par partie (graine du gameId), '
+        'gelée en « Toujours » M1-M3 dans les règles de la partie', () async {
       final provider = await givenReadyProvider();
       final outcomes = <bool>{};
       for (var i = 0; i < 40; i++) {
         await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
-        final oneAnswer = provider.game.fiesta!.rules.oneAnswer;
+        final rules = provider.game.fiesta!.rules;
+        final oneAnswer = rules.activeSetting('one_answer') != null;
         expect(oneAnswer, drawsOneAnswer(provider.game.gameId!));
+        expect(provider.isOneAnswer, oneAnswer);
         outcomes.add(oneAnswer);
       }
       expect(outcomes, {true, false});
-
-      for (final chosen in [true, false]) {
-        await provider.startGame(
-            fiesta: FiestaRules(mode: FiestaMode.custom, oneAnswer: chosen));
-        expect(provider.game.fiesta!.rules.oneAnswer, chosen);
-      }
     });
 
     test('startGame() sans argument efface la Fiesta de la partie précédente',
@@ -102,5 +98,56 @@ void main() {
       expect(provider.game.fiesta, isNotNull);
       expect(provider.game.fiesta!.toJson(), equals(captured));
     });
+  });
+
+  test(
+      'partie Fiesta suspendue de la forme v1 (avant Fiesta v2) : abandonnée '
+      'proprement au démarrage, jamais reprise en Classique ni de crash',
+      () async {
+    final provider = await givenReadyProvider();
+    await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
+    await pumpEventQueue();
+    final saved = (await StorageService().loadGameState())!;
+    // Les règles telles que les écrivait la forme v1.
+    saved['game']['fiesta']['rules'] = {
+      'mode': 'auto',
+      'symmetric': true,
+      'autoCalibrate': true,
+      'modifiers': {},
+      'oneOfThree': false,
+      'drawCount': 1,
+      'oneAnswer': true,
+    };
+    await StorageService().saveGameState(saved);
+
+    final reloaded = GameProvider();
+    await pumpEventQueue();
+    expect(reloaded.game.currentScreen, AppConstants.screenHome);
+    expect(reloaded.game.gameId, isNull);
+    expect(reloaded.isFiesta, isFalse);
+    expect(await StorageService().loadGameState(), isNull);
+    expect(reloaded.players.map((p) => p.name), ['Ana', 'Bob'],
+        reason: 'joueurs gardés');
+  });
+
+  test(
+      'snapshot de retour arrière en forme v1 dans une partie v2 : retour '
+      'arrière refusé sans rien muter, jamais restauré en Classique', () async {
+    final provider = await givenReadyProvider();
+    await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
+    provider.startTurn();
+    provider.startTurnTimer();
+    provider.endTurn();
+    provider.savePreValidationState(const []);
+    final snapshot = provider.game.preValidationSnapshot!;
+    final rules =
+        (snapshot['game'] as Map<String, dynamic>)['fiesta']['rules'] as Map;
+    rules.remove('format'); // forme v1 : illisible
+    final before = provider.game.toJson();
+
+    expect(provider.canGoBackToVerification, isFalse);
+    provider.restorePreValidationState();
+    expect(provider.game.toJson(), before);
+    expect(provider.isFiesta, isTrue);
   });
 }

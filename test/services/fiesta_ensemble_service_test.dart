@@ -14,17 +14,25 @@ import '../helpers/test_prefs.dart';
 
 const key = FiestaEnsembleService.storageKey;
 
-/// Blob FIGÉ, tel qu'écrit par la version qui introduit les ensembles (2-3).
+/// Blob FIGÉ, tel qu'écrit par la version Fiesta v2 (modèle des modes).
 /// 🔴 Ne jamais le régénérer : s'il ne se relit plus en entier, c'est qu'un
 /// changement de `FiestaRules` effacerait les ensembles des joueurs.
 const frozenBlob = '{"schemaVersion":1,"data":{"ensembles":[{"id":"e1",'
+    '"rules":{"format":2,"mode":"custom","autoCalibrate":true,'
+    '"ensembleName":"Soirée chez Max","modifiers":{"no_pass":{"active":true,'
+    '"rounds":[1,2],"mode":"draw","charges":1,"perGame":false},'
+    '"free_pass":{"active":false,"rounds":[2,3],"mode":"stock","charges":2,'
+    '"perGame":true}},"drawCount":2,"pick3Choices":2,"catchUp":{"b1":0,'
+    '"b2":0,"cap":0,"mal":0,"malCap":0}}}],"lastUsedId":"e1"}}';
+
+/// Blob de la forme v1 (avant Fiesta v2, jamais publiée) : `arrival`,
+/// `symmetric`, `oneOfThree`, `oneAnswer`.
+const v1Blob = '{"schemaVersion":1,"data":{"ensembles":[{"id":"old",'
     '"rules":{"mode":"custom","symmetric":true,"autoCalibrate":true,'
     '"ensembleName":"Soirée chez Max","modifiers":{"no_pass":{"active":true,'
-    '"arrival":"draw","startRound":1,"fixedRound":3,"charges":0},'
-    '"free_pass":{"active":false,"arrival":"offer","startRound":2,'
-    '"fixedRound":3,"charges":2}},"oneOfThree":true,"catchUp":{"b1":3,'
-    '"b2":5,"cap":30,"mal":1,"malCap":15},"drawCount":2,"oneAnswer":false,'
-    '"carryOver":true}}],"lastUsedId":"e1"}}';
+    '"arrival":"draw","startRound":1,"fixedRound":3,"charges":0}},'
+    '"oneOfThree":true,"catchUp":{"b1":3,"b2":5,"cap":30,"mal":1,'
+    '"malCap":15},"drawCount":2,"oneAnswer":false}}],"lastUsedId":"old"}}';
 
 void main() {
   final service = FiestaEnsembleService();
@@ -34,7 +42,7 @@ void main() {
     await givenPrefs();
     final rules = defaultEnsembleRules('Soirée chez Max').copyWith(
       drawCount: 2,
-      oneAnswer: false,
+      pick3Choices: 3,
       catchUp: const CatchUpRules(b1: 1, b2: 2, cap: 10, mal: 0, malCap: 0),
     );
 
@@ -52,7 +60,7 @@ void main() {
     expect(jsonEncode(restored.rules.toJson()), jsonEncode(rules.toJson()));
   });
 
-  test('format figé de la 1re version : relu en entier', () async {
+  test('format figé Fiesta v2 : relu en entier', () async {
     await givenPrefs({key: frozenBlob});
 
     final store = await service.load();
@@ -60,30 +68,41 @@ void main() {
     final rules = store.ensembles.single.rules;
     expect(rules.ensembleName, 'Soirée chez Max');
     expect(rules.modifiers.keys, ['no_pass', 'free_pass']);
+    expect(rules.modifiers['no_pass']!.rounds, {1, 2});
     expect(rules.modifiers['free_pass']!.charges, 2);
-    expect(rules.drawCount, 2);
-    expect(rules.oneAnswer, isFalse);
-    expect(rules.catchUp.b2, 5);
+    expect(rules.modifiers['free_pass']!.perGame, isTrue);
+    expect([rules.drawCount, rules.pick3Choices], [2, 2]);
+    expect(catchUpOn(rules.catchUp), isFalse);
   });
 
   test(
-      'ensemble d\'avant la famille « Mime » (deux mimes fixés sur M3) : '
-      'relu sans planter, un seul mime gardé : le 1er fixé dans l\'ordre du '
-      'catalogue', () async {
-    String mod(String arrival, {bool active = true}) =>
-        '{"active":$active,"arrival":"$arrival","startRound":3,'
-        '"fixedRound":3,"charges":0}';
+      'ensemble de la forme v1 (avant Fiesta v2) : ignoré sans planter, '
+      'jamais détruit par une écriture', () async {
+    await givenPrefs({key: v1Blob});
+
+    expect((await service.load()).ensembles, isEmpty);
+    await service.create(defaultEnsembleRules('Neuf'));
+    expect((await service.load()).ensembles.map((e) => e.name), ['Neuf']);
+    final stored = (await persistedData(key))!['ensembles'] as List;
+    expect(stored, anyElement(isA<Map>().having((m) => m['id'], 'id', 'old')));
+  });
+
+  test(
+      'ensemble à plusieurs mimes actifs (blob non écrit par l\'éditeur) : '
+      'relu sans planter, un seul mime gardé : le 1er « Toujours » dans '
+      'l\'ordre du catalogue', () async {
+    String mod(String mode) => '{"active":true,"rounds":[3],"mode":"$mode"}';
     await givenPrefs({
       key: '{"schemaVersion":1,"data":{"ensembles":[{"id":"e1","rules":'
-          '{"mode":"custom","ensembleName":"Vieux","modifiers":{'
-          '"draw":${mod('fixed')},"mime_eyes_closed":${mod('fixed')},'
+          '{"format":2,"mode":"custom","ensembleName":"Vieux","modifiers":{'
+          '"draw":${mod('always')},"mime_eyes_closed":${mod('always')},'
           '"mime_no_arms":${mod('draw')},"no_pass":${mod('draw')}}}}]}}',
     });
 
     final rules = (await service.load()).ensembles.single.rules;
-    // Les fixés passaient avant le tirage, dans l'ordre du catalogue :
+    // Les « Toujours » passent avant le tirage, dans l'ordre du catalogue :
     // `mime_eyes_closed` d'abord, puis « Dessiner » et `mime_no_arms` (tiré)
-    // étaient refusés comme incompatibles.
+    // seraient refusés comme incompatibles.
     expect(
       {for (final e in rules.modifiers.entries) e.key: e.value.active},
       {
@@ -93,7 +112,7 @@ void main() {
         'no_pass': true,
       },
     );
-    expect(rules.modifiers['draw']!.arrival, ModifierArrival.fixed,
+    expect(rules.modifiers['draw']!.mode, ModifierMode.always,
         reason: 'réglages conservés, seul `active` change');
     expect(validateEnsemble(rules), isEmpty);
   });
@@ -102,10 +121,9 @@ void main() {
       'écriture figée : une clé vide ou nulle est omise (blob Fiesta et '
       'ensembles), et l\'absence se relit comme le défaut', () async {
     final fiesta = FiestaState(rules: FiestaRules(mode: FiestaMode.auto));
-    const frozenFiesta = '{"rules":{"mode":"auto","symmetric":true,'
-        '"autoCalibrate":true,"modifiers":{},"oneOfThree":false,"catchUp":'
-        '{"b1":3,"b2":5,"cap":30,"mal":1,"malCap":15},"drawCount":1,'
-        '"oneAnswer":true}}';
+    const frozenFiesta = '{"rules":{"format":2,"mode":"auto",'
+        '"autoCalibrate":true,"modifiers":{},"drawCount":1,"pick3Choices":1,'
+        '"catchUp":{"b1":3,"b2":5,"cap":30,"mal":1,"malCap":15}}}';
     expect(jsonEncode(fiesta.toJson()), frozenFiesta);
     final relu = FiestaState.tryFromJson(jsonDecode(frozenFiesta))!;
     expect([relu.active, relu.turn, relu.catchUpDue, relu.rules.ensembleName],
@@ -125,31 +143,10 @@ void main() {
         '"nature":"malus","round":2}');
 
     await givenPrefs();
-    await service.create(FiestaRules(
-      mode: FiestaMode.custom,
-      ensembleName: 'E',
-      modifiers: {
-        'no_pass': const ModifierSetting(
-            active: true,
-            arrival: ModifierArrival.draw,
-            startRound: 1,
-            charges: 0),
-      },
-    ));
+    await service
+        .create(FiestaRules(mode: FiestaMode.custom, ensembleName: 'E'));
     final data = jsonDecode((await rawString(key))!)['data'] as Map;
     expect(data.containsKey('lastUsedId'), isFalse);
-    expect(
-        jsonEncode(data['ensembles'][0]['rules']['modifiers']),
-        '{"no_pass":{"active":true,"arrival":"draw","startRound":1,'
-        '"charges":0}}');
-    expect(
-        (await service.load())
-            .ensembles
-            .single
-            .rules
-            .modifiers['no_pass']!
-            .fixedRound,
-        isNull);
   });
 
   test('supprimer le dernier utilisé efface lastUsedId (AC6)', () async {
@@ -165,12 +162,35 @@ void main() {
     expect(store.lastUsedId, isNull, reason: 'sinon il pointe dans le vide');
   });
 
-  test('la copie d\'un nom de 30 caractères reste distincte', () {
+  test(
+      'copie : « Nom (2) », puis le premier numéro libre (casse ignorée) ; '
+      'un nom de 30 caractères reste distinct et tient en 30', () {
+    expect(FiestaEnsembleService.copyName('Pro Player', ['Pro Player']),
+        'Pro Player (2)');
+    expect(
+        FiestaEnsembleService.copyName(
+            'Pro Player', ['Pro Player', 'pro player (2)']),
+        'Pro Player (3)');
     final name = 'x' * FiestaEnsembleService.maxNameLength;
-    final copy = FiestaEnsembleService.copyName(name);
+    final copy = FiestaEnsembleService.copyName(name, [name]);
     expect(copy, isNot(name));
-    expect(copy, endsWith(' (copie)'));
+    expect(copy, endsWith(' (2)'));
     expect(copy.length, FiestaEnsembleService.maxNameLength);
+  });
+
+  test(
+      'dupliquer un ensemble fourni : une copie à moi, en fin de liste, nom '
+      'libre ; les fournis ne sont jamais écrits', () async {
+    await givenPrefs();
+    final mine = (await service.create(defaultEnsembleRules('A')))!;
+    final copy = (await service.duplicate(classicEnsemble))!;
+    expect(copy.isProvided, isFalse);
+    expect(copy.name, 'Fiesta classique (2)');
+    expect(
+        (await service.load()).ensembles.map((e) => e.id), [mine.id, copy.id]);
+    final stored = (await persistedData(key))!['ensembles'] as List;
+    expect(stored.map((e) => (e as Map)['id']),
+        isNot(contains(kClassicEnsembleId)));
   });
 
   group('lecture tolérante', () {
@@ -238,12 +258,12 @@ void main() {
     // Deux taps rapides à 9 : les écritures sont asynchrones, une seule passe.
     final racing = await Future.wait([
       service.create(defaultEnsembleRules('E9')),
-      service.duplicate(first.id),
+      service.duplicate(first),
     ]);
     expect(racing.whereType<FiestaEnsemble>(), hasLength(1));
 
     expect(await service.create(defaultEnsembleRules('trop')), isNull);
-    expect(await service.duplicate(first.id), isNull);
+    expect(await service.duplicate(first), isNull);
     expect((await service.load()).ensembles,
         hasLength(FiestaEnsembleService.maxEnsembles));
   });

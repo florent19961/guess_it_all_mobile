@@ -15,8 +15,12 @@ class RoundTransitionPlan {
   /// Manche d'arrivée (N+1).
   final int round;
 
-  /// Fixés + tirage symétrique de N+1, pour toutes les équipes.
+  /// Règles de manche de N+1 (« Toujours » + tirage), pour toutes les
+  /// équipes.
   final List<ModifierInstance> draw;
+
+  /// Cartouches « En stock » reçues par chaque équipe à l'entrée de N+1.
+  final List<ModifierInstance> stock;
 
   /// Coup de pouce de l'app (Auto).
   final List<ModifierInstance> gifts;
@@ -30,6 +34,7 @@ class RoundTransitionPlan {
   const RoundTransitionPlan({
     required this.round,
     required this.draw,
+    this.stock = const [],
     required this.gifts,
     required this.choices,
     required this.catchUp,
@@ -45,6 +50,7 @@ class RoundTransitionPlan {
         active: [
           ...fiesta.active.where((m) => m.round >= round - 1),
           ...draw,
+          ...stock,
           ...gifts,
           ...choices,
         ],
@@ -68,6 +74,8 @@ RoundTransitionPlan? planRoundTransition({
   return RoundTransitionPlan(
     round: round,
     draw: draw,
+    stock: stockForRound(rules,
+        round: round, teamIds: scores.keys, chargesUsed: fiesta.chargesUsed),
     gifts: isAppBoostOn(rules, finishedRound)
         ? appBoost(
             rules: rules,
@@ -91,8 +99,8 @@ RoundTransitionPlan? planRoundTransition({
 /// Instances qui pèsent sur [teamId] pendant son tour : celles de la manche
 /// LOGIQUE du tour. Une continuation (temps reporté en début de N+1) est le
 /// même tour que la fin de N : elle joue avec les effets de N, jamais ceux de
-/// N+1, qui commencent au premier vrai tour de chaque équipe. Le plafond de 2
-/// (Q8), tenu en N, tient donc aussi sur la continuation.
+/// N+1, qui commencent au premier vrai tour de chaque équipe. Une cartouche
+/// en réserve ([ModifierInstance.reserve]) n'a aucun effet.
 List<ModifierInstance> modifiersForTurn(
   List<ModifierInstance> active, {
   required String teamId,
@@ -100,6 +108,7 @@ List<ModifierInstance> modifiersForTurn(
 }) =>
     active
         .where((m) =>
+            !m.reserve &&
             m.round == logicalRound &&
             (m.target == ModifierTarget.both || m.teamId == teamId))
         .toList();

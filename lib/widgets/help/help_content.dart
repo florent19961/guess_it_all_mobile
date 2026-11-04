@@ -163,27 +163,54 @@ List<CoachStep> teamsHelp({
 
 List<CoachStep> fiestaEnsemblesHelp({
   required GlobalKey ready,
-  required GlobalKey editor,
+  required GlobalKey create,
   required GlobalKey next,
 }) =>
     [
       CoachStep(
         target: ready,
         title: 'Prêts à jouer',
-        text: 'Tes ensembles de règles Fiesta (sinon, celui fourni par '
-            'l\'app). Touche-en un pour le choisir. « Modifier » le charge '
-            'dans l\'éditeur en dessous.',
+        text: 'Les ensembles fournis par l\'app, puis les tiens. Touche-en un '
+            'pour le choisir. Ceux de l\'app se dupliquent pour les modifier.',
       ),
       CoachStep(
-        target: editor,
+        target: create,
         title: 'Créer un ensemble',
-        text: 'Donne-lui un nom, règle les malus et bonus, puis '
-            '« Enregistrer » : il apparaît en haut, déjà choisi.',
+        text: 'Ouvre l\'éditeur : un nom, les règles de la partie, les malus '
+            'et bonus, puis « Enregistrer ».',
       ),
       CoachStep(
         target: next,
         title: 'Suivant',
         text: 'Passe aux joueurs avec l\'ensemble choisi.',
+      ),
+    ];
+
+List<CoachStep> fiestaEditorHelp({
+  required GlobalKey rules,
+  required GlobalKey modifiers,
+  required GlobalKey save,
+}) =>
+    [
+      CoachStep(
+        target: rules,
+        title: 'Règles de la partie',
+        text: 'Combien de modificateurs sont tirés à chaque manche, combien '
+            'de cartes « 1 parmi 3 » chaque équipe en retard prend, et le '
+            'rattrapage.',
+      ),
+      CoachStep(
+        target: modifiers,
+        title: 'Malus et bonus',
+        text: 'Allume un modificateur, puis « Régler » : ses manches et son '
+            'mode. « Toujours » et « Au tirage » valent pour toutes les '
+            'équipes toute la manche ; « En stock » et « 1 parmi 3 » sont des '
+            'cartouches d\'un tour.',
+      ),
+      CoachStep(
+        target: save,
+        title: 'Enregistrer',
+        text: 'S\'il manque quelque chose, le message dit quoi.',
       ),
     ];
 

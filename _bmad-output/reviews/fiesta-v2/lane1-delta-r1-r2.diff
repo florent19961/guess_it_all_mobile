@@ -1,0 +1,609 @@
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index 2ecd0d0..c65a1ed 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -858,8 +858,11 @@ abandonnée au démarrage (accueil, joueurs gardés), jamais reprise en Classiqu
+ d'historique v1 → pas de « Rejouer » (snapshot illisible). `kCurrentSchemaVersion` inchangé
+ (le marqueur `format` suffit). Classique intouché.
+ 
+-**Résidus assumés jusqu'à la lane 2.** Malus « En stock » : persistés et éditables, **sans
+-effet en jeu**. Bonus « En stock » = mécanisme de charges actuel (×2 et Deux mots s'allument
++**Résidus assumés jusqu'à la lane 2.** Malus « En stock » : instanciés par équipe en
++**réserve** (`ModifierInstance.reserve`, persistés, kill compris), **sans effet en jeu**.
++« Passe gratuite » : « par manche » seulement (option « pour la partie » masquée, ses passes ne
++laissent pas de `ChargeUse`). Revue r1 : « Deux mots » en règle de manche s'applique d'elle-même
++(deux cartes à chaque tour, sans activation ni charge) ; snapshot de retour arrière v1 refusé. Bonus « En stock » = mécanisme de charges actuel (×2 et Deux mots s'allument
+ avant le tour ; Passe gratuite en stock = N passes gratuites par tour toute la manche). Une carte
+ 1 parmi 3 de malus vise encore le leader pour toute la manche N+1 (la cartouche ciblée d'un tour
+ arrive avec l'écran « Ce tour / Réserve »).
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index 4c1fc55..b8987f3 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -9,7 +9,7 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `player.dart` | `Player` | Joueur (id, name, words). Factory `Player.create()` |
+ | `team.dart` | `Team` | Equipe (id, name, playerIds, score, scoreByRound[3]) |
+ | `game_settings.dart` | `GameSettings` | Config partie : nb equipes/joueurs, wordChoice, totalWords, turnDuration, passPenalty, categories, difficultes |
+-| `game_state.dart` | `GameState`, `HistoryEntry` | Etat complet de la partie en cours : ecran, round, tour, pools de mots, scores, timestamps, snapshots de validation. `turnAllottedSeconds` = durée de **départ** réelle du tour (continuation, rattrapage, malus), base de `HistoryEntry.timeSpent` ; nul = partie d'une version antérieure → `turnDuration`. `HistoryEntry.pointsScored` (optionnel) : écrit seulement s'il diffère du nombre de mots (×2) ; absent = un point par mot ; `points` est la seule source de « Évolution des scores » |
++| `game_state.dart` | `GameState`, `HistoryEntry` | `GameState.hasUnreadableFiesta(json)` : clé `fiesta` présente mais illisible (forme v1) — reprise abandonnée, retour arrière refusé, jamais relue en Classique. Etat complet de la partie en cours : ecran, round, tour, pools de mots, scores, timestamps, snapshots de validation. `turnAllottedSeconds` = durée de **départ** réelle du tour (continuation, rattrapage, malus), base de `HistoryEntry.timeSpent` ; nul = partie d'une version antérieure → `turnDuration`. `HistoryEntry.pointsScored` (optionnel) : écrit seulement s'il diffère du nombre de mots (×2) ; absent = un point par mot ; `points` est la seule source de « Évolution des scores » |
+ | `game_analytics.dart` | `GameAnalytics`, `DeviceInfo` | Analytics completes d'une partie pour Firebase (gameId, events, wordMetadata, wordStats). Fiesta : `gameMode`, `fiestaRules` (clés absentes en Classique ; recopiés par `copyWith`, sinon perdus au 1er event) |
+ | `word_event.dart` | `WordEvent`, `WordEventType`, `PassEvent` | Evenement atomique : shown/guessed/passed/expired/invalidated avec contexte (round, turn, team, player). Fiesta : `modifiers` (clé absente en Classique) |
+ | `game_result.dart` | `GameResult`, `TeamResult`, `ModifierRecapItem` | Partie archivée pour l'historique. Fiesta : `mode`, `modifierRecap` (clés absentes en Classique) ; le récap est archivé en **faits** (`{kind, round, catalogId?, teamId?, chooserId?, seconds?}`), jamais en phrases ; fait illisible ignoré seul. `setup` (optionnel) : `GameSetupSnapshot` pour « Rejouer » depuis l'historique ; absent des archives antérieures |
+@@ -17,9 +17,9 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `word_stats.dart` | `WordMetadata`, `WordRoundStats`, `WordStats` | Metadonnees mot (category, difficulty, language), stats par manche et agregees |
+ | `category_metadata.dart` | `CategoryMetadata` | Metadonnees categorie multilingue (id, icon, noms, locales) |
+ | `fiesta/modifier_catalog.dart` | `ModifierDef`, `kModifierCatalog`, `kModifierIncompatibilities`, `kCartridgeOnlyIds`, enums `ModifierNature/Scope/Target` | Catalogue Fiesta (16 ids **figés**, du code, jamais persisté ; un ajout se fait **en fin de liste** : `one_answer` puis `sounds_only` ajoutés par Fiesta v2), `modifierById`, `areCompatible` (paires + règle de famille : deux membres `mimeFamily` — les 3 mimes, « Dessiner », « Mimer sous un drap », « Mime de dos », « Bruitages seulement » — s'excluent toujours). `round3Only` = manche 3 seulement (mime) ; `notInRound3` = jamais en manche 3 (« Faire deviner dans une autre langue »), lus par `isEligibleForRound` / `allowedRounds`. `kCartridgeOnlyIds` (`block_guesser`, `double_points`) : jamais règle de manche. « Une seule réponse » (`one_answer`) est un malus normal (plus de réglage de toute la partie). 🔴 Tout ajout au catalogue change les tirages et offres des parties suspendues (candidats mélangés par graine) : persister les tirages ou versionner le catalogue avant d'ajouter un modificateur une fois la Fiesta publiée |
+-| `fiesta/modifier_instance.dart` | `ModifierInstance` | Modificateur actif dans une partie. `tryFromJson` tolérant (id inconnu → `null`, jamais de défaut inventé). `canAdd(active, candidate)` : compatibilité seulement (plus de plafond) |
++| `fiesta/modifier_instance.dart` | `ModifierInstance` | Modificateur actif dans une partie. `tryFromJson` tolérant (id inconnu → `null`, jamais de défaut inventé). `canAdd(active, candidate)` : compatibilité seulement (plus de plafond). `reserve` (clé omise si faux) : malus « En stock » détenu par `teamId`, sans effet (`modifiersForTurn` l'ignore) jusqu'à la lane 2. Cible `both` = règle de manche (s'applique d'elle-même : « Deux mots » Toujours/Au tirage = deux cartes sans activation), cible `team`/`player` = cartouche |
+ | `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, `CatchUpRules`, enums `FiestaMode`, `ModifierMode` | Configuration Fiesta **immuable**, forme **v2** (`format: 2`). `ModifierSetting` = `{active, rounds ⊂ {1,2,3}, mode, charges, perGame}` ; `ModifierMode` : `always` / `draw` (« Toute la manche, pour tous ») ou `stock` / `offer` (« Cartouche · un tour »), un seul par modificateur. `FiestaRules` = `{mode, autoCalibrate, ensembleName?, modifiers, drawCount 0-5, pick3Choices 1-3, catchUp}` ; `activeSetting(id)`, `copyWith` ; `kCatchUpOff` / `catchUpOn`. `tryFromJson` : sans `format: 2` (forme v1) ou compteur hors bornes → `null` ; réglage illisible ou d'id inconnu ignoré seul |
+-| `fiesta/symmetric_draw.dart` | fonctions pures | Règles de manche : `alwaysForRound` puis `drawForRound` (« Au tirage » cochés sur la manche, `drawCount`, Auto 1 ou 2 ; incompatibles sautés, **pas de plafond**), réunis par `roundModifiers(rules, gameId:, round:)`. `stockForRound` : cartouches « En stock » par équipe (lane 1 : bonus seulement, malus en stock sans effet en jeu ; « pour la partie » = N − dépensées avant). `autoRules(oneAnswer:)` : le mode Auto dans le modèle des ensembles (tout « Au tirage », `one_answer` « Toujours » M1-M3 si tiré). Graine `drawSeed(gameId, round)` (FNV-1a, stable). `drawsOneAnswer(gameId)` : Auto, 1 chance sur 4, graine de la « manche 0 », appelé par `startGame`. `allowedRounds`, `canBeRoundRule` |
++| `fiesta/symmetric_draw.dart` | fonctions pures | Règles de manche : `alwaysForRound` puis `drawForRound` (« Au tirage » cochés sur la manche, `drawCount`, Auto 1 ou 2 ; incompatibles sautés, **pas de plafond**), réunis par `roundModifiers(rules, gameId:, round:)`. `stockForRound` : cartouches « En stock » par équipe (bonus par le mécanisme de charges ; malus posés en `reserve`, sans effet jusqu'à la lane 2 ; « pour la partie » = N − dépensées avant, sauf Passe gratuite, toujours par manche). `autoRules(oneAnswer:)` : le mode Auto dans le modèle des ensembles (tout « Au tirage », `one_answer` « Toujours » M1-M3 si tiré). Graine `drawSeed(gameId, round)` (FNV-1a, stable). `drawsOneAnswer(gameId)` : Auto, 1 chance sur 4, graine de la « manche 0 », appelé par `startGame`. `allowedRounds`, `canBeRoundRule` |
+ | `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn, catchUpDue}`. `turn` : `FiestaTurnState` typé (`turn_effects.dart`), vidé à la vraie fin du tour (continuation de fin de manche comprise dans le tour). `catchUpDue` : id d'équipe → secondes dues (négatives = malus du leader), posé par `nextRound`, consommé au premier tour non-continuation. `chargesUsed` (2-9, clé omise si vide) : charges dépensées `{catalogId, teamId, round}`, décompte de la manche en cours + récap « Bonus utilisés » ; `offerChoices` (2-10, clé omise si vide) : cartes 1 parmi 3 choisies `{chooserId, row, modifier}` (`row` = rangée, absent = 0) — celles dont `modifier.round` = manche suivante forment la file de la transition, `nextRound` les rend actives ; relues pour le récap et `blockingTeam` |
+ | `fiesta/modifier_recap.dart` | fonctions pures | `fiestaModeId` (`fiesta_auto`/`fiesta_custom`), `fiestaModeLabel`, `buildModifierRecap` : récap « Modificateurs de la partie » **recalculé** en faits (tirage par graine, rattrapage et coup de pouce par `planRoundTransition` sur les scores cumulés par manche), rien de persisté pendant la partie ; `formatModifierRecap` forme les lignes affichées (`ModifierRecapLine`, jamais persistée) |
+ | `fiesta/turn_effects.dart` | `FiestaTurnState` + fonctions pures | État du tour typé et immuable (`freePassesUsed`, `blockedPlayerId`, `charges` par id ↔ clés JSON `doublePoints`/`twoWords` via `kChargeBonusKeys`, valeurs `armed`/`spent`, `secondWord`, `secondExpiredWord`) : JSON conditionnel, lecture tolérante clé par clé, `afterRoundEnd()` (continuation) ; `chargeAllowance`, `canBlockGuesser` (équipe de 3+), `drawOtherCard` (remplaçant ≠ l'autre carte) |
+diff --git a/lib/models/fiesta/modifier_instance.dart b/lib/models/fiesta/modifier_instance.dart
+index dce8614..35cff21 100644
+--- a/lib/models/fiesta/modifier_instance.dart
++++ b/lib/models/fiesta/modifier_instance.dart
+@@ -13,6 +13,12 @@ class ModifierInstance {
+   /// Manche dans laquelle l'instance a été posée.
+   final int round;
+ 
++  /// Cartouche de malus « En stock » détenue par l'équipe [teamId], en
++  /// RÉSERVE : sans aucun effet tant qu'elle n'est pas jouée contre une
++  /// équipe (écran « Ce tour / Réserve », lane 2). `modifiersForTurn` l'ignore.
++  /// Clé JSON omise si faux.
++  final bool reserve;
++
+   /// Contrat : une cible `team` ou `player` porte toujours son [teamId] (le
+   /// joueur est repéré par son équipe pour le plafond par équipe).
+   const ModifierInstance({
+@@ -24,6 +30,7 @@ class ModifierInstance {
+     required this.charges,
+     required this.nature,
+     required this.round,
++    this.reserve = false,
+   }) : assert(target == ModifierTarget.both || teamId != null,
+             'une cible team/player exige un teamId');
+ 
+@@ -45,6 +52,7 @@ class ModifierInstance {
+         'charges': charges,
+         'nature': nature.name,
+         'round': round,
++        if (reserve) 'reserve': true,
+       };
+ 
+   /// Variante tolérante : rend `null` au lieu de lever.
+@@ -63,7 +71,9 @@ class ModifierInstance {
+     final round = json['round'];
+     final teamId = json['teamId'];
+     final playerId = json['playerId'];
+-    if (scope == null ||
++    final reserve = json['reserve'] ?? false;
++    if (reserve is! bool ||
++        scope == null ||
+         target == null ||
+         nature == null ||
+         charges is! int ||
+@@ -82,6 +92,7 @@ class ModifierInstance {
+       charges: charges,
+       nature: nature,
+       round: round,
++      reserve: reserve,
+     );
+   }
+ }
+diff --git a/lib/models/fiesta/round_transition.dart b/lib/models/fiesta/round_transition.dart
+index cb1e9a1..48aa4a0 100644
+--- a/lib/models/fiesta/round_transition.dart
++++ b/lib/models/fiesta/round_transition.dart
+@@ -99,7 +99,8 @@ RoundTransitionPlan? planRoundTransition({
+ /// Instances qui pèsent sur [teamId] pendant son tour : celles de la manche
+ /// LOGIQUE du tour. Une continuation (temps reporté en début de N+1) est le
+ /// même tour que la fin de N : elle joue avec les effets de N, jamais ceux de
+-/// N+1, qui commencent au premier vrai tour de chaque équipe.
++/// N+1, qui commencent au premier vrai tour de chaque équipe. Une cartouche
++/// en réserve ([ModifierInstance.reserve]) n'a aucun effet.
+ List<ModifierInstance> modifiersForTurn(
+   List<ModifierInstance> active, {
+   required String teamId,
+@@ -107,6 +108,7 @@ List<ModifierInstance> modifiersForTurn(
+ }) =>
+     active
+         .where((m) =>
++            !m.reserve &&
+             m.round == logicalRound &&
+             (m.target == ModifierTarget.both || m.teamId == teamId))
+         .toList();
+diff --git a/lib/models/fiesta/symmetric_draw.dart b/lib/models/fiesta/symmetric_draw.dart
+index ea34f36..f981d47 100644
+--- a/lib/models/fiesta/symmetric_draw.dart
++++ b/lib/models/fiesta/symmetric_draw.dart
+@@ -164,14 +164,16 @@ List<ModifierInstance> roundModifiers(
+ }
+ 
+ /// Cartouches « En stock » reçues par chaque équipe de [teamIds] au début de
+-/// la manche [round] : une instance par équipe et par bonus, `charges` = N
+-/// (« par manche ») ou N moins ce que l'équipe a déjà dépensé dans les
++/// la manche [round] : une instance par équipe et par modificateur, `charges`
++/// = N (« par manche ») ou N moins ce que l'équipe a déjà dépensé dans les
+ /// manches d'avant (« pour la partie », [chargesUsed]).
+ ///
+-/// 🔴 Lane 1 : seuls les BONUS en stock jouent, par le mécanisme de charges
+-/// existant (×2 et Deux mots s'allument avant le tour, Passe gratuite donne N
+-/// passes gratuites par tour). Les malus en stock sont persistés mais sans
+-/// effet en jeu jusqu'à l'écran « Ce tour / Réserve » (lane 2).
++/// 🔴 Lane 1 : les BONUS jouent par le mécanisme de charges existant (×2 et
++/// Deux mots s'allument avant le tour ; Passe gratuite = N passes gratuites
++/// par tour toute la manche, toujours « par manche » : ses passes ne
++/// laissent pas de `ChargeUse`). Les MALUS sont posés en réserve
++/// ([ModifierInstance.reserve]) : persistés, sans effet jusqu'à l'écran
++/// « Ce tour / Réserve » (lane 2).
+ List<ModifierInstance> stockForRound(
+   FiestaRules rules, {
+   required int round,
+@@ -180,13 +182,11 @@ List<ModifierInstance> stockForRound(
+ }) {
+   final stock = <ModifierInstance>[];
+   for (final def in kModifierCatalog) {
+-    if (def.nature != ModifierNature.bonus ||
+-        !_plays(rules, def, ModifierMode.stock, round)) {
+-      continue;
+-    }
++    if (!_plays(rules, def, ModifierMode.stock, round)) continue;
+     final setting = rules.activeSetting(def.id)!;
++    final perGame = setting.perGame && def.id != 'free_pass';
+     for (final teamId in teamIds) {
+-      final spent = setting.perGame
++      final spent = perGame
+           ? chargesUsed
+               .where((u) =>
+                   u.catalogId == def.id &&
+@@ -204,6 +204,7 @@ List<ModifierInstance> stockForRound(
+         charges: charges,
+         nature: def.nature,
+         round: round,
++        reserve: def.nature == ModifierNature.malus,
+       ));
+     }
+   }
+diff --git a/lib/models/game_state.dart b/lib/models/game_state.dart
+index 4f38bf1..26601a1 100644
+--- a/lib/models/game_state.dart
++++ b/lib/models/game_state.dart
+@@ -313,6 +313,16 @@ class GameState {
+     };
+   }
+ 
++  /// [json] (une `GameState.toJson()` relue) porte une partie Fiesta dont
++  /// l'état est illisible (ex. forme v1, avant Fiesta v2) : `fromJson` la
++  /// relirait en Classique. Les appelants (reprise au démarrage, retour
++  /// arrière) l'abandonnent ou la refusent au lieu de la jouer en Classique.
++  static bool hasUnreadableFiesta(Map json) {
++    final raw = json['fiesta'];
++    return raw is Map &&
++        FiestaState.tryFromJson(Map<String, dynamic>.from(raw)) == null;
++  }
++
+   factory GameState.fromJson(Map<String, dynamic> json) {
+     return GameState(
+       gameId: json['gameId'] as String?,
+diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
+index 353e09a..dd5702a 100644
+--- a/lib/providers/game_provider.dart
++++ b/lib/providers/game_provider.dart
+@@ -119,9 +119,7 @@ class GameProvider extends ChangeNotifier {
+         // modèle des ensembles v2) : on ne la reprend pas en Classique, on
+         // l'abandonne proprement (retour à l'accueil, joueurs et équipes
+         // gardés). Jamais de crash.
+-        if (rawGame is Map &&
+-            rawGame['fiesta'] is Map &&
+-            _game.fiesta == null) {
++        if (rawGame is Map && GameState.hasUnreadableFiesta(rawGame)) {
+           debugPrint('[GameProvider] Partie Fiesta illisible, abandonnée');
+           _game = GameState();
+           await _storage.clearGameState();
+@@ -653,7 +651,8 @@ class GameProvider extends ChangeNotifier {
+     final currentWord = _game.currentWord;
+     String? drawnSecond;
+     if (fiesta != null &&
+-        fiesta.turn.charges['two_words'] == ChargeState.spent &&
++        (fiesta.turn.charges['two_words'] == ChargeState.spent ||
++            _isRoundRule('two_words')) &&
+         fiesta.turn.secondWord == null &&
+         currentWord != null) {
+       drawnSecond = drawOtherCard(
+@@ -709,7 +708,7 @@ class GameProvider extends ChangeNotifier {
+             ? [
+                 ...turnModifiers.map((m) => m.catalogId),
+                 if (isDoublePointsOn) 'double_points',
+-                if (isTwoWordsOn) 'two_words',
++                if (_charge('two_words') == ChargeState.spent) 'two_words',
+               ]
+             : null,
+       );
+@@ -1401,10 +1400,23 @@ class GameProvider extends ChangeNotifier {
+   // Une table (`kChargeBonusKeys`), une implémentation : chaque getter public
+   // n'est qu'un id de catalogue.
+ 
++  /// Une instance « pour tous » (cible `both`) vient d'une règle de manche
++  /// (« Toujours » / « Au tirage ») : elle s'applique d'elle-même, sans
++  /// activation ni charge. Les cartouches (stock, 1 parmi 3, coup de pouce)
++  /// visent une équipe.
++  static bool _isCartridge(ModifierInstance m) =>
++      m.target != ModifierTarget.both;
++
++  /// [id] pèse sur l'équipe qui joue comme règle de manche.
++  bool _isRoundRule(String id) =>
++      currentTeamModifiers.any((m) => m.catalogId == id && !_isCartridge(m));
++
+   /// Modificateurs EN JEU pendant le tour (badges du tour, tags analytics) :
+-  /// une charge non activée n'en est pas un (activée : badge et tag à part).
++  /// une cartouche à charge non activée n'en est pas un (activée : badge et
++  /// tag à part) ; une règle de manche (ex. « Deux mots » Toujours) en est un.
+   List<ModifierInstance> get turnModifiers => currentTeamModifiers
+-      .where((m) => !kChargeBonusKeys.containsKey(m.catalogId))
++      .where((m) =>
++          !(kChargeBonusKeys.containsKey(m.catalogId) && _isCartridge(m)))
+       .toList();
+ 
+   ChargeState? _charge(String id) => _turn.charges[id];
+@@ -1422,7 +1434,9 @@ class GameProvider extends ChangeNotifier {
+             u.teamId == teamId &&
+             u.round == _game.currentRound)
+         .length;
+-    return chargeAllowance(currentTeamModifiers, id) - used;
++    return chargeAllowance(
++            currentTeamModifiers.where(_isCartridge).toList(), id) -
++        used;
+   }
+ 
+   /// Allumer est refusé si le bonus est incompatible avec un modificateur en
+@@ -1463,7 +1477,11 @@ class GameProvider extends ChangeNotifier {
+ 
+   /// Deux mots à l'écran pendant CE tour (continuation comprise).
+   bool get isTwoWordsArmed => _charge('two_words') != null;
+-  bool get isTwoWordsOn => _charge('two_words') == ChargeState.spent;
++
++  /// Deux cartes à l'écran : cartouche dépensée, ou règle de manche (qui
++  /// s'applique d'elle-même à chaque tour).
++  bool get isTwoWordsOn =>
++      _charge('two_words') == ChargeState.spent || _isRoundRule('two_words');
+   int get twoWordsLeft => _chargesLeft('two_words');
+   bool get twoWordsBlocked => _blocked('two_words');
+   void setTwoWords(bool on) => _setCharge('two_words', on);
+@@ -2108,7 +2126,19 @@ class GameProvider extends ChangeNotifier {
+       _game.history.isEmpty && _game.currentRound == 1;
+ 
+   // Vérifie si on peut revenir à l'écran de vérification
+-  bool get canGoBackToVerification => _game.preValidationSnapshot != null;
++  bool get canGoBackToVerification => _restorableSnapshot != null;
++
++  /// Le `game` du snapshot de retour arrière, s'il est restaurable : écrit à
++  /// plat par l'ancienne version, corrompu, ou Fiesta illisible (forme v1 :
++  /// il serait restauré en Classique) → `null`, on renonce au retour arrière.
++  Map<String, dynamic>? get _restorableSnapshot {
++    final gameJson = _game.preValidationSnapshot?['game'];
++    if (gameJson is! Map<String, dynamic> ||
++        GameState.hasUnreadableFiesta(gameJson)) {
++      return null;
++    }
++    return gameJson;
++  }
+ 
+   // Sauvegarde l'état avant validation (appelé dans verification_screen)
+   // validatedWords = les mots que l'utilisateur a choisi de valider
+@@ -2145,13 +2175,11 @@ class GameProvider extends ChangeNotifier {
+   // Restaure l'état avant validation (appelé quand on clique sur retour)
+   void restorePreValidationState() {
+     final snapshot = _game.preValidationSnapshot;
+-    if (snapshot == null) return;
+-
+-    final gameJson = snapshot['game'];
+-    // Un snapshot écrit par l'ancienne version (format à plat) ou corrompu :
+-    // on renonce au retour arrière plutôt que de crasher. L'utilisateur perd la
+-    // possibilité de revenir sur CE tour, rien d'autre.
+-    if (gameJson is! Map<String, dynamic>) return;
++    // Snapshot non restaurable ([_restorableSnapshot]) : on renonce au retour
++    // arrière plutôt que de crasher ou de repartir en Classique, sans rien
++    // muter. L'utilisateur perd la possibilité de revenir sur CE tour.
++    final gameJson = _restorableSnapshot;
++    if (snapshot == null || gameJson == null) return;
+ 
+     // Restaurer les scores des équipes
+     final teamScores = snapshot['teamScores'];
+diff --git a/lib/screens/fiesta_ensemble_editor_screen.dart b/lib/screens/fiesta_ensemble_editor_screen.dart
+index 3878abc..e5a299e 100644
+--- a/lib/screens/fiesta_ensemble_editor_screen.dart
++++ b/lib/screens/fiesta_ensemble_editor_screen.dart
+@@ -412,7 +412,9 @@ class _FiestaEnsembleEditorScreenState
+         '(choix 1 parmi 3).',
+   };
+ 
+-  String _summary(ModifierSetting s) {
++  static bool _canBePerGame(ModifierDef def) => def.id != 'free_pass';
++
++  String _summary(ModifierDef def, ModifierSetting s) {
+     if (!s.active) return 'Désactivé';
+     final rounds = s.rounds.toList()..sort();
+     return [
+@@ -421,7 +423,7 @@ class _FiestaEnsembleEditorScreenState
+           : '${rounds.length > 1 ? 'Manches' : 'Manche'} ${rounds.join(', ')}',
+       if (s.mode == ModifierMode.stock)
+         '${s.charges} cartouche${s.charges > 1 ? 's' : ''}'
+-            '${s.perGame ? ' pour la partie' : ''}',
++            '${s.perGame && _canBePerGame(def) ? ' pour la partie' : ''}',
+       _modeLabels[s.mode]!,
+     ].join(' · ');
+   }
+@@ -476,7 +478,7 @@ class _FiestaEnsembleEditorScreenState
+                       ),
+                     ),
+                     Text(
+-                      _summary(s),
++                      _summary(def, s),
+                       style: AppTextStyles.bodySmall
+                           .copyWith(color: AppColors.gray400, fontSize: 11),
+                     ),
+@@ -555,14 +557,18 @@ class _FiestaEnsembleEditorScreenState
+                   onChanged: (v) => _set(def, s.copyWith(charges: v)),
+                 ),
+               ),
+-              _Choices<bool>(
+-                values: const [false, true],
+-                selected: s.perGame,
+-                label: (perGame) => perGame ? 'pour la partie' : 'par manche',
+-                onSelect: (perGame) => _set(def, s.copyWith(perGame: perGame)),
+-              ),
++              // Passe gratuite : « par manche » seulement tant que ses passes
++              // ne sont pas décomptées comme des cartouches (lane 2).
++              if (_canBePerGame(def))
++                _Choices<bool>(
++                  values: const [false, true],
++                  selected: s.perGame,
++                  label: (perGame) => perGame ? 'pour la partie' : 'par manche',
++                  onSelect: (perGame) =>
++                      _set(def, s.copyWith(perGame: perGame)),
++                ),
+               const SizedBox(height: 4),
+-              _Hint(s.perGame
++              _Hint(s.perGame && _canBePerGame(def)
+                   ? 'Les cartouches ne reviennent pas : elles servent pour '
+                       'toute la partie.'
+                   : 'Les cartouches reviennent à chaque manche.'),
+diff --git a/lib/screens/fiesta_ensembles_screen.dart b/lib/screens/fiesta_ensembles_screen.dart
+index f9f59bd..5e5c49c 100644
+--- a/lib/screens/fiesta_ensembles_screen.dart
++++ b/lib/screens/fiesta_ensembles_screen.dart
+@@ -131,7 +131,9 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
+       if (!mounted) return;
+       switch (result) {
+         case EnsembleSaved(:final ensemble):
+-          FiestaEnsemblesScreen.draft = null;
++          // Seul le brouillon repris (donc enregistré) disparaît : celui d'un
++          // AUTRE ensemble reste.
++          if (resumed != null) FiestaEnsemblesScreen.draft = null;
+           await _reload(select: ensemble.id);
+         case EnsembleDraftKept(:final rules):
+           setState(() =>
+diff --git a/test/models/fiesta/ensemble_validation_test.dart b/test/models/fiesta/ensemble_validation_test.dart
+index f491c1f..e01bd13 100644
+--- a/test/models/fiesta/ensemble_validation_test.dart
++++ b/test/models/fiesta/ensemble_validation_test.dart
+@@ -21,6 +21,17 @@ void main() {
+       'cas nominaux : l\'ensemble par défaut et les 7 ensembles fournis sont '
+       'valides, et deux à deux distincts (noms et réglages)', () {
+     // Sans ce cas, une garde qui refuse TOUT passerait les tests ci-dessous.
++    expect([
++      for (final e in kProvidedEnsembles) (e.id, e.name)
++    ], [
++      ('provided_classic', 'Fiesta classique'),
++      ('provided_pro', 'Pro Player'),
++      ('provided_straight', 'Droit au but'),
++      ('provided_explosive', 'Explosif'),
++      ('provided_pictionary', 'Pictionnary'),
++      ('provided_bilingual', 'Bilingue'),
++      ('provided_injustice', 'L\'injustice'),
++    ]);
+     expect(validateEnsemble(rulesWith(), others: kProvidedEnsembles), isEmpty);
+     for (final e in kProvidedEnsembles) {
+       expect(
+diff --git a/test/models/fiesta/symmetric_draw_test.dart b/test/models/fiesta/symmetric_draw_test.dart
+index 2f3006a..fb91b02 100644
+--- a/test/models/fiesta/symmetric_draw_test.dart
++++ b/test/models/fiesta/symmetric_draw_test.dart
+@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/fiesta_state.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
++import 'package:guess_it_all_mobile/models/fiesta/round_transition.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
+ 
+ ModifierSetting setting(ModifierMode mode,
+@@ -197,22 +198,25 @@ void main() {
+   });
+ 
+   test(
+-      'En stock : bonus seulement (lane 1), une instance par équipe sur les '
+-      'manches cochées ; « pour la partie » = N moins ce qui est déjà dépensé',
+-      () {
++      'En stock : une instance par équipe sur les manches cochées, malus en '
++      'réserve (sans effet, lane 2) ; « pour la partie » = N moins ce qui '
++      'est déjà dépensé, sauf Passe gratuite (toujours par manche)', () {
+     final rules = FiestaRules(
+       mode: FiestaMode.custom,
+       modifiers: {
+         'double_points':
+             setting(ModifierMode.stock, rounds: {1, 3}, charges: 2),
+         'two_words': setting(ModifierMode.stock, charges: 2, perGame: true),
+-        'minus_10s': setting(ModifierMode.stock, charges: 2),
++        'minus_10s': setting(ModifierMode.stock, rounds: {1}, charges: 2),
++        'free_pass':
++            setting(ModifierMode.stock, rounds: {2}, charges: 3, perGame: true),
+       },
+     );
+     Map<String, int> stock(int round, [List<ChargeUse> used = const []]) => {
+           for (final m in stockForRound(rules,
+               round: round, teamIds: ['a', 'b'], chargesUsed: used))
+-            '${m.catalogId}/${m.teamId}': m.charges,
++            if (m.catalogId != 'minus_10s' && m.catalogId != 'free_pass')
++              '${m.catalogId}/${m.teamId}': m.charges,
+         };
+ 
+     expect(stock(1), {
+@@ -221,6 +225,21 @@ void main() {
+       'two_words/a': 2,
+       'two_words/b': 2,
+     });
++    // Malus en réserve : persistés pour chaque équipe, sans effet en jeu.
++    final malus = stockForRound(rules, round: 1, teamIds: ['a', 'b'])
++        .where((m) => m.catalogId == 'minus_10s')
++        .toList();
++    expect(malus.map((m) => (m.teamId, m.charges, m.reserve)),
++        [('a', 2, true), ('b', 2, true)]);
++    expect(modifiersForTurn(malus, teamId: 'a', logicalRound: 1), isEmpty);
++    // Passe gratuite « pour la partie » relue « par manche » (intérim lane 1).
++    expect(
++        stockForRound(rules, round: 2, teamIds: [
++          'a'
++        ], chargesUsed: [
++          const ChargeUse(catalogId: 'free_pass', teamId: 'a', round: 1),
++        ]).where((m) => m.catalogId == 'free_pass').single.charges,
++        3);
+     final used = [
+       const ChargeUse(catalogId: 'two_words', teamId: 'a', round: 1),
+       const ChargeUse(catalogId: 'two_words', teamId: 'a', round: 2),
+diff --git a/test/providers/fiesta_freeze_test.dart b/test/providers/fiesta_freeze_test.dart
+index be6c00c..0ecaac0 100644
+--- a/test/providers/fiesta_freeze_test.dart
++++ b/test/providers/fiesta_freeze_test.dart
+@@ -129,4 +129,25 @@ void main() {
+     expect(reloaded.players.map((p) => p.name), ['Ana', 'Bob'],
+         reason: 'joueurs gardés');
+   });
++
++  test(
++      'snapshot de retour arrière en forme v1 dans une partie v2 : retour '
++      'arrière refusé sans rien muter, jamais restauré en Classique', () async {
++    final provider = await givenReadyProvider();
++    await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
++    provider.startTurn();
++    provider.startTurnTimer();
++    provider.endTurn();
++    provider.savePreValidationState(const []);
++    final snapshot = provider.game.preValidationSnapshot!;
++    final rules =
++        (snapshot['game'] as Map<String, dynamic>)['fiesta']['rules'] as Map;
++    rules.remove('format'); // forme v1 : illisible
++    final before = provider.game.toJson();
++
++    expect(provider.canGoBackToVerification, isFalse);
++    provider.restorePreValidationState();
++    expect(provider.game.toJson(), before);
++    expect(provider.isFiesta, isTrue);
++  });
+ }
+diff --git a/test/providers/fiesta_pick_three_test.dart b/test/providers/fiesta_pick_three_test.dart
+index 7c9f4c7..982e6f8 100644
+--- a/test/providers/fiesta_pick_three_test.dart
++++ b/test/providers/fiesta_pick_three_test.dart
+@@ -122,6 +122,35 @@ void main() {
+     expect(provider.passBlocked, isTrue);
+   });
+ 
++  test(
++      'pick3Choices 2 : deux rangées, une carte par rangée ; nextRound bloqué '
++      'après la 1re, pas deux cartes dans une rangée, les deux appliquées '
++      'en M2', () async {
++    final provider = await givenProvider(['Ana', 'Bob'], wordsEach: 11);
++    await provider.startGame(fiesta: pickThreeWith(pick3Choices: 2));
++    playTurn(provider, 14);
++    final trailing = playTurn(provider, 8);
++
++    final rows = provider.offersFor(trailing);
++    expect(rows, hasLength(2));
++    provider.chooseOffer(trailing, 0, 0);
++    expect(provider.nextChooserId, trailing, reason: 'rangée 2 à choisir');
++    provider.nextRound();
++    expect(provider.game.currentRound, 1, reason: 'bloqué après la 1re');
++
++    provider.chooseOffer(trailing, 0, 1); // même rangée : refusé
++    expect(provider.game.fiesta!.offerChoices, hasLength(1));
++    expect(provider.offersFor(trailing).map(ids), rows.map(ids),
++        reason: 'ses rangées ne bougent pas pendant qu\'elle choisit');
++
++    provider.chooseOffer(trailing, 1, 0);
++    expect(provider.nextChooserId, isNull);
++    provider.nextRound();
++    expect(provider.game.currentRound, 2);
++    expect(ids(provider.game.fiesta!.active.where((m) => m.round == 2)),
++        ids([rows[0][0], rows[1][0]]));
++  });
++
+   test(
+       'app tuée au milieu de la file : le choix fait est gardé, la file '
+       'reprend à l\'équipe suivante avec les mêmes offres (AC5)', () async {
+diff --git a/test/providers/fiesta_two_words_test.dart b/test/providers/fiesta_two_words_test.dart
+index 08cf1ff..ec5459c 100644
+--- a/test/providers/fiesta_two_words_test.dart
++++ b/test/providers/fiesta_two_words_test.dart
+@@ -24,8 +24,8 @@ Future<GameProvider> givenReadyProvider() async {
+   return provider;
+ }
+ 
+-/// Personnalisé, sans tirage : [ids] « Toujours » sur la manche 1 (×2 :
+-/// 1 cartouche en stock), 1 charge.
++/// Personnalisé, sans tirage : [ids] en stock sur la manche 1, 1 cartouche
++/// par équipe (à allumer avant le tour).
+ FiestaRules fixedOnRound1(List<String> ids) => FiestaRules(
+       mode: FiestaMode.custom,
+       drawCount: 0,
+@@ -34,10 +34,7 @@ FiestaRules fixedOnRound1(List<String> ids) => FiestaRules(
+           id: ModifierSetting(
+             active: true,
+             rounds: const {1},
+-            // « Mot compte double » : seulement en cartouche.
+-            mode: id == 'double_points'
+-                ? ModifierMode.stock
+-                : ModifierMode.always,
++            mode: ModifierMode.stock,
+           ),
+       },
+     );
+@@ -234,6 +231,36 @@ void main() {
+     expect(p.isDoublePointsArmed, isTrue);
+   });
+ 
++  test(
++      '« Deux mots » règle de manche (Toujours) : deux cartes à chaque tour '
++      'sans rien allumer, aucune charge offerte ni dépensée', () async {
++    final p = await givenReadyProvider();
++    await p.startGame(
++      fiesta: FiestaRules(
++        mode: FiestaMode.custom,
++        drawCount: 0,
++        modifiers: {
++          'two_words': ModifierSetting(
++              active: true, rounds: const {1}, mode: ModifierMode.always),
++        },
++      ),
++    );
++    for (var turn = 0; turn < 2; turn++) {
++      expect(p.twoWordsLeft, 0, reason: 'pas une cartouche');
++      expect(p.turnModifiers.map((m) => m.catalogId), ['two_words']);
++      p.startTurn();
++      p.startTurnTimer();
++      expect(p.isTwoWordsOn, isTrue);
++      expect(p.secondWord, isNotNull);
++      expectPoolIntact(p);
++      p.endTurn();
++      final guessed = List<String>.from(p.game.wordsGuessedThisTurn);
++      p.savePreValidationState(guessed);
++      p.validateWords(guessed);
++    }
++    expect(p.game.fiesta!.chargesUsed, isEmpty);
++  });
++
+   test(
+       'Analytics après un kill (vrai redémarrage du service) : en plein tour '
+       'à deux cartes, puis sur la vérification, chaque événement terminal est '

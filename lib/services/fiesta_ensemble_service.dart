@@ -80,18 +80,24 @@ class FiestaEnsembleService {
       }) ??
       false;
 
-  /// Copie « <nom> (copie) » juste après l'original. `null` si la borne est
-  /// atteinte ou l'original introuvable.
-  Future<FiestaEnsemble?> duplicate(String id) => _mutate((store) {
+  /// Copie « <nom> (2) » (premier numéro libre) : juste après l'original
+  /// pour l'un des miens, en fin de liste pour un ensemble fourni. `null` si
+  /// la borne est atteinte ou l'original (à moi) introuvable.
+  Future<FiestaEnsemble?> duplicate(FiestaEnsemble source) => _mutate((store) {
         if (store.ensembles.length >= maxEnsembles) return null;
-        final index = store.ensembles.indexWhere((e) => e.id == id);
-        if (index < 0) return null;
-        final source = store.ensembles[index];
+        final index = store.ensembles.indexWhere((e) => e.id == source.id);
+        if (index < 0 && !source.isProvided) return null;
         final copy = FiestaEnsemble(
           id: const Uuid().v4(),
-          rules: source.rules.copyWith(ensembleName: copyName(source.name)),
+          rules: source.rules.copyWith(
+            ensembleName: copyName(source.name, [
+              for (final e in [...kProvidedEnsembles, ...store.ensembles])
+                e.name,
+            ]),
+          ),
         );
-        final list = [...store.ensembles]..insert(index + 1, copy);
+        final list = [...store.ensembles]
+          ..insert(index < 0 ? store.ensembles.length : index + 1, copy);
         return (EnsembleStore(list, store.lastUsedId), copy);
       });
 
@@ -105,15 +111,19 @@ class FiestaEnsembleService {
   Future<void> markUsed(String id) =>
       _mutate((store) => (EnsembleStore(store.ensembles, id), null));
 
-  /// Q13 : pas d'unicité imposée, 30 caractères au plus. C'est le nom de
-  /// BASE qu'on raccourcit, pas le suffixe : sinon la copie d'un nom de 30
-  /// caractères porterait exactement le nom de l'original. Coupe en
+  /// Nom d'une copie : « <nom> (2) », ou le premier numéro libre parmi
+  /// [taken] (noms uniques, sans compter la casse ni les espaces autour).
+  /// C'est le nom de BASE qu'on raccourcit, pas le suffixe : coupe en
   /// caractères visibles (comme le `maxLength` du champ), jamais au milieu
   /// d'un emoji.
-  static String copyName(String name) {
-    const suffix = ' (copie)';
-    final base = name.characters.take(maxNameLength - suffix.length);
-    return '$base$suffix';
+  static String copyName(String name, Iterable<String> taken) {
+    final used = {for (final t in taken) nameKey(t)};
+    for (var n = 2;; n++) {
+      final suffix = ' ($n)';
+      final base = name.trim().characters.take(maxNameLength - suffix.length);
+      final candidate = '$base$suffix';
+      if (!used.contains(nameKey(candidate))) return candidate;
+    }
   }
 
   /// Relit, applique [change], réécrit. [change] rend `null` pour ne rien

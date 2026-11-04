@@ -24,19 +24,15 @@ Future<GameProvider> givenReadyProvider(
   return provider;
 }
 
-/// Personnalisé, sans tirage : [fixed] (id → charges) fixés sur la manche 1.
+/// Personnalisé, sans tirage : [fixed] « Toujours » sur la manche 1 (les
+/// charges sont celles du catalogue : 2 passes gratuites).
 FiestaRules fixedOnRound1(Map<String, int> fixed) => FiestaRules(
       mode: FiestaMode.custom,
       drawCount: 0,
       modifiers: {
         for (final e in fixed.entries)
           e.key: ModifierSetting(
-            active: true,
-            arrival: ModifierArrival.fixed,
-            startRound: 1,
-            fixedRound: 1,
-            charges: e.value,
-          ),
+              active: true, rounds: const {1}, mode: ModifierMode.always),
       },
     );
 
