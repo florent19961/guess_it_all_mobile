@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
+import 'package:guess_it_all_mobile/services/storage_service.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
 
 import '../helpers/test_prefs.dart';
@@ -256,5 +258,53 @@ void main() {
     expect([p.passBlocked, p.freePasses], [false, 2]);
     playTurn(p);
     expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null), isEmpty);
+  });
+
+  test(
+      'Coup de pouce (Auto) : la Passe gratuite offerte est UNE cartouche — '
+      'allumée, 2 passes gratuites ce tour-là, puis plus rien', () async {
+    var p = await givenProvider(['Ana', 'Bob'], wordsEach: 2);
+    await p.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
+    // Graine fixée : un tirage de M2 qui laisse la Passe gratuite utile.
+    final rules = p.game.fiesta!.rules;
+    final gameId = [
+      for (var i = 0; i < 100; i++) 'g$i'
+    ].firstWhere((id) => roundModifiers(rules, gameId: id, round: 2)
+        .every((m) => m.catalogId != 'free_pass' && m.catalogId != 'no_pass'));
+    await pumpEventQueue();
+    final saved = (await StorageService().loadGameState())!;
+    saved['game']['gameId'] = gameId;
+    await StorageService().saveGameState(saved);
+    p = GameProvider();
+    await pumpEventQueue();
+
+    // M1 : 1 mot contre 3 → écart 2, coup de pouce « léger » pour la menée.
+    final trailing = playTurn(p, 1);
+    playTurn(p, 99);
+    expect(
+        p.appBoostPreview
+            .where((m) => m.teamId == trailing)
+            .map((m) => (m.catalogId, m.charges)),
+        [('free_pass', 1)]);
+    p.nextRound();
+    playTurn(p); // continuation du leader
+
+    expect(p.getCurrentTeam()!.id, trailing);
+    expect(left(p, 'free_pass'), 1);
+    expect(p.freePasses, 0, reason: 'pas toute la manche');
+    p.toggleBonus('free_pass');
+    p.startTurn();
+    p.startTurnTimer();
+    expect(p.freePasses, 2);
+    p.passWord();
+    p.passWord();
+    expect(p.currentPassPenalty, 5);
+    p.endTurn();
+    p.savePreValidationState(const []);
+    p.validateWords(const []);
+    playTurn(p);
+
+    expect(p.getCurrentTeam()!.id, trailing);
+    expect([p.freePasses, left(p, 'free_pass')], [0, 0]);
   });
 }
