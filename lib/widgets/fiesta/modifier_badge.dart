@@ -18,6 +18,9 @@ const Map<String, String> kModifierIcons = {
   'two_words': '⧉',
   'reversed': '⇄',
   'block_guesser': '🔇',
+  'mime_under_sheet': '⛺',
+  'mime_back_turned': '↩',
+  'other_language': '🌐',
 };
 
 String modifierIcon(String id) => kModifierIcons[id] ?? '✦';

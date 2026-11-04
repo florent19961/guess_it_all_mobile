@@ -80,7 +80,7 @@ void main() {
     expect(provider.offersFor(leader), isEmpty);
     final offers = provider.offersFor(trailing);
     expect(offers.map((m) => m.catalogId).toSet(),
-        {'double_points', 'two_words', 'no_pass'});
+        {'no_pass', 'other_language', 'double_points'});
     expect(
         offers
             .every((m) => kOfferStrength[m.catalogId] == OfferStrength.medium),

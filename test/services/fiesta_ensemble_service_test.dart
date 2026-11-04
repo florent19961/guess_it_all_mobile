@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guess_it_all_mobile/models/fiesta/ensemble_validation.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_state.dart';
@@ -63,6 +64,38 @@ void main() {
     expect(rules.drawCount, 2);
     expect(rules.oneAnswer, isFalse);
     expect(rules.catchUp.b2, 5);
+  });
+
+  test(
+      'ensemble d\'avant la famille « Mime » (deux mimes fixés sur M3) : '
+      'relu sans planter, un seul mime gardé — celui que le jeu appliquait',
+      () async {
+    String mod(String arrival, {bool active = true}) =>
+        '{"active":$active,"arrival":"$arrival","startRound":3,'
+        '"fixedRound":3,"charges":0}';
+    await givenPrefs({
+      key: '{"schemaVersion":1,"data":{"ensembles":[{"id":"e1","rules":'
+          '{"mode":"custom","ensembleName":"Vieux","modifiers":{'
+          '"draw":${mod('fixed')},"mime_eyes_closed":${mod('fixed')},'
+          '"mime_no_arms":${mod('draw')},"no_pass":${mod('draw')}}}}]}}',
+    });
+
+    final rules = (await service.load()).ensembles.single.rules;
+    // Les fixés passaient avant le tirage, dans l'ordre du catalogue :
+    // `mime_eyes_closed` d'abord, puis « Dessiner » et `mime_no_arms` (tiré)
+    // étaient refusés comme incompatibles.
+    expect(
+      {for (final e in rules.modifiers.entries) e.key: e.value.active},
+      {
+        'draw': false,
+        'mime_eyes_closed': true,
+        'mime_no_arms': false,
+        'no_pass': true,
+      },
+    );
+    expect(rules.modifiers['draw']!.arrival, ModifierArrival.fixed,
+        reason: 'réglages conservés, seul `active` change');
+    expect(validateEnsemble(rules), isEmpty);
   });
 
   test(

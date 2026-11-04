@@ -21,9 +21,10 @@ int drawSeed(String gameId, int round) {
   return hash;
 }
 
-/// Un modificateur peut-il sortir en manche [round] ?
+/// Un modificateur peut-il sortir en manche [round] ? (« manche 3
+/// seulement » pour le mime, jamais en manche 3 pour la parole.)
 bool isEligibleForRound(ModifierDef def, int round) =>
-    !def.round3Only || round == 3;
+    round == 3 ? !def.notInRound3 : !def.round3Only;
 
 /// Un modificateur qui vise un joueur (`block_guesser`, choisi par les
 /// adversaires) n'a pas de sens « pour toutes les équipes » : ni tiré, ni fixé.

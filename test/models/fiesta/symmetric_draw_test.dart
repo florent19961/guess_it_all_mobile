@@ -44,8 +44,9 @@ void main() {
 
   test(
       'pour toute config, manche et graine : plafond (2 en Auto, 3 en '
-      'Personnalisé), aucune paire incompatible, jamais « Dessiner » avec un '
-      'mime, rien de « manche 3 » avant M3, résultat déterministe', () {
+      'Personnalisé), aucune paire incompatible, au plus un de la famille '
+      '« Mime », rien de « manche 3 » avant M3 ni de « pas en M3 » en M3, '
+      'résultat déterministe', () {
     final seen = <String, Set<int>>{};
     configs.forEach((label, rulesFor) {
       for (final round in [1, 2, 3]) {
@@ -58,10 +59,9 @@ void main() {
           final cap = label == 'Auto' ? 2 : 3;
           expect(ids.length, lessThanOrEqualTo(cap), reason: why);
           (seen[label] ??= {}).add(ids.length);
-          if (ids.contains('draw')) {
-            expect(ids.where((id) => modifierById(id)!.mime), isEmpty,
-                reason: why);
-          }
+          expect(ids.where((id) => modifierById(id)!.mimeFamily).length,
+              lessThanOrEqualTo(1),
+              reason: why);
           expect(ids, isNot(contains('block_guesser')), reason: why);
           expect(ids.toSet().length, ids.length, reason: why);
           for (var i = 0; i < ids.length; i++) {
@@ -74,6 +74,9 @@ void main() {
           }
           if (round < 3) {
             expect(ids.where((id) => modifierById(id)!.round3Only), isEmpty,
+                reason: why);
+          } else {
+            expect(ids.where((id) => modifierById(id)!.notInRound3), isEmpty,
                 reason: why);
           }
           // Même graine (retour arrière, app tuée) = même tirage.
@@ -96,8 +99,9 @@ void main() {
       drawCount: 3,
       modifiers: {
         'draw': setting(ModifierArrival.fixed, fixedRound: 3),
-        for (final id in ['mime_no_arms', 'mime_no_fists', 'mime_eyes_closed'])
-          id: setting(ModifierArrival.draw, startRound: 3),
+        for (final def in kModifierCatalog.where((d) => d.mimeFamily))
+          if (def.id != 'draw')
+            def.id: setting(ModifierArrival.draw, startRound: 3),
       },
     );
     for (final gameId in gameIds) {

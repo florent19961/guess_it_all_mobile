@@ -64,6 +64,15 @@ List<String> validateEnsemble(FiestaRules rules) {
           : setting.startRound < 3;
       if (tooEarly) errors.add('$name n\'existe qu\'en manche 3 (mime).');
     }
+    if (def.notInRound3) {
+      final onlyRound3 = setting.arrival == ModifierArrival.fixed
+          ? setting.fixedRound == 3
+          : setting.startRound >= 3;
+      if (onlyRound3) {
+        errors.add('$name n\'existe pas en manche 3 (mime) : '
+            'manche 1 ou 2 seulement.');
+      }
+    }
   }
 
   for (final MapEntry(key: round, value: ids) in fixedByRound.entries) {

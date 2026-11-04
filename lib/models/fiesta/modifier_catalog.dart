@@ -26,8 +26,12 @@ class ModifierDef {
   /// Contrainte de la manche 3 (mime / dessin) : jamais avant.
   final bool round3Only;
 
-  /// Variante du mime : exclue de « Dessiner » (voir [areCompatible]).
-  final bool mime;
+  /// Contrainte de la parole : jamais en manche 3 (on y mime).
+  final bool notInRound3;
+
+  /// Famille « Mime » : au plus UN de ses membres à la fois (voir
+  /// [areCompatible]).
+  final bool mimeFamily;
 
   const ModifierDef({
     required this.id,
@@ -38,7 +42,8 @@ class ModifierDef {
     this.defaultTarget = ModifierTarget.both,
     this.defaultCharges = 0,
     this.round3Only = false,
-    this.mime = false,
+    this.notInRound3 = false,
+    this.mimeFamily = false,
   });
 }
 
@@ -49,7 +54,7 @@ const List<ModifierDef> kModifierCatalog = [
     description: 'Les bras restent le long du corps pendant tout le tour.',
     nature: ModifierNature.malus,
     round3Only: true,
-    mime: true,
+    mimeFamily: true,
   ),
   ModifierDef(
     id: 'mime_no_fists',
@@ -57,7 +62,7 @@ const List<ModifierDef> kModifierCatalog = [
     description: 'Mains ouvertes, jamais de poing fermé.',
     nature: ModifierNature.malus,
     round3Only: true,
-    mime: true,
+    mimeFamily: true,
   ),
   ModifierDef(
     id: 'mime_eyes_closed',
@@ -65,7 +70,7 @@ const List<ModifierDef> kModifierCatalog = [
     description: 'On mime les yeux fermés pendant tout le tour.',
     nature: ModifierNature.malus,
     round3Only: true,
-    mime: true,
+    mimeFamily: true,
   ),
   ModifierDef(
     id: 'draw',
@@ -73,6 +78,7 @@ const List<ModifierDef> kModifierCatalog = [
     description: 'On dessine au lieu de mimer.',
     nature: ModifierNature.malus,
     round3Only: true,
+    mimeFamily: true,
   ),
   ModifierDef(
     id: 'no_pass',
@@ -121,22 +127,41 @@ const List<ModifierDef> kModifierCatalog = [
     defaultScope: ModifierScope.turn,
     defaultTarget: ModifierTarget.player,
   ),
+  // Ajouts du 2026-11-04 : EN FIN de liste (les ids et l'ordre des anciens
+  // ne bougent pas).
+  ModifierDef(
+    id: 'mime_under_sheet',
+    name: 'Mimer sous un drap',
+    description: 'On mime caché sous un drap (ou une couverture).',
+    nature: ModifierNature.malus,
+    round3Only: true,
+    mimeFamily: true,
+  ),
+  ModifierDef(
+    id: 'mime_back_turned',
+    name: 'Mime de dos',
+    description: 'On mime en tournant le dos à son équipe.',
+    nature: ModifierNature.malus,
+    round3Only: true,
+    mimeFamily: true,
+  ),
+  ModifierDef(
+    id: 'other_language',
+    name: 'Faire deviner dans une autre langue',
+    description: 'On fait deviner en parlant une autre langue que le '
+        'français.',
+    nature: ModifierNature.malus,
+    notInRound3: true,
+  ),
 ];
 
 /// Paires incompatibles (Q14 de l'epic). Chaque paire est écrite une fois :
-/// [areCompatible] est symétrique par construction. « Dessiner » contre les
-/// mimes n'y figure pas : c'est une règle de groupe ([kDrawId], `mime`).
+/// [areCompatible] est symétrique par construction. La famille « Mime » n'y
+/// figure pas : c'est une règle de groupe (`mimeFamily`).
 const List<(String, String)> kModifierIncompatibilities = [
   ('no_pass', 'two_words'),
   ('no_pass', 'free_pass'),
-  ('mime_no_arms', 'mime_eyes_closed'),
-  ('mime_no_fists', 'mime_no_arms'),
 ];
-
-/// « Dessiner » remplace le mime : il exclut TOUT modificateur `mime`, et
-/// inversement (retours device 2026-11-04) — un mime ajouté au catalogue
-/// l'est d'office.
-const String kDrawId = 'draw';
 
 /// « Une seule réponse » : modificateur de TOUTE la partie, hors de
 /// [kModifierCatalog] (ni tiré par manche, ni proposé, ni fixé). Son état vit
@@ -156,10 +181,12 @@ ModifierDef? modifierById(String id) {
   return null;
 }
 
+/// Deux membres de la famille « Mime » (`mimeFamily`, « Dessiner » compris)
+/// s'excluent toujours (retours device 2026-11-04) : un membre ajouté au
+/// catalogue l'est d'office.
 bool areCompatible(String a, String b) {
-  bool drawVsMime(String x, String y) =>
-      x == kDrawId && (modifierById(y)?.mime ?? false);
-  if (drawVsMime(a, b) || drawVsMime(b, a)) return false;
+  bool family(String id) => modifierById(id)?.mimeFamily ?? false;
+  if (family(a) && family(b)) return false;
   for (final (x, y) in kModifierIncompatibilities) {
     if ((x == a && y == b) || (x == b && y == a)) return false;
   }
