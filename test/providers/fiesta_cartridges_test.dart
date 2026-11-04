@@ -204,4 +204,27 @@ void main() {
     expect(p.inflictMalus('mime_eyes_closed', x), isNull);
     expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null).length, 2);
   });
+
+  test(
+      'Malus interdit dans la manche où la cible rejoue (« Autre langue » '
+      'envoyé en M2, cible qui rejoue en M3) : sans effet, il part à la fin '
+      'de son tour', () async {
+    final p = await givenProvider(['Ana', 'Bob', 'Cid'], wordsEach: 1);
+    await p.startGame(
+        fiesta: stock({
+      'other_language': {2}
+    }));
+    playTurn(p, 99);
+    p.nextRound();
+    final victim = playTurn(p); // continuation M2
+    expect(p.inflictMalus('other_language', victim), isNull);
+    playTurn(p, 99); // l'envoyeuse finit M2
+    p.nextRound();
+    while (p.getCurrentTeam()!.id != victim) {
+      playTurn(p);
+    }
+    expect(p.receivedThisTurn, isEmpty);
+    playTurn(p);
+    expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null), isEmpty);
+  });
 }
