@@ -10,18 +10,32 @@ la skill ne modifie aucun fichier de mots.
 
 ## Ce que la page montre
 
-- **Le décrochage par niveau** : pour chaque manche, la gaussienne ajustée sur les temps « affiché
-  → trouvé » de chaque niveau (1 Facile, 2 Moyen, 3 Difficile, 4 Expert), la médiane en pointillé,
-  et un tableau moyenne / médiane / écart-type / % trouvés / % passés. La manche 1 (description
-  libre) est celle qui mesure la difficulté ; en manches 2 et 3 les mots sont déjà connus.
+Unité de mesure : **un mot dans une manche d'une partie**. Son temps est le **cumul de tous ses
+affichages dans la manche** (passé puis repris, fin de tour puis repris…) jusqu'à « trouvé »
+(règle Florent 2026-11-04).
+
+- **Le décrochage par niveau** : pour chaque manche, la gaussienne ajustée sur les temps cumulés
+  des mots trouvés de chaque niveau (1 Facile, 2 Moyen, 3 Difficile, 4 Expert), **mise à
+  l'échelle de la part de mots trouvés**, la médiane en pointillé, et à droite une barre
+  **« Jamais trouvés »** par niveau (passés ou restés à l'écran sans jamais être trouvés dans la
+  manche). C'est ainsi que les passes entrent dans le graphique : une passe suivie d'une réussite
+  allonge le temps cumulé, une passe sans réussite nourrit la barre. Tableau : mots joués, % jamais
+  trouvés, affichages par mot, passes par mot, moyenne / médiane / écart-type. La manche 1
+  (description libre) est celle qui mesure la difficulté.
 - **Les mots joués** : tout mot trouvé ou passé au moins une fois (un seul passage suffit, choix
   Florent 2026-11-04), avec son niveau actuel (lu dans `assets/translations/words/fr/*.json`),
-  et les signaux « Passé en M1 », « Lent » / « Rapide » (temps médian M1 au-dessus du 3ᵉ quartile /
-  en dessous du 1ᵉʳ quartile des mots de son niveau).
+  ses affichages, passes et « jamais trouvé » en M1, son temps cumulé médian M1, et les signaux
+  « Passé en M1 », « Jamais trouvé », « Lent » / « Rapide » (temps médian M1 au-dessus du
+  3ᵉ quartile / en dessous du 1ᵉʳ quartile des mots de son niveau).
 
-Règles de calcul (`analyze.py`) : mots personnalisés exclus (pas de niveau) ; un mot trouvé puis
-invalidé à la vérification ne compte pas ; une durée absente ou plus longue qu'un tour est écartée
-(et comptée dans la note de la page).
+Règles de calcul (`analyze.py`) :
+- **un mot trouvé en moins d'1 s cumulée est écarté de tout** (tap accidentel, règle Florent
+  2026-11-04, constante `MIN_S`) ;
+- mots personnalisés exclus (pas de niveau) ;
+- un mot trouvé puis invalidé à la vérification ne compte pas comme trouvé ;
+- un affichage sans durée ou plus long qu'un tour (app fermée ou en pause) retire le mot des
+  temps mais le garde dans les comptes ;
+- « jamais trouvé » inclut les parties abandonnées en cours de manche.
 
 ## Lancer
 
@@ -46,8 +60,7 @@ après une lecture `action: "read"` si la page n'a pas été publiée dans cette
 ## Lire le résultat
 
 Répondre à Florent en quelques lignes : nombre de parties et de mots, médianes M1 par niveau,
-écart entre niveaux (le temps sépare peu les niveaux, le taux de passe sépare davantage), et les
-mots les plus signalés. Ne pas proposer de reclassement chiffré sans qu'il le demande.
+écart entre niveaux, part de « jamais trouvés », et les mots les plus signalés. Ne pas proposer de reclassement chiffré sans qu'il le demande.
 
 ## Faire évoluer
 
