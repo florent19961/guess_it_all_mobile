@@ -16,14 +16,6 @@ import '../widgets/help/help_button.dart';
 import '../widgets/help/help_content.dart';
 import 'fiesta_ensemble_editor_screen.dart';
 
-/// Brouillon de l'éditeur gardé en mémoire tant que l'app est ouverte
-/// (jamais persisté) : [ensembleId] nul = un nouvel ensemble.
-class EnsembleDraft {
-  final String? ensembleId;
-  final FiestaRules rules;
-  const EnsembleDraft(this.ensembleId, this.rules);
-}
-
 /// « Fiesta personnalisée » : juste après les Paramètres, avant les joueurs
 /// (Fiesta Personnalisé seulement). Les ensembles fournis par l'app puis les
 /// miens (un tap sélectionne), « Créer un ensemble » qui POUSSE l'éditeur
@@ -46,8 +38,15 @@ class FiestaEnsemblesScreen extends StatefulWidget {
     super.key,
   });
 
-  /// Brouillon de l'éditeur, en mémoire seulement (spec Fiesta v2 §4).
-  static EnsembleDraft? draft;
+  /// Brouillons de l'éditeur, en mémoire seulement tant que l'app est
+  /// ouverte (spec Fiesta v2 §4) : un par ensemble modifié (son id), et un
+  /// pour la création ([newDraftKey]). Chaque éditeur ne lit, n'écrit et
+  /// n'efface que le sien : aucun brouillon n'en écrase un autre.
+  static final Map<String, FiestaRules> drafts = {};
+
+  /// Clé du brouillon d'un nouvel ensemble (jamais un id : ids uuid ou
+  /// `provided_*`).
+  static const newDraftKey = '';
 
   @override
   State<FiestaEnsemblesScreen> createState() => _FiestaEnsemblesScreenState();
@@ -113,14 +112,14 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
     if (_busy) return;
     _busy = true;
     try {
-      final draft = FiestaEnsemblesScreen.draft;
-      final resumed =
-          draft != null && draft.ensembleId == ensemble?.id ? draft : null;
+      final drafts = FiestaEnsemblesScreen.drafts;
+      final key = ensemble?.id ?? FiestaEnsemblesScreen.newDraftKey;
+      final resumed = drafts[key];
       final result = await Navigator.of(context).push<EnsembleEditorResult>(
         MaterialPageRoute(
           builder: (_) => FiestaEnsembleEditorScreen(
             initial: ensemble,
-            draft: resumed?.rules,
+            draft: resumed,
             others: [
               for (final e in _ready)
                 if (e.id != ensemble?.id) e,
@@ -131,13 +130,11 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
       if (!mounted) return;
       switch (result) {
         case EnsembleSaved(:final ensemble):
-          // Seul le brouillon repris (donc enregistré) disparaît : celui d'un
-          // AUTRE ensemble reste.
-          if (resumed != null) FiestaEnsemblesScreen.draft = null;
+          // Seul le brouillon de cet éditeur (enregistré) disparaît.
+          drafts.remove(key);
           await _reload(select: ensemble.id);
         case EnsembleDraftKept(:final rules):
-          setState(() =>
-              FiestaEnsemblesScreen.draft = EnsembleDraft(ensemble?.id, rules));
+          setState(() => drafts[key] = rules);
           if (mounted) {
             // Flottant au-dessus de « Suivant », qu'il ne doit pas masquer.
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -147,10 +144,9 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
             ));
           }
         case null:
-          // Sorti sans rien garder : un brouillon repris est abandonné.
-          if (resumed != null) {
-            setState(() => FiestaEnsemblesScreen.draft = null);
-          }
+          // Sorti sans rien garder : le brouillon de cet éditeur, s'il en
+          // avait un, est abandonné.
+          if (resumed != null) setState(() => drafts.remove(key));
       }
     } finally {
       _busy = false;
@@ -172,9 +168,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
     );
     if (!confirmed) return;
     await _service.delete(ensemble.id);
-    if (FiestaEnsemblesScreen.draft?.ensembleId == ensemble.id) {
-      FiestaEnsemblesScreen.draft = null;
-    }
+    FiestaEnsemblesScreen.drafts.remove(ensemble.id);
     await _reload();
   }
 
@@ -237,8 +231,8 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
   }
 
   Widget _buildBody() {
-    final newDraft = FiestaEnsemblesScreen.draft?.ensembleId == null &&
-        FiestaEnsemblesScreen.draft != null;
+    final newDraft = FiestaEnsemblesScreen.drafts
+        .containsKey(FiestaEnsemblesScreen.newDraftKey);
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 72, 20, 24),
       children: [

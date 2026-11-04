@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_state.dart';
 import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
 import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
+import 'package:guess_it_all_mobile/models/fiesta/round_transition.dart';
 import 'package:guess_it_all_mobile/models/game_state.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
 
@@ -271,6 +274,30 @@ void main() {
       fiesta['offerChoices'] = 'oui';
       expect(GameState.fromJson(json).fiesta!.offerChoices, isEmpty);
       expect(FiestaState.tryFromJson(emptyFiesta)!.offerChoices, isEmpty);
+    });
+
+    test(
+        'malus « En stock » en réserve : conservé à l\'aller-retour JSON, '
+        'sans effet en jeu (règle 7)', () {
+      const reserved = ModifierInstance(
+        catalogId: 'minus_10s',
+        scope: ModifierScope.round,
+        target: ModifierTarget.team,
+        teamId: 'a',
+        charges: 2,
+        nature: ModifierNature.malus,
+        round: 1,
+        reserve: true,
+      );
+      final original = GameState(
+          gameId: 'abc',
+          fiesta: fiestaState().copyWith(active: [instance, reserved]));
+      final json = jsonDecode(jsonEncode(original.toJson()));
+      final restored = GameState.fromJson(json).fiesta!;
+      expect(restored.active.map((m) => (m.catalogId, m.reserve)),
+          [('no_pass', false), ('minus_10s', true)]);
+      expect(modifiersForTurn(restored.active, teamId: 'a', logicalRound: 1),
+          isEmpty);
     });
 
     test('une instance inconnue ou mal formée est ignorée, le reste se relit',

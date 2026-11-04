@@ -120,7 +120,8 @@ String settingsKey(FiestaRules rules) {
           'mode': rules.modifiers[id]!.mode.name,
           if (rules.modifiers[id]!.mode == ModifierMode.stock) ...{
             'charges': rules.modifiers[id]!.charges,
-            'perGame': rules.modifiers[id]!.perGame,
+            // Passe gratuite : toujours « par manche » (bit inopérant).
+            'perGame': rules.modifiers[id]!.perGame && id != 'free_pass',
           },
         },
     },

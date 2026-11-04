@@ -390,7 +390,10 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                                   wrapExplain: (show) =>
                                       _whilePaused(provider, show),
                                 ),
-                              if (provider.isTwoWordsOn)
+                              // Règle de manche : déjà dans `turnModifiers`.
+                              if (provider.isTwoWordsOn &&
+                                  !provider.turnModifiers
+                                      .any((m) => m.catalogId == 'two_words'))
                                 ModifierBadge.catalog(
                                   'two_words',
                                   nature: ModifierNature.bonus,

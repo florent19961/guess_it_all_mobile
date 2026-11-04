@@ -1,9 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/app.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
 import 'package:guess_it_all_mobile/services/fiesta_ensemble_service.dart';
+import 'package:guess_it_all_mobile/services/persisted_schema.dart';
+import 'package:guess_it_all_mobile/screens/fiesta_ensembles_screen.dart';
+import 'package:guess_it_all_mobile/widgets/common/app_back_button.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
 import 'package:provider/provider.dart';
 
@@ -28,13 +34,23 @@ Future<void> tapText(WidgetTester tester, String text) async {
 
 /// Monte l'app complète, en Fiesta Personnalisé, sur [screen].
 Future<GameProvider> pumpCustomFiesta(WidgetTester tester, String screen,
-    {Size size = const Size(390, 844)}) async {
+    {Size size = const Size(390, 844),
+    List<FiestaRules> ensembles = const []}) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   await givenPrefs({
     AppConstants.tutorialSeenKey: true,
     AppConstants.fiestaTutorialSeenKey: true,
+    // Écrit à la main : le service sérialise ses écritures sur une file
+    // singleton, qu'un test précédent (horloge simulée) peut laisser figée.
+    if (ensembles.isNotEmpty)
+      FiestaEnsembleService.storageKey: jsonEncode(wrapWithSchema({
+        'ensembles': [
+          for (final (i, rules) in ensembles.indexed)
+            FiestaEnsemble(id: 'e$i', rules: rules).toJson(),
+        ],
+      })),
   });
   givenFakePlatformPlugins();
   final provider = GameProvider();
@@ -92,6 +108,55 @@ void main() {
     expect(provider.game.currentScreen, AppConstants.screenPlayers);
     expect(provider.pendingFiesta?.ensembleName, 'Soirée chez Max',
         reason: 'l\'ensemble enregistré est celui sélectionné');
+  });
+
+  testWidgets(
+      'brouillons : un par ensemble, aucun n\'en écrase un autre (création A '
+      'puis modification B laissées incomplètes, puis reprise de A et de B)',
+      (tester) async {
+    FiestaEnsemblesScreen.drafts.clear();
+    addTearDown(FiestaEnsemblesScreen.drafts.clear);
+    await pumpCustomFiesta(tester, AppConstants.screenFiestaEnsembles,
+        ensembles: [defaultEnsembleRules('Mien')]);
+    Future<void> scrollTo(String text) =>
+        tester.scrollUntilVisible(find.text(text), 300,
+            scrollable: find.byType(Scrollable).first);
+    String nameField() =>
+        tester.widget<TextField>(find.byType(TextField)).controller!.text;
+    Future<void> back() async {
+      await tester.tap(find.byType(AppBackButton).last);
+      await settle(tester);
+      // Laisse partir le toast « Brouillon gardé » (il flotte sur la liste).
+      await tester.pump(const Duration(seconds: 5));
+      await settle(tester);
+    }
+
+    // A : création, nom déjà pris → incomplet, gardé.
+    await scrollTo('Créer un ensemble');
+    await tapText(tester, 'Créer un ensemble');
+    await tester.enterText(find.byType(TextField), 'Pro Player');
+    await tester.pump();
+    await back();
+    expect(find.text('Nouvel ensemble'), findsNothing);
+
+    // B : modification de « Mien », nom vidé → incomplet, gardé.
+    await scrollTo('Modifier');
+    await tapText(tester, 'Modifier');
+    expect(nameField(), 'Mien');
+    await tester.enterText(find.byType(TextField), '');
+    await tester.pump();
+    await back();
+
+    // Reprise de A, intacte ; puis de B, intacte.
+    await scrollTo('Reprendre le brouillon');
+    await tapText(tester, 'Reprendre le brouillon');
+    expect(nameField(), 'Pro Player');
+    await back();
+    await scrollTo('Modifier');
+    await tapText(tester, 'Modifier');
+    expect(nameField(), '');
+    expect(FiestaEnsemblesScreen.drafts.keys,
+        unorderedEquals([FiestaEnsemblesScreen.newDraftKey, isNotEmpty]));
   });
 
   testWidgets(
