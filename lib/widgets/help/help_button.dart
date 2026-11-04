@@ -5,7 +5,7 @@ import '../../theme/app_theme.dart';
 ///
 /// Comme `AppBackButton` / `HomeButton`, c'est un [Positioned] : à placer
 /// directement dans le `Stack` de l'écran. [HelpButton.inline] rend le seul
-/// rond, à glisser dans une rangée de boutons existante (Paramètres).
+/// « ? », à glisser dans une rangée de boutons existante (Paramètres).
 class HelpButton extends StatelessWidget {
   /// Décalage à droite quand un `HomeButton(alignRight: true)` ou un bouton
   /// pause occupe déjà le coin.
@@ -29,17 +29,13 @@ class HelpButton extends StatelessWidget {
           width: 48,
           height: 48,
           alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: AppColors.gray700,
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.secondaryCyan, width: 2),
-          ),
+          color: Colors.transparent, // toute la zone 48×48 reste tactile
           child: const Text(
             '?',
             style: TextStyle(
               fontFamily: 'Bangers',
               fontSize: 26,
-              color: Colors.white,
+              color: AppColors.gray400,
             ),
           ),
         ),

@@ -705,3 +705,9 @@ qu'un tap explique : rien de l'information Fiesta n'est perdu, seulement le text
 fixe (plafonds du rattrapage, « s'applique à toutes les équipes »).
 
 **Conséquence.** Affichage seul : aucune logique de jeu ni forme persistée touchée.
+
+## 2026-11-04 — Prise en main : retouches de l'aide après la recette device
+
+**Quoi.** Les bulles d'aide passent en bleu nuit, comme les cartes de l'app : le titre est en Bangers avec l'ombre rose, le texte en Poppins blanc, et le bouton est un `AppButton`. La cible est entourée d'un liseré blanc translucide. Le « ? » s'affiche seul, en gris clair, sans rond, et garde une zone tactile de 48×48. Au premier « Jouer » d'un téléphone neuf, le tuto des règles s'ouvre d'office, sans la question « Première partie ? » ; « Passer » permet de le fermer. `FiestaTutorialScreen.show` a maintenant une garde statique contre une double ouverture.
+
+**Pourquoi.** Sur Flutter web, la cible restait voilée. Le voile n'utilise plus `Path.combine(difference)` mais un seul chemin `PathFillType.evenOdd` (écran + cible), qui découpe le trou sans opération booléenne et se rend de la même façon sur tous les moteurs. La question « Première partie ? » ne commandait que le tuto des règles, car les bulles de la première partie étaient déjà automatiques ; elle est donc supprimée. Le critère « téléphone neuf » ne change pas : c'est `guessItAll_tutorialSeen`, posé par `initAtStartup`. Aucune clé n'est créée et aucune ne change de forme (règle 7).

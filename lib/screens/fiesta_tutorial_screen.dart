@@ -8,13 +8,22 @@ import '../widgets/help/tutorial_pager.dart';
 class FiestaTutorialScreen extends StatelessWidget {
   const FiestaTutorialScreen({super.key});
 
-  /// Ouvre le tuto et le marque vu.
-  static Future<void> show(BuildContext context) {
-    StorageService().markFiestaTutorialSeen();
-    return Navigator.of(context).push(MaterialPageRoute<void>(
-      fullscreenDialog: true,
-      builder: (_) => const FiestaTutorialScreen(),
-    ));
+  static bool _isOpen = false;
+
+  /// Ouvre le tuto et le marque vu. Déjà ouvert (double tap, « Continuer »
+  /// puis « ? ») : ne rouvre rien.
+  static Future<void> show(BuildContext context) async {
+    if (_isOpen) return;
+    _isOpen = true;
+    try {
+      StorageService().markFiestaTutorialSeen();
+      await Navigator.of(context).push(MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (_) => const FiestaTutorialScreen(),
+      ));
+    } finally {
+      _isOpen = false;
+    }
   }
 
   @override

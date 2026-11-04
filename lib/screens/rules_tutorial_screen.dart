@@ -6,7 +6,8 @@ import '../widgets/help/help_content.dart';
 import '../widgets/help/tutorial_pager.dart';
 
 /// Tuto des règles, 4 cartes. Ouvert par `Navigator.push` (prompt
-/// « Première partie ? » ou « Revoir le tuto » dans Règles).
+/// d'office au premier « Jouer » d'un téléphone neuf, ou « Revoir le tuto »
+/// dans Règles).
 class RulesTutorialScreen extends StatelessWidget {
   final int passPenalty;
 
