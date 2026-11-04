@@ -44,24 +44,29 @@ String playTurn(GameProvider provider, int n) {
   return teamId;
 }
 
-/// Personnalisé, 1 parmi 3 allumé, sans tirage : tout le catalogue proposé
-/// à l'équipe menée dès M2, sauf « autre langue » : coupée, elle laisse
-/// exactement 3 cartes « moyenne » (le `gameId` est aléatoire, les offres
-/// doivent donc être les mêmes quel qu'il soit).
-final pickThree = FiestaRules(
-  mode: FiestaMode.custom,
-  oneOfThree: true,
-  drawCount: 0,
-  modifiers: {
-    for (final def in kModifierCatalog)
-      def.id: ModifierSetting(
-        active: def.id != 'other_language',
-        arrival: ModifierArrival.offer,
-        startRound: 2,
-        charges: def.defaultCharges,
-      ),
-  },
-);
+/// Personnalisé, sans tirage : tout le catalogue en « 1 parmi 3 » sur M2 et
+/// M3, sauf « autre langue » et « une seule réponse » : coupées, elles
+/// laissent exactement 3 cartes « moyenne » (le `gameId` est aléatoire, les
+/// offres doivent donc être les mêmes quel qu'il soit).
+FiestaRules pickThreeWith({int pick3Choices = 1}) => FiestaRules(
+      mode: FiestaMode.custom,
+      pick3Choices: pick3Choices,
+      drawCount: 0,
+      modifiers: {
+        for (final def in kModifierCatalog)
+          def.id: ModifierSetting(
+            active: def.id != 'other_language' && def.id != 'one_answer',
+            rounds: const {2, 3},
+            mode: ModifierMode.offer,
+          ),
+      },
+    );
+
+final pickThree = pickThreeWith();
+
+/// La rangée 0 des offres de [teamId] (vide hors 1 parmi 3).
+List<ModifierInstance> offersOf(GameProvider p, String teamId) =>
+    p.offersFor(teamId).firstOrNull ?? const [];
 
 List<String> ids(Iterable<ModifierInstance> mods) =>
     mods.map((m) => '${m.catalogId}@${m.round}>${m.teamId}').toList();
@@ -79,8 +84,8 @@ void main() {
     expect(provider.game.currentScreen, AppConstants.screenTransition);
 
     expect(provider.nextChooserId, trailing);
-    expect(provider.offersFor(leader), isEmpty);
-    final offers = provider.offersFor(trailing);
+    expect(offersOf(provider, leader), isEmpty);
+    final offers = offersOf(provider, trailing);
     expect(offers.map((m) => m.catalogId).toSet(),
         {'double_points', 'two_words', 'no_pass'});
     expect(
@@ -94,7 +99,7 @@ void main() {
     expect(provider.game.currentScreen, AppConstants.screenTransition);
 
     final noPass = offers.indexWhere((m) => m.catalogId == 'no_pass');
-    provider.chooseOffer(trailing, noPass);
+    provider.chooseOffer(trailing, 0, noPass);
     expect(provider.nextChooserId, isNull);
 
     // AC6 : le choix est postérieur au snapshot, il est à refaire.
@@ -103,9 +108,9 @@ void main() {
     provider.savePreValidationState(guessed);
     provider.validateWords(guessed);
     expect(provider.nextChooserId, trailing);
-    expect(ids(provider.offersFor(trailing)), ids(offers));
+    expect(ids(offersOf(provider, trailing)), ids(offers));
 
-    provider.chooseOffer(trailing, noPass);
+    provider.chooseOffer(trailing, 0, noPass);
     provider.nextRound();
     expect(provider.game.currentRound, 2);
     expect(ids(provider.game.fiesta!.active), ['no_pass@2>$leader']);
@@ -128,10 +133,10 @@ void main() {
     expect(provider.game.currentScreen, AppConstants.screenTransition);
 
     expect(provider.nextChooserId, last);
-    final lastPick = provider.offersFor(last).first;
-    provider.chooseOffer(last, 0);
+    final lastPick = offersOf(provider, last).first;
+    provider.chooseOffer(last, 0, 0);
     expect(provider.nextChooserId, second);
-    final secondOffers = provider.offersFor(second);
+    final secondOffers = offersOf(provider, second);
     expect(secondOffers, isNotEmpty);
 
     await pumpEventQueue();
@@ -139,11 +144,11 @@ void main() {
     await pumpEventQueue();
     expect(reloaded.game.currentScreen, AppConstants.screenTransition);
     expect(reloaded.nextChooserId, second);
-    expect(ids(reloaded.offersFor(second)), ids(secondOffers));
+    expect(ids(offersOf(reloaded, second)), ids(secondOffers));
     reloaded.nextRound();
     expect(reloaded.game.currentRound, 1);
 
-    reloaded.chooseOffer(second, 0);
+    reloaded.chooseOffer(second, 0, 0);
     reloaded.nextRound();
     expect(reloaded.game.currentRound, 2);
     expect(ids(reloaded.game.fiesta!.active),
@@ -167,9 +172,9 @@ void main() {
     expect(playTurn(provider, 20), leader);
     expect(provider.game.currentScreen, AppConstants.screenTransition);
 
-    expect(provider.offersFor(trailing).map((m) => m.catalogId),
+    expect(offersOf(provider, trailing).map((m) => m.catalogId),
         ['block_guesser']);
-    provider.chooseOffer(trailing, 0);
+    provider.chooseOffer(trailing, 0, 0);
     provider.nextRound();
 
     // La continuation du leader : le blocage de M2 attend.
@@ -201,25 +206,19 @@ void main() {
       'au premier vrai tour (epic fix, Codex MAJOR-1)', () async {
     final provider =
         await givenProvider(['A', 'B', 'C', 'D', 'E'], wordsEach: 4, teams: 2);
-    ModifierSetting setting(ModifierArrival arrival, int round) =>
-        ModifierSetting(
-            active: true,
-            arrival: arrival,
-            startRound: round,
-            fixedRound: round,
-            charges: 1);
+    ModifierSetting setting(ModifierMode mode, int round) =>
+        ModifierSetting(active: true, rounds: {round}, mode: mode);
     await provider.startGame(
       fiesta: FiestaRules(
         mode: FiestaMode.custom,
-        oneOfThree: true,
-        // 3 tirages en M3 = le plafond du Personnalisé : rien à offrir.
         drawCount: 3,
         modifiers: {
-          'block_guesser': setting(ModifierArrival.offer, 2),
-          'double_points': setting(ModifierArrival.fixed, 2),
-          'no_pass': setting(ModifierArrival.draw, 3),
-          'reversed': setting(ModifierArrival.draw, 3),
-          'minus_10s': setting(ModifierArrival.draw, 3),
+          // M2 seulement : rien à offrir pour M3.
+          'block_guesser': setting(ModifierMode.offer, 2),
+          'double_points': setting(ModifierMode.stock, 2),
+          'no_pass': setting(ModifierMode.draw, 3),
+          'reversed': setting(ModifierMode.draw, 3),
+          'minus_10s': setting(ModifierMode.draw, 3),
         },
       ),
     );
@@ -229,7 +228,7 @@ void main() {
     if (provider.getCurrentTeam()!.id == trailing) playTurn(provider, 1);
     playTurn(provider, 15);
     expect(playTurn(provider, 20), trailing);
-    provider.chooseOffer(trailing, 0);
+    provider.chooseOffer(trailing, 0, 0);
     provider.nextRound();
     playTurn(provider, 0); // continuation de la menée
 
@@ -240,7 +239,8 @@ void main() {
     playTurn(provider, 20);
     expect(provider.nextRoundModifiers.map((m) => m.catalogId),
         unorderedEquals(['no_pass', 'reversed', 'minus_10s']));
-    expect(provider.nextChooserId, isNull, reason: 'plafond : rien à offrir');
+    expect(provider.nextChooserId, isNull,
+        reason: 'aucun « 1 parmi 3 » coché en M3');
     provider.nextRound();
 
     void expectContinuation(GameProvider p) {
@@ -303,26 +303,14 @@ void main() {
     await provider.startGame(
       fiesta: FiestaRules(
         mode: FiestaMode.custom,
-        oneOfThree: true,
         drawCount: 0,
         modifiers: {
-          'block_guesser': const ModifierSetting(
-              active: true,
-              arrival: ModifierArrival.offer,
-              startRound: 2,
-              charges: 0),
-          'double_points': const ModifierSetting(
-              active: true,
-              arrival: ModifierArrival.fixed,
-              startRound: 1,
-              fixedRound: 1,
-              charges: 1),
-          'minus_10s': const ModifierSetting(
-              active: true,
-              arrival: ModifierArrival.fixed,
-              startRound: 2,
-              fixedRound: 2,
-              charges: 0),
+          'block_guesser': ModifierSetting(
+              active: true, rounds: const {2, 3}, mode: ModifierMode.offer),
+          'double_points': ModifierSetting(
+              active: true, rounds: const {1}, mode: ModifierMode.stock),
+          'minus_10s': ModifierSetting(
+              active: true, rounds: const {2}, mode: ModifierMode.always),
         },
       ),
     );
@@ -332,7 +320,7 @@ void main() {
     if (provider.getCurrentTeam()!.id == trailing) playTurn(provider, 1);
     provider.setDoublePoints(true);
     expect(playTurn(provider, 20), leader);
-    provider.chooseOffer(trailing, 0);
+    provider.chooseOffer(trailing, 0, 0);
     provider.nextRound();
 
     // M2 : sa continuation (×2 de M1) vide à elle seule le pool de M2.
@@ -340,7 +328,8 @@ void main() {
     expect(provider.isDoublePointsOn, isTrue);
     expect(playTurn(provider, 20), leader);
     expect(provider.game.currentRound, 2);
-    if (provider.nextChooserId == trailing) provider.chooseOffer(trailing, 0);
+    if (provider.nextChooserId == trailing)
+      provider.chooseOffer(trailing, 0, 0);
     provider.nextRound();
 
     void expectChained(GameProvider p) {
@@ -407,7 +396,7 @@ void main() {
     if (provider.getCurrentTeam()!.id == trailing) playTurn(provider, 1);
     playTurn(provider, 18);
     expect(playTurn(provider, 20), trailing);
-    provider.chooseOffer(trailing, 0);
+    provider.chooseOffer(trailing, 0, 0);
     provider.nextRound();
     expect(provider.getCurrentTeam()!.id, trailing);
 
@@ -440,11 +429,11 @@ void main() {
       'pour un écart de 6) est actif en M2, sans file de choix (AC7)',
       () async {
     final provider = await givenProvider(['Ana', 'Bob'], wordsEach: 11);
-    await provider.startGame(
-        fiesta: FiestaRules(mode: FiestaMode.auto, symmetric: false));
+    await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
     final leader = playTurn(provider, 14);
     final trailing = playTurn(provider, 8);
 
+    final draw = provider.nextRoundModifiers;
     final gifts = provider.appBoostPreview;
     expect(gifts.map((m) => (m.nature, m.teamId)).toList(), [
       (ModifierNature.bonus, trailing),
@@ -457,7 +446,8 @@ void main() {
 
     provider.nextRound();
     expect(provider.game.currentRound, 2);
-    expect(ids(provider.game.fiesta!.active), ids(gifts));
+    expect(ids(provider.game.fiesta!.active.where((m) => m.round == 2)),
+        [...ids(draw), ...ids(gifts)]);
   });
 
   test('Classique : ni file, ni coup de pouce, nextRound inchangé', () async {

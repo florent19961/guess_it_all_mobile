@@ -89,22 +89,12 @@ void main() {
       fiesta: FiestaRules(
         mode: FiestaMode.custom,
         catchUp: CatchUpRules.auto,
-        modifiers: const {
+        modifiers: {
           // Un second malus, sans effet sur le temps : seul `minus_10s` compte.
           'no_pass': ModifierSetting(
-            active: true,
-            arrival: ModifierArrival.fixed,
-            startRound: 1,
-            fixedRound: 2,
-            charges: 0,
-          ),
+              active: true, rounds: const {2}, mode: ModifierMode.always),
           'minus_10s': ModifierSetting(
-            active: true,
-            arrival: ModifierArrival.fixed,
-            startRound: 1,
-            fixedRound: 2,
-            charges: 1,
-          ),
+              active: true, rounds: const {2}, mode: ModifierMode.always),
         },
       ),
     );

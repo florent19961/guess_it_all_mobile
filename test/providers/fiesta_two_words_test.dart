@@ -1,11 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
-import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
-import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
 import 'package:guess_it_all_mobile/models/word_event.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
 import 'package:guess_it_all_mobile/services/analytics_service.dart';
-import 'package:guess_it_all_mobile/services/storage_service.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
 
 import '../helpers/test_prefs.dart';
@@ -27,7 +24,8 @@ Future<GameProvider> givenReadyProvider() async {
   return provider;
 }
 
-/// Personnalisé, sans tirage : [ids] fixés sur la manche 1, 1 charge.
+/// Personnalisé, sans tirage : [ids] « Toujours » sur la manche 1 (×2 :
+/// 1 cartouche en stock), 1 charge.
 FiestaRules fixedOnRound1(List<String> ids) => FiestaRules(
       mode: FiestaMode.custom,
       drawCount: 0,
@@ -35,10 +33,11 @@ FiestaRules fixedOnRound1(List<String> ids) => FiestaRules(
         for (final id in ids)
           id: ModifierSetting(
             active: true,
-            arrival: ModifierArrival.fixed,
-            startRound: 1,
-            fixedRound: 1,
-            charges: 1,
+            rounds: const {1},
+            // « Mot compte double » : seulement en cartouche.
+            mode: id == 'double_points'
+                ? ModifierMode.stock
+                : ModifierMode.always,
           ),
       },
     );
@@ -204,38 +203,35 @@ void main() {
   });
 
   test(
-      'Q8 : avec déjà un modificateur de manche, un bonus allumé refuse '
-      'l\'autre, dans les deux ordres', () async {
-    final first = await givenReadyProvider();
-    await first.startGame(
-        fiesta: fixedOnRound1(['two_words', 'double_points']));
-    // Un 3ᵉ modificateur de manche (le tirage et les fixés plafonnent à 2) :
-    // posé dans l'état persisté, puis partie relue.
-    await pumpEventQueue();
-    final saved = (await StorageService().loadGameState())!;
-    (saved['game']['fiesta']['active'] as List).add(ModifierInstance(
-      catalogId: 'reversed',
-      scope: ModifierScope.round,
-      target: ModifierTarget.both,
-      charges: 0,
-      nature: ModifierNature.malus,
-      round: 1,
-    ).toJson());
-    await StorageService().saveGameState(saved);
-    final p = GameProvider();
-    await pumpEventQueue();
-    expect(p.turnModifiers.map((m) => m.catalogId), ['reversed']);
+      'Fiesta v2 : plus de plafond, les deux bonus s\'allument ensemble ; '
+      'une incompatibilité avec une règle de manche refuse (sans dépenser)',
+      () async {
+    final p = await givenReadyProvider();
+    await p.startGame(
+      fiesta: FiestaRules(
+        mode: FiestaMode.custom,
+        drawCount: 0,
+        modifiers: {
+          'no_pass': ModifierSetting(
+              active: true, rounds: const {1}, mode: ModifierMode.always),
+          'reversed': ModifierSetting(
+              active: true, rounds: const {1}, mode: ModifierMode.always),
+          for (final id in ['two_words', 'double_points'])
+            id: ModifierSetting(
+                active: true, rounds: const {1}, mode: ModifierMode.stock),
+        },
+      ),
+    );
+    expect(p.turnModifiers.map((m) => m.catalogId), ['no_pass', 'reversed']);
 
-    p.setDoublePoints(true);
+    // « Interdit de passer » en jeu : « Deux mots » est refusé.
+    expect(p.twoWordsBlocked, isTrue);
     p.setTwoWords(true);
-    expect(p.isDoublePointsArmed, isTrue);
     expect(p.isTwoWordsArmed, isFalse);
-
-    p.setDoublePoints(false);
-    p.setTwoWords(true);
+    expect(p.twoWordsLeft, 1);
+    // ×2 s'allume malgré 2 modificateurs déjà en jeu.
     p.setDoublePoints(true);
-    expect(p.isTwoWordsArmed, isTrue);
-    expect(p.isDoublePointsArmed, isFalse);
+    expect(p.isDoublePointsArmed, isTrue);
   });
 
   test(

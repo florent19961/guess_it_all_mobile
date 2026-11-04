@@ -33,7 +33,7 @@ void main() {
       'Paramètres ; après une partie Classique, rien en attente', () async {
     final provider = await givenReadyProvider();
     provider.setPendingFiesta(
-      FiestaRules(mode: FiestaMode.auto, symmetric: false),
+      FiestaRules(mode: FiestaMode.auto, autoCalibrate: false),
     );
     await provider.startGame(fiesta: provider.pendingFiesta);
 
@@ -41,9 +41,9 @@ void main() {
 
     expect(provider.game.currentScreen, AppConstants.screenSettings);
     expect(provider.pendingFiesta!.mode, FiestaMode.auto);
-    // Auto n'a plus d'interrupteurs : un « symétrique coupé » d'une partie
-    // d'avant la mise à jour n'est pas transmis à la suivante.
-    expect(provider.pendingFiesta!.symmetric, isTrue);
+    // Auto n'a plus d'interrupteurs : un « auto-calibrage coupé » d'une
+    // partie d'avant la mise à jour n'est pas transmis à la suivante.
+    expect(provider.pendingFiesta!.autoCalibrate, isTrue);
 
     // Même chose via l'accueil : fin de partie, puis « Rejouer » de l'accueil.
     givenWords(provider);
@@ -58,12 +58,12 @@ void main() {
     // sinon « Retour aux équipes » puis « Lancer » repartirait en Classique.
     givenWords(provider);
     await provider.startGame(
-        fiesta: FiestaRules(mode: FiestaMode.auto, symmetric: false));
+        fiesta: FiestaRules(mode: FiestaMode.auto, autoCalibrate: false));
     await pumpEventQueue();
     final reloaded = GameProvider();
     await pumpEventQueue();
     expect(reloaded.isFiesta, isTrue);
-    expect(reloaded.pendingFiesta?.symmetric, isFalse);
+    expect(reloaded.pendingFiesta?.autoCalibrate, isFalse);
 
     // « Nouvelle partie » repart d'un choix vide.
     await reloaded.startNewGame();

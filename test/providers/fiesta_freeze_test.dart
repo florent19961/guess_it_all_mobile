@@ -27,22 +27,20 @@ void main() {
         'ne change pas la partie', () async {
       final provider = await givenReadyProvider();
       final sourceModifiers = <String, ModifierSetting>{
-        'no_pass': const ModifierSetting(
+        'no_pass': ModifierSetting(
           active: true,
-          arrival: ModifierArrival.draw,
-          startRound: 1,
-          charges: 0,
+          rounds: const {1, 2, 3},
+          mode: ModifierMode.draw,
         ),
       };
       final rules =
           FiestaRules(mode: FiestaMode.custom, modifiers: sourceModifiers);
 
       await provider.startGame(fiesta: rules);
-      sourceModifiers['draw'] = const ModifierSetting(
+      sourceModifiers['draw'] = ModifierSetting(
         active: true,
-        arrival: ModifierArrival.fixed,
-        startRound: 3,
-        charges: 0,
+        rounds: const {3},
+        mode: ModifierMode.always,
       );
 
       expect(provider.isFiesta, isTrue);
@@ -52,23 +50,19 @@ void main() {
     });
 
     test(
-        '« Une seule réponse » : tirée par partie en Auto (graine du gameId), '
-        'reprise telle quelle de l\'ensemble en Personnalisé', () async {
+        '« Une seule réponse » en Auto : tirée par partie (graine du gameId), '
+        'gelée en « Toujours » M1-M3 dans les règles de la partie', () async {
       final provider = await givenReadyProvider();
       final outcomes = <bool>{};
       for (var i = 0; i < 40; i++) {
         await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
-        final oneAnswer = provider.game.fiesta!.rules.oneAnswer;
+        final rules = provider.game.fiesta!.rules;
+        final oneAnswer = rules.activeSetting('one_answer') != null;
         expect(oneAnswer, drawsOneAnswer(provider.game.gameId!));
+        expect(provider.isOneAnswer, oneAnswer);
         outcomes.add(oneAnswer);
       }
       expect(outcomes, {true, false});
-
-      for (final chosen in [true, false]) {
-        await provider.startGame(
-            fiesta: FiestaRules(mode: FiestaMode.custom, oneAnswer: chosen));
-        expect(provider.game.fiesta!.rules.oneAnswer, chosen);
-      }
     });
 
     test('startGame() sans argument efface la Fiesta de la partie précédente',

@@ -126,13 +126,8 @@ void main() {
         mode: FiestaMode.custom,
         drawCount: 0,
         modifiers: {
-          'minus_10s': const ModifierSetting(
-            active: true,
-            arrival: ModifierArrival.fixed,
-            startRound: 1,
-            fixedRound: 1,
-            charges: 0,
-          ),
+          'minus_10s': ModifierSetting(
+              active: true, rounds: const {1}, mode: ModifierMode.always),
         },
       ),
     );
@@ -155,12 +150,8 @@ void main() {
     final provider = await givenReadyProvider();
     await provider.startGame(
       fiesta: FiestaRules(mode: FiestaMode.custom, modifiers: {
-        'minus_10s': const ModifierSetting(
-          active: true,
-          arrival: ModifierArrival.draw,
-          startRound: 1,
-          charges: 0,
-        ),
+        'minus_10s': ModifierSetting(
+            active: true, rounds: const {1, 2, 3}, mode: ModifierMode.draw),
       }),
     );
     final first = provider.getCurrentTeam()!.id;
@@ -202,13 +193,8 @@ void main() {
         mode: FiestaMode.custom,
         drawCount: 0,
         modifiers: {
-          'minus_10s': const ModifierSetting(
-            active: true,
-            arrival: ModifierArrival.fixed,
-            startRound: 1,
-            fixedRound: 1,
-            charges: 0,
-          ),
+          'minus_10s': ModifierSetting(
+              active: true, rounds: const {1}, mode: ModifierMode.always),
         },
       ),
     );

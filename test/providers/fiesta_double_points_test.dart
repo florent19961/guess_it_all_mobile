@@ -20,17 +20,16 @@ Future<GameProvider> givenReadyProvider(List<String> names) async {
   return provider;
 }
 
-/// Personnalisé : « Mot compte double » tiré pour tous à chaque manche, seul
-/// candidat, 1 charge.
+/// Personnalisé : « Mot compte double » en stock, 1 cartouche par équipe à
+/// chaque manche.
 final doubleEveryRound = FiestaRules(
   mode: FiestaMode.custom,
-  drawCount: 1,
+  drawCount: 0,
   modifiers: {
     'double_points': ModifierSetting(
       active: true,
-      arrival: ModifierArrival.draw,
-      startRound: 1,
-      charges: 1,
+      rounds: const {1, 2, 3},
+      mode: ModifierMode.stock,
     ),
   },
 );
