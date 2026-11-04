@@ -68,18 +68,18 @@ List<CoachStep> settingsHelp({
 }) =>
     [
       CoachStep(
+        target: counts,
+        title: 'Joueurs et équipes',
+        text: 'Le nombre de joueurs, et d\'équipes. Il faut au moins '
+            '2 joueurs par équipe.',
+      ),
+      CoachStep(
         target: mode,
         title: 'Classique ou Fiesta',
         text: 'Classique : les 3 manches habituelles. Fiesta : les mêmes '
             'manches, pimentées de bonus et de malus. En Fiesta, la roue '
             'crantée choisit Auto (l\'app décide de tout) ou Personnalisé '
             '(tes propres réglages, choisis après les équipes).',
-      ),
-      CoachStep(
-        target: counts,
-        title: 'Joueurs et équipes',
-        text: 'Le nombre de joueurs, et d\'équipes. Il faut au moins '
-            '2 joueurs par équipe.',
       ),
       CoachStep(
         target: wordChoice,

@@ -44,7 +44,7 @@ class AppCounter extends StatelessWidget {
             const SizedBox(width: 24),
             Text(
               '$value',
-              style: AppTextStyles.title(fontSize: 48),
+              style: AppTextStyles.title(fontSize: 40),
             ),
             const SizedBox(width: 24),
             _buildCircularButton(

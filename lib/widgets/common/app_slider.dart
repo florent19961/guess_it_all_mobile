@@ -9,6 +9,10 @@ class AppSlider extends StatelessWidget {
   final String? label;
   final String unit;
 
+  /// Valeur à droite du libellé plutôt que sous le curseur (fenêtre
+  /// « Avancés », qui doit tenir sans défiler).
+  final bool compact;
+
   const AppSlider({
     required this.min,
     required this.max,
@@ -16,24 +20,41 @@ class AppSlider extends StatelessWidget {
     this.onChanged,
     this.label,
     this.unit = '',
+    this.compact = false,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
+    final valueText = Text(
+      '${value.toInt()}$unit',
+      style: const TextStyle(
+        fontFamily: 'Poppins',
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        color: AppColors.secondaryCyan,
+      ),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (label != null) ...[
-          Text(
-            label!,
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              color: Colors.white,
-              fontSize: 16,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label!,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              if (compact) valueText,
+            ],
           ),
-          const SizedBox(height: 12),
+          if (!compact) const SizedBox(height: 12),
         ],
         Material(
           color: Colors.transparent,
@@ -54,17 +75,7 @@ class AppSlider extends StatelessWidget {
             ),
           ),
         ),
-        Center(
-          child: Text(
-            '${value.toInt()}$unit',
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: AppColors.secondaryCyan,
-            ),
-          ),
-        ),
+        if (!compact || label == null) Center(child: valueText),
       ],
     );
   }
