@@ -1,0 +1,12 @@
+# Fiesta v2 — lane 2 — corrections de la revue r2
+
+Arbitrages du lead appliqués (2ᵉ finding sur la mise en page : racine simplifiée, pas un
+`_fit` plus fin). Chaque finding re-tracé dans le code. Suite complète verte (format + analyze
++ 243 tests).
+
+| # | Finding | Décision | Preuve |
+|---|---|---|---|
+| MAJOR | Puces « Envoyé » coupées par le `ClipRect` (seul moyen d'annuler) : `_fit` supposait 3 puces par rangée, une puce pouvait faire 143 px | **Corrigé à la racine** : puce à **taille fixe** 96 × 26 px (icône → nom d'équipe coupé à 8 caractères + « … », ellipse en plus) ; le nombre de puces par rangée est donc exact (3 à 360 px) et `_fit` réserve la hauteur réelle de leurs rangées avant le clip. **Repli « +N » non nécessaire** : 7 envois tiennent. En passant (même rendu) : la carte d'équipe compacte coupe le nom d'équipe, jamais celui du joueur. | `lib/widgets/fiesta/turn_cartridges.dart:45`, `:466`, `:570` ; `lib/screens/game_screen.dart:362`. Rendu 360 × 640, Explosif M1, 4 équipes aux noms longs, 7 envois : les 7 puces visibles, la plus basse finit à 472 px pour un bouton à 550 px (assertion dans le test de rendu local) : `/tmp/claude-1000/-home-florent19961-guess-it-all-audit/d1dcd342-b34e-4aab-9ecb-60b413049ad8/scratchpad/lane2-renders-r3/pre_360x640_4t_m1_7envois.png`. Les 10 rendus r2 refaits sans débordement dans le même dossier. |
+| MINOR | Doublon non couvert (mutant survivant) | **Corrigé, test au niveau du modèle** : en partie, le doublon « même malus reçu + même règle de manche » est **inatteignable** (un modificateur n'a qu'un mode par ensemble : « En stock » en M1 exclut « Toujours » en M2 ; deux envois identiques sont refusés à l'envoi). Le cas proposé, ajouté au test provider, ne testait donc rien (envoi ignoré). Test pur de `modifiersForTurn` : doublon d'une règle écarté, second mime écarté dans l'ordre d'envoi, malus compatible gardé. Mutants « sans garde de doublon » et « reçus non comptés entre eux » : rouges. | `test/models/fiesta/symmetric_draw_test.dart:258` |
+| MINOR | Test Auto : passes gratuites non vérifiées une à une | **Corrigé** : `freePassesUsed` 1 et pénalité 0 après la 1re passe, 2 et 5 après la 2e. Mutant « +2 par passe » : rouge. | `test/providers/fiesta_cartridges_test.dart:307` |
+| MINOR | `settingsKey` « pour la partie » de la Passe gratuite non protégé | **Corrigé** : deux ensembles ne différant que par Passe gratuite par manche / pour la partie ont des clés distinctes. Mutant « retour lane 1 » : rouge. | `test/models/fiesta/ensemble_validation_test.dart:74` |
