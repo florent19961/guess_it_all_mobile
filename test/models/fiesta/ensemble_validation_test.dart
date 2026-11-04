@@ -3,174 +3,121 @@ import 'package:guess_it_all_mobile/models/fiesta/ensemble_validation.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 
-/// Ensemble par défaut (maquette `mkSet`) où l'on remplace des réglages.
+/// Ensemble par défaut (maquette `defaults()`) où l'on remplace des réglages.
 FiestaRules rulesWith({
   String name = 'Soirée',
   Map<String, ModifierSetting> overrides = const {},
-  bool? oneOfThree,
-  bool? symmetric,
-  int? drawCount,
 }) {
   final base = defaultEnsembleRules(name);
-  return base.copyWith(
-    modifiers: {...base.modifiers, ...overrides},
-    oneOfThree: oneOfThree,
-    symmetric: symmetric,
-    drawCount: drawCount,
-  );
+  return base.copyWith(modifiers: {...base.modifiers, ...overrides});
 }
 
-ModifierSetting setting(
-  ModifierArrival arrival, {
-  int startRound = 1,
-  int? fixedRound,
-  bool active = true,
-}) =>
-    ModifierSetting(
-      active: active,
-      arrival: arrival,
-      startRound: startRound,
-      fixedRound: fixedRound,
-      charges: 0,
-    );
+ModifierSetting setting(ModifierMode mode,
+        {Set<int> rounds = const {1, 2, 3}}) =>
+    ModifierSetting(active: true, rounds: rounds, mode: mode);
 
 void main() {
-  test('l\'ensemble par défaut est valide (cas nominal)', () {
+  test(
+      'cas nominaux : l\'ensemble par défaut et les 7 ensembles fournis sont '
+      'valides, et deux à deux distincts (noms et réglages)', () {
     // Sans ce cas, une garde qui refuse TOUT passerait les tests ci-dessous.
-    expect(validateEnsemble(rulesWith()), isEmpty);
-  });
-
-  test('nom vide après trim → refusé', () {
-    expect(validateEnsemble(rulesWith(name: '   ')), hasLength(1));
-  });
-
-  group('« tiré pour tous » sans tirage', () {
-    final drawn = {'no_pass': setting(ModifierArrival.draw)};
-
-    test('tirage coupé → refusé', () {
+    expect(validateEnsemble(rulesWith(), others: kProvidedEnsembles), isEmpty);
+    for (final e in kProvidedEnsembles) {
       expect(
-        validateEnsemble(rulesWith(overrides: drawn, symmetric: false)),
-        contains(startsWith('Interdit de passer est tiré pour tous')),
-      );
-    });
-
-    test('tirage à 0 → refusé', () {
-      expect(
-        validateEnsemble(rulesWith(overrides: drawn, drawCount: 0)),
-        contains(startsWith('Interdit de passer est tiré pour tous')),
-      );
-    });
-
-    test('modificateur désactivé → ignoré', () {
-      // Le défaut a d'autres modificateurs tirés : on les coupe tous.
-      final off = {
-        for (final e in defaultEnsembleRules('x').modifiers.entries)
-          if (e.value.arrival == ModifierArrival.draw)
-            e.key: setting(ModifierArrival.draw, active: false),
-      };
-      expect(
-        validateEnsemble(rulesWith(overrides: off, drawCount: 0)),
+        validateEnsemble(e.rules,
+            others: kProvidedEnsembles.where((o) => o.id != e.id)),
         isEmpty,
-      );
-    });
-  });
-
-  test('« proposé » avec le 1 parmi 3 coupé → refusé', () {
-    // Le défaut propose déjà les bonus : un message par modificateur proposé.
-    expect(validateEnsemble(rulesWith(oneOfThree: false)), isNotEmpty);
-  });
-
-  test('« proposé » dès la manche 1 → refusé', () {
-    expect(
-      validateEnsemble(rulesWith(overrides: {
-        'free_pass': setting(ModifierArrival.offer, startRound: 1),
-      })),
-      hasLength(1),
-    );
-  });
-
-  test('« Bloquer un devineur » tiré → refusé (proposé seulement)', () {
-    expect(
-      validateEnsemble(rulesWith(overrides: {
-        'block_guesser': setting(ModifierArrival.draw),
-      })),
-      contains(startsWith('Bloquer un devineur ne peut être que proposé')),
-    );
-  });
-
-  test('« fixé » sans manche → refusé', () {
-    // Impossible par l'éditeur, possible dans un blob relu.
-    expect(
-      validateEnsemble(rulesWith(overrides: {
-        'no_pass': setting(ModifierArrival.fixed),
-      })),
-      hasLength(1),
-    );
-  });
-
-  group('manche 3 seulement', () {
-    test('fixé sur une autre manche → refusé', () {
-      expect(
-        validateEnsemble(rulesWith(overrides: {
-          'draw': setting(ModifierArrival.fixed, fixedRound: 2),
-        })),
-        hasLength(1),
-      );
-    });
-
-    test('tiré dès la manche 2 → refusé', () {
-      expect(
-        validateEnsemble(rulesWith(overrides: {
-          'mime_no_fists': setting(ModifierArrival.draw, startRound: 2),
-        })),
-        hasLength(1),
-      );
-    });
-  });
-
-  test('deux incompatibles fixés sur la même manche → refusé', () {
-    final fixed = rulesWith(overrides: {
-      'no_pass': setting(ModifierArrival.fixed, fixedRound: 2),
-      'two_words': setting(ModifierArrival.fixed, fixedRound: 2),
-    });
-    expect(validateEnsemble(fixed), hasLength(1));
-
-    final apart = rulesWith(overrides: {
-      'no_pass': setting(ModifierArrival.fixed, fixedRound: 1),
-      'two_words': setting(ModifierArrival.fixed, fixedRound: 2),
-    });
-    expect(validateEnsemble(apart), isEmpty,
-        reason: 'sur deux manches différentes, ils ne se croisent pas');
-  });
-
-  test('« Autre langue » sur la manche 3 (mime) → refusé', () {
-    for (final s in [
-      setting(ModifierArrival.fixed, fixedRound: 3),
-      setting(ModifierArrival.draw, startRound: 3),
-      // Hors bornes : jamais atteint (revue r1).
-      setting(ModifierArrival.fixed, fixedRound: 4),
-      setting(ModifierArrival.fixed, fixedRound: 0),
-      setting(ModifierArrival.draw, startRound: 4),
-      setting(ModifierArrival.offer, startRound: 3),
-    ]) {
-      expect(
-        validateEnsemble(rulesWith(overrides: {'other_language': s})),
-        contains(startsWith('Faire deviner dans une autre langue n\'existe '
-            'pas en manche 3')),
-        reason: '${s.arrival} ${s.fixedRound} ${s.startRound}',
+        reason: e.name,
       );
     }
+  });
+
+  test('nom vide après trim, ou déjà pris (casse et espaces ignorés)', () {
+    expect(validateEnsemble(rulesWith(name: '   ')),
+        ['Donne un nom à l\'ensemble.']);
     expect(
-      validateEnsemble(rulesWith(overrides: {
-        'other_language': setting(ModifierArrival.fixed, fixedRound: 2),
-      })),
-      isEmpty,
+      validateEnsemble(rulesWith(name: '  pro PLAYER '),
+          others: kProvidedEnsembles),
+      ['Ce nom est déjà pris : choisis-en un autre.'],
+    );
+  });
+
+  test('doublon : mêmes réglages qu\'un autre ensemble, hors nom → refusé', () {
+    final pro = kProvidedEnsembles.firstWhere((e) => e.name == 'Pro Player');
+    final twin = pro.rules.copyWith(
+      ensembleName: 'Soirée chez Max',
+      // Réglage d'un modificateur COUPÉ : ne change pas le jeu, donc doublon.
+      modifiers: {
+        ...pro.rules.modifiers,
+        'two_words': pro.rules.modifiers['two_words']!.copyWith(charges: 3),
+      },
+    );
+    expect(validateEnsemble(twin, others: kProvidedEnsembles),
+        ['L\'ensemble Pro Player a déjà ces paramètres.']);
+    // Une manche de plus : plus un doublon.
+    final different = twin.copyWith(modifiers: {
+      ...twin.modifiers,
+      'reversed': setting(ModifierMode.draw, rounds: {2, 3}),
+    });
+    expect(validateEnsemble(different, others: kProvidedEnsembles), isEmpty);
+  });
+
+  test('modificateur actif sans manche → refusé, coupé → ignoré', () {
+    expect(
+      validateEnsemble(rulesWith(
+          overrides: {'reversed': setting(ModifierMode.draw, rounds: {})})),
+      ['Mot à l\'envers : coche au moins une manche.'],
     );
     expect(
       validateEnsemble(rulesWith(overrides: {
-        'other_language': setting(ModifierArrival.offer, startRound: 2),
+        'reversed': setting(ModifierMode.draw, rounds: {}).copyWith(
+          active: false,
+        ),
       })),
       isEmpty,
+    );
+  });
+
+  test(
+      'exclusivité des modes : une exception cartouche en règle de manche, '
+      'des manches interdites par le catalogue, une offre en M1 seule → '
+      'refusés', () {
+    expect(
+      validateEnsemble(rulesWith(overrides: {
+        'double_points': setting(ModifierMode.always),
+        'block_guesser': setting(ModifierMode.draw),
+      })),
+      [
+        'Mot compte double : seulement en cartouche.',
+        'Bloquer un devineur : seulement en cartouche.',
+      ],
+    );
+    expect(
+      validateEnsemble(rulesWith(overrides: {
+        'mime_no_arms': setting(ModifierMode.draw, rounds: {2, 3}),
+        'other_language': setting(ModifierMode.draw, rounds: {2, 3}),
+        'two_words': setting(ModifierMode.offer, rounds: {1}),
+      })),
+      unorderedEquals([
+        'Mime sans les bras n\'existe qu\'en manche 3 (mime).',
+        'Faire deviner dans une autre langue n\'existe pas en manche 3 '
+            '(mime) : manche 1 ou 2 seulement.',
+        'Deux mots à la fois : en « 1 parmi 3 », la carte se gagne entre '
+            'deux manches. Coche la manche 2 ou 3.',
+      ]),
+    );
+  });
+
+  test('deux « Toujours » incompatibles sur une même manche → refusé', () {
+    expect(
+      validateEnsemble(rulesWith(overrides: {
+        'no_pass': setting(ModifierMode.always, rounds: {2}),
+        'two_words': setting(ModifierMode.always, rounds: {1, 2}),
+      })),
+      [
+        'Interdit de passer et Deux mots à la fois sont incompatibles : pas '
+            '« Toujours » tous les deux en manche 2.'
+      ],
     );
   });
 }

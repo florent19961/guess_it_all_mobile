@@ -22,17 +22,15 @@ void main() {
       fiesta: FiestaRules(
         mode: FiestaMode.custom,
         ensembleName: 'Soirée',
-        modifiers: const {
+        modifiers: {
           'no_pass': ModifierSetting(
             active: true,
-            arrival: ModifierArrival.fixed,
-            startRound: 1,
-            fixedRound: 2,
-            charges: 1,
+            rounds: const {2},
+            mode: ModifierMode.always,
           ),
         },
         drawCount: 2,
-        oneAnswer: false,
+        pick3Choices: 2,
       ),
     );
 
@@ -82,7 +80,12 @@ void main() {
       {'settings': okSettings, 'fiesta': 'x'},
       {
         'settings': okSettings,
-        'fiesta': {'mode': 'inconnu'},
+        'fiesta': {'format': 2, 'mode': 'inconnu'},
+      },
+      // Forme v1 (avant Fiesta v2) : illisible, pas de « Rejouer ».
+      {
+        'settings': okSettings,
+        'fiesta': {'mode': 'custom', 'oneOfThree': true},
       },
     ]) {
       expect(GameSetupSnapshot.tryFromJson(raw), isNull, reason: '$raw');

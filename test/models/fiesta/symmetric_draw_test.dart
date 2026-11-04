@@ -1,77 +1,77 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+import 'package:guess_it_all_mobile/models/fiesta/fiesta_state.dart';
 import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
 import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
 
-ModifierSetting setting(ModifierArrival arrival,
-        {int startRound = 1, int? fixedRound}) =>
+ModifierSetting setting(ModifierMode mode,
+        {Set<int> rounds = const {1, 2, 3},
+        int charges = 1,
+        bool perGame = false}) =>
     ModifierSetting(
       active: true,
-      arrival: arrival,
-      startRound: startRound,
-      fixedRound: fixedRound,
-      charges: 0,
+      rounds: rounds,
+      mode: mode,
+      charges: charges,
+      perGame: perGame,
     );
 
-/// Personnalisé : tout le catalogue en « tiré pour tous » dès M1, sauf
-/// `no_pass` fixé sur [fixedNoPassRound] s'il est donné.
-FiestaRules customAllDraw({int drawCount = 2, int? fixedNoPassRound}) =>
+/// Personnalisé : tout le catalogue « Au tirage » sur toutes les manches
+/// (les contraintes de manche du catalogue filtrent), sauf `no_pass`
+/// « Toujours » si [alwaysNoPass].
+FiestaRules customAllDraw({int drawCount = 2, bool alwaysNoPass = false}) =>
     FiestaRules(
       mode: FiestaMode.custom,
       drawCount: drawCount,
       modifiers: {
         for (final def in kModifierCatalog)
-          // `block_guesser` (cible joueur) fixé lui aussi : ne doit jamais sortir.
-          def.id: (def.id == 'no_pass' || def.id == 'block_guesser') &&
-                  fixedNoPassRound != null
-              ? setting(ModifierArrival.fixed, fixedRound: fixedNoPassRound)
-              : setting(ModifierArrival.draw),
+          def.id: setting(def.id == 'no_pass' && alwaysNoPass
+              ? ModifierMode.always
+              : ModifierMode.draw),
       },
     );
 
 final gameIds = List.generate(200, (i) => 'game-$i');
 
 void main() {
-  final configs = <String, FiestaRules Function(int round)>{
-    'Auto': (_) => FiestaRules(mode: FiestaMode.auto),
-    'Personnalisé, tirage 2': (_) => customAllDraw(),
-    'Personnalisé, tirage 2 + fixé': (round) =>
-        customAllDraw(fixedNoPassRound: round),
-    'Personnalisé, tirage 3': (_) => customAllDraw(drawCount: 3),
-    'Personnalisé, tirage 3 + fixé': (round) =>
-        customAllDraw(drawCount: 3, fixedNoPassRound: round),
+  final configs = <String, FiestaRules>{
+    'Auto': autoRules(oneAnswer: false),
+    'Personnalisé, tirage 2': customAllDraw(),
+    'Personnalisé, tirage 5': customAllDraw(drawCount: 5),
+    'Personnalisé, tirage 5 + Toujours': customAllDraw(
+      drawCount: 5,
+      alwaysNoPass: true,
+    ),
   };
 
   test(
-      'pour toute config, manche et graine : plafond (2 en Auto, 3 en '
-      'Personnalisé), aucune paire incompatible, au plus un de la famille '
-      '« Mime », rien de « manche 3 » avant M3 ni de « pas en M3 » en M3, '
-      'résultat déterministe', () {
+      'pour toute config, manche et graine : au plus drawCount tirés (sans '
+      'plafond), aucune paire incompatible, au plus un de la famille « Mime », '
+      'jamais une exception cartouche, rien de « manche 3 » avant M3 ni de '
+      '« pas en M3 » en M3, résultat déterministe', () {
     final seen = <String, Set<int>>{};
-    configs.forEach((label, rulesFor) {
+    configs.forEach((label, rules) {
       for (final round in [1, 2, 3]) {
         for (final gameId in gameIds) {
-          final rules = rulesFor(round);
           final mods = roundModifiers(rules, gameId: gameId, round: round);
           final ids = mods.map((m) => m.catalogId).toList();
           final why = '$label, M$round, $gameId : $ids';
 
-          final cap = label == 'Auto' ? 2 : 3;
-          expect(ids.length, lessThanOrEqualTo(cap), reason: why);
+          final always = label.endsWith('Toujours') ? 1 : 0;
+          final max = label == 'Auto' ? 2 : rules.drawCount;
+          expect(ids.length, lessThanOrEqualTo(max + always), reason: why);
           (seen[label] ??= {}).add(ids.length);
           expect(ids.where((id) => modifierById(id)!.mimeFamily).length,
               lessThanOrEqualTo(1),
               reason: why);
-          expect(ids, isNot(contains('block_guesser')), reason: why);
+          expect(ids.where(kCartridgeOnlyIds.contains), isEmpty, reason: why);
           expect(ids.toSet().length, ids.length, reason: why);
           for (var i = 0; i < ids.length; i++) {
             for (var j = i + 1; j < ids.length; j++) {
               expect(areCompatible(ids[i], ids[j]), isTrue, reason: why);
             }
           }
-          if (label.endsWith('fixé')) {
-            expect(ids.first, 'no_pass', reason: why);
-          }
+          if (always == 1) expect(ids.first, 'no_pass', reason: why);
           if (round < 3) {
             expect(ids.where((id) => modifierById(id)!.round3Only), isEmpty,
                 reason: why);
@@ -87,21 +87,31 @@ void main() {
         }
       }
     });
-    // Le plafond de 3 est atteint en Personnalisé (sinon il ne prouve rien).
-    expect(seen['Personnalisé, tirage 3'], contains(3));
-    expect(seen['Personnalisé, tirage 3 + fixé'], contains(3));
+    // Plus de plafond de 3 : un tirage de 5 en sort 5 (sinon le test ne
+    // prouve rien).
+    expect(seen['Personnalisé, tirage 5'], contains(5));
+    expect(seen['Auto'], {1, 2});
   });
 
-  test('M3 : « Dessiner » fixé, mimes tirés pour tous → aucun mime ne sort',
+  test(
+      'tirage figé : une graine donne toujours les mêmes ids (une mise à jour '
+      'qui changerait l\'ordre des candidats changerait les tirages)', () {
+    expect(
+      roundModifiers(customAllDraw(), gameId: 'game-0', round: 1)
+          .map((m) => m.catalogId),
+      ['one_answer', 'minus_10s'],
+    );
+  });
+
+  test('M3 : « Dessiner » Toujours, mimes au tirage → aucun autre mime ne sort',
       () {
     final rules = FiestaRules(
       mode: FiestaMode.custom,
       drawCount: 3,
       modifiers: {
-        'draw': setting(ModifierArrival.fixed, fixedRound: 3),
+        'draw': setting(ModifierMode.always, rounds: {3}),
         for (final def in kModifierCatalog.where((d) => d.mimeFamily))
-          if (def.id != 'draw')
-            def.id: setting(ModifierArrival.draw, startRound: 3),
+          if (def.id != 'draw') def.id: setting(ModifierMode.draw, rounds: {3}),
       },
     );
     for (final gameId in gameIds) {
@@ -114,12 +124,11 @@ void main() {
 
   test(
       '« Une seule réponse » en Auto : déterministe par partie, environ 1 '
-      'fois sur 4', () {
+      'fois sur 4 ; tirée = « Toujours » M1-M3, sinon jamais', () {
     // Graine figée (« manche 0 », distincte des manches 1 à 3) : une app mise
     // à jour retrouve le même tirage pour une partie suspendue.
     expect(drawSeed('game-0', 0), 2787898305);
     expect(drawSeed('game-1', 0), 286747006);
-    // Sorties épinglées : `Random(drawSeed(id, 0)).nextInt(4) == 0`.
     expect([
       for (var i = 0; i < 12; i++) drawsOneAnswer('game-$i')
     ], [
@@ -136,43 +145,41 @@ void main() {
       false,
       false
     ]);
-
     final drawn = gameIds.where(drawsOneAnswer).length;
     expect(drawn, inInclusiveRange(35, 65)); // 200 parties, attendu 50
-    for (final gameId in gameIds) {
-      expect(drawsOneAnswer(gameId), drawsOneAnswer(gameId));
+
+    for (final round in [1, 2, 3]) {
+      expect(
+        roundModifiers(autoRules(oneAnswer: true), gameId: 'g', round: round)
+            .first
+            .catalogId,
+        'one_answer',
+      );
+      for (final gameId in gameIds) {
+        expect(
+          roundModifiers(autoRules(oneAnswer: false),
+                  gameId: gameId, round: round)
+              .map((m) => m.catalogId),
+          isNot(contains('one_answer')),
+        );
+      }
     }
   });
 
-  test('Auto : 1 ou 2 tirés, les deux cas arrivent', () {
-    final counts = gameIds
-        .map((id) => roundModifiers(FiestaRules(mode: FiestaMode.auto),
-                gameId: id, round: 1)
-            .length)
-        .toSet();
-    expect(counts, {1, 2});
-  });
-
   test(
-      'Personnalisé : tirage à 0 = rien ; seuls les « tiré pour tous » '
-      'dont la manche de départ est atteinte sortent', () {
+      'Personnalisé : tirage à 0 = rien ; seuls les « Au tirage » cochés sur '
+      'la manche sortent', () {
     expect(
       roundModifiers(customAllDraw(drawCount: 0), gameId: 'g', round: 1),
       isEmpty,
     );
-    expect(
-      roundModifiers(FiestaRules(mode: FiestaMode.auto, symmetric: false),
-          gameId: 'g', round: 1),
-      isEmpty,
-    );
-
     final rules = FiestaRules(
       mode: FiestaMode.custom,
       drawCount: 2,
       modifiers: {
-        'reversed': setting(ModifierArrival.draw, startRound: 2),
-        'minus_10s': setting(ModifierArrival.draw),
-        'free_pass': setting(ModifierArrival.offer),
+        'reversed': setting(ModifierMode.draw, rounds: {2, 3}),
+        'minus_10s': setting(ModifierMode.draw),
+        'free_pass': setting(ModifierMode.offer),
       },
     );
     for (final gameId in gameIds) {
@@ -187,5 +194,43 @@ void main() {
         {'minus_10s', 'reversed'},
       );
     }
+  });
+
+  test(
+      'En stock : bonus seulement (lane 1), une instance par équipe sur les '
+      'manches cochées ; « pour la partie » = N moins ce qui est déjà dépensé',
+      () {
+    final rules = FiestaRules(
+      mode: FiestaMode.custom,
+      modifiers: {
+        'double_points':
+            setting(ModifierMode.stock, rounds: {1, 3}, charges: 2),
+        'two_words': setting(ModifierMode.stock, charges: 2, perGame: true),
+        'minus_10s': setting(ModifierMode.stock, charges: 2),
+      },
+    );
+    Map<String, int> stock(int round, [List<ChargeUse> used = const []]) => {
+          for (final m in stockForRound(rules,
+              round: round, teamIds: ['a', 'b'], chargesUsed: used))
+            '${m.catalogId}/${m.teamId}': m.charges,
+        };
+
+    expect(stock(1), {
+      'double_points/a': 2,
+      'double_points/b': 2,
+      'two_words/a': 2,
+      'two_words/b': 2,
+    });
+    final used = [
+      const ChargeUse(catalogId: 'two_words', teamId: 'a', round: 1),
+      const ChargeUse(catalogId: 'two_words', teamId: 'a', round: 2),
+      const ChargeUse(catalogId: 'double_points', teamId: 'a', round: 1),
+    ];
+    // M2 : pas de ×2 (manche non cochée) ; Deux mots « pour la partie » :
+    // 2 − 1 dépensée en M1 pour a.
+    expect(stock(2, used), {'two_words/a': 1, 'two_words/b': 2});
+    // M3 : ×2 « par manche » revient à 2 ; Deux mots épuisé pour a.
+    expect(stock(3, used),
+        {'double_points/a': 2, 'double_points/b': 2, 'two_words/b': 2});
   });
 }
