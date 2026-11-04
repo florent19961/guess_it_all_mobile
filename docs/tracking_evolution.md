@@ -741,3 +741,11 @@ supprimé tombe sur l'accueil (cas par défaut de `app.dart`). Une partie Person
 avant la mise à jour peut tirer un 3ᵉ modificateur aux manches suivantes (plafond relevé), sans
 rien casser. Dans Firestore, `fiestaRules.oneAnswer` d'une partie Auto dit désormais ce qui a
 été tiré, et non plus un interrupteur.
+
+**Revue r1 (même jour).** Paramètres et « Mes ensembles » sont l'écran racine du `MaterialApp` :
+le retour système d'Android quittait l'app. Un `PopScope` les ramène à la destination de leur
+bouton retour (accueil, équipes) — les écrans supprimés le faisaient via `FiestaSetupScaffold`.
+« Tout réinitialiser » vide aussi la Fiesta en attente. Ajout demandé par Florent : le bouton
+rond « Réinitialiser » quitte le coin haut droit des Paramètres pour le bas de la fenêtre
+« Avancés » (« Réinitialiser les paramètres », même confirmation) ; en haut à droite ne restent
+que le « ? » et la roue crantée.

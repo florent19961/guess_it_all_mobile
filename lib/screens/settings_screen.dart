@@ -329,7 +329,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             AppBackButton(
               onPressed: () => provider.goToScreen(AppConstants.screenHome),
             ),
-            // Boutons en haut à droite : Réinitialiser + Paramètres avancés
+            // Boutons en haut à droite : aide + Paramètres avancés
             Positioned(
               top: MediaQuery.of(context).padding.top + 16,
               right: 16,
@@ -345,25 +345,6 @@ class _SettingsScreenState extends State<SettingsScreen>
                         categories: _categoriesKey,
                         advanced: _advancedKey,
                         passPenalty: provider.settings.passPenalty,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Bouton réinitialiser
-                  GestureDetector(
-                    onTap: () => _showResetConfirmation(context, provider),
-                    child: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: AppColors.backgroundCard,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.gray600, width: 2),
-                      ),
-                      child: const Icon(
-                        Icons.refresh,
-                        color: Colors.white,
-                        size: 24,
                       ),
                     ),
                   ),
@@ -526,6 +507,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   void _showAdvancedSettings(BuildContext context, GameProvider provider) {
+    final screenContext = context;
     AppModal.show(
       context,
       title: 'Avancés',
@@ -604,6 +586,19 @@ class _SettingsScreenState extends State<SettingsScreen>
                     },
                   ),
                 ],
+
+                // Réinitialiser (ancien bouton rond du coin haut droit) : ferme
+                // « Avancés », puis la même confirmation qu'avant.
+                const SizedBox(height: 24),
+                AppButton(
+                  text: 'Réinitialiser les paramètres',
+                  variant: AppButtonVariant.ghost,
+                  size: AppButtonSize.small,
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _showResetConfirmation(screenContext, provider);
+                  },
+                ),
               ],
             ),
           );

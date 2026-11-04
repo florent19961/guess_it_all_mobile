@@ -98,7 +98,8 @@ List<CoachStep> settingsHelp({
         text: 'Le nombre de mots, la durée d\'un tour et la pénalité quand on '
             'passe un mot. Avec tes réglages : '
             '${passPenaltySentence(passPenalty).toLowerCase()} En Fiesta, '
-            'c\'est aussi là qu\'on passe d\'Auto à Personnalisé.',
+            'c\'est aussi là qu\'on passe d\'Auto à Personnalisé. Tout en '
+            'bas : réinitialiser les paramètres.',
       ),
     ];
 
