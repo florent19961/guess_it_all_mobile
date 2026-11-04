@@ -467,7 +467,8 @@ List<CoachStep> fiestaTransitionHelp({
         target: pickThree,
         title: 'Choix 1 parmi 3',
         text: 'L\'équipe menée prend le téléphone et choisit une carte : un '
-            'bonus pour elle ou un malus pour l\'équipe en tête.',
+            'bonus pour elle, ou un malus qu\'elle infligera à l\'équipe '
+            'de son choix avant l\'un de ses tours.',
       ),
       CoachStep(
         target: appBoost,

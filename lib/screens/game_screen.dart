@@ -252,10 +252,8 @@ class _GameScreenState extends State<GameScreen> {
                   ] else
                     const Spacer(),
 
-                  // Time bonus indicator (Classique : en Fiesta, la carte
-                  // « Temps du tour » porte déjà la ligne « Temps reporté »)
-                  if (provider.game.turnBonusTime != null &&
-                      !provider.isFiesta) ...[
+                  // Temps reporté (continuation), Classique comme Fiesta
+                  if (provider.game.turnBonusTime != null) ...[
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
