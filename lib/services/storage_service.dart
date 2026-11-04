@@ -128,6 +128,8 @@ class StorageService {
   // Aides de prise en main : booléens autonomes, absents = false (clés neuves,
   // rien à migrer). Posés une fois au démarrage par [initHelpFlags].
 
+  /// Onboarding des règles de première partie traité : question « Première
+  /// partie ? » posée (anciennes versions) ou tuto des règles ouvert.
   Future<bool> hasSeenTutorial() => _readFlag(AppConstants.tutorialSeenKey);
   Future<void> markTutorialSeen() =>
       _writeFlag(AppConstants.tutorialSeenKey, true);

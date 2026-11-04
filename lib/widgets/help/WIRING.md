@@ -82,7 +82,7 @@ chaque joueur).
 
 | Clé | Lecture / écriture | Sens |
 |---|---|---|
-| `guessItAll_tutorialSeen` | `hasSeenTutorial` / `markTutorialSeen` | tuto des règles déjà vu (ouvert d'office au premier « Jouer » sinon, sans question) |
+| `guessItAll_tutorialSeen` | `hasSeenTutorial` / `markTutorialSeen` | onboarding des règles de première partie traité : question « Première partie ? » posée (anciennes versions) **ou** tuto des règles ouvert. Faux → le premier « Jouer » ouvre le tuto d'office, sans question. Sens inchangé, pas de migration |
 | `guessItAll_fiestaTutorialSeen` | `hasSeenFiestaTutorial` / `markFiestaTutorialSeen` | tuto Fiesta déjà vu |
 | `guessItAll_firstGameDone` | `isFirstGameDone` / `markFirstGameDone` / `resetFirstGameDone` | première partie terminée |
 | `guessItAll_firstGameId` | `loadFirstGameId` / `saveFirstGameId` | `gameId` de la première partie (absent = pas encore enregistrée) |
