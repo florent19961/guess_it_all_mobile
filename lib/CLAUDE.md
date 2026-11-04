@@ -7,7 +7,7 @@ Point d'entree de l'application Flutter "Guess It All".
 | Fichier | Role |
 |---------|------|
 | `main.dart` | Initialise Firebase, services singletons (WordLoader, WordHistory, Connectivity, FirebaseSync, Analytics), wrappe l'app avec `GameProvider` |
-| `app.dart` | Widget racine `GuessItAllApp` : MaterialApp + `UpgradeAlert` (mise a jour forcee) + routing par `GameProvider.game.currentScreen` |
+| `app.dart` | Widget racine `GuessItAllApp` : MaterialApp + `StartupIntro` (animation de demarrage, `builder`) + `UpgradeAlert` (mise a jour forcee) + routing par `GameProvider.game.currentScreen` |
 | `firebase_options.dart` | Config Firebase auto-generee par FlutterFire CLI (ne pas modifier manuellement) |
 
 ## Architecture

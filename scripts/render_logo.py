@@ -12,7 +12,7 @@ Sorties dans visuals/ :
 
 Le splash natif est un simple fond #2B3848 sans logo : l'animation de démarrage
 (lib/widgets/effects/startup_intro.dart) dessine le logo à partir de rien. Sa
-géométrie (StartupLogoPainter) reprend les constantes de artwork() ci-dessous :
+géométrie (_StartupLogoPainter) reprend les constantes de artwork() ci-dessous :
 toute modification ici doit y être reportée à la main.
 """
 
