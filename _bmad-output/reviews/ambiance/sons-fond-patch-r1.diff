@@ -1,0 +1,346 @@
+diff --git a/lib/services/CLAUDE.md b/lib/services/CLAUDE.md
+index be63af4..ebd4890 100644
+--- a/lib/services/CLAUDE.md
++++ b/lib/services/CLAUDE.md
+@@ -13,7 +13,7 @@
+ | `word_loader_service.dart` | `WordLoaderService` | Charge categories depuis JSON (assets/translations/). Cache en memoire. Methodes : `loadCategory()`, `getCategoriesMetadata()` |
+ | `connectivity_service.dart` | `ConnectivityService` | Detection reseau (wifi/mobile/ethernet) via connectivity_plus |
+ | `firebase_sync_service.dart` | `FirebaseSyncService` | Sync offline-first vers Firestore. Queue de games en attente, sync auto quand online |
+-| `audio_service.dart` | `AudioService` | Sons : ding (mot devine), whoosh (mot passe), klaxon (fin de tour) via audioplayers |
++| `audio_service.dart` | `AudioService` | Sons : ding (mot devine), whoosh (mot passe), gong (fin de tour, `end_of_turn.wav`) via audioplayers. `ding.wav` et `end_of_turn.wav` sont générés par `scripts/render_sounds.py` |
+ | `fiesta_ensemble_service.dart` | `FiestaEnsembleService` | Ensembles Fiesta (mode Personnalise) : `load` / `create` / `update` (sur place) / `duplicate` / `delete` / `markUsed`. **Borne 10 tenue par le service**, modifications serialisees (file interne), quarantaine du blob illisible ou venu du futur, ensemble illisible ignore seul a la lecture et **reecrit tel quel** a chaque modification (jamais detruit) ; ces entrees illisibles **ne comptent pas** dans la borne de 10 (le blob peut en porter 10 + k) |
+ 
+ ## Cles SharedPreferences
+diff --git a/lib/services/audio_service.dart b/lib/services/audio_service.dart
+index cd2906a..972aa02 100644
+--- a/lib/services/audio_service.dart
++++ b/lib/services/audio_service.dart
+@@ -7,7 +7,7 @@ class AudioService {
+   static Future<void> playDing() async {
+     try {
+       await _player.stop();
+-      await _player.play(AssetSource('sounds/ding.mp3'));
++      await _player.play(AssetSource('sounds/ding.wav'));
+     } catch (e) {
+       // Ignorer les erreurs audio sur web (interruption play/pause)
+     }
+@@ -27,7 +27,7 @@ class AudioService {
+   static Future<void> playKlaxon() async {
+     try {
+       await _player.stop();
+-      await _player.play(AssetSource('sounds/klaxon.mp3'));
++      await _player.play(AssetSource('sounds/end_of_turn.wav'));
+     } catch (e) {
+       // Ignorer les erreurs audio sur web
+     }
+diff --git a/lib/widgets/effects/CLAUDE.md b/lib/widgets/effects/CLAUDE.md
+index 105e89c..da730ab 100644
+--- a/lib/widgets/effects/CLAUDE.md
++++ b/lib/widgets/effects/CLAUDE.md
+@@ -4,7 +4,7 @@ Effets visuels et animations.
+ 
+ ## Fichier unique : `shooting_stars.dart`
+ 
+-`ShootingStarsBackground` : fond anime avec etoiles filantes sur 2 couches parallax via `CustomPainter`.
++`ShootingStars` : fond animé « ciel étoilé calme » via `CustomPainter` — étoiles qui scintillent sur 3 profondeurs en dérivant lentement, et une étoile filante toutes les 4 à 7 s. Un seul `Ticker` alimente un `ValueNotifier` : seul le painter se redessine (dans un `RepaintBoundary`), pas l'arbre.
+ 
+ Wrappe son `child` dans un `Material(type: transparent)` pour supporter les `TextField` imbriques.
+ 
+diff --git a/lib/widgets/effects/shooting_stars.dart b/lib/widgets/effects/shooting_stars.dart
+index 989835d..e6f7461 100644
+--- a/lib/widgets/effects/shooting_stars.dart
++++ b/lib/widgets/effects/shooting_stars.dart
+@@ -1,6 +1,11 @@
+ import 'dart:math';
++import 'dart:ui' as ui;
++
+ import 'package:flutter/material.dart';
++import 'package:flutter/scheduler.dart';
+ 
++/// Fond animé « ciel étoilé calme » : des étoiles qui scintillent sur trois
++/// profondeurs en dérivant lentement, et une étoile filante de temps en temps.
+ class ShootingStars extends StatefulWidget {
+   final Widget child;
+ 
+@@ -11,28 +16,24 @@ class ShootingStars extends StatefulWidget {
+ }
+ 
+ class _ShootingStarsState extends State<ShootingStars>
+-    with TickerProviderStateMixin {
+-  late AnimationController _controller1;
+-  late AnimationController _controller2;
++    with SingleTickerProviderStateMixin {
++  // Temps écoulé en secondes : seul le painter se redessine, pas l'arbre.
++  final ValueNotifier<double> _time = ValueNotifier(0);
++  late final Ticker _ticker;
+ 
+   @override
+   void initState() {
+     super.initState();
+-    _controller1 = AnimationController(
+-      duration: const Duration(seconds: 12),
+-      vsync: this,
+-    )..repeat();
+-
+-    _controller2 = AnimationController(
+-      duration: const Duration(seconds: 15),
+-      vsync: this,
+-    )..repeat();
++    _ticker = createTicker((elapsed) {
++      _time.value = elapsed.inMicroseconds / Duration.microsecondsPerSecond;
++    })
++      ..start();
+   }
+ 
+   @override
+   void dispose() {
+-    _controller1.dispose();
+-    _controller2.dispose();
++    _ticker.dispose();
++    _time.dispose();
+     super.dispose();
+   }
+ 
+@@ -40,35 +41,10 @@ class _ShootingStarsState extends State<ShootingStars>
+   Widget build(BuildContext context) {
+     return Stack(
+       children: [
+-        // Background
+-        Container(color: const Color(0xFF2B3848)),
+-
+-        // Stars layer 1
+-        AnimatedBuilder(
+-          animation: _controller1,
+-          builder: (context, child) {
+-            return CustomPaint(
+-              painter: StarsPainter(
+-                progress: _controller1.value,
+-                seed: 1,
+-              ),
+-              size: Size.infinite,
+-            );
+-          },
+-        ),
+-
+-        // Stars layer 2
+-        AnimatedBuilder(
+-          animation: _controller2,
+-          builder: (context, child) {
+-            return CustomPaint(
+-              painter: StarsPainter(
+-                progress: _controller2.value,
+-                seed: 2,
+-              ),
+-              size: Size.infinite,
+-            );
+-          },
++        SizedBox.expand(
++          child: RepaintBoundary(
++            child: CustomPaint(painter: _SkyPainter(_time)),
++          ),
+         ),
+ 
+         // Child content (wrapped in Material for TextField support)
+@@ -81,45 +57,109 @@ class _ShootingStarsState extends State<ShootingStars>
+   }
+ }
+ 
+-class StarsPainter extends CustomPainter {
+-  final double progress;
+-  final int seed;
++class _Star {
++  final double x, y, phase, frequency;
++  const _Star(this.x, this.y, this.phase, this.frequency);
++}
+ 
+-  StarsPainter({required this.progress, required this.seed});
++class _Layer {
++  final double radius, speed;
++  final List<_Star> stars;
++  const _Layer(this.radius, this.speed, this.stars);
++}
++
++class _Shot {
++  final double at, x, y, length;
++  const _Shot(this.at, this.x, this.y, this.length);
++}
++
++/// Largeur logique de référence d'un téléphone : les tailles en découlent.
++const double _refWidth = 390;
++
++/// Durée du cycle des étoiles filantes (12 passages par cycle).
++const double _shotCycle = 55;
++
++final Random _random = Random(7);
++
++// (nombre, rayon, vitesse) : du fond, petit et lent, au premier plan.
++final List<_Layer> _layers = [
++  for (final (count, radius, speed) in const [
++    (70, 0.6, 3.0),
++    (40, 1.0, 6.0),
++    (16, 1.5, 11.0)
++  ])
++    _Layer(radius, speed, [
++      for (var i = 0; i < count; i++)
++        _Star(_random.nextDouble(), _random.nextDouble(),
++            _random.nextDouble() * 2 * pi, 0.6 + _random.nextDouble() * 1.6),
++    ]),
++];
++
++final List<_Shot> _shots = [
++  for (var i = 0; i < 12; i++)
++    _Shot(
++        i * 4.6 + _random.nextDouble() * 2.5,
++        0.1 + _random.nextDouble() * 0.7,
++        _random.nextDouble() * 0.4,
++        90 + _random.nextDouble() * 70),
++];
++
++class _SkyPainter extends CustomPainter {
++  final ValueNotifier<double> time;
++
++  _SkyPainter(this.time) : super(repaint: time);
+ 
+   @override
+   void paint(Canvas canvas, Size size) {
+-    final random = Random(seed);
+-    final paint = Paint()
+-      ..color = Colors.white.withOpacity(0.3)
+-      ..strokeWidth = 1.5
+-      ..strokeCap = StrokeCap.round;
+-
+-    for (int i = 0; i < 15; i++) {
+-      final startX = random.nextDouble() * size.width * 1.5 - size.width * 0.25;
+-      final startY = random.nextDouble() * size.height * 0.5;
+-      final length = 50 + random.nextDouble() * 100;
+-      final delay = random.nextDouble();
+-
+-      final adjustedProgress = (progress + delay) % 1.0;
+-      final x = startX + adjustedProgress * (size.width + length);
+-      final y = startY + adjustedProgress * (size.height + length);
+-
+-      if (x > -length &&
+-          x < size.width + length &&
+-          y > -length &&
+-          y < size.height + length) {
+-        canvas.drawLine(
+-          Offset(x, y),
+-          Offset(x + length * 0.3, y + length * 0.3),
+-          paint,
+-        );
++    final w = size.width, h = size.height;
++    if (w <= 0 || h <= 0) return;
++    final t = time.value;
++    final s = w / _refWidth;
++
++    canvas.drawRect(
++      Offset.zero & size,
++      Paint()
++        ..shader = ui.Gradient.linear(Offset.zero, Offset(0, h),
++            const [Color(0xFF22304A), Color(0xFF2B3848)]),
++    );
++
++    final star = Paint();
++    for (final layer in _layers) {
++      final dim = layer.radius > 1.2 ? 1.0 : 0.8;
++      for (final st in layer.stars) {
++        final x = (st.x * w + t * layer.speed * s * 0.6) % w;
++        final y = (st.y * h + t * layer.speed * s) % h;
++        final twinkle =
++            0.25 + 0.6 * (0.5 + 0.5 * sin(t * st.frequency + st.phase));
++        star.color = Color.fromRGBO(255, 255, 255, twinkle * dim);
++        canvas.drawCircle(Offset(x, y), layer.radius * s * 1.2, star);
+       }
+     }
++
++    final cycle = t % _shotCycle;
++    for (final shot in _shots) {
++      final k = (cycle - shot.at) / 0.9;
++      if (k < 0 || k > 1) continue;
++      final head = Offset((shot.x + k * 0.35) * w, (shot.y + k * 0.25) * h);
++      final length = shot.length * s;
++      final tail = head - Offset(length * 0.81, length * 0.58);
++      final fade = sin(k * pi);
++      canvas.drawLine(
++        tail,
++        head,
++        Paint()
++          ..shader = ui.Gradient.linear(tail, head, [
++            const Color.fromRGBO(255, 255, 255, 0),
++            Color.fromRGBO(255, 255, 255, 0.85 * fade),
++          ])
++          ..strokeWidth = 1.8 * s
++          ..strokeCap = StrokeCap.round,
++      );
++      canvas.drawCircle(
++          head, 1.8 * s, Paint()..color = Color.fromRGBO(255, 255, 255, fade));
++    }
+   }
+ 
+   @override
+-  bool shouldRepaint(StarsPainter oldDelegate) {
+-    return oldDelegate.progress != progress;
+-  }
++  bool shouldRepaint(_SkyPainter oldDelegate) => oldDelegate.time != time;
+ }
+diff --git a/scripts/render_sounds.py b/scripts/render_sounds.py
+new file mode 100644
+index 0000000..c9fc36e
+--- /dev/null
++++ b/scripts/render_sounds.py
+@@ -0,0 +1,55 @@
++# Rend en WAV les sons validés (même synthèse que la page de comparaison).
++import sys, wave, numpy as np
++SR = 44100
++
++def env(n_t, t0, gain, attack, dur):
++    t = n_t - t0
++    e = np.zeros_like(t)
++    a = (t >= 0) & (t < attack)
++    e[a] = 1e-4 * (gain / 1e-4) ** (t[a] / attack)
++    d = (t >= attack) & (t < dur)
++    e[d] = gain * (1e-4 / gain) ** ((t[d] - attack) / (dur - attack))
++    return e
++
++def wave_of(kind, f, t):
++    ph = 2 * np.pi * f * t
++    if kind == "sine":
++        return np.sin(ph)
++    if kind == "triangle":  # additif, limité en bande comme Web Audio
++        s = np.zeros_like(t)
++        k = 1
++        while k * f < SR / 2:
++            s += ((-1) ** ((k - 1) // 2)) * np.sin(k * ph) / k**2
++            k += 2
++        return s * 8 / np.pi**2
++
++def tone(buf, t, t0, f, gain, dur, kind="sine", attack=0.004):
++    buf += wave_of(kind, f, t - t0) * env(t, t0, gain, attack, dur)
++
++def bell(buf, t, t0, f, gain=0.28, dur=0.55):
++    tone(buf, t, t0, f, gain, dur)
++    tone(buf, t, t0, f * 2.76, gain * 0.18, dur * 0.45)
++    tone(buf, t, t0, f * 5.4, gain * 0.06, dur * 0.2)
++
++def render(length, fn, path, peak=0.89):
++    t = np.arange(int(SR * length)) / SR
++    buf = np.zeros_like(t)
++    fn(buf, t)
++    buf *= peak / np.max(np.abs(buf))
++    pcm = (buf * 32767).astype("<i2")
++    with wave.open(path, "wb") as w:
++        w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes(pcm.tobytes())
++
++def ding(buf, t):  # A · Cloche douce
++    bell(buf, t, 0.0, 1318.5, 0.24)
++    bell(buf, t, 0.075, 1975.5, 0.22, 0.6)
++
++def gong(buf, t):  # A · Gong de fin
++    for i, f in enumerate([784, 659.3, 523.3]):
++        tone(buf, t, i * 0.14, f, 0.3, 0.32, "triangle")
++    for f in [261.6, 329.6, 392, 523.3]:
++        bell(buf, t, 0.44, f, 0.17, 1.3)
++
++out = sys.argv[1]
++render(0.72, ding, out + "/ding.wav")
++render(1.78, gong, out + "/end_of_turn.wav")

@@ -76,9 +76,6 @@ class _Shot {
 /// Largeur logique de référence d'un téléphone : les tailles en découlent.
 const double _refWidth = 390;
 
-/// Durée du cycle des étoiles filantes (12 passages par cycle).
-const double _shotCycle = 55;
-
 final Random _random = Random(7);
 
 // (nombre, rayon, vitesse) : du fond, petit et lent, au premier plan.
@@ -95,10 +92,18 @@ final List<_Layer> _layers = [
     ]),
 ];
 
+/// Écart entre deux étoiles filantes : 4 à 7 s, y compris d'un cycle au suivant.
+final List<double> _shotGaps = [
+  for (var i = 0; i < 12; i++) 4 + _random.nextDouble() * 3,
+];
+
+/// Durée du cycle des étoiles filantes : la somme des écarts.
+final double _shotCycle = _shotGaps.reduce((a, b) => a + b);
+
 final List<_Shot> _shots = [
-  for (var i = 0; i < 12; i++)
+  for (var i = 0; i < _shotGaps.length; i++)
     _Shot(
-        i * 4.6 + _random.nextDouble() * 2.5,
+        _shotGaps.take(i).fold(0.0, (a, b) => a + b),
         0.1 + _random.nextDouble() * 0.7,
         _random.nextDouble() * 0.4,
         90 + _random.nextDouble() * 70),
