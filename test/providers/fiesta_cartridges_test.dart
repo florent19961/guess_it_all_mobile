@@ -226,4 +226,35 @@ void main() {
     playTurn(p);
     expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null), isEmpty);
   });
+
+  test(
+      'Malus envoyé en fin de M1, la cible rejoue en M2 sous une règle de '
+      'manche incompatible (« Passe gratuite » Toujours) : écarté sans effet, '
+      'puis retiré à la fin de son tour', () async {
+    final p = await givenProvider(['Ana', 'Bob'], wordsEach: 1);
+    await p.startGame(
+      fiesta: FiestaRules(
+        mode: FiestaMode.custom,
+        drawCount: 0,
+        modifiers: {
+          'no_pass': ModifierSetting(
+              active: true, rounds: const {1}, mode: ModifierMode.stock),
+          'free_pass': ModifierSetting(
+              active: true, rounds: const {2}, mode: ModifierMode.always),
+        },
+      ),
+    );
+    final a = p.getCurrentTeam()!.id;
+    final b = p.teams.firstWhere((t) => t.id != a).id;
+    expect(p.inflictMalus('no_pass', b), isNull);
+    playTurn(p, 99); // a finit M1
+    p.nextRound();
+    expect(playTurn(p), a); // continuation de a en M2
+
+    expect(p.getCurrentTeam()!.id, b);
+    expect(p.receivedThisTurn, isEmpty);
+    expect([p.passBlocked, p.freePasses], [false, 2]);
+    playTurn(p);
+    expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null), isEmpty);
+  });
 }
