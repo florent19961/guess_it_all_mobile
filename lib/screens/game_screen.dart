@@ -359,15 +359,24 @@ class _GameScreenState extends State<GameScreen> {
           ),
           child: Column(
             children: [
-              Text.rich(
-                TextSpan(children: [
-                  TextSpan(
-                    text: currentTeam?.name ?? '',
-                    style: TextStyle(
-                        fontFamily: 'Bangers', fontSize: 22, color: teamColor),
+              // Le nom d'équipe se coupe, jamais celui du joueur.
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Text(
+                      currentTeam?.name ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontFamily: 'Bangers',
+                          fontSize: 22,
+                          color: teamColor),
+                    ),
                   ),
-                  TextSpan(
-                    text: '  ·  ${currentPlayer?.name ?? ''}',
+                  Text(
+                    '  ·  ${currentPlayer?.name ?? ''}',
+                    maxLines: 1,
                     style: const TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 16,
@@ -375,10 +384,7 @@ class _GameScreenState extends State<GameScreen> {
                       color: Colors.white,
                     ),
                   ),
-                ]),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                ],
               ),
               const SizedBox(height: 2),
               _wordsRow(provider, fontSize: 12),

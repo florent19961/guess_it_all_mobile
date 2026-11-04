@@ -40,6 +40,15 @@ const _gap = 6.0;
 const _maxSize = 50.0;
 const _minSize = 36.0;
 
+/// Puce « Envoyé » : taille FIXE, pour que [_FiestaTurnZoneState._fit]
+/// compte exactement ses rangées (nom d'équipe coupé à 8 caractères).
+const _sentChipWidth = 96.0;
+const _sentChipHeight = 26.0;
+
+/// Éléments de largeur [item] (espacés de [_gap]) par rangée de [space].
+int _perRowOf(double space, double item) =>
+    max(1, ((space + _gap) / (item + _gap)).floor());
+
 /// Dernier recours pour la RÉSERVE seulement (jamais « Ce tour »).
 const _reserveMinSize = 32.0;
 
@@ -470,8 +479,9 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
         if (cancel && mounted) _p.cancelSent(m);
       },
       child: Container(
-        height: 26,
-        padding: const EdgeInsets.fromLTRB(3, 0, 10, 0),
+        width: _sentChipWidth,
+        height: _sentChipHeight,
+        padding: const EdgeInsets.fromLTRB(3, 0, 8, 0),
         decoration: BoxDecoration(
           color: AppColors.malus.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(13),
@@ -495,10 +505,9 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                       fontWeight: FontWeight.w700,
                       color: AppColors.malus)),
             ),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 110),
+            Expanded(
               child: Text(
-                ' → $team',
+                ' → ${team.length > 8 ? '${team.substring(0, 8)}…' : team}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.bodySmall.copyWith(
@@ -545,8 +554,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
     required int thisTurn,
   }) {
     const minColumn = 64.0; // l'en-tête « BONUS » / « MALUS »
-    int perRow(double space, double d) =>
-        max(1, ((space + _gap) / (d + _gap)).floor());
+    int perRow(double space, double d) => _perRowOf(space, d);
     int rowsOf(int n, double space, double d) => (n / perRow(space, d)).ceil();
     ({int rows, double bonusWidth}) columns(double d) {
       var best = (rows: 1 << 30, bonusWidth: minColumn);
@@ -558,9 +566,9 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
       return best;
     }
 
-    // Puces « Envoyé » : ~3 par rangée.
-    final sentRows = (sent / 3).ceil();
-    final sentHeight = sent == 0 ? 0 : 6 + sentRows * 30 - 4;
+    // Puces « Envoyé » : largeur fixe, donc rangées exactes.
+    final sentRows = (sent / _perRowOf(width, _sentChipWidth)).ceil();
+    final sentHeight = sent == 0 ? 0 : 6 + sentRows * (_sentChipHeight + 4) - 4;
     double needed(double t, double r) {
       final thisTurnRows = max(1, rowsOf(thisTurn, width - 26, t));
       const thisTurnFixed = 10 + 15 + 6 + 10 + 2;
