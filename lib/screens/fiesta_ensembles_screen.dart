@@ -132,6 +132,8 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
       switch (result) {
         case EnsembleSaved(:final ensemble):
           FiestaEnsemblesScreen.draft = null;
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('« ${ensemble.name} » enregistré.')));
           await _reload(select: ensemble.id);
         case EnsembleDraftKept(:final rules):
           setState(() =>

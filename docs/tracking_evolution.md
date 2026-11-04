@@ -826,3 +826,40 @@ jamais autre chose que ce que « Suivant » lancera. Retour système Android bra
 (toute la partie), décochable dans l'éditeur. Remplace « les nouveaux ensembles partent
 décochés » plus haut. Les ensembles déjà enregistrés gardent leur valeur ; « Fiesta classique »
 (ensemble fourni par l'app) suit ce défaut. **Pourquoi.** Décision Florent : coché par défaut.
+
+## 2026-11-04 — Fiesta v2, lane 1 : modes par modificateur, ensembles fournis, éditeur poussé
+
+**Quoi.** Nouveau modèle d'ensemble (`FiestaRules` forme **v2**, `format: 2`). Chaque
+modificateur a des manches cochées {1, 2, 3} et UN mode : « Toute la manche, pour tous »
+(`always` / `draw`) ou « Cartouche · un tour » (`stock` N par équipe, par manche ou pour la
+partie / `offer` 1 parmi 3). Règles de la partie : `drawCount` 0-5, `pick3Choices` 1-3 (rangées de
+3 cartes sur le même écran, une carte par rangée), rattrapage. Supprimés : tirage symétrique,
+« fixé en manche N » (→ `always` + cases), plafond de 2/3 modificateurs (seules les
+incompatibilités limitent, `canAdd` et l'allumage des bonus), « Une seule réponse » comme
+réglage global (→ malus `one_answer` du catalogue). Ajouts **en fin de catalogue** : `one_answer`,
+`sounds_only` (famille mime, M3). Exceptions « seulement en cartouche » : `block_guesser`,
+`double_points`. Auto ré-exprimé (`autoRules`) : tout « Au tirage » (1 ou 2 par manche),
+`one_answer` « Toujours » M1-M3 une partie sur 4, coup de pouce inchangé. 7 ensembles fournis
+(code, jamais écrits, duplicables), « Fiesta classique » présélectionné ; noms uniques
+(casse/espaces ignorés), copie « Nom (2) », doublon de réglages refusé. Éditeur = écran poussé
+« Nouvel ensemble » / « Modifier », Enregistrer toujours actif avec erreurs précises après appui,
+brouillon en mémoire, « Tu veux l'enregistrer ? », retour Android. Couleurs malus #F87171 /
+bonus `AppColors.success` (éditeur, badges, cartes).
+
+**Pourquoi.** Décisions Florent du 2026-11-04 (spec cartouches, maquette `cartouches`). Le bug
+« Donne un nom à l'ensemble » avec un nom saisi venait de la validation affichée en permanence :
+l'éditeur en ligne repartait vierge après un enregistrement et criait aussitôt l'erreur. Les
+erreurs ne s'affichent plus qu'après un appui sur Enregistrer (test qui le reproduisait sur
+`origin/main`).
+
+**Conséquence (règle 7).** Fiesta jamais publiée : la forme v1 n'est pas traduite. Ensemble v1
+→ illisible, ignoré (réécrit tel quel, jamais détruit) ; partie Fiesta suspendue v1 →
+abandonnée au démarrage (accueil, joueurs gardés), jamais reprise en Classique ; archive
+d'historique v1 → pas de « Rejouer » (snapshot illisible). `kCurrentSchemaVersion` inchangé
+(le marqueur `format` suffit). Classique intouché.
+
+**Résidus assumés jusqu'à la lane 2.** Malus « En stock » : persistés et éditables, **sans
+effet en jeu**. Bonus « En stock » = mécanisme de charges actuel (×2 et Deux mots s'allument
+avant le tour ; Passe gratuite en stock = N passes gratuites par tour toute la manche). Une carte
+1 parmi 3 de malus vise encore le leader pour toute la manche N+1 (la cartouche ciblée d'un tour
+arrive avec l'écran « Ce tour / Réserve »).

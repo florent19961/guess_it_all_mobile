@@ -33,7 +33,8 @@ HomeScreen → SettingsScreen (Classique / Fiesta ; Auto / Personnalisé dans «
 | `rules_screen.dart` | Regles completes du jeu (3 manches) + Revoir le tuto / le tuto Fiesta / les aides |
 | `rules_tutorial_screen.dart` | Tuto des regles, 4 cartes (`Navigator.push` via `show`), pénalité de passe lue dans les reglages |
 | `fiesta_tutorial_screen.dart` | Tuto Fiesta, 3 cartes (`Navigator.push` via `show`) |
-| `fiesta_ensembles_screen.dart` | « Fiesta personnalisee » (Fiesta Personnalise, juste apres Parametres, avant les joueurs ; retour bouton et systeme → Parametres). Un seul ecran, aucune page poussee : en haut « Prets a jouer » (ensembles enregistres, n / 10 ; aucun → « Fiesta classique » fourni par l'app = `defaultEnsembleRules`, jamais stocke), un tap selectionne ; Modifier (charge l'ensemble dans l'editeur) / Dupliquer / Supprimer (confirmation). En dessous, l'editeur en ligne (`FiestaEnsembleEditor`, `lib/widgets/fiesta/`) : un ensemble enregistre apparait en haut, selectionne. Une seule porte (`_leaveDraft`) pour toute action qui change la selection ou l'editeur (selectionner, Modifier, Dupliquer, Supprimer, Annuler, Retour bouton et systeme, Suivant) : editeur modifie (brouillon neuf ou modification) → « Abandonner les modifications ? », puis l'editeur repart vierge (ou charge l'ensemble a modifier, qui est aussi selectionne) ; l'affichage ne contredit jamais la selection. « Suivant » (grise sans selection) → joueurs |
+| `fiesta_ensembles_screen.dart` | « Fiesta personnalisee » (Fiesta Personnalise, juste apres Parametres, avant les joueurs ; retour bouton et systeme → Parametres). « Prets a jouer » : les 7 ensembles **fournis** (`kProvidedEnsembles`, seulement Dupliquer) puis les miens (n / 10 ; Modifier / Dupliquer / Supprimer avec confirmation) ; un tap selectionne ; « Fiesta classique » preselectionne a defaut d'attente ou de dernier utilise. « Creer un ensemble » (« Reprendre le brouillon » s'il y en a un) et « Modifier » POUSSENT `FiestaEnsembleEditorScreen` ; enregistre → selectionne. Brouillon = `FiestaEnsemblesScreen.draft` (statique, en memoire tant que l'app est ouverte, jamais persiste). « Suivant » → joueurs |
+| `fiesta_ensemble_editor_screen.dart` | « Nouvel ensemble » / « Modifier l'ensemble » (maquette `cartouches` A) : Nom (renommage), « Regles de la partie » (tires par manche 0-5, choix 1 parmi 3 par manche 1-3, rattrapage), Malus (#F87171, sous-groupe « Mimes · un seul a la fois »), Bonus (vert) ; par modificateur : manches, Mode en deux familles (Toujours / Au tirage ; En stock / 1 parmi 3), cartouches en stock (par manche / pour la partie). « Enregistrer » colle en bas, **toujours actif** : erreurs precises (`validateEnsemble`, unicite du nom, doublon de reglages) affichees seulement apres un appui. Retour bouton et Android : rien modifie → sort ; incomplet → brouillon garde (« Brouillon garde ») ; complet → « Tu veux l'enregistrer ? ». Rend `EnsembleSaved` / `EnsembleDraftKept` |
 
 Invariant Fiesta : le choix du mode vit dans `GameProvider.pendingFiesta`, **en memoire
 seulement** (Q10) : nul = Classique, `FiestaRules(mode: auto)` = Auto, mode `custom` =
@@ -48,8 +49,8 @@ tombe sur l'accueil.
 
 `FiestaEnsemblesScreen({FiestaRules? selected, required VoidCallback onBack, required ValueChanged<FiestaRules> onNext})`.
 L'ecran ne connait ni le provider ni la navigation. `selected` = `pendingFiesta` : l'ensemble
-aux memes regles (JSON egal) est preselectionne, sinon le `lastUsedId` du stockage (« Rejouer »
+aux memes regles (JSON egal) est preselectionne, sinon le `lastUsedId` du stockage, sinon
+« Fiesta classique » (« Rejouer »
 repasse par Parametres puis cet ecran, l'ensemble precedent selectionne). `onNext` recoit les
-regles choisies (mode `custom`, `ensembleName` = nom), apres `markUsed` pour un ensemble
-enregistre. Branchement (`app.dart`) : `onBack` → `screenSettings` ; `onNext` →
+regles choisies (mode `custom`, `ensembleName` = nom), apres `markUsed`. Branchement (`app.dart`) : `onBack` → `screenSettings` ; `onNext` →
 `setPendingFiesta(rules)` puis `screenPlayers`.
