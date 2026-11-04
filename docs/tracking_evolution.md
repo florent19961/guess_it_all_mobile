@@ -866,3 +866,12 @@ laissent pas de `ChargeUse`). Revue r1 : « Deux mots » en règle de manche s'a
 avant le tour ; Passe gratuite en stock = N passes gratuites par tour toute la manche). Une carte
 1 parmi 3 de malus vise encore le leader pour toute la manche N+1 (la cartouche ciblée d'un tour
 arrive avec l'écran « Ce tour / Réserve »).
+
+## 2026-11-04 — Reclassement de mots FR (revue Florent)
+
+Difficulté seule (`assets/translations/words/fr/`), aucune forme persistée touchée.
+- Niveau 2 : Shape of You, Vice-Versa, Persil, Accrocher, Nerveux, Lancer franc, Pain, Harpe, Affamé, Sous-sol, Profiterole, Réparateur, Marche rapide, Nausée.
+- Niveau 3 : Ampli, Téléski, Mew.
+- « Chauffeur de camion » renommé « Chauffeur poids lourd » + niveau 2.
+- « Laurent Gerra » supprimé (celebrites).
+- « Dedans » laissé en niveau 1.
