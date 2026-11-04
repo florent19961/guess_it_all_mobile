@@ -9,7 +9,7 @@ import '../helpers/test_prefs.dart';
 
 /// Monte `HomeScreen` avec un vrai `GameProvider` sur un stockage de test.
 Future<GameProvider> pumpHome(WidgetTester tester) async {
-  // Tuto des règles déjà vu : ces tests suivent le chemin après.
+  // Onboarding des règles de première partie déjà traité : ces tests suivent le chemin après.
   await givenPrefs({AppConstants.tutorialSeenKey: true});
   final provider = GameProvider();
   await tester.runAsync(() => pumpEventQueue());
