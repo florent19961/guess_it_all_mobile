@@ -1,0 +1,1298 @@
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 9e9ef62..febb37c 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -138,8 +138,9 @@ Hors cycle : bug / test rouge / comportement inattendu → `bmad-investigate` ;
+ 5. **Partie** — 3 manches, tous les mots remis dans le pool à chaque manche.
+ 6. **Résultats** — scores par équipe et par manche.
+ 
+-> **Mode Fiesta** (modificateurs de jeu) : en **Personnalisé** seulement, le choix de l'ensemble
+-> s'insère après les équipes et lance la partie ; Auto n'ajoute aucun écran. Détail →
++> **Mode Fiesta** (modificateurs de jeu) : en **Personnalisé** seulement, l'écran « Fiesta
++> personnalisée » (choix ou création de l'ensemble) s'insère juste après les Paramètres, avant
++> les joueurs ; Auto n'ajoute aucun écran. Détail →
+ > `lib/screens/CLAUDE.md`.
+ 
+ ## Conventions de code
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index d4dc0ad..8caca5e 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -791,3 +791,25 @@ un mode jamais publié. Règle pour l'après-publication → `lib/models/CLAUDE.
+ quand le mode est Classique ; le choix est gardé en mémoire de l'écran et appliqué au passage en
+ Fiesta. 24 px d'air au-dessus de « Réinitialiser les paramètres ». **Pourquoi.** Retours
+ Florent : voir le réglage dans les deux modes, et le bouton ne respirait pas assez.
++
++## 2026-11-04 — Fiesta Personnalisé : un seul écran « Fiesta personnalisée », avant les joueurs
++
++**Quoi.** L'écran des ensembles vient juste après les Paramètres (Personnalisé seulement), avant
++les joueurs ; les Équipes redeviennent « Commencer » et lancent la partie avec `pendingFiesta`.
++L'écran réunit, sans page poussée : les ensembles prêts à jouer (aucun enregistré → « Fiesta
++classique » fourni par l'app, `defaultEnsembleRules`, jamais stocké), l'éditeur en ligne
++(`FiestaEnsembleEditor`, ex-`FiestaEnsembleEditorScreen`) et « Suivant ». Un ensemble enregistré
++apparaît en haut, sélectionné. Rejouer repasse par cet écran, l'ensemble précédent présélectionné
++(règles égales à `pendingFiesta`, sinon `lastUsedId`). Le « ? » ouvre une aide propre
++(`fiestaEnsemblesHelp`) au lieu du tuto Fiesta.
++
++**Pourquoi (bug Florent, Chrome).** « Impossible d'enregistrer un ensemble, c'est un
++cul-de-sac. » Le stockage n'était pas en cause (créer + relire marche, test à l'appui) : l'éditeur
++était une page poussée sans « Suivant », dont la seule issue visible était le retour, qui
++**jetait** la saisie (`pop(false)`) ; « Enregistrer » restait grisé sans nom et, enregistré, ne
++menait qu'à une liste où il fallait encore trouver « Jouer ». Sans ensemble, on tournait en rond.
++La racine est le parcours, pas un correctif ponctuel : d'où l'écran unique.
++
++**Conséquence (règle 7).** Aucune forme persistée ne change (`guessItAll_fiestaEnsembles`
++intact, `lastUsedId` toujours écrit par `markUsed` au « Suivant »). `pendingFiesta` reste en
++mémoire seulement.
+diff --git a/lib/app.dart b/lib/app.dart
+index d332e71..962f5f4 100644
+--- a/lib/app.dart
++++ b/lib/app.dart
+@@ -90,16 +90,17 @@ class GuessItAllApp extends StatelessWidget {
+         return const CategoriesScreen();
+       case AppConstants.screenHistory:
+         return const HistoryScreen();
+-      // Fiesta Personnalisé : après les équipes, le choix de l'ensemble lance
+-      // la partie.
++      // Fiesta Personnalisé : entre les Paramètres et les joueurs, l'ensemble
++      // choisi attend dans `pendingFiesta` jusqu'à « Commencer » (équipes).
+       case AppConstants.screenFiestaEnsembles:
+         return Builder(builder: (context) {
+           final provider = context.read<GameProvider>();
+           return FiestaEnsemblesScreen(
+-            onBack: () => provider.goToScreen(AppConstants.screenTeams),
+-            onUse: (ensemble) {
+-              provider.setPendingFiesta(ensemble.rules);
+-              provider.startGame(fiesta: ensemble.rules);
++            selected: provider.pendingFiesta,
++            onBack: () => provider.goToScreen(AppConstants.screenSettings),
++            onNext: (rules) {
++              provider.setPendingFiesta(rules);
++              provider.goToScreen(AppConstants.screenPlayers);
+             },
+           );
+         });
+diff --git a/lib/screens/CLAUDE.md b/lib/screens/CLAUDE.md
+index a588f0f..b75ce99 100644
+--- a/lib/screens/CLAUDE.md
++++ b/lib/screens/CLAUDE.md
+@@ -1,13 +1,14 @@
+ # screens/
+ 
+-14 ecrans du jeu. Tous sont des StatefulWidget/StatelessWidget qui lisent le `GameProvider` via `Provider.of` ou `context.watch`.
++Les ecrans du jeu. Tous sont des StatefulWidget/StatelessWidget qui lisent le `GameProvider` via `Provider.of` ou `context.watch`.
+ 
+ ## Flux de navigation
+ 
+ ```
+ HomeScreen → SettingsScreen (Classique / Fiesta ; Auto / Personnalisé dans « Avancés »)
+-  → (CategoriesScreen) → PlayersScreen → (WordsScreen) → TeamsScreen
+-  → [Fiesta Personnalisé seulement : FiestaEnsemblesScreen, « Jouer » lance la partie]
++  → (CategoriesScreen)
++  → [Fiesta Personnalisé seulement : FiestaEnsemblesScreen, « Suivant » → joueurs]
++  → PlayersScreen → (WordsScreen) → TeamsScreen (« Commencer » lance la partie)
+   → GameScreen → CountdownScreen → TurnScreen → VerificationScreen
+   → TransitionScreen (entre manches) → ResultsScreen → StatsScreen
+ ```
+@@ -19,9 +20,9 @@ HomeScreen → SettingsScreen (Classique / Fiesta ; Auto / Personnalisé dans «
+ | `home_screen.dart` | Accueil : 3 etats (partie suspendue, session existante, nouveau jeu) |
+ | `settings_screen.dart` | Premier ecran de toute partie, **sans defilement** (390 × 763 et 360 × 740 utiles) : sections Joueurs, Equipes, « Mode de jeu » (interrupteur Classique / Fiesta ; Classique par defaut ; 1er choix de Fiesta → tuto Fiesta une fois), Choix des mots, puis categories, parametres avances (modal sans defilement, curseurs `compact` ; en Fiesta, + Auto / Personnalise ; en bas, « Reinitialiser les parametres » avec confirmation). En haut a droite : « ? » et roue crantee seulement. Retour (bouton et retour systeme) → accueil |
+ | `categories_screen.dart` | Selection categories et niveaux de difficulte (1-4) |
+-| `players_screen.dart` | Saisie noms joueurs + generation mots aleatoires avec cache metadata |
++| `players_screen.dart` | Saisie noms joueurs + generation mots aleatoires avec cache metadata. Retour → Parametres (Fiesta Personnalise : → ensembles) |
+ | `words_screen.dart` | Saisie mots par joueur (mode personnalise). Bouton "Grosse flemme" pour auto-remplir |
+-| `teams_screen.dart` | Composition equipes par drag-and-drop, noms editables, bouton aleatoire. « Commencer » lance la partie ; en Fiesta Personnalise, « Suivant » mene aux ensembles |
++| `teams_screen.dart` | Composition equipes par drag-and-drop, noms editables, bouton aleatoire. « Commencer » lance la partie (avec `pendingFiesta`, l'ensemble deja choisi en Personnalise) |
+ | `game_screen.dart` | Pre-tour : affiche manche, equipe/joueur courant, scores, bouton jouer |
+ | `countdown_screen.dart` | Decompte 3-2-1-GO anime |
+ | `turn_screen.dart` | Jeu actif : timer, mot courant (auto-size), boutons Passer/Valider, pause, sons, haptic |
+@@ -32,23 +33,23 @@ HomeScreen → SettingsScreen (Classique / Fiesta ; Auto / Personnalisé dans «
+ | `rules_screen.dart` | Regles completes du jeu (3 manches) + Revoir le tuto / le tuto Fiesta / les aides |
+ | `rules_tutorial_screen.dart` | Tuto des regles, 4 cartes (`Navigator.push` via `show`), pénalité de passe lue dans les reglages |
+ | `fiesta_tutorial_screen.dart` | Tuto Fiesta, 3 cartes (`Navigator.push` via `show`) |
+-| `fiesta_ensembles_screen.dart` | « Mes ensembles » (Fiesta Personnalise, apres les equipes ; retour bouton et systeme → equipes) : compteur n / 10, Creer, Jouer / Modifier / Dupliquer / Supprimer (confirmation) |
+-| `fiesta_ensemble_editor_screen.dart` | Editeur d'un ensemble, ouvert par `Navigator.push` depuis la liste (rend `true` si enregistre). Catalogue en sections Malus (dont « Une seule reponse », toute la partie, et la sous-categorie Mimes : un seul a la fois, allumer l'un coupe les autres) puis Bonus, tirage 0 a 3. Bouton grise + explications tant que `validateEnsemble` rend des erreurs |
++| `fiesta_ensembles_screen.dart` | « Fiesta personnalisee » (Fiesta Personnalise, juste apres Parametres, avant les joueurs ; retour bouton et systeme → Parametres). Un seul ecran, aucune page poussee : en haut « Prets a jouer » (ensembles enregistres, n / 10 ; aucun → « Fiesta classique » fourni par l'app = `defaultEnsembleRules`, jamais stocke), un tap selectionne ; Modifier (charge l'ensemble dans l'editeur) / Dupliquer / Supprimer (confirmation). En dessous, l'editeur en ligne (`FiestaEnsembleEditor`, `lib/widgets/fiesta/`) : un ensemble enregistre apparait en haut, selectionne. « Suivant » (grise sans selection) → joueurs |
+ 
+ Invariant Fiesta : le choix du mode vit dans `GameProvider.pendingFiesta`, **en memoire
+ seulement** (Q10) : nul = Classique, `FiestaRules(mode: auto)` = Auto, mode `custom` =
+-Personnalise (l'ensemble, choisi apres les equipes, le remplace). `TeamsScreen` le passe a
+-`startGame` (ou mene aux ensembles en Personnalise). « Nouvelle partie » le vide (Classique par
++Personnalise (l'ensemble, choisi juste apres Parametres, le remplace). `TeamsScreen` le passe a
++`startGame`. « Nouvelle partie » le vide (Classique par
+ defaut) ; « Rejouer » le garde et revient aux Parametres. Le chemin « Reprendre » de l'accueil
+ ne traverse jamais ces ecrans. Les anciens ecrans « Mode de jeu », « Auto ou Personnalise »,
+ « Mode Auto » et « Recap » sont supprimes (2026-11-04) : un `currentScreen` relu a leur nom
+ tombe sur l'accueil.
+ 
+-## Point d'entree des ensembles (contrat 2-3 → 2-4)
++## Point d'entree des ensembles
+ 
+-`FiestaEnsemblesScreen({required VoidCallback onBack, required ValueChanged<FiestaEnsemble> onUse})`.
+-L'ecran ne connait ni le provider ni la navigation : `onUse` recoit l'ensemble choisi, **deja
+-marque `lastUsedId`** ; `ensemble.rules` est un `FiestaRules` (mode `custom`, `ensembleName` =
+-nom) pret a etre gele par `startGame(fiesta: ...)`. Branchement (`app.dart`, route
+-`AppConstants.screenFiestaEnsembles`) : `onBack` → `screenTeams` ; `onUse` →
+-`setPendingFiesta(ensemble.rules)` puis `startGame(fiesta: ensemble.rules)`.
++`FiestaEnsemblesScreen({FiestaRules? selected, required VoidCallback onBack, required ValueChanged<FiestaRules> onNext})`.
++L'ecran ne connait ni le provider ni la navigation. `selected` = `pendingFiesta` : l'ensemble
++aux memes regles (JSON egal) est preselectionne, sinon le `lastUsedId` du stockage (« Rejouer »
++repasse par Parametres puis cet ecran, l'ensemble precedent selectionne). `onNext` recoit les
++regles choisies (mode `custom`, `ensembleName` = nom), apres `markUsed` pour un ensemble
++enregistre. Branchement (`app.dart`) : `onBack` → `screenSettings` ; `onNext` →
++`setPendingFiesta(rules)` puis `screenPlayers`.
+diff --git a/lib/screens/fiesta_ensembles_screen.dart b/lib/screens/fiesta_ensembles_screen.dart
+index 9a99ee8..8efb1d2 100644
+--- a/lib/screens/fiesta_ensembles_screen.dart
++++ b/lib/screens/fiesta_ensembles_screen.dart
+@@ -1,78 +1,139 @@
++import 'dart:convert';
++
+ import 'package:flutter/material.dart';
+ 
+ import '../models/fiesta/fiesta_ensemble.dart';
++import '../models/fiesta/fiesta_rules.dart';
+ import '../services/fiesta_ensemble_service.dart';
+ import '../theme/app_theme.dart';
+ import '../widgets/common/app_back_button.dart';
+ import '../widgets/common/app_button.dart';
+ import '../widgets/common/app_confirm_dialog.dart';
++import '../widgets/effects/shooting_stars.dart';
++import '../widgets/fiesta/fiesta_ensemble_editor.dart';
++import '../widgets/help/coach_marks.dart';
+ import '../widgets/help/help_button.dart';
+-import 'fiesta_ensemble_editor_screen.dart';
+-import 'fiesta_tutorial_screen.dart';
++import '../widgets/help/help_content.dart';
+ 
+-/// « Mes ensembles » (maquette `perso`) : les ensembles du mode Personnalisé.
++/// « Fiesta personnalisée » : juste après les Paramètres, avant les joueurs
++/// (Fiesta Personnalisé seulement). Un seul écran, sans page poussée : en
++/// haut les ensembles prêts à jouer (un tap sélectionne), en dessous
++/// l'éditeur, en bas « Suivant ».
+ ///
+-/// Point d'entrée de la story 2-4 : l'écran ne connaît ni le provider ni la
+-/// navigation de l'app. [onUse] reçoit l'ensemble choisi (déjà marqué
+-/// « dernier utilisé ») ; [onBack] ramène à l'écran précédent.
++/// L'écran ne connaît ni le provider ni la navigation : [onNext] reçoit les
++/// règles de l'ensemble choisi (mode `custom`, `ensembleName` = nom), prêtes
++/// à attendre dans `pendingFiesta`. [selected] (l'attente courante, ex. après
++/// « Rejouer ») présélectionne l'ensemble aux mêmes règles.
+ class FiestaEnsemblesScreen extends StatefulWidget {
++  final FiestaRules? selected;
+   final VoidCallback onBack;
+-  final ValueChanged<FiestaEnsemble> onUse;
++  final ValueChanged<FiestaRules> onNext;
+ 
+   const FiestaEnsemblesScreen({
+     required this.onBack,
+-    required this.onUse,
++    required this.onNext,
++    this.selected,
+     super.key,
+   });
+ 
++  /// Ensemble fourni par l'app quand aucun n'est enregistré : les réglages
++  /// par défaut d'un nouvel ensemble. Jamais écrit dans le stockage.
++  static final builtIn = FiestaEnsemble(
++    id: '_builtin',
++    rules: defaultEnsembleRules('Fiesta classique'),
++  );
++
+   @override
+   State<FiestaEnsemblesScreen> createState() => _FiestaEnsemblesScreenState();
+ }
+ 
+ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
+   final _service = FiestaEnsembleService();
++  final _readyKey = GlobalKey();
++  final _editorKey = GlobalKey();
++  final _nextKey = GlobalKey();
++
+   EnsembleStore? _store;
++  String? _selectedId;
++
++  /// Ensemble chargé dans l'éditeur (nul = création).
++  FiestaEnsemble? _editing;
++
++  /// Change à chaque remise à zéro de l'éditeur (nouvelle `key`).
++  int _editorRun = 0;
+ 
+-  /// Un double tap sur « Jouer » ne doit pas naviguer deux fois.
+-  bool _using = false;
++  /// Un double tap sur « Suivant » ne doit pas naviguer deux fois.
++  bool _leaving = false;
+ 
+   @override
+   void initState() {
+     super.initState();
+-    _reload();
++    _load();
+   }
+ 
+-  Future<void> _reload() async {
+-    final store = await _service.load();
+-    if (mounted) setState(() => _store = store);
++  List<FiestaEnsemble> get _ready {
++    final saved = _store?.ensembles ?? const [];
++    return saved.isEmpty ? [FiestaEnsemblesScreen.builtIn] : saved;
+   }
+ 
+   bool get _full =>
+       (_store?.ensembles.length ?? 0) >= FiestaEnsembleService.maxEnsembles;
+ 
+-  Future<void> _openEditor([FiestaEnsemble? ensemble]) async {
+-    final saved = await Navigator.of(context).push<bool>(
+-      MaterialPageRoute(
+-        builder: (_) => FiestaEnsembleEditorScreen(initial: ensemble),
+-      ),
+-    );
+-    if (saved == true) await _reload();
++  static String _sameRules(FiestaRules rules) => jsonEncode(rules.toJson());
++
++  /// Premier affichage : l'ensemble aux règles de l'attente courante, sinon
++  /// le dernier utilisé.
++  Future<void> _load() async {
++    final store = await _service.load();
++    if (!mounted) return;
++    _store = store;
++    final pending = widget.selected;
++    final match = pending == null
++        ? null
++        : _ready
++            .where((e) => _sameRules(e.rules) == _sameRules(pending))
++            .firstOrNull;
++    final lastUsed = _ready.where((e) => e.id == store.lastUsedId).firstOrNull;
++    setState(() => _selectedId = (match ?? lastUsed)?.id);
+   }
+ 
+-  Future<void> _use(FiestaEnsemble ensemble) async {
+-    if (_using) return;
+-    _using = true;
+-    try {
+-      await _service.markUsed(ensemble.id);
+-      if (mounted) widget.onUse(ensemble);
+-    } finally {
+-      _using = false;
+-    }
++  Future<void> _reload({String? select}) async {
++    final store = await _service.load();
++    if (!mounted) return;
++    setState(() {
++      _store = store;
++      if (select != null) _selectedId = select;
++      if (!_ready.any((e) => e.id == _selectedId)) _selectedId = null;
++    });
++  }
++
++  void _resetEditor() => setState(() {
++        _editing = null;
++        _editorRun++;
++      });
++
++  Future<void> _onSaved(FiestaEnsemble ensemble) async {
++    _resetEditor();
++    await _reload(select: ensemble.id);
++  }
++
++  void _edit(FiestaEnsemble ensemble) {
++    setState(() {
++      _editing = ensemble;
++      _editorRun++;
++    });
++    WidgetsBinding.instance.addPostFrameCallback((_) {
++      final target = _editorKey.currentContext;
++      if (target != null && target.mounted) {
++        Scrollable.ensureVisible(target,
++            duration: const Duration(milliseconds: 300));
++      }
++    });
+   }
+ 
+   Future<void> _duplicate(FiestaEnsemble ensemble) async {
+-    await _service.duplicate(ensemble.id);
+-    await _reload();
++    final copy = await _service.duplicate(ensemble.id);
++    await _reload(select: copy?.id);
+   }
+ 
+   Future<void> _delete(FiestaEnsemble ensemble) async {
+@@ -85,9 +146,24 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
+     );
+     if (!confirmed) return;
+     await _service.delete(ensemble.id);
++    if (_editing?.id == ensemble.id) _resetEditor();
+     await _reload();
+   }
+ 
++  Future<void> _next() async {
++    final chosen = _ready.where((e) => e.id == _selectedId).firstOrNull;
++    if (chosen == null || _leaving) return;
++    _leaving = true;
++    try {
++      if (chosen.id != FiestaEnsemblesScreen.builtIn.id) {
++        await _service.markUsed(chosen.id);
++      }
++      if (mounted) widget.onNext(chosen.rules);
++    } finally {
++      _leaving = false;
++    }
++  }
++
+   @override
+   Widget build(BuildContext context) {
+     final store = _store;
+@@ -97,95 +173,144 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
+       onPopInvokedWithResult: (didPop, _) {
+         if (!didPop) widget.onBack();
+       },
+-      child: Material(
+-        color: AppColors.backgroundMain,
+-        child: Stack(
+-          children: [
+-            SafeArea(
+-              child: store == null
+-                  ? const Center(
+-                      child: CircularProgressIndicator(
+-                        color: AppColors.secondaryCyan,
++      child: Scaffold(
++        backgroundColor: AppColors.backgroundMain,
++        body: ShootingStars(
++          child: Stack(
++            children: [
++              SafeArea(
++                child: store == null
++                    ? const Center(
++                        child: CircularProgressIndicator(
++                          color: AppColors.secondaryCyan,
++                        ),
++                      )
++                    : Column(
++                        children: [
++                          Expanded(child: _buildBody(store)),
++                          _buildNextBar(),
++                        ],
+                       ),
+-                    )
+-                  : _buildList(store),
+-            ),
+-            AppBackButton(onPressed: widget.onBack),
+-            HelpButton(onPressed: () => FiestaTutorialScreen.show(context)),
+-          ],
++              ),
++              AppBackButton(onPressed: widget.onBack),
++              HelpButton(
++                onPressed: () => CoachMarks.show(
++                  context,
++                  fiestaEnsemblesHelp(
++                    ready: _readyKey,
++                    editor: _editorKey,
++                    next: _nextKey,
++                  ),
++                ),
++              ),
++            ],
++          ),
+         ),
+       ),
+     );
+   }
+ 
+-  Widget _buildList(EnsembleStore store) {
++  Widget _buildBody(EnsembleStore store) {
++    final builtIn = store.ensembles.isEmpty;
+     return ListView(
+-      padding: const EdgeInsets.fromLTRB(24, 72, 24, 32),
++      padding: const EdgeInsets.fromLTRB(20, 72, 20, 24),
+       children: [
+         Text(
+-          'Mes ensembles',
+-          style: AppTextStyles.subtitle(fontSize: 36),
++          'Fiesta personnalisée',
++          style: AppTextStyles.subtitle(fontSize: 34),
+           textAlign: TextAlign.center,
+         ),
+-        const SizedBox(height: 24),
+-        AppButton(
+-          text: '+ Créer un ensemble',
+-          fullWidth: true,
+-          disabled: _full,
+-          onPressed: () => _openEditor(),
+-        ),
+-        if (_full) ...[
+-          const SizedBox(height: 12),
+-          _Alert(
+-            'Limite de ${FiestaEnsembleService.maxEnsembles} ensembles '
+-            'atteinte. Supprime un ensemble pour en créer un nouveau.',
++        const SizedBox(height: 20),
++        KeyedSubtree(
++          key: _readyKey,
++          child: Column(
++            crossAxisAlignment: CrossAxisAlignment.stretch,
++            children: [
++              Row(
++                children: [
++                  Expanded(
++                    child: Text(
++                      'PRÊTS À JOUER',
++                      style: AppTextStyles.label
++                          .copyWith(color: AppColors.gray400, fontSize: 12),
++                    ),
++                  ),
++                  if (!builtIn)
++                    Text(
++                      '${store.ensembles.length} / '
++                      '${FiestaEnsembleService.maxEnsembles}',
++                      style: AppTextStyles.bodySmall
++                          .copyWith(color: AppColors.gray400),
++                    ),
++                ],
++              ),
++              const SizedBox(height: 8),
++              for (final ensemble in _ready)
++                _EnsembleCard(
++                  ensemble: ensemble,
++                  selected: ensemble.id == _selectedId,
++                  builtIn: builtIn,
++                  canDuplicate: !_full,
++                  onTap: () => setState(() => _selectedId = ensemble.id),
++                  onEdit: () => _edit(ensemble),
++                  onDuplicate: () => _duplicate(ensemble),
++                  onDelete: () => _delete(ensemble),
++                ),
++            ],
+           ),
+-        ],
+-        const SizedBox(height: 12),
+-        Text(
+-          '${store.ensembles.length} / ${FiestaEnsembleService.maxEnsembles}',
+-          style: AppTextStyles.bodySmall.copyWith(color: AppColors.gray400),
+-          textAlign: TextAlign.right,
+         ),
+-        const SizedBox(height: 8),
+-        if (store.ensembles.isEmpty)
+-          Padding(
+-            padding: const EdgeInsets.only(top: 24),
+-            child: Text(
+-              'Aucun ensemble. Crée le premier !',
+-              style: AppTextStyles.body.copyWith(color: AppColors.gray400),
+-              textAlign: TextAlign.center,
+-            ),
+-          ),
+-        for (final ensemble in store.ensembles)
+-          _EnsembleCard(
+-            ensemble: ensemble,
+-            lastUsed: ensemble.id == store.lastUsedId,
+-            canDuplicate: !_full,
+-            onUse: () => _use(ensemble),
+-            onEdit: () => _openEditor(ensemble),
+-            onDuplicate: () => _duplicate(ensemble),
+-            onDelete: () => _delete(ensemble),
+-          ),
++        const SizedBox(height: 24),
++        KeyedSubtree(
++          key: _editorKey,
++          child: _editing == null && _full
++              ? _Alert(
++                  'Limite de ${FiestaEnsembleService.maxEnsembles} ensembles '
++                  'atteinte. Supprime un ensemble pour en créer un nouveau.',
++                )
++              : FiestaEnsembleEditor(
++                  key: ValueKey(_editorRun),
++                  initial: _editing,
++                  onSaved: _onSaved,
++                  onCancel: _editing == null ? null : _resetEditor,
++                ),
++        ),
+       ],
+     );
+   }
++
++  Widget _buildNextBar() {
++    return Container(
++      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
++      color: AppColors.backgroundMain,
++      child: AppButton(
++        key: _nextKey,
++        text: 'Suivant',
++        variant: AppButtonVariant.primary,
++        size: AppButtonSize.large,
++        fullWidth: true,
++        disabled: _selectedId == null,
++        onPressed: _selectedId == null ? null : _next,
++      ),
++    );
++  }
+ }
+ 
+ class _EnsembleCard extends StatelessWidget {
+   final FiestaEnsemble ensemble;
+-  final bool lastUsed;
++  final bool selected;
++  final bool builtIn;
+   final bool canDuplicate;
+-  final VoidCallback onUse;
++  final VoidCallback onTap;
+   final VoidCallback onEdit;
+   final VoidCallback onDuplicate;
+   final VoidCallback onDelete;
+ 
+   const _EnsembleCard({
+     required this.ensemble,
+-    required this.lastUsed,
++    required this.selected,
++    required this.builtIn,
+     required this.canDuplicate,
+-    required this.onUse,
++    required this.onTap,
+     required this.onEdit,
+     required this.onDuplicate,
+     required this.onDelete,
+@@ -205,74 +330,78 @@ class _EnsembleCard extends StatelessWidget {
+ 
+   @override
+   Widget build(BuildContext context) {
+-    return Container(
+-      margin: const EdgeInsets.only(bottom: 12),
+-      padding: const EdgeInsets.all(12),
+-      decoration: BoxDecoration(
+-        color: AppColors.backgroundCard,
+-        borderRadius: BorderRadius.circular(14),
+-        border: Border.all(
+-          color: lastUsed ? AppColors.secondaryCyan : AppColors.gray700,
+-          width: 2,
+-        ),
+-      ),
+-      child: Column(
+-        crossAxisAlignment: CrossAxisAlignment.stretch,
+-        children: [
+-          Row(
+-            children: [
+-              Expanded(
+-                child: Text(ensemble.name, style: AppTextStyles.label),
+-              ),
+-              if (lastUsed)
+-                Text(
+-                  'dernier utilisé',
+-                  style: AppTextStyles.bodySmall.copyWith(
+-                    color: AppColors.secondaryCyan,
+-                    fontSize: 12,
+-                  ),
+-                ),
+-            ],
+-          ),
+-          const SizedBox(height: 4),
+-          Text(
+-            _summary,
+-            style: AppTextStyles.bodySmall
+-                .copyWith(color: AppColors.gray400, fontSize: 12),
++    return Semantics(
++      selected: selected,
++      button: true,
++      child: GestureDetector(
++        onTap: onTap,
++        child: Container(
++          margin: const EdgeInsets.only(bottom: 12),
++          padding: const EdgeInsets.all(12),
++          decoration: BoxDecoration(
++            color: selected
++                ? AppColors.secondaryCyan.withValues(alpha: 0.12)
++                : AppColors.backgroundCard,
++            borderRadius: BorderRadius.circular(14),
++            border: Border.all(
++              color: selected ? AppColors.secondaryCyan : AppColors.gray700,
++              width: 2,
++            ),
+           ),
+-          const SizedBox(height: 10),
+-          Wrap(
+-            spacing: 8,
+-            runSpacing: 8,
++          child: Column(
++            crossAxisAlignment: CrossAxisAlignment.stretch,
+             children: [
+-              AppButton(
+-                text: 'Jouer',
+-                size: AppButtonSize.small,
+-                variant: AppButtonVariant.secondary,
+-                onPressed: onUse,
+-              ),
+-              AppButton(
+-                text: 'Modifier',
+-                size: AppButtonSize.small,
+-                variant: AppButtonVariant.ghost,
+-                onPressed: onEdit,
+-              ),
+-              AppButton(
+-                text: 'Dupliquer',
+-                size: AppButtonSize.small,
+-                variant: AppButtonVariant.ghost,
+-                disabled: !canDuplicate,
+-                onPressed: onDuplicate,
++              Row(
++                children: [
++                  Expanded(
++                    child: Text(ensemble.name, style: AppTextStyles.label),
++                  ),
++                  Icon(
++                    selected
++                        ? Icons.check_circle
++                        : Icons.radio_button_unchecked,
++                    color:
++                        selected ? AppColors.secondaryCyan : AppColors.gray500,
++                  ),
++                ],
+               ),
+-              AppButton(
+-                text: 'Supprimer',
+-                size: AppButtonSize.small,
+-                variant: AppButtonVariant.danger,
+-                onPressed: onDelete,
++              const SizedBox(height: 4),
++              Text(
++                builtIn ? 'Fourni par l\'app · $_summary' : _summary,
++                style: AppTextStyles.bodySmall
++                    .copyWith(color: AppColors.gray400, fontSize: 12),
+               ),
++              if (!builtIn) ...[
++                const SizedBox(height: 10),
++                Wrap(
++                  spacing: 8,
++                  runSpacing: 8,
++                  children: [
++                    AppButton(
++                      text: 'Modifier',
++                      size: AppButtonSize.small,
++                      variant: AppButtonVariant.ghost,
++                      onPressed: onEdit,
++                    ),
++                    AppButton(
++                      text: 'Dupliquer',
++                      size: AppButtonSize.small,
++                      variant: AppButtonVariant.ghost,
++                      disabled: !canDuplicate,
++                      onPressed: onDuplicate,
++                    ),
++                    AppButton(
++                      text: 'Supprimer',
++                      size: AppButtonSize.small,
++                      variant: AppButtonVariant.danger,
++                      onPressed: onDelete,
++                    ),
++                  ],
++                ),
++              ],
+             ],
+           ),
+-        ],
++        ),
+       ),
+     );
+   }
+diff --git a/lib/screens/players_screen.dart b/lib/screens/players_screen.dart
+index a5e81e9..83f7be7 100644
+--- a/lib/screens/players_screen.dart
++++ b/lib/screens/players_screen.dart
+@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
+ import '../theme/app_theme.dart';
+ import '../providers/game_provider.dart';
+ import '../models/word_stats.dart';
++import '../models/fiesta/fiesta_rules.dart';
+ import '../utils/constants.dart';
+ import '../utils/word_categories/word_categories.dart';
+ import '../widgets/common/app_button.dart';
+@@ -492,7 +493,12 @@ class _PlayersScreenState extends State<PlayersScreen> {
+                   provider.updatePlayer(player.id, name: name);
+                 }
+               }
+-              provider.goToScreen(AppConstants.screenSettings);
++              // Fiesta Personnalisé : retour à l'écran des ensembles.
++              provider.goToScreen(
++                provider.pendingFiesta?.mode == FiestaMode.custom
++                    ? AppConstants.screenFiestaEnsembles
++                    : AppConstants.screenSettings,
++              );
+             },
+           ),
+           HelpButton(
+diff --git a/lib/screens/settings_screen.dart b/lib/screens/settings_screen.dart
+index d6e3eeb..0add16d 100644
+--- a/lib/screens/settings_screen.dart
++++ b/lib/screens/settings_screen.dart
+@@ -101,8 +101,15 @@ class _SettingsScreenState extends State<SettingsScreen>
+     }
+   }
+ 
++  /// Fiesta Personnalisé : l'écran des ensembles vient avant les joueurs.
++  void _goNext(GameProvider provider) => provider.goToScreen(
++        provider.pendingFiesta?.mode == FiestaMode.custom
++            ? AppConstants.screenFiestaEnsembles
++            : AppConstants.screenPlayers,
++      );
++
+   /// Auto / Personnalisé (fenêtre « Avancés »). Personnalisé garde l'ensemble
+-  /// déjà en attente (Rejouer) ; l'ensemble se choisit après les équipes.
++  /// déjà en attente (Rejouer) ; l'ensemble se choisit juste après.
+   void _setFiestaMode(GameProvider provider, String value) {
+     final custom = value == _custom;
+     _fiestaMode = custom ? FiestaMode.custom : FiestaMode.auto;
+@@ -331,7 +338,7 @@ class _SettingsScreenState extends State<SettingsScreen>
+                             return;
+                           }
+                         }
+-                        provider.goToScreen(AppConstants.screenPlayers);
++                        _goNext(provider);
+                       },
+                     ),
+                   ],
+@@ -510,7 +517,7 @@ class _SettingsScreenState extends State<SettingsScreen>
+                   variant: AppButtonVariant.primary,
+                   onPressed: () {
+                     Navigator.pop(context);
+-                    provider.goToScreen(AppConstants.screenPlayers);
++                    _goNext(provider);
+                   },
+                 ),
+               ),
+diff --git a/lib/screens/teams_screen.dart b/lib/screens/teams_screen.dart
+index b3526e5..bf46636 100644
+--- a/lib/screens/teams_screen.dart
++++ b/lib/screens/teams_screen.dart
+@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
+ import '../theme/app_theme.dart';
+ import '../providers/game_provider.dart';
+ import '../models/player.dart';
+-import '../models/fiesta/fiesta_rules.dart';
+ import '../utils/constants.dart';
+ import '../widgets/common/app_button.dart';
+ import '../widgets/common/app_back_button.dart';
+@@ -85,27 +84,17 @@ class _TeamsScreenState extends State<TeamsScreen> {
+                         ),
+                       AppButton(
+                         key: _startKey,
+-                        text: provider.pendingFiesta?.mode == FiestaMode.custom
+-                            ? 'Suivant'
+-                            : 'Commencer',
++                        text: 'Commencer',
+                         variant: AppButtonVariant.primary,
+                         size: AppButtonSize.large,
+                         fullWidth: true,
+                         disabled: !allTeamsValid,
+                         onPressed: allTeamsValid
+-                            ? () {
+-                                // Fiesta Personnalisé : on choisit d'abord
+-                                // l'ensemble, qui lance la partie.
+-                                if (provider.pendingFiesta?.mode ==
+-                                    FiestaMode.custom) {
+-                                  provider.goToScreen(
+-                                      AppConstants.screenFiestaEnsembles);
+-                                } else {
+-                                  provider.startGame(
+-                                    fiesta: provider.pendingFiesta,
+-                                  );
+-                                }
+-                              }
++                            // Personnalisé : l'ensemble, choisi avant les
++                            // joueurs, attend dans `pendingFiesta`.
++                            ? () => provider.startGame(
++                                  fiesta: provider.pendingFiesta,
++                                )
+                             : null,
+                       ),
+                     ],
+diff --git a/lib/widgets/CLAUDE.md b/lib/widgets/CLAUDE.md
+index 93d8d2f..a2a31d7 100644
+--- a/lib/widgets/CLAUDE.md
++++ b/lib/widgets/CLAUDE.md
+@@ -8,7 +8,7 @@ Widgets reutilisables organises en deux sous-repertoires.
+ |------------|------|
+ | `common/` | Composants UI reutilisables (boutons, inputs, modals, sliders, toggles) |
+ | `effects/` | Effets visuels et animations de fond |
+-| `fiesta/` | Cartes Fiesta (`FiestaCard`, `FiestaLine`, `FiestaHint`) ; kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawCard` (« Tirage de la manche N », avant-tour M1) / `RoundDrawLine` (même tirage en une ligne, transition), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `TurnTimeCard` (« Temps du tour », detail + total, avant-tour) `CatchUpLine` (« Rattrapage » en une ligne, transition) et `BlockedGuesser` (selecteur « Les adversaires choisissent » + annonce « X ne repond pas », 2-8) ; kit 2-10 (`offer_widgets.dart`, sans Provider) : `PickThreeCard`, `PassPhonePanel`, `OfferChoiceBody` (sélection tenue par l'appelant), `AppBoostLine` (une ligne, transition) ; `FiestaInfoLine` (`fiesta_setup_widgets.dart`) = gabarit « Libellé : … » de ces lignes |
++| `fiesta/` | Cartes Fiesta (`FiestaCard`, `FiestaLine`, `FiestaHint`) ; kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawCard` (« Tirage de la manche N », avant-tour M1) / `RoundDrawLine` (même tirage en une ligne, transition), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `TurnTimeCard` (« Temps du tour », detail + total, avant-tour) `CatchUpLine` (« Rattrapage » en une ligne, transition) et `BlockedGuesser` (selecteur « Les adversaires choisissent » + annonce « X ne repond pas », 2-8) ; kit 2-10 (`offer_widgets.dart`, sans Provider) : `PickThreeCard`, `PassPhonePanel`, `OfferChoiceBody` (sélection tenue par l'appelant), `AppBoostLine` (une ligne, transition) ; `FiestaEnsembleEditor` (`fiesta_ensemble_editor.dart`, editeur d'un ensemble pose en ligne dans l'ecran Fiesta personnalisee, `onSaved` rend l'ensemble enregistre) ; `FiestaInfoLine` (`fiesta_setup_widgets.dart`) = gabarit « Libellé : … » de ces lignes |
+ | `help/` | Aides de prise en main : `HelpButton` (« ? »), `CoachMarks` (voile + bulle, étapes `CoachStep` ciblées par `GlobalKey`), textes par écran (`help_content.dart`), `TutorialPager`, `FirstGamePrompt` (tuto des règles d'office au 1er « Jouer »), `FirstGameHelp` (aides auto de la 1re partie). Branchement écran par écran → `help/WIRING.md` |
+ 
+ ## Kit visuel du tour Fiesta (`fiesta/fiesta_turn_widgets.dart`)
+diff --git a/lib/screens/fiesta_ensemble_editor_screen.dart b/lib/widgets/fiesta/fiesta_ensemble_editor.dart
+similarity index 71%
+rename from lib/screens/fiesta_ensemble_editor_screen.dart
+rename to lib/widgets/fiesta/fiesta_ensemble_editor.dart
+index 5318990..fbb2eb1 100644
+--- a/lib/screens/fiesta_ensemble_editor_screen.dart
++++ b/lib/widgets/fiesta/fiesta_ensemble_editor.dart
+@@ -1,37 +1,43 @@
+ import 'package:flutter/material.dart';
+ 
+-import '../models/fiesta/ensemble_validation.dart';
+-import '../models/fiesta/fiesta_ensemble.dart';
+-import '../models/fiesta/fiesta_rules.dart';
+-import '../models/fiesta/modifier_catalog.dart';
+-import '../models/fiesta/symmetric_draw.dart';
+-import '../services/fiesta_ensemble_service.dart';
+-import '../theme/app_theme.dart';
+-import '../widgets/common/app_back_button.dart';
+-import '../widgets/common/app_button.dart';
+-import '../widgets/common/app_input.dart';
+-import '../widgets/common/app_slider.dart';
+-import '../widgets/help/help_button.dart';
+-import 'fiesta_tutorial_screen.dart';
+-
+-/// Éditeur d'un ensemble (maquette `edit`). Ouvert par `Navigator.push` depuis
+-/// « Mes ensembles » ; rend `true` à l'appelant quand il a enregistré.
++import '../../models/fiesta/ensemble_validation.dart';
++import '../../models/fiesta/fiesta_ensemble.dart';
++import '../../models/fiesta/fiesta_rules.dart';
++import '../../models/fiesta/modifier_catalog.dart';
++import '../../models/fiesta/symmetric_draw.dart';
++import '../../services/fiesta_ensemble_service.dart';
++import '../../theme/app_theme.dart';
++import '../common/app_button.dart';
++import '../common/app_input.dart';
++import '../common/app_slider.dart';
++
++/// Éditeur d'un ensemble (maquette `edit`), posé EN LIGNE sous la liste de
++/// l'écran Fiesta personnalisée — plus une page poussée : une page à part
++/// sans « Suivant » était un cul-de-sac (retour Florent 2026-11-04).
+ ///
+-/// [initial] nul = création (valeurs par défaut de la maquette), sinon
+-/// modification sur place. Le bouton reste grisé tant que
+-/// `validateEnsemble` rend des erreurs, affichées sous lui.
+-class FiestaEnsembleEditorScreen extends StatefulWidget {
++/// [initial] nul = création (valeurs par défaut), sinon modification sur
++/// place. [onSaved] reçoit l'ensemble enregistré. Le bouton reste grisé tant
++/// que `validateEnsemble` rend des erreurs, affichées sous lui. Le parent
++/// change la `key` pour repartir d'un éditeur vierge.
++class FiestaEnsembleEditor extends StatefulWidget {
+   final FiestaEnsemble? initial;
++  final ValueChanged<FiestaEnsemble> onSaved;
+ 
+-  const FiestaEnsembleEditorScreen({this.initial, super.key});
++  /// Modification en cours : « Annuler » rend un éditeur de création.
++  final VoidCallback? onCancel;
++
++  const FiestaEnsembleEditor({
++    required this.onSaved,
++    this.initial,
++    this.onCancel,
++    super.key,
++  });
+ 
+   @override
+-  State<FiestaEnsembleEditorScreen> createState() =>
+-      _FiestaEnsembleEditorScreenState();
++  State<FiestaEnsembleEditor> createState() => _FiestaEnsembleEditorState();
+ }
+ 
+-class _FiestaEnsembleEditorScreenState
+-    extends State<FiestaEnsembleEditorScreen> {
++class _FiestaEnsembleEditorState extends State<FiestaEnsembleEditor> {
+   late FiestaRules _rules;
+   late final TextEditingController _name;
+   String? _openModifier;
+@@ -88,12 +94,16 @@ class _FiestaEnsembleEditorScreenState
+     final service = FiestaEnsembleService();
+     final rules = _rules.copyWith(ensembleName: _name.text.trim());
+     final initial = widget.initial;
+-    final ok = initial == null
+-        ? await service.create(rules) != null
+-        : await service.update(FiestaEnsemble(id: initial.id, rules: rules));
++    final FiestaEnsemble? saved;
++    if (initial == null) {
++      saved = await service.create(rules);
++    } else {
++      final edited = FiestaEnsemble(id: initial.id, rules: rules);
++      saved = await service.update(edited) ? edited : null;
++    }
+     if (!mounted) return;
+-    if (ok) {
+-      Navigator.of(context).pop(true);
++    if (saved != null) {
++      widget.onSaved(saved);
+       return;
+     }
+     // `create` rend aussi `null` sur une lecture en panne : on ne parle de la
+@@ -106,7 +116,7 @@ class _FiestaEnsembleEditorScreenState
+       SnackBar(
+         content: Text(initial == null && full
+             ? 'Limite de ${FiestaEnsembleService.maxEnsembles} ensembles '
+-                'atteinte : rien n\'a été enregistré.'
++                'atteinte : supprime un ensemble pour en créer un nouveau.'
+             : 'Enregistrement impossible, réessaie.'),
+       ),
+     );
+@@ -118,95 +128,87 @@ class _FiestaEnsembleEditorScreenState
+       _rules.copyWith(ensembleName: _name.text),
+     );
+ 
+-    return Scaffold(
+-      backgroundColor: AppColors.backgroundMain,
+-      body: Stack(
+-        children: [
+-          SafeArea(
+-            child: Column(
+-              children: [
+-                Expanded(
+-                  child: ListView(
+-                    padding: const EdgeInsets.fromLTRB(20, 72, 20, 24),
+-                    children: [
+-                      Text(
+-                        widget.initial == null
+-                            ? 'Nouvel ensemble'
+-                            : 'Modifier l\'ensemble',
+-                        style: AppTextStyles.subtitle(fontSize: 32),
+-                        textAlign: TextAlign.center,
+-                      ),
+-                      const SizedBox(height: 20),
+-                      _Card(
+-                        title: 'Nom de l\'ensemble',
+-                        child: AppInput(
+-                          controller: _name,
+-                          placeholder: 'ex. Soirée chez Max',
+-                          maxLength: FiestaEnsembleService.maxNameLength,
+-                          textCapitalization: TextCapitalization.sentences,
+-                          onChanged: (_) => setState(() {}),
+-                        ),
+-                      ),
+-                      _Card(
+-                        title: 'Malus',
+-                        child: Column(
+-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+-                          children: [
+-                            for (final def in kModifierCatalog)
+-                              if (def.nature == ModifierNature.malus &&
+-                                  !def.mimeFamily)
+-                                _buildModifier(def),
+-                            _buildOneAnswer(),
+-                            const SizedBox(height: 12),
+-                            Text(
+-                              'MIMES · UN SEUL À LA FOIS',
+-                              style: AppTextStyles.label.copyWith(
+-                                  color: AppColors.gray400, fontSize: 11),
+-                            ),
+-                            const SizedBox(height: 6),
+-                            for (final def in kModifierCatalog)
+-                              if (def.mimeFamily) _buildModifier(def),
+-                          ],
+-                        ),
+-                      ),
+-                      _Card(
+-                        title: 'Bonus',
+-                        child: Column(
+-                          children: [
+-                            for (final def in kModifierCatalog)
+-                              if (def.nature == ModifierNature.bonus)
+-                                _buildModifier(def),
+-                          ],
+-                        ),
+-                      ),
+-                      _Card(
+-                        title: 'Choix 1 parmi 3',
+-                        trailing: _switch(
+-                          _rules.oneOfThree,
+-                          (v) => setState(
+-                            () => _rules = _rules.copyWith(oneOfThree: v),
+-                          ),
+-                        ),
+-                        child: const _Hint(
+-                          'À chaque fin de manche, chaque équipe non en tête '
+-                          'choisit 1 carte parmi 3 : un bonus pour elle ou un '
+-                          'malus pour l\'équipe en tête. Plus l\'écart est '
+-                          'grand, plus l\'offre est forte.',
+-                        ),
+-                      ),
+-                      _buildCatchUp(),
+-                      _buildDraw(),
+-                    ],
+-                  ),
+-                ),
+-                _buildSaveBar(errors),
+-              ],
++    return Column(
++      crossAxisAlignment: CrossAxisAlignment.stretch,
++      children: [
++        Row(
++          children: [
++            Expanded(
++              child: Text(
++                widget.initial == null
++                    ? 'Créer un ensemble'
++                    : 'Modifier « ${widget.initial!.name} »',
++                style: AppTextStyles.subtitle(fontSize: 26),
++              ),
+             ),
++            if (widget.onCancel != null)
++              TextButton(
++                onPressed: widget.onCancel,
++                child: const Text(
++                  'Annuler',
++                  style: TextStyle(color: AppColors.secondaryCyan),
++                ),
++              ),
++          ],
++        ),
++        const SizedBox(height: 12),
++        _Card(
++          title: 'Nom de l\'ensemble',
++          child: AppInput(
++            controller: _name,
++            placeholder: 'ex. Soirée chez Max',
++            maxLength: FiestaEnsembleService.maxNameLength,
++            textCapitalization: TextCapitalization.sentences,
++            onChanged: (_) => setState(() {}),
+           ),
+-          AppBackButton(onPressed: () => Navigator.of(context).pop(false)),
+-          HelpButton(onPressed: () => FiestaTutorialScreen.show(context)),
+-        ],
+-      ),
++        ),
++        _Card(
++          title: 'Malus',
++          child: Column(
++            crossAxisAlignment: CrossAxisAlignment.stretch,
++            children: [
++              for (final def in kModifierCatalog)
++                if (def.nature == ModifierNature.malus && !def.mimeFamily)
++                  _buildModifier(def),
++              _buildOneAnswer(),
++              const SizedBox(height: 12),
++              Text(
++                'MIMES · UN SEUL À LA FOIS',
++                style: AppTextStyles.label
++                    .copyWith(color: AppColors.gray400, fontSize: 11),
++              ),
++              const SizedBox(height: 6),
++              for (final def in kModifierCatalog)
++                if (def.mimeFamily) _buildModifier(def),
++            ],
++          ),
++        ),
++        _Card(
++          title: 'Bonus',
++          child: Column(
++            children: [
++              for (final def in kModifierCatalog)
++                if (def.nature == ModifierNature.bonus) _buildModifier(def),
++            ],
++          ),
++        ),
++        _Card(
++          title: 'Choix 1 parmi 3',
++          trailing: _switch(
++            _rules.oneOfThree,
++            (v) => setState(() => _rules = _rules.copyWith(oneOfThree: v)),
++          ),
++          child: const _Hint(
++            'À chaque fin de manche, chaque équipe non en tête '
++            'choisit 1 carte parmi 3 : un bonus pour elle ou un '
++            'malus pour l\'équipe en tête. Plus l\'écart est '
++            'grand, plus l\'offre est forte.',
++          ),
++        ),
++        _buildCatchUp(),
++        _buildDraw(),
++        _buildSave(errors),
++      ],
+     );
+   }
+ 
+@@ -453,40 +455,26 @@ class _FiestaEnsembleEditorScreenState
+     );
+   }
+ 
+-  Widget _buildSaveBar(List<String> errors) {
+-    return Container(
+-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+-      color: AppColors.backgroundMain,
+-      child: Column(
+-        mainAxisSize: MainAxisSize.min,
+-        crossAxisAlignment: CrossAxisAlignment.stretch,
+-        children: [
+-          AppButton(
+-            text: 'Enregistrer',
+-            fullWidth: true,
+-            disabled: errors.isNotEmpty || _saving,
+-            onPressed: _save,
+-          ),
+-          if (errors.isNotEmpty)
+-            ConstrainedBox(
+-              constraints: const BoxConstraints(maxHeight: 96),
+-              child: SingleChildScrollView(
+-                padding: const EdgeInsets.only(top: 8),
+-                child: Column(
+-                  crossAxisAlignment: CrossAxisAlignment.start,
+-                  children: [
+-                    for (final error in errors)
+-                      Text(
+-                        error,
+-                        style: AppTextStyles.bodySmall
+-                            .copyWith(color: AppColors.warning, fontSize: 12),
+-                      ),
+-                  ],
+-                ),
+-              ),
++  Widget _buildSave(List<String> errors) {
++    return Column(
++      crossAxisAlignment: CrossAxisAlignment.stretch,
++      children: [
++        AppButton(
++          text: 'Enregistrer',
++          fullWidth: true,
++          disabled: errors.isNotEmpty || _saving,
++          onPressed: _save,
++        ),
++        for (final error in errors)
++          Padding(
++            padding: const EdgeInsets.only(top: 6),
++            child: Text(
++              error,
++              style: AppTextStyles.bodySmall
++                  .copyWith(color: AppColors.warning, fontSize: 12),
+             ),
+-        ],
+-      ),
++          ),
++      ],
+     );
+   }
+ 
+diff --git a/lib/widgets/help/WIRING.md b/lib/widgets/help/WIRING.md
+index 8687af5..82cf0c3 100644
+--- a/lib/widgets/help/WIRING.md
++++ b/lib/widgets/help/WIRING.md
+@@ -31,6 +31,7 @@ résultats finaux en montrent.
+ | `home_screen` | `homeHelp` | `play` (« Jouer » **ou** « Nouvelle partie »), `resume` (« Reprendre »), `replay` (« Rejouer »), `rules`, `history` | `right: 16` |
+ | `settings_screen` | `settingsHelp(passPenalty: provider.settings.passPenalty)` | `counts` (cartes Joueurs + Équipes), `mode` (interrupteur Classique / Fiesta de la section « Mode de jeu »), `wordChoice`, `categories` (bouton Catégories & Difficultés), `advanced` (bouton Avancés ; « Réinitialiser les paramètres » vit en bas de cette fenêtre) | `HelpButton.inline` en tête de la `Row` « ? » / Avancés |
+ | `players_screen` | `playersHelp` | `firstPlayer` (ligne du joueur 1), `words` (bouton Saisir/Voir mots du joueur 1), `next` | `right: 16` |
++| `fiesta_ensembles_screen` (Fiesta Personnalisé) | `fiestaEnsemblesHelp` | `ready` (liste « Prêts à jouer »), `editor` (éditeur en ligne), `next` (« Suivant ») | `right: 16` |
+ | `teams_screen` | `teamsHelp` | `firstTeam` (carte de la 1re équipe), `shuffle`, `start` (« Commencer ») | `right: 16` |
+ | `game_screen` (avant-tour) | `preTurnHelp(playerName: …)` | `team` (nom d'équipe + joueur), `roundRules` (icône info de la manche), `previousTurn` (« Tour précédent »), `start` | `right: besideCornerButton` |
+ | `game_screen` Fiesta | `fiestaPreTurnHelp` | `badges` (Actif ce tour), `doublePoints` (interrupteur Mot compte double), `turnTime` (`TurnTimeCard`) | même bouton : concaténer `preTurnHelp(...) + fiestaPreTurnHelp(...)` en Fiesta |
+diff --git a/lib/widgets/help/help_content.dart b/lib/widgets/help/help_content.dart
+index 92c7bdd..2ee24e2 100644
+--- a/lib/widgets/help/help_content.dart
++++ b/lib/widgets/help/help_content.dart
+@@ -79,7 +79,7 @@ List<CoachStep> settingsHelp({
+         text: 'Classique : les 3 manches habituelles. Fiesta : les mêmes '
+             'manches, pimentées de bonus et de malus. En Fiesta, la roue '
+             'crantée choisit Auto (l\'app décide de tout) ou Personnalisé '
+-            '(tes propres réglages, choisis après les équipes).',
++            '(tes propres réglages, choisis juste après cet écran).',
+       ),
+       CoachStep(
+         target: wordChoice,
+@@ -159,6 +159,34 @@ List<CoachStep> teamsHelp({
+       ),
+     ];
+ 
++// ========== FIESTA PERSONNALISÉE ==========
++
++List<CoachStep> fiestaEnsemblesHelp({
++  required GlobalKey ready,
++  required GlobalKey editor,
++  required GlobalKey next,
++}) =>
++    [
++      CoachStep(
++        target: ready,
++        title: 'Prêts à jouer',
++        text: 'Tes ensembles de règles Fiesta (sinon, celui fourni par '
++            'l\'app). Touche-en un pour le choisir. « Modifier » le charge '
++            'dans l\'éditeur en dessous.',
++      ),
++      CoachStep(
++        target: editor,
++        title: 'Créer un ensemble',
++        text: 'Donne-lui un nom, règle les malus et bonus, puis '
++            '« Enregistrer » : il apparaît en haut, déjà choisi.',
++      ),
++      CoachStep(
++        target: next,
++        title: 'Suivant',
++        text: 'Passe aux joueurs avec l\'ensemble choisi.',
++      ),
++    ];
++
+ // ========== HISTORIQUE ==========
+ 
+ List<CoachStep> historyHelp({
+diff --git a/test/screens/fiesta_ensembles_flow_test.dart b/test/screens/fiesta_ensembles_flow_test.dart
+new file mode 100644
+index 0000000..5cc2fdf
+--- /dev/null
++++ b/test/screens/fiesta_ensembles_flow_test.dart
+@@ -0,0 +1,75 @@
++import 'package:flutter/material.dart';
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/app.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/providers/game_provider.dart';
++import 'package:guess_it_all_mobile/services/fiesta_ensemble_service.dart';
++import 'package:guess_it_all_mobile/utils/constants.dart';
++import 'package:provider/provider.dart';
++
++import '../helpers/test_prefs.dart';
++
++/// Laisse tourner les Futures réelles (stockage) puis redessine. pump() et
++/// non pumpAndSettle() : fonds animés en boucle.
++Future<void> settle(WidgetTester tester) async {
++  for (var i = 0; i < 3; i++) {
++    await tester.runAsync(() => pumpEventQueue());
++    await tester.pump(const Duration(milliseconds: 400));
++  }
++}
++
++Future<void> tapText(WidgetTester tester, String text) async {
++  final target = find.text(text).last;
++  await tester.ensureVisible(target);
++  await tester.pump();
++  await tester.tap(target);
++  await settle(tester);
++}
++
++void main() {
++  // Bug Florent 2026-11-04 (Chrome) : aucun ensemble, « Créer un ensemble »
++  // ouvrait une page à part sans « Suivant » ; on n'en sortait que par le
++  // retour, qui jetait la saisie : cul-de-sac, liste toujours vide.
++  testWidgets(
++      'Personnalisé sans ensemble : créer, enregistrer, l\'ensemble est '
++      'sélectionné et « Suivant » mène aux joueurs avec lui', (tester) async {
++    tester.view.physicalSize = const Size(390, 844);
++    tester.view.devicePixelRatio = 1;
++    addTearDown(tester.view.reset);
++    await givenPrefs({
++      AppConstants.tutorialSeenKey: true,
++      'guessItAll_fiestaTutorialSeen': true,
++    });
++    givenFakePlatformPlugins();
++    final provider = GameProvider();
++    await tester.runAsync(() => pumpEventQueue());
++    provider.setPendingFiesta(FiestaRules(mode: FiestaMode.custom));
++    // Arrivée depuis Paramètres (sa mise en page déborde avec la police de
++    // test : on entre directement sur l'écran).
++    provider.goToScreen(AppConstants.screenFiestaEnsembles);
++
++    await tester.pumpWidget(ChangeNotifierProvider<GameProvider>.value(
++      value: provider,
++      child: const GuessItAllApp(),
++    ));
++    await settle(tester);
++    // L'intro de démarrage (au-dessus de tout) doit finir de s'effacer.
++    for (var i = 0; i < 30; i++) {
++      await tester.pump(const Duration(milliseconds: 100));
++    }
++
++    await tester.enterText(find.byType(TextField), 'Soirée chez Max');
++    await tester.pump();
++    await tapText(tester, 'Enregistrer');
++
++    final stored = await tester.runAsync(() => FiestaEnsembleService().load());
++    expect(stored!.ensembles.map((e) => e.name), ['Soirée chez Max']);
++    expect(provider.game.currentScreen, AppConstants.screenFiestaEnsembles,
++        reason: 'on reste sur l\'écran, l\'ensemble apparaît dans la liste');
++
++    await tapText(tester, 'Suivant');
++    expect(provider.game.currentScreen, AppConstants.screenPlayers);
++    expect(provider.pendingFiesta?.ensembleName, 'Soirée chez Max',
++        reason: 'l\'ensemble enregistré est celui sélectionné');
++  });
++}
