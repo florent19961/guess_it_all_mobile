@@ -111,57 +111,45 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
     });
   }
 
-  void _resetEditor() => setState(() {
-        _editing = null;
-        _editorRun++;
-        _dirty = false;
-      });
-
-  /// Vrai si rien n'est en cours dans l'éditeur, ou si l'utilisateur accepte
-  /// de perdre ses modifications non enregistrées.
-  Future<bool> _confirmDiscard() async {
-    if (!_dirty) return true;
-    return AppConfirmDialog.show(
-      context,
-      title: 'Abandonner les modifications ?',
-      message: 'L\'ensemble en cours n\'est pas enregistré.',
-      confirmText: 'Abandonner',
-      accentColor: AppColors.warning,
-    );
+  /// LA porte unique de l'éditeur. Toute action qui change la sélection ou
+  /// le contenu de l'éditeur (sélectionner, Modifier, Dupliquer, Supprimer,
+  /// Annuler, Retour, Suivant) passe par ici : si la saisie diffère de ce qui
+  /// a été chargé — brouillon neuf ou modification, peu importe —, on demande
+  /// avant de la jeter. Accepté (ou rien en cours) : l'éditeur repart vierge,
+  /// [editing] y est chargé, et l'action continue. L'éditeur ne contredit
+  /// donc jamais la sélection, et rien n'est perdu en silence.
+  Future<bool> _leaveDraft({FiestaEnsemble? editing}) async {
+    if (_dirty &&
+        !await AppConfirmDialog.show(
+          context,
+          title: 'Abandonner les modifications ?',
+          message: 'L\'ensemble en cours n\'est pas enregistré.',
+          confirmText: 'Abandonner',
+          accentColor: AppColors.warning,
+        )) {
+      return false;
+    }
+    if (!mounted) return false;
+    setState(() {
+      _editing = editing;
+      _editorRun++;
+      _dirty = false;
+    });
+    return true;
   }
 
   Future<void> _back() async {
-    if (await _confirmDiscard() && mounted) widget.onBack();
+    if (await _leaveDraft()) widget.onBack();
   }
 
-  /// Sélectionner pendant une modification referme l'éditeur : ce qui est
-  /// affiché ne contredit jamais ce que « Suivant » lancera.
   Future<void> _select(FiestaEnsemble ensemble) async {
-    if (_editing != null) {
-      if (!await _confirmDiscard() || !mounted) return;
-      _resetEditor();
-    }
-    setState(() => _selectedId = ensemble.id);
-  }
-
-  Future<void> _cancelEdit() async {
-    if (await _confirmDiscard() && mounted) _resetEditor();
-  }
-
-  Future<void> _onSaved(FiestaEnsemble ensemble) async {
-    _resetEditor();
-    await _reload(select: ensemble.id);
+    if (await _leaveDraft()) setState(() => _selectedId = ensemble.id);
   }
 
   /// Modifier sélectionne aussi l'ensemble (éditeur et sélection d'accord).
   Future<void> _edit(FiestaEnsemble ensemble) async {
-    if (!await _confirmDiscard() || !mounted) return;
-    setState(() {
-      _editing = ensemble;
-      _selectedId = ensemble.id;
-      _editorRun++;
-      _dirty = false;
-    });
+    if (!await _leaveDraft(editing: ensemble)) return;
+    setState(() => _selectedId = ensemble.id);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final target = _editorKey.currentContext;
       if (target != null && target.mounted) {
@@ -172,11 +160,13 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
   }
 
   Future<void> _duplicate(FiestaEnsemble ensemble) async {
+    if (!await _leaveDraft()) return;
     final copy = await _service.duplicate(ensemble.id);
     await _reload(select: copy?.id);
   }
 
   Future<void> _delete(FiestaEnsemble ensemble) async {
+    if (!await _leaveDraft() || !mounted) return;
     final confirmed = await AppConfirmDialog.show(
       context,
       title: 'Supprimer ?',
@@ -186,8 +176,17 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
     );
     if (!confirmed) return;
     await _service.delete(ensemble.id);
-    if (_editing?.id == ensemble.id) _resetEditor();
     await _reload();
+  }
+
+  /// Enregistré : pas de brouillon à abandonner, l'éditeur repart vierge.
+  Future<void> _onSaved(FiestaEnsemble ensemble) async {
+    setState(() {
+      _editing = null;
+      _editorRun++;
+      _dirty = false;
+    });
+    await _reload(select: ensemble.id);
   }
 
   Future<void> _next() async {
@@ -195,7 +194,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
     if (chosen == null || _leaving) return;
     _leaving = true;
     try {
-      if (!await _confirmDiscard()) return;
+      if (!await _leaveDraft()) return;
       if (chosen.id != FiestaEnsemblesScreen.builtIn.id) {
         await _service.markUsed(chosen.id);
       }
@@ -312,7 +311,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
                   key: ValueKey(_editorRun),
                   initial: _editing,
                   onSaved: _onSaved,
-                  onCancel: _editing == null ? null : _cancelEdit,
+                  onCancel: _editing == null ? null : _leaveDraft,
                   onDirty: (dirty) => _dirty = dirty,
                 ),
         ),
