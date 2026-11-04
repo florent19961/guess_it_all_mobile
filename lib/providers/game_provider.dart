@@ -1434,11 +1434,10 @@ class GameProvider extends ChangeNotifier {
   List<ModifierInstance> get _heldCartridges {
     final teamId = getCurrentTeam()?.id;
     return [
-      ...currentTeamModifiers.where((m) =>
-          _isCartridge(m) && kChargeBonusKeys.containsKey(m.catalogId)),
+      ...currentTeamModifiers.where(
+          (m) => _isCartridge(m) && kChargeBonusKeys.containsKey(m.catalogId)),
       for (final m in _game.fiesta?.active ?? const <ModifierInstance>[])
-        if (m.reserve && m.teamId == teamId && m.round == _game.currentRound)
-          m,
+        if (m.reserve && m.teamId == teamId && m.round == _game.currentRound) m,
     ];
   }
 
@@ -1682,8 +1681,7 @@ class GameProvider extends ChangeNotifier {
         modifierById(catalogId)?.defaultTarget == ModifierTarget.player;
     return [
       for (final t in _teams)
-        if (t.id != me && (!toPlayer || canBlockGuesser(t.playerIds.length)))
-          t,
+        if (t.id != me && (!toPlayer || canBlockGuesser(t.playerIds.length))) t,
     ];
   }
 
