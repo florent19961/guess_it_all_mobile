@@ -72,16 +72,23 @@ class AppTheme {
       ),
       switchTheme: SwitchThemeData(
         // Pouce bleu nuit sur turquoise (8,33:1), blanc sur gray700 (10,31:1).
-        thumbColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected)
+        // Désactivé (onChanged null) : mêmes couleurs à 38 %, comme Material.
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          final c = states.contains(WidgetState.selected)
               ? AppColors.backgroundMain
-              : Colors.white,
-        ),
-        trackColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected)
+              : Colors.white;
+          return states.contains(WidgetState.disabled)
+              ? c.withValues(alpha: 0.38)
+              : c;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          final c = states.contains(WidgetState.selected)
               ? AppColors.secondaryCyan
-              : AppColors.gray700,
-        ),
+              : AppColors.gray700;
+          return states.contains(WidgetState.disabled)
+              ? c.withValues(alpha: 0.38)
+              : c;
+        }),
         trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
         overlayColor: WidgetStatePropertyAll(
           AppColors.secondaryCyan.withValues(alpha: 0.2),
