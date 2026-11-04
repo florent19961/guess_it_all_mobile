@@ -1,0 +1,259 @@
+diff --git a/lib/screens/game_screen.dart b/lib/screens/game_screen.dart
+index c0a45ac..8d1e6a6 100644
+--- a/lib/screens/game_screen.dart
++++ b/lib/screens/game_screen.dart
+@@ -359,15 +359,24 @@ class _GameScreenState extends State<GameScreen> {
+           ),
+           child: Column(
+             children: [
+-              Text.rich(
+-                TextSpan(children: [
+-                  TextSpan(
+-                    text: currentTeam?.name ?? '',
+-                    style: TextStyle(
+-                        fontFamily: 'Bangers', fontSize: 22, color: teamColor),
++              // Le nom d'équipe se coupe, jamais celui du joueur.
++              Row(
++                mainAxisAlignment: MainAxisAlignment.center,
++                children: [
++                  Flexible(
++                    child: Text(
++                      currentTeam?.name ?? '',
++                      maxLines: 1,
++                      overflow: TextOverflow.ellipsis,
++                      style: TextStyle(
++                          fontFamily: 'Bangers',
++                          fontSize: 22,
++                          color: teamColor),
++                    ),
+                   ),
+-                  TextSpan(
+-                    text: '  ·  ${currentPlayer?.name ?? ''}',
++                  Text(
++                    '  ·  ${currentPlayer?.name ?? ''}',
++                    maxLines: 1,
+                     style: const TextStyle(
+                       fontFamily: 'Poppins',
+                       fontSize: 16,
+@@ -375,10 +384,7 @@ class _GameScreenState extends State<GameScreen> {
+                       color: Colors.white,
+                     ),
+                   ),
+-                ]),
+-                textAlign: TextAlign.center,
+-                maxLines: 1,
+-                overflow: TextOverflow.ellipsis,
++                ],
+               ),
+               const SizedBox(height: 2),
+               _wordsRow(provider, fontSize: 12),
+diff --git a/lib/widgets/fiesta/turn_cartridges.dart b/lib/widgets/fiesta/turn_cartridges.dart
+index 819aa8b..fecfa8e 100644
+--- a/lib/widgets/fiesta/turn_cartridges.dart
++++ b/lib/widgets/fiesta/turn_cartridges.dart
+@@ -40,6 +40,15 @@ const _gap = 6.0;
+ const _maxSize = 50.0;
+ const _minSize = 36.0;
+ 
++/// Puce « Envoyé » : taille FIXE, pour que [_FiestaTurnZoneState._fit]
++/// compte exactement ses rangées (nom d'équipe coupé à 8 caractères).
++const _sentChipWidth = 96.0;
++const _sentChipHeight = 26.0;
++
++/// Éléments de largeur [item] (espacés de [_gap]) par rangée de [space].
++int _perRowOf(double space, double item) =>
++    max(1, ((space + _gap) / (item + _gap)).floor());
++
+ /// Dernier recours pour la RÉSERVE seulement (jamais « Ce tour »).
+ const _reserveMinSize = 32.0;
+ 
+@@ -470,8 +479,9 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+         if (cancel && mounted) _p.cancelSent(m);
+       },
+       child: Container(
+-        height: 26,
+-        padding: const EdgeInsets.fromLTRB(3, 0, 10, 0),
++        width: _sentChipWidth,
++        height: _sentChipHeight,
++        padding: const EdgeInsets.fromLTRB(3, 0, 8, 0),
+         decoration: BoxDecoration(
+           color: AppColors.malus.withValues(alpha: 0.12),
+           borderRadius: BorderRadius.circular(13),
+@@ -495,10 +505,9 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+                       fontWeight: FontWeight.w700,
+                       color: AppColors.malus)),
+             ),
+-            ConstrainedBox(
+-              constraints: const BoxConstraints(maxWidth: 110),
++            Expanded(
+               child: Text(
+-                ' → $team',
++                ' → ${team.length > 8 ? '${team.substring(0, 8)}…' : team}',
+                 maxLines: 1,
+                 overflow: TextOverflow.ellipsis,
+                 style: AppTextStyles.bodySmall.copyWith(
+@@ -545,8 +554,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+     required int thisTurn,
+   }) {
+     const minColumn = 64.0; // l'en-tête « BONUS » / « MALUS »
+-    int perRow(double space, double d) =>
+-        max(1, ((space + _gap) / (d + _gap)).floor());
++    int perRow(double space, double d) => _perRowOf(space, d);
+     int rowsOf(int n, double space, double d) => (n / perRow(space, d)).ceil();
+     ({int rows, double bonusWidth}) columns(double d) {
+       var best = (rows: 1 << 30, bonusWidth: minColumn);
+@@ -558,9 +566,9 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+       return best;
+     }
+ 
+-    // Puces « Envoyé » : ~3 par rangée.
+-    final sentRows = (sent / 3).ceil();
+-    final sentHeight = sent == 0 ? 0 : 6 + sentRows * 30 - 4;
++    // Puces « Envoyé » : largeur fixe, donc rangées exactes.
++    final sentRows = (sent / _perRowOf(width, _sentChipWidth)).ceil();
++    final sentHeight = sent == 0 ? 0 : 6 + sentRows * (_sentChipHeight + 4) - 4;
+     double needed(double t, double r) {
+       final thisTurnRows = max(1, rowsOf(thisTurn, width - 26, t));
+       const thisTurnFixed = 10 + 15 + 6 + 10 + 2;
+diff --git a/test/models/fiesta/ensemble_validation_test.dart b/test/models/fiesta/ensemble_validation_test.dart
+index e01bd13..d7e1e24 100644
+--- a/test/models/fiesta/ensemble_validation_test.dart
++++ b/test/models/fiesta/ensemble_validation_test.dart
+@@ -71,6 +71,17 @@ void main() {
+       'reversed': setting(ModifierMode.draw, rounds: {2, 3}),
+     });
+     expect(validateEnsemble(different, others: kProvidedEnsembles), isEmpty);
++    // Passe gratuite « pour la partie » au lieu de « par manche » : décomptée
++    // (lane 2), donc un autre ensemble.
++    final perRound = rulesWith(overrides: {
++      'free_pass': ModifierSetting(
++          active: true, rounds: const {1, 2, 3}, mode: ModifierMode.stock),
++    });
++    final perGame = perRound.copyWith(modifiers: {
++      ...perRound.modifiers,
++      'free_pass': perRound.modifiers['free_pass']!.copyWith(perGame: true),
++    });
++    expect(settingsKey(perGame), isNot(settingsKey(perRound)));
+   });
+ 
+   test('modificateur actif sans manche → refusé, coupé → ignoré', () {
+diff --git a/test/models/fiesta/symmetric_draw_test.dart b/test/models/fiesta/symmetric_draw_test.dart
+index 3004838..52046b1 100644
+--- a/test/models/fiesta/symmetric_draw_test.dart
++++ b/test/models/fiesta/symmetric_draw_test.dart
+@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/fiesta_state.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
++import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/round_transition.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
+ 
+@@ -252,4 +253,37 @@ void main() {
+     expect(stock(3, used),
+         {'double_points/a': 2, 'double_points/b': 2, 'two_words/b': 2});
+   });
++
++  test(
++      'Malus reçus résolus au tour de la cible : en double avec une règle de '
++      'manche, ou incompatible avec un malus retenu avant lui (ordre '
++      'd\'envoi), il est écarté', () {
++    ModifierInstance sent(String id, String from) => ModifierInstance(
++          catalogId: id,
++          scope: ModifierScope.turn,
++          target: ModifierTarget.team,
++          teamId: 'b',
++          charges: 0,
++          nature: ModifierNature.malus,
++          round: 3,
++          fromTeamId: from,
++        );
++    final rule = ModifierInstance(
++      catalogId: 'minus_10s',
++      scope: ModifierScope.round,
++      target: ModifierTarget.both,
++      charges: 0,
++      nature: ModifierNature.malus,
++      round: 3,
++    );
++    final kept = modifiersForTurn([
++      rule,
++      sent('minus_10s', 'a'), // doublon de la règle
++      sent('mime_no_arms', 'a'),
++      sent('draw', 'c'), // second mime : incompatible
++      sent('reversed', 'c'),
++    ], teamId: 'b', logicalRound: 3);
++    expect(kept.map((m) => '${m.catalogId}<${m.fromTeamId}'),
++        ['minus_10s<null', 'mime_no_arms<a', 'reversed<c']);
++  });
+ }
+diff --git a/test/providers/fiesta_cartridges_test.dart b/test/providers/fiesta_cartridges_test.dart
+index 46639bc..bdf7467 100644
+--- a/test/providers/fiesta_cartridges_test.dart
++++ b/test/providers/fiesta_cartridges_test.dart
+@@ -233,27 +233,34 @@ void main() {
+       'Malus envoyé en fin de M1, la cible rejoue en M2 sous une règle de '
+       'manche incompatible (« Passe gratuite » Toujours) : écarté sans effet, '
+       'puis retiré à la fin de son tour', () async {
+-    final p = await givenProvider(['Ana', 'Bob'], wordsEach: 1);
+-    await p.startGame(
+-      fiesta: FiestaRules(
+-        mode: FiestaMode.custom,
+-        drawCount: 0,
+-        modifiers: {
+-          'no_pass': ModifierSetting(
+-              active: true, rounds: const {1}, mode: ModifierMode.stock),
+-          'free_pass': ModifierSetting(
+-              active: true, rounds: const {2}, mode: ModifierMode.always),
+-        },
+-      ),
+-    );
+-    final a = p.getCurrentTeam()!.id;
+-    final b = p.teams.firstWhere((t) => t.id != a).id;
+-    expect(p.inflictMalus('no_pass', b), isNull);
+-    playTurn(p, 99); // a finit M1
+-    p.nextRound();
+-    expect(playTurn(p), a); // continuation de a en M2
++    /// [sent] envoyé par l'équipe qui ouvre la partie, qui finit M1 ; [rule]
++    /// « Toujours » en M2. Rend le provider au tour M2 de la cible.
++    Future<GameProvider> crossRound(String sent, String rule) async {
++      final p = await givenProvider(['Ana', 'Bob'], wordsEach: 1);
++      await p.startGame(
++        fiesta: FiestaRules(
++          mode: FiestaMode.custom,
++          drawCount: 0,
++          catchUp: kCatchUpOff,
++          modifiers: {
++            sent: ModifierSetting(
++                active: true, rounds: const {1}, mode: ModifierMode.stock),
++            rule: ModifierSetting(
++                active: true, rounds: const {2}, mode: ModifierMode.always),
++          },
++        ),
++      );
++      final a = p.getCurrentTeam()!.id;
++      final b = p.teams.firstWhere((t) => t.id != a).id;
++      expect(p.inflictMalus(sent, b), isNull);
++      playTurn(p, 99); // a finit M1
++      p.nextRound();
++      expect(playTurn(p), a); // continuation de a en M2
++      expect(p.getCurrentTeam()!.id, b);
++      return p;
++    }
+ 
+-    expect(p.getCurrentTeam()!.id, b);
++    final p = await crossRound('no_pass', 'free_pass');
+     expect(p.receivedThisTurn, isEmpty);
+     expect([p.passBlocked, p.freePasses], [false, 2]);
+     playTurn(p);
+@@ -297,8 +304,9 @@ void main() {
+     p.startTurnTimer();
+     expect(p.freePasses, 2);
+     p.passWord();
++    expect([p.freePassesUsed, p.currentPassPenalty], [1, 0]);
+     p.passWord();
+-    expect(p.currentPassPenalty, 5);
++    expect([p.freePassesUsed, p.currentPassPenalty], [2, 5]);
+     p.endTurn();
+     p.savePreValidationState(const []);
+     p.validateWords(const []);
