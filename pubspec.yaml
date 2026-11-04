@@ -42,6 +42,8 @@ flutter_launcher_icons:
   image_path: "visuals/logo_bulle_chrono.png"
   adaptive_icon_background: "#2B3848"
   adaptive_icon_foreground: "visuals/logo_bulle_chrono_foreground.png"
+  # Le foreground est déjà cadré dans la zone sûre 66/108 par scripts/render_logo.py.
+  adaptive_icon_foreground_inset: 0
 
 flutter_native_splash:
   color: "#2B3848"
@@ -51,7 +53,6 @@ flutter_native_splash:
   android_12:
     color: "#2B3848"
     image: visuals/logo_bulle_chrono_android12.png
-    fullscreen: true
 
 flutter:
   uses-material-design: true
