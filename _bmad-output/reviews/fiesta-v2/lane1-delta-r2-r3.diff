@@ -1,0 +1,287 @@
+diff --git a/lib/models/fiesta/fiesta_ensemble.dart b/lib/models/fiesta/fiesta_ensemble.dart
+index d9e1875..8b28140 100644
+--- a/lib/models/fiesta/fiesta_ensemble.dart
++++ b/lib/models/fiesta/fiesta_ensemble.dart
+@@ -120,7 +120,8 @@ String settingsKey(FiestaRules rules) {
+           'mode': rules.modifiers[id]!.mode.name,
+           if (rules.modifiers[id]!.mode == ModifierMode.stock) ...{
+             'charges': rules.modifiers[id]!.charges,
+-            'perGame': rules.modifiers[id]!.perGame,
++            // Passe gratuite : toujours « par manche » (bit inopérant).
++            'perGame': rules.modifiers[id]!.perGame && id != 'free_pass',
+           },
+         },
+     },
+diff --git a/lib/screens/fiesta_ensembles_screen.dart b/lib/screens/fiesta_ensembles_screen.dart
+index 5e5c49c..53e011b 100644
+--- a/lib/screens/fiesta_ensembles_screen.dart
++++ b/lib/screens/fiesta_ensembles_screen.dart
+@@ -16,14 +16,6 @@ import '../widgets/help/help_button.dart';
+ import '../widgets/help/help_content.dart';
+ import 'fiesta_ensemble_editor_screen.dart';
+ 
+-/// Brouillon de l'éditeur gardé en mémoire tant que l'app est ouverte
+-/// (jamais persisté) : [ensembleId] nul = un nouvel ensemble.
+-class EnsembleDraft {
+-  final String? ensembleId;
+-  final FiestaRules rules;
+-  const EnsembleDraft(this.ensembleId, this.rules);
+-}
+-
+ /// « Fiesta personnalisée » : juste après les Paramètres, avant les joueurs
+ /// (Fiesta Personnalisé seulement). Les ensembles fournis par l'app puis les
+ /// miens (un tap sélectionne), « Créer un ensemble » qui POUSSE l'éditeur
+@@ -46,8 +38,15 @@ class FiestaEnsemblesScreen extends StatefulWidget {
+     super.key,
+   });
+ 
+-  /// Brouillon de l'éditeur, en mémoire seulement (spec Fiesta v2 §4).
+-  static EnsembleDraft? draft;
++  /// Brouillons de l'éditeur, en mémoire seulement tant que l'app est
++  /// ouverte (spec Fiesta v2 §4) : un par ensemble modifié (son id), et un
++  /// pour la création ([newDraftKey]). Chaque éditeur ne lit, n'écrit et
++  /// n'efface que le sien : aucun brouillon n'en écrase un autre.
++  static final Map<String, FiestaRules> drafts = {};
++
++  /// Clé du brouillon d'un nouvel ensemble (jamais un id : ids uuid ou
++  /// `provided_*`).
++  static const newDraftKey = '';
+ 
+   @override
+   State<FiestaEnsemblesScreen> createState() => _FiestaEnsemblesScreenState();
+@@ -113,14 +112,14 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
+     if (_busy) return;
+     _busy = true;
+     try {
+-      final draft = FiestaEnsemblesScreen.draft;
+-      final resumed =
+-          draft != null && draft.ensembleId == ensemble?.id ? draft : null;
++      final drafts = FiestaEnsemblesScreen.drafts;
++      final key = ensemble?.id ?? FiestaEnsemblesScreen.newDraftKey;
++      final resumed = drafts[key];
+       final result = await Navigator.of(context).push<EnsembleEditorResult>(
+         MaterialPageRoute(
+           builder: (_) => FiestaEnsembleEditorScreen(
+             initial: ensemble,
+-            draft: resumed?.rules,
++            draft: resumed,
+             others: [
+               for (final e in _ready)
+                 if (e.id != ensemble?.id) e,
+@@ -131,13 +130,11 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
+       if (!mounted) return;
+       switch (result) {
+         case EnsembleSaved(:final ensemble):
+-          // Seul le brouillon repris (donc enregistré) disparaît : celui d'un
+-          // AUTRE ensemble reste.
+-          if (resumed != null) FiestaEnsemblesScreen.draft = null;
++          // Seul le brouillon de cet éditeur (enregistré) disparaît.
++          drafts.remove(key);
+           await _reload(select: ensemble.id);
+         case EnsembleDraftKept(:final rules):
+-          setState(() =>
+-              FiestaEnsemblesScreen.draft = EnsembleDraft(ensemble?.id, rules));
++          setState(() => drafts[key] = rules);
+           if (mounted) {
+             // Flottant au-dessus de « Suivant », qu'il ne doit pas masquer.
+             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+@@ -147,10 +144,9 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
+             ));
+           }
+         case null:
+-          // Sorti sans rien garder : un brouillon repris est abandonné.
+-          if (resumed != null) {
+-            setState(() => FiestaEnsemblesScreen.draft = null);
+-          }
++          // Sorti sans rien garder : le brouillon de cet éditeur, s'il en
++          // avait un, est abandonné.
++          if (resumed != null) setState(() => drafts.remove(key));
+       }
+     } finally {
+       _busy = false;
+@@ -172,9 +168,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
+     );
+     if (!confirmed) return;
+     await _service.delete(ensemble.id);
+-    if (FiestaEnsemblesScreen.draft?.ensembleId == ensemble.id) {
+-      FiestaEnsemblesScreen.draft = null;
+-    }
++    FiestaEnsemblesScreen.drafts.remove(ensemble.id);
+     await _reload();
+   }
+ 
+@@ -237,8 +231,8 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
+   }
+ 
+   Widget _buildBody() {
+-    final newDraft = FiestaEnsemblesScreen.draft?.ensembleId == null &&
+-        FiestaEnsemblesScreen.draft != null;
++    final newDraft = FiestaEnsemblesScreen.drafts
++        .containsKey(FiestaEnsemblesScreen.newDraftKey);
+     return ListView(
+       padding: const EdgeInsets.fromLTRB(20, 72, 20, 24),
+       children: [
+diff --git a/lib/screens/turn_screen.dart b/lib/screens/turn_screen.dart
+index e7e392d..e9aa253 100644
+--- a/lib/screens/turn_screen.dart
++++ b/lib/screens/turn_screen.dart
+@@ -390,7 +390,10 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+                                   wrapExplain: (show) =>
+                                       _whilePaused(provider, show),
+                                 ),
+-                              if (provider.isTwoWordsOn)
++                              // Règle de manche : déjà dans `turnModifiers`.
++                              if (provider.isTwoWordsOn &&
++                                  !provider.turnModifiers
++                                      .any((m) => m.catalogId == 'two_words'))
+                                 ModifierBadge.catalog(
+                                   'two_words',
+                                   nature: ModifierNature.bonus,
+diff --git a/test/models/game_state_test.dart b/test/models/game_state_test.dart
+index f189438..957ea7a 100644
+--- a/test/models/game_state_test.dart
++++ b/test/models/game_state_test.dart
+@@ -1,8 +1,11 @@
++import 'dart:convert';
++
+ import 'package:flutter_test/flutter_test.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/fiesta_state.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
++import 'package:guess_it_all_mobile/models/fiesta/round_transition.dart';
+ import 'package:guess_it_all_mobile/models/game_state.dart';
+ import 'package:guess_it_all_mobile/utils/constants.dart';
+ 
+@@ -273,6 +276,30 @@ void main() {
+       expect(FiestaState.tryFromJson(emptyFiesta)!.offerChoices, isEmpty);
+     });
+ 
++    test(
++        'malus « En stock » en réserve : conservé à l\'aller-retour JSON, '
++        'sans effet en jeu (règle 7)', () {
++      const reserved = ModifierInstance(
++        catalogId: 'minus_10s',
++        scope: ModifierScope.round,
++        target: ModifierTarget.team,
++        teamId: 'a',
++        charges: 2,
++        nature: ModifierNature.malus,
++        round: 1,
++        reserve: true,
++      );
++      final original = GameState(
++          gameId: 'abc',
++          fiesta: fiestaState().copyWith(active: [instance, reserved]));
++      final json = jsonDecode(jsonEncode(original.toJson()));
++      final restored = GameState.fromJson(json).fiesta!;
++      expect(restored.active.map((m) => (m.catalogId, m.reserve)),
++          [('no_pass', false), ('minus_10s', true)]);
++      expect(modifiersForTurn(restored.active, teamId: 'a', logicalRound: 1),
++          isEmpty);
++    });
++
+     test('une instance inconnue ou mal formée est ignorée, le reste se relit',
+         () {
+       final json = GameState(gameId: 'abc', fiesta: fiestaState()).toJson();
+diff --git a/test/screens/fiesta_ensembles_flow_test.dart b/test/screens/fiesta_ensembles_flow_test.dart
+index dd6557a..4cc68bd 100644
+--- a/test/screens/fiesta_ensembles_flow_test.dart
++++ b/test/screens/fiesta_ensembles_flow_test.dart
+@@ -1,9 +1,15 @@
++import 'dart:convert';
++
+ import 'package:flutter/material.dart';
+ import 'package:flutter_test/flutter_test.dart';
+ import 'package:guess_it_all_mobile/app.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
+ import 'package:guess_it_all_mobile/providers/game_provider.dart';
+ import 'package:guess_it_all_mobile/services/fiesta_ensemble_service.dart';
++import 'package:guess_it_all_mobile/services/persisted_schema.dart';
++import 'package:guess_it_all_mobile/screens/fiesta_ensembles_screen.dart';
++import 'package:guess_it_all_mobile/widgets/common/app_back_button.dart';
+ import 'package:guess_it_all_mobile/utils/constants.dart';
+ import 'package:provider/provider.dart';
+ 
+@@ -28,13 +34,23 @@ Future<void> tapText(WidgetTester tester, String text) async {
+ 
+ /// Monte l'app complète, en Fiesta Personnalisé, sur [screen].
+ Future<GameProvider> pumpCustomFiesta(WidgetTester tester, String screen,
+-    {Size size = const Size(390, 844)}) async {
++    {Size size = const Size(390, 844),
++    List<FiestaRules> ensembles = const []}) async {
+   tester.view.physicalSize = size;
+   tester.view.devicePixelRatio = 1;
+   addTearDown(tester.view.reset);
+   await givenPrefs({
+     AppConstants.tutorialSeenKey: true,
+     AppConstants.fiestaTutorialSeenKey: true,
++    // Écrit à la main : le service sérialise ses écritures sur une file
++    // singleton, qu'un test précédent (horloge simulée) peut laisser figée.
++    if (ensembles.isNotEmpty)
++      FiestaEnsembleService.storageKey: jsonEncode(wrapWithSchema({
++        'ensembles': [
++          for (final (i, rules) in ensembles.indexed)
++            FiestaEnsemble(id: 'e$i', rules: rules).toJson(),
++        ],
++      })),
+   });
+   givenFakePlatformPlugins();
+   final provider = GameProvider();
+@@ -94,6 +110,55 @@ void main() {
+         reason: 'l\'ensemble enregistré est celui sélectionné');
+   });
+ 
++  testWidgets(
++      'brouillons : un par ensemble, aucun n\'en écrase un autre (création A '
++      'puis modification B laissées incomplètes, puis reprise de A et de B)',
++      (tester) async {
++    FiestaEnsemblesScreen.drafts.clear();
++    addTearDown(FiestaEnsemblesScreen.drafts.clear);
++    await pumpCustomFiesta(tester, AppConstants.screenFiestaEnsembles,
++        ensembles: [defaultEnsembleRules('Mien')]);
++    Future<void> scrollTo(String text) =>
++        tester.scrollUntilVisible(find.text(text), 300,
++            scrollable: find.byType(Scrollable).first);
++    String nameField() =>
++        tester.widget<TextField>(find.byType(TextField)).controller!.text;
++    Future<void> back() async {
++      await tester.tap(find.byType(AppBackButton).last);
++      await settle(tester);
++      // Laisse partir le toast « Brouillon gardé » (il flotte sur la liste).
++      await tester.pump(const Duration(seconds: 5));
++      await settle(tester);
++    }
++
++    // A : création, nom déjà pris → incomplet, gardé.
++    await scrollTo('Créer un ensemble');
++    await tapText(tester, 'Créer un ensemble');
++    await tester.enterText(find.byType(TextField), 'Pro Player');
++    await tester.pump();
++    await back();
++    expect(find.text('Nouvel ensemble'), findsNothing);
++
++    // B : modification de « Mien », nom vidé → incomplet, gardé.
++    await scrollTo('Modifier');
++    await tapText(tester, 'Modifier');
++    expect(nameField(), 'Mien');
++    await tester.enterText(find.byType(TextField), '');
++    await tester.pump();
++    await back();
++
++    // Reprise de A, intacte ; puis de B, intacte.
++    await scrollTo('Reprendre le brouillon');
++    await tapText(tester, 'Reprendre le brouillon');
++    expect(nameField(), 'Pro Player');
++    await back();
++    await scrollTo('Modifier');
++    await tapText(tester, 'Modifier');
++    expect(nameField(), '');
++    expect(FiestaEnsemblesScreen.drafts.keys,
++        unorderedEquals([FiestaEnsemblesScreen.newDraftKey, isNotEmpty]));
++  });
++
+   testWidgets(
+       'Personnalisé : « Suivant » des Paramètres mène à l\'écran des '
+       'ensembles, avant les joueurs', (tester) async {
