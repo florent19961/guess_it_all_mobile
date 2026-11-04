@@ -100,17 +100,30 @@ class _GameScreenState extends State<GameScreen> {
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  const Spacer(),
+                  // Fiesta : hauteur fixe sous les boutons du haut, tout le
+                  // reste va aux cartouches.
+                  if (provider.isFiesta)
+                    const SizedBox(height: 40)
+                  else
+                    const Spacer(),
 
                   // Round mode (gros)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        AppConstants.roundModes[provider.game.currentRound] ??
-                            '',
-                        style: AppTextStyles.subtitle(fontSize: 44),
-                        textAlign: TextAlign.center,
+                      // Rétrécit au lieu de déborder (« Description libre »
+                      // en 360 px de large).
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            AppConstants
+                                    .roundModes[provider.game.currentRound] ??
+                                '',
+                            style: AppTextStyles.subtitle(fontSize: 44),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 12),
                       GestureDetector(
@@ -133,107 +146,18 @@ class _GameScreenState extends State<GameScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 32),
-
-                  // Team card (cliquable pour voir la composition)
-                  GestureDetector(
-                    key: _teamKey,
-                    onTap: () => _showTeamMembersDialog(
-                        context, currentTeam, provider, teamColor),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 32, vertical: 20),
-                      decoration: BoxDecoration(
-                        color: teamColor.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: teamColor, width: 2),
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                currentTeam?.name ?? '',
-                                style: TextStyle(
-                                  fontFamily: 'Bangers',
-                                  fontSize: 24,
-                                  color: teamColor,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                Icons.people_outline,
-                                color: teamColor,
-                                size: 18,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            currentPlayer?.name ?? '',
-                            style: const TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Mots restants + mots devinés au tour précédent. Pas de
-                  // score : il reste caché jusqu'aux résultats.
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        '${provider.game.remainingWords.length} ${provider.game.remainingWords.length <= 1 ? 'mot restant' : 'mots restants'}',
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 14,
-                          color: Colors.white60,
-                        ),
-                      ),
-                      // Bouton pour voir les mots devinés au tour précédent
-                      if (provider.game.history.isNotEmpty) ...[
-                        const SizedBox(width: 12),
-                        GestureDetector(
-                          key: _previousTurnKey,
-                          onTap: () =>
-                              _showGuessedWordsDialog(context, provider),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.gray600,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.checklist,
-                                    size: 14, color: Colors.white70),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${provider.game.history.last.wordsGuessed.length} mots',
-                                  style: const TextStyle(
-                                    fontFamily: 'Poppins',
-                                    fontSize: 12,
-                                    color: Colors.white70,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                  // Fiesta : carte d'équipe compacte (nom · joueur, mots
+                  // restants dedans) pour laisser la place aux cartouches.
+                  if (provider.isFiesta) ...[
+                    const SizedBox(height: 16),
+                    _compactTeamCard(
+                        provider, currentTeam, currentPlayer, teamColor),
+                  ] else ...[
+                    const SizedBox(height: 32),
+                    _teamCard(provider, currentTeam, currentPlayer, teamColor),
+                    const SizedBox(height: 16),
+                    _wordsRow(provider),
+                  ],
 
                   // Fiesta : « Ce tour » et « Réserve » juste sous l'équipe,
                   // sans défilement (les cercles s'adaptent à la place) ;
@@ -241,11 +165,14 @@ class _GameScreenState extends State<GameScreen> {
                   if (provider.isFiesta) ...[
                     const SizedBox(height: 18),
                     Expanded(
-                      flex: 20,
-                      child: FiestaTurnZone(
-                        provider: provider,
-                        thisTurnKey: _thisTurnKey,
-                        reserveKey: _reserveKey,
+                      // Jamais rien sous « Commencer le tour » : un cas
+                      // extrême qui ne tient pas est coupé, pas recouvrant.
+                      child: ClipRect(
+                        child: FiestaTurnZone(
+                          provider: provider,
+                          thisTurnKey: _thisTurnKey,
+                          reserveKey: _reserveKey,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -316,6 +243,149 @@ class _GameScreenState extends State<GameScreen> {
       ),
     );
   }
+
+  Widget _teamCard(GameProvider provider, dynamic currentTeam,
+          dynamic currentPlayer, Color teamColor) =>
+      GestureDetector(
+        key: _teamKey,
+        onTap: () =>
+            _showTeamMembersDialog(context, currentTeam, provider, teamColor),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+          decoration: BoxDecoration(
+            color: teamColor.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: teamColor, width: 2),
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    currentTeam?.name ?? '',
+                    style: TextStyle(
+                      fontFamily: 'Bangers',
+                      fontSize: 24,
+                      color: teamColor,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.people_outline,
+                    color: teamColor,
+                    size: 18,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                currentPlayer?.name ?? '',
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  /// Mots restants + mots devinés au tour précédent. Pas de score : il reste
+  /// caché jusqu'aux résultats.
+  Widget _wordsRow(GameProvider provider, {double fontSize = 14}) => Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            '${provider.game.remainingWords.length} ${provider.game.remainingWords.length <= 1 ? 'mot restant' : 'mots restants'}',
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontSize: fontSize,
+              color: Colors.white60,
+            ),
+          ),
+          // Bouton pour voir les mots devinés au tour précédent
+          if (provider.game.history.isNotEmpty) ...[
+            const SizedBox(width: 12),
+            GestureDetector(
+              key: _previousTurnKey,
+              onTap: () => _showGuessedWordsDialog(context, provider),
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                    horizontal: 10, vertical: fontSize < 14 ? 1 : 4),
+                decoration: BoxDecoration(
+                  color: AppColors.gray600,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.checklist,
+                        size: 14, color: Colors.white70),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${provider.game.history.last.wordsGuessed.length} mots',
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 12,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      );
+
+  /// Carte d'équipe compacte (Fiesta) : « Équipe · Joueur » sur une ligne,
+  /// mots restants dessous. Même style que la grande carte, sans ombre.
+  Widget _compactTeamCard(GameProvider provider, dynamic currentTeam,
+          dynamic currentPlayer, Color teamColor) =>
+      GestureDetector(
+        key: _teamKey,
+        onTap: () =>
+            _showTeamMembersDialog(context, currentTeam, provider, teamColor),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: teamColor.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: teamColor, width: 2),
+          ),
+          child: Column(
+            children: [
+              Text.rich(
+                TextSpan(children: [
+                  TextSpan(
+                    text: currentTeam?.name ?? '',
+                    style: TextStyle(
+                        fontFamily: 'Bangers', fontSize: 22, color: teamColor),
+                  ),
+                  TextSpan(
+                    text: '  ·  ${currentPlayer?.name ?? ''}',
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ]),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              _wordsRow(provider, fontSize: 12),
+            ],
+          ),
+        ),
+      );
 
   /// Fiesta : révèle d'abord les malus de l'équipe à son premier tour de la
   /// manche, puis fait choisir le devineur bloqué (`block_guesser`), puis

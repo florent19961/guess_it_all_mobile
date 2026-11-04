@@ -9,6 +9,7 @@ import '../../models/fiesta/turn_effects.dart';
 import '../../models/team.dart';
 import '../../providers/game_provider.dart';
 import '../../theme/app_theme.dart';
+import '../common/app_confirm_dialog.dart';
 import 'modifier_badge.dart';
 
 /// Écran avant le tour, Fiesta v2 (maquette `cartouches` B, variante a) :
@@ -38,6 +39,9 @@ enum _Kind { rule, received, armed, reserve }
 const _gap = 6.0;
 const _maxSize = 50.0;
 const _minSize = 36.0;
+
+/// Dernier recours pour la RÉSERVE seulement (jamais « Ce tour »).
+const _reserveMinSize = 32.0;
 
 /// Entre deux rangées de « Ce tour » : place pour l'étiquette « manche ».
 const _thisTurnRunSpacing = _gap + 6;
@@ -274,7 +278,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
 
     return LayoutBuilder(builder: (context, box) {
       final thisTurnCount = rules.length + received.length + armed.length;
-      final (:size, :bonusWidth) = _fit(
+      final (:size, :reserveSize, :bonusWidth) = _fit(
         width: box.maxWidth,
         height: box.maxHeight,
         bonus: bonus.length,
@@ -285,17 +289,18 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
 
       final thisTurn = Container(
         key: widget.thisTurnKey,
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
         decoration: BoxDecoration(
           color: _ink.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: AppColors.gray700),
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const _ZoneTitle('CE TOUR'),
-            const SizedBox(height: 10),
+            const SizedBox(height: 6),
             if (thisTurnCount == 0)
               SizedBox(
                 height: size,
@@ -365,13 +370,14 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontFamily: 'Poppins',
-                  fontSize: 11,
+                  fontSize: 10,
+                  height: 1.4,
                   fontWeight: FontWeight.w600,
-                  letterSpacing: 1.2,
+                  letterSpacing: 1,
                   color: color,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Wrap(
                 spacing: _gap,
                 runSpacing: _gap,
@@ -385,7 +391,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                           child: _Circle(
                               id: c.catalogId,
                               kind: _Kind.reserve,
-                              size: size,
+                              size: reserveSize,
                               cartridge: c),
                         ),
                       ),
@@ -403,13 +409,13 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           thisTurn,
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
           Column(
             key: widget.reserveKey,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const _ZoneTitle('RÉSERVE'),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -427,12 +433,19 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
               ),
             ],
           ),
-          for (final m in sent) _sentLine(m),
-          const SizedBox(height: 8),
+          if (sent.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: _gap,
+              runSpacing: 4,
+              children: [for (final m in sent) _sentChip(m)],
+            ),
+          ],
+          const SizedBox(height: 6),
           Text('Touche : activer · Appui long : explication',
               textAlign: TextAlign.center,
-              style: AppTextStyles.bodySmall
-                  .copyWith(fontSize: 11, color: AppColors.gray500)),
+              style: AppTextStyles.bodySmall.copyWith(
+                  fontSize: 11, height: 1.4, color: AppColors.gray500)),
         ],
       );
       // Pas de défilement (spec) : [_fit] choisit le diamètre qui tient.
@@ -440,48 +453,63 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
     });
   }
 
-  Widget _sentLine(ModifierInstance m) {
+  /// Puce « [icône] → X » d'un malus envoyé ; un appui propose de l'annuler.
+  Widget _sentChip(ModifierInstance m) {
     final index = _p.teams.indexWhere((t) => t.id == m.teamId);
-    final style = AppTextStyles.bodySmall
-        .copyWith(fontSize: 12, color: AppColors.gray400);
-    return Padding(
-      padding: const EdgeInsets.only(top: 6),
-      child: Row(
-        children: [
-          Text('Envoyé : ', style: style),
-          Container(
-            width: 24,
-            height: 24,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.malus, width: 1.5),
+    final team = _p.getTeamById(m.teamId!)?.name ?? '';
+    return GestureDetector(
+      onTap: () async {
+        final cancel = await AppConfirmDialog.show(
+          context,
+          title: 'Annuler l\'envoi ?',
+          message: '${_name(m.catalogId)} → $team : la cartouche revient '
+              'dans ta réserve.',
+          confirmText: 'Annuler l\'envoi',
+          cancelText: 'Garder',
+        );
+        if (cancel && mounted) _p.cancelSent(m);
+      },
+      child: Container(
+        height: 26,
+        padding: const EdgeInsets.fromLTRB(3, 0, 10, 0),
+        decoration: BoxDecoration(
+          color: AppColors.malus.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(color: AppColors.malus.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 20,
+              height: 20,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.malus, width: 1.5),
+              ),
+              child: Text(modifierIcon(m.catalogId),
+                  style: const TextStyle(
+                      fontSize: 9,
+                      height: 1,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.malus)),
             ),
-            child: Text(modifierIcon(m.catalogId),
-                style: const TextStyle(
-                    fontSize: 10,
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 110),
+              child: Text(
+                ' → $team',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.bodySmall.copyWith(
+                    fontSize: 12,
+                    height: 1.2,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.malus)),
-          ),
-          Text(' → ', style: style),
-          Flexible(
-            child: Text(
-              _p.getTeamById(m.teamId!)?.name ?? '',
-              overflow: TextOverflow.ellipsis,
-              style: style.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.getTeamColor(index < 0 ? 0 : index)),
+                    color: AppColors.getTeamColor(index < 0 ? 0 : index)),
+              ),
             ),
-          ),
-          const Spacer(),
-          GestureDetector(
-            onTap: () => _p.cancelSent(m),
-            child: Text('Annuler',
-                style: style.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.secondaryCyan)),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -504,10 +532,11 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
 
   /// Plus grand diamètre (50 au plus, [_minSize] au moins) qui fait tenir la
   /// zone dans [height] : « Ce tour » (repliée sur plusieurs rangées s'il le
-  /// faut), « Réserve » (deux colonnes repliées), lignes « Envoyé », aide.
+  /// faut), « Réserve » (deux colonnes repliées), puces « Envoyé », aide. En
+  /// dernier recours, la RÉSERVE seule descend jusqu'à [_reserveMinSize].
   /// La colonne Bonus (3 cartouches au plus) prend la largeur qui minimise le
   /// nombre de rangées ; la colonne Malus, le reste.
-  static ({double size, double bonusWidth}) _fit({
+  static ({double size, double reserveSize, double bonusWidth}) _fit({
     required double width,
     required double height,
     required int bonus,
@@ -529,28 +558,33 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
       return best;
     }
 
-    double needed(double d) {
-      final thisTurnRows = max(1, rowsOf(thisTurn, width - 26, d));
-      const thisTurnFixed = 12 + 18 + 10 + 12 + 2;
-      const reserveTitle = 16 + 18 + 8;
-      const columnTitle = 18 + 6;
-      const help = 8 + 18;
+    // Puces « Envoyé » : ~3 par rangée.
+    final sentRows = (sent / 3).ceil();
+    final sentHeight = sent == 0 ? 0 : 6 + sentRows * 30 - 4;
+    double needed(double t, double r) {
+      final thisTurnRows = max(1, rowsOf(thisTurn, width - 26, t));
+      const thisTurnFixed = 10 + 15 + 6 + 10 + 2;
+      const reserveTitles = 10 + 15 + 4 + 14 + 4;
+      const help = 6 + 16;
       return thisTurnFixed +
-          thisTurnRows * (d + _thisTurnRunSpacing) -
+          thisTurnRows * (t + _thisTurnRunSpacing) -
           _thisTurnRunSpacing +
-          reserveTitle +
-          columnTitle +
-          columns(d).rows * (d + _gap) -
+          reserveTitles +
+          columns(r).rows * (r + _gap) -
           _gap +
-          sent * 30 +
+          sentHeight +
           help;
     }
 
     var d = _maxSize;
-    while (d > _minSize && needed(d) > height) {
+    while (d > _minSize && needed(d, d) > height) {
       d -= 2;
     }
-    return (size: d, bonusWidth: columns(d).bonusWidth);
+    var r = d;
+    while (r > _reserveMinSize && needed(d, r) > height) {
+      r -= 2;
+    }
+    return (size: d, reserveSize: r, bonusWidth: columns(r).bonusWidth);
   }
 }
 
@@ -564,9 +598,10 @@ class _ZoneTitle extends StatelessWidget {
         text,
         style: const TextStyle(
           fontFamily: 'Poppins',
-          fontSize: 12,
+          fontSize: 10,
+          height: 1.4,
           fontWeight: FontWeight.w600,
-          letterSpacing: 1.2,
+          letterSpacing: 1,
           color: AppColors.gray400,
         ),
       );
