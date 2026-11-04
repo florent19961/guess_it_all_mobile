@@ -354,14 +354,14 @@ class _OfferCard extends StatelessWidget {
   }
 }
 
-/// « Coup de pouce de l'app » (Auto, maquette `r2`) : ce que l'app donne à
+/// « Coup de pouce de l'app » (Auto) en une ligne : ce que l'app donne à
 /// chaque équipe menée et impose à l'équipe en tête, avec la force appliquée.
 /// Rien si [gifts] est vide.
-class AppBoostCard extends StatelessWidget {
+class AppBoostLine extends StatelessWidget {
   final List<Team> teams;
   final List<ModifierInstance> gifts;
 
-  const AppBoostCard({
+  const AppBoostLine({
     required this.teams,
     required this.gifts,
     super.key,
@@ -370,35 +370,19 @@ class AppBoostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (gifts.isEmpty) return const SizedBox.shrink();
-    return FiestaCard(
-      title: 'Coup de pouce de l\'app',
-      children: [
-        const FiestaHint('Choisi par l\'app selon l\'écart. Personne ne '
-            'choisit. Pour toute la manche suivante.'),
-        const SizedBox(height: 6),
-        for (final gift in gifts)
-          Builder(builder: (context) {
-            final id = gift.teamId!;
-            final strength = _strength(gift);
-            final label = gift.nature == ModifierNature.bonus
-                ? 'Coup de pouce pour'
-                : 'Malus pour';
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '$label : ${_name(teams, id)} · $strength',
-                      style: AppTextStyles.bodySmall
-                          .copyWith(color: _color(teams, id)),
-                    ),
-                  ),
-                  ModifierBadge.of(gift),
-                ],
-              ),
-            );
-          }),
+    return FiestaInfoLine(
+      label: 'Coup de pouce de l\'app',
+      spans: [
+        for (final (i, gift) in gifts.indexed) ...[
+          if (i > 0) const TextSpan(text: ' · '),
+          TextSpan(
+            text: '${_name(teams, gift.teamId!)} '
+                '${gift.nature == ModifierNature.bonus ? 'reçoit' : 'subit'} ',
+            style: TextStyle(color: _color(teams, gift.teamId!)),
+          ),
+          modifierBadgeSpan(ModifierBadge.of(gift)),
+          TextSpan(text: ' (${_strength(gift)})'),
+        ],
       ],
     );
   }

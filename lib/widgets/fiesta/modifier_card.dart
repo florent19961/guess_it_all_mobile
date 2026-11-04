@@ -108,3 +108,28 @@ class RoundDrawCard extends StatelessWidget {
     );
   }
 }
+
+/// Le tirage en une ligne, entre les manches : « Tirage de la manche N : »
+/// et une pastille par modificateur (un tap l'explique). Rien si la liste est
+/// vide.
+class RoundDrawLine extends StatelessWidget {
+  final int round;
+  final List<ModifierInstance> modifiers;
+
+  const RoundDrawLine({
+    required this.round,
+    required this.modifiers,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (modifiers.isEmpty) return const SizedBox.shrink();
+    return FiestaInfoLine(
+      label: 'Tirage de la manche $round',
+      spans: [
+        for (final m in modifiers) modifierBadgeSpan(ModifierBadge.of(m)),
+      ],
+    );
+  }
+}
