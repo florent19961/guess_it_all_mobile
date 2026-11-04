@@ -7,7 +7,7 @@ class AudioService {
   static Future<void> playDing() async {
     try {
       await _player.stop();
-      await _player.play(AssetSource('sounds/ding.mp3'));
+      await _player.play(AssetSource('sounds/ding.wav'));
     } catch (e) {
       // Ignorer les erreurs audio sur web (interruption play/pause)
     }
@@ -27,7 +27,7 @@ class AudioService {
   static Future<void> playKlaxon() async {
     try {
       await _player.stop();
-      await _player.play(AssetSource('sounds/klaxon.mp3'));
+      await _player.play(AssetSource('sounds/end_of_turn.wav'));
     } catch (e) {
       // Ignorer les erreurs audio sur web
     }
