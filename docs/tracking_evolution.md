@@ -819,3 +819,10 @@ mémoire seulement.
 Suivant) ; sélectionner pendant une modification referme l'éditeur, pour que l'écran ne montre
 jamais autre chose que ce que « Suivant » lancera. Retour système Android branché sur Joueurs,
 Équipes et Mots (même motif `PopScope` que Paramètres), destination = bouton retour visible.
+
+## 2026-11-04 — « Une seule réponse » cochée par défaut en Personnalisé
+
+**Quoi.** `defaultEnsembleRules` crée désormais un ensemble avec « Une seule réponse » **cochée**
+(toute la partie), décochable dans l'éditeur. Remplace « les nouveaux ensembles partent
+décochés » plus haut. Les ensembles déjà enregistrés gardent leur valeur ; « Fiesta classique »
+(ensemble fourni par l'app) suit ce défaut. **Pourquoi.** Décision Florent : coché par défaut.

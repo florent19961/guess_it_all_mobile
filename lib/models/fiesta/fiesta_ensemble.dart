@@ -87,8 +87,9 @@ FiestaRules defaultEnsembleRules(String name) => FiestaRules(
       oneOfThree: true,
       symmetric: true,
       catchUp: kCatchUpOff,
-      // « Une seule réponse » : à cocher pour toute la partie, pas d'office.
-      oneAnswer: false,
+      // « Une seule réponse » : cochée d'office, pour toute la partie
+      // (décision Florent 2026-11-04) ; décochable dans l'éditeur.
+      oneAnswer: true,
     );
 
 /// Rattrapage coupé : tous les curseurs à 0 (voir [catchUpOn]).
