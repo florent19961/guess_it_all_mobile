@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Génère le logo « Bulle chrono » et ses déclinaisons (icône, splash).
+"""Génère le logo « Bulle chrono » et ses déclinaisons (icône, splash vide).
 
 Géométrie = le SVG validé par Florent le 2026-11-04 (canevas 1024×1024),
 rendue en 4× puis réduite en LANCZOS pour l'anticrénelage.
@@ -8,8 +8,12 @@ Usage : python3 scripts/render_logo.py   (depuis la racine du repo)
 Sorties dans visuals/ :
   logo_bulle_chrono.png             1024 opaque (icône iOS / launcher, sans alpha)
   logo_bulle_chrono_foreground.png  1024 transparent, dans la zone sûre 66/108 (adaptive icon Android)
-  logo_bulle_chrono_splash.png      768 transparent (splash 4x : iOS + Android < 12)
-  logo_bulle_chrono_android12.png   1152 transparent, dans le cercle de 768 (splash Android 12+)
+  splash_vide.png                   4×4 entièrement transparent (splash natif : fond seul)
+
+Le splash natif est un simple fond #2B3848 sans logo : l'animation de démarrage
+(lib/widgets/effects/startup_intro.dart) dessine le logo à partir de rien. Sa
+géométrie (StartupLogoPainter) reprend les constantes de artwork() ci-dessous :
+toute modification ici doit y être reportée à la main.
 """
 
 import math
@@ -116,11 +120,9 @@ def main():
     safe = 1024 * 66 / 108 / 2
     place(art, 1024, 0.97 * safe / r).save(OUT / "logo_bulle_chrono_foreground.png")
 
-    # Splash iOS + Android < 12 : image 4x (768 px ≈ 192 pt), fond = couleur du splash.
-    place(art, 768, 0.75).save(OUT / "logo_bulle_chrono_splash.png")
-
-    # Splash Android 12+ sans fond d'icône : 1152×1152, dessin dans un cercle de 768 de diamètre.
-    place(art, 1152, 0.97 * 384 / r).save(OUT / "logo_bulle_chrono_android12.png")
+    # Splash natif = fond seul. Android 12+ affiche toujours une icône, et sans image
+    # flutter_native_splash écrit pour iOS un pixel NOIR opaque : on lui donne une image vide.
+    Image.new("RGBA", (4, 4), (0, 0, 0, 0)).save(OUT / "splash_vide.png")
 
 
 if __name__ == "__main__":
