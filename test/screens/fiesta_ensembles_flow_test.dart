@@ -53,7 +53,10 @@ void main() {
       child: const GuessItAllApp(),
     ));
     await settle(tester);
-    await tester.pump(const Duration(seconds: 2)); // intro de démarrage
+    // L'intro de démarrage (au-dessus de tout) doit finir de s'effacer.
+    for (var i = 0; i < 30; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
 
     await tester.enterText(find.byType(TextField), 'Soirée chez Max');
     await tester.pump();

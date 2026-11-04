@@ -1,29 +1,47 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../models/fiesta/fiesta_ensemble.dart';
+import '../models/fiesta/fiesta_rules.dart';
 import '../services/fiesta_ensemble_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common/app_back_button.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/app_confirm_dialog.dart';
+import '../widgets/effects/shooting_stars.dart';
+import '../widgets/fiesta/fiesta_ensemble_editor.dart';
+import '../widgets/help/coach_marks.dart';
 import '../widgets/help/help_button.dart';
-import 'fiesta_ensemble_editor_screen.dart';
-import 'fiesta_tutorial_screen.dart';
+import '../widgets/help/help_content.dart';
 
-/// « Mes ensembles » (maquette `perso`) : les ensembles du mode Personnalisé.
+/// « Fiesta personnalisée » : juste après les Paramètres, avant les joueurs
+/// (Fiesta Personnalisé seulement). Un seul écran, sans page poussée : en
+/// haut les ensembles prêts à jouer (un tap sélectionne), en dessous
+/// l'éditeur, en bas « Suivant ».
 ///
-/// Point d'entrée de la story 2-4 : l'écran ne connaît ni le provider ni la
-/// navigation de l'app. [onUse] reçoit l'ensemble choisi (déjà marqué
-/// « dernier utilisé ») ; [onBack] ramène à l'écran précédent.
+/// L'écran ne connaît ni le provider ni la navigation : [onNext] reçoit les
+/// règles de l'ensemble choisi (mode `custom`, `ensembleName` = nom), prêtes
+/// à attendre dans `pendingFiesta`. [selected] (l'attente courante, ex. après
+/// « Rejouer ») présélectionne l'ensemble aux mêmes règles.
 class FiestaEnsemblesScreen extends StatefulWidget {
+  final FiestaRules? selected;
   final VoidCallback onBack;
-  final ValueChanged<FiestaEnsemble> onUse;
+  final ValueChanged<FiestaRules> onNext;
 
   const FiestaEnsemblesScreen({
     required this.onBack,
-    required this.onUse,
+    required this.onNext,
+    this.selected,
     super.key,
   });
+
+  /// Ensemble fourni par l'app quand aucun n'est enregistré : les réglages
+  /// par défaut d'un nouvel ensemble. Jamais écrit dans le stockage.
+  static final builtIn = FiestaEnsemble(
+    id: '_builtin',
+    rules: defaultEnsembleRules('Fiesta classique'),
+  );
 
   @override
   State<FiestaEnsemblesScreen> createState() => _FiestaEnsemblesScreenState();
@@ -31,48 +49,91 @@ class FiestaEnsemblesScreen extends StatefulWidget {
 
 class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
   final _service = FiestaEnsembleService();
-  EnsembleStore? _store;
+  final _readyKey = GlobalKey();
+  final _editorKey = GlobalKey();
+  final _nextKey = GlobalKey();
 
-  /// Un double tap sur « Jouer » ne doit pas naviguer deux fois.
-  bool _using = false;
+  EnsembleStore? _store;
+  String? _selectedId;
+
+  /// Ensemble chargé dans l'éditeur (nul = création).
+  FiestaEnsemble? _editing;
+
+  /// Change à chaque remise à zéro de l'éditeur (nouvelle `key`).
+  int _editorRun = 0;
+
+  /// Un double tap sur « Suivant » ne doit pas naviguer deux fois.
+  bool _leaving = false;
 
   @override
   void initState() {
     super.initState();
-    _reload();
+    _load();
   }
 
-  Future<void> _reload() async {
-    final store = await _service.load();
-    if (mounted) setState(() => _store = store);
+  List<FiestaEnsemble> get _ready {
+    final saved = _store?.ensembles ?? const [];
+    return saved.isEmpty ? [FiestaEnsemblesScreen.builtIn] : saved;
   }
 
   bool get _full =>
       (_store?.ensembles.length ?? 0) >= FiestaEnsembleService.maxEnsembles;
 
-  Future<void> _openEditor([FiestaEnsemble? ensemble]) async {
-    final saved = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => FiestaEnsembleEditorScreen(initial: ensemble),
-      ),
-    );
-    if (saved == true) await _reload();
+  static String _sameRules(FiestaRules rules) => jsonEncode(rules.toJson());
+
+  /// Premier affichage : l'ensemble aux règles de l'attente courante, sinon
+  /// le dernier utilisé.
+  Future<void> _load() async {
+    final store = await _service.load();
+    if (!mounted) return;
+    _store = store;
+    final pending = widget.selected;
+    final match = pending == null
+        ? null
+        : _ready
+            .where((e) => _sameRules(e.rules) == _sameRules(pending))
+            .firstOrNull;
+    final lastUsed = _ready.where((e) => e.id == store.lastUsedId).firstOrNull;
+    setState(() => _selectedId = (match ?? lastUsed)?.id);
   }
 
-  Future<void> _use(FiestaEnsemble ensemble) async {
-    if (_using) return;
-    _using = true;
-    try {
-      await _service.markUsed(ensemble.id);
-      if (mounted) widget.onUse(ensemble);
-    } finally {
-      _using = false;
-    }
+  Future<void> _reload({String? select}) async {
+    final store = await _service.load();
+    if (!mounted) return;
+    setState(() {
+      _store = store;
+      if (select != null) _selectedId = select;
+      if (!_ready.any((e) => e.id == _selectedId)) _selectedId = null;
+    });
+  }
+
+  void _resetEditor() => setState(() {
+        _editing = null;
+        _editorRun++;
+      });
+
+  Future<void> _onSaved(FiestaEnsemble ensemble) async {
+    _resetEditor();
+    await _reload(select: ensemble.id);
+  }
+
+  void _edit(FiestaEnsemble ensemble) {
+    setState(() {
+      _editing = ensemble;
+      _editorRun++;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = _editorKey.currentContext;
+      if (target != null && target.mounted) {
+        Scrollable.ensureVisible(target,
+            duration: const Duration(milliseconds: 300));
+      }
+    });
   }
 
   Future<void> _duplicate(FiestaEnsemble ensemble) async {
-    await _service.duplicate(ensemble.id);
-    await _reload();
+    final copy = await _service.duplicate(ensemble.id);
+    await _reload(select: copy?.id);
   }
 
   Future<void> _delete(FiestaEnsemble ensemble) async {
@@ -85,7 +146,22 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
     );
     if (!confirmed) return;
     await _service.delete(ensemble.id);
+    if (_editing?.id == ensemble.id) _resetEditor();
     await _reload();
+  }
+
+  Future<void> _next() async {
+    final chosen = _ready.where((e) => e.id == _selectedId).firstOrNull;
+    if (chosen == null || _leaving) return;
+    _leaving = true;
+    try {
+      if (chosen.id != FiestaEnsemblesScreen.builtIn.id) {
+        await _service.markUsed(chosen.id);
+      }
+      if (mounted) widget.onNext(chosen.rules);
+    } finally {
+      _leaving = false;
+    }
   }
 
   @override
@@ -97,95 +173,144 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) widget.onBack();
       },
-      child: Material(
-        color: AppColors.backgroundMain,
-        child: Stack(
-          children: [
-            SafeArea(
-              child: store == null
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.secondaryCyan,
+      child: Scaffold(
+        backgroundColor: AppColors.backgroundMain,
+        body: ShootingStars(
+          child: Stack(
+            children: [
+              SafeArea(
+                child: store == null
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.secondaryCyan,
+                        ),
+                      )
+                    : Column(
+                        children: [
+                          Expanded(child: _buildBody(store)),
+                          _buildNextBar(),
+                        ],
                       ),
-                    )
-                  : _buildList(store),
-            ),
-            AppBackButton(onPressed: widget.onBack),
-            HelpButton(onPressed: () => FiestaTutorialScreen.show(context)),
-          ],
+              ),
+              AppBackButton(onPressed: widget.onBack),
+              HelpButton(
+                onPressed: () => CoachMarks.show(
+                  context,
+                  fiestaEnsemblesHelp(
+                    ready: _readyKey,
+                    editor: _editorKey,
+                    next: _nextKey,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildList(EnsembleStore store) {
+  Widget _buildBody(EnsembleStore store) {
+    final builtIn = store.ensembles.isEmpty;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 72, 24, 32),
+      padding: const EdgeInsets.fromLTRB(20, 72, 20, 24),
       children: [
         Text(
-          'Mes ensembles',
-          style: AppTextStyles.subtitle(fontSize: 36),
+          'Fiesta personnalisée',
+          style: AppTextStyles.subtitle(fontSize: 34),
           textAlign: TextAlign.center,
         ),
+        const SizedBox(height: 20),
+        KeyedSubtree(
+          key: _readyKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'PRÊTS À JOUER',
+                      style: AppTextStyles.label
+                          .copyWith(color: AppColors.gray400, fontSize: 12),
+                    ),
+                  ),
+                  if (!builtIn)
+                    Text(
+                      '${store.ensembles.length} / '
+                      '${FiestaEnsembleService.maxEnsembles}',
+                      style: AppTextStyles.bodySmall
+                          .copyWith(color: AppColors.gray400),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              for (final ensemble in _ready)
+                _EnsembleCard(
+                  ensemble: ensemble,
+                  selected: ensemble.id == _selectedId,
+                  builtIn: builtIn,
+                  canDuplicate: !_full,
+                  onTap: () => setState(() => _selectedId = ensemble.id),
+                  onEdit: () => _edit(ensemble),
+                  onDuplicate: () => _duplicate(ensemble),
+                  onDelete: () => _delete(ensemble),
+                ),
+            ],
+          ),
+        ),
         const SizedBox(height: 24),
-        AppButton(
-          text: '+ Créer un ensemble',
-          fullWidth: true,
-          disabled: _full,
-          onPressed: () => _openEditor(),
+        KeyedSubtree(
+          key: _editorKey,
+          child: _editing == null && _full
+              ? _Alert(
+                  'Limite de ${FiestaEnsembleService.maxEnsembles} ensembles '
+                  'atteinte. Supprime un ensemble pour en créer un nouveau.',
+                )
+              : FiestaEnsembleEditor(
+                  key: ValueKey(_editorRun),
+                  initial: _editing,
+                  onSaved: _onSaved,
+                  onCancel: _editing == null ? null : _resetEditor,
+                ),
         ),
-        if (_full) ...[
-          const SizedBox(height: 12),
-          _Alert(
-            'Limite de ${FiestaEnsembleService.maxEnsembles} ensembles '
-            'atteinte. Supprime un ensemble pour en créer un nouveau.',
-          ),
-        ],
-        const SizedBox(height: 12),
-        Text(
-          '${store.ensembles.length} / ${FiestaEnsembleService.maxEnsembles}',
-          style: AppTextStyles.bodySmall.copyWith(color: AppColors.gray400),
-          textAlign: TextAlign.right,
-        ),
-        const SizedBox(height: 8),
-        if (store.ensembles.isEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 24),
-            child: Text(
-              'Aucun ensemble. Crée le premier !',
-              style: AppTextStyles.body.copyWith(color: AppColors.gray400),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        for (final ensemble in store.ensembles)
-          _EnsembleCard(
-            ensemble: ensemble,
-            lastUsed: ensemble.id == store.lastUsedId,
-            canDuplicate: !_full,
-            onUse: () => _use(ensemble),
-            onEdit: () => _openEditor(ensemble),
-            onDuplicate: () => _duplicate(ensemble),
-            onDelete: () => _delete(ensemble),
-          ),
       ],
+    );
+  }
+
+  Widget _buildNextBar() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+      color: AppColors.backgroundMain,
+      child: AppButton(
+        key: _nextKey,
+        text: 'Suivant',
+        variant: AppButtonVariant.primary,
+        size: AppButtonSize.large,
+        fullWidth: true,
+        disabled: _selectedId == null,
+        onPressed: _selectedId == null ? null : _next,
+      ),
     );
   }
 }
 
 class _EnsembleCard extends StatelessWidget {
   final FiestaEnsemble ensemble;
-  final bool lastUsed;
+  final bool selected;
+  final bool builtIn;
   final bool canDuplicate;
-  final VoidCallback onUse;
+  final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDuplicate;
   final VoidCallback onDelete;
 
   const _EnsembleCard({
     required this.ensemble,
-    required this.lastUsed,
+    required this.selected,
+    required this.builtIn,
     required this.canDuplicate,
-    required this.onUse,
+    required this.onTap,
     required this.onEdit,
     required this.onDuplicate,
     required this.onDelete,
@@ -205,74 +330,78 @@ class _EnsembleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: lastUsed ? AppColors.secondaryCyan : AppColors.gray700,
-          width: 2,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: selected
+                ? AppColors.secondaryCyan.withValues(alpha: 0.12)
+                : AppColors.backgroundCard,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected ? AppColors.secondaryCyan : AppColors.gray700,
+              width: 2,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: Text(ensemble.name, style: AppTextStyles.label),
-              ),
-              if (lastUsed)
-                Text(
-                  'dernier utilisé',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.secondaryCyan,
-                    fontSize: 12,
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(ensemble.name, style: AppTextStyles.label),
                   ),
+                  Icon(
+                    selected
+                        ? Icons.check_circle
+                        : Icons.radio_button_unchecked,
+                    color:
+                        selected ? AppColors.secondaryCyan : AppColors.gray500,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                builtIn ? 'Fourni par l\'app · $_summary' : _summary,
+                style: AppTextStyles.bodySmall
+                    .copyWith(color: AppColors.gray400, fontSize: 12),
+              ),
+              if (!builtIn) ...[
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    AppButton(
+                      text: 'Modifier',
+                      size: AppButtonSize.small,
+                      variant: AppButtonVariant.ghost,
+                      onPressed: onEdit,
+                    ),
+                    AppButton(
+                      text: 'Dupliquer',
+                      size: AppButtonSize.small,
+                      variant: AppButtonVariant.ghost,
+                      disabled: !canDuplicate,
+                      onPressed: onDuplicate,
+                    ),
+                    AppButton(
+                      text: 'Supprimer',
+                      size: AppButtonSize.small,
+                      variant: AppButtonVariant.danger,
+                      onPressed: onDelete,
+                    ),
+                  ],
                 ),
+              ],
             ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            _summary,
-            style: AppTextStyles.bodySmall
-                .copyWith(color: AppColors.gray400, fontSize: 12),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              AppButton(
-                text: 'Jouer',
-                size: AppButtonSize.small,
-                variant: AppButtonVariant.secondary,
-                onPressed: onUse,
-              ),
-              AppButton(
-                text: 'Modifier',
-                size: AppButtonSize.small,
-                variant: AppButtonVariant.ghost,
-                onPressed: onEdit,
-              ),
-              AppButton(
-                text: 'Dupliquer',
-                size: AppButtonSize.small,
-                variant: AppButtonVariant.ghost,
-                disabled: !canDuplicate,
-                onPressed: onDuplicate,
-              ),
-              AppButton(
-                text: 'Supprimer',
-                size: AppButtonSize.small,
-                variant: AppButtonVariant.danger,
-                onPressed: onDelete,
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }

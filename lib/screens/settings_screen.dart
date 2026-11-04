@@ -101,8 +101,15 @@ class _SettingsScreenState extends State<SettingsScreen>
     }
   }
 
+  /// Fiesta Personnalisé : l'écran des ensembles vient avant les joueurs.
+  void _goNext(GameProvider provider) => provider.goToScreen(
+        provider.pendingFiesta?.mode == FiestaMode.custom
+            ? AppConstants.screenFiestaEnsembles
+            : AppConstants.screenPlayers,
+      );
+
   /// Auto / Personnalisé (fenêtre « Avancés »). Personnalisé garde l'ensemble
-  /// déjà en attente (Rejouer) ; l'ensemble se choisit après les équipes.
+  /// déjà en attente (Rejouer) ; l'ensemble se choisit juste après.
   void _setFiestaMode(GameProvider provider, String value) {
     final custom = value == _custom;
     _fiestaMode = custom ? FiestaMode.custom : FiestaMode.auto;
@@ -331,7 +338,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                             return;
                           }
                         }
-                        provider.goToScreen(AppConstants.screenPlayers);
+                        _goNext(provider);
                       },
                     ),
                   ],
@@ -510,7 +517,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   variant: AppButtonVariant.primary,
                   onPressed: () {
                     Navigator.pop(context);
-                    provider.goToScreen(AppConstants.screenPlayers);
+                    _goNext(provider);
                   },
                 ),
               ),
