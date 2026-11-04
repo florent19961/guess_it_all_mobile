@@ -1,0 +1,387 @@
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index 8bd87d8..fcdbfdd 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -900,6 +900,12 @@ utilisés » devient « Cartouches utilisées » (un malus : « X contre Y »).
+ cartouches (une Passe gratuite offerte = un tour, plus toute la manche) ; son malus frappe
+ toujours le leader toute la manche (personne pour l'infliger). Un malus infligé interdit dans la
+ manche où la cible rejoue (« Autre langue » envoyé en M2, cible qui rejoue en M3) part sans
+-effet à la fin de ce tour. Ensembles fournis inchangés (Explosif, L'injustice). Si la zone ne
+-tient pas même à 32 px (ensemble « Explosif », 3 équipes et plusieurs envois sur 360 × 740), elle
+-défile en garde-fou.
++effet à la fin de ce tour. Ensembles fournis inchangés (Explosif, L'injustice).
++
++**Revue r1.** Les malus reçus se résolvent au tour de la cible (`modifiersForTurn`, seule
++résolution), contre les règles de manche de SA manche et les malus déjà retenus : un malus en
++double ou incompatible (ex. « Interdit de passer » envoyé en fin de M1, « Passe gratuite »
++Toujours en M2) est écarté sans effet, comme un malus interdit dans la manche. L'avant-tour ne
++défile plus : cercles de 50 à 36 px, « Ce tour » sur plusieurs rangées s'il le faut, colonne
++Bonus à la largeur qui minimise les rangées. Résidu : « Explosif » en M3 (11 malus en réserve)
++déborde encore sur 360 × 640, et sur 360 × 740 avec plusieurs malus reçus et envois.
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index 7a2ce15..8eca09e 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -23,7 +23,7 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `fiesta/fiesta_state.dart` | `FiestaState` | `GameState.fiesta` : `{rules, active, turn, catchUpDue}`. `turn` : `FiestaTurnState` typé (`turn_effects.dart`), vidé à la vraie fin du tour (continuation de fin de manche comprise dans le tour). `catchUpDue` : id d'équipe → secondes dues (négatives = malus du leader), posé par `nextRound`, consommé au premier tour non-continuation. `chargesUsed` (2-9, clé omise si vide) : cartouches dépensées `{catalogId, teamId, round, target?}` (`target` = cible d'un malus infligé, lane 2), décompte de la manche en cours, « pour la partie » + récap « Cartouches utilisées » ; `offerChoices` (2-10, clé omise si vide) : cartes 1 parmi 3 choisies `{chooserId, row, modifier}` (`row` = rangée, absent = 0) — celles dont `modifier.round` = manche suivante forment la file de la transition, `nextRound` les rend actives ; relues pour le récap |
+ | `fiesta/modifier_recap.dart` | fonctions pures | `fiestaModeId` (`fiesta_auto`/`fiesta_custom`), `fiestaModeLabel`, `buildModifierRecap` : récap « Modificateurs de la partie » **recalculé** en faits (tirage par graine, rattrapage et coup de pouce par `planRoundTransition` sur les scores cumulés par manche), rien de persisté pendant la partie ; `formatModifierRecap` forme les lignes affichées (`ModifierRecapLine`, jamais persistée) |
+ | `fiesta/turn_effects.dart` | `FiestaTurnState` + fonctions pures | État du tour typé et immuable (`freePassesUsed`, `blockedPlayerId`, `charges` par id ↔ clés JSON `doublePoints`/`twoWords`/`freePass` via `kChargeBonusKeys` (tous les bonus en cartouche, lane 2), valeurs `armed`/`spent`, `secondWord`, `secondExpiredWord`) : JSON conditionnel, lecture tolérante clé par clé, `afterRoundEnd()` (continuation) ; `chargeAllowance`, `canBlockGuesser` (équipe de 3+), `drawOtherCard` (remplaçant ≠ l'autre carte) ; `Cartridge` (une cartouche de la réserve affichée : restantes, raison du grisé ; jamais persistée) |
+-| `fiesta/round_transition.dart` | fonctions pures | `planRoundTransition` → `RoundTransitionPlan` (tirage + cadeaux + choix + rattrapage de N+1 ; `apply` garde les instances de N pour la continuation) : SEULE source de l'aperçu et de `nextRound`. `modifiersForTurn` : effets d'un tour = instances de sa manche logique (N pour une continuation), plus les malus infligés à l'équipe (toute manche où ils sont permis) ; `apply` garde les malus infligés en attente |
++| `fiesta/round_transition.dart` | fonctions pures | `planRoundTransition` → `RoundTransitionPlan` (tirage + cadeaux + choix + rattrapage de N+1 ; `apply` garde les instances de N pour la continuation) : SEULE source de l'aperçu et de `nextRound`. `modifiersForTurn` : effets d'un tour = instances de sa manche logique (N pour une continuation), plus les malus infligés à l'équipe, résolus ICI au tour de la cible (permis dans sa manche logique, ni en double ni incompatibles avec ses règles de manche ou un malus déjà retenu ; sinon écartés sans effet) ; `apply` garde les malus infligés en attente |
+ | `fiesta/turn_time.dart` | fonctions pures | `composeTurnSeconds` (base + rattrapage − malus du leader − 10 s × `minus_10s`, plancher `kTurnFloorSeconds` = 10 ; continuation = ses secondes, sans modificateur) ; `computeCatchUp` (k × écart avec la tête, plafonds, co-leaders tous en tête, égalité = rien) ; `effectiveCatchUp` (Auto → auto-calibrage, Personnalisé → curseurs) |
+ | `fiesta/offers.dart` | `Standings`, `OfferStrength`, fonctions pures | 2-10 + Fiesta v2 : `kOfferStrength` + `strengthForGap` (≤3 légère, ≤7 moyenne, >7 forte, **à recalibrer**), cran vide → cran inférieur ; `Standings` (leader unique ou `null`, `gapOf`, `choosingOrder` dernière → avant-dernière, vide si égalité) ; `isPickThreeOn` (Personnalisé, un « 1 parmi 3 » coché sur N+1) ; `pickThreeOffers(…, roundDraw:, earlierChoices:, blockImmuneTeamIds:)` → **rangées** (`pick3Choices` × 3 cartes au plus, aucun id repris d'une rangée à l'autre, rangée 0 graine `offerSeed(gameId, round, teamId)` **figée par test**, rangée k graine de `'$teamId#k'`) ; `isUsefulOffer` (compatible, pas déjà subi ; **pas de plafond** ; un malus en réserve n'est jugé que contre les règles de manche, une réserve n'exclut rien) ; `appBoost(…, roundDraw:)` (Auto : 1 bonus par menée + 1 malus au leader, jamais `block_guesser`). Lane 2 : en Personnalisé, une carte = UNE cartouche de celle qui choisit (bonus à charge ; malus en `reserve`, à infliger) ; « Bloquer un devineur » offert seulement si une autre équipe a 3 joueurs. Coup de pouce (Auto) : bonus en cartouche, malus au leader toute la manche N+1 |
+ | `fiesta/fiesta_ensemble.dart` | `FiestaEnsemble`, `kProvidedEnsembles`, `defaultEnsembleRules`, `defaultSetting`, `settingsKey`, `nameKey`, `oneMimeAtMost` | Ensemble Personnalisé `{id, rules}` (nom = `rules.ensembleName`). **7 ensembles fournis** (ids `provided_*`, `isProvided`, jamais écrits, seulement duplicables) : Fiesta classique (`kClassicEnsembleId`, présélectionné), Pro Player, Droit au but, Explosif, Pictionnary, Bilingue, L'injustice. Nouvel ensemble = maquette `defaults()`. `settingsKey` : réglages hors nom, modificateurs actifs seulement (doublons). `tryFromJson` refuse un id `provided_*` et passe par `oneMimeAtMost` (garde le 1er « Toujours », sinon le 1er actif) |
+diff --git a/lib/models/fiesta/round_transition.dart b/lib/models/fiesta/round_transition.dart
+index b40b912..eb7287c 100644
+--- a/lib/models/fiesta/round_transition.dart
++++ b/lib/models/fiesta/round_transition.dart
+@@ -103,21 +103,45 @@ RoundTransitionPlan? planRoundTransition({
+ /// LOGIQUE du tour. Une continuation (temps reporté en début de N+1) est le
+ /// même tour que la fin de N : elle joue avec les effets de N, jamais ceux de
+ /// N+1, qui commencent au premier vrai tour de chaque équipe. Une cartouche
+-/// en réserve ([ModifierInstance.reserve]) n'a aucun effet. Un malus infligé
+-/// ([ModifierInstance.fromTeamId]) pèse sur le prochain tour de sa cible
+-/// quelle que soit la manche d'envoi, s'il est permis dans la manche logique
+-/// (sinon il part sans effet à la fin de ce tour).
++/// en réserve ([ModifierInstance.reserve]) n'a aucun effet.
++///
++/// 🔴 Malus infligés ([ModifierInstance.fromTeamId]) : SEULE résolution, au
++/// tour de la cible (quelle que soit la manche d'envoi). Un malus interdit
++/// dans la manche logique, déjà en jeu (même id) ou incompatible avec une
++/// règle de manche ou un malus déjà retenu pour ce tour est écarté : sans
++/// effet, il part à la fin de ce tour (`_fiestaAfterTurn`).
+ List<ModifierInstance> modifiersForTurn(
+   List<ModifierInstance> active, {
+   required String teamId,
+   required int logicalRound,
+-}) =>
+-    active
+-        .where((m) =>
+-            !m.reserve &&
+-            (m.fromTeamId != null
+-                ? m.teamId == teamId &&
+-                    isEligibleForRound(modifierById(m.catalogId)!, logicalRound)
+-                : m.round == logicalRound &&
+-                    (m.target == ModifierTarget.both || m.teamId == teamId)))
+-        .toList();
++}) {
++  final own = active
++      .where((m) =>
++          !m.reserve &&
++          m.fromTeamId == null &&
++          m.round == logicalRound &&
++          (m.target == ModifierTarget.both || m.teamId == teamId))
++      .toList();
++  // Règles de manche et malus déjà subis : ce contre quoi un malus reçu se
++  // juge (pas les bonus en cartouche de la cible, qui se règlent à
++  // l'allumage).
++  final weighing = own
++      .where((m) =>
++          m.target == ModifierTarget.both || m.nature == ModifierNature.malus)
++      .toList();
++  final received = <ModifierInstance>{};
++  for (final m in active) {
++    if (m.fromTeamId == null || m.teamId != teamId) continue;
++    if (!isEligibleForRound(modifierById(m.catalogId)!, logicalRound) ||
++        weighing.any((w) => w.catalogId == m.catalogId) ||
++        !weighing.every((w) => areCompatible(w.catalogId, m.catalogId))) {
++      continue;
++    }
++    weighing.add(m);
++    received.add(m);
++  }
++  return [
++    for (final m in active)
++      if (own.contains(m) || received.contains(m)) m,
++  ];
++}
+diff --git a/lib/screens/game_screen.dart b/lib/screens/game_screen.dart
+index 16a1635..29758aa 100644
+--- a/lib/screens/game_screen.dart
++++ b/lib/screens/game_screen.dart
+@@ -241,7 +241,7 @@ class _GameScreenState extends State<GameScreen> {
+                   if (provider.isFiesta) ...[
+                     const SizedBox(height: 18),
+                     Expanded(
+-                      flex: 6,
++                      flex: 20,
+                       child: FiestaTurnZone(
+                         provider: provider,
+                         thisTurnKey: _thisTurnKey,
+diff --git a/lib/widgets/CLAUDE.md b/lib/widgets/CLAUDE.md
+index 3fb8664..6ea47e2 100644
+--- a/lib/widgets/CLAUDE.md
++++ b/lib/widgets/CLAUDE.md
+@@ -8,7 +8,7 @@ Widgets reutilisables organises en deux sous-repertoires.
+ |------------|------|
+ | `common/` | Composants UI reutilisables (boutons, inputs, modals, sliders, toggles) |
+ | `effects/` | Effets visuels et animations de fond |
+-| `fiesta/` | Cartes Fiesta (`FiestaCard`, `FiestaLine`, `FiestaHint`) ; kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawLine` (tirage de la manche en une ligne, transition), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `FiestaTurnZone` (`turn_cartridges.dart`, Fiesta v2 lane 2 : avant-tour « Ce tour / Réserve », cercles ~50 px qui rapetissent jusqu'à 32 px pour tenir sans défiler, appui long = explication, feuille « Contre quelle équipe ? », ligne « Envoyé : … → X » annulable ; lit et appelle le `GameProvider`), `CatchUpLine` (« Rattrapage » en une ligne, transition) et `BlockedGuesser` (selecteur « Les adversaires choisissent » + annonce « X ne repond pas », 2-8) ; kit 2-10 (`offer_widgets.dart`, sans Provider) : `PickThreeCard`, `PassPhonePanel`, `OfferChoiceBody` (rangées de cartes, une par rangée ; sélection rangée → index tenue par l'appelant, cartes sans effet grisées), `AppBoostLine` (une ligne, transition) ; couleurs : `modifierColor` = malus `AppColors.malus` (#F87171), bonus `AppColors.success` ; `FiestaInfoLine` (`fiesta_setup_widgets.dart`) = gabarit « Libellé : … » de ces lignes |
++| `fiesta/` | Cartes Fiesta (`FiestaCard`, `FiestaLine`, `FiestaHint`) ; kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawLine` (tirage de la manche en une ligne, transition), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `FiestaTurnZone` (`turn_cartridges.dart`, Fiesta v2 lane 2 : avant-tour « Ce tour / Réserve », cercles ~50 px qui rapetissent jusqu'à 36 px pour tenir sans défiler (« Ce tour » sur plusieurs rangées, colonne Bonus ajustée ; jamais de défilement), appui long = explication, feuille « Contre quelle équipe ? », ligne « Envoyé : … → X » annulable ; lit et appelle le `GameProvider`), `CatchUpLine` (« Rattrapage » en une ligne, transition) et `BlockedGuesser` (selecteur « Les adversaires choisissent » + annonce « X ne repond pas », 2-8) ; kit 2-10 (`offer_widgets.dart`, sans Provider) : `PickThreeCard`, `PassPhonePanel`, `OfferChoiceBody` (rangées de cartes, une par rangée ; sélection rangée → index tenue par l'appelant, cartes sans effet grisées), `AppBoostLine` (une ligne, transition) ; couleurs : `modifierColor` = malus `AppColors.malus` (#F87171), bonus `AppColors.success` ; `FiestaInfoLine` (`fiesta_setup_widgets.dart`) = gabarit « Libellé : … » de ces lignes |
+ | `help/` | Aides de prise en main : `HelpButton` (« ? »), `CoachMarks` (voile + bulle, étapes `CoachStep` ciblées par `GlobalKey`), textes par écran (`help_content.dart`), `TutorialPager`, `FirstGamePrompt` (tuto des règles d'office au 1er « Jouer »), `FirstGameHelp` (aides auto de la 1re partie). Branchement écran par écran → `help/WIRING.md` |
+ 
+ ## Kit visuel du tour Fiesta (`fiesta/fiesta_turn_widgets.dart`)
+diff --git a/lib/widgets/fiesta/turn_cartridges.dart b/lib/widgets/fiesta/turn_cartridges.dart
+index d3fe61b..bb3641a 100644
+--- a/lib/widgets/fiesta/turn_cartridges.dart
++++ b/lib/widgets/fiesta/turn_cartridges.dart
+@@ -37,7 +37,10 @@ enum _Kind { rule, received, armed, reserve }
+ 
+ const _gap = 6.0;
+ const _maxSize = 50.0;
+-const _minSize = 32.0;
++const _minSize = 36.0;
++
++/// Entre deux rangées de « Ce tour » : place pour l'étiquette « manche ».
++const _thisTurnRunSpacing = _gap + 6;
+ const _ink = AppColors.backgroundMain;
+ 
+ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+@@ -271,17 +274,14 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+ 
+     return LayoutBuilder(builder: (context, box) {
+       final thisTurnCount = rules.length + received.length + armed.length;
+-      final size = _fit(
++      final (:size, :bonusWidth) = _fit(
+         width: box.maxWidth,
+         height: box.maxHeight,
+         bonus: bonus.length,
+         malus: malus.length,
+         sent: sent.length,
++        thisTurn: thisTurnCount,
+       );
+-      final rowSize = thisTurnCount == 0
+-          ? size
+-          : min(size,
+-              (box.maxWidth - 26 - _gap * (thisTurnCount - 1)) / thisTurnCount);
+ 
+       final thisTurn = Container(
+         key: widget.thisTurnKey,
+@@ -298,7 +298,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+             const SizedBox(height: 10),
+             if (thisTurnCount == 0)
+               SizedBox(
+-                height: rowSize,
++                height: size,
+                 child: Center(
+                   child: Text('Rien ce tour',
+                       style: AppTextStyles.bodySmall
+@@ -308,18 +308,16 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+             else
+               Wrap(
+                 spacing: _gap,
++                runSpacing: _thisTurnRunSpacing,
+                 children: [
+                   for (final m in rules)
+                     _slot(
+-                        _Circle(
+-                            id: m.catalogId, kind: _Kind.rule, size: rowSize),
++                        _Circle(id: m.catalogId, kind: _Kind.rule, size: size),
+                         onLongPress: () => _explain(m.catalogId, _Kind.rule)),
+                   for (final m in received)
+                     _slot(
+                         _Circle(
+-                            id: m.catalogId,
+-                            kind: _Kind.received,
+-                            size: rowSize),
++                            id: m.catalogId, kind: _Kind.received, size: size),
+                         onLongPress: () => _explain(m.catalogId, _Kind.received,
+                             from: m.fromTeamId == null
+                                 ? null
+@@ -331,8 +329,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+                         key: _keyOf('on-$id'),
+                         child: Opacity(
+                           opacity: _flying == id ? 0 : 1,
+-                          child:
+-                              _Circle(id: id, kind: _Kind.armed, size: rowSize),
++                          child: _Circle(id: id, kind: _Kind.armed, size: size),
+                         ),
+                       ),
+                       onTap: (circle) =>
+@@ -416,7 +413,9 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+               Row(
+                 crossAxisAlignment: CrossAxisAlignment.start,
+                 children: [
+-                  Expanded(child: column('BONUS', bonus, AppColors.success)),
++                  SizedBox(
++                      width: bonusWidth,
++                      child: column('BONUS', bonus, AppColors.success)),
+                   const SizedBox(width: 12),
+                   Expanded(
+                     child: column('MALUS', malus, AppColors.malus,
+@@ -436,8 +435,8 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+                   .copyWith(fontSize: 11, color: AppColors.gray500)),
+         ],
+       );
+-      // Garde-fou seulement : [_fit] fait tenir la zone sans défiler.
+-      return SingleChildScrollView(child: content);
++      // Pas de défilement (spec) : [_fit] choisit le diamètre qui tient.
++      return Align(alignment: Alignment.topCenter, child: content);
+     });
+   }
+ 
+@@ -503,38 +502,55 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+         ),
+       );
+ 
+-  /// Plus grand diamètre (50 au plus, 32 au moins) qui fait tenir la zone
+-  /// dans [height] : « Ce tour » (une rangée), « Réserve » (deux colonnes
+-  /// repliées), lignes « Envoyé », aide.
+-  static double _fit({
++  /// Plus grand diamètre (50 au plus, [_minSize] au moins) qui fait tenir la
++  /// zone dans [height] : « Ce tour » (repliée sur plusieurs rangées s'il le
++  /// faut), « Réserve » (deux colonnes repliées), lignes « Envoyé », aide.
++  /// La colonne Bonus (3 cartouches au plus) prend la largeur qui minimise le
++  /// nombre de rangées ; la colonne Malus, le reste.
++  static ({double size, double bonusWidth}) _fit({
+     required double width,
+     required double height,
+     required int bonus,
+     required int malus,
+     required int sent,
++    required int thisTurn,
+   }) {
+-    final column = (width - 12) / 2;
++    const minColumn = 64.0; // l'en-tête « BONUS » / « MALUS »
++    int perRow(double space, double d) =>
++        max(1, ((space + _gap) / (d + _gap)).floor());
++    int rowsOf(int n, double space, double d) => (n / perRow(space, d)).ceil();
++    ({int rows, double bonusWidth}) columns(double d) {
++      var best = (rows: 1 << 30, bonusWidth: minColumn);
++      for (var k = 1; k <= max(1, bonus); k++) {
++        final w = max(minColumn, k * (d + _gap) - _gap);
++        final rows = max(rowsOf(bonus, w, d), rowsOf(malus, width - 12 - w, d));
++        if (rows < best.rows) best = (rows: rows, bonusWidth: w);
++      }
++      return best;
++    }
++
+     double needed(double d) {
+-      final perRow = max(1, ((column + _gap) / (d + _gap)).floor());
+-      final rows = max((bonus / perRow).ceil(), (malus / perRow).ceil());
++      final thisTurnRows = max(1, rowsOf(thisTurn, width - 26, d));
+       const thisTurnFixed = 12 + 18 + 10 + 12 + 2;
+       const reserveTitle = 16 + 18 + 8;
+       const columnTitle = 18 + 6;
+       const help = 8 + 18;
+       return thisTurnFixed +
+-          d +
++          thisTurnRows * (d + _thisTurnRunSpacing) -
++          _thisTurnRunSpacing +
+           reserveTitle +
+           columnTitle +
+-          rows * (d + _gap) -
++          columns(d).rows * (d + _gap) -
+           _gap +
+           sent * 30 +
+           help;
+     }
+ 
+-    for (var d = _maxSize; d > _minSize; d -= 2) {
+-      if (needed(d) <= height) return d;
++    var d = _maxSize;
++    while (d > _minSize && needed(d) > height) {
++      d -= 2;
+     }
+-    return _minSize;
++    return (size: d, bonusWidth: columns(d).bonusWidth);
+   }
+ }
+ 
+diff --git a/test/providers/fiesta_cartridges_test.dart b/test/providers/fiesta_cartridges_test.dart
+index 29b239b..46639bc 100644
+--- a/test/providers/fiesta_cartridges_test.dart
++++ b/test/providers/fiesta_cartridges_test.dart
+@@ -1,6 +1,8 @@
+ import 'package:flutter_test/flutter_test.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
+ import 'package:guess_it_all_mobile/providers/game_provider.dart';
++import 'package:guess_it_all_mobile/services/storage_service.dart';
+ import 'package:guess_it_all_mobile/utils/constants.dart';
+ 
+ import '../helpers/test_prefs.dart';
+@@ -226,4 +228,83 @@ void main() {
+     playTurn(p);
+     expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null), isEmpty);
+   });
++
++  test(
++      'Malus envoyé en fin de M1, la cible rejoue en M2 sous une règle de '
++      'manche incompatible (« Passe gratuite » Toujours) : écarté sans effet, '
++      'puis retiré à la fin de son tour', () async {
++    final p = await givenProvider(['Ana', 'Bob'], wordsEach: 1);
++    await p.startGame(
++      fiesta: FiestaRules(
++        mode: FiestaMode.custom,
++        drawCount: 0,
++        modifiers: {
++          'no_pass': ModifierSetting(
++              active: true, rounds: const {1}, mode: ModifierMode.stock),
++          'free_pass': ModifierSetting(
++              active: true, rounds: const {2}, mode: ModifierMode.always),
++        },
++      ),
++    );
++    final a = p.getCurrentTeam()!.id;
++    final b = p.teams.firstWhere((t) => t.id != a).id;
++    expect(p.inflictMalus('no_pass', b), isNull);
++    playTurn(p, 99); // a finit M1
++    p.nextRound();
++    expect(playTurn(p), a); // continuation de a en M2
++
++    expect(p.getCurrentTeam()!.id, b);
++    expect(p.receivedThisTurn, isEmpty);
++    expect([p.passBlocked, p.freePasses], [false, 2]);
++    playTurn(p);
++    expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null), isEmpty);
++  });
++
++  test(
++      'Coup de pouce (Auto) : la Passe gratuite offerte est UNE cartouche — '
++      'allumée, 2 passes gratuites ce tour-là, puis plus rien', () async {
++    var p = await givenProvider(['Ana', 'Bob'], wordsEach: 2);
++    await p.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
++    // Graine fixée : un tirage de M2 qui laisse la Passe gratuite utile.
++    final rules = p.game.fiesta!.rules;
++    final gameId = [
++      for (var i = 0; i < 100; i++) 'g$i'
++    ].firstWhere((id) => roundModifiers(rules, gameId: id, round: 2)
++        .every((m) => m.catalogId != 'free_pass' && m.catalogId != 'no_pass'));
++    await pumpEventQueue();
++    final saved = (await StorageService().loadGameState())!;
++    saved['game']['gameId'] = gameId;
++    await StorageService().saveGameState(saved);
++    p = GameProvider();
++    await pumpEventQueue();
++
++    // M1 : 1 mot contre 3 → écart 2, coup de pouce « léger » pour la menée.
++    final trailing = playTurn(p, 1);
++    playTurn(p, 99);
++    expect(
++        p.appBoostPreview
++            .where((m) => m.teamId == trailing)
++            .map((m) => (m.catalogId, m.charges)),
++        [('free_pass', 1)]);
++    p.nextRound();
++    playTurn(p); // continuation du leader
++
++    expect(p.getCurrentTeam()!.id, trailing);
++    expect(left(p, 'free_pass'), 1);
++    expect(p.freePasses, 0, reason: 'pas toute la manche');
++    p.toggleBonus('free_pass');
++    p.startTurn();
++    p.startTurnTimer();
++    expect(p.freePasses, 2);
++    p.passWord();
++    p.passWord();
++    expect(p.currentPassPenalty, 5);
++    p.endTurn();
++    p.savePreValidationState(const []);
++    p.validateWords(const []);
++    playTurn(p);
++
++    expect(p.getCurrentTeam()!.id, trailing);
++    expect([p.freePasses, left(p, 'free_pass')], [0, 0]);
++  });
+ }
