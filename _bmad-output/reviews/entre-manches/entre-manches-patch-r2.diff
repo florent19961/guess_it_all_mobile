@@ -1,0 +1,1511 @@
+diff --git a/_bmad-output/reviews/entre-manches/entre-manches-patch-r1.diff b/_bmad-output/reviews/entre-manches/entre-manches-patch-r1.diff
+new file mode 100644
+index 0000000..fd9ff98
+--- /dev/null
++++ b/_bmad-output/reviews/entre-manches/entre-manches-patch-r1.diff
+@@ -0,0 +1,730 @@
++diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
++index 80e0534..e47859e 100644
++--- a/docs/tracking_evolution.md
+++++ b/docs/tracking_evolution.md
++@@ -688,3 +688,20 @@ Tutos en `Navigator.push` plutôt qu'en route `currentScreen` : pas de toucher 
++ la machine d'écrans. Clés neuves, absentes = `false` : aucune migration (règle 7).
++ 
++ **Conséquence.** Le branchement des autres écrans suit `lib/widgets/help/WIRING.md`.
+++
+++## 2026-11-04 — Écran entre les manches réduit à l'essentiel
+++
+++**Quoi.** `transition_screen` ne garde que : « Manche N terminée », une carte sobre « Manche N+1 :
+++<mode> » + sa règle, qui commence, le temps bonus conservé (formulation d'avant la refonte #23),
+++« Voir les N mots devinés », le bouton. Retirés : la frise des manches, la tuile « N mots
+++reviennent dans le chapeau », l'astuce mémoire, l'emoji de fond et l'animation d'entrée. Fiesta :
+++le 1 parmi 3 reste une carte (il demande une action) ; tirage, rattrapage et coup de pouce
+++deviennent chacun une ligne (`RoundDrawLine`, `CatchUpLine`, `AppBoostLine`, gabarit
+++`FiestaInfoLine`) ; `CatchUpCard` et `AppBoostCard` disparaissent.
+++
+++**Pourquoi.** Retour device de Florent : « Manche 1 terminée, manche 2, c'est ça la règle, et on
+++clique sur suivant. » Le reste ralentissait la lecture. Les modificateurs restent des pastilles
+++qu'un tap explique : rien de l'information Fiesta n'est perdu, seulement le texte d'explication
+++fixe (plafonds du rattrapage, « s'applique à toutes les équipes »).
+++
+++**Conséquence.** Affichage seul : aucune logique de jeu ni forme persistée touchée.
++diff --git a/lib/screens/CLAUDE.md b/lib/screens/CLAUDE.md
++index 4fe6eb9..70fc735 100644
++--- a/lib/screens/CLAUDE.md
+++++ b/lib/screens/CLAUDE.md
++@@ -26,7 +26,7 @@ SettingsScreen → (CategoriesScreen) → PlayersScreen → (WordsScreen) → Te
++ | `countdown_screen.dart` | Decompte 3-2-1-GO anime |
++ | `turn_screen.dart` | Jeu actif : timer, mot courant (auto-size), boutons Passer/Valider, pause, sons, haptic |
++ | `verification_screen.dart` | Validation post-tour : toggle valid/invalide par mot, sauvegarde snapshot |
++-| `transition_screen.dart` | Entre manches : scores, medailles, indicateur bonus ; Fiesta : tirage, rattrapage, coup de pouce, 1 parmi 3 (route `_PickThreeFlow` : passer le telephone puis choisir, non persistee) |
+++| `transition_screen.dart` | Entre manches, volontairement minimal (aucun score) : manche terminee, carte de la manche suivante (titre + regle), qui commence, temps bonus conserve, mots du dernier tour ; Fiesta : tirage, rattrapage, coup de pouce en une ligne chacun, 1 parmi 3 en carte (route `_PickThreeFlow` : passer le telephone puis choisir, non persistee) |
++ | `results_screen.dart` | Podium anime, tableau scores par manche, carte « Modificateurs de la partie » (Fiesta seulement), boutons Rejouer/Stats |
++ | `stats_screen.dart` | Stats detaillees : graphique evolution scores (fl_chart), top joueurs, temps moyen |
++ | `rules_screen.dart` | Regles completes du jeu (3 manches) + Revoir le tuto / le tuto Fiesta / les aides |
++diff --git a/lib/screens/transition_screen.dart b/lib/screens/transition_screen.dart
++index d29b510..b287c70 100644
++--- a/lib/screens/transition_screen.dart
+++++ b/lib/screens/transition_screen.dart
++@@ -64,7 +64,6 @@ class _TransitionScreenState extends State<TransitionScreen> {
++     // refuse aussi, cf. `nextRound`).
++     final chooserId = provider.nextChooserId;
++     final chooser = chooserId == null ? null : provider.getTeamById(chooserId);
++-    final totalWords = provider.game.allWords.length;
++     // `nextRound` ne touche pas à l'équipe ni au joueur courants : ce sont
++     // ceux que l'avant-tour de la manche suivante affichera.
++     final starterTeam = provider.getCurrentTeam();
++@@ -86,8 +85,6 @@ class _TransitionScreenState extends State<TransitionScreen> {
++                       child: Column(
++                         crossAxisAlignment: CrossAxisAlignment.stretch,
++                         children: [
++-                          _RoundTrack(done: currentRound),
++-                          const SizedBox(height: 10),
++                           Text(
++                             'MANCHE $currentRound TERMINÉE',
++                             textAlign: TextAlign.center,
++@@ -104,25 +101,14 @@ class _TransitionScreenState extends State<TransitionScreen> {
++                           // résultats.
++                           _Hero(
++                             key: _nextRoundKey,
++-                            decoration: _roundEmoji[nextRound] ?? '✦',
++                             children: [
++-                              const _HeroEyebrow('Et maintenant'),
++-                              _HeroBig('$nextRound'),
++-                              _HeroTitle(
++-                                  AppConstants.roundModes[nextRound] ?? ''),
+++                              _HeroTitle('Manche $nextRound : '
+++                                  '${AppConstants.roundModes[nextRound] ?? ''}'),
++                               _HeroText(
++                                   AppConstants.roundDescriptions[nextRound] ??
++                                       ''),
++                             ],
++                           ),
++-                          const SizedBox(height: 12),
++-                          _FactTiles(tiles: [
++-                            _Fact('$totalWords',
++-                                'mots reviennent dans le chapeau'),
++-                            if (bonus > 0)
++-                              _Fact('+$bonus s',
++-                                  'reportées pour ${starterTeam?.name ?? ''}'),
++-                          ]),
++                           if (starterTeam != null) ...[
++                             const SizedBox(height: 14),
++                             _Starter(
++@@ -131,8 +117,18 @@ class _TransitionScreenState extends State<TransitionScreen> {
++                               color: starterColor,
++                             ),
++                           ],
++-                          const SizedBox(height: 14),
++-                          _MemoryTip(round: currentRound),
+++                          if (bonus > 0) ...[
+++                            const SizedBox(height: 8),
+++                            Text(
+++                              'Temps bonus conservé : ${bonus}s',
+++                              textAlign: TextAlign.center,
+++                              style: const TextStyle(
+++                                fontFamily: 'Poppins',
+++                                fontSize: 14,
+++                                color: AppColors.warning,
+++                              ),
+++                            ),
+++                          ],
++                           // Bouton pour consulter les mots devinés du tour
++                           // précédent.
++                           if (provider.game.history.isNotEmpty) ...[
++@@ -171,22 +167,21 @@ class _TransitionScreenState extends State<TransitionScreen> {
++                           ],
++                           const SizedBox(height: 16),
++                           // Fiesta : sous le héros. Vides en Classique.
++-                          RoundDrawCard(
+++                          RoundDrawLine(
++                             round: nextRound,
++                             modifiers: provider.nextRoundModifiers,
++                           ),
++                           if (catchUpRules != null)
++-                            CatchUpCard(
++-                              // Carte vide (aucun rattrapage) : pas d'aide.
+++                            CatchUpLine(
+++                              // Ligne vide (aucun rattrapage) : pas d'aide.
++                               key: provider.catchUpPreview.isEmpty
++                                   ? null
++                                   : _catchUpKey,
++                               entries: provider.catchUpPreview,
++-                              rules: catchUpRules,
++                               teams: provider.teams,
++                             ),
++                           // Fiesta Auto : coup de pouce de l'app.
++-                          AppBoostCard(
+++                          AppBoostLine(
++                             key: provider.appBoostPreview.isEmpty
++                                 ? null
++                                 : _appBoostKey,
++@@ -405,90 +400,18 @@ class _PickThreeFlowState extends State<_PickThreeFlow> {
++   }
++ }
++ 
++-// ========== Mise en scène de la manche suivante (sans aucun score) ==========
++-
++-const Map<int, String> _roundEmoji = {2: '🤐', 3: '🤸'};
++-
++-/// Piste des 3 manches : ✓ pour les manches jouées, la suivante en avant.
++-class _RoundTrack extends StatelessWidget {
++-  final int done;
++-
++-  const _RoundTrack({required this.done});
++-
++-  @override
++-  Widget build(BuildContext context) {
++-    return Row(
++-      mainAxisAlignment: MainAxisAlignment.center,
++-      children: [
++-        for (var i = 1; i <= 3; i++) ...[
++-          if (i > 1)
++-            Container(
++-              width: 46,
++-              height: 3,
++-              color: i <= done ? AppColors.success : AppColors.gray700,
++-            ),
++-          _step(i),
++-        ],
++-      ],
++-    );
++-  }
+++// ========== La manche suivante (sans aucun score) ==========
++ 
++-  Widget _step(int i) {
++-    final isDone = i <= done;
++-    final isNext = i == done + 1;
++-    return Container(
++-      width: 34,
++-      height: 34,
++-      alignment: Alignment.center,
++-      decoration: BoxDecoration(
++-        shape: BoxShape.circle,
++-        color: isDone ? AppColors.success : AppColors.gray700,
++-        border: Border.all(
++-          color: isDone
++-              ? AppColors.success
++-              : isNext
++-                  ? AppColors.primaryPink
++-                  : AppColors.gray600,
++-          width: 2,
++-        ),
++-        boxShadow: isNext
++-            ? [
++-                BoxShadow(
++-                  color: AppColors.primaryPink.withValues(alpha: 0.15),
++-                  spreadRadius: 6,
++-                ),
++-              ]
++-            : null,
++-      ),
++-      child: Text(
++-        isDone ? '✓' : '$i',
++-        style: TextStyle(
++-          fontFamily: 'Bangers',
++-          fontSize: 18,
++-          color: isDone
++-              ? Colors.white
++-              : isNext
++-                  ? AppColors.primaryPink
++-                  : AppColors.gray400,
++-        ),
++-      ),
++-    );
++-  }
++-}
++-
++-/// Carte héros : dégradé, gros emoji pâle en décor, entrée légère (coupée si
++-/// l'utilisateur a demandé moins d'animations, Android comme iOS).
+++/// Carte sobre de la manche suivante : son titre et sa règle.
++ class _Hero extends StatelessWidget {
++-  final String decoration;
++   final List<Widget> children;
++ 
++-  const _Hero({required this.decoration, required this.children, super.key});
+++  const _Hero({required this.children, super.key});
++ 
++   @override
++   Widget build(BuildContext context) {
++-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
++-    final card = Container(
++-      clipBehavior: Clip.hardEdge,
+++    return Container(
+++      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
++       decoration: BoxDecoration(
++         borderRadius: BorderRadius.circular(24),
++         border:
++@@ -502,91 +425,14 @@ class _Hero extends StatelessWidget {
++           ],
++         ),
++       ),
++-      child: Stack(
++-        children: [
++-          Positioned(
++-            right: -6,
++-            top: -10,
++-            child: ExcludeSemantics(
++-              child: Transform.rotate(
++-                angle: 0.2,
++-                child: Opacity(
++-                  opacity: 0.12,
++-                  child: Text(decoration, style: const TextStyle(fontSize: 90)),
++-                ),
++-              ),
++-            ),
++-          ),
++-          Padding(
++-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
++-            child: Column(
++-              crossAxisAlignment: CrossAxisAlignment.stretch,
++-              children: children,
++-            ),
++-          ),
++-        ],
++-      ),
++-    );
++-    if (reduceMotion) return card;
++-    return TweenAnimationBuilder<double>(
++-      tween: Tween(begin: 0, end: 1),
++-      duration: const Duration(milliseconds: 500),
++-      curve: Curves.easeOut,
++-      builder: (context, t, child) => Opacity(
++-        opacity: 0.3 + 0.7 * t,
++-        child: Transform.translate(
++-          offset: Offset(0, 10 * (1 - t)),
++-          child: child,
++-        ),
+++      child: Column(
+++        crossAxisAlignment: CrossAxisAlignment.stretch,
+++        children: children,
++       ),
++-      child: card,
++     );
++   }
++ }
++ 
++-class _HeroEyebrow extends StatelessWidget {
++-  final String text;
++-
++-  const _HeroEyebrow(this.text);
++-
++-  @override
++-  Widget build(BuildContext context) => Text(
++-        text.toUpperCase(),
++-        textAlign: TextAlign.center,
++-        style: const TextStyle(
++-          fontFamily: 'Poppins',
++-          fontSize: 12,
++-          fontWeight: FontWeight.w600,
++-          letterSpacing: 1.4,
++-          color: AppColors.gray400,
++-        ),
++-      );
++-}
++-
++-class _HeroBig extends StatelessWidget {
++-  final String text;
++-
++-  const _HeroBig(this.text);
++-
++-  @override
++-  Widget build(BuildContext context) => Text(
++-        text,
++-        textAlign: TextAlign.center,
++-        style: TextStyle(
++-          fontFamily: 'Bangers',
++-          fontSize: 84,
++-          height: 1,
++-          color: AppColors.primaryPink,
++-          shadows: [
++-            Shadow(
++-              offset: const Offset(4, 4),
++-              color: AppColors.primaryPinkDark.withValues(alpha: 0.4),
++-            ),
++-          ],
++-        ),
++-      );
++-}
++-
++ class _HeroTitle extends StatelessWidget {
++   final String text;
++ 
++@@ -628,65 +474,6 @@ class _HeroText extends StatelessWidget {
++       );
++ }
++ 
++-class _Fact {
++-  final String value;
++-  final String label;
++-
++-  const _Fact(this.value, this.label);
++-}
++-
++-/// Une ou deux tuiles côte à côte : jamais rien qui révèle le classement.
++-class _FactTiles extends StatelessWidget {
++-  final List<_Fact> tiles;
++-
++-  const _FactTiles({required this.tiles});
++-
++-  @override
++-  Widget build(BuildContext context) {
++-    return IntrinsicHeight(
++-      child: Row(
++-        crossAxisAlignment: CrossAxisAlignment.stretch,
++-        children: [
++-          for (final (i, f) in tiles.indexed) ...[
++-            if (i > 0) const SizedBox(width: 10),
++-            Expanded(
++-              child: Container(
++-                padding: const EdgeInsets.all(12),
++-                decoration: BoxDecoration(
++-                  color: AppColors.gray700,
++-                  borderRadius: BorderRadius.circular(16),
++-                ),
++-                child: Column(
++-                  crossAxisAlignment: CrossAxisAlignment.start,
++-                  children: [
++-                    Text(
++-                      f.value,
++-                      style: const TextStyle(
++-                        fontFamily: 'Bangers',
++-                        fontSize: 26,
++-                        letterSpacing: 1,
++-                        color: AppColors.secondaryCyan,
++-                      ),
++-                    ),
++-                    Text(
++-                      f.label,
++-                      style: const TextStyle(
++-                        fontFamily: 'Poppins',
++-                        fontSize: 12,
++-                        color: AppColors.gray400,
++-                      ),
++-                    ),
++-                  ],
++-                ),
++-              ),
++-            ),
++-          ],
++-        ],
++-      ),
++-    );
++-  }
++-}
++-
++ /// « Commence : <équipe> · <joueur> fait deviner ».
++ class _Starter extends StatelessWidget {
++   final String team;
++@@ -730,39 +517,3 @@ class _Starter extends StatelessWidget {
++     );
++   }
++ }
++-
++-/// Astuce mémoire : les mêmes mots reviennent à chaque manche.
++-class _MemoryTip extends StatelessWidget {
++-  final int round;
++-
++-  const _MemoryTip({required this.round});
++-
++-  @override
++-  Widget build(BuildContext context) {
++-    return Container(
++-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
++-      decoration: BoxDecoration(
++-        color: AppColors.warning.withValues(alpha: 0.08),
++-        borderRadius: BorderRadius.circular(14),
++-        border: Border.all(color: AppColors.warning.withValues(alpha: 0.45)),
++-      ),
++-      child: Row(
++-        children: [
++-          const Text('🧠', style: TextStyle(fontSize: 20)),
++-          const SizedBox(width: 10),
++-          Expanded(
++-            child: Text(
++-              'Ce sont exactement les mêmes mots : ceux qui se souviennent '
++-              'de la manche $round ont un temps d\'avance.',
++-              style: const TextStyle(
++-                fontFamily: 'Poppins',
++-                fontSize: 12.5,
++-                color: AppColors.warning,
++-              ),
++-            ),
++-          ),
++-        ],
++-      ),
++-    );
++-  }
++-}
++diff --git a/lib/widgets/CLAUDE.md b/lib/widgets/CLAUDE.md
++index bb74642..d3c378e 100644
++--- a/lib/widgets/CLAUDE.md
+++++ b/lib/widgets/CLAUDE.md
++@@ -8,7 +8,7 @@ Widgets reutilisables organises en deux sous-repertoires.
++ |------------|------|
++ | `common/` | Composants UI reutilisables (boutons, inputs, modals, sliders, toggles) |
++ | `effects/` | Effets visuels et animations de fond |
++-| `fiesta/` | Squelette et cartes des ecrans de choix du mode Fiesta (retour systeme Android gere) ; kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawCard` (« Tirage de la manche N »), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `TurnTimeCard` (« Temps du tour », detail + total, avant-tour) `CatchUpCard` (« Rattrapage », transition) et `BlockedGuesser` (selecteur « Les adversaires choisissent » + annonce « X ne repond pas », 2-8) ; kit 2-10 (`offer_widgets.dart`, sans Provider) : `PickThreeCard`, `PassPhonePanel`, `OfferChoiceBody` (sélection tenue par l'appelant), `AppBoostCard` |
+++| `fiesta/` | Squelette et cartes des ecrans de choix du mode Fiesta (retour systeme Android gere) ; kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawCard` (« Tirage de la manche N », avant-tour M1) / `RoundDrawLine` (même tirage en une ligne, transition), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `TurnTimeCard` (« Temps du tour », detail + total, avant-tour) `CatchUpLine` (« Rattrapage » en une ligne, transition) et `BlockedGuesser` (selecteur « Les adversaires choisissent » + annonce « X ne repond pas », 2-8) ; kit 2-10 (`offer_widgets.dart`, sans Provider) : `PickThreeCard`, `PassPhonePanel`, `OfferChoiceBody` (sélection tenue par l'appelant), `AppBoostLine` (une ligne, transition) ; `FiestaInfoLine` (`fiesta_setup_widgets.dart`) = gabarit « Libellé : … » de ces lignes |
++ | `help/` | Aides de prise en main : `HelpButton` (« ? »), `CoachMarks` (voile + bulle, étapes `CoachStep` ciblées par `GlobalKey`), textes par écran (`help_content.dart`), `TutorialPager`, `FirstGamePrompt`, `FirstGameHelp` (aides auto de la 1re partie). Branchement écran par écran → `help/WIRING.md` |
++ 
++ ## Kit visuel du tour Fiesta (`fiesta/fiesta_turn_widgets.dart`)
++diff --git a/lib/widgets/fiesta/fiesta_setup_widgets.dart b/lib/widgets/fiesta/fiesta_setup_widgets.dart
++index aafeab5..c315a8d 100644
++--- a/lib/widgets/fiesta/fiesta_setup_widgets.dart
+++++ b/lib/widgets/fiesta/fiesta_setup_widgets.dart
++@@ -315,6 +315,43 @@ class FiestaHint extends StatelessWidget {
++       );
++ }
++ 
+++/// Information Fiesta en une ligne (entre les manches) : « Libellé : … ».
+++/// Le texte se replie si l'écran est étroit.
+++class FiestaInfoLine extends StatelessWidget {
+++  final String label;
+++  final List<InlineSpan> spans;
+++
+++  const FiestaInfoLine({required this.label, required this.spans, super.key});
+++
+++  @override
+++  Widget build(BuildContext context) => Padding(
+++        padding: const EdgeInsets.only(bottom: 8),
+++        child: Text.rich(
+++          TextSpan(
+++            style: AppTextStyles.bodySmall
+++                .copyWith(fontSize: 13, color: AppColors.gray400),
+++            children: [
+++              TextSpan(
+++                  text: '$label : ',
+++                  style: const TextStyle(fontWeight: FontWeight.w600)),
+++              ...spans,
+++            ],
+++          ),
+++          textAlign: TextAlign.center,
+++        ),
+++      );
+++}
+++
+++/// Pastille d'un modificateur au fil d'une [FiestaInfoLine] (un tap
+++/// l'explique, comme partout ailleurs).
+++WidgetSpan modifierBadgeSpan(Widget badge) => WidgetSpan(
+++      alignment: PlaceholderAlignment.middle,
+++      child: Padding(
+++        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+++        child: badge,
+++      ),
+++    );
+++
++ /// Résumé d'une ligne du rattrapage, pour le Récap (Auto et Personnalisé).
++ String catchUpSummary(CatchUpRules c) =>
++     '+${c.b1} s / +${c.b2} s × écart (max +${c.cap} s) · '
++diff --git a/lib/widgets/fiesta/modifier_card.dart b/lib/widgets/fiesta/modifier_card.dart
++index bc06f9d..5a00301 100644
++--- a/lib/widgets/fiesta/modifier_card.dart
+++++ b/lib/widgets/fiesta/modifier_card.dart
++@@ -108,3 +108,28 @@ class RoundDrawCard extends StatelessWidget {
++     );
++   }
++ }
+++
+++/// Le tirage en une ligne, entre les manches : « Tirage de la manche N : »
+++/// et une pastille par modificateur (un tap l'explique). Rien si la liste est
+++/// vide.
+++class RoundDrawLine extends StatelessWidget {
+++  final int round;
+++  final List<ModifierInstance> modifiers;
+++
+++  const RoundDrawLine({
+++    required this.round,
+++    required this.modifiers,
+++    super.key,
+++  });
+++
+++  @override
+++  Widget build(BuildContext context) {
+++    if (modifiers.isEmpty) return const SizedBox.shrink();
+++    return FiestaInfoLine(
+++      label: 'Tirage de la manche $round',
+++      spans: [
+++        for (final m in modifiers) modifierBadgeSpan(ModifierBadge.of(m)),
+++      ],
+++    );
+++  }
+++}
++diff --git a/lib/widgets/fiesta/offer_widgets.dart b/lib/widgets/fiesta/offer_widgets.dart
++index 82872f3..d04b185 100644
++--- a/lib/widgets/fiesta/offer_widgets.dart
+++++ b/lib/widgets/fiesta/offer_widgets.dart
++@@ -354,14 +354,14 @@ class _OfferCard extends StatelessWidget {
++   }
++ }
++ 
++-/// « Coup de pouce de l'app » (Auto, maquette `r2`) : ce que l'app donne à
+++/// « Coup de pouce de l'app » (Auto) en une ligne : ce que l'app donne à
++ /// chaque équipe menée et impose à l'équipe en tête, avec la force appliquée.
++ /// Rien si [gifts] est vide.
++-class AppBoostCard extends StatelessWidget {
+++class AppBoostLine extends StatelessWidget {
++   final List<Team> teams;
++   final List<ModifierInstance> gifts;
++ 
++-  const AppBoostCard({
+++  const AppBoostLine({
++     required this.teams,
++     required this.gifts,
++     super.key,
++@@ -370,35 +370,19 @@ class AppBoostCard extends StatelessWidget {
++   @override
++   Widget build(BuildContext context) {
++     if (gifts.isEmpty) return const SizedBox.shrink();
++-    return FiestaCard(
++-      title: 'Coup de pouce de l\'app',
++-      children: [
++-        const FiestaHint('Choisi par l\'app selon l\'écart. Personne ne '
++-            'choisit. Pour toute la manche suivante.'),
++-        const SizedBox(height: 6),
++-        for (final gift in gifts)
++-          Builder(builder: (context) {
++-            final id = gift.teamId!;
++-            final strength = _strength(gift);
++-            final label = gift.nature == ModifierNature.bonus
++-                ? 'Coup de pouce pour'
++-                : 'Malus pour';
++-            return Padding(
++-              padding: const EdgeInsets.only(bottom: 6),
++-              child: Row(
++-                children: [
++-                  Expanded(
++-                    child: Text(
++-                      '$label : ${_name(teams, id)} · $strength',
++-                      style: AppTextStyles.bodySmall
++-                          .copyWith(color: _color(teams, id)),
++-                    ),
++-                  ),
++-                  ModifierBadge.of(gift),
++-                ],
++-              ),
++-            );
++-          }),
+++    return FiestaInfoLine(
+++      label: 'Coup de pouce de l\'app',
+++      spans: [
+++        for (final (i, gift) in gifts.indexed) ...[
+++          if (i > 0) const TextSpan(text: ' · '),
+++          TextSpan(
+++            text: '${_name(teams, gift.teamId!)} '
+++                '${gift.nature == ModifierNature.bonus ? 'reçoit' : 'subit'} ',
+++            style: TextStyle(color: _color(teams, gift.teamId!)),
+++          ),
+++          modifierBadgeSpan(ModifierBadge.of(gift)),
+++          TextSpan(text: ' (${_strength(gift)})'),
+++        ],
++       ],
++     );
++   }
++diff --git a/lib/widgets/fiesta/turn_time_cards.dart b/lib/widgets/fiesta/turn_time_cards.dart
++index 1ad32c3..cb9376c 100644
++--- a/lib/widgets/fiesta/turn_time_cards.dart
+++++ b/lib/widgets/fiesta/turn_time_cards.dart
++@@ -1,5 +1,4 @@
++ import 'package:flutter/material.dart';
++-import '../../models/fiesta/fiesta_rules.dart';
++ import '../../models/fiesta/turn_time.dart';
++ import '../../models/team.dart';
++ import '../../theme/app_theme.dart';
++@@ -54,16 +53,15 @@ class TurnTimeCard extends StatelessWidget {
++   }
++ }
++ 
++-/// « Rattrapage » (maquette `r2`) sur la transition : ce que chaque équipe
++-/// aura en plus ou en moins à son premier tour de la manche suivante.
++-class CatchUpCard extends StatelessWidget {
+++/// « Rattrapage : A +20 s · B −10 s » sur la transition : ce que chaque
+++/// équipe aura en plus ou en moins à son premier tour de la manche suivante.
+++/// Sans l'écart chiffré : scores cachés jusqu'aux résultats.
+++class CatchUpLine extends StatelessWidget {
++   final List<CatchUpEntry> entries;
++-  final CatchUpRules rules;
++   final List<Team> teams;
++ 
++-  const CatchUpCard({
+++  const CatchUpLine({
++     required this.entries,
++-    required this.rules,
++     required this.teams,
++     super.key,
++   });
++@@ -71,43 +69,34 @@ class CatchUpCard extends StatelessWidget {
++   @override
++   Widget build(BuildContext context) {
++     if (entries.isEmpty) return const SizedBox.shrink();
++-    return FiestaCard(
++-      title: 'Rattrapage',
+++    return FiestaInfoLine(
+++      label: 'Rattrapage',
+++      spans: [
+++        for (final (i, e) in entries.indexed) ...[
+++          if (i > 0) const TextSpan(text: ' · '),
+++          _entry(e),
+++        ],
+++      ],
+++    );
+++  }
+++
+++  TextSpan _entry(CatchUpEntry e) {
+++    final index = teams.indexWhere((t) => t.id == e.teamId);
+++    final name = index < 0 ? e.teamId : teams[index].name;
+++    return TextSpan(
++       children: [
++-        const FiestaHint('Appliqué au premier tour de chaque équipe dans la '
++-            'manche (pas à une continuation).'),
++-        const SizedBox(height: 6),
++-        for (final e in entries)
++-          Builder(builder: (context) {
++-            final index = teams.indexWhere((t) => t.id == e.teamId);
++-            final color = AppColors.getTeamColor(index < 0 ? 0 : index);
++-            final name = index < 0 ? e.teamId : teams[index].name;
++-            return Padding(
++-              padding: const EdgeInsets.only(bottom: 4),
++-              child: Row(
++-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
++-                children: [
++-                  Expanded(
++-                    child: Text(
++-                      // Sans l'écart chiffré : scores cachés jusqu'aux
++-                      // résultats. Restent l'équipe et ses secondes.
++-                      '$name (${e.isLeader ? 'en tête' : 'en retard'})',
++-                      style: AppTextStyles.bodySmall.copyWith(color: color),
++-                    ),
++-                  ),
++-                  Text(
++-                    _signed(e.seconds),
++-                    style: AppTextStyles.bodySmall.copyWith(
++-                      color: e.isLeader ? AppColors.error : AppColors.success,
++-                      fontWeight: FontWeight.w600,
++-                    ),
++-                  ),
++-                ],
++-              ),
++-            );
++-          }),
++-        FiestaHint('Plafonds : +${rules.cap} s pour les menées, '
++-            '−${rules.malCap} s pour le leader.'),
+++        TextSpan(
+++          text: '$name ',
+++          style:
+++              TextStyle(color: AppColors.getTeamColor(index < 0 ? 0 : index)),
+++        ),
+++        TextSpan(
+++          text: _signed(e.seconds),
+++          style: TextStyle(
+++            color: e.isLeader ? AppColors.error : AppColors.success,
+++            fontWeight: FontWeight.w600,
+++          ),
+++        ),
++       ],
++     );
++   }
++diff --git a/lib/widgets/help/WIRING.md b/lib/widgets/help/WIRING.md
++index 2eac409..2eadf59 100644
++--- a/lib/widgets/help/WIRING.md
+++++ b/lib/widgets/help/WIRING.md
++@@ -37,7 +37,7 @@ résultats finaux en montrent.
++ | `turn_screen` | `turnHelp(passPenalty: provider.currentPassPenalty)` — pas `settings.passPenalty` : la Passe gratuite Fiesta la met à 0. Malus « Interdit de passer » : ne pas poser la clé `pass` (bouton désactivé, le texte « Passe-le » serait faux) | `timer`, `word`, `guessed`, `pass`, `pause` | `right: besideCornerButton` (pause à droite). 🔴 `provider.pauseTurn()` **avant** `CoachMarks.show`, reprise **après** : le chrono ne doit jamais tourner sous l'aide |
++ | `verification_screen` | `verificationHelp` | `wordList` (la liste défilante entière), `validate` | `right: 16` (HomeButton à gauche) |
++ | `transition_screen` | `transitionHelp` | `previousTurn` (« Voir les N mots devinés »), `next` (bouton « Manche N » ; « En attente du choix : X » en Fiesta tant que le choix n'est pas fait), `back` (`GameBackButton`), `home` (`HomeButton`) | `right: besideCornerButton` |
++-| `transition_screen` Fiesta | `fiestaTransitionHelp` | `catchUp` (`CatchUpCard`), `pickThree` (`PickThreeCard` / `PassPhonePanel`), `appBoost` (`AppBoostCard`) | même bouton : concaténer `fiestaTransitionHelp(...) + transitionHelp(...)` en Fiesta |
+++| `transition_screen` Fiesta | `fiestaTransitionHelp` | `catchUp` (`CatchUpLine`), `pickThree` (`PickThreeCard` / `PassPhonePanel`), `appBoost` (`AppBoostLine`) | même bouton : concaténer `fiestaTransitionHelp(...) + transitionHelp(...)` en Fiesta |
++ | `results_screen` | `resultsHelp` | `podium` (la rangée du podium), `details` (Détails par manche), `replay`, `stats` | `right: besideCornerButton` |
++ 
++ ## Les seules aides automatiques
++diff --git a/lib/widgets/help/help_content.dart b/lib/widgets/help/help_content.dart
++index 2203f6e..67580a4 100644
++--- a/lib/widgets/help/help_content.dart
+++++ b/lib/widgets/help/help_content.dart
++@@ -296,9 +296,9 @@ List<CoachStep> transitionHelp({
++       CoachStep(
++         target: nextRound,
++         title: 'La manche suivante',
++-        text: 'Sa nouvelle règle, le nombre de mots qui reviennent dans le '
++-            'chapeau, le temps reporté s\'il en reste, et qui commence. Ce '
++-            'sont exactement les mêmes mots qu\'à la manche d\'avant.',
+++        text: 'Sa nouvelle règle, puis qui commence et le temps reporté '
+++            's\'il en reste. Ce sont exactement les mêmes mots qu\'à la '
+++            'manche d\'avant.',
++       ),
++       CoachStep(
++         target: previousTurn,
+diff --git a/_bmad-output/reviews/entre-manches/entre-manches-prompt-r1.md b/_bmad-output/reviews/entre-manches/entre-manches-prompt-r1.md
+new file mode 100644
+index 0000000..cfa2911
+--- /dev/null
++++ b/_bmad-output/reviews/entre-manches/entre-manches-prompt-r1.md
+@@ -0,0 +1,25 @@
++# Revue — entre-manches r1 (tier standard)
++
++Lis `_bmad-output/reviews/entre-manches/entre-manches-patch-r1.diff` (diff merge-base ; ne lance pas `git diff`). Lecture seule. Rapport dans `_bmad-output/reviews/entre-manches/entre-manches-review-r1.md`.
++
++## Objectif (retour device Florent)
++« Manche 1 terminée, manche 2, c'est ça la règle, et on clique sur suivant. » Affichage seul : aucune logique de jeu, aucun état persisté.
++
++**Garder** : « Manche N terminée » ; carte sobre « Manche N+1 : <mode> » + règle (`roundModes`/`roundDescriptions`), sans emoji de fond ; « Commence : équipe · joueur fait deviner » ; temps reporté en une ligne avec la formulation d'avant la refonte #23 ; « Voir les N mots devinés » ; Fiesta : 1 parmi 3 (`PickThreeCard`, attente du choix) en carte pleine, tirage / rattrapage / coup de pouce chacun en une ligne sans perte d'info ; bouton « Manche N+1 » / « En attente du choix : X », Home, « ? », retour vérification.
++**Retirer** : frise `_RoundTrack`, tuile « N mots reviennent dans le chapeau », astuce mémoire 🧠, emoji de fond.
++
++## Décisions prises
++- Formulation du report : avant #23 c'était exactement `Temps bonus conservé : ${turnBonusTime}s` (vérifiable : `git show 50b9191^:lib/screens/transition_screen.dart`, L213). Reprise telle quelle, placée juste sous « Commence : <équipe> » (c'est cette équipe qui reçoit le temps : `nextRound` ne change pas l'équipe courante).
++- `CatchUpCard` / `AppBoostCard` remplacées par `CatchUpLine` / `AppBoostLine` ; `RoundDrawLine` ajoutée (`RoundDrawCard` reste pour l'avant-tour M1 de `game_screen`). Gabarit commun `FiestaInfoLine`. Les modificateurs restent des `ModifierBadge` (tap = explication).
++- Animation d'entrée de la carte retirée (carte « sobre »).
++- Aide : étape « La manche suivante » ne mentionne plus le nombre de mots du chapeau.
++
++## Questions précises
++1. Rien de perdu côté Fiesta ? Comparer chaque info des anciennes cartes (équipe, secondes ±, en tête/en retard, nature bonus/malus, force, nom du modificateur) aux nouvelles lignes. Ce qui a sauté volontairement : textes d'explication fixes (plafonds du rattrapage, « s'applique à toutes les équipes »). Acceptable ?
++2. Wording du report : la ligne est-elle juste et non ambiguë ? Cas où `turnBonusTime > 0` mais l'équipe affichée n'est pas celle qui le reçoit ?
++3. Cibles d'aide : `_catchUpKey` / `_appBoostKey` restent posées seulement quand la ligne est non vide ; `_nextRoundKey` sur la carte ; aucune clé orpheline ou cible disparue ? Texte d'aide cohérent avec l'écran ?
++4. Mise en page : débordement possible (WidgetSpan badge dans Text.rich, titre long en Bangers 30) sur petit écran, Android et iOS ?
++5. Code mort ou orphelins laissés par le diff ; docs (`lib/widgets/CLAUDE.md`, `lib/screens/CLAUDE.md`, `WIRING.md`) à jour ?
++
++## Format attendu
++Verdict READY / NOT READY, puis findings BLOCKER / MAJOR / MINOR avec `fichier:ligne` et preuve.
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index 80e0534..e47859e 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -688,3 +688,20 @@ Tutos en `Navigator.push` plutôt qu'en route `currentScreen` : pas de toucher 
+ la machine d'écrans. Clés neuves, absentes = `false` : aucune migration (règle 7).
+ 
+ **Conséquence.** Le branchement des autres écrans suit `lib/widgets/help/WIRING.md`.
++
++## 2026-11-04 — Écran entre les manches réduit à l'essentiel
++
++**Quoi.** `transition_screen` ne garde que : « Manche N terminée », une carte sobre « Manche N+1 :
++<mode> » + sa règle, qui commence, le temps bonus conservé (formulation d'avant la refonte #23),
++« Voir les N mots devinés », le bouton. Retirés : la frise des manches, la tuile « N mots
++reviennent dans le chapeau », l'astuce mémoire, l'emoji de fond et l'animation d'entrée. Fiesta :
++le 1 parmi 3 reste une carte (il demande une action) ; tirage, rattrapage et coup de pouce
++deviennent chacun une ligne (`RoundDrawLine`, `CatchUpLine`, `AppBoostLine`, gabarit
++`FiestaInfoLine`) ; `CatchUpCard` et `AppBoostCard` disparaissent.
++
++**Pourquoi.** Retour device de Florent : « Manche 1 terminée, manche 2, c'est ça la règle, et on
++clique sur suivant. » Le reste ralentissait la lecture. Les modificateurs restent des pastilles
++qu'un tap explique : rien de l'information Fiesta n'est perdu, seulement le texte d'explication
++fixe (plafonds du rattrapage, « s'applique à toutes les équipes »).
++
++**Conséquence.** Affichage seul : aucune logique de jeu ni forme persistée touchée.
+diff --git a/lib/screens/CLAUDE.md b/lib/screens/CLAUDE.md
+index 4fe6eb9..70fc735 100644
+--- a/lib/screens/CLAUDE.md
++++ b/lib/screens/CLAUDE.md
+@@ -26,7 +26,7 @@ SettingsScreen → (CategoriesScreen) → PlayersScreen → (WordsScreen) → Te
+ | `countdown_screen.dart` | Decompte 3-2-1-GO anime |
+ | `turn_screen.dart` | Jeu actif : timer, mot courant (auto-size), boutons Passer/Valider, pause, sons, haptic |
+ | `verification_screen.dart` | Validation post-tour : toggle valid/invalide par mot, sauvegarde snapshot |
+-| `transition_screen.dart` | Entre manches : scores, medailles, indicateur bonus ; Fiesta : tirage, rattrapage, coup de pouce, 1 parmi 3 (route `_PickThreeFlow` : passer le telephone puis choisir, non persistee) |
++| `transition_screen.dart` | Entre manches, volontairement minimal (aucun score) : manche terminee, carte de la manche suivante (titre + regle), qui commence, temps bonus conserve, mots du dernier tour ; Fiesta : tirage, rattrapage, coup de pouce en une ligne chacun, 1 parmi 3 en carte (route `_PickThreeFlow` : passer le telephone puis choisir, non persistee) |
+ | `results_screen.dart` | Podium anime, tableau scores par manche, carte « Modificateurs de la partie » (Fiesta seulement), boutons Rejouer/Stats |
+ | `stats_screen.dart` | Stats detaillees : graphique evolution scores (fl_chart), top joueurs, temps moyen |
+ | `rules_screen.dart` | Regles completes du jeu (3 manches) + Revoir le tuto / le tuto Fiesta / les aides |
+diff --git a/lib/screens/transition_screen.dart b/lib/screens/transition_screen.dart
+index d29b510..b287c70 100644
+--- a/lib/screens/transition_screen.dart
++++ b/lib/screens/transition_screen.dart
+@@ -64,7 +64,6 @@ class _TransitionScreenState extends State<TransitionScreen> {
+     // refuse aussi, cf. `nextRound`).
+     final chooserId = provider.nextChooserId;
+     final chooser = chooserId == null ? null : provider.getTeamById(chooserId);
+-    final totalWords = provider.game.allWords.length;
+     // `nextRound` ne touche pas à l'équipe ni au joueur courants : ce sont
+     // ceux que l'avant-tour de la manche suivante affichera.
+     final starterTeam = provider.getCurrentTeam();
+@@ -86,8 +85,6 @@ class _TransitionScreenState extends State<TransitionScreen> {
+                       child: Column(
+                         crossAxisAlignment: CrossAxisAlignment.stretch,
+                         children: [
+-                          _RoundTrack(done: currentRound),
+-                          const SizedBox(height: 10),
+                           Text(
+                             'MANCHE $currentRound TERMINÉE',
+                             textAlign: TextAlign.center,
+@@ -104,25 +101,14 @@ class _TransitionScreenState extends State<TransitionScreen> {
+                           // résultats.
+                           _Hero(
+                             key: _nextRoundKey,
+-                            decoration: _roundEmoji[nextRound] ?? '✦',
+                             children: [
+-                              const _HeroEyebrow('Et maintenant'),
+-                              _HeroBig('$nextRound'),
+-                              _HeroTitle(
+-                                  AppConstants.roundModes[nextRound] ?? ''),
++                              _HeroTitle('Manche $nextRound : '
++                                  '${AppConstants.roundModes[nextRound] ?? ''}'),
+                               _HeroText(
+                                   AppConstants.roundDescriptions[nextRound] ??
+                                       ''),
+                             ],
+                           ),
+-                          const SizedBox(height: 12),
+-                          _FactTiles(tiles: [
+-                            _Fact('$totalWords',
+-                                'mots reviennent dans le chapeau'),
+-                            if (bonus > 0)
+-                              _Fact('+$bonus s',
+-                                  'reportées pour ${starterTeam?.name ?? ''}'),
+-                          ]),
+                           if (starterTeam != null) ...[
+                             const SizedBox(height: 14),
+                             _Starter(
+@@ -131,8 +117,18 @@ class _TransitionScreenState extends State<TransitionScreen> {
+                               color: starterColor,
+                             ),
+                           ],
+-                          const SizedBox(height: 14),
+-                          _MemoryTip(round: currentRound),
++                          if (bonus > 0) ...[
++                            const SizedBox(height: 8),
++                            Text(
++                              'Temps bonus conservé : ${bonus}s',
++                              textAlign: TextAlign.center,
++                              style: const TextStyle(
++                                fontFamily: 'Poppins',
++                                fontSize: 14,
++                                color: AppColors.warning,
++                              ),
++                            ),
++                          ],
+                           // Bouton pour consulter les mots devinés du tour
+                           // précédent.
+                           if (provider.game.history.isNotEmpty) ...[
+@@ -171,22 +167,21 @@ class _TransitionScreenState extends State<TransitionScreen> {
+                           ],
+                           const SizedBox(height: 16),
+                           // Fiesta : sous le héros. Vides en Classique.
+-                          RoundDrawCard(
++                          RoundDrawLine(
+                             round: nextRound,
+                             modifiers: provider.nextRoundModifiers,
+                           ),
+                           if (catchUpRules != null)
+-                            CatchUpCard(
+-                              // Carte vide (aucun rattrapage) : pas d'aide.
++                            CatchUpLine(
++                              // Ligne vide (aucun rattrapage) : pas d'aide.
+                               key: provider.catchUpPreview.isEmpty
+                                   ? null
+                                   : _catchUpKey,
+                               entries: provider.catchUpPreview,
+-                              rules: catchUpRules,
+                               teams: provider.teams,
+                             ),
+                           // Fiesta Auto : coup de pouce de l'app.
+-                          AppBoostCard(
++                          AppBoostLine(
+                             key: provider.appBoostPreview.isEmpty
+                                 ? null
+                                 : _appBoostKey,
+@@ -405,90 +400,18 @@ class _PickThreeFlowState extends State<_PickThreeFlow> {
+   }
+ }
+ 
+-// ========== Mise en scène de la manche suivante (sans aucun score) ==========
+-
+-const Map<int, String> _roundEmoji = {2: '🤐', 3: '🤸'};
+-
+-/// Piste des 3 manches : ✓ pour les manches jouées, la suivante en avant.
+-class _RoundTrack extends StatelessWidget {
+-  final int done;
+-
+-  const _RoundTrack({required this.done});
+-
+-  @override
+-  Widget build(BuildContext context) {
+-    return Row(
+-      mainAxisAlignment: MainAxisAlignment.center,
+-      children: [
+-        for (var i = 1; i <= 3; i++) ...[
+-          if (i > 1)
+-            Container(
+-              width: 46,
+-              height: 3,
+-              color: i <= done ? AppColors.success : AppColors.gray700,
+-            ),
+-          _step(i),
+-        ],
+-      ],
+-    );
+-  }
++// ========== La manche suivante (sans aucun score) ==========
+ 
+-  Widget _step(int i) {
+-    final isDone = i <= done;
+-    final isNext = i == done + 1;
+-    return Container(
+-      width: 34,
+-      height: 34,
+-      alignment: Alignment.center,
+-      decoration: BoxDecoration(
+-        shape: BoxShape.circle,
+-        color: isDone ? AppColors.success : AppColors.gray700,
+-        border: Border.all(
+-          color: isDone
+-              ? AppColors.success
+-              : isNext
+-                  ? AppColors.primaryPink
+-                  : AppColors.gray600,
+-          width: 2,
+-        ),
+-        boxShadow: isNext
+-            ? [
+-                BoxShadow(
+-                  color: AppColors.primaryPink.withValues(alpha: 0.15),
+-                  spreadRadius: 6,
+-                ),
+-              ]
+-            : null,
+-      ),
+-      child: Text(
+-        isDone ? '✓' : '$i',
+-        style: TextStyle(
+-          fontFamily: 'Bangers',
+-          fontSize: 18,
+-          color: isDone
+-              ? Colors.white
+-              : isNext
+-                  ? AppColors.primaryPink
+-                  : AppColors.gray400,
+-        ),
+-      ),
+-    );
+-  }
+-}
+-
+-/// Carte héros : dégradé, gros emoji pâle en décor, entrée légère (coupée si
+-/// l'utilisateur a demandé moins d'animations, Android comme iOS).
++/// Carte sobre de la manche suivante : son titre et sa règle.
+ class _Hero extends StatelessWidget {
+-  final String decoration;
+   final List<Widget> children;
+ 
+-  const _Hero({required this.decoration, required this.children, super.key});
++  const _Hero({required this.children, super.key});
+ 
+   @override
+   Widget build(BuildContext context) {
+-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+-    final card = Container(
+-      clipBehavior: Clip.hardEdge,
++    return Container(
++      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+       decoration: BoxDecoration(
+         borderRadius: BorderRadius.circular(24),
+         border:
+@@ -502,91 +425,14 @@ class _Hero extends StatelessWidget {
+           ],
+         ),
+       ),
+-      child: Stack(
+-        children: [
+-          Positioned(
+-            right: -6,
+-            top: -10,
+-            child: ExcludeSemantics(
+-              child: Transform.rotate(
+-                angle: 0.2,
+-                child: Opacity(
+-                  opacity: 0.12,
+-                  child: Text(decoration, style: const TextStyle(fontSize: 90)),
+-                ),
+-              ),
+-            ),
+-          ),
+-          Padding(
+-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+-            child: Column(
+-              crossAxisAlignment: CrossAxisAlignment.stretch,
+-              children: children,
+-            ),
+-          ),
+-        ],
+-      ),
+-    );
+-    if (reduceMotion) return card;
+-    return TweenAnimationBuilder<double>(
+-      tween: Tween(begin: 0, end: 1),
+-      duration: const Duration(milliseconds: 500),
+-      curve: Curves.easeOut,
+-      builder: (context, t, child) => Opacity(
+-        opacity: 0.3 + 0.7 * t,
+-        child: Transform.translate(
+-          offset: Offset(0, 10 * (1 - t)),
+-          child: child,
+-        ),
++      child: Column(
++        crossAxisAlignment: CrossAxisAlignment.stretch,
++        children: children,
+       ),
+-      child: card,
+     );
+   }
+ }
+ 
+-class _HeroEyebrow extends StatelessWidget {
+-  final String text;
+-
+-  const _HeroEyebrow(this.text);
+-
+-  @override
+-  Widget build(BuildContext context) => Text(
+-        text.toUpperCase(),
+-        textAlign: TextAlign.center,
+-        style: const TextStyle(
+-          fontFamily: 'Poppins',
+-          fontSize: 12,
+-          fontWeight: FontWeight.w600,
+-          letterSpacing: 1.4,
+-          color: AppColors.gray400,
+-        ),
+-      );
+-}
+-
+-class _HeroBig extends StatelessWidget {
+-  final String text;
+-
+-  const _HeroBig(this.text);
+-
+-  @override
+-  Widget build(BuildContext context) => Text(
+-        text,
+-        textAlign: TextAlign.center,
+-        style: TextStyle(
+-          fontFamily: 'Bangers',
+-          fontSize: 84,
+-          height: 1,
+-          color: AppColors.primaryPink,
+-          shadows: [
+-            Shadow(
+-              offset: const Offset(4, 4),
+-              color: AppColors.primaryPinkDark.withValues(alpha: 0.4),
+-            ),
+-          ],
+-        ),
+-      );
+-}
+-
+ class _HeroTitle extends StatelessWidget {
+   final String text;
+ 
+@@ -628,65 +474,6 @@ class _HeroText extends StatelessWidget {
+       );
+ }
+ 
+-class _Fact {
+-  final String value;
+-  final String label;
+-
+-  const _Fact(this.value, this.label);
+-}
+-
+-/// Une ou deux tuiles côte à côte : jamais rien qui révèle le classement.
+-class _FactTiles extends StatelessWidget {
+-  final List<_Fact> tiles;
+-
+-  const _FactTiles({required this.tiles});
+-
+-  @override
+-  Widget build(BuildContext context) {
+-    return IntrinsicHeight(
+-      child: Row(
+-        crossAxisAlignment: CrossAxisAlignment.stretch,
+-        children: [
+-          for (final (i, f) in tiles.indexed) ...[
+-            if (i > 0) const SizedBox(width: 10),
+-            Expanded(
+-              child: Container(
+-                padding: const EdgeInsets.all(12),
+-                decoration: BoxDecoration(
+-                  color: AppColors.gray700,
+-                  borderRadius: BorderRadius.circular(16),
+-                ),
+-                child: Column(
+-                  crossAxisAlignment: CrossAxisAlignment.start,
+-                  children: [
+-                    Text(
+-                      f.value,
+-                      style: const TextStyle(
+-                        fontFamily: 'Bangers',
+-                        fontSize: 26,
+-                        letterSpacing: 1,
+-                        color: AppColors.secondaryCyan,
+-                      ),
+-                    ),
+-                    Text(
+-                      f.label,
+-                      style: const TextStyle(
+-                        fontFamily: 'Poppins',
+-                        fontSize: 12,
+-                        color: AppColors.gray400,
+-                      ),
+-                    ),
+-                  ],
+-                ),
+-              ),
+-            ),
+-          ],
+-        ],
+-      ),
+-    );
+-  }
+-}
+-
+ /// « Commence : <équipe> · <joueur> fait deviner ».
+ class _Starter extends StatelessWidget {
+   final String team;
+@@ -730,39 +517,3 @@ class _Starter extends StatelessWidget {
+     );
+   }
+ }
+-
+-/// Astuce mémoire : les mêmes mots reviennent à chaque manche.
+-class _MemoryTip extends StatelessWidget {
+-  final int round;
+-
+-  const _MemoryTip({required this.round});
+-
+-  @override
+-  Widget build(BuildContext context) {
+-    return Container(
+-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+-      decoration: BoxDecoration(
+-        color: AppColors.warning.withValues(alpha: 0.08),
+-        borderRadius: BorderRadius.circular(14),
+-        border: Border.all(color: AppColors.warning.withValues(alpha: 0.45)),
+-      ),
+-      child: Row(
+-        children: [
+-          const Text('🧠', style: TextStyle(fontSize: 20)),
+-          const SizedBox(width: 10),
+-          Expanded(
+-            child: Text(
+-              'Ce sont exactement les mêmes mots : ceux qui se souviennent '
+-              'de la manche $round ont un temps d\'avance.',
+-              style: const TextStyle(
+-                fontFamily: 'Poppins',
+-                fontSize: 12.5,
+-                color: AppColors.warning,
+-              ),
+-            ),
+-          ),
+-        ],
+-      ),
+-    );
+-  }
+-}
+diff --git a/lib/widgets/CLAUDE.md b/lib/widgets/CLAUDE.md
+index bb74642..d3c378e 100644
+--- a/lib/widgets/CLAUDE.md
++++ b/lib/widgets/CLAUDE.md
+@@ -8,7 +8,7 @@ Widgets reutilisables organises en deux sous-repertoires.
+ |------------|------|
+ | `common/` | Composants UI reutilisables (boutons, inputs, modals, sliders, toggles) |
+ | `effects/` | Effets visuels et animations de fond |
+-| `fiesta/` | Squelette et cartes des ecrans de choix du mode Fiesta (retour systeme Android gere) ; kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawCard` (« Tirage de la manche N »), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `TurnTimeCard` (« Temps du tour », detail + total, avant-tour) `CatchUpCard` (« Rattrapage », transition) et `BlockedGuesser` (selecteur « Les adversaires choisissent » + annonce « X ne repond pas », 2-8) ; kit 2-10 (`offer_widgets.dart`, sans Provider) : `PickThreeCard`, `PassPhonePanel`, `OfferChoiceBody` (sélection tenue par l'appelant), `AppBoostCard` |
++| `fiesta/` | Squelette et cartes des ecrans de choix du mode Fiesta (retour systeme Android gere) ; kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawCard` (« Tirage de la manche N », avant-tour M1) / `RoundDrawLine` (même tirage en une ligne, transition), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `TurnTimeCard` (« Temps du tour », detail + total, avant-tour) `CatchUpLine` (« Rattrapage » en une ligne, transition) et `BlockedGuesser` (selecteur « Les adversaires choisissent » + annonce « X ne repond pas », 2-8) ; kit 2-10 (`offer_widgets.dart`, sans Provider) : `PickThreeCard`, `PassPhonePanel`, `OfferChoiceBody` (sélection tenue par l'appelant), `AppBoostLine` (une ligne, transition) ; `FiestaInfoLine` (`fiesta_setup_widgets.dart`) = gabarit « Libellé : … » de ces lignes |
+ | `help/` | Aides de prise en main : `HelpButton` (« ? »), `CoachMarks` (voile + bulle, étapes `CoachStep` ciblées par `GlobalKey`), textes par écran (`help_content.dart`), `TutorialPager`, `FirstGamePrompt`, `FirstGameHelp` (aides auto de la 1re partie). Branchement écran par écran → `help/WIRING.md` |
+ 
+ ## Kit visuel du tour Fiesta (`fiesta/fiesta_turn_widgets.dart`)
+diff --git a/lib/widgets/fiesta/fiesta_setup_widgets.dart b/lib/widgets/fiesta/fiesta_setup_widgets.dart
+index aafeab5..c315a8d 100644
+--- a/lib/widgets/fiesta/fiesta_setup_widgets.dart
++++ b/lib/widgets/fiesta/fiesta_setup_widgets.dart
+@@ -315,6 +315,43 @@ class FiestaHint extends StatelessWidget {
+       );
+ }
+ 
++/// Information Fiesta en une ligne (entre les manches) : « Libellé : … ».
++/// Le texte se replie si l'écran est étroit.
++class FiestaInfoLine extends StatelessWidget {
++  final String label;
++  final List<InlineSpan> spans;
++
++  const FiestaInfoLine({required this.label, required this.spans, super.key});
++
++  @override
++  Widget build(BuildContext context) => Padding(
++        padding: const EdgeInsets.only(bottom: 8),
++        child: Text.rich(
++          TextSpan(
++            style: AppTextStyles.bodySmall
++                .copyWith(fontSize: 13, color: AppColors.gray400),
++            children: [
++              TextSpan(
++                  text: '$label : ',
++                  style: const TextStyle(fontWeight: FontWeight.w600)),
++              ...spans,
++            ],
++          ),
++          textAlign: TextAlign.center,
++        ),
++      );
++}
++
++/// Pastille d'un modificateur au fil d'une [FiestaInfoLine] (un tap
++/// l'explique, comme partout ailleurs).
++WidgetSpan modifierBadgeSpan(Widget badge) => WidgetSpan(
++      alignment: PlaceholderAlignment.middle,
++      child: Padding(
++        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
++        child: badge,
++      ),
++    );
++
+ /// Résumé d'une ligne du rattrapage, pour le Récap (Auto et Personnalisé).
+ String catchUpSummary(CatchUpRules c) =>
+     '+${c.b1} s / +${c.b2} s × écart (max +${c.cap} s) · '
+diff --git a/lib/widgets/fiesta/modifier_card.dart b/lib/widgets/fiesta/modifier_card.dart
+index bc06f9d..5a00301 100644
+--- a/lib/widgets/fiesta/modifier_card.dart
++++ b/lib/widgets/fiesta/modifier_card.dart
+@@ -108,3 +108,28 @@ class RoundDrawCard extends StatelessWidget {
+     );
+   }
+ }
++
++/// Le tirage en une ligne, entre les manches : « Tirage de la manche N : »
++/// et une pastille par modificateur (un tap l'explique). Rien si la liste est
++/// vide.
++class RoundDrawLine extends StatelessWidget {
++  final int round;
++  final List<ModifierInstance> modifiers;
++
++  const RoundDrawLine({
++    required this.round,
++    required this.modifiers,
++    super.key,
++  });
++
++  @override
++  Widget build(BuildContext context) {
++    if (modifiers.isEmpty) return const SizedBox.shrink();
++    return FiestaInfoLine(
++      label: 'Tirage de la manche $round',
++      spans: [
++        for (final m in modifiers) modifierBadgeSpan(ModifierBadge.of(m)),
++      ],
++    );
++  }
++}
+diff --git a/lib/widgets/fiesta/offer_widgets.dart b/lib/widgets/fiesta/offer_widgets.dart
+index 82872f3..d04b185 100644
+--- a/lib/widgets/fiesta/offer_widgets.dart
++++ b/lib/widgets/fiesta/offer_widgets.dart
+@@ -354,14 +354,14 @@ class _OfferCard extends StatelessWidget {
+   }
+ }
+ 
+-/// « Coup de pouce de l'app » (Auto, maquette `r2`) : ce que l'app donne à
++/// « Coup de pouce de l'app » (Auto) en une ligne : ce que l'app donne à
+ /// chaque équipe menée et impose à l'équipe en tête, avec la force appliquée.
+ /// Rien si [gifts] est vide.
+-class AppBoostCard extends StatelessWidget {
++class AppBoostLine extends StatelessWidget {
+   final List<Team> teams;
+   final List<ModifierInstance> gifts;
+ 
+-  const AppBoostCard({
++  const AppBoostLine({
+     required this.teams,
+     required this.gifts,
+     super.key,
+@@ -370,35 +370,19 @@ class AppBoostCard extends StatelessWidget {
+   @override
+   Widget build(BuildContext context) {
+     if (gifts.isEmpty) return const SizedBox.shrink();
+-    return FiestaCard(
+-      title: 'Coup de pouce de l\'app',
+-      children: [
+-        const FiestaHint('Choisi par l\'app selon l\'écart. Personne ne '
+-            'choisit. Pour toute la manche suivante.'),
+-        const SizedBox(height: 6),
+-        for (final gift in gifts)
+-          Builder(builder: (context) {
+-            final id = gift.teamId!;
+-            final strength = _strength(gift);
+-            final label = gift.nature == ModifierNature.bonus
+-                ? 'Coup de pouce pour'
+-                : 'Malus pour';
+-            return Padding(
+-              padding: const EdgeInsets.only(bottom: 6),
+-              child: Row(
+-                children: [
+-                  Expanded(
+-                    child: Text(
+-                      '$label : ${_name(teams, id)} · $strength',
+-                      style: AppTextStyles.bodySmall
+-                          .copyWith(color: _color(teams, id)),
+-                    ),
+-                  ),
+-                  ModifierBadge.of(gift),
+-                ],
+-              ),
+-            );
+-          }),
++    return FiestaInfoLine(
++      label: 'Coup de pouce de l\'app',
++      spans: [
++        for (final (i, gift) in gifts.indexed) ...[
++          if (i > 0) const TextSpan(text: ' · '),
++          TextSpan(
++            text: '${_name(teams, gift.teamId!)} '
++                '${gift.nature == ModifierNature.bonus ? 'reçoit' : 'subit'} ',
++            style: TextStyle(color: _color(teams, gift.teamId!)),
++          ),
++          modifierBadgeSpan(ModifierBadge.of(gift)),
++          TextSpan(text: ' (${_strength(gift)})'),
++        ],
+       ],
+     );
+   }
+diff --git a/lib/widgets/fiesta/turn_time_cards.dart b/lib/widgets/fiesta/turn_time_cards.dart
+index 1ad32c3..d14ee71 100644
+--- a/lib/widgets/fiesta/turn_time_cards.dart
++++ b/lib/widgets/fiesta/turn_time_cards.dart
+@@ -1,5 +1,4 @@
+ import 'package:flutter/material.dart';
+-import '../../models/fiesta/fiesta_rules.dart';
+ import '../../models/fiesta/turn_time.dart';
+ import '../../models/team.dart';
+ import '../../theme/app_theme.dart';
+@@ -54,16 +53,15 @@ class TurnTimeCard extends StatelessWidget {
+   }
+ }
+ 
+-/// « Rattrapage » (maquette `r2`) sur la transition : ce que chaque équipe
+-/// aura en plus ou en moins à son premier tour de la manche suivante.
+-class CatchUpCard extends StatelessWidget {
++/// « Rattrapage : A +20 s · B −10 s » sur la transition : ce que chaque
++/// équipe aura en plus ou en moins à son premier tour de la manche suivante.
++/// Sans l'écart chiffré : scores cachés jusqu'aux résultats.
++class CatchUpLine extends StatelessWidget {
+   final List<CatchUpEntry> entries;
+-  final CatchUpRules rules;
+   final List<Team> teams;
+ 
+-  const CatchUpCard({
++  const CatchUpLine({
+     required this.entries,
+-    required this.rules,
+     required this.teams,
+     super.key,
+   });
+@@ -71,43 +69,38 @@ class CatchUpCard extends StatelessWidget {
+   @override
+   Widget build(BuildContext context) {
+     if (entries.isEmpty) return const SizedBox.shrink();
+-    return FiestaCard(
+-      title: 'Rattrapage',
++    return FiestaInfoLine(
++      label: 'Rattrapage',
++      spans: [
++        for (final (i, e) in entries.indexed) ...[
++          if (i > 0) const TextSpan(text: ' · '),
++          _entry(e),
++        ],
++      ],
++    );
++  }
++
++  TextSpan _entry(CatchUpEntry e) {
++    final index = teams.indexWhere((t) => t.id == e.teamId);
++    final name = index < 0 ? e.teamId : teams[index].name;
++    return TextSpan(
+       children: [
+-        const FiestaHint('Appliqué au premier tour de chaque équipe dans la '
+-            'manche (pas à une continuation).'),
+-        const SizedBox(height: 6),
+-        for (final e in entries)
+-          Builder(builder: (context) {
+-            final index = teams.indexWhere((t) => t.id == e.teamId);
+-            final color = AppColors.getTeamColor(index < 0 ? 0 : index);
+-            final name = index < 0 ? e.teamId : teams[index].name;
+-            return Padding(
+-              padding: const EdgeInsets.only(bottom: 4),
+-              child: Row(
+-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+-                children: [
+-                  Expanded(
+-                    child: Text(
+-                      // Sans l'écart chiffré : scores cachés jusqu'aux
+-                      // résultats. Restent l'équipe et ses secondes.
+-                      '$name (${e.isLeader ? 'en tête' : 'en retard'})',
+-                      style: AppTextStyles.bodySmall.copyWith(color: color),
+-                    ),
+-                  ),
+-                  Text(
+-                    _signed(e.seconds),
+-                    style: AppTextStyles.bodySmall.copyWith(
+-                      color: e.isLeader ? AppColors.error : AppColors.success,
+-                      fontWeight: FontWeight.w600,
+-                    ),
+-                  ),
+-                ],
+-              ),
+-            );
+-          }),
+-        FiestaHint('Plafonds : +${rules.cap} s pour les menées, '
+-            '−${rules.malCap} s pour le leader.'),
++        TextSpan(
++          text: '$name ',
++          // Le signe se lit à l'écran ; l'état est dit en toutes lettres aux
++          // lecteurs d'écran (la couleur seule ne le porte pas). Sur ce span
++          // à texte : un label posé sur le parent sans texte serait ignoré.
++          semanticsLabel: '$name ${e.isLeader ? 'en tête' : 'en retard'}, ',
++          style:
++              TextStyle(color: AppColors.getTeamColor(index < 0 ? 0 : index)),
++        ),
++        TextSpan(
++          text: _signed(e.seconds),
++          style: TextStyle(
++            color: e.isLeader ? AppColors.error : AppColors.success,
++            fontWeight: FontWeight.w600,
++          ),
++        ),
+       ],
+     );
+   }
+diff --git a/lib/widgets/help/WIRING.md b/lib/widgets/help/WIRING.md
+index 2eac409..2eadf59 100644
+--- a/lib/widgets/help/WIRING.md
++++ b/lib/widgets/help/WIRING.md
+@@ -37,7 +37,7 @@ résultats finaux en montrent.
+ | `turn_screen` | `turnHelp(passPenalty: provider.currentPassPenalty)` — pas `settings.passPenalty` : la Passe gratuite Fiesta la met à 0. Malus « Interdit de passer » : ne pas poser la clé `pass` (bouton désactivé, le texte « Passe-le » serait faux) | `timer`, `word`, `guessed`, `pass`, `pause` | `right: besideCornerButton` (pause à droite). 🔴 `provider.pauseTurn()` **avant** `CoachMarks.show`, reprise **après** : le chrono ne doit jamais tourner sous l'aide |
+ | `verification_screen` | `verificationHelp` | `wordList` (la liste défilante entière), `validate` | `right: 16` (HomeButton à gauche) |
+ | `transition_screen` | `transitionHelp` | `previousTurn` (« Voir les N mots devinés »), `next` (bouton « Manche N » ; « En attente du choix : X » en Fiesta tant que le choix n'est pas fait), `back` (`GameBackButton`), `home` (`HomeButton`) | `right: besideCornerButton` |
+-| `transition_screen` Fiesta | `fiestaTransitionHelp` | `catchUp` (`CatchUpCard`), `pickThree` (`PickThreeCard` / `PassPhonePanel`), `appBoost` (`AppBoostCard`) | même bouton : concaténer `fiestaTransitionHelp(...) + transitionHelp(...)` en Fiesta |
++| `transition_screen` Fiesta | `fiestaTransitionHelp` | `catchUp` (`CatchUpLine`), `pickThree` (`PickThreeCard` / `PassPhonePanel`), `appBoost` (`AppBoostLine`) | même bouton : concaténer `fiestaTransitionHelp(...) + transitionHelp(...)` en Fiesta |
+ | `results_screen` | `resultsHelp` | `podium` (la rangée du podium), `details` (Détails par manche), `replay`, `stats` | `right: besideCornerButton` |
+ 
+ ## Les seules aides automatiques
+diff --git a/lib/widgets/help/help_content.dart b/lib/widgets/help/help_content.dart
+index 2203f6e..e057abf 100644
+--- a/lib/widgets/help/help_content.dart
++++ b/lib/widgets/help/help_content.dart
+@@ -296,9 +296,9 @@ List<CoachStep> transitionHelp({
+       CoachStep(
+         target: nextRound,
+         title: 'La manche suivante',
+-        text: 'Sa nouvelle règle, le nombre de mots qui reviennent dans le '
+-            'chapeau, le temps reporté s\'il en reste, et qui commence. Ce '
+-            'sont exactement les mêmes mots qu\'à la manche d\'avant.',
++        text: 'Sa nouvelle règle, puis qui commence et le temps reporté '
++            's\'il en reste. Ce sont exactement les mêmes mots qu\'à la '
++            'manche d\'avant.',
+       ),
+       CoachStep(
+         target: previousTurn,
+@@ -398,7 +398,8 @@ List<CoachStep> fiestaTransitionHelp({
+         target: catchUp,
+         title: 'Rattrapage',
+         text: 'L\'équipe menée gagne du temps à la manche suivante, l\'équipe '
+-            'en tête en perd un peu.',
++            'en tête en perd un peu. Seulement au premier tour de chaque '
++            'équipe dans la manche (pas quand un tour coupé se poursuit).',
+       ),
+       CoachStep(
+         target: pickThree,
