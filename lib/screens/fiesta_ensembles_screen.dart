@@ -62,6 +62,10 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
   /// Change à chaque remise à zéro de l'éditeur (nouvelle `key`).
   int _editorRun = 0;
 
+  /// L'éditeur diffère de ce qu'il a chargé (remonté par l'éditeur à chaque
+  /// rendu ; simple champ, rien à redessiner).
+  bool _dirty = false;
+
   /// Un double tap sur « Suivant » ne doit pas naviguer deux fois.
   bool _leaving = false;
 
@@ -110,17 +114,53 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
   void _resetEditor() => setState(() {
         _editing = null;
         _editorRun++;
+        _dirty = false;
       });
+
+  /// Vrai si rien n'est en cours dans l'éditeur, ou si l'utilisateur accepte
+  /// de perdre ses modifications non enregistrées.
+  Future<bool> _confirmDiscard() async {
+    if (!_dirty) return true;
+    return AppConfirmDialog.show(
+      context,
+      title: 'Abandonner les modifications ?',
+      message: 'L\'ensemble en cours n\'est pas enregistré.',
+      confirmText: 'Abandonner',
+      accentColor: AppColors.warning,
+    );
+  }
+
+  Future<void> _back() async {
+    if (await _confirmDiscard() && mounted) widget.onBack();
+  }
+
+  /// Sélectionner pendant une modification referme l'éditeur : ce qui est
+  /// affiché ne contredit jamais ce que « Suivant » lancera.
+  Future<void> _select(FiestaEnsemble ensemble) async {
+    if (_editing != null) {
+      if (!await _confirmDiscard() || !mounted) return;
+      _resetEditor();
+    }
+    setState(() => _selectedId = ensemble.id);
+  }
+
+  Future<void> _cancelEdit() async {
+    if (await _confirmDiscard() && mounted) _resetEditor();
+  }
 
   Future<void> _onSaved(FiestaEnsemble ensemble) async {
     _resetEditor();
     await _reload(select: ensemble.id);
   }
 
-  void _edit(FiestaEnsemble ensemble) {
+  /// Modifier sélectionne aussi l'ensemble (éditeur et sélection d'accord).
+  Future<void> _edit(FiestaEnsemble ensemble) async {
+    if (!await _confirmDiscard() || !mounted) return;
     setState(() {
       _editing = ensemble;
+      _selectedId = ensemble.id;
       _editorRun++;
+      _dirty = false;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final target = _editorKey.currentContext;
@@ -155,6 +195,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
     if (chosen == null || _leaving) return;
     _leaving = true;
     try {
+      if (!await _confirmDiscard()) return;
       if (chosen.id != FiestaEnsemblesScreen.builtIn.id) {
         await _service.markUsed(chosen.id);
       }
@@ -171,7 +212,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) widget.onBack();
+        if (!didPop) _back();
       },
       child: Scaffold(
         backgroundColor: AppColors.backgroundMain,
@@ -192,7 +233,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
                         ],
                       ),
               ),
-              AppBackButton(onPressed: widget.onBack),
+              AppBackButton(onPressed: _back),
               HelpButton(
                 onPressed: () => CoachMarks.show(
                   context,
@@ -251,7 +292,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
                   selected: ensemble.id == _selectedId,
                   builtIn: builtIn,
                   canDuplicate: !_full,
-                  onTap: () => setState(() => _selectedId = ensemble.id),
+                  onTap: () => _select(ensemble),
                   onEdit: () => _edit(ensemble),
                   onDuplicate: () => _duplicate(ensemble),
                   onDelete: () => _delete(ensemble),
@@ -271,7 +312,8 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
                   key: ValueKey(_editorRun),
                   initial: _editing,
                   onSaved: _onSaved,
-                  onCancel: _editing == null ? null : _resetEditor,
+                  onCancel: _editing == null ? null : _cancelEdit,
+                  onDirty: (dirty) => _dirty = dirty,
                 ),
         ),
       ],

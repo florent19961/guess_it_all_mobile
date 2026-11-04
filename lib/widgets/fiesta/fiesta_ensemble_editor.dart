@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../../models/fiesta/ensemble_validation.dart';
@@ -26,10 +28,16 @@ class FiestaEnsembleEditor extends StatefulWidget {
   /// Modification en cours : « Annuler » rend un éditeur de création.
   final VoidCallback? onCancel;
 
+  /// Appelé à chaque rendu : vrai si la saisie diffère de ce qui a été
+  /// chargé (le parent confirme avant de la jeter). Le parent ne doit pas
+  /// appeler `setState` ici.
+  final ValueChanged<bool>? onDirty;
+
   const FiestaEnsembleEditor({
     required this.onSaved,
     this.initial,
     this.onCancel,
+    this.onDirty,
     super.key,
   });
 
@@ -40,6 +48,7 @@ class FiestaEnsembleEditor extends StatefulWidget {
 class _FiestaEnsembleEditorState extends State<FiestaEnsembleEditor> {
   late FiestaRules _rules;
   late final TextEditingController _name;
+  late final String _loaded;
   String? _openModifier;
   bool _saving = false;
 
@@ -54,6 +63,7 @@ class _FiestaEnsembleEditorState extends State<FiestaEnsembleEditor> {
     super.initState();
     _rules = widget.initial?.rules ?? defaultEnsembleRules('');
     _name = TextEditingController(text: _rules.ensembleName ?? '');
+    _loaded = jsonEncode(_rules.toJson());
   }
 
   @override
@@ -124,9 +134,9 @@ class _FiestaEnsembleEditorState extends State<FiestaEnsembleEditor> {
 
   @override
   Widget build(BuildContext context) {
-    final errors = validateEnsemble(
-      _rules.copyWith(ensembleName: _name.text),
-    );
+    final current = _rules.copyWith(ensembleName: _name.text);
+    final errors = validateEnsemble(current);
+    widget.onDirty?.call(jsonEncode(current.toJson()) != _loaded);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
