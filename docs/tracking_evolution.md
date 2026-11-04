@@ -784,3 +784,10 @@ store ne contient aucun fichier Fiesta) ; une partie Fiesta suspendue sur une bu
 peut voir tirages/offres/récap recalculés, car les nouveaux ids allongent les listes de
 candidats mélangées par la même graine. Pas de versionnage du catalogue : sur-dimensionné pour
 un mode jamais publié. Règle pour l'après-publication → `lib/models/CLAUDE.md`.
+
+## 2026-11-04 — « Avancés » : réglage Fiesta visible en Classique, Réinitialiser aéré
+
+**Quoi.** Le réglage « Fiesta : Auto / Personnalisé » de la fenêtre « Avancés » s'affiche aussi
+quand le mode est Classique ; le choix est gardé en mémoire de l'écran et appliqué au passage en
+Fiesta. 24 px d'air au-dessus de « Réinitialiser les paramètres ». **Pourquoi.** Retours
+Florent : voir le réglage dans les deux modes, et le bouton ne respirait pas assez.

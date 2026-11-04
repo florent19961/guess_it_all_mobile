@@ -76,6 +76,11 @@ class _SettingsScreenState extends State<SettingsScreen>
   /// Garde contre le double tap : un seul tuto Fiesta.
   bool _tutorialBusy = false;
 
+  /// Auto / Personnalisé choisi dans « Avancés » alors que le mode est
+  /// Classique : appliqué au passage en Fiesta (réglage visible dans les deux
+  /// modes, retours 2026-11-04).
+  FiestaMode _fiestaMode = FiestaMode.auto;
+
   /// Classique / Fiesta. Fiesta part en Auto ; la première fois, le tuto
   /// Fiesta s'ouvre (clé `guessItAll_fiestaTutorialSeen`).
   Future<void> _setMode(GameProvider provider, String mode) async {
@@ -84,7 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       return;
     }
     if (provider.pendingFiesta != null) return;
-    provider.setPendingFiesta(FiestaRules(mode: FiestaMode.auto));
+    provider.setPendingFiesta(FiestaRules(mode: _fiestaMode));
     if (_tutorialBusy) return;
     _tutorialBusy = true;
     try {
@@ -100,6 +105,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   /// déjà en attente (Rejouer) ; l'ensemble se choisit après les équipes.
   void _setFiestaMode(GameProvider provider, String value) {
     final custom = value == _custom;
+    _fiestaMode = custom ? FiestaMode.custom : FiestaMode.auto;
     final pending = provider.pendingFiesta;
     if (pending == null || (pending.mode == FiestaMode.custom) == custom) {
       return;
@@ -573,8 +579,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                   },
                 ),
 
-                // Fiesta : Auto / Personnalisé, seulement en mode Fiesta
-                if (provider.pendingFiesta != null) ...[
+                // Fiesta : Auto / Personnalisé, visible aussi en Classique
+                // (appliqué au passage en Fiesta).
+                ...[
                   const SizedBox(height: 8),
                   const Align(
                     alignment: Alignment.centerLeft,
@@ -590,7 +597,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                   const SizedBox(height: 8),
                   AppToggle(
                     options: const [_auto, _custom],
-                    selected: provider.pendingFiesta!.mode == FiestaMode.custom
+                    selected: (provider.pendingFiesta?.mode ?? _fiestaMode) ==
+                            FiestaMode.custom
                         ? _custom
                         : _auto,
                     onChange: (value) {
@@ -601,8 +609,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                 ],
 
                 // Réinitialiser (ancien bouton rond du coin haut droit) : ferme
-                // « Avancés », puis la même confirmation qu'avant.
-                const SizedBox(height: 8),
+                // « Avancés », puis la même confirmation qu'avant. Un peu d'air
+                // pour le séparer des réglages.
+                const SizedBox(height: 24),
                 AppButton(
                   text: 'Réinitialiser les paramètres',
                   variant: AppButtonVariant.ghost,
