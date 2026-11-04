@@ -65,10 +65,12 @@ List<String> validateEnsemble(FiestaRules rules) {
       if (tooEarly) errors.add('$name n\'existe qu\'en manche 3 (mime).');
     }
     if (def.notInRound3) {
-      final onlyRound3 = setting.arrival == ModifierArrival.fixed
-          ? setting.fixedRound == 3
-          : setting.startRound >= 3;
-      if (onlyRound3) {
+      // Manche 1 ou 2 (offre : 2, déjà exigé plus haut) ; une manche fixée
+      // absente a déjà son message.
+      final round = setting.arrival == ModifierArrival.fixed
+          ? setting.fixedRound
+          : setting.startRound;
+      if (round != null && (round < 1 || round > 2)) {
         errors.add('$name n\'existe pas en manche 3 (mime) : '
             'manche 1 ou 2 seulement.');
       }

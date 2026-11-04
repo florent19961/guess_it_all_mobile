@@ -33,10 +33,11 @@ class FiestaEnsemble {
 
 /// Famille « Mime » : un ensemble n'en garde qu'UN actif (choix exclusif de
 /// l'éditeur). Un ensemble enregistré avant cette règle peut en avoir
-/// plusieurs : on garde celui que le jeu appliquait déjà — le premier FIXÉ
-/// dans l'ordre du catalogue (les fixés passent avant le tirage), sinon le
-/// premier actif — et on désactive les autres, réglages conservés. Même forme
-/// JSON : le blob est réécrit tel quel au prochain « Enregistrer ».
+/// plusieurs. Normalisation déterministe : le premier mime FIXÉ dans l'ordre
+/// du catalogue, sinon le premier actif dans l'ordre du catalogue (ce n'est
+/// pas forcément le mime tiré auparavant) ; les autres sont désactivés,
+/// réglages conservés. Même forme JSON, réécrite à la prochaine écriture du
+/// store.
 FiestaRules oneMimeAtMost(FiestaRules rules) {
   final active = [
     for (final def in kModifierCatalog)

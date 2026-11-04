@@ -68,8 +68,8 @@ void main() {
 
   test(
       'ensemble d\'avant la famille « Mime » (deux mimes fixés sur M3) : '
-      'relu sans planter, un seul mime gardé — celui que le jeu appliquait',
-      () async {
+      'relu sans planter, un seul mime gardé : le 1er fixé dans l\'ordre du '
+      'catalogue', () async {
     String mod(String arrival, {bool active = true}) =>
         '{"active":$active,"arrival":"$arrival","startRound":3,'
         '"fixedRound":3,"charges":0}';

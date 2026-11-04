@@ -770,11 +770,15 @@ code propre. Les nouveaux ids sont ajoutés **en fin** de catalogue et dans `kOf
 (drap : forte ; dos et autre langue : moyenne — au doigt mouillé, comme le reste).
 
 **Conséquence (règle 7).** Aucune forme persistée ne change (ids ajoutés seulement). Un ensemble
-enregistré avec plusieurs mimes actifs se relit via `oneMimeAtMost` : on garde le mime que le
-jeu appliquait déjà (le 1er fixé dans l'ordre du catalogue, sinon le 1er actif), les autres
-passent `active: false` en gardant leurs réglages ; le blob est réécrit au prochain
-« Enregistrer ». Les règles gelées d'une partie en cours ne sont PAS normalisées (le tirage
-rejoué par graine doit rester identique) : la règle de famille s'y applique à l'exécution.
-Ajouter des ids allonge les listes de candidats mélangées par graine : une partie Fiesta en
-cours au moment de la mise à jour peut voir un récap ou des offres recalculés différents pour
-une manche déjà passée (cosmétique ; Fiesta pas encore publiée en store).
+enregistré avec plusieurs mimes actifs se relit via `oneMimeAtMost` — normalisation
+déterministe : le premier mime fixé dans l'ordre du catalogue, sinon le premier actif dans
+l'ordre du catalogue (ce n'est pas forcément le mime tiré auparavant) ; les autres passent
+`active: false` en gardant leurs réglages, et le blob est réécrit à la prochaine écriture du
+store (« Enregistrer », mais aussi « Jouer » via `markUsed`). Les règles gelées d'une partie
+en cours ne sont PAS normalisées : la règle de famille s'y applique à l'exécution.
+
+**Rupture pré-release assumée (revue r1).** La Fiesta n'a jamais été publiée (le dernier tag
+store ne contient aucun fichier Fiesta) ; une partie Fiesta suspendue sur une build de dev
+peut voir tirages/offres/récap recalculés, car les nouveaux ids allongent les listes de
+candidats mélangées par la même graine. Pas de versionnage du catalogue : sur-dimensionné pour
+un mode jamais publié. Règle pour l'après-publication → `lib/models/CLAUDE.md`.

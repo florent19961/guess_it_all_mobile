@@ -147,16 +147,28 @@ void main() {
     for (final s in [
       setting(ModifierArrival.fixed, fixedRound: 3),
       setting(ModifierArrival.draw, startRound: 3),
+      // Hors bornes : jamais atteint (revue r1).
+      setting(ModifierArrival.fixed, fixedRound: 4),
+      setting(ModifierArrival.fixed, fixedRound: 0),
+      setting(ModifierArrival.draw, startRound: 4),
+      setting(ModifierArrival.offer, startRound: 3),
     ]) {
       expect(
         validateEnsemble(rulesWith(overrides: {'other_language': s})),
         contains(startsWith('Faire deviner dans une autre langue n\'existe '
             'pas en manche 3')),
+        reason: '${s.arrival} ${s.fixedRound} ${s.startRound}',
       );
     }
     expect(
       validateEnsemble(rulesWith(overrides: {
         'other_language': setting(ModifierArrival.fixed, fixedRound: 2),
+      })),
+      isEmpty,
+    );
+    expect(
+      validateEnsemble(rulesWith(overrides: {
+        'other_language': setting(ModifierArrival.offer, startRound: 2),
       })),
       isEmpty,
     );

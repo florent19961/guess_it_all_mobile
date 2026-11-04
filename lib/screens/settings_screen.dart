@@ -606,7 +606,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                 AppButton(
                   text: 'Réinitialiser les paramètres',
                   variant: AppButtonVariant.ghost,
-                  size: AppButtonSize.small,
+                  // Medium : cible tactile ≥ 44 px (revue r1).
+                  size: AppButtonSize.medium,
                   onPressed: () {
                     Navigator.of(context).pop();
                     _showResetConfirmation(screenContext, provider);
