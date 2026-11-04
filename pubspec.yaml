@@ -39,18 +39,18 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "visuals/icone_guess_it_all.png"
-  adaptive_icon_background: "#1a2744"
-  adaptive_icon_foreground: "visuals/icone_guess_it_all.png"
+  image_path: "visuals/logo_bulle_chrono.png"
+  adaptive_icon_background: "#2B3848"
+  adaptive_icon_foreground: "visuals/logo_bulle_chrono_foreground.png"
 
 flutter_native_splash:
-  color: "#1a2744"
-  image: visuals/icone_guess_it_all.png
+  color: "#2B3848"
+  image: visuals/logo_bulle_chrono_splash.png
   android: true
   ios: true
   android_12:
-    color: "#1a2744"
-    image: visuals/icone_guess_it_all.png
+    color: "#2B3848"
+    image: visuals/logo_bulle_chrono_android12.png
     fullscreen: true
 
 flutter:
