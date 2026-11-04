@@ -1,8 +1,16 @@
 # Revue Fiesta v2 — lane 2 (écran avant le tour, cartouches ciblées) — round 2
 
 **Tier : RISQUÉ.** Lecture seule. Lis `_bmad-output/reviews/fiesta-v2/lane2-delta-r1-r2.diff`
-(ce qui a changé depuis r1) puis, pour le contexte, `lane2-patch-r2.diff` (toute la lane 2,
-calculé sur `feat/fiesta-v2-modele`) ; jamais `git diff` toi-même. Code du worktree
+(ce qui a changé depuis r1, rebase compris) puis, pour le contexte, `lane2-patch-r2.diff`
+(toute la lane 2, calculé sur `git merge-base origin/main HEAD`) ; jamais `git diff` toi-même.
+
+**Rebase.** La lane 1 est mergée (PR #39, `be92456`) : la branche est rebasée sur `origin/main`
+(base d'origine `804ccdf`). Un seul conflit, `docs/tracking_evolution.md` (entrées des deux côtés
+gardées). `turn_screen.dart` fusionné sans conflit : dédoublonnage du badge « Deux mots » (lane 1
+r2) ET badge Passe gratuite (lane 2). `settingsKey` (`lib/models/fiesta/fiesta_ensemble.dart`) :
+la lane 1 r2 ignorait `perGame` pour `free_pass` (bit inopérant) ; la lane 2 le rend opérant
+(décompté par `stockForRound`), il compte donc de nouveau dans la clé des doublons. Suite
+complète verte après rebase (242 tests). Code du worktree
 `/home/florent19961/guess-it-all-fiesta-v2-tour` (branche `feat/fiesta-v2-tour`). Ton rapport
 r1 : `lane2-review-r1.md` ; les corrections : `lane2-fix-r1.md`. Écris ton rapport dans
 `_bmad-output/reviews/fiesta-v2/lane2-review-r2.md`.
@@ -41,6 +49,8 @@ Arbitrages du lead (à respecter, pas à rediscuter) :
    inchangé (grande carte, `Spacer`) ?
 4. Le nouveau test Auto fixe le `gameId` en réécrivant l'état sauvegardé : légitime, ou fragile ?
 5. Mutation testing sur les deux tests ajoutés (`fiesta_cartridges_test.dart`, tests 5 et 6).
+6. Rebase : la résolution de `settingsKey` (Passe gratuite « pour la partie » distingue deux
+   ensembles) et la fusion de `turn_screen.dart` sont-elles justes ?
 
 ## Format attendu
 

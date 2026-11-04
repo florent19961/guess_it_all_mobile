@@ -1,8 +1,8 @@
 diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
-index 8bd87d8..26e35b2 100644
+index 714c999..c395e33 100644
 --- a/docs/tracking_evolution.md
 +++ b/docs/tracking_evolution.md
-@@ -900,6 +900,17 @@ utilisés » devient « Cartouches utilisées » (un malus : « X contre Y »).
+@@ -909,6 +909,17 @@ utilisés » devient « Cartouches utilisées » (un malus : « X contre Y »).
  cartouches (une Passe gratuite offerte = un tour, plus toute la manche) ; son malus frappe
  toujours le leader toute la manche (personne pour l'infliger). Un malus infligé interdit dans la
  manche où la cible rejoue (« Autre langue » envoyé en M2, cible qui rejoue en M3) part sans
@@ -36,6 +36,20 @@ index 7a2ce15..8eca09e 100644
  | `fiesta/turn_time.dart` | fonctions pures | `composeTurnSeconds` (base + rattrapage − malus du leader − 10 s × `minus_10s`, plancher `kTurnFloorSeconds` = 10 ; continuation = ses secondes, sans modificateur) ; `computeCatchUp` (k × écart avec la tête, plafonds, co-leaders tous en tête, égalité = rien) ; `effectiveCatchUp` (Auto → auto-calibrage, Personnalisé → curseurs) |
  | `fiesta/offers.dart` | `Standings`, `OfferStrength`, fonctions pures | 2-10 + Fiesta v2 : `kOfferStrength` + `strengthForGap` (≤3 légère, ≤7 moyenne, >7 forte, **à recalibrer**), cran vide → cran inférieur ; `Standings` (leader unique ou `null`, `gapOf`, `choosingOrder` dernière → avant-dernière, vide si égalité) ; `isPickThreeOn` (Personnalisé, un « 1 parmi 3 » coché sur N+1) ; `pickThreeOffers(…, roundDraw:, earlierChoices:, blockImmuneTeamIds:)` → **rangées** (`pick3Choices` × 3 cartes au plus, aucun id repris d'une rangée à l'autre, rangée 0 graine `offerSeed(gameId, round, teamId)` **figée par test**, rangée k graine de `'$teamId#k'`) ; `isUsefulOffer` (compatible, pas déjà subi ; **pas de plafond** ; un malus en réserve n'est jugé que contre les règles de manche, une réserve n'exclut rien) ; `appBoost(…, roundDraw:)` (Auto : 1 bonus par menée + 1 malus au leader, jamais `block_guesser`). Lane 2 : en Personnalisé, une carte = UNE cartouche de celle qui choisit (bonus à charge ; malus en `reserve`, à infliger) ; « Bloquer un devineur » offert seulement si une autre équipe a 3 joueurs. Coup de pouce (Auto) : bonus en cartouche, malus au leader toute la manche N+1 |
  | `fiesta/fiesta_ensemble.dart` | `FiestaEnsemble`, `kProvidedEnsembles`, `defaultEnsembleRules`, `defaultSetting`, `settingsKey`, `nameKey`, `oneMimeAtMost` | Ensemble Personnalisé `{id, rules}` (nom = `rules.ensembleName`). **7 ensembles fournis** (ids `provided_*`, `isProvided`, jamais écrits, seulement duplicables) : Fiesta classique (`kClassicEnsembleId`, présélectionné), Pro Player, Droit au but, Explosif, Pictionnary, Bilingue, L'injustice. Nouvel ensemble = maquette `defaults()`. `settingsKey` : réglages hors nom, modificateurs actifs seulement (doublons). `tryFromJson` refuse un id `provided_*` et passe par `oneMimeAtMost` (garde le 1er « Toujours », sinon le 1er actif) |
+diff --git a/lib/models/fiesta/fiesta_ensemble.dart b/lib/models/fiesta/fiesta_ensemble.dart
+index 8b28140..d9e1875 100644
+--- a/lib/models/fiesta/fiesta_ensemble.dart
++++ b/lib/models/fiesta/fiesta_ensemble.dart
+@@ -120,8 +120,7 @@ String settingsKey(FiestaRules rules) {
+           'mode': rules.modifiers[id]!.mode.name,
+           if (rules.modifiers[id]!.mode == ModifierMode.stock) ...{
+             'charges': rules.modifiers[id]!.charges,
+-            // Passe gratuite : toujours « par manche » (bit inopérant).
+-            'perGame': rules.modifiers[id]!.perGame && id != 'free_pass',
++            'perGame': rules.modifiers[id]!.perGame,
+           },
+         },
+     },
 diff --git a/lib/models/fiesta/round_transition.dart b/lib/models/fiesta/round_transition.dart
 index b40b912..eb7287c 100644
 --- a/lib/models/fiesta/round_transition.dart
