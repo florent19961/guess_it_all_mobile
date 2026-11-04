@@ -71,7 +71,12 @@ class AppTheme {
         outlineVariant: AppColors.gray700,
       ),
       switchTheme: SwitchThemeData(
-        thumbColor: const WidgetStatePropertyAll(Colors.white),
+        // Pouce bleu nuit sur turquoise (8,33:1), blanc sur gray700 (10,31:1).
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.backgroundMain
+              : Colors.white,
+        ),
         trackColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
               ? AppColors.secondaryCyan
@@ -91,6 +96,7 @@ class AppTheme {
       ),
       snackBarTheme: const SnackBarThemeData(
         backgroundColor: AppColors.gray700,
+        actionTextColor: AppColors.secondaryCyan,
         contentTextStyle: TextStyle(fontFamily: 'Poppins', color: Colors.white),
       ),
       fontFamily: 'Poppins',

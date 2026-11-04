@@ -31,7 +31,7 @@ grep -n "static const Color" lib/theme/app_theme.dart
 - Le `colorScheme` est construit **a la main** depuis `AppColors` (constructeur
   `ColorScheme(...)` nu, jamais `fromSeed` ni `ColorScheme.dark()`, qui
   ramenent le violet Material). Un widget Material non style prend donc la
-  charte. Le `switchTheme` (pouce blanc, piste turquoise / `gray700`, sans
+  charte. Le `switchTheme` (pouce bleu nuit sur piste turquoise, blanc sur `gray700`, sans
   contour) et le `textSelectionTheme` (turquoise) completent.
 
 ## Typographie
