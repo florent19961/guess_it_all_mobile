@@ -200,6 +200,17 @@ void main() {
     expect(wide, hasLength(2));
     expect(ids(wide), isNot(contains('block_guesser')));
 
+    // Plafond de 2 en Auto (3 en Personnalisé) : deux tirages pour tous
+    // remplissent chaque équipe, plus aucun cadeau.
+    expect(
+        appBoost(
+            rules: auto,
+            gameId: 'g',
+            round: 1,
+            standings: const Standings({'rose': 14, 'bleue': 8}),
+            roundDraw: [forAll('minus_10s'), forAll('reversed')]),
+        isEmpty);
+
     for (var i = 0; i < 50; i++) {
       final g = boost(
           const Standings({'rose': 20, 'jaune': 18, 'bleue': 5}), 2, 'game-$i');
