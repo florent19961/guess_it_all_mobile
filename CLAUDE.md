@@ -138,8 +138,9 @@ Hors cycle : bug / test rouge / comportement inattendu → `bmad-investigate` ; 
 5. **Partie** — 3 manches, tous les mots remis dans le pool à chaque manche.
 6. **Résultats** — scores par équipe et par manche.
 
-> **Mode Fiesta** (modificateurs de jeu) : en **Personnalisé** seulement, le choix de l'ensemble
-> s'insère après les équipes et lance la partie ; Auto n'ajoute aucun écran. Détail →
+> **Mode Fiesta** (modificateurs de jeu) : en **Personnalisé** seulement, l'écran « Fiesta
+> personnalisée » (choix ou création de l'ensemble) s'insère juste après les Paramètres, avant
+> les joueurs ; Auto n'ajoute aucun écran. Détail →
 > `lib/screens/CLAUDE.md`.
 
 ## Conventions de code

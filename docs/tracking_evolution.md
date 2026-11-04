@@ -791,3 +791,25 @@ un mode jamais publié. Règle pour l'après-publication → `lib/models/CLAUDE.
 quand le mode est Classique ; le choix est gardé en mémoire de l'écran et appliqué au passage en
 Fiesta. 24 px d'air au-dessus de « Réinitialiser les paramètres ». **Pourquoi.** Retours
 Florent : voir le réglage dans les deux modes, et le bouton ne respirait pas assez.
+
+## 2026-11-04 — Fiesta Personnalisé : un seul écran « Fiesta personnalisée », avant les joueurs
+
+**Quoi.** L'écran des ensembles vient juste après les Paramètres (Personnalisé seulement), avant
+les joueurs ; les Équipes redeviennent « Commencer » et lancent la partie avec `pendingFiesta`.
+L'écran réunit, sans page poussée : les ensembles prêts à jouer (aucun enregistré → « Fiesta
+classique » fourni par l'app, `defaultEnsembleRules`, jamais stocké), l'éditeur en ligne
+(`FiestaEnsembleEditor`, ex-`FiestaEnsembleEditorScreen`) et « Suivant ». Un ensemble enregistré
+apparaît en haut, sélectionné. Rejouer repasse par cet écran, l'ensemble précédent présélectionné
+(règles égales à `pendingFiesta`, sinon `lastUsedId`). Le « ? » ouvre une aide propre
+(`fiestaEnsemblesHelp`) au lieu du tuto Fiesta.
+
+**Pourquoi (bug Florent, Chrome).** « Impossible d'enregistrer un ensemble, c'est un
+cul-de-sac. » Le stockage n'était pas en cause (créer + relire marche, test à l'appui) : l'éditeur
+était une page poussée sans « Suivant », dont la seule issue visible était le retour, qui
+**jetait** la saisie (`pop(false)`) ; « Enregistrer » restait grisé sans nom et, enregistré, ne
+menait qu'à une liste où il fallait encore trouver « Jouer ». Sans ensemble, on tournait en rond.
+La racine est le parcours, pas un correctif ponctuel : d'où l'écran unique.
+
+**Conséquence (règle 7).** Aucune forme persistée ne change (`guessItAll_fiestaEnsembles`
+intact, `lastUsedId` toujours écrit par `markUsed` au « Suivant »). `pendingFiesta` reste en
+mémoire seulement.
