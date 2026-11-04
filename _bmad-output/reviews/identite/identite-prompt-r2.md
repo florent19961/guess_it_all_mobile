@@ -2,6 +2,8 @@
 
 Lire `identite-patch-r2.diff` (diff complet sur la merge-base avec `origin/main`, **PNG exclus**, listés en bas ; les `.diff` de revue sont aussi exclus). Ne pas lancer `git diff`. Revue en lecture seule ; la lane recopiera le rapport dans `identite-review-r2.md`. Les PNG et le code peuvent être ouverts dans le worktree `/home/florent19961/guess-it-all-identite` (branche `feat/identite-visuelle`).
 
+Branche rebasée sur `origin/main` après #26 et #27 (#27 a remplacé `shooting_stars.dart` : le fond de l'accueil est maintenant un dégradé `#22304A` → `#2B3848` ; l'intro reste un fond plat `#2B3848`, identique au splash, puis fond vers l'accueil).
+
 Contexte r1 : objectif, décisions et questions dans `identite-prompt-r1.md` ; findings dans `identite-review-r1.md` ; corrections dans `identite-fix-r1.md`.
 
 ## 1. Corrections r1 à vérifier
@@ -21,7 +23,7 @@ Choix d'implémentation à challenger :
 2. **Structure stable** : `Stack([child, if (!_done) overlay])` — retirer le dernier enfant ne recrée pas l'app (Navigator, état de l'accueil). Vérifier.
 3. **Tap = passer** : `GestureDetector(opaque)` plein écran → arrêt de `_play` + fondu de sortie 250 ms. Les taps pendant l'intro ne traversent pas vers l'accueil.
 4. **Animations réduites** : `MediaQuery.disableAnimations` lu une fois dans `didChangeDependencies` → logo et titre à l'état final, fondu d'entrée 300 ms, sortie à 900 ms + 250 ms. Les deux contrôleurs sont en `AnimationBehavior.preserve` : sinon Flutter réduit leurs durées à 5 % dans ce mode (vérifié par un test jetable : sans `preserve`, l'intro réduite durait ~2 frames).
-5. **Titre** : `'Guess It All'` en `AppTextStyles.title(fontSize: logoSize * 0.26)` — même style que `home_screen.dart`, mais une `Row` de `Text` par lettre (nécessaire pour l'animation par lettre) : perte de crénage entre lettres. `FittedBox(scaleDown)` sur `width - 48`. Le `Material` autour de la scène évite le soulignement jaune du `DefaultTextStyle` de `WidgetsApp` (on est au-dessus du Navigator). Acceptable ?
+5. **Titre** : `'Guess It All'` en `AppTextStyles.title(fontSize: 72)` — même style **et même taille** que `home_screen.dart` (retour Florent 2026-11-04), réduit seulement par le `FittedBox` sur écran étroit, mais une `Row` de `Text` par lettre (nécessaire pour l'animation par lettre) : perte de crénage entre lettres. `FittedBox(scaleDown)` sur `width - 48`. Le `Material` autour de la scène évite le soulignement jaune du `DefaultTextStyle` de `WidgetsApp` (on est au-dessus du Navigator). Acceptable ?
 6. **Logo peint** : `_StartupLogoPainter`, constantes recopiées de `render_logo.py` (renvoi documenté des deux côtés, pas de codegen). Pivot du pop = centre de la boîte bulle + queue (543, 516). Le « ? » : inclinaison fixe -6° autour de (512, 600) comme l'icône (la maquette HTML tournait autour de (512, 485) — choix : coller à l'icône), puis balancier autour du centre de la boîte du glyphe. `TextPainter` recréé à chaque frame (≈ 1,5 s une seule fois) : acceptable ?
 7. **Démarrage non retardé** : `main.dart` intact ; les tâches de démarrage restent avant `runApp`, l'intro joue après. Le splash natif couvre l'attente des tâches, puis l'intro.
 8. **Jointure splash → intro (Android 12+ surtout)** : le premier frame Flutter est un fond `#2B3848` vide (piste à opacité 0, arc non dessiné tant que sa progression vaut 0, point à opacité 0). Le splash Android 12 sans icône doit donc s'enchaîner sans saut. Y a-t-il un frame où l'app (accueil) apparaît avant l'overlay ?
