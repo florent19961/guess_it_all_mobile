@@ -233,27 +233,34 @@ void main() {
       'Malus envoyé en fin de M1, la cible rejoue en M2 sous une règle de '
       'manche incompatible (« Passe gratuite » Toujours) : écarté sans effet, '
       'puis retiré à la fin de son tour', () async {
-    final p = await givenProvider(['Ana', 'Bob'], wordsEach: 1);
-    await p.startGame(
-      fiesta: FiestaRules(
-        mode: FiestaMode.custom,
-        drawCount: 0,
-        modifiers: {
-          'no_pass': ModifierSetting(
-              active: true, rounds: const {1}, mode: ModifierMode.stock),
-          'free_pass': ModifierSetting(
-              active: true, rounds: const {2}, mode: ModifierMode.always),
-        },
-      ),
-    );
-    final a = p.getCurrentTeam()!.id;
-    final b = p.teams.firstWhere((t) => t.id != a).id;
-    expect(p.inflictMalus('no_pass', b), isNull);
-    playTurn(p, 99); // a finit M1
-    p.nextRound();
-    expect(playTurn(p), a); // continuation de a en M2
+    /// [sent] envoyé par l'équipe qui ouvre la partie, qui finit M1 ; [rule]
+    /// « Toujours » en M2. Rend le provider au tour M2 de la cible.
+    Future<GameProvider> crossRound(String sent, String rule) async {
+      final p = await givenProvider(['Ana', 'Bob'], wordsEach: 1);
+      await p.startGame(
+        fiesta: FiestaRules(
+          mode: FiestaMode.custom,
+          drawCount: 0,
+          catchUp: kCatchUpOff,
+          modifiers: {
+            sent: ModifierSetting(
+                active: true, rounds: const {1}, mode: ModifierMode.stock),
+            rule: ModifierSetting(
+                active: true, rounds: const {2}, mode: ModifierMode.always),
+          },
+        ),
+      );
+      final a = p.getCurrentTeam()!.id;
+      final b = p.teams.firstWhere((t) => t.id != a).id;
+      expect(p.inflictMalus(sent, b), isNull);
+      playTurn(p, 99); // a finit M1
+      p.nextRound();
+      expect(playTurn(p), a); // continuation de a en M2
+      expect(p.getCurrentTeam()!.id, b);
+      return p;
+    }
 
-    expect(p.getCurrentTeam()!.id, b);
+    final p = await crossRound('no_pass', 'free_pass');
     expect(p.receivedThisTurn, isEmpty);
     expect([p.passBlocked, p.freePasses], [false, 2]);
     playTurn(p);
@@ -297,8 +304,9 @@ void main() {
     p.startTurnTimer();
     expect(p.freePasses, 2);
     p.passWord();
+    expect([p.freePassesUsed, p.currentPassPenalty], [1, 0]);
     p.passWord();
-    expect(p.currentPassPenalty, 5);
+    expect([p.freePassesUsed, p.currentPassPenalty], [2, 5]);
     p.endTurn();
     p.savePreValidationState(const []);
     p.validateWords(const []);

@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_state.dart';
 import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
+import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
 import 'package:guess_it_all_mobile/models/fiesta/round_transition.dart';
 import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
 
@@ -251,5 +252,38 @@ void main() {
     // M3 : ×2 « par manche » revient à 2 ; Deux mots épuisé pour a.
     expect(stock(3, used),
         {'double_points/a': 2, 'double_points/b': 2, 'two_words/b': 2});
+  });
+
+  test(
+      'Malus reçus résolus au tour de la cible : en double avec une règle de '
+      'manche, ou incompatible avec un malus retenu avant lui (ordre '
+      'd\'envoi), il est écarté', () {
+    ModifierInstance sent(String id, String from) => ModifierInstance(
+          catalogId: id,
+          scope: ModifierScope.turn,
+          target: ModifierTarget.team,
+          teamId: 'b',
+          charges: 0,
+          nature: ModifierNature.malus,
+          round: 3,
+          fromTeamId: from,
+        );
+    final rule = ModifierInstance(
+      catalogId: 'minus_10s',
+      scope: ModifierScope.round,
+      target: ModifierTarget.both,
+      charges: 0,
+      nature: ModifierNature.malus,
+      round: 3,
+    );
+    final kept = modifiersForTurn([
+      rule,
+      sent('minus_10s', 'a'), // doublon de la règle
+      sent('mime_no_arms', 'a'),
+      sent('draw', 'c'), // second mime : incompatible
+      sent('reversed', 'c'),
+    ], teamId: 'b', logicalRound: 3);
+    expect(kept.map((m) => '${m.catalogId}<${m.fromTeamId}'),
+        ['minus_10s<null', 'mime_no_arms<a', 'reversed<c']);
   });
 }
