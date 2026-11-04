@@ -915,6 +915,11 @@ effet à la fin de ce tour. Ensembles fournis inchangés (Explosif, L'injustice)
 résolution), contre les règles de manche de SA manche et les malus déjà retenus : un malus en
 double ou incompatible (ex. « Interdit de passer » envoyé en fin de M1, « Passe gratuite »
 Toujours en M2) est écarté sans effet, comme un malus interdit dans la manche. L'avant-tour ne
-défile plus : cercles de 50 à 36 px, « Ce tour » sur plusieurs rangées s'il le faut, colonne
-Bonus à la largeur qui minimise les rangées. Résidu : « Explosif » en M3 (11 malus en réserve)
-déborde encore sur 360 × 640, et sur 360 × 740 avec plusieurs malus reçus et envois.
+défile plus : cercles de 50 à 36 px (la réserve seule jusqu'à 32 px en dernier recours),
+« Ce tour » sur plusieurs rangées s'il le faut, colonne Bonus à la largeur qui minimise les
+rangées. Pour faire la place (arbitrage lead) : en Fiesta, carte d'équipe compacte
+(« Équipe · Joueur », mots restants dedans) sous une marge fixe, titres de zone réduits, envois
+en puces « [icône] → X » (un appui propose d'annuler). La zone est coupée (`ClipRect`) plutôt que
+de passer sous « Commencer le tour ». Rendus locaux : Explosif M1 et M3 chargés (3 malus reçus,
+une règle, un bonus allumé, 2 envois), Explosif M3 2 équipes et Fiesta classique tiennent en
+360 × 640 et 360 × 740. Le titre de manche rétrécit au lieu de déborder (« Description libre »).

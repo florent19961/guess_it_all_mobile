@@ -18,8 +18,11 @@ Arbitrages du lead (à respecter, pas à rediscuter) :
    contre les règles de manche actives à ce tour (`always`/`draw` de sa manche logique) et les
    malus déjà retenus ; en double ou incompatible → écarté sans effet, retiré à la fin du tour.
    L'UI d'envoi garde sa vérification actuelle, sans anticiper la manche suivante.
-2. MAJOR : pas de défilement ; plancher ~36 px ; « Ce tour » sur 2 rangées si nécessaire. Un cas
-   extrême qui déborde encore est signalé au lead, pas « réparé » par un scroll.
+2. MAJOR : pas de défilement ; plancher 36 px (réserve seule jusqu'à 32 px en dernier
+   recours) ; « Ce tour » sur 2 rangées si nécessaire ; écran allégé en Fiesta (carte d'équipe
+   compacte, titres réduits, envois en puces annulables par un appui) ; rien ne passe jamais sous
+   « Commencer le tour » (`ClipRect`). Un cas extrême qui déborde encore est signalé au lead, pas
+   « réparé » par un scroll.
 3. MINOR : test du coup de pouce Auto (Passe gratuite = une cartouche d'un tour).
 
 ## Questions précises
@@ -32,8 +35,10 @@ Arbitrages du lead (à respecter, pas à rediscuter) :
 2. `_fiestaAfterTurn` retire tous les malus infligés à l'équipe à la vraie fin de son tour : avec
    la nouvelle résolution, un malus écarté peut-il survivre ou être appliqué plus tard ?
 3. `_fit` / colonnes (`lib/widgets/fiesta/turn_cartridges.dart`) : estimation de hauteur
-   cohérente avec le rendu (le plancher 36 px peut encore déborder, résidu connu) ; cas limites
-   (réserve vide, une colonne vide, « Ce tour » vide).
+   cohérente avec le rendu (constantes de texte estimées, pas mesurées) ; cas limites (réserve
+   vide, une colonne vide, « Ce tour » vide, beaucoup d'envois). Carte compacte de
+   `game_screen.dart` : aides (`_teamKey`, `_previousTurnKey`) et taps conservés ? Classique
+   inchangé (grande carte, `Spacer`) ?
 4. Le nouveau test Auto fixe le `gameId` en réécrivant l'état sauvegardé : légitime, ou fragile ?
 5. Mutation testing sur les deux tests ajoutés (`fiesta_cartridges_test.dart`, tests 5 et 6).
 
