@@ -153,7 +153,7 @@ class FiestaRules {
     this.oneOfThree = false,
     this.catchUp = CatchUpRules.auto,
     this.drawCount = 1,
-    this.oneAnswer = false,
+    this.oneAnswer = true,
   }) : modifiers = Map.unmodifiable(modifiers);
 
   Map<String, dynamic> toJson() => {

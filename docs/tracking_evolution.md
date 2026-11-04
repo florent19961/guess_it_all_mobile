@@ -735,8 +735,8 @@ réglages, c'était trop. Le choix du mode reste en mémoire (`pendingFiesta`, Q
 
 **Conséquence (règle 7).** Aucune forme persistée ne change : `FiestaRules` garde exactement ses
 clés. `oneAnswer` garde sa clé et son sens (« une seule réponse en vigueur pendant la partie ») ;
-une clé absente se relit toujours `true`, l'ancien défaut. Seul le défaut du constructeur passe
-à `false` (un nouvel ensemble ne la coche pas). Un `currentScreen` relu au nom d'un écran
+une clé absente se relit toujours `true`, l'ancien défaut. Seuls les nouveaux ensembles partent
+décochés (`defaultEnsembleRules`). Un `currentScreen` relu au nom d'un écran
 supprimé tombe sur l'accueil (cas par défaut de `app.dart`). Une partie Personnalisé suspendue
 avant la mise à jour peut tirer un 3ᵉ modificateur aux manches suivantes (plafond relevé), sans
 rien casser. Dans Firestore, `fiestaRules.oneAnswer` d'une partie Auto dit désormais ce qui a

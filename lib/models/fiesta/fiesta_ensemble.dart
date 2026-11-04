@@ -59,6 +59,8 @@ FiestaRules defaultEnsembleRules(String name) => FiestaRules(
           ),
       },
       oneOfThree: true,
+      // « Une seule réponse » : à cocher pour toute la partie, pas d'office.
+      oneAnswer: false,
     );
 
 /// Copie modifiée, pour l'éditeur et la duplication. Extension plutôt qu'un

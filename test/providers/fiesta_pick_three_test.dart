@@ -193,8 +193,8 @@ void main() {
   });
 
   test(
-      'M2 → M3 : ×2 + blocage de M2 sur le dernier tour, deux tirages en M3. '
-      'La continuation garde ×2 et blocage, pas les tirages (2 effets, pas 4) ; '
+      'M2 → M3 : ×2 + blocage de M2 sur le dernier tour, trois tirages en M3. '
+      'La continuation garde ×2 et blocage, pas les tirages (2 effets, pas 5) ; '
       'idem après un kill et un retour arrière ; les tirages de M3 commencent '
       'au premier vrai tour (epic fix, Codex MAJOR-1)', () async {
     final provider =
@@ -210,12 +210,14 @@ void main() {
       fiesta: FiestaRules(
         mode: FiestaMode.custom,
         oneOfThree: true,
-        drawCount: 2,
+        // 3 tirages en M3 = le plafond du Personnalisé : rien à offrir.
+        drawCount: 3,
         modifiers: {
           'block_guesser': setting(ModifierArrival.offer, 2),
           'double_points': setting(ModifierArrival.fixed, 2),
           'no_pass': setting(ModifierArrival.draw, 3),
           'reversed': setting(ModifierArrival.draw, 3),
+          'minus_10s': setting(ModifierArrival.draw, 3),
         },
       ),
     );
@@ -235,7 +237,7 @@ void main() {
     provider.setDoublePoints(true);
     playTurn(provider, 20);
     expect(provider.nextRoundModifiers.map((m) => m.catalogId),
-        unorderedEquals(['no_pass', 'reversed']));
+        unorderedEquals(['no_pass', 'reversed', 'minus_10s']));
     expect(provider.nextChooserId, isNull, reason: 'plafond : rien à offrir');
     provider.nextRound();
 
@@ -280,9 +282,9 @@ void main() {
     playTurn(reloaded, 0);
     expect(reloaded.getCurrentTeam()!.id, leader);
     expect(reloaded.turnModifiers.map((m) => m.catalogId),
-        unorderedEquals(['no_pass', 'reversed']));
+        unorderedEquals(['no_pass', 'reversed', 'minus_10s']));
     expect(reloaded.malusToReveal.map((m) => m.catalogId),
-        unorderedEquals(['no_pass', 'reversed']));
+        unorderedEquals(['no_pass', 'reversed', 'minus_10s']));
     expect([reloaded.isDoublePointsOn, reloaded.needsBlockedGuesser],
         [false, false]);
     expect(reloaded.game.fiesta!.active.every((m) => m.round == 3), isTrue);
