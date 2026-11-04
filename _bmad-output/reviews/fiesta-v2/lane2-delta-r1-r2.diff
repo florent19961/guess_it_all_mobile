@@ -1,8 +1,8 @@
 diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
-index 8bd87d8..fcdbfdd 100644
+index 8bd87d8..26e35b2 100644
 --- a/docs/tracking_evolution.md
 +++ b/docs/tracking_evolution.md
-@@ -900,6 +900,12 @@ utilisés » devient « Cartouches utilisées » (un malus : « X contre Y »).
+@@ -900,6 +900,17 @@ utilisés » devient « Cartouches utilisées » (un malus : « X contre Y »).
  cartouches (une Passe gratuite offerte = un tour, plus toute la manche) ; son malus frappe
  toujours le leader toute la manche (personne pour l'infliger). Un malus infligé interdit dans la
  manche où la cible rejoue (« Autre langue » envoyé en M2, cible qui rejoue en M3) part sans
@@ -15,9 +15,14 @@ index 8bd87d8..fcdbfdd 100644
 +résolution), contre les règles de manche de SA manche et les malus déjà retenus : un malus en
 +double ou incompatible (ex. « Interdit de passer » envoyé en fin de M1, « Passe gratuite »
 +Toujours en M2) est écarté sans effet, comme un malus interdit dans la manche. L'avant-tour ne
-+défile plus : cercles de 50 à 36 px, « Ce tour » sur plusieurs rangées s'il le faut, colonne
-+Bonus à la largeur qui minimise les rangées. Résidu : « Explosif » en M3 (11 malus en réserve)
-+déborde encore sur 360 × 640, et sur 360 × 740 avec plusieurs malus reçus et envois.
++défile plus : cercles de 50 à 36 px (la réserve seule jusqu'à 32 px en dernier recours),
++« Ce tour » sur plusieurs rangées s'il le faut, colonne Bonus à la largeur qui minimise les
++rangées. Pour faire la place (arbitrage lead) : en Fiesta, carte d'équipe compacte
++(« Équipe · Joueur », mots restants dedans) sous une marge fixe, titres de zone réduits, envois
++en puces « [icône] → X » (un appui propose d'annuler). La zone est coupée (`ClipRect`) plutôt que
++de passer sous « Commencer le tour ». Rendus locaux : Explosif M1 et M3 chargés (3 malus reçus,
++une règle, un bonus allumé, 2 envois), Explosif M3 2 équipes et Fiesta classique tiennent en
++360 × 640 et 360 × 740. Le titre de manche rétrécit au lieu de déborder (« Description libre »).
 diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
 index 7a2ce15..8eca09e 100644
 --- a/lib/models/CLAUDE.md
@@ -95,21 +100,352 @@ index b40b912..eb7287c 100644
 +      if (own.contains(m) || received.contains(m)) m,
 +  ];
 +}
+diff --git a/lib/screens/CLAUDE.md b/lib/screens/CLAUDE.md
+index 04a10e3..017a809 100644
+--- a/lib/screens/CLAUDE.md
++++ b/lib/screens/CLAUDE.md
+@@ -23,7 +23,7 @@ HomeScreen → SettingsScreen (Classique / Fiesta ; Auto / Personnalisé dans «
+ | `players_screen.dart` | Saisie noms joueurs + generation mots aleatoires avec cache metadata. Retour (bouton et systeme) → Parametres (Fiesta Personnalise : → ensembles) |
+ | `words_screen.dart` | Saisie mots par joueur (mode personnalise). Bouton "Grosse flemme" pour auto-remplir. Retour (bouton et systeme) → joueurs, mots sauvegardes |
+ | `teams_screen.dart` | Composition equipes par drag-and-drop, noms editables, bouton aleatoire. Retour (bouton et systeme) → joueurs. « Commencer » lance la partie (avec `pendingFiesta`, l'ensemble deja choisi en Personnalise) |
+-| `game_screen.dart` | Pre-tour : affiche manche, equipe/joueur courant, mots restants, bouton jouer. Fiesta (v2, maquette `cartouches` B variante a) : `FiestaTurnZone` sous l'équipe, **sans défilement** — « Ce tour » (règles de manche, malus reçus, bonus allumés ; « Rien ce tour ») puis « Réserve » (bonus / malus de l'équipe, toucher = activer ou infliger, appui long = explication), lignes « Envoyé » annulables. Plus de carte « Temps du tour » ; le temps reporté d'une continuation s'affiche comme en Classique |
++| `game_screen.dart` | Pre-tour : affiche manche, equipe/joueur courant, mots restants, bouton jouer. Fiesta (v2, maquette `cartouches` B variante a) : carte d'équipe compacte (« Équipe · Joueur », mots restants dedans), puis `FiestaTurnZone`, **sans défilement** et coupée plutôt que de passer sous le bouton — « Ce tour » (règles de manche, malus reçus, bonus allumés ; « Rien ce tour ») puis « Réserve » (bonus / malus de l'équipe, toucher = activer ou infliger, appui long = explication), puces « Envoyé » annulables. Plus de carte « Temps du tour » ; le temps reporté d'une continuation s'affiche comme en Classique |
+ | `countdown_screen.dart` | Decompte 3-2-1-GO anime |
+ | `turn_screen.dart` | Jeu actif : timer, mot courant (auto-size), boutons Passer/Valider, pause, sons, haptic |
+ | `verification_screen.dart` | Validation post-tour : toggle valid/invalide par mot, sauvegarde snapshot |
 diff --git a/lib/screens/game_screen.dart b/lib/screens/game_screen.dart
-index 16a1635..29758aa 100644
+index 16a1635..c0a45ac 100644
 --- a/lib/screens/game_screen.dart
 +++ b/lib/screens/game_screen.dart
-@@ -241,7 +241,7 @@ class _GameScreenState extends State<GameScreen> {
+@@ -100,17 +100,30 @@ class _GameScreenState extends State<GameScreen> {
+               padding: const EdgeInsets.all(24),
+               child: Column(
+                 children: [
+-                  const Spacer(),
++                  // Fiesta : hauteur fixe sous les boutons du haut, tout le
++                  // reste va aux cartouches.
++                  if (provider.isFiesta)
++                    const SizedBox(height: 40)
++                  else
++                    const Spacer(),
+ 
+                   // Round mode (gros)
+                   Row(
+                     mainAxisAlignment: MainAxisAlignment.center,
+                     children: [
+-                      Text(
+-                        AppConstants.roundModes[provider.game.currentRound] ??
+-                            '',
+-                        style: AppTextStyles.subtitle(fontSize: 44),
+-                        textAlign: TextAlign.center,
++                      // Rétrécit au lieu de déborder (« Description libre »
++                      // en 360 px de large).
++                      Flexible(
++                        child: FittedBox(
++                          fit: BoxFit.scaleDown,
++                          child: Text(
++                            AppConstants
++                                    .roundModes[provider.game.currentRound] ??
++                                '',
++                            style: AppTextStyles.subtitle(fontSize: 44),
++                            textAlign: TextAlign.center,
++                          ),
++                        ),
+                       ),
+                       const SizedBox(width: 12),
+                       GestureDetector(
+@@ -133,107 +146,18 @@ class _GameScreenState extends State<GameScreen> {
+                       ),
+                     ],
+                   ),
+-                  const SizedBox(height: 32),
+-
+-                  // Team card (cliquable pour voir la composition)
+-                  GestureDetector(
+-                    key: _teamKey,
+-                    onTap: () => _showTeamMembersDialog(
+-                        context, currentTeam, provider, teamColor),
+-                    child: Container(
+-                      padding: const EdgeInsets.symmetric(
+-                          horizontal: 32, vertical: 20),
+-                      decoration: BoxDecoration(
+-                        color: teamColor.withOpacity(0.15),
+-                        borderRadius: BorderRadius.circular(20),
+-                        border: Border.all(color: teamColor, width: 2),
+-                      ),
+-                      child: Column(
+-                        children: [
+-                          Row(
+-                            mainAxisSize: MainAxisSize.min,
+-                            children: [
+-                              Text(
+-                                currentTeam?.name ?? '',
+-                                style: TextStyle(
+-                                  fontFamily: 'Bangers',
+-                                  fontSize: 24,
+-                                  color: teamColor,
+-                                ),
+-                              ),
+-                              const SizedBox(width: 8),
+-                              Icon(
+-                                Icons.people_outline,
+-                                color: teamColor,
+-                                size: 18,
+-                              ),
+-                            ],
+-                          ),
+-                          const SizedBox(height: 8),
+-                          Text(
+-                            currentPlayer?.name ?? '',
+-                            style: const TextStyle(
+-                              fontFamily: 'Poppins',
+-                              fontSize: 20,
+-                              fontWeight: FontWeight.w600,
+-                              color: Colors.white,
+-                            ),
+-                          ),
+-                        ],
+-                      ),
+-                    ),
+-                  ),
+-
+-                  const SizedBox(height: 16),
+-
+-                  // Mots restants + mots devinés au tour précédent. Pas de
+-                  // score : il reste caché jusqu'aux résultats.
+-                  Row(
+-                    mainAxisAlignment: MainAxisAlignment.center,
+-                    children: [
+-                      Text(
+-                        '${provider.game.remainingWords.length} ${provider.game.remainingWords.length <= 1 ? 'mot restant' : 'mots restants'}',
+-                        style: const TextStyle(
+-                          fontFamily: 'Poppins',
+-                          fontSize: 14,
+-                          color: Colors.white60,
+-                        ),
+-                      ),
+-                      // Bouton pour voir les mots devinés au tour précédent
+-                      if (provider.game.history.isNotEmpty) ...[
+-                        const SizedBox(width: 12),
+-                        GestureDetector(
+-                          key: _previousTurnKey,
+-                          onTap: () =>
+-                              _showGuessedWordsDialog(context, provider),
+-                          child: Container(
+-                            padding: const EdgeInsets.symmetric(
+-                                horizontal: 10, vertical: 4),
+-                            decoration: BoxDecoration(
+-                              color: AppColors.gray600,
+-                              borderRadius: BorderRadius.circular(8),
+-                            ),
+-                            child: Row(
+-                              mainAxisSize: MainAxisSize.min,
+-                              children: [
+-                                const Icon(Icons.checklist,
+-                                    size: 14, color: Colors.white70),
+-                                const SizedBox(width: 4),
+-                                Text(
+-                                  '${provider.game.history.last.wordsGuessed.length} mots',
+-                                  style: const TextStyle(
+-                                    fontFamily: 'Poppins',
+-                                    fontSize: 12,
+-                                    color: Colors.white70,
+-                                  ),
+-                                ),
+-                              ],
+-                            ),
+-                          ),
+-                        ),
+-                      ],
+-                    ],
+-                  ),
++                  // Fiesta : carte d'équipe compacte (nom · joueur, mots
++                  // restants dedans) pour laisser la place aux cartouches.
++                  if (provider.isFiesta) ...[
++                    const SizedBox(height: 16),
++                    _compactTeamCard(
++                        provider, currentTeam, currentPlayer, teamColor),
++                  ] else ...[
++                    const SizedBox(height: 32),
++                    _teamCard(provider, currentTeam, currentPlayer, teamColor),
++                    const SizedBox(height: 16),
++                    _wordsRow(provider),
++                  ],
+ 
+                   // Fiesta : « Ce tour » et « Réserve » juste sous l'équipe,
+                   // sans défilement (les cercles s'adaptent à la place) ;
+@@ -241,11 +165,14 @@ class _GameScreenState extends State<GameScreen> {
                    if (provider.isFiesta) ...[
                      const SizedBox(height: 18),
                      Expanded(
 -                      flex: 6,
-+                      flex: 20,
-                       child: FiestaTurnZone(
-                         provider: provider,
-                         thisTurnKey: _thisTurnKey,
+-                      child: FiestaTurnZone(
+-                        provider: provider,
+-                        thisTurnKey: _thisTurnKey,
+-                        reserveKey: _reserveKey,
++                      // Jamais rien sous « Commencer le tour » : un cas
++                      // extrême qui ne tient pas est coupé, pas recouvrant.
++                      child: ClipRect(
++                        child: FiestaTurnZone(
++                          provider: provider,
++                          thisTurnKey: _thisTurnKey,
++                          reserveKey: _reserveKey,
++                        ),
+                       ),
+                     ),
+                     const SizedBox(height: 16),
+@@ -317,6 +244,149 @@ class _GameScreenState extends State<GameScreen> {
+     );
+   }
+ 
++  Widget _teamCard(GameProvider provider, dynamic currentTeam,
++          dynamic currentPlayer, Color teamColor) =>
++      GestureDetector(
++        key: _teamKey,
++        onTap: () =>
++            _showTeamMembersDialog(context, currentTeam, provider, teamColor),
++        child: Container(
++          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
++          decoration: BoxDecoration(
++            color: teamColor.withOpacity(0.15),
++            borderRadius: BorderRadius.circular(20),
++            border: Border.all(color: teamColor, width: 2),
++          ),
++          child: Column(
++            children: [
++              Row(
++                mainAxisSize: MainAxisSize.min,
++                children: [
++                  Text(
++                    currentTeam?.name ?? '',
++                    style: TextStyle(
++                      fontFamily: 'Bangers',
++                      fontSize: 24,
++                      color: teamColor,
++                    ),
++                  ),
++                  const SizedBox(width: 8),
++                  Icon(
++                    Icons.people_outline,
++                    color: teamColor,
++                    size: 18,
++                  ),
++                ],
++              ),
++              const SizedBox(height: 8),
++              Text(
++                currentPlayer?.name ?? '',
++                style: const TextStyle(
++                  fontFamily: 'Poppins',
++                  fontSize: 20,
++                  fontWeight: FontWeight.w600,
++                  color: Colors.white,
++                ),
++              ),
++            ],
++          ),
++        ),
++      );
++
++  /// Mots restants + mots devinés au tour précédent. Pas de score : il reste
++  /// caché jusqu'aux résultats.
++  Widget _wordsRow(GameProvider provider, {double fontSize = 14}) => Row(
++        mainAxisAlignment: MainAxisAlignment.center,
++        children: [
++          Text(
++            '${provider.game.remainingWords.length} ${provider.game.remainingWords.length <= 1 ? 'mot restant' : 'mots restants'}',
++            style: TextStyle(
++              fontFamily: 'Poppins',
++              fontSize: fontSize,
++              color: Colors.white60,
++            ),
++          ),
++          // Bouton pour voir les mots devinés au tour précédent
++          if (provider.game.history.isNotEmpty) ...[
++            const SizedBox(width: 12),
++            GestureDetector(
++              key: _previousTurnKey,
++              onTap: () => _showGuessedWordsDialog(context, provider),
++              child: Container(
++                padding: EdgeInsets.symmetric(
++                    horizontal: 10, vertical: fontSize < 14 ? 1 : 4),
++                decoration: BoxDecoration(
++                  color: AppColors.gray600,
++                  borderRadius: BorderRadius.circular(8),
++                ),
++                child: Row(
++                  mainAxisSize: MainAxisSize.min,
++                  children: [
++                    const Icon(Icons.checklist,
++                        size: 14, color: Colors.white70),
++                    const SizedBox(width: 4),
++                    Text(
++                      '${provider.game.history.last.wordsGuessed.length} mots',
++                      style: const TextStyle(
++                        fontFamily: 'Poppins',
++                        fontSize: 12,
++                        color: Colors.white70,
++                      ),
++                    ),
++                  ],
++                ),
++              ),
++            ),
++          ],
++        ],
++      );
++
++  /// Carte d'équipe compacte (Fiesta) : « Équipe · Joueur » sur une ligne,
++  /// mots restants dessous. Même style que la grande carte, sans ombre.
++  Widget _compactTeamCard(GameProvider provider, dynamic currentTeam,
++          dynamic currentPlayer, Color teamColor) =>
++      GestureDetector(
++        key: _teamKey,
++        onTap: () =>
++            _showTeamMembersDialog(context, currentTeam, provider, teamColor),
++        child: Container(
++          width: double.infinity,
++          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
++          decoration: BoxDecoration(
++            color: teamColor.withValues(alpha: 0.15),
++            borderRadius: BorderRadius.circular(20),
++            border: Border.all(color: teamColor, width: 2),
++          ),
++          child: Column(
++            children: [
++              Text.rich(
++                TextSpan(children: [
++                  TextSpan(
++                    text: currentTeam?.name ?? '',
++                    style: TextStyle(
++                        fontFamily: 'Bangers', fontSize: 22, color: teamColor),
++                  ),
++                  TextSpan(
++                    text: '  ·  ${currentPlayer?.name ?? ''}',
++                    style: const TextStyle(
++                      fontFamily: 'Poppins',
++                      fontSize: 16,
++                      fontWeight: FontWeight.w600,
++                      color: Colors.white,
++                    ),
++                  ),
++                ]),
++                textAlign: TextAlign.center,
++                maxLines: 1,
++                overflow: TextOverflow.ellipsis,
++              ),
++              const SizedBox(height: 2),
++              _wordsRow(provider, fontSize: 12),
++            ],
++          ),
++        ),
++      );
++
+   /// Fiesta : révèle d'abord les malus de l'équipe à son premier tour de la
+   /// manche, puis fait choisir le devineur bloqué (`block_guesser`), puis
+   /// lance le compte à rebours. Sélecteur fermé sans choix : on reste ici.
 diff --git a/lib/widgets/CLAUDE.md b/lib/widgets/CLAUDE.md
-index 3fb8664..6ea47e2 100644
+index 3fb8664..0a01d80 100644
 --- a/lib/widgets/CLAUDE.md
 +++ b/lib/widgets/CLAUDE.md
 @@ -8,7 +8,7 @@ Widgets reutilisables organises en deux sous-repertoires.
@@ -117,32 +453,43 @@ index 3fb8664..6ea47e2 100644
  | `common/` | Composants UI reutilisables (boutons, inputs, modals, sliders, toggles) |
  | `effects/` | Effets visuels et animations de fond |
 -| `fiesta/` | Cartes Fiesta (`FiestaCard`, `FiestaLine`, `FiestaHint`) ; kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawLine` (tirage de la manche en une ligne, transition), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `FiestaTurnZone` (`turn_cartridges.dart`, Fiesta v2 lane 2 : avant-tour « Ce tour / Réserve », cercles ~50 px qui rapetissent jusqu'à 32 px pour tenir sans défiler, appui long = explication, feuille « Contre quelle équipe ? », ligne « Envoyé : … → X » annulable ; lit et appelle le `GameProvider`), `CatchUpLine` (« Rattrapage » en une ligne, transition) et `BlockedGuesser` (selecteur « Les adversaires choisissent » + annonce « X ne repond pas », 2-8) ; kit 2-10 (`offer_widgets.dart`, sans Provider) : `PickThreeCard`, `PassPhonePanel`, `OfferChoiceBody` (rangées de cartes, une par rangée ; sélection rangée → index tenue par l'appelant, cartes sans effet grisées), `AppBoostLine` (une ligne, transition) ; couleurs : `modifierColor` = malus `AppColors.malus` (#F87171), bonus `AppColors.success` ; `FiestaInfoLine` (`fiesta_setup_widgets.dart`) = gabarit « Libellé : … » de ces lignes |
-+| `fiesta/` | Cartes Fiesta (`FiestaCard`, `FiestaLine`, `FiestaHint`) ; kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawLine` (tirage de la manche en une ligne, transition), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `FiestaTurnZone` (`turn_cartridges.dart`, Fiesta v2 lane 2 : avant-tour « Ce tour / Réserve », cercles ~50 px qui rapetissent jusqu'à 36 px pour tenir sans défiler (« Ce tour » sur plusieurs rangées, colonne Bonus ajustée ; jamais de défilement), appui long = explication, feuille « Contre quelle équipe ? », ligne « Envoyé : … → X » annulable ; lit et appelle le `GameProvider`), `CatchUpLine` (« Rattrapage » en une ligne, transition) et `BlockedGuesser` (selecteur « Les adversaires choisissent » + annonce « X ne repond pas », 2-8) ; kit 2-10 (`offer_widgets.dart`, sans Provider) : `PickThreeCard`, `PassPhonePanel`, `OfferChoiceBody` (rangées de cartes, une par rangée ; sélection rangée → index tenue par l'appelant, cartes sans effet grisées), `AppBoostLine` (une ligne, transition) ; couleurs : `modifierColor` = malus `AppColors.malus` (#F87171), bonus `AppColors.success` ; `FiestaInfoLine` (`fiesta_setup_widgets.dart`) = gabarit « Libellé : … » de ces lignes |
++| `fiesta/` | Cartes Fiesta (`FiestaCard`, `FiestaLine`, `FiestaHint`) ; kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `ModifierCard`, `RoundDrawLine` (tirage de la manche en une ligne, transition), `MalusReveal` (plein ecran avant le tour, reutilisable 2-8 / 2-10), `FiestaTurnZone` (`turn_cartridges.dart`, Fiesta v2 lane 2 : avant-tour « Ce tour / Réserve », cercles ~50 px qui rapetissent jusqu'à 36 px (la réserve seule jusqu'à 32 px) pour tenir sans défiler (« Ce tour » sur plusieurs rangées, colonne Bonus ajustée ; jamais de défilement), appui long = explication, feuille « Contre quelle équipe ? », puces « Envoyé » « [icône] → X », un appui propose d'annuler ; lit et appelle le `GameProvider`), `CatchUpLine` (« Rattrapage » en une ligne, transition) et `BlockedGuesser` (selecteur « Les adversaires choisissent » + annonce « X ne repond pas », 2-8) ; kit 2-10 (`offer_widgets.dart`, sans Provider) : `PickThreeCard`, `PassPhonePanel`, `OfferChoiceBody` (rangées de cartes, une par rangée ; sélection rangée → index tenue par l'appelant, cartes sans effet grisées), `AppBoostLine` (une ligne, transition) ; couleurs : `modifierColor` = malus `AppColors.malus` (#F87171), bonus `AppColors.success` ; `FiestaInfoLine` (`fiesta_setup_widgets.dart`) = gabarit « Libellé : … » de ces lignes |
  | `help/` | Aides de prise en main : `HelpButton` (« ? »), `CoachMarks` (voile + bulle, étapes `CoachStep` ciblées par `GlobalKey`), textes par écran (`help_content.dart`), `TutorialPager`, `FirstGamePrompt` (tuto des règles d'office au 1er « Jouer »), `FirstGameHelp` (aides auto de la 1re partie). Branchement écran par écran → `help/WIRING.md` |
  
  ## Kit visuel du tour Fiesta (`fiesta/fiesta_turn_widgets.dart`)
 diff --git a/lib/widgets/fiesta/turn_cartridges.dart b/lib/widgets/fiesta/turn_cartridges.dart
-index d3fe61b..bb3641a 100644
+index d3fe61b..819aa8b 100644
 --- a/lib/widgets/fiesta/turn_cartridges.dart
 +++ b/lib/widgets/fiesta/turn_cartridges.dart
-@@ -37,7 +37,10 @@ enum _Kind { rule, received, armed, reserve }
+@@ -9,6 +9,7 @@ import '../../models/fiesta/turn_effects.dart';
+ import '../../models/team.dart';
+ import '../../providers/game_provider.dart';
+ import '../../theme/app_theme.dart';
++import '../common/app_confirm_dialog.dart';
+ import 'modifier_badge.dart';
+ 
+ /// Écran avant le tour, Fiesta v2 (maquette `cartouches` B, variante a) :
+@@ -37,7 +38,13 @@ enum _Kind { rule, received, armed, reserve }
  
  const _gap = 6.0;
  const _maxSize = 50.0;
 -const _minSize = 32.0;
 +const _minSize = 36.0;
 +
++/// Dernier recours pour la RÉSERVE seulement (jamais « Ce tour »).
++const _reserveMinSize = 32.0;
++
 +/// Entre deux rangées de « Ce tour » : place pour l'étiquette « manche ».
 +const _thisTurnRunSpacing = _gap + 6;
  const _ink = AppColors.backgroundMain;
  
  class _FiestaTurnZoneState extends State<FiestaTurnZone> {
-@@ -271,17 +274,14 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+@@ -271,34 +278,32 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
  
      return LayoutBuilder(builder: (context, box) {
        final thisTurnCount = rules.length + received.length + armed.length;
 -      final size = _fit(
-+      final (:size, :bonusWidth) = _fit(
++      final (:size, :reserveSize, :bonusWidth) = _fit(
          width: box.maxWidth,
          height: box.maxHeight,
          bonus: bonus.length,
@@ -157,8 +504,20 @@ index d3fe61b..bb3641a 100644
  
        final thisTurn = Container(
          key: widget.thisTurnKey,
-@@ -298,7 +298,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
-             const SizedBox(height: 10),
+-        padding: const EdgeInsets.all(12),
++        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+         decoration: BoxDecoration(
+           color: _ink.withValues(alpha: 0.6),
+           borderRadius: BorderRadius.circular(18),
+           border: Border.all(color: AppColors.gray700),
+         ),
+         child: Column(
++          mainAxisSize: MainAxisSize.min,
+           crossAxisAlignment: CrossAxisAlignment.stretch,
+           children: [
+             const _ZoneTitle('CE TOUR'),
+-            const SizedBox(height: 10),
++            const SizedBox(height: 6),
              if (thisTurnCount == 0)
                SizedBox(
 -                height: rowSize,
@@ -166,7 +525,7 @@ index d3fe61b..bb3641a 100644
                  child: Center(
                    child: Text('Rien ce tour',
                        style: AppTextStyles.bodySmall
-@@ -308,18 +308,16 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+@@ -308,18 +313,16 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
              else
                Wrap(
                  spacing: _gap,
@@ -188,7 +547,7 @@ index d3fe61b..bb3641a 100644
                          onLongPress: () => _explain(m.catalogId, _Kind.received,
                              from: m.fromTeamId == null
                                  ? null
-@@ -331,8 +329,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+@@ -331,8 +334,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                          key: _keyOf('on-$id'),
                          child: Opacity(
                            opacity: _flying == id ? 0 : 1,
@@ -198,7 +557,46 @@ index d3fe61b..bb3641a 100644
                          ),
                        ),
                        onTap: (circle) =>
-@@ -416,7 +413,9 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+@@ -368,13 +370,14 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+                 overflow: TextOverflow.ellipsis,
+                 style: TextStyle(
+                   fontFamily: 'Poppins',
+-                  fontSize: 11,
++                  fontSize: 10,
++                  height: 1.4,
+                   fontWeight: FontWeight.w600,
+-                  letterSpacing: 1.2,
++                  letterSpacing: 1,
+                   color: color,
+                 ),
+               ),
+-              const SizedBox(height: 6),
++              const SizedBox(height: 4),
+               Wrap(
+                 spacing: _gap,
+                 runSpacing: _gap,
+@@ -388,7 +391,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+                           child: _Circle(
+                               id: c.catalogId,
+                               kind: _Kind.reserve,
+-                              size: size,
++                              size: reserveSize,
+                               cartridge: c),
+                         ),
+                       ),
+@@ -406,17 +409,19 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+         crossAxisAlignment: CrossAxisAlignment.stretch,
+         children: [
+           thisTurn,
+-          const SizedBox(height: 16),
++          const SizedBox(height: 10),
+           Column(
+             key: widget.reserveKey,
+             crossAxisAlignment: CrossAxisAlignment.stretch,
+             children: [
+               const _ZoneTitle('RÉSERVE'),
+-              const SizedBox(height: 8),
++              const SizedBox(height: 4),
                Row(
                  crossAxisAlignment: CrossAxisAlignment.start,
                  children: [
@@ -209,8 +607,27 @@ index d3fe61b..bb3641a 100644
                    const SizedBox(width: 12),
                    Expanded(
                      child: column('MALUS', malus, AppColors.malus,
-@@ -436,8 +435,8 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
-                   .copyWith(fontSize: 11, color: AppColors.gray500)),
+@@ -428,61 +433,83 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+               ),
+             ],
+           ),
+-          for (final m in sent) _sentLine(m),
+-          const SizedBox(height: 8),
++          if (sent.isNotEmpty) ...[
++            const SizedBox(height: 6),
++            Wrap(
++              spacing: _gap,
++              runSpacing: 4,
++              children: [for (final m in sent) _sentChip(m)],
++            ),
++          ],
++          const SizedBox(height: 6),
+           Text('Touche : activer · Appui long : explication',
+               textAlign: TextAlign.center,
+-              style: AppTextStyles.bodySmall
+-                  .copyWith(fontSize: 11, color: AppColors.gray500)),
++              style: AppTextStyles.bodySmall.copyWith(
++                  fontSize: 11, height: 1.4, color: AppColors.gray500)),
          ],
        );
 -      // Garde-fou seulement : [_fit] fait tenir la zone sans défiler.
@@ -220,7 +637,105 @@ index d3fe61b..bb3641a 100644
      });
    }
  
-@@ -503,38 +502,55 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+-  Widget _sentLine(ModifierInstance m) {
++  /// Puce « [icône] → X » d'un malus envoyé ; un appui propose de l'annuler.
++  Widget _sentChip(ModifierInstance m) {
+     final index = _p.teams.indexWhere((t) => t.id == m.teamId);
+-    final style = AppTextStyles.bodySmall
+-        .copyWith(fontSize: 12, color: AppColors.gray400);
+-    return Padding(
+-      padding: const EdgeInsets.only(top: 6),
+-      child: Row(
+-        children: [
+-          Text('Envoyé : ', style: style),
+-          Container(
+-            width: 24,
+-            height: 24,
+-            alignment: Alignment.center,
+-            decoration: BoxDecoration(
+-              shape: BoxShape.circle,
+-              border: Border.all(color: AppColors.malus, width: 1.5),
++    final team = _p.getTeamById(m.teamId!)?.name ?? '';
++    return GestureDetector(
++      onTap: () async {
++        final cancel = await AppConfirmDialog.show(
++          context,
++          title: 'Annuler l\'envoi ?',
++          message: '${_name(m.catalogId)} → $team : la cartouche revient '
++              'dans ta réserve.',
++          confirmText: 'Annuler l\'envoi',
++          cancelText: 'Garder',
++        );
++        if (cancel && mounted) _p.cancelSent(m);
++      },
++      child: Container(
++        height: 26,
++        padding: const EdgeInsets.fromLTRB(3, 0, 10, 0),
++        decoration: BoxDecoration(
++          color: AppColors.malus.withValues(alpha: 0.12),
++          borderRadius: BorderRadius.circular(13),
++          border: Border.all(color: AppColors.malus.withValues(alpha: 0.5)),
++        ),
++        child: Row(
++          mainAxisSize: MainAxisSize.min,
++          children: [
++            Container(
++              width: 20,
++              height: 20,
++              alignment: Alignment.center,
++              decoration: BoxDecoration(
++                shape: BoxShape.circle,
++                border: Border.all(color: AppColors.malus, width: 1.5),
++              ),
++              child: Text(modifierIcon(m.catalogId),
++                  style: const TextStyle(
++                      fontSize: 9,
++                      height: 1,
++                      fontWeight: FontWeight.w700,
++                      color: AppColors.malus)),
+             ),
+-            child: Text(modifierIcon(m.catalogId),
+-                style: const TextStyle(
+-                    fontSize: 10,
++            ConstrainedBox(
++              constraints: const BoxConstraints(maxWidth: 110),
++              child: Text(
++                ' → $team',
++                maxLines: 1,
++                overflow: TextOverflow.ellipsis,
++                style: AppTextStyles.bodySmall.copyWith(
++                    fontSize: 12,
++                    height: 1.2,
+                     fontWeight: FontWeight.w700,
+-                    color: AppColors.malus)),
+-          ),
+-          Text(' → ', style: style),
+-          Flexible(
+-            child: Text(
+-              _p.getTeamById(m.teamId!)?.name ?? '',
+-              overflow: TextOverflow.ellipsis,
+-              style: style.copyWith(
+-                  fontWeight: FontWeight.w700,
+-                  color: AppColors.getTeamColor(index < 0 ? 0 : index)),
++                    color: AppColors.getTeamColor(index < 0 ? 0 : index)),
++              ),
+             ),
+-          ),
+-          const Spacer(),
+-          GestureDetector(
+-            onTap: () => _p.cancelSent(m),
+-            child: Text('Annuler',
+-                style: style.copyWith(
+-                    fontWeight: FontWeight.w600,
+-                    color: AppColors.secondaryCyan)),
+-          ),
+-        ],
++          ],
++        ),
+       ),
+     );
+   }
+@@ -503,38 +530,61 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
          ),
        );
  
@@ -230,10 +745,11 @@ index d3fe61b..bb3641a 100644
 -  static double _fit({
 +  /// Plus grand diamètre (50 au plus, [_minSize] au moins) qui fait tenir la
 +  /// zone dans [height] : « Ce tour » (repliée sur plusieurs rangées s'il le
-+  /// faut), « Réserve » (deux colonnes repliées), lignes « Envoyé », aide.
++  /// faut), « Réserve » (deux colonnes repliées), puces « Envoyé », aide. En
++  /// dernier recours, la RÉSERVE seule descend jusqu'à [_reserveMinSize].
 +  /// La colonne Bonus (3 cartouches au plus) prend la largeur qui minimise le
 +  /// nombre de rangées ; la colonne Malus, le reste.
-+  static ({double size, double bonusWidth}) _fit({
++  static ({double size, double reserveSize, double bonusWidth}) _fit({
      required double width,
      required double height,
      required int bonus,
@@ -242,6 +758,13 @@ index d3fe61b..bb3641a 100644
 +    required int thisTurn,
    }) {
 -    final column = (width - 12) / 2;
+-    double needed(double d) {
+-      final perRow = max(1, ((column + _gap) / (d + _gap)).floor());
+-      final rows = max((bonus / perRow).ceil(), (malus / perRow).ceil());
+-      const thisTurnFixed = 12 + 18 + 10 + 12 + 2;
+-      const reserveTitle = 16 + 18 + 8;
+-      const columnTitle = 18 + 6;
+-      const help = 8 + 18;
 +    const minColumn = 64.0; // l'en-tête « BONUS » / « MALUS »
 +    int perRow(double space, double d) =>
 +        max(1, ((space + _gap) / (d + _gap)).floor());
@@ -256,38 +779,57 @@ index d3fe61b..bb3641a 100644
 +      return best;
 +    }
 +
-     double needed(double d) {
--      final perRow = max(1, ((column + _gap) / (d + _gap)).floor());
--      final rows = max((bonus / perRow).ceil(), (malus / perRow).ceil());
-+      final thisTurnRows = max(1, rowsOf(thisTurn, width - 26, d));
-       const thisTurnFixed = 12 + 18 + 10 + 12 + 2;
-       const reserveTitle = 16 + 18 + 8;
-       const columnTitle = 18 + 6;
-       const help = 8 + 18;
++    // Puces « Envoyé » : ~3 par rangée.
++    final sentRows = (sent / 3).ceil();
++    final sentHeight = sent == 0 ? 0 : 6 + sentRows * 30 - 4;
++    double needed(double t, double r) {
++      final thisTurnRows = max(1, rowsOf(thisTurn, width - 26, t));
++      const thisTurnFixed = 10 + 15 + 6 + 10 + 2;
++      const reserveTitles = 10 + 15 + 4 + 14 + 4;
++      const help = 6 + 16;
        return thisTurnFixed +
 -          d +
-+          thisTurnRows * (d + _thisTurnRunSpacing) -
-+          _thisTurnRunSpacing +
-           reserveTitle +
-           columnTitle +
+-          reserveTitle +
+-          columnTitle +
 -          rows * (d + _gap) -
-+          columns(d).rows * (d + _gap) -
++          thisTurnRows * (t + _thisTurnRunSpacing) -
++          _thisTurnRunSpacing +
++          reserveTitles +
++          columns(r).rows * (r + _gap) -
            _gap +
-           sent * 30 +
+-          sent * 30 +
++          sentHeight +
            help;
      }
  
 -    for (var d = _maxSize; d > _minSize; d -= 2) {
 -      if (needed(d) <= height) return d;
 +    var d = _maxSize;
-+    while (d > _minSize && needed(d) > height) {
++    while (d > _minSize && needed(d, d) > height) {
 +      d -= 2;
++    }
++    var r = d;
++    while (r > _reserveMinSize && needed(d, r) > height) {
++      r -= 2;
      }
 -    return _minSize;
-+    return (size: d, bonusWidth: columns(d).bonusWidth);
++    return (size: d, reserveSize: r, bonusWidth: columns(r).bonusWidth);
    }
  }
  
+@@ -548,9 +598,10 @@ class _ZoneTitle extends StatelessWidget {
+         text,
+         style: const TextStyle(
+           fontFamily: 'Poppins',
+-          fontSize: 12,
++          fontSize: 10,
++          height: 1.4,
+           fontWeight: FontWeight.w600,
+-          letterSpacing: 1.2,
++          letterSpacing: 1,
+           color: AppColors.gray400,
+         ),
+       );
 diff --git a/test/providers/fiesta_cartridges_test.dart b/test/providers/fiesta_cartridges_test.dart
 index 29b239b..46639bc 100644
 --- a/test/providers/fiesta_cartridges_test.dart
