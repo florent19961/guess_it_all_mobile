@@ -148,12 +148,34 @@ class _FiestaEnsembleEditorScreenState
                         ),
                       ),
                       _Card(
-                        title: 'Catalogue',
+                        title: 'Malus',
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            for (final def in kModifierCatalog)
+                              if (def.nature == ModifierNature.malus &&
+                                  !def.mimeFamily)
+                                _buildModifier(def),
+                            _buildOneAnswer(),
+                            const SizedBox(height: 12),
+                            Text(
+                              'MIMES · UN SEUL À LA FOIS',
+                              style: AppTextStyles.label.copyWith(
+                                  color: AppColors.gray400, fontSize: 11),
+                            ),
+                            const SizedBox(height: 6),
+                            for (final def in kModifierCatalog)
+                              if (def.mimeFamily) _buildModifier(def),
+                          ],
+                        ),
+                      ),
+                      _Card(
+                        title: 'Bonus',
                         child: Column(
                           children: [
                             for (final def in kModifierCatalog)
-                              _buildModifier(def),
-                            _buildOneAnswer(),
+                              if (def.nature == ModifierNature.bonus)
+                                _buildModifier(def),
                           ],
                         ),
                       ),
@@ -244,6 +266,16 @@ class _FiestaEnsembleEditorScreenState
               _switch(s.active, (v) {
                 if (v) _openModifier = def.id;
                 _setModifier(def, s.copyWith(active: v));
+                // Famille « Mime » : choix exclusif, allumer l'un coupe les
+                // autres.
+                if (v && def.mimeFamily) {
+                  for (final other in kModifierCatalog) {
+                    if (other.mimeFamily && other.id != def.id) {
+                      _setModifier(
+                          other, _settingFor(other).copyWith(active: false));
+                    }
+                  }
+                }
               }),
             ],
           ),
@@ -275,7 +307,7 @@ class _FiestaEnsembleEditorScreenState
                     : _Stepper(
                         value: s.fixedRound ?? 3,
                         min: 1,
-                        max: 3,
+                        max: def.notInRound3 ? 2 : 3,
                         onChanged: (v) =>
                             _setModifier(def, s.copyWith(fixedRound: v)),
                       ),
@@ -288,12 +320,13 @@ class _FiestaEnsembleEditorScreenState
                     : _Stepper(
                         value: s.startRound,
                         min: s.arrival == ModifierArrival.offer ? 2 : 1,
-                        max: 3,
+                        max: def.notInRound3 ? 2 : 3,
                         onChanged: (v) =>
                             _setModifier(def, s.copyWith(startRound: v)),
                       ),
               ),
             if (round3) const _Hint('Manche 3 seulement (mime).'),
+            if (def.notInRound3) const _Hint('Jamais en manche 3 (on y mime).'),
             if (def.defaultCharges > 0)
               _line(
                 def.id == 'free_pass'
@@ -332,9 +365,7 @@ class _FiestaEnsembleEditorScreenState
       trailing: _switch(
         on,
         (v) => setState(() => _rules = _rules.copyWith(
-              catchUp: v
-                  ? CatchUpRules.auto
-                  : const CatchUpRules(b1: 0, b2: 0, cap: 0, mal: 0, malCap: 0),
+              catchUp: v ? CatchUpRules.auto : kCatchUpOff,
             )),
       ),
       child: !on

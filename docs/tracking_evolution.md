@@ -749,3 +749,38 @@ bouton retour (accueil, équipes) — les écrans supprimés le faisaient via `F
 rond « Réinitialiser » quitte le coin haut droit des Paramètres pour le bas de la fenêtre
 « Avancés » (« Réinitialiser les paramètres », même confirmation) ; en haut à droite ne restent
 que le « ? » et la roue crantée.
+
+## 2026-11-04 — Paramètres sans défilement, famille « Mime », deux nouveautés au catalogue
+
+**Quoi.** Paramètres : ordre Joueurs, Équipes, « Mode de jeu » (section titrée, Classique /
+Fiesta), Choix des mots, puis Catégories ; espacements serrés et compteurs à 40 pt pour tenir
+sans défiler (mesuré : contenu 709 px, avertissement « partie longue » compris, pour 763 utiles
+sur iPhone 390 × 844 et 740 sur Android 360 × 780). « Avancés » : curseurs `compact` (valeur à
+droite du libellé) et espaces de 8 px, contenu 402 px en Fiesta. Catalogue : une **famille
+« Mime »** (`mimeFamily` : les 3 mimes, « Dessiner », « Mimer sous un drap », « Mime de dos »)
+dont deux membres s'excluent toujours, à la place des paires mime/mime et de la règle
+Dessiner/mimes ; « Faire deviner dans une autre langue » (malus, `notInRound3` : jamais en
+manche 3, compatible avec tout le reste). Éditeur Personnalisé : sections Malus puis Bonus,
+sous-catégorie Mimes à choix exclusif ; nouvel ensemble = rattrapage coupé, tirage symétrique
+allumé, seul « Dessiner » actif parmi les mimes.
+
+**Pourquoi.** Retours device de Florent. La règle de famille passe par `areCompatible`, donc
+par `canAdd` : tirage Auto et Personnalisé, fixés, 1 parmi 3, coup de pouce l'appliquent sans
+code propre. Les nouveaux ids sont ajoutés **en fin** de catalogue et dans `kOfferStrength`
+(drap : forte ; dos et autre langue : moyenne — au doigt mouillé, comme le reste).
+
+**Conséquence (règle 7).** Aucune forme persistée ne change (ids ajoutés seulement). Un ensemble
+enregistré avec plusieurs mimes actifs se relit via `oneMimeAtMost` — normalisation
+déterministe : le premier mime fixé dans l'ordre du catalogue, sinon le premier actif dans
+l'ordre du catalogue (ce n'est pas forcément le mime tiré auparavant) ; les autres passent
+`active: false` en gardant leurs réglages, et le blob est réécrit à la prochaine écriture du
+store (« Enregistrer », mais aussi « Jouer » via `markUsed`). Les règles et l'état gelés d'une
+partie en cours ne sont PAS normalisés : une partie Fiesta de dev déjà gelée avec deux mimes
+les garde et les applique tous les deux (couvert par la rupture pré-release ci-dessous) ; la
+règle de famille ne s'applique qu'aux nouveaux tirages.
+
+**Rupture pré-release assumée (revue r1).** La Fiesta n'a jamais été publiée (le dernier tag
+store ne contient aucun fichier Fiesta) ; une partie Fiesta suspendue sur une build de dev
+peut voir tirages/offres/récap recalculés, car les nouveaux ids allongent les listes de
+candidats mélangées par la même graine. Pas de versionnage du catalogue : sur-dimensionné pour
+un mode jamais publié. Règle pour l'après-publication → `lib/models/CLAUDE.md`.

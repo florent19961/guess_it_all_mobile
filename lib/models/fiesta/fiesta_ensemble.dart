@@ -27,22 +27,48 @@ class FiestaEnsemble {
     // Un ensemble est toujours Personnalisé : des règles Auto ici ne
     // viennent pas de l'éditeur, on ne les rend pas à `onUse`.
     if (rules == null || rules.mode != FiestaMode.custom) return null;
-    return FiestaEnsemble(id: id, rules: rules);
+    return FiestaEnsemble(id: id, rules: oneMimeAtMost(rules));
   }
 }
 
+/// Famille « Mime » : un ensemble n'en garde qu'UN actif (choix exclusif de
+/// l'éditeur). Un ensemble enregistré avant cette règle peut en avoir
+/// plusieurs. Normalisation déterministe : le premier mime FIXÉ dans l'ordre
+/// du catalogue, sinon le premier actif dans l'ordre du catalogue (ce n'est
+/// pas forcément le mime tiré auparavant) ; les autres sont désactivés,
+/// réglages conservés. Même forme JSON, réécrite à la prochaine écriture du
+/// store.
+FiestaRules oneMimeAtMost(FiestaRules rules) {
+  final active = [
+    for (final def in kModifierCatalog)
+      if (def.mimeFamily && (rules.modifiers[def.id]?.active ?? false)) def.id
+  ];
+  if (active.length < 2) return rules;
+  final keep = active.firstWhere(
+    (id) => rules.modifiers[id]!.arrival == ModifierArrival.fixed,
+    orElse: () => active.first,
+  );
+  return rules.copyWith(modifiers: {
+    for (final MapEntry(key: id, value: setting) in rules.modifiers.entries)
+      id: active.contains(id) && id != keep
+          ? setting.copyWith(active: false)
+          : setting,
+  });
+}
+
 /// Règles d'un nouvel ensemble : les valeurs par défaut de la maquette
-/// (`mkSet`). Tout le catalogue est actif ; les contraintes de mime arrivent en
-/// manche 3 (« Dessiner » fixé dessus, les autres tirées), les bonus sont
-/// proposés dès M2, les malus tirés dès M1 — sauf ceux à cible joueur
-/// (« Bloquer un devineur »), jamais tirés : proposés dès M2.
+/// (`mkSet`), retouchées le 2026-11-04. Tout le catalogue est actif sauf la
+/// famille « Mime », dont seul « Dessiner » l'est (fixé en manche 3 : un seul
+/// mime à la fois) ; les bonus sont proposés dès M2, les malus tirés dès M1 —
+/// sauf ceux à cible joueur (« Bloquer un devineur »), jamais tirés : proposés
+/// dès M2. Rattrapage coupé, tirage symétrique allumé.
 FiestaRules defaultEnsembleRules(String name) => FiestaRules(
       mode: FiestaMode.custom,
       ensembleName: name,
       modifiers: {
         for (final def in kModifierCatalog)
           def.id: ModifierSetting(
-            active: true,
+            active: !def.mimeFamily || def.id == 'draw',
             arrival: def.id == 'draw'
                 ? ModifierArrival.fixed
                 : !isForAllTeams(def) ||
@@ -54,14 +80,19 @@ FiestaRules defaultEnsembleRules(String name) => FiestaRules(
                 : !isForAllTeams(def) || def.nature == ModifierNature.bonus
                     ? 2
                     : 1,
-            fixedRound: 3,
+            fixedRound: def.notInRound3 ? 1 : 3,
             charges: def.defaultCharges,
           ),
       },
       oneOfThree: true,
+      symmetric: true,
+      catchUp: kCatchUpOff,
       // « Une seule réponse » : à cocher pour toute la partie, pas d'office.
       oneAnswer: false,
     );
+
+/// Rattrapage coupé : tous les curseurs à 0 (voir [catchUpOn]).
+const kCatchUpOff = CatchUpRules(b1: 0, b2: 0, cap: 0, mal: 0, malCap: 0);
 
 /// Copie modifiée, pour l'éditeur et la duplication. Extension plutôt qu'un
 /// `copyWith` dans `FiestaRules` : le type appartient à la story 2-2.

@@ -28,6 +28,9 @@ const Map<String, OfferStrength> kOfferStrength = {
   'block_guesser': OfferStrength.heavy,
   'mime_no_arms': OfferStrength.heavy,
   'mime_eyes_closed': OfferStrength.heavy,
+  'mime_back_turned': OfferStrength.medium,
+  'other_language': OfferStrength.medium,
+  'mime_under_sheet': OfferStrength.heavy,
 };
 
 /// 🔴 À RECALIBRER : seuils de la maquette, écart ≤ 3 → légère, ≤ 7 →

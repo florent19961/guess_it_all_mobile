@@ -29,7 +29,7 @@ résultats finaux en montrent.
 | Écran | Fonction | Clés à poser | Bouton « ? » |
 |---|---|---|---|
 | `home_screen` | `homeHelp` | `play` (« Jouer » **ou** « Nouvelle partie »), `resume` (« Reprendre »), `replay` (« Rejouer »), `rules`, `history` | `right: 16` |
-| `settings_screen` | `settingsHelp(passPenalty: provider.settings.passPenalty)` | `mode` (interrupteur Classique / Fiesta), `counts` (cartes Joueurs + Équipes), `wordChoice`, `categories` (bouton Catégories & Difficultés), `advanced` (bouton Avancés ; « Réinitialiser les paramètres » vit en bas de cette fenêtre) | `HelpButton.inline` en tête de la `Row` « ? » / Avancés |
+| `settings_screen` | `settingsHelp(passPenalty: provider.settings.passPenalty)` | `counts` (cartes Joueurs + Équipes), `mode` (interrupteur Classique / Fiesta de la section « Mode de jeu »), `wordChoice`, `categories` (bouton Catégories & Difficultés), `advanced` (bouton Avancés ; « Réinitialiser les paramètres » vit en bas de cette fenêtre) | `HelpButton.inline` en tête de la `Row` « ? » / Avancés |
 | `players_screen` | `playersHelp` | `firstPlayer` (ligne du joueur 1), `words` (bouton Saisir/Voir mots du joueur 1), `next` | `right: 16` |
 | `teams_screen` | `teamsHelp` | `firstTeam` (carte de la 1re équipe), `shuffle`, `start` (« Commencer ») | `right: 16` |
 | `game_screen` (avant-tour) | `preTurnHelp(playerName: …)` | `team` (nom d'équipe + joueur), `roundRules` (icône info de la manche), `previousTurn` (« Tour précédent »), `start` | `right: besideCornerButton` |

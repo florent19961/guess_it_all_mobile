@@ -98,7 +98,7 @@ void main() {
     // `no_pass` tiré pour tous : `two_words` (incompatible) et `no_pass`
     // contre Rose (déjà subi, carte sans effet) disparaissent.
     expect(ids(offersFor(s, 'bleue', roundDraw: [forAll('no_pass')])),
-        ['double_points']);
+        ['other_language', 'double_points']);
 
     // Rose a déjà 3 modificateurs (tirage + choix des équipes précédentes) :
     // plus de malus contre elle, les bonus pour Bleue restent.
@@ -171,7 +171,7 @@ void main() {
       'retrouve les mêmes offres', () {
     expect(offerSeed('g', 1, 'bleue'), 1610297326);
     expect(ids(offersFor(const Standings({'rose': 14, 'bleue': 8}), 'bleue')),
-        ['double_points', 'two_words', 'no_pass']);
+        ['no_pass', 'two_words', 'other_language']);
   });
 
   test(

@@ -17,7 +17,7 @@ HomeScreen → SettingsScreen (Classique / Fiesta ; Auto / Personnalisé dans «
 | Ecran | Role |
 |-------|------|
 | `home_screen.dart` | Accueil : 3 etats (partie suspendue, session existante, nouveau jeu) |
-| `settings_screen.dart` | Premier ecran de toute partie : interrupteur Classique / Fiesta (Classique par defaut ; 1er choix de Fiesta → tuto Fiesta une fois), nb joueurs/equipes, mode mots, categories, parametres avances (modal ; en Fiesta, + Auto / Personnalise ; en bas, « Reinitialiser les parametres » avec confirmation). En haut a droite : « ? » et roue crantee seulement. Retour (bouton et retour systeme) → accueil |
+| `settings_screen.dart` | Premier ecran de toute partie, **sans defilement** (390 × 763 et 360 × 740 utiles) : sections Joueurs, Equipes, « Mode de jeu » (interrupteur Classique / Fiesta ; Classique par defaut ; 1er choix de Fiesta → tuto Fiesta une fois), Choix des mots, puis categories, parametres avances (modal sans defilement, curseurs `compact` ; en Fiesta, + Auto / Personnalise ; en bas, « Reinitialiser les parametres » avec confirmation). En haut a droite : « ? » et roue crantee seulement. Retour (bouton et retour systeme) → accueil |
 | `categories_screen.dart` | Selection categories et niveaux de difficulte (1-4) |
 | `players_screen.dart` | Saisie noms joueurs + generation mots aleatoires avec cache metadata |
 | `words_screen.dart` | Saisie mots par joueur (mode personnalise). Bouton "Grosse flemme" pour auto-remplir |
@@ -33,7 +33,7 @@ HomeScreen → SettingsScreen (Classique / Fiesta ; Auto / Personnalisé dans «
 | `rules_tutorial_screen.dart` | Tuto des regles, 4 cartes (`Navigator.push` via `show`), pénalité de passe lue dans les reglages |
 | `fiesta_tutorial_screen.dart` | Tuto Fiesta, 3 cartes (`Navigator.push` via `show`) |
 | `fiesta_ensembles_screen.dart` | « Mes ensembles » (Fiesta Personnalise, apres les equipes ; retour bouton et systeme → equipes) : compteur n / 10, Creer, Jouer / Modifier / Dupliquer / Supprimer (confirmation) |
-| `fiesta_ensemble_editor_screen.dart` | Editeur d'un ensemble, ouvert par `Navigator.push` depuis la liste (rend `true` si enregistre). Catalogue + « Une seule reponse » (toute la partie), tirage 0 a 3. Bouton grise + explications tant que `validateEnsemble` rend des erreurs |
+| `fiesta_ensemble_editor_screen.dart` | Editeur d'un ensemble, ouvert par `Navigator.push` depuis la liste (rend `true` si enregistre). Catalogue en sections Malus (dont « Une seule reponse », toute la partie, et la sous-categorie Mimes : un seul a la fois, allumer l'un coupe les autres) puis Bonus, tirage 0 a 3. Bouton grise + explications tant que `validateEnsemble` rend des erreurs |
 
 Invariant Fiesta : le choix du mode vit dans `GameProvider.pendingFiesta`, **en memoire
 seulement** (Q10) : nul = Classique, `FiestaRules(mode: auto)` = Auto, mode `custom` =

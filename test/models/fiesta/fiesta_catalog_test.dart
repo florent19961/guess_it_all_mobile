@@ -17,7 +17,7 @@ ModifierInstance _instance(String id,
 void main() {
   group('Catalogue Fiesta', () {
     test(
-        '11 ids uniques, et la table d\'incompatibilités ne cite que des ids '
+        '14 ids uniques, et la table d\'incompatibilités ne cite que des ids '
         'du catalogue', () {
       // 🔴 Ids FIGÉS : ils sont persistés dans les parties en cours et les
       // ensembles enregistrés. En renommer un rend ces données illisibles.
@@ -34,6 +34,9 @@ void main() {
         'two_words',
         'reversed',
         'block_guesser',
+        'mime_under_sheet',
+        'mime_back_turned',
+        'other_language',
       ]);
 
       for (final (a, b) in kModifierIncompatibilities) {
@@ -52,11 +55,28 @@ void main() {
       }
       expect(areCompatible('no_pass', 'two_words'), isFalse);
       expect(areCompatible('two_words', 'no_pass'), isFalse);
-      // « Dessiner » exclut tout mime, et inversement.
-      for (final def in kModifierCatalog.where((d) => d.mime)) {
-        expect(areCompatible('draw', def.id), isFalse, reason: def.id);
+      // Famille « Mime » (« Dessiner » compris) : deux membres s'excluent
+      // toujours ; hors famille, les mimes ne gênent personne.
+      final family = kModifierCatalog.where((d) => d.mimeFamily).toList();
+      expect(family.map((d) => d.id), {
+        'mime_no_arms',
+        'mime_no_fists',
+        'mime_eyes_closed',
+        'draw',
+        'mime_under_sheet',
+        'mime_back_turned',
+      });
+      for (final a in family) {
+        for (final b in family) {
+          expect(areCompatible(a.id, b.id), isFalse, reason: '${a.id}/${b.id}');
+        }
+        expect(areCompatible(a.id, 'reversed'), isTrue, reason: a.id);
       }
-      expect(kModifierCatalog.where((d) => d.mime), hasLength(3));
+      // « Autre langue » : compatible avec tout (jamais en M3, donc jamais
+      // avec un mime).
+      for (final id in ids) {
+        expect(areCompatible('other_language', id), isTrue, reason: id);
+      }
       expect(areCompatible('no_pass', 'reversed'), isTrue);
     });
   });

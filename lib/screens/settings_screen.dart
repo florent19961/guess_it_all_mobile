@@ -125,26 +125,20 @@ class _SettingsScreenState extends State<SettingsScreen>
         child: Stack(
           children: [
             SafeArea(
+              // Tout tient sans défiler sur un iPhone 390 × 844 (763 px utiles)
+              // et un Android 360 × 780 (740 utiles), avertissement « partie
+              // longue » compris : espacements serrés (retours 2026-11-04).
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
                 child: Column(
                   children: [
+                    // Sous les boutons du haut (retour, aide, roue crantée).
                     const SizedBox(height: 48),
                     Text(
                       'Paramètres',
                       style: AppTextStyles.subtitle(fontSize: 40),
                     ),
-                    const SizedBox(height: 32),
-
-                    // Classique / Fiesta (Auto / Personnalisé : roue crantée)
-                    AppToggle(
-                      key: _modeKey,
-                      options: const [_classic, _fiesta],
-                      selected:
-                          provider.pendingFiesta == null ? _classic : _fiesta,
-                      onChange: (value) => _setMode(provider, value),
-                    ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: _sectionGap),
 
                     // Nombre de joueurs et d'équipes (une seule cible d'aide)
                     Column(
@@ -161,7 +155,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                                 provider.updateSettings(numberOfPlayers: value),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: _sectionGap),
 
                         // Nombre d'équipes (ajuste le minimum de joueurs)
                         _buildSection(
@@ -183,7 +177,20 @@ class _SettingsScreenState extends State<SettingsScreen>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: _sectionGap),
+
+                    // Classique / Fiesta (Auto / Personnalisé : roue crantée)
+                    _buildSection(
+                      title: 'Mode de jeu',
+                      child: AppToggle(
+                        key: _modeKey,
+                        options: const [_classic, _fiesta],
+                        selected:
+                            provider.pendingFiesta == null ? _classic : _fiesta,
+                        onChange: (value) => _setMode(provider, value),
+                      ),
+                    ),
+                    const SizedBox(height: _sectionGap),
 
                     // Choix des mots
                     KeyedSubtree(
@@ -254,12 +261,12 @@ class _SettingsScreenState extends State<SettingsScreen>
                       ),
                     ),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(height: _sectionGap),
 
                     // Avertissement si trop de mots
                     if (settings.totalWords > 50)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.only(bottom: 12),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -321,7 +328,6 @@ class _SettingsScreenState extends State<SettingsScreen>
                         provider.goToScreen(AppConstants.screenPlayers);
                       },
                     ),
-                    const SizedBox(height: 24),
                   ],
                 ),
               ),
@@ -409,11 +415,14 @@ class _SettingsScreenState extends State<SettingsScreen>
             color: Colors.white,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
         child,
       ],
     );
   }
+
+  /// Espace entre deux sections (serré : l'écran tient sans défiler).
+  static const double _sectionGap = 16;
 
   void _showResetConfirmation(BuildContext context, GameProvider provider) {
     AppModal.show(
@@ -519,6 +528,7 @@ class _SettingsScreenState extends State<SettingsScreen>
           return SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              // Serré : tout tient sans défiler (iPhone 390 × 844).
               children: [
                 // Nombre total de mots
                 AppSlider(
@@ -526,12 +536,13 @@ class _SettingsScreenState extends State<SettingsScreen>
                   min: AppConstants.minTotalWords.toDouble(),
                   max: AppConstants.maxTotalWords.toDouble(),
                   value: settings.totalWords.toDouble(),
+                  compact: true,
                   onChanged: (value) {
                     provider.updateSettings(totalWords: value.toInt());
                     setState(() {});
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
 
                 // Durée du tour
                 AppSlider(
@@ -540,12 +551,13 @@ class _SettingsScreenState extends State<SettingsScreen>
                   max: AppConstants.maxTurnDuration.toDouble(),
                   value: settings.turnDuration.toDouble(),
                   unit: 's',
+                  compact: true,
                   onChanged: (value) {
                     provider.updateSettings(turnDuration: value.toInt());
                     setState(() {});
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
 
                 // Pénalité de passe
                 AppSlider(
@@ -554,6 +566,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   max: AppConstants.maxPassPenalty.toDouble(),
                   value: settings.passPenalty.toDouble(),
                   unit: 's',
+                  compact: true,
                   onChanged: (value) {
                     provider.updateSettings(passPenalty: value.toInt());
                     setState(() {});
@@ -562,7 +575,7 @@ class _SettingsScreenState extends State<SettingsScreen>
 
                 // Fiesta : Auto / Personnalisé, seulement en mode Fiesta
                 if (provider.pendingFiesta != null) ...[
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 8),
                   const Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
@@ -574,7 +587,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   AppToggle(
                     options: const [_auto, _custom],
                     selected: provider.pendingFiesta!.mode == FiestaMode.custom
@@ -589,11 +602,12 @@ class _SettingsScreenState extends State<SettingsScreen>
 
                 // Réinitialiser (ancien bouton rond du coin haut droit) : ferme
                 // « Avancés », puis la même confirmation qu'avant.
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
                 AppButton(
                   text: 'Réinitialiser les paramètres',
                   variant: AppButtonVariant.ghost,
-                  size: AppButtonSize.small,
+                  // Medium : cible tactile ≥ 44 px (revue r1).
+                  size: AppButtonSize.medium,
                   onPressed: () {
                     Navigator.of(context).pop();
                     _showResetConfirmation(screenContext, provider);

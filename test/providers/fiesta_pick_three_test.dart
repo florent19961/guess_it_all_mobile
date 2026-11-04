@@ -45,7 +45,9 @@ String playTurn(GameProvider provider, int n) {
 }
 
 /// Personnalisé, 1 parmi 3 allumé, sans tirage : tout le catalogue proposé
-/// à l'équipe menée dès M2.
+/// à l'équipe menée dès M2, sauf « autre langue » : coupée, elle laisse
+/// exactement 3 cartes « moyenne » (le `gameId` est aléatoire, les offres
+/// doivent donc être les mêmes quel qu'il soit).
 final pickThree = FiestaRules(
   mode: FiestaMode.custom,
   oneOfThree: true,
@@ -53,7 +55,7 @@ final pickThree = FiestaRules(
   modifiers: {
     for (final def in kModifierCatalog)
       def.id: ModifierSetting(
-        active: true,
+        active: def.id != 'other_language',
         arrival: ModifierArrival.offer,
         startRound: 2,
         charges: def.defaultCharges,

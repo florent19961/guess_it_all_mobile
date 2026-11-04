@@ -20,7 +20,7 @@ desactive). Pas encore branche : les stories du tour le cablent dans `turn_scree
 |--------|--------------|-------------|
 | `FiestaWordCard` | `({required String word, bool reversed = false, VoidCallback? onGuessed, VoidCallback? onPass, String passLabel = 'Passer', String? label, double fontSize = 56})` | 2-11 |
 | `TwoWordsLayout` | `({required String firstWord, String? secondWord, bool reversed = false, onGuessedFirst, onPassFirst, onGuessedSecond, onPassSecond, String passLabel = 'Passer'})` | 2-11 |
-| `MimeConstraintBanner` | `({required String modifierId})` ; ids acceptes = `MimeConstraintBanner.icons.keys` | 2-8 |
+| `MimeConstraintBanner` | `({required String modifierId})` ; ids acceptes = `MimeConstraintBanner.icons.keys` (famille Mime + `other_language`) | 2-8 |
 
 - `FiestaWordCard` anime chaque nouveau mot et **ignore les taps pendant `kWordCardLock`
   (300 ms)** (2-11 critere 9). Etat de widget seulement : rien de persiste, chrono intact.
