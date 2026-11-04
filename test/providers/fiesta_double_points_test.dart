@@ -97,7 +97,7 @@ void main() {
 
   test(
       'Continuation de fin de manche : même tour, toujours ×2, sans dépenser '
-      'la charge de la nouvelle manche ; récap « Bonus utilisés » (AC6, AC8)',
+      'la charge de la nouvelle manche ; récap « Cartouches utilisées » (AC6, AC8)',
       () async {
     final provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
     await provider.startGame(fiesta: doubleEveryRound);
@@ -132,7 +132,7 @@ void main() {
     expect(provider.isDoublePointsArmed, isFalse);
 
     final recap = provider.modifierRecap.last;
-    expect(recap.title, 'Bonus utilisés');
+    expect(recap.title, 'Cartouches utilisées');
     expect(recap.detail,
         'Mot compte double, ${provider.getTeamById(teamId)!.name} en M1');
   });

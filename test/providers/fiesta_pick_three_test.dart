@@ -75,8 +75,9 @@ void main() {
   test(
       '14–8 : seule l\'équipe à 8 choisit, parmi 3 offres « moyenne », et '
       'nextRound attend son choix (AC1) ; retour arrière + revalidation : '
-      'mêmes offres, choix à refaire (AC6) ; le malus choisi frappe le leader '
-      'en M2, annoncé à son premier tour (AC4)', () async {
+      'mêmes offres, choix à refaire (AC6) ; lane 2 : le malus choisi entre '
+      'dans la réserve de la menée, qui l\'inflige au leader pour SON '
+      'prochain tour, consommé à sa fin', () async {
     final provider = await givenProvider(['Ana', 'Bob'], wordsEach: 11);
     await provider.startGame(fiesta: pickThree);
     final leader = playTurn(provider, 14);
@@ -113,13 +114,28 @@ void main() {
     provider.chooseOffer(trailing, 0, noPass);
     provider.nextRound();
     expect(provider.game.currentRound, 2);
-    expect(ids(provider.game.fiesta!.active), ['no_pass@2>$leader']);
+    expect(ids(provider.game.fiesta!.active), ['no_pass@2>$trailing']);
 
-    // Continuation de l'équipe menée, puis premier tour du leader.
+    // Continuation de la menée (rien ne s'y joue), puis le leader : intact.
+    expect(provider.reserve, isEmpty);
     expect(playTurn(provider, 0), trailing);
-    expect(provider.getCurrentTeam()!.id, leader);
-    expect(ids(provider.malusToReveal), ['no_pass@2>$leader']);
+    expect(provider.passBlocked, isFalse);
+    expect(playTurn(provider, 0), leader);
+
+    // Vrai tour de la menée : elle inflige « Interdit de passer » au leader.
+    expect(provider.reserve.single.left, 1);
+    expect(provider.inflictMalus('no_pass', leader), isNull);
+    expect(provider.reserve.single.left, 0);
+    expect(provider.passBlocked, isFalse, reason: 'pas sur l\'envoyeuse');
+    expect(playTurn(provider, 0), trailing);
+
+    // Prochain tour du leader : frappé, puis consommé à la fin du tour.
+    expect(ids(provider.receivedThisTurn), ['no_pass@2>$leader']);
     expect(provider.passBlocked, isTrue);
+    playTurn(provider, 0);
+    playTurn(provider, 0);
+    expect(provider.getCurrentTeam()!.id, leader);
+    expect(provider.passBlocked, isFalse);
   });
 
   test(
@@ -185,10 +201,9 @@ void main() {
   });
 
   test(
-      '« Bloquer un devineur » choisi pour M2 contre le leader qui a fini M1 : '
-      'ni appliqué ni consommé par sa continuation ; annoncé et désigné par '
-      'l\'équipe qui l\'a choisi à son premier vrai tour de M2, consommé à '
-      'sa fin (epic fix M3)', () async {
+      '« Bloquer un devineur » choisi pour M2 (offert : le leader a 3 '
+      'joueurs) : infligé au leader par la menée, annoncé et désigné par elle '
+      'à son prochain tour, consommé à sa fin', () async {
     final provider =
         await givenProvider(['A', 'B', 'C', 'D', 'E'], wordsEach: 4, teams: 2);
     await provider.startGame(fiesta: pickThree);
@@ -206,33 +221,34 @@ void main() {
     provider.chooseOffer(trailing, 0, 0);
     provider.nextRound();
 
-    // La continuation du leader : le blocage de M2 attend.
-    expect(provider.getCurrentTeam()!.id, leader);
+    // La continuation du leader, puis la menée inflige le blocage.
     expect(provider.isContinuation, isTrue);
     expect(provider.needsBlockedGuesser, isFalse);
-    expect(provider.malusToReveal, isEmpty);
     playTurn(provider, 0);
-    expect(ids(provider.game.fiesta!.active), ['block_guesser@2>$leader']);
+    expect(provider.getCurrentTeam()!.id, trailing);
+    expect(provider.targetsFor('block_guesser').map((t) => t.id), [leader]);
+    expect(provider.inflictMalus('block_guesser', leader), isNull);
     playTurn(provider, 0);
 
-    // Premier vrai tour de M2 du leader : annoncé, désigné par la menée.
+    // Prochain tour du leader : désigné par la menée.
     expect(provider.getCurrentTeam()!.id, leader);
-    expect(ids(provider.malusToReveal), ['block_guesser@2>$leader']);
     expect(provider.needsBlockedGuesser, isTrue);
     expect(provider.blockingTeam!.id, trailing);
     provider.setBlockedGuesser(provider.blockableGuessers.first.id);
     playTurn(provider, 0);
-    expect(provider.game.fiesta!.active, isEmpty);
+    expect(provider.game.fiesta!.active.where((m) => m.fromTeamId != null),
+        isEmpty);
     playTurn(provider, 0);
     expect(provider.getCurrentTeam()!.id, leader);
     expect(provider.needsBlockedGuesser, isFalse);
   });
 
   test(
-      'M2 → M3 : ×2 + blocage de M2 sur le dernier tour, trois tirages en M3. '
-      'La continuation garde ×2 et blocage, pas les tirages (2 effets, pas 5) ; '
-      'idem après un kill et un retour arrière ; les tirages de M3 commencent '
-      'au premier vrai tour (epic fix, Codex MAJOR-1)', () async {
+      'M2 → M3 : ×2 + blocage infligé en M2 sur le dernier tour, trois '
+      'tirages en M3. La continuation garde ×2 et blocage, pas les tirages (2 '
+      'effets, pas 5) ; idem après un kill et un retour arrière ; les tirages '
+      'de M3 commencent au premier vrai tour (epic fix, Codex MAJOR-1)',
+      () async {
     final provider =
         await givenProvider(['A', 'B', 'C', 'D', 'E'], wordsEach: 4, teams: 2);
     ModifierSetting setting(ModifierMode mode, int round) =>
@@ -260,8 +276,12 @@ void main() {
     provider.chooseOffer(trailing, 0, 0);
     provider.nextRound();
     playTurn(provider, 0); // continuation de la menée
+    playTurn(provider, 0); // premier tour M2 du leader
+    // Vrai tour de la menée : elle inflige le blocage au leader.
+    expect(provider.inflictMalus('block_guesser', leader), isNull);
+    playTurn(provider, 0);
 
-    // M2 : premier vrai tour du leader, bloqué et à ×2 ; il finit M2.
+    // M2 : tour du leader, bloqué et à ×2 ; il finit M2.
     expect(provider.getCurrentTeam()!.id, leader);
     provider.setBlockedGuesser(provider.blockableGuessers.first.id);
     provider.setDoublePoints(true);
@@ -323,10 +343,10 @@ void main() {
 
   test(
       'Continuation en chaîne : la continuation M1→M2 vide le pool de M2. Son '
-      'tour logique M1 se clôt (×2 dépensé et instances M1 partis), et la '
-      'continuation M3 ne porte que le contexte de M2 (blocage M2 annoncé, '
-      '−10 s de M2 ni annoncé ni appliqué : temps reporté), kill et retour '
-      'arrière compris (epic fix r1-r2, Codex MAJOR-1)', () async {
+      'tour logique M1 se clôt (×2 dépensé, blocage infligé en M1 et '
+      'instances M1 partis), et la continuation M3 ne porte que le contexte '
+      'de M2 (−10 s de M2 ni annoncé ni appliqué : temps reporté), kill et '
+      'retour arrière compris (epic fix r1-r2, Codex MAJOR-1)', () async {
     final provider =
         await givenProvider(['A', 'B', 'C', 'D', 'E'], wordsEach: 4, teams: 2);
     await provider.startGame(
@@ -335,7 +355,7 @@ void main() {
         drawCount: 0,
         modifiers: {
           'block_guesser': ModifierSetting(
-              active: true, rounds: const {2, 3}, mode: ModifierMode.offer),
+              active: true, rounds: const {1}, mode: ModifierMode.stock),
           'double_points': ModifierSetting(
               active: true, rounds: const {1}, mode: ModifierMode.stock),
           'minus_10s': ModifierSetting(
@@ -345,20 +365,22 @@ void main() {
     );
     final leader = provider.teams.firstWhere((t) => t.playerIds.length == 3).id;
     final trailing = provider.teams.firstWhere((t) => t.id != leader).id;
-    // M1 : le leader finit la manche à ×2. Blocage choisi contre lui pour M2.
-    if (provider.getCurrentTeam()!.id == trailing) playTurn(provider, 1);
+    // M1 : la menée inflige le blocage au leader, qui finit la manche à ×2,
+    // bloqué.
+    if (provider.getCurrentTeam()!.id == leader) playTurn(provider, 0);
+    expect(provider.inflictMalus('block_guesser', leader), isNull);
+    playTurn(provider, 1);
+    provider.setBlockedGuesser(provider.blockableGuessers.first.id);
     provider.setDoublePoints(true);
     expect(playTurn(provider, 20), leader);
-    provider.chooseOffer(trailing, 0, 0);
     provider.nextRound();
 
-    // M2 : sa continuation (×2 de M1) vide à elle seule le pool de M2.
+    // M2 : sa continuation (×2 et blocage de M1) vide à elle seule le pool.
     expect(provider.isContinuation, isTrue);
     expect(provider.isDoublePointsOn, isTrue);
+    expect(provider.blockedGuesser, isNotNull);
     expect(playTurn(provider, 20), leader);
     expect(provider.game.currentRound, 2);
-    if (provider.nextChooserId == trailing)
-      provider.chooseOffer(trailing, 0, 0);
     provider.nextRound();
 
     void expectChained(GameProvider p) {
@@ -366,23 +388,20 @@ void main() {
       expect(p.isContinuation, isTrue);
       expect([p.isDoublePointsOn, p.freePassesUsed, p.doublePointsLeft],
           [false, 0, 0]);
-      expect(ids(p.turnModifiers),
-          ['minus_10s@2>null', 'block_guesser@2>$leader']);
+      expect(ids(p.turnModifiers), ['minus_10s@2>null']);
       // Le −10 s de M2 n'est pas annoncé : la continuation joue son temps
       // reporté, sans modificateur de temps.
-      expect(ids(p.malusToReveal), ['block_guesser@2>$leader']);
+      expect(p.malusToReveal, isEmpty);
       expect(p.turnTime.lines.map((l) => l.label), ['Temps reporté']);
-      expect(p.blockingTeam!.id, trailing);
+      expect([p.blockedGuesser, p.needsBlockedGuesser], [null, false]);
       expect(p.game.fiesta!.active.where((m) => m.round < 2), isEmpty);
     }
 
     expectChained(provider);
-    expect(provider.needsBlockedGuesser, isTrue);
     await pumpEventQueue();
     final reloaded = GameProvider(); // app tuée avant la continuation M3
     await pumpEventQueue();
     expectChained(reloaded);
-    reloaded.setBlockedGuesser(reloaded.blockableGuessers.first.id);
     reloaded.startTurn();
     reloaded.startTurnTimer();
     reloaded.markWordAsGuessed();
@@ -391,9 +410,7 @@ void main() {
     reloaded.savePreValidationState(word);
     reloaded.validateWords(word);
     reloaded.restorePreValidationState(); // retour arrière
-    expect(reloaded.blockedGuesser, isNotNull);
-    expect(ids(reloaded.turnModifiers),
-        ['minus_10s@2>null', 'block_guesser@2>$leader']);
+    expect(ids(reloaded.turnModifiers), ['minus_10s@2>null']);
     reloaded.savePreValidationState(word);
     reloaded.validateWords(word);
 
@@ -418,8 +435,8 @@ void main() {
     final provider =
         await givenProvider(['A', 'B', 'C', 'D', 'E'], wordsEach: 4, teams: 2);
     await provider.startGame(fiesta: pickThree);
-    // L'équipe menée (2 joueurs) finit M1 : elle joue la continuation, puis
-    // vient le premier tour M2 du leader, bloqué.
+    // L'équipe menée (2 joueurs) finit M1 ; en M2, à son vrai tour, elle
+    // inflige le blocage au leader, qui joue après elle.
     final leader = provider.teams.firstWhere((t) => t.playerIds.length == 3).id;
     final trailing = provider.teams.firstWhere((t) => t.id != leader).id;
     if (provider.getCurrentTeam()!.id == trailing) playTurn(provider, 1);
@@ -427,7 +444,10 @@ void main() {
     expect(playTurn(provider, 20), trailing);
     provider.chooseOffer(trailing, 0, 0);
     provider.nextRound();
+    playTurn(provider, 0); // continuation de la menée
+    playTurn(provider, 0); // le leader
     expect(provider.getCurrentTeam()!.id, trailing);
+    expect(provider.inflictMalus('block_guesser', leader), isNull);
 
     provider.startTurn();
     provider.startTurnTimer();
@@ -445,7 +465,8 @@ void main() {
     expect(provider.teams.firstWhere((t) => t.id == leader).score,
         scoreBefore[leader]);
     expect(provider.getCurrentTeam()!.id, leader);
-    expect(ids(provider.game.fiesta!.active), ['block_guesser@2>$leader']);
+    expect(ids(provider.game.fiesta!.active.where((m) => m.fromTeamId != null)),
+        ['block_guesser@2>$leader']);
 
     provider.restorePreValidationState();
     expect(provider.game.currentScreen, AppConstants.screenVerification);

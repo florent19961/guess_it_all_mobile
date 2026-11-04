@@ -200,7 +200,7 @@ void main() {
   test(
       'En stock : une instance par équipe sur les manches cochées, malus en '
       'réserve (sans effet, lane 2) ; « pour la partie » = N moins ce qui '
-      'est déjà dépensé, sauf Passe gratuite (toujours par manche)', () {
+      'est déjà dépensé, Passe gratuite comprise (lane 2)', () {
     final rules = FiestaRules(
       mode: FiestaMode.custom,
       modifiers: {
@@ -232,14 +232,14 @@ void main() {
     expect(malus.map((m) => (m.teamId, m.charges, m.reserve)),
         [('a', 2, true), ('b', 2, true)]);
     expect(modifiersForTurn(malus, teamId: 'a', logicalRound: 1), isEmpty);
-    // Passe gratuite « pour la partie » relue « par manche » (intérim lane 1).
+    // Passe gratuite « pour la partie » : 3 − 1 cartouche dépensée en M1.
     expect(
         stockForRound(rules, round: 2, teamIds: [
           'a'
         ], chargesUsed: [
           const ChargeUse(catalogId: 'free_pass', teamId: 'a', round: 1),
         ]).where((m) => m.catalogId == 'free_pass').single.charges,
-        3);
+        2);
     final used = [
       const ChargeUse(catalogId: 'two_words', teamId: 'a', round: 1),
       const ChargeUse(catalogId: 'two_words', teamId: 'a', round: 2),
