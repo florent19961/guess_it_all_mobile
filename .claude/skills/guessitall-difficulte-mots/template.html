@@ -1,0 +1,197 @@
+<title>Difficulté des mots</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Poppins:wght@400;600;700&display=swap">
+<style>
+/* Layout : en haut le décrochage par niveau (courbes + tableau par manche), en dessous la liste des mots joués à trier et filtrer. Monde sombre de l'app. */
+:root {
+  --bg: #1E293B; --panel: #26344a; --line: #3a4a63; --fg: #EEF2F7; --muted: #9CA3AF;
+  --l1: #7DD3C0; --l2: #FBBF24; --l3: #F19B9B; --l4: #A78BFA; --warn: #F19B9B; --ok: #7DD3C0;
+  --display: "Bangers", "Impact", "Arial Black", sans-serif;
+  --body: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 14px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 64px; }
+.wrap { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+h1 { font-family: var(--display); font-weight: 400; letter-spacing: .04em; font-size: clamp(2.2rem, 6vw, 3.2rem); line-height: 1; margin: 0 0 8px; color: var(--l3); }
+h2 { font-family: var(--display); font-weight: 400; letter-spacing: .05em; font-size: 1.8rem; margin: 0; color: var(--l1); }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.lead { color: var(--muted); max-width: 70ch; }
+section { display: flex; flex-direction: column; gap: 14px; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 22px; color: var(--muted); font-size: .9rem; }
+.facts b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+button, select, input { font: inherit; }
+.tabs button, .chip-btn { background: var(--panel); color: var(--fg); border: 1.5px solid var(--line); border-radius: 999px; padding: 6px 14px; cursor: pointer; font-weight: 600; font-size: .85rem; }
+.tabs button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid var(--l2); outline-offset: 2px; }
+.chart { background: var(--panel); border: 1.5px solid var(--line); border-radius: 14px; padding: 12px; overflow-x: auto; }
+.chart svg { display: block; width: 100%; min-width: 560px; height: auto; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .85rem; align-items: center; }
+.sw { display: inline-block; width: 14px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.scroll { overflow-x: auto; border: 1.5px solid var(--line); border-radius: 14px; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: .74rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; background: var(--panel); position: sticky; top: 0; }
+th.sort { cursor: pointer; }
+th.sort[aria-sort="ascending"]::after { content: " ▲"; } th.sort[aria-sort="descending"]::after { content: " ▼"; }
+td.num, th.num { text-align: right; }
+tbody tr:hover { background: color-mix(in srgb, var(--panel) 70%, transparent); }
+.lv { display: inline-block; min-width: 26px; text-align: center; border-radius: 999px; padding: 1px 8px; font-weight: 700; font-size: .8rem; color: #1E293B; }
+.lv1 { background: var(--l1); } .lv2 { background: var(--l2); } .lv3 { background: var(--l3); } .lv4 { background: var(--l4); }
+.sig { display: inline-block; border-radius: 6px; padding: 1px 7px; font-size: .78rem; margin-right: 4px; border: 1px solid var(--line); }
+.sig.hard { border-color: var(--warn); color: var(--warn); } .sig.easy { border-color: var(--ok); color: var(--ok); }
+.filters { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: end; }
+.filters label { display: flex; flex-direction: column; gap: 3px; font-size: .78rem; color: var(--muted); }
+.filters input, .filters select { background: var(--panel); color: var(--fg); border: 1.5px solid var(--line); border-radius: 8px; padding: 6px 10px; min-width: 0; }
+.note { font-size: .82rem; color: var(--muted); max-width: 80ch; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Difficulté des mots</h1>
+    <p class="lead">Ce que les vraies parties disent de chaque mot, pour juger s'il est au bon niveau. Un seul passage suffit à donner un indice : un mot passé en manche 1, ou trouvé bien plus lentement que les autres mots de son niveau, mérite un coup d'œil.</p>
+    <div class="facts" id="facts"></div>
+  </header>
+
+  <section aria-labelledby="h-dec">
+    <h2 id="h-dec">Le décrochage par niveau</h2>
+    <p class="lead">Temps cumulé pour faire deviner un mot dans une manche : tous ses affichages s'additionnent, y compris quand il a été passé puis repris plus tard. Chaque courbe est la gaussienne ajustée sur les mots trouvés d'un niveau, et sa surface vaut la part de mots trouvés ; à droite, la barre « Jamais trouvés » montre la part de mots passés ou restés à l'écran sans jamais être trouvés dans la manche. Le pointillé marque la médiane, plus fiable car les temps ont une longue traîne. La manche 1 (description libre) est celle qui mesure la difficulté : en manches 2 et 3 les mots sont déjà connus.</p>
+    <div class="tabs" id="round-tabs" role="group" aria-label="Manche"></div>
+    <div class="chart"><svg id="curves" viewBox="0 0 760 300" role="img" aria-label="Distribution des temps par niveau"></svg></div>
+    <div class="legend" id="legend"></div>
+    <div class="scroll"><table><thead><tr><th>Niveau</th><th class="num">Mots joués</th><th class="num">Jamais trouvés</th><th class="num">Affichages par mot</th><th class="num">Passes par mot</th><th class="num">Temps moyen</th><th class="num">Médiane</th><th class="num">Écart-type</th></tr></thead><tbody id="level-table"></tbody></table></div>
+    <p class="note" id="level-note"></p>
+  </section>
+
+  <section aria-labelledby="h-mots">
+    <h2 id="h-mots">Les mots joués</h2>
+    <p class="lead">Tous les mots trouvés ou passés au moins une fois. Les colonnes M1 additionnent toutes les parties. « Lent » et « rapide » comparent le temps cumulé médian du mot en manche 1 aux mots de son niveau (au-dessus du 3ᵉ quartile ou en dessous du 1ᵉʳ).</p>
+    <div class="filters">
+      <label for="q">Chercher<input id="q" type="search" placeholder="un mot"></label>
+      <label for="f-cat">Catégorie<select id="f-cat"><option value="">Toutes</option></select></label>
+      <label for="f-lv">Niveau<select id="f-lv"><option value="">Tous</option></select></label>
+      <label for="f-sig">Signal<select id="f-sig"><option value="">Tous les mots</option><option value="any">Avec un signal</option><option value="pass">Passé en manche 1</option><option value="miss">Jamais trouvé en manche 1</option><option value="slow">Lent pour son niveau</option><option value="fast">Rapide pour son niveau</option></select></label>
+      <span class="muted" id="count"></span>
+    </div>
+    <div class="scroll" style="max-height: 70vh; overflow-y: auto;"><table>
+      <thead><tr>
+        <th class="sort" data-k="word">Mot</th><th class="sort" data-k="cat">Catégorie</th><th class="sort num" data-k="level">Niveau</th>
+        <th class="sort num" data-k="games">Parties</th><th class="sort num" data-k="s1">Affichages M1</th><th class="sort num" data-k="p1">Passes M1</th><th class="sort num" data-k="n1">Jamais trouvé M1</th>
+        <th class="sort num" data-k="t1">Temps cumulé M1</th><th class="sort num" data-k="p23">Passes M2-3</th><th class="sort" data-k="score">Signal</th>
+      </tr></thead>
+      <tbody id="words"></tbody>
+    </table></div>
+  </section>
+</div>
+
+<script>
+const D = __DATA__;
+const COLORS = { 1: "var(--l1)", 2: "var(--l2)", 3: "var(--l3)", 4: "var(--l4)" };
+const NAMES = { 1: "Facile", 2: "Moyen", 3: "Difficile", 4: "Expert" };
+const CAT = { "7eme_art": "7e art", celebrites: "Célébrités", dictionnaire: "Dictionnaire", expressions: "Expressions", geographie: "Géographie", marques: "Marques", metiers_sports: "Métiers et sports", metro_parisien: "Métro parisien", musique: "Musique", nature: "Nature", noms_communs: "Noms communs", science_medecine: "Science et médecine", univers_arcade: "Univers arcade" };
+const fmt = (x, d = 1) => x == null ? "–" : x.toFixed(d).replace(".", ",");
+const pct = (a, b) => b ? Math.round(100 * a / b) + " %" : "–";
+const median = xs => { if (!xs.length) return null; const s = [...xs].sort((a, b) => a - b), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const quant = (s, q) => s[Math.min(s.length - 1, Math.floor(q * (s.length - 1)))];
+
+document.getElementById("facts").innerHTML =
+  `<span><b>${D.games}</b> parties</span><span><b>${D.words.length}</b> mots trouvés ou passés</span>` +
+  `<span>Données au <b>${new Date(D.generatedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</b></span>` +
+  `<span>Mots personnalisés exclus (pas de niveau)</span>`;
+
+/* ---------- Courbes ---------- */
+let round = 1;
+const tabs = document.getElementById("round-tabs");
+for (const r of D.rounds) {
+  const b = document.createElement("button"); b.type = "button"; b.textContent = "Manche " + r;
+  b.addEventListener("click", () => { round = r; drawRound(); }); tabs.append(b);
+}
+function drawRound() {
+  [...tabs.children].forEach((b, i) => b.setAttribute("aria-pressed", String(D.rounds[i] === round)));
+  const W = 760, H = 300, L = 44, R = 16, T = 26, B = 40, XMAX = 30, GAP = 26, BARW = 22;
+  const nl = D.levels.length, plotR = W - R - GAP - nl * BARW - 10;
+  const x = s => L + (s / XMAX) * (plotR - L);
+  const series = D.levels.map(l => ({ l, s: D.times[l + "-" + round], c: D.counts[l + "-" + round] || {} }))
+    .filter(o => o.s && o.s.n >= 5 && o.c.passages);
+  const pdf = (s, m, sd) => Math.exp(-0.5 * ((s - m) / sd) ** 2) / (sd * Math.sqrt(2 * Math.PI));
+  // Densité en « % des mots par seconde » : la surface de chaque courbe = part de mots trouvés.
+  const share = o => o.c.found / o.c.passages;
+  const ymax = Math.max(...series.map(o => 100 * share(o) * pdf(o.s.mean, o.s.mean, Math.max(o.s.sd, 0.8)))) * 1.15;
+  const y = v => H - B - (v / ymax) * (H - T - B);
+  let svg = "";
+  for (let s = 0; s <= XMAX; s += 5) svg += `<line x1="${x(s)}" x2="${x(s)}" y1="${T}" y2="${H - B}" stroke="var(--line)" stroke-width="1"/><text x="${x(s)}" y="${H - B + 18}" fill="var(--muted)" font-size="12" text-anchor="middle">${s} s</text>`;
+  svg += `<line x1="${L}" x2="${plotR}" y1="${H - B}" y2="${H - B}" stroke="var(--muted)"/>`;
+  svg += `<text x="${L}" y="${T - 10}" fill="var(--muted)" font-size="12">% des mots trouvés à chaque seconde</text>`;
+  series.forEach((o, i) => {
+    const { l, s } = o, sd = Math.max(s.sd, 0.8), k0 = 100 * share(o); let d = "";
+    for (let k = 0; k <= 200; k++) { const t = XMAX * k / 200; d += (k ? "L" : "M") + x(t).toFixed(1) + "," + y(k0 * pdf(t, s.mean, sd)).toFixed(1); }
+    svg += `<path d="${d}" fill="${COLORS[l]}" fill-opacity=".08" stroke="${COLORS[l]}" stroke-width="2.5"/>`;
+    svg += `<line x1="${x(s.median)}" x2="${x(s.median)}" y1="${T + 4 + i * 14}" y2="${H - B}" stroke="${COLORS[l]}" stroke-dasharray="4 4" stroke-width="1.5"/>`;
+    svg += `<text x="${x(s.median) + 5}" y="${T + 14 + i * 14}" fill="${COLORS[l]}" font-size="12" font-weight="600">${fmt(s.median)} s</text>`;
+  });
+  // Barres « jamais trouvés » : leur propre échelle, valeur écrite au-dessus.
+  const bx0 = plotR + GAP;
+  const scaleTop = Math.max(0.05, ...D.levels.map(l => { const c = D.counts[l + "-" + round]; return c && c.passages ? (c.notFound || 0) / c.passages : 0; }));
+  svg += `<text x="${bx0 + nl * BARW / 2}" y="${H - B + 18}" fill="var(--muted)" font-size="12" text-anchor="middle">Jamais</text><text x="${bx0 + nl * BARW / 2}" y="${H - B + 32}" fill="var(--muted)" font-size="12" text-anchor="middle">trouvés</text>`;
+  svg += `<line x1="${bx0 - 6}" x2="${bx0 + nl * BARW + 4}" y1="${H - B}" y2="${H - B}" stroke="var(--muted)"/>`;
+  D.levels.forEach((l, i) => {
+    const c = D.counts[l + "-" + round]; if (!c || !c.passages) return;
+    const v = (c.notFound || 0) / c.passages, h = (v / scaleTop) * (H - T - B - 30), bx = bx0 + i * BARW;
+    svg += `<rect x="${bx + 3}" y="${H - B - h}" width="${BARW - 6}" height="${h}" rx="3" fill="${COLORS[l]}"/>`;
+    svg += `<text x="${bx + BARW / 2}" y="${H - B - h - 5}" fill="${COLORS[l]}" font-size="11" font-weight="600" text-anchor="middle">${Math.round(100 * v)}%</text>`;
+  });
+  document.getElementById("curves").innerHTML = svg;
+  document.getElementById("legend").innerHTML = D.levels.map(l => {
+    const s = D.times[l + "-" + round];
+    return `<span><span class="sw" style="background:${COLORS[l]}"></span>${l} · ${NAMES[l]}${!s || s.n < 5 ? " (pas assez de mots trouvés pour une courbe)" : ""}</span>`;
+  }).join("");
+  document.getElementById("level-table").innerHTML = D.levels.map(l => {
+    const s = D.times[l + "-" + round], c = D.counts[l + "-" + round] || {}, n = c.passages || 0;
+    return `<tr><td><span class="lv lv${l}">${l}</span> ${NAMES[l]}</td><td class="num">${n}</td><td class="num">${pct(c.notFound || 0, n)}</td><td class="num">${n ? fmt(c.shows / n, 2) : "–"}</td><td class="num">${n ? fmt(c.passes / n, 2) : "–"}</td><td class="num">${s ? fmt(s.mean) + " s" : "–"}</td><td class="num">${s ? fmt(s.median) + " s" : "–"}</td><td class="num">${s ? fmt(s.sd) + " s" : "–"}</td></tr>`;
+  }).join("");
+  document.getElementById("level-note").textContent = `Un « mot joué » = un mot dans une manche d'une partie. Écartés au total : ${D.dropped.tooFast} mots trouvés en moins de ${fmt(D.minSeconds, 0)} s cumulée (tap accidentel), et ${D.dropped.noDuration} mots trouvés dont un affichage n'a pas de durée fiable (app fermée ou mise en pause), retirés des temps mais gardés dans les comptes. Les mots trouvés puis invalidés à la vérification ne comptent pas comme trouvés. « Jamais trouvés » inclut les mots d'une partie abandonnée en cours de manche.`;
+}
+drawRound();
+
+/* ---------- Mots ---------- */
+const q1 = {};
+for (const l of D.levels) { const s = D.times[l + "-1"]; if (s && s.n >= 20) q1[l] = { lo: quant(s.values, .25), hi: quant(s.values, .75) }; }
+const rows = D.words.map(w => {
+  const t1 = median(w.r1), sig = [];
+  if (w.passes[0] > 0) sig.push(["pass", "hard", "Passé en M1"]);
+  if (w.notFound[0] > 0) sig.push(["miss", "hard", "Jamais trouvé"]);
+  const q = q1[w.level];
+  if (q && t1 != null && t1 > q.hi) sig.push(["slow", "hard", "Lent"]);
+  if (q && t1 != null && t1 < q.lo && !w.passes[0]) sig.push(["fast", "easy", "Rapide"]);
+  return { ...w, t1, s1: w.shows[0], p1: w.passes[0], n1: w.notFound[0], p23: w.passes[1] + w.passes[2], sig,
+           score: w.notFound[0] * 20 + w.passes[0] * 10 + (sig.some(s => s[0] === "slow") ? 5 : 0) + (sig.some(s => s[0] === "fast") ? 1 : 0) };
+});
+const cats = [...new Set(rows.map(r => r.cat))].sort((a, b) => (CAT[a] || a).localeCompare(CAT[b] || b));
+document.getElementById("f-cat").innerHTML += cats.map(c => `<option value="${c}">${CAT[c] || c}</option>`).join("");
+document.getElementById("f-lv").innerHTML += D.levels.map(l => `<option value="${l}">${l} · ${NAMES[l]}</option>`).join("");
+let sortK = "score", sortDir = -1;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function render() {
+  const q = document.getElementById("q").value.trim().toLowerCase(), c = document.getElementById("f-cat").value,
+        l = document.getElementById("f-lv").value, s = document.getElementById("f-sig").value;
+  let list = rows.filter(r => (!q || r.word.toLowerCase().includes(q)) && (!c || r.cat === c) && (!l || String(r.level) === l) &&
+    (!s || (s === "any" ? r.sig.length : r.sig.some(x => x[0] === s))));
+  list.sort((a, b) => { const A = a[sortK], B = b[sortK]; if (A == null) return 1; if (B == null) return -1;
+    return (typeof A === "string" ? A.localeCompare(B) : A - B) * sortDir || b.games - a.games; });
+  document.getElementById("count").textContent = list.length + " mots";
+  document.getElementById("words").innerHTML = list.map(r => `<tr><td>${esc(r.word)}</td><td class="muted">${CAT[r.cat] || r.cat}</td>` +
+    `<td class="num"><span class="lv lv${r.level}">${r.level ?? "?"}</span></td><td class="num">${r.games}</td><td class="num">${r.s1}</td><td class="num">${r.p1 || ""}</td><td class="num">${r.n1 || ""}</td>` +
+    `<td class="num">${r.t1 == null ? "–" : fmt(r.t1) + " s"}</td><td class="num">${r.p23 || ""}</td>` +
+    `<td>${r.sig.map(x => `<span class="sig ${x[1]}">${x[2]}</span>`).join("")}</td></tr>`).join("");
+  document.querySelectorAll("th.sort").forEach(th => th.setAttribute("aria-sort", th.dataset.k === sortK ? (sortDir > 0 ? "ascending" : "descending") : "none"));
+}
+document.querySelectorAll("th.sort").forEach(th => th.addEventListener("click", () => {
+  if (sortK === th.dataset.k) sortDir = -sortDir; else { sortK = th.dataset.k; sortDir = ["word", "cat"].includes(sortK) ? 1 : -1; }
+  render();
+}));
+["q", "f-cat", "f-lv", "f-sig"].forEach(id => document.getElementById(id).addEventListener("input", render));
+render();
+</script>
