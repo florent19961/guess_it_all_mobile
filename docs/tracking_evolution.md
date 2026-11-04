@@ -875,3 +875,40 @@ Difficulté seule (`assets/translations/words/fr/`), aucune forme persistée tou
 - « Chauffeur de camion » renommé « Chauffeur poids lourd » + niveau 2.
 - « Laurent Gerra » supprimé (celebrites).
 - « Dedans » laissé en niveau 1.
+
+## 2026-11-04 — Fiesta v2, lane 2 : écran avant le tour « Ce tour / Réserve », cartouches ciblées
+
+**Quoi.** L'avant-tour Fiesta (maquette `cartouches` B, variante a) remplace les cartes
+« Actif ce tour », « Bonus » et « Temps du tour » par deux zones, sans défilement : « CE TOUR »
+(règles de manche en cercle neutre, malus reçus en rouge plein, bonus allumés en vert plein ;
+« Rien ce tour » si vide) et « RÉSERVE » (mes cartouches, colonnes Bonus / Malus, pastille du
+nombre restant, grisé si épuisé ou incompatible). Toucher = activer / infliger, appui long =
+explication. Une cartouche = UN tour d'UNE équipe :
+- **Bonus** (×2, Deux mots, Passe gratuite) : allumé avant le tour, dépensé au départ du chrono
+  (`ChargeUse`). Passe gratuite devient une cartouche (`kChargeBonusKeys` : un tour de 2 passes
+  gratuites) ; son « pour la partie » est décompté et réactivé dans l'éditeur.
+- **Malus** (« En stock », et désormais les cartes 1 parmi 3, qui entrent dans la réserve de
+  celle qui choisit au lieu de viser le leader toute la manche) : infligé à une équipe (2
+  équipes : directement à l'autre ; 3+ : « Contre quelle équipe ? »), pour SON prochain tour,
+  quel que soit le joueur. Dépensé tout de suite, annulable tant que le tour de l'envoyeuse n'a
+  pas commencé. Même malus déjà infligé à la cible → refus, cartouche non consommée ; deux malus
+  différents se cumulent, sauf deux mimes (un seul mime par tour : traité comme la collision).
+
+**Pourquoi.** Décisions Florent du 2026-11-04 (spec cartouches §3, variante B des malus ciblés).
+Le malus infligé est une `ModifierInstance` de portée tour avec `fromTeamId` : il réutilise le
+chemin existant des effets du tour (`modifiersForTurn`, `turnTime`, `passBlocked`, devineur
+bloqué désigné par l'envoyeuse) au lieu d'un second mécanisme.
+
+**Conséquence (règle 7).** Fiesta jamais publiée ; ajouts **optionnels** à la forme v2 :
+`ModifierInstance.from`, `ChargeUse.target`, `fiesta.turn.freePass` (clés omises si absentes,
+relues tolérantes). Envois en attente et cartouches dépensées vivent dans `GameState.fiesta`
+(kill, retour arrière). Classique intouché, `kCurrentSchemaVersion` inchangé. Récap : « Bonus
+utilisés » devient « Cartouches utilisées » (un malus : « X contre Y »).
+
+**Choix et résidus.** Coup de pouce (Auto) : ses bonus passent par l'offre, donc deviennent des
+cartouches (une Passe gratuite offerte = un tour, plus toute la manche) ; son malus frappe
+toujours le leader toute la manche (personne pour l'infliger). Un malus infligé interdit dans la
+manche où la cible rejoue (« Autre langue » envoyé en M2, cible qui rejoue en M3) part sans
+effet à la fin de ce tour. Ensembles fournis inchangés (Explosif, L'injustice). Si la zone ne
+tient pas même à 32 px (ensemble « Explosif », 3 équipes et plusieurs envois sur 360 × 740), elle
+défile en garde-fou.
