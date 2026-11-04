@@ -749,3 +749,32 @@ bouton retour (accueil, équipes) — les écrans supprimés le faisaient via `F
 rond « Réinitialiser » quitte le coin haut droit des Paramètres pour le bas de la fenêtre
 « Avancés » (« Réinitialiser les paramètres », même confirmation) ; en haut à droite ne restent
 que le « ? » et la roue crantée.
+
+## 2026-11-04 — Paramètres sans défilement, famille « Mime », deux nouveautés au catalogue
+
+**Quoi.** Paramètres : ordre Joueurs, Équipes, « Mode de jeu » (section titrée, Classique /
+Fiesta), Choix des mots, puis Catégories ; espacements serrés et compteurs à 40 pt pour tenir
+sans défiler (mesuré : contenu 709 px, avertissement « partie longue » compris, pour 763 utiles
+sur iPhone 390 × 844 et 740 sur Android 360 × 780). « Avancés » : curseurs `compact` (valeur à
+droite du libellé) et espaces de 8 px, contenu 402 px en Fiesta. Catalogue : une **famille
+« Mime »** (`mimeFamily` : les 3 mimes, « Dessiner », « Mimer sous un drap », « Mime de dos »)
+dont deux membres s'excluent toujours, à la place des paires mime/mime et de la règle
+Dessiner/mimes ; « Faire deviner dans une autre langue » (malus, `notInRound3` : jamais en
+manche 3, compatible avec tout le reste). Éditeur Personnalisé : sections Malus puis Bonus,
+sous-catégorie Mimes à choix exclusif ; nouvel ensemble = rattrapage coupé, tirage symétrique
+allumé, seul « Dessiner » actif parmi les mimes.
+
+**Pourquoi.** Retours device de Florent. La règle de famille passe par `areCompatible`, donc
+par `canAdd` : tirage Auto et Personnalisé, fixés, 1 parmi 3, coup de pouce l'appliquent sans
+code propre. Les nouveaux ids sont ajoutés **en fin** de catalogue et dans `kOfferStrength`
+(drap : forte ; dos et autre langue : moyenne — au doigt mouillé, comme le reste).
+
+**Conséquence (règle 7).** Aucune forme persistée ne change (ids ajoutés seulement). Un ensemble
+enregistré avec plusieurs mimes actifs se relit via `oneMimeAtMost` : on garde le mime que le
+jeu appliquait déjà (le 1er fixé dans l'ordre du catalogue, sinon le 1er actif), les autres
+passent `active: false` en gardant leurs réglages ; le blob est réécrit au prochain
+« Enregistrer ». Les règles gelées d'une partie en cours ne sont PAS normalisées (le tirage
+rejoué par graine doit rester identique) : la règle de famille s'y applique à l'exécution.
+Ajouter des ids allonge les listes de candidats mélangées par graine : une partie Fiesta en
+cours au moment de la mise à jour peut voir un récap ou des offres recalculés différents pour
+une manche déjà passée (cosmétique ; Fiesta pas encore publiée en store).
