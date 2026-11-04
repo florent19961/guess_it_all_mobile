@@ -132,15 +132,17 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
       switch (result) {
         case EnsembleSaved(:final ensemble):
           FiestaEnsemblesScreen.draft = null;
-          ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('« ${ensemble.name} » enregistré.')));
           await _reload(select: ensemble.id);
         case EnsembleDraftKept(:final rules):
           setState(() =>
               FiestaEnsemblesScreen.draft = EnsembleDraft(ensemble?.id, rules));
           if (mounted) {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(const SnackBar(content: Text('Brouillon gardé')));
+            // Flottant au-dessus de « Suivant », qu'il ne doit pas masquer.
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Brouillon gardé'),
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.fromLTRB(20, 0, 20, 90),
+            ));
           }
         case null:
           // Sorti sans rien garder : un brouillon repris est abandonné.
