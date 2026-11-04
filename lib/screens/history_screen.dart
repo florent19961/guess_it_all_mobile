@@ -115,15 +115,24 @@ class _HistoryScreenState extends State<HistoryScreen> {
           AppBackButton(
             onPressed: () => provider.goToScreen(AppConstants.screenHome),
           ),
-          HelpButton(
-            onPressed: () => CoachMarks.show(
-              context,
-              historyHelp(
-                trends: _trendsKey,
-                firstGame: _firstGameKey,
-                replay: _replayKey,
-              ),
-            ),
+          // Pas de « ? » tant que l'historique est vide : rien à expliquer.
+          FutureBuilder<List<GameResult>>(
+            future: _future,
+            builder: (context, snapshot) {
+              if (snapshot.data?.isNotEmpty != true) {
+                return const SizedBox.shrink();
+              }
+              return HelpButton(
+                onPressed: () => CoachMarks.show(
+                  context,
+                  historyHelp(
+                    trends: _trendsKey,
+                    firstGame: _firstGameKey,
+                    replay: _replayKey,
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
