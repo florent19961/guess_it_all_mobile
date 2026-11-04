@@ -145,8 +145,10 @@ void main() {
     var provider = await givenReadyProvider(['A', 'B', 'C', 'D', 'E', 'F']);
     await provider.startGame(fiesta: fixedOnRound1({}));
     final teamId = provider.getCurrentTeam()!.id;
+    // Une cartouche Passe gratuite (un tour de 2 passes), allumée.
     provider = await withTurnInstance(provider, 'free_pass');
     provider = await withTurnInstance(provider, 'block_guesser');
+    provider.toggleBonus('free_pass');
     bool held() =>
         provider.game.fiesta!.active.any((m) => m.scope == ModifierScope.turn);
     final blocked = provider.blockableGuessers.first;

@@ -32,7 +32,8 @@ class ModifierRecapLine {
 /// RECALCULÉ, pas relu d'un journal : le tirage vient de la graine
 /// `(gameId, manche)` et le rattrapage des scores cumulés en fin de manche,
 /// soit ce que la transition a montré (même plan, `planRoundTransition`).
-/// Exceptions : les bonus utilisés (2-9), relus de [chargesUsed], et les
+/// Exceptions : les cartouches utilisées (2-9, lane 2), relues de
+/// [chargesUsed], et les
 /// cartes 1 parmi 3 de [offerChoices] (2-10).
 List<ModifierRecapItem> buildModifierRecap({
   required FiestaRules rules,
@@ -74,9 +75,13 @@ List<ModifierRecapItem> buildModifierRecap({
       for (final m in plan.gifts)
         ModifierRecapItem(RecapKind.boost,
             round: m.round, catalogId: m.catalogId, teamId: m.teamId),
+    // Un malus infligé : `chooserId` = qui l'a joué, `teamId` = sa cible.
     for (final u in chargesUsed)
       ModifierRecapItem(RecapKind.bonusUsed,
-          round: u.round, catalogId: u.catalogId, teamId: u.teamId),
+          round: u.round,
+          catalogId: u.catalogId,
+          teamId: u.targetTeamId ?? u.teamId,
+          chooserId: u.targetTeamId == null ? null : u.teamId),
   ];
 }
 
@@ -148,9 +153,13 @@ List<ModifierRecapLine> formatModifierRecap(
 
   if (of(RecapKind.bonusUsed).isNotEmpty) {
     lines.add(ModifierRecapLine(
-      title: 'Bonus utilisés',
-      detail: joined(RecapKind.bonusUsed,
-          (i) => '${mod(i.catalogId)}, ${team(i.teamId)} en M${i.round}'),
+      title: 'Cartouches utilisées',
+      detail: joined(
+          RecapKind.bonusUsed,
+          (i) => i.chooserId == null
+              ? '${mod(i.catalogId)}, ${team(i.teamId)} en M${i.round}'
+              : '${mod(i.catalogId)}, ${team(i.chooserId)} contre '
+                  '${team(i.teamId)} en M${i.round}'),
     ));
   }
   return lines;

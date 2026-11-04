@@ -124,14 +124,16 @@ int offerSeed(String gameId, int round, String teamId) =>
 /// Candidats d'une [nature] à la [strength] voulue pour la manche [round]+1,
 /// dans l'ordre du catalogue (le mélange doit partir de la même liste).
 ///
-/// Un bonus vise [beneficiaryId], un malus vise [leaderId] (aucun malus si
-/// `null`). Personnalisé : seuls les modificateurs actifs en « 1 parmi 3 »
-/// cochés sur la manche [round]+1. Une carte est UNE cartouche : un bonus à
-/// charge (×2, Deux mots) en porte une ; les autres gardent leur effet de
-/// manche (lane 1 : la cartouche ciblée d'un tour arrive avec la lane 2).
-/// « Bloquer un devineur » : jamais en Auto (personne ne choisit, donc
-/// personne ne désigne le devineur) ; en Personnalisé, jamais contre une
-/// équipe de [blockImmuneTeamIds].
+/// Une carte est UNE cartouche de [beneficiaryId] (Fiesta v2, lane 2) : un
+/// bonus pour elle, ou un malus qui entre dans sa réserve, à infliger à
+/// l'équipe de son choix. Personnalisé : seuls les modificateurs actifs en
+/// « 1 parmi 3 » cochés sur la manche [round]+1.
+///
+/// Auto (coup de pouce, personne ne choisit) : un malus frappe [leaderId]
+/// toute la manche N+1 (aucun si `null`), et jamais « Bloquer un devineur »
+/// (personne pour désigner le devineur). En Personnalisé, « Bloquer un
+/// devineur » seulement si [canBlock] (une équipe adverse d'au moins 3
+/// joueurs).
 List<ModifierInstance> _candidates({
   required FiestaRules rules,
   required int round,
@@ -139,7 +141,7 @@ List<ModifierInstance> _candidates({
   required Set<ModifierNature> natures,
   required String beneficiaryId,
   required String? leaderId,
-  required Set<String> blockImmuneTeamIds,
+  required bool canBlock,
 }) {
   final next = round + 1;
   final custom = rules.mode == FiestaMode.custom;
@@ -158,25 +160,26 @@ List<ModifierInstance> _candidates({
         continue;
       }
     }
-    final charges =
-        kChargeBonusKeys.containsKey(def.id) ? 1 : def.defaultCharges;
-    final targetTeam =
-        def.nature == ModifierNature.bonus ? beneficiaryId : leaderId;
+    final malus = def.nature == ModifierNature.malus;
+    // Personnalisé : malus en réserve de celui qui choisit.
+    final reserve = custom && malus;
+    final targetTeam = malus && !custom ? leaderId : beneficiaryId;
     if (targetTeam == null) continue;
     final toPlayer = def.defaultTarget == ModifierTarget.player;
-    if (toPlayer && (!custom || blockImmuneTeamIds.contains(targetTeam))) {
-      continue;
-    }
+    if (toPlayer && (!custom || !canBlock)) continue;
     out.add(ModifierInstance(
       catalogId: def.id,
-      // « Bloquer un devineur » = un tour (fin de manche + continuation) ;
-      // les autres cartes durent la manche N+1.
       scope: def.defaultScope,
       target: toPlayer ? ModifierTarget.player : ModifierTarget.team,
       teamId: targetTeam,
-      charges: charges,
+      // Une cartouche (bonus à charge ou malus en réserve) ; le malus du
+      // coup de pouce garde l'effet de manche du catalogue.
+      charges: reserve || kChargeBonusKeys.containsKey(def.id)
+          ? 1
+          : def.defaultCharges,
       nature: def.nature,
       round: next,
+      reserve: reserve,
     ));
   }
   return out;
@@ -185,9 +188,19 @@ List<ModifierInstance> _candidates({
 /// Une carte a-t-elle un effet ? Non si elle est incompatible pour sa cible,
 /// ni si le même modificateur touche déjà sa cible (tirage, choix ou cadeau
 /// précédent : la carte serait vide). Pas de plafond (Fiesta v2).
-bool isUsefulOffer(List<ModifierInstance> taken, ModifierInstance c) =>
-    canAdd(taken, c) &&
-    !taken.any((t) => t.catalogId == c.catalogId && t.concernsSameTeamAs(c));
+///
+/// Une cartouche de malus en réserve vise une équipe choisie plus tard :
+/// seules les règles de manche (pour tous) la rendent inutile ; et une
+/// réserve ne pèse sur personne, elle n'exclut aucune autre carte.
+bool isUsefulOffer(List<ModifierInstance> taken, ModifierInstance c) {
+  final weighing = [
+    for (final t in taken)
+      if (!t.reserve && (!c.reserve || t.target == ModifierTarget.both)) t,
+  ];
+  return canAdd(weighing, c) &&
+      !weighing
+          .any((t) => t.catalogId == c.catalogId && t.concernsSameTeamAs(c));
+}
 
 /// Jusqu'à [count] cartes utiles (voir [isUsefulOffer]) à la force de [gap],
 /// mélangées par la graine [seed]. Si cette force n'en a AUCUNE, on descend
@@ -201,7 +214,7 @@ List<ModifierInstance> _offer({
   required int gap,
   required Set<ModifierNature> natures,
   required String? leaderId,
-  required Set<String> blockImmuneTeamIds,
+  required bool canBlock,
   required List<ModifierInstance> taken,
   required int count,
   Set<String> excludedIds = const {},
@@ -215,7 +228,7 @@ List<ModifierInstance> _offer({
       natures: natures,
       beneficiaryId: teamId,
       leaderId: leaderId,
-      blockImmuneTeamIds: blockImmuneTeamIds,
+      canBlock: canBlock,
     )..shuffle(random);
     final picked = candidates
         .where((c) =>
@@ -238,7 +251,8 @@ List<ModifierInstance> _offer({
 ///   pendant qu'elle choisit, [isUsefulOffer] grise ce que ses propres choix
 ///   rendent inutile).
 /// - [blockImmuneTeamIds] : équipes qui ne peuvent pas recevoir « Bloquer un
-///   devineur » (2 joueurs ou moins).
+///   devineur » (2 joueurs ou moins) ; la carte n'est offerte que si une
+///   autre équipe que [teamId] peut la recevoir.
 ///
 /// Rangée 0 : graine `offerSeed(gameId, round, teamId)` (figée par test) ;
 /// rangée k : `offerSeed(gameId, round, '$teamId#k')`. Une rangée ne reprend
@@ -254,6 +268,8 @@ List<List<ModifierInstance>> pickThreeOffers({
   Set<String> blockImmuneTeamIds = const {},
 }) {
   if (!standings.choosingOrder.contains(teamId)) return const [];
+  final canBlock = standings.scores.keys
+      .any((id) => id != teamId && !blockImmuneTeamIds.contains(id));
   final rows = <List<ModifierInstance>>[];
   final shown = <String>{};
   for (var k = 0; k < rules.pick3Choices; k++) {
@@ -265,7 +281,7 @@ List<List<ModifierInstance>> pickThreeOffers({
       gap: standings.gapOf(teamId),
       natures: ModifierNature.values.toSet(),
       leaderId: standings.leaderId,
-      blockImmuneTeamIds: blockImmuneTeamIds,
+      canBlock: canBlock,
       taken: [...roundDraw, ...earlierChoices],
       count: kOfferCount,
       excludedIds: shown,
@@ -301,7 +317,7 @@ List<ModifierInstance> appBoost({
       gap: standings.gapOf(teamId),
       natures: {nature},
       leaderId: leaderId,
-      blockImmuneTeamIds: const {},
+      canBlock: false,
       taken: [...roundDraw, ...gifts],
       count: 1,
     ));

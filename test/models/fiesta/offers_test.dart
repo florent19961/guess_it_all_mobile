@@ -93,14 +93,16 @@ void main() {
   });
 
   test(
-      'critère 1 : 14–8 → 3 offres « moyennes », bonus pour moi, malus '
-      'contre la tête ; seuls les « 1 parmi 3 » cochés sur N+1', () {
+      'critère 1 : 14–8 → 3 offres « moyennes », toutes des cartouches de '
+      'celle qui choisit (malus en réserve, à infliger) ; seuls les « 1 '
+      'parmi 3 » cochés sur N+1', () {
     const s = Standings({'rose': 14, 'bleue': 8});
     final offers = offersFor(s, 'bleue');
     expect(offers, hasLength(3));
     for (final o in offers) {
       expect(kOfferStrength[o.catalogId], OfferStrength.medium);
-      expect(o.teamId, o.nature == ModifierNature.bonus ? 'bleue' : 'rose');
+      expect(o.teamId, 'bleue');
+      expect(o.reserve, o.nature == ModifierNature.malus);
       expect(o.round, 2);
     }
     expect(offersFor(s, 'rose'), isEmpty, reason: 'le leader ne choisit pas');

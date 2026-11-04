@@ -71,6 +71,17 @@ void main() {
       'reversed': setting(ModifierMode.draw, rounds: {2, 3}),
     });
     expect(validateEnsemble(different, others: kProvidedEnsembles), isEmpty);
+    // Passe gratuite « pour la partie » au lieu de « par manche » : décomptée
+    // (lane 2), donc un autre ensemble.
+    final perRound = rulesWith(overrides: {
+      'free_pass': ModifierSetting(
+          active: true, rounds: const {1, 2, 3}, mode: ModifierMode.stock),
+    });
+    final perGame = perRound.copyWith(modifiers: {
+      ...perRound.modifiers,
+      'free_pass': perRound.modifiers['free_pass']!.copyWith(perGame: true),
+    });
+    expect(settingsKey(perGame), isNot(settingsKey(perRound)));
   });
 
   test('modificateur actif sans manche → refusé, coupé → ignoré', () {

@@ -427,28 +427,24 @@ List<CoachStep> resultsHelp({
 // ========== FIESTA : AVANT LE TOUR ==========
 
 List<CoachStep> fiestaPreTurnHelp({
-  required GlobalKey badges,
-  required GlobalKey doublePoints,
-  required GlobalKey turnTime,
+  required GlobalKey thisTurn,
+  required GlobalKey reserve,
 }) =>
     [
       CoachStep(
-        target: badges,
-        title: 'Actif ce tour',
-        text: 'Les bonus et malus qui s\'appliquent à ton équipe pendant ce '
-            'tour. Chaque badge s\'explique d\'un tap.',
+        target: thisTurn,
+        title: 'Ce tour',
+        text: 'Tout ce qui s\'applique à ton tour : les règles de la manche, '
+            'les malus reçus d\'une autre équipe et les bonus que tu as '
+            'activés. Appui long sur un cercle pour l\'explication.',
       ),
       CoachStep(
-        target: doublePoints,
-        title: 'Mot compte double',
-        text: 'Une charge par manche : active-la avant le tour, les points '
-            'de ce tour comptent double.',
-      ),
-      CoachStep(
-        target: turnTime,
-        title: 'Temps du tour',
-        text: 'Le détail du chrono : base, temps reporté, rattrapage et '
-            'malus. Le total est le temps que tu auras.',
+        target: reserve,
+        title: 'Réserve',
+        text: 'Tes cartouches, un tour chacune. Touche un bonus pour '
+            'l\'activer ce tour ; touche un malus pour l\'infliger à une '
+            'autre équipe, pour son prochain tour (annulable tant que ton '
+            'tour n\'a pas commencé).',
       ),
     ];
 
@@ -471,7 +467,8 @@ List<CoachStep> fiestaTransitionHelp({
         target: pickThree,
         title: 'Choix 1 parmi 3',
         text: 'L\'équipe menée prend le téléphone et choisit une carte : un '
-            'bonus pour elle ou un malus pour l\'équipe en tête.',
+            'bonus pour elle, ou un malus qu\'elle infligera à l\'équipe '
+            'de son choix avant l\'un de ses tours.',
       ),
       CoachStep(
         target: appBoost,

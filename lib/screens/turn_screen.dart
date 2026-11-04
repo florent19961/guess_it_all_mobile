@@ -377,7 +377,8 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                         // Fiesta : modificateurs du tour, sous le chrono.
                         if (provider.turnModifiers.isNotEmpty ||
                             provider.isDoublePointsOn ||
-                            provider.isTwoWordsOn) ...[
+                            provider.isTwoWordsOn ||
+                            provider.isFreePassOn) ...[
                           const SizedBox(height: 8),
                           ModifierBadges(
                             modifiers: provider.turnModifiers,
@@ -396,6 +397,13 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                                       .any((m) => m.catalogId == 'two_words'))
                                 ModifierBadge.catalog(
                                   'two_words',
+                                  nature: ModifierNature.bonus,
+                                  wrapExplain: (show) =>
+                                      _whilePaused(provider, show),
+                                ),
+                              if (provider.isFreePassOn)
+                                ModifierBadge.catalog(
+                                  'free_pass',
                                   nature: ModifierNature.bonus,
                                   wrapExplain: (show) =>
                                       _whilePaused(provider, show),

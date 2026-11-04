@@ -240,9 +240,11 @@ class OfferChoiceBody extends StatelessWidget {
                       for (final (i, offer) in row.indexed)
                         _OfferCard(
                           offer: offer,
-                          who: offer.teamId == chooserId
-                              ? 'Pour vous'
-                              : 'Contre ${_name(teams, offer.teamId!)}',
+                          // Fiesta v2 : une carte = une cartouche de
+                          // l'équipe ; un malus s'inflige plus tard.
+                          who: offer.reserve
+                              ? 'À infliger à une équipe'
+                              : 'Pour vous',
                           selected: selected[r] == i,
                           enabled: selected[r] == i || isUsable(r, i),
                           onTap: () => onSelect(r, i),

@@ -130,36 +130,52 @@ class FiestaState {
   }
 }
 
-/// Une charge dépensée : [teamId] a utilisé [catalogId] en manche [round].
+/// Une cartouche dépensée : [teamId] a utilisé [catalogId] en manche
+/// [round] — un bonus pour elle, ou un malus infligé à [targetTeamId] (Fiesta
+/// v2, lane 2 ; clé `target` omise pour un bonus).
 class ChargeUse {
   final String catalogId;
   final String teamId;
   final int round;
+  final String? targetTeamId;
 
   const ChargeUse({
     required this.catalogId,
     required this.teamId,
     required this.round,
+    this.targetTeamId,
   });
 
-  Map<String, dynamic> toJson() =>
-      {'catalogId': catalogId, 'teamId': teamId, 'round': round};
+  Map<String, dynamic> toJson() => {
+        'catalogId': catalogId,
+        'teamId': teamId,
+        'round': round,
+        if (targetTeamId != null) 'target': targetTeamId,
+      };
 
   /// Variante tolérante : une entrée illisible est ignorée seule.
   static ChargeUse? tryFromJson(Map<String, dynamic> json) {
     final catalogId = json['catalogId'];
     final teamId = json['teamId'];
     final round = json['round'];
-    if (catalogId is! String || teamId is! String || round is! int) {
+    final target = json['target'];
+    if (catalogId is! String ||
+        teamId is! String ||
+        round is! int ||
+        target is! String?) {
       return null;
     }
-    return ChargeUse(catalogId: catalogId, teamId: teamId, round: round);
+    return ChargeUse(
+        catalogId: catalogId,
+        teamId: teamId,
+        round: round,
+        targetTeamId: target);
   }
 }
 
 /// Une carte « 1 parmi 3 » : [chooserId] l'a prise dans sa rangée [row]
-/// (0 à `pick3Choices` − 1), [modifier] est l'instance de la manche suivante
-/// (un malus vise le leader, d'où la clé de celui qui a choisi).
+/// (0 à `pick3Choices` − 1), [modifier] est l'instance de la manche suivante :
+/// une cartouche de [chooserId] (un malus entre dans sa réserve, à infliger).
 class OfferChoice {
   final String chooserId;
   final int row;

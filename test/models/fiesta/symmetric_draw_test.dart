@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_state.dart';
 import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
+import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
 import 'package:guess_it_all_mobile/models/fiesta/round_transition.dart';
 import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
 
@@ -200,7 +201,7 @@ void main() {
   test(
       'En stock : une instance par équipe sur les manches cochées, malus en '
       'réserve (sans effet, lane 2) ; « pour la partie » = N moins ce qui '
-      'est déjà dépensé, sauf Passe gratuite (toujours par manche)', () {
+      'est déjà dépensé, Passe gratuite comprise (lane 2)', () {
     final rules = FiestaRules(
       mode: FiestaMode.custom,
       modifiers: {
@@ -232,14 +233,14 @@ void main() {
     expect(malus.map((m) => (m.teamId, m.charges, m.reserve)),
         [('a', 2, true), ('b', 2, true)]);
     expect(modifiersForTurn(malus, teamId: 'a', logicalRound: 1), isEmpty);
-    // Passe gratuite « pour la partie » relue « par manche » (intérim lane 1).
+    // Passe gratuite « pour la partie » : 3 − 1 cartouche dépensée en M1.
     expect(
         stockForRound(rules, round: 2, teamIds: [
           'a'
         ], chargesUsed: [
           const ChargeUse(catalogId: 'free_pass', teamId: 'a', round: 1),
         ]).where((m) => m.catalogId == 'free_pass').single.charges,
-        3);
+        2);
     final used = [
       const ChargeUse(catalogId: 'two_words', teamId: 'a', round: 1),
       const ChargeUse(catalogId: 'two_words', teamId: 'a', round: 2),
@@ -251,5 +252,38 @@ void main() {
     // M3 : ×2 « par manche » revient à 2 ; Deux mots épuisé pour a.
     expect(stock(3, used),
         {'double_points/a': 2, 'double_points/b': 2, 'two_words/b': 2});
+  });
+
+  test(
+      'Malus reçus résolus au tour de la cible : en double avec une règle de '
+      'manche, ou incompatible avec un malus retenu avant lui (ordre '
+      'd\'envoi), il est écarté', () {
+    ModifierInstance sent(String id, String from) => ModifierInstance(
+          catalogId: id,
+          scope: ModifierScope.turn,
+          target: ModifierTarget.team,
+          teamId: 'b',
+          charges: 0,
+          nature: ModifierNature.malus,
+          round: 3,
+          fromTeamId: from,
+        );
+    final rule = ModifierInstance(
+      catalogId: 'minus_10s',
+      scope: ModifierScope.round,
+      target: ModifierTarget.both,
+      charges: 0,
+      nature: ModifierNature.malus,
+      round: 3,
+    );
+    final kept = modifiersForTurn([
+      rule,
+      sent('minus_10s', 'a'), // doublon de la règle
+      sent('mime_no_arms', 'a'),
+      sent('draw', 'c'), // second mime : incompatible
+      sent('reversed', 'c'),
+    ], teamId: 'b', logicalRound: 3);
+    expect(kept.map((m) => '${m.catalogId}<${m.fromTeamId}'),
+        ['minus_10s<null', 'mime_no_arms<a', 'reversed<c']);
   });
 }

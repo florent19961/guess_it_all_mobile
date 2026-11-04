@@ -83,32 +83,6 @@ class ModifierCard extends StatelessWidget {
   }
 }
 
-/// « Tirage de la manche N » (maquette `drawCard`) : fixés et tirage de la
-/// manche, pour toutes les équipes. Rien si la liste est vide.
-class RoundDrawCard extends StatelessWidget {
-  final int round;
-  final List<ModifierInstance> modifiers;
-
-  const RoundDrawCard({
-    required this.round,
-    required this.modifiers,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (modifiers.isEmpty) return const SizedBox.shrink();
-    return FiestaCard(
-      title: 'Tirage de la manche $round',
-      children: [
-        const FiestaHint('S\'applique à toutes les équipes, à chacun de leurs '
-            'tours. Pas de relance : le tirage est définitif.'),
-        ...modifiers.map(ModifierCard.new),
-      ],
-    );
-  }
-}
-
 /// Le tirage en une ligne, entre les manches : « Tirage de la manche N : »
 /// et une pastille par modificateur (un tap l'explique). Rien si la liste est
 /// vide.
