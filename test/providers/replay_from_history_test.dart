@@ -184,11 +184,11 @@ void main() {
     });
     expect(provider.pendingFiesta!.toJson(), rules.toJson());
     expect(provider.game.isGameSuspended, isFalse);
-    expect(provider.game.currentScreen, AppConstants.screenFiestaRecap);
+    expect(provider.game.currentScreen, AppConstants.screenSettings);
 
     // Aléatoire (réglage de l'archive) : l'écran des mots reste fermé.
     provider.goToScreen(AppConstants.screenWords);
-    expect(provider.game.currentScreen, AppConstants.screenFiestaRecap);
+    expect(provider.game.currentScreen, AppConstants.screenSettings);
   });
 
   test(

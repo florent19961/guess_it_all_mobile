@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
 
 import '../helpers/test_prefs.dart';
@@ -48,6 +49,26 @@ void main() {
       expect(provider.game.fiesta!.rules.modifiers.keys, ['no_pass']);
       // Tirage de M1 (2-5) : pris dans la config gelée, seul `no_pass` y est.
       expect(provider.game.fiesta!.active.map((m) => m.catalogId), ['no_pass']);
+    });
+
+    test(
+        '« Une seule réponse » : tirée par partie en Auto (graine du gameId), '
+        'reprise telle quelle de l\'ensemble en Personnalisé', () async {
+      final provider = await givenReadyProvider();
+      final outcomes = <bool>{};
+      for (var i = 0; i < 40; i++) {
+        await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
+        final oneAnswer = provider.game.fiesta!.rules.oneAnswer;
+        expect(oneAnswer, drawsOneAnswer(provider.game.gameId!));
+        outcomes.add(oneAnswer);
+      }
+      expect(outcomes, {true, false});
+
+      for (final chosen in [true, false]) {
+        await provider.startGame(
+            fiesta: FiestaRules(mode: FiestaMode.custom, oneAnswer: chosen));
+        expect(provider.game.fiesta!.rules.oneAnswer, chosen);
+      }
     });
 
     test('startGame() sans argument efface la Fiesta de la partie précédente',
