@@ -4,26 +4,36 @@ import 'package:flutter/material.dart';
 
 import '../models/fiesta/fiesta_ensemble.dart';
 import '../models/fiesta/fiesta_rules.dart';
+import '../models/fiesta/modifier_catalog.dart';
 import '../services/fiesta_ensemble_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common/app_back_button.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/app_confirm_dialog.dart';
 import '../widgets/effects/shooting_stars.dart';
-import '../widgets/fiesta/fiesta_ensemble_editor.dart';
 import '../widgets/help/coach_marks.dart';
 import '../widgets/help/help_button.dart';
 import '../widgets/help/help_content.dart';
+import 'fiesta_ensemble_editor_screen.dart';
+
+/// Brouillon de l'éditeur gardé en mémoire tant que l'app est ouverte
+/// (jamais persisté) : [ensembleId] nul = un nouvel ensemble.
+class EnsembleDraft {
+  final String? ensembleId;
+  final FiestaRules rules;
+  const EnsembleDraft(this.ensembleId, this.rules);
+}
 
 /// « Fiesta personnalisée » : juste après les Paramètres, avant les joueurs
-/// (Fiesta Personnalisé seulement). Un seul écran, sans page poussée : en
-/// haut les ensembles prêts à jouer (un tap sélectionne), en dessous
-/// l'éditeur, en bas « Suivant ».
+/// (Fiesta Personnalisé seulement). Les ensembles fournis par l'app puis les
+/// miens (un tap sélectionne), « Créer un ensemble » qui POUSSE l'éditeur
+/// (`FiestaEnsembleEditorScreen`), en bas « Suivant ».
 ///
-/// L'écran ne connaît ni le provider ni la navigation : [onNext] reçoit les
-/// règles de l'ensemble choisi (mode `custom`, `ensembleName` = nom), prêtes
-/// à attendre dans `pendingFiesta`. [selected] (l'attente courante, ex. après
-/// « Rejouer ») présélectionne l'ensemble aux mêmes règles.
+/// L'écran ne connaît ni le provider ni la navigation de l'app : [onNext]
+/// reçoit les règles de l'ensemble choisi (mode `custom`, `ensembleName` =
+/// nom), prêtes à attendre dans `pendingFiesta`. [selected] (l'attente
+/// courante, ex. après « Rejouer ») présélectionne l'ensemble aux mêmes
+/// règles ; sinon le dernier utilisé, sinon « Fiesta classique ».
 class FiestaEnsemblesScreen extends StatefulWidget {
   final FiestaRules? selected;
   final VoidCallback onBack;
@@ -36,12 +46,8 @@ class FiestaEnsemblesScreen extends StatefulWidget {
     super.key,
   });
 
-  /// Ensemble fourni par l'app quand aucun n'est enregistré : les réglages
-  /// par défaut d'un nouvel ensemble. Jamais écrit dans le stockage.
-  static final builtIn = FiestaEnsemble(
-    id: '_builtin',
-    rules: defaultEnsembleRules('Fiesta classique'),
-  );
+  /// Brouillon de l'éditeur, en mémoire seulement (spec Fiesta v2 §4).
+  static EnsembleDraft? draft;
 
   @override
   State<FiestaEnsemblesScreen> createState() => _FiestaEnsemblesScreenState();
@@ -50,24 +56,14 @@ class FiestaEnsemblesScreen extends StatefulWidget {
 class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
   final _service = FiestaEnsembleService();
   final _readyKey = GlobalKey();
-  final _editorKey = GlobalKey();
+  final _createKey = GlobalKey();
   final _nextKey = GlobalKey();
 
   EnsembleStore? _store;
   String? _selectedId;
 
-  /// Ensemble chargé dans l'éditeur (nul = création).
-  FiestaEnsemble? _editing;
-
-  /// Change à chaque remise à zéro de l'éditeur (nouvelle `key`).
-  int _editorRun = 0;
-
-  /// L'éditeur diffère de ce qu'il a chargé (remonté par l'éditeur à chaque
-  /// rendu ; simple champ, rien à redessiner).
-  bool _dirty = false;
-
-  /// Un double tap sur « Suivant » ne doit pas naviguer deux fois.
-  bool _leaving = false;
+  /// Un double tap ne doit pas naviguer deux fois.
+  bool _busy = false;
 
   @override
   void initState() {
@@ -75,18 +71,16 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
     _load();
   }
 
-  List<FiestaEnsemble> get _ready {
-    final saved = _store?.ensembles ?? const [];
-    return saved.isEmpty ? [FiestaEnsemblesScreen.builtIn] : saved;
-  }
+  List<FiestaEnsemble> get _mine => _store?.ensembles ?? const [];
 
-  bool get _full =>
-      (_store?.ensembles.length ?? 0) >= FiestaEnsembleService.maxEnsembles;
+  List<FiestaEnsemble> get _ready => [...kProvidedEnsembles, ..._mine];
+
+  bool get _full => _mine.length >= FiestaEnsembleService.maxEnsembles;
 
   static String _sameRules(FiestaRules rules) => jsonEncode(rules.toJson());
 
   /// Premier affichage : l'ensemble aux règles de l'attente courante, sinon
-  /// le dernier utilisé.
+  /// le dernier utilisé, sinon « Fiesta classique ».
   Future<void> _load() async {
     final store = await _service.load();
     if (!mounted) return;
@@ -98,7 +92,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
             .where((e) => _sameRules(e.rules) == _sameRules(pending))
             .firstOrNull;
     final lastUsed = _ready.where((e) => e.id == store.lastUsedId).firstOrNull;
-    setState(() => _selectedId = (match ?? lastUsed)?.id);
+    setState(() => _selectedId = (match ?? lastUsed)?.id ?? kClassicEnsembleId);
   }
 
   Future<void> _reload({String? select}) async {
@@ -107,66 +101,62 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
     setState(() {
       _store = store;
       if (select != null) _selectedId = select;
-      if (!_ready.any((e) => e.id == _selectedId)) _selectedId = null;
-    });
-  }
-
-  /// LA porte unique de l'éditeur. Toute action qui change la sélection ou
-  /// le contenu de l'éditeur (sélectionner, Modifier, Dupliquer, Supprimer,
-  /// Annuler, Retour, Suivant) passe par ici : si la saisie diffère de ce qui
-  /// a été chargé — brouillon neuf ou modification, peu importe —, on demande
-  /// avant de la jeter. Accepté (ou rien en cours) : l'éditeur repart vierge,
-  /// [editing] y est chargé, et l'action continue. L'éditeur ne contredit
-  /// donc jamais la sélection, et rien n'est perdu en silence.
-  Future<bool> _leaveDraft({FiestaEnsemble? editing}) async {
-    if (_dirty &&
-        !await AppConfirmDialog.show(
-          context,
-          title: 'Abandonner les modifications ?',
-          message: 'L\'ensemble en cours n\'est pas enregistré.',
-          confirmText: 'Abandonner',
-          accentColor: AppColors.warning,
-        )) {
-      return false;
-    }
-    if (!mounted) return false;
-    setState(() {
-      _editing = editing;
-      _editorRun++;
-      _dirty = false;
-    });
-    return true;
-  }
-
-  Future<void> _back() async {
-    if (await _leaveDraft()) widget.onBack();
-  }
-
-  Future<void> _select(FiestaEnsemble ensemble) async {
-    if (await _leaveDraft()) setState(() => _selectedId = ensemble.id);
-  }
-
-  /// Modifier sélectionne aussi l'ensemble (éditeur et sélection d'accord).
-  Future<void> _edit(FiestaEnsemble ensemble) async {
-    if (!await _leaveDraft(editing: ensemble)) return;
-    setState(() => _selectedId = ensemble.id);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final target = _editorKey.currentContext;
-      if (target != null && target.mounted) {
-        Scrollable.ensureVisible(target,
-            duration: const Duration(milliseconds: 300));
+      if (!_ready.any((e) => e.id == _selectedId)) {
+        _selectedId = kClassicEnsembleId;
       }
     });
   }
 
+  /// Ouvre l'éditeur : création (reprend le brouillon s'il y en a un) ou
+  /// modification de [ensemble] (reprend son brouillon s'il en a un).
+  Future<void> _openEditor({FiestaEnsemble? ensemble}) async {
+    if (_busy) return;
+    _busy = true;
+    try {
+      final draft = FiestaEnsemblesScreen.draft;
+      final resumed =
+          draft != null && draft.ensembleId == ensemble?.id ? draft : null;
+      final result = await Navigator.of(context).push<EnsembleEditorResult>(
+        MaterialPageRoute(
+          builder: (_) => FiestaEnsembleEditorScreen(
+            initial: ensemble,
+            draft: resumed?.rules,
+            others: [
+              for (final e in _ready)
+                if (e.id != ensemble?.id) e,
+            ],
+          ),
+        ),
+      );
+      if (!mounted) return;
+      switch (result) {
+        case EnsembleSaved(:final ensemble):
+          FiestaEnsemblesScreen.draft = null;
+          await _reload(select: ensemble.id);
+        case EnsembleDraftKept(:final rules):
+          setState(() =>
+              FiestaEnsemblesScreen.draft = EnsembleDraft(ensemble?.id, rules));
+          if (mounted) {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(const SnackBar(content: Text('Brouillon gardé')));
+          }
+        case null:
+          // Sorti sans rien garder : un brouillon repris est abandonné.
+          if (resumed != null) {
+            setState(() => FiestaEnsemblesScreen.draft = null);
+          }
+      }
+    } finally {
+      _busy = false;
+    }
+  }
+
   Future<void> _duplicate(FiestaEnsemble ensemble) async {
-    if (!await _leaveDraft()) return;
-    final copy = await _service.duplicate(ensemble.id);
+    final copy = await _service.duplicate(ensemble);
     await _reload(select: copy?.id);
   }
 
   Future<void> _delete(FiestaEnsemble ensemble) async {
-    if (!await _leaveDraft() || !mounted) return;
     final confirmed = await AppConfirmDialog.show(
       context,
       title: 'Supprimer ?',
@@ -176,31 +166,21 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
     );
     if (!confirmed) return;
     await _service.delete(ensemble.id);
+    if (FiestaEnsemblesScreen.draft?.ensembleId == ensemble.id) {
+      FiestaEnsemblesScreen.draft = null;
+    }
     await _reload();
-  }
-
-  /// Enregistré : pas de brouillon à abandonner, l'éditeur repart vierge.
-  Future<void> _onSaved(FiestaEnsemble ensemble) async {
-    setState(() {
-      _editing = null;
-      _editorRun++;
-      _dirty = false;
-    });
-    await _reload(select: ensemble.id);
   }
 
   Future<void> _next() async {
     final chosen = _ready.where((e) => e.id == _selectedId).firstOrNull;
-    if (chosen == null || _leaving) return;
-    _leaving = true;
+    if (chosen == null || _busy) return;
+    _busy = true;
     try {
-      if (!await _leaveDraft()) return;
-      if (chosen.id != FiestaEnsemblesScreen.builtIn.id) {
-        await _service.markUsed(chosen.id);
-      }
+      await _service.markUsed(chosen.id);
       if (mounted) widget.onNext(chosen.rules);
     } finally {
-      _leaving = false;
+      _busy = false;
     }
   }
 
@@ -211,7 +191,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _back();
+        if (!didPop) widget.onBack();
       },
       child: Scaffold(
         backgroundColor: AppColors.backgroundMain,
@@ -227,18 +207,18 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
                       )
                     : Column(
                         children: [
-                          Expanded(child: _buildBody(store)),
+                          Expanded(child: _buildBody()),
                           _buildNextBar(),
                         ],
                       ),
               ),
-              AppBackButton(onPressed: _back),
+              AppBackButton(onPressed: widget.onBack),
               HelpButton(
                 onPressed: () => CoachMarks.show(
                   context,
                   fiestaEnsemblesHelp(
                     ready: _readyKey,
-                    editor: _editorKey,
+                    create: _createKey,
                     next: _nextKey,
                   ),
                 ),
@@ -250,8 +230,9 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
     );
   }
 
-  Widget _buildBody(EnsembleStore store) {
-    final builtIn = store.ensembles.isEmpty;
+  Widget _buildBody() {
+    final newDraft = FiestaEnsemblesScreen.draft?.ensembleId == null &&
+        FiestaEnsemblesScreen.draft != null;
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 72, 20, 24),
       children: [
@@ -275,13 +256,11 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
                           .copyWith(color: AppColors.gray400, fontSize: 12),
                     ),
                   ),
-                  if (!builtIn)
-                    Text(
-                      '${store.ensembles.length} / '
-                      '${FiestaEnsembleService.maxEnsembles}',
-                      style: AppTextStyles.bodySmall
-                          .copyWith(color: AppColors.gray400),
-                    ),
+                  Text(
+                    '${_mine.length} / ${FiestaEnsembleService.maxEnsembles}',
+                    style: AppTextStyles.bodySmall
+                        .copyWith(color: AppColors.gray400),
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -289,30 +268,31 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
                 _EnsembleCard(
                   ensemble: ensemble,
                   selected: ensemble.id == _selectedId,
-                  builtIn: builtIn,
                   canDuplicate: !_full,
-                  onTap: () => _select(ensemble),
-                  onEdit: () => _edit(ensemble),
+                  onTap: () => setState(() => _selectedId = ensemble.id),
+                  onEdit: () => _openEditor(ensemble: ensemble),
                   onDuplicate: () => _duplicate(ensemble),
                   onDelete: () => _delete(ensemble),
                 ),
             ],
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 12),
         KeyedSubtree(
-          key: _editorKey,
-          child: _editing == null && _full
+          key: _createKey,
+          child: _full && !newDraft
               ? _Alert(
                   'Limite de ${FiestaEnsembleService.maxEnsembles} ensembles '
                   'atteinte. Supprime un ensemble pour en créer un nouveau.',
                 )
-              : FiestaEnsembleEditor(
-                  key: ValueKey(_editorRun),
-                  initial: _editing,
-                  onSaved: _onSaved,
-                  onCancel: _editing == null ? null : _leaveDraft,
-                  onDirty: (dirty) => _dirty = dirty,
+              : AppButton(
+                  text:
+                      newDraft ? 'Reprendre le brouillon' : 'Créer un ensemble',
+                  icon: const Icon(Icons.add, size: 20),
+                  variant: AppButtonVariant.secondary,
+                  size: AppButtonSize.medium,
+                  fullWidth: true,
+                  onPressed: () => _openEditor(),
                 ),
         ),
       ],
@@ -339,7 +319,6 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
 class _EnsembleCard extends StatelessWidget {
   final FiestaEnsemble ensemble;
   final bool selected;
-  final bool builtIn;
   final bool canDuplicate;
   final VoidCallback onTap;
   final VoidCallback onEdit;
@@ -349,7 +328,6 @@ class _EnsembleCard extends StatelessWidget {
   const _EnsembleCard({
     required this.ensemble,
     required this.selected,
-    required this.builtIn,
     required this.canDuplicate,
     required this.onTap,
     required this.onEdit,
@@ -357,20 +335,20 @@ class _EnsembleCard extends StatelessWidget {
     required this.onDelete,
   });
 
+  /// « N malus · M bonus » (maquette `summaryOf`).
   String get _summary {
-    final rules = ensemble.rules;
-    final active = rules.modifiers.values.where((m) => m.active).length;
-    final draw = rules.symmetric && rules.drawCount > 0
-        ? 'tirage ${rules.drawCount}/manche'
-        : 'sans tirage';
-    return '$active modificateurs · '
-        '${rules.oneOfThree ? 'choix 1 parmi 3' : 'pas de choix'} · '
-        '${catchUpOn(rules.catchUp) ? 'rattrapage' : 'sans rattrapage'} · $draw'
-        '${rules.oneAnswer ? ' · une seule réponse' : ''}';
+    var malus = 0;
+    var bonus = 0;
+    for (final def in kModifierCatalog) {
+      if (ensemble.rules.activeSetting(def.id) == null) continue;
+      def.nature == ModifierNature.malus ? malus++ : bonus++;
+    }
+    return '$malus malus · $bonus bonus';
   }
 
   @override
   Widget build(BuildContext context) {
+    final provided = ensemble.isProvided;
     return Semantics(
       selected: selected,
       button: true,
@@ -408,38 +386,38 @@ class _EnsembleCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                builtIn ? 'Fourni par l\'app · $_summary' : _summary,
+                provided ? 'Fourni par l\'app · $_summary' : _summary,
                 style: AppTextStyles.bodySmall
                     .copyWith(color: AppColors.gray400, fontSize: 12),
               ),
-              if (!builtIn) ...[
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (!provided)
                     AppButton(
                       text: 'Modifier',
                       size: AppButtonSize.small,
                       variant: AppButtonVariant.ghost,
                       onPressed: onEdit,
                     ),
-                    AppButton(
-                      text: 'Dupliquer',
-                      size: AppButtonSize.small,
-                      variant: AppButtonVariant.ghost,
-                      disabled: !canDuplicate,
-                      onPressed: onDuplicate,
-                    ),
+                  AppButton(
+                    text: 'Dupliquer',
+                    size: AppButtonSize.small,
+                    variant: AppButtonVariant.ghost,
+                    disabled: !canDuplicate,
+                    onPressed: onDuplicate,
+                  ),
+                  if (!provided)
                     AppButton(
                       text: 'Supprimer',
                       size: AppButtonSize.small,
                       variant: AppButtonVariant.danger,
                       onPressed: onDelete,
                     ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ],
           ),
         ),

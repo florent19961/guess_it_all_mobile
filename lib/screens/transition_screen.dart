@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import '../models/fiesta/modifier_instance.dart';
 import '../providers/game_provider.dart';
 import '../utils/constants.dart';
 import '../widgets/common/app_button.dart';
@@ -366,7 +367,32 @@ class _PickThreeFlow extends StatefulWidget {
 
 class _PickThreeFlowState extends State<_PickThreeFlow> {
   bool _revealed = false;
-  int? _selected;
+
+  /// Carte sélectionnée par rangée (index dans la rangée), pas encore validée.
+  final Map<int, int> _selected = {};
+
+  /// Les cartes sélectionnées dans les autres rangées que [row].
+  List<ModifierInstance> _others(List<List<ModifierInstance>> rows, int row) =>
+      [
+        for (final MapEntry(key: r, value: i) in _selected.entries)
+          if (r != row) rows[r][i],
+      ];
+
+  bool _usable(GameProvider provider, List<List<ModifierInstance>> rows,
+          int row, int index) =>
+      provider.canChooseOffer(widget.teamId, row, index,
+          alsoTaken: _others(rows, row));
+
+  void _select(GameProvider provider, List<List<ModifierInstance>> rows,
+      int row, int index) {
+    setState(() {
+      _selected[row] = index;
+      // Une sélection devenue sans effet (incompatible avec la nouvelle) est
+      // retirée : la rangée redevient à choisir.
+      _selected
+          .removeWhere((r, i) => r != row && !_usable(provider, rows, r, i));
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -379,6 +405,15 @@ class _PickThreeFlowState extends State<_PickThreeFlow> {
         onReady: () => setState(() => _revealed = true),
       );
     }
+    final rows = provider.offersFor(widget.teamId);
+    // Prêt : chaque rangée a sa carte, ou n'en a plus aucune utile.
+    final ready = _selected.isNotEmpty &&
+        [
+          for (var r = 0; r < rows.length; r++)
+            _selected.containsKey(r) ||
+                !List.generate(rows[r].length, (i) => i)
+                    .any((i) => _usable(provider, rows, r, i)),
+        ].every((ok) => ok);
     return Material(
       color: AppColors.backgroundMain,
       child: OfferChoiceBody(
@@ -386,14 +421,20 @@ class _PickThreeFlowState extends State<_PickThreeFlow> {
         teams: provider.teams,
         standings: provider.standings,
         chooserId: widget.teamId,
-        offers: provider.offersFor(widget.teamId),
+        rows: rows,
         selected: _selected,
-        onSelect: (i) => setState(() => _selected = i),
+        isUsable: (row, i) => _usable(provider, rows, row, i),
+        ready: ready,
+        onSelect: (row, i) => _select(provider, rows, row, i),
         // Fermer AVANT de choisir : sinon la route qui se ferme se
         // reconstruit avec les offres recalculées après ce choix.
         onConfirm: () {
+          final picks = _selected.entries.toList()
+            ..sort((a, b) => a.key.compareTo(b.key));
           Navigator.of(context).pop();
-          provider.chooseOffer(widget.teamId, _selected!);
+          for (final MapEntry(key: row, value: i) in picks) {
+            provider.chooseOffer(widget.teamId, row, i);
+          }
         },
       ),
     );

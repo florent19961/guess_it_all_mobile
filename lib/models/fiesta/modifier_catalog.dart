@@ -153,7 +153,30 @@ const List<ModifierDef> kModifierCatalog = [
     nature: ModifierNature.malus,
     notInRound3: true,
   ),
+  // Fiesta v2 (2026-11-04) : « Une seule réponse » devient un malus normal du
+  // catalogue (avant : un réglage de toute la partie, hors liste), puis
+  // « Bruitages seulement ». EN FIN de liste.
+  ModifierDef(
+    id: 'one_answer',
+    name: 'Une seule réponse',
+    description: 'Une seule réponse par mot.',
+    nature: ModifierNature.malus,
+  ),
+  ModifierDef(
+    id: 'sounds_only',
+    name: 'Bruitages seulement',
+    description: 'On fait deviner uniquement avec des bruitages : ni mots, '
+        'ni gestes.',
+    nature: ModifierNature.malus,
+    round3Only: true,
+    mimeFamily: true,
+  ),
 ];
+
+/// Seulement en cartouche (Fiesta v2) : jamais « Toujours » ni « Au tirage »
+/// (une règle de manche pour tous n'aurait pas de sens : personne pour
+/// désigner le devineur, un « ×2 » pour tout le monde n'en est pas un).
+const Set<String> kCartridgeOnlyIds = {'block_guesser', 'double_points'};
 
 /// Paires incompatibles (Q14 de l'epic). Chaque paire est écrite une fois :
 /// [areCompatible] est symétrique par construction. La famille « Mime » n'y
@@ -162,17 +185,6 @@ const List<(String, String)> kModifierIncompatibilities = [
   ('no_pass', 'two_words'),
   ('no_pass', 'free_pass'),
 ];
-
-/// « Une seule réponse » : modificateur de TOUTE la partie, hors de
-/// [kModifierCatalog] (ni tiré par manche, ni proposé, ni fixé). Son état vit
-/// dans `FiestaRules.oneAnswer` : coché en Personnalisé, tiré au lancement
-/// en Auto (`drawsOneAnswer`).
-const ModifierDef kOneAnswer = ModifierDef(
-  id: 'one_answer',
-  name: 'Une seule réponse',
-  description: 'Toute la partie : une seule réponse par mot.',
-  nature: ModifierNature.malus,
-);
 
 ModifierDef? modifierById(String id) {
   for (final def in kModifierCatalog) {

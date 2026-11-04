@@ -132,18 +132,23 @@ class PassPhonePanel extends StatelessWidget {
   }
 }
 
-/// Corps de l'écran de choix (maquette `pick3`) : équipe, écart et force,
-/// ordre de la file, offres, « Valider ce choix ». La sélection est tenue par
-/// l'appelant ([selected], [onSelect]).
+/// Corps de l'écran de choix (maquette `pick3`) : équipe, force, ordre de la
+/// file, une ou plusieurs rangées de 3 cartes (une carte par rangée, sur le
+/// même écran), « Valider ». La sélection est tenue par l'appelant
+/// ([selected] : rangée → index, [onSelect]) ; [isUsable] grise une carte que
+/// les autres sélections rendent sans effet ; [ready] = chaque rangée a sa
+/// carte ou n'en a plus d'utile.
 class OfferChoiceBody extends StatelessWidget {
   /// La manche N qui vient de finir.
   final int round;
   final List<Team> teams;
   final Standings standings;
   final String chooserId;
-  final List<ModifierInstance> offers;
-  final int? selected;
-  final ValueChanged<int> onSelect;
+  final List<List<ModifierInstance>> rows;
+  final Map<int, int> selected;
+  final bool Function(int row, int index) isUsable;
+  final bool ready;
+  final void Function(int row, int index) onSelect;
   final VoidCallback onConfirm;
 
   const OfferChoiceBody({
@@ -151,8 +156,10 @@ class OfferChoiceBody extends StatelessWidget {
     required this.teams,
     required this.standings,
     required this.chooserId,
-    required this.offers,
+    required this.rows,
     required this.selected,
+    required this.isUsable,
+    required this.ready,
     required this.onSelect,
     required this.onConfirm,
     super.key,
@@ -187,9 +194,9 @@ class OfferChoiceBody extends StatelessWidget {
                     // Force de l'offre, jamais l'écart chiffré (scores
                     // cachés jusqu'aux résultats).
                     Text(
-                      offers.isEmpty
+                      rows.isEmpty
                           ? 'En retard'
-                          : 'En retard · offre ${_strength(offers.first)}',
+                          : 'En retard · offre ${_strength(rows.first.first)}',
                       textAlign: TextAlign.center,
                       style: hint,
                     ),
@@ -213,27 +220,51 @@ class OfferChoiceBody extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    for (final (i, offer) in offers.indexed)
-                      _OfferCard(
-                        offer: offer,
-                        who: offer.teamId == chooserId
-                            ? 'Pour vous'
-                            : 'Contre ${_name(teams, offer.teamId!)}',
-                        selected: selected == i,
-                        onTap: () => onSelect(i),
+                    if (rows.length > 1) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Prends une carte par rangée ; les autres sont '
+                        'perdues.',
+                        textAlign: TextAlign.center,
+                        style: hint,
                       ),
+                    ],
+                    for (final (r, row) in rows.indexed) ...[
+                      const SizedBox(height: 16),
+                      if (rows.length > 1) ...[
+                        Text('CARTE ${r + 1}',
+                            style: AppTextStyles.label.copyWith(
+                                color: AppColors.gray400, fontSize: 12)),
+                        const SizedBox(height: 8),
+                      ],
+                      for (final (i, offer) in row.indexed)
+                        _OfferCard(
+                          offer: offer,
+                          who: offer.teamId == chooserId
+                              ? 'Pour vous'
+                              : 'Contre ${_name(teams, offer.teamId!)}',
+                          selected: selected[r] == i,
+                          enabled: selected[r] == i || isUsable(r, i),
+                          onTap: () => onSelect(r, i),
+                        ),
+                    ],
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 16),
             AppButton(
-              text: selected == null ? 'Choisis une carte' : 'Valider ce choix',
+              text: !ready
+                  ? (rows.length > 1
+                      ? 'Choisis une carte par rangée'
+                      : 'Choisis une carte')
+                  : (selected.length > 1
+                      ? 'Valider ces choix'
+                      : 'Valider ce choix'),
               size: AppButtonSize.large,
               fullWidth: true,
-              disabled: selected == null,
-              onPressed: selected == null ? null : onConfirm,
+              disabled: !ready,
+              onPressed: ready ? onConfirm : null,
             ),
           ],
         ),
@@ -271,12 +302,14 @@ class _OfferCard extends StatelessWidget {
   final ModifierInstance offer;
   final String who;
   final bool selected;
+  final bool enabled;
   final VoidCallback onTap;
 
   const _OfferCard({
     required this.offer,
     required this.who,
     required this.selected,
+    required this.enabled,
     required this.onTap,
   });
 
@@ -289,63 +322,70 @@ class _OfferCard extends StatelessWidget {
       child: Semantics(
         button: true,
         selected: selected,
+        enabled: enabled,
         child: GestureDetector(
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.backgroundMain,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: selected ? AppColors.secondaryCyan : Colors.transparent,
-                width: 2,
+          onTap: enabled ? onTap : null,
+          child: Opacity(
+            opacity: enabled ? 1 : 0.35,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.backgroundMain,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color:
+                      selected ? AppColors.secondaryCyan : Colors.transparent,
+                  width: 2,
+                ),
               ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(14),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Text(
+                      modifierIcon(offer.catalogId),
+                      style: TextStyle(
+                          fontFamily: 'Bangers', fontSize: 22, color: color),
+                    ),
                   ),
-                  child: Text(
-                    modifierIcon(offer.catalogId),
-                    style: TextStyle(
-                        fontFamily: 'Bangers', fontSize: 22, color: color),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(def?.name ?? offer.catalogId,
-                          style: AppTextStyles.label),
-                      if (def != null) FiestaHint(def.description),
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(99),
-                          border: Border.all(color: AppColors.gray600),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(def?.name ?? offer.catalogId,
+                            style: AppTextStyles.label),
+                        if (def != null) FiestaHint(def.description),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(99),
+                            border: Border.all(color: AppColors.gray600),
+                          ),
+                          child: Text(
+                            offer.charges > 0
+                                ? '$who · +${offer.charges}'
+                                : who,
+                            style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 10.5,
+                                color: AppColors.gray400),
+                          ),
                         ),
-                        child: Text(
-                          offer.charges > 0 ? '$who · +${offer.charges}' : who,
-                          style: const TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 10.5,
-                              color: AppColors.gray400),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

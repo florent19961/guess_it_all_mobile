@@ -21,23 +21,23 @@ const Map<String, String> kModifierIcons = {
   'mime_under_sheet': '⛺',
   'mime_back_turned': '↩',
   'other_language': '🌐',
+  'one_answer': '☝',
+  'sounds_only': '🔊',
 };
 
 String modifierIcon(String id) => kModifierIcons[id] ?? '✦';
 
-/// Couleur d'un modificateur : cyan pour un bonus, rose pour un malus.
-Color modifierColor(ModifierNature nature) => nature == ModifierNature.bonus
-    ? AppColors.secondaryCyan
-    : AppColors.primaryPink;
+/// Couleur d'un modificateur (Fiesta v2) : vert pour un bonus, rouge pour un
+/// malus.
+Color modifierColor(ModifierNature nature) =>
+    nature == ModifierNature.bonus ? AppColors.success : AppColors.malus;
 
 /// Enveloppe l'ouverture de l'explication d'un badge. L'écran du tour s'en
 /// sert pour geler le chrono tant que la fiche est ouverte.
 typedef BadgeExplainWrapper = Future<void> Function(
     Future<void> Function() show);
 
-/// Pastille « icône + nom » (maquette `.badge`). [label] remplace le nom du
-/// catalogue par manche (ex. « Une seule réponse », modificateur de toute la
-/// partie, `kOneAnswer`).
+/// Pastille « icône + nom » (maquette `.badge`).
 ///
 /// Avec une [description], un tap ouvre une petite fiche qui l'explique.
 class ModifierBadge extends StatelessWidget {

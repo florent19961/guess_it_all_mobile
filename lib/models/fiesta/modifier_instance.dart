@@ -86,32 +86,9 @@ class ModifierInstance {
   }
 }
 
-/// Peut-on poser [candidate] à côté des instances [active] (celles du tour en
-/// cours) ? Non si UNE équipe qu'elle touche atteindrait [maxPerTurn]
-/// modificateurs, ou si une instance active d'une équipe qu'elle touche lui
-/// est incompatible.
-///
-/// Le plafond est PAR ÉQUIPE (epic, Q8) : la charge d'une équipe = les
-/// instances « pour tous » + les siennes. Une candidate `both` est jugée sur
-/// l'équipe la plus chargée.
-bool canAdd(
-  List<ModifierInstance> active,
-  ModifierInstance candidate, {
-  int maxPerTurn = 2,
-}) {
-  final shared = active.where(candidate.concernsSameTeamAs).toList();
-  if (!shared.every((a) => areCompatible(a.catalogId, candidate.catalogId))) {
-    return false;
-  }
-  var forAll = 0;
-  final perTeam = <String?, int>{};
-  for (final a in shared) {
-    if (a.target == ModifierTarget.both) {
-      forAll++;
-    } else {
-      perTeam[a.teamId] = (perTeam[a.teamId] ?? 0) + 1;
-    }
-  }
-  final heaviest = perTeam.values.fold(0, (m, n) => n > m ? n : m);
-  return forAll + heaviest < maxPerTurn;
-}
+/// Peut-on poser [candidate] à côté des instances [active] ? Non si une
+/// instance active d'une équipe qu'elle touche lui est incompatible. Pas de
+/// plafond (Fiesta v2 : seules les incompatibilités limitent).
+bool canAdd(List<ModifierInstance> active, ModifierInstance candidate) => active
+    .where(candidate.concernsSameTeamAs)
+    .every((a) => areCompatible(a.catalogId, candidate.catalogId));

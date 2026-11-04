@@ -2,56 +2,91 @@ import 'modifier_catalog.dart';
 
 enum FiestaMode { auto, custom }
 
-/// Comment un modificateur arrive en jeu (mode Personnalisé).
-enum ModifierArrival { draw, offer, fixed }
+/// Mode d'un modificateur dans un ensemble (Fiesta v2), UN seul par
+/// modificateur, en deux familles :
+/// - « Toute la manche, pour tous » (règle de manche, personne ne décide) :
+///   [always] actif toute la manche sur chaque manche cochée ; [draw]
+///   candidat au tirage du début de chaque manche cochée.
+/// - « Cartouche · un tour » : [stock] N cartouches par équipe au début de
+///   chaque manche cochée ; [offer] gagnée entre deux manches (1 parmi 3).
+enum ModifierMode { always, draw, stock, offer }
 
-/// Réglage d'UN modificateur dans un ensemble Personnalisé.
+/// Les modes « Toute la manche, pour tous ».
+bool isRoundRuleMode(ModifierMode mode) =>
+    mode == ModifierMode.always || mode == ModifierMode.draw;
+
+/// Réglage d'UN modificateur dans un ensemble.
 class ModifierSetting {
   final bool active;
-  final ModifierArrival arrival;
 
-  /// Manche à partir de laquelle il peut arriver (`draw` / `offer`).
-  final int startRound;
+  /// Manches cochées, parmi {1, 2, 3} (au moins une si [active]).
+  final Set<int> rounds;
+  final ModifierMode mode;
 
-  /// Manche sur laquelle il est fixé (`fixed`).
-  final int? fixedRound;
+  /// [ModifierMode.stock] : nombre de cartouches par équipe (au moins 1).
   final int charges;
 
-  const ModifierSetting({
+  /// [ModifierMode.stock] : `true` = [charges] pour toute la partie, `false`
+  /// = remises à [charges] à chaque manche cochée.
+  final bool perGame;
+
+  ModifierSetting({
     required this.active,
-    required this.arrival,
-    required this.startRound,
-    this.fixedRound,
-    required this.charges,
-  });
+    required Set<int> rounds,
+    required this.mode,
+    this.charges = 1,
+    this.perGame = false,
+  }) : rounds = Set.unmodifiable(rounds);
+
+  ModifierSetting copyWith({
+    bool? active,
+    Set<int>? rounds,
+    ModifierMode? mode,
+    int? charges,
+    bool? perGame,
+  }) =>
+      ModifierSetting(
+        active: active ?? this.active,
+        rounds: rounds ?? this.rounds,
+        mode: mode ?? this.mode,
+        charges: charges ?? this.charges,
+        perGame: perGame ?? this.perGame,
+      );
 
   Map<String, dynamic> toJson() => {
         'active': active,
-        'arrival': arrival.name,
-        'startRound': startRound,
-        if (fixedRound != null) 'fixedRound': fixedRound,
+        // Trié : deux réglages égaux ont le même JSON (doublons, `_loaded`).
+        'rounds': rounds.toList()..sort(),
+        'mode': mode.name,
         'charges': charges,
+        'perGame': perGame,
       };
 
+  /// `null` si illisible (champ manquant ou mal typé, manche hors 1-3).
   static ModifierSetting? tryFromJson(Map<String, dynamic> json) {
     final active = json['active'];
-    final arrival = enumFromJson(ModifierArrival.values, json['arrival']);
-    final startRound = readOr(json, 'startRound', 1);
-    final fixedRound = json['fixedRound'];
-    final charges = readOr(json, 'charges', 0);
+    final rawRounds = json['rounds'];
+    final mode = enumFromJson(ModifierMode.values, json['mode']);
+    final charges = readOr(json, 'charges', 1);
+    final perGame = readOr(json, 'perGame', false);
     if (active is! bool ||
-        arrival == null ||
-        startRound == null ||
-        fixedRound is! int? ||
-        charges == null) {
+        rawRounds is! List ||
+        mode == null ||
+        charges == null ||
+        perGame == null) {
       return null;
+    }
+    final rounds = <int>{};
+    for (final r in rawRounds) {
+      if (r is! int || r < 1 || r > 3) return null;
+      rounds.add(r);
     }
     return ModifierSetting(
       active: active,
-      arrival: arrival,
-      startRound: startRound,
-      fixedRound: fixedRound,
+      rounds: rounds,
+      mode: mode,
       charges: charges,
+      perGame: perGame,
     );
   }
 }
@@ -99,6 +134,15 @@ class CatchUpRules {
   }
 }
 
+/// Rattrapage coupé : tous les curseurs à 0 (voir [catchUpOn]).
+const kCatchUpOff = CatchUpRules(b1: 0, b2: 0, cap: 0, mal: 0, malCap: 0);
+
+/// Le rattrapage est « actif » dès qu'un de ses curseurs est au-dessus de 0 :
+/// l'interrupteur de l'éditeur n'est pas un champ persisté, il met tout à 0
+/// ou rend `CatchUpRules.auto`.
+bool catchUpOn(CatchUpRules c) =>
+    c.b1 > 0 || c.b2 > 0 || c.cap > 0 || c.mal > 0 || c.malCap > 0;
+
 /// Lit [key] en tolérant son ABSENCE : absent (ou `null`) → [fallback] ;
 /// présent et mal typé → `null` (blob illisible).
 ///
@@ -111,87 +155,114 @@ T? readOr<T extends Object>(Map<String, dynamic> json, String key, T fallback) {
   return raw is T ? raw : null;
 }
 
+/// Bornes des règles de la partie (éditeur et relecture).
+const int kMaxDrawCount = 5;
+const int kMaxPick3Choices = 3;
+
 /// La configuration Fiesta d'une partie, GELÉE dans `GameState` au lancement.
 ///
 /// Immuable : les collections sont copiées en lecture seule à la construction,
 /// donc modifier l'ensemble source après `startGame` ne touche pas la partie.
+///
+/// Forme v2 (Fiesta v2, 2026-11-04) : JSON marqué `format: 2`. Un blob sans
+/// cette marque (forme v1 : `symmetric`, `oneOfThree`, `oneAnswer`,
+/// `arrival`…) est ILLISIBLE : la Fiesta n'a jamais été publiée, on ne
+/// traduit pas, l'appelant ignore l'ensemble ou abandonne la partie.
 class FiestaRules {
+  static const int format = 2;
+
   final FiestaMode mode;
 
-  // `symmetric` : tirage pour tous, lu par les DEUX modes (en Personnalisé, le
-  // tirage est actif seulement si `symmetric && drawCount > 0`).
-  // `autoCalibrate` : mode Auto ; au moins un des deux allumé en Auto.
-  final bool symmetric;
+  /// Auto : rattrapage auto-calibré et coup de pouce de l'app.
   final bool autoCalibrate;
 
-  // Mode Personnalisé.
+  /// Personnalisé : nom de l'ensemble.
   final String? ensembleName;
 
-  /// Réglage par id de catalogue. Un id absent = modificateur non réglé.
+  /// Réglage par id de catalogue. Un id absent = modificateur non réglé
+  /// (inactif).
   final Map<String, ModifierSetting> modifiers;
-  final bool oneOfThree;
-  final CatchUpRules catchUp;
 
-  /// Nombre de modificateurs tirés pour tous à chaque manche, 0 à 3
-  /// (plafond `maxModifiersPerTeam`).
+  /// Modificateurs tirés pour tous à chaque manche, 0 (aucun tirage) à
+  /// [kMaxDrawCount], parmi ceux en [ModifierMode.draw]. Ignoré en Auto
+  /// (1 ou 2 par manche, au hasard de la graine).
   final int drawCount;
 
-  /// Modificateur « Une seule réponse » (`kOneAnswer`) pour TOUTE la partie :
-  /// coché dans l'ensemble en Personnalisé, tiré au lancement en Auto. Même
-  /// clé JSON qu'à l'époque où c'était une « règle commune » : un blob relu
-  /// garde son sens (absente = `true`, l'ancien défaut). Le report du temps
-  /// de fin de manche n'est PAS un réglage (epic : « conservé ») ; l'ancienne
-  /// clé `carryOver` d'un blob est ignorée.
-  final bool oneAnswer;
+  /// Cartes prises par équipe à chaque choix « 1 parmi 3 » : autant de
+  /// rangées de 3 cartes, 1 à [kMaxPick3Choices].
+  final int pick3Choices;
+  final CatchUpRules catchUp;
 
   FiestaRules({
     required this.mode,
-    this.symmetric = true,
     this.autoCalibrate = true,
     this.ensembleName,
     Map<String, ModifierSetting> modifiers = const {},
-    this.oneOfThree = false,
-    this.catchUp = CatchUpRules.auto,
     this.drawCount = 1,
-    this.oneAnswer = true,
+    this.pick3Choices = 1,
+    this.catchUp = CatchUpRules.auto,
   }) : modifiers = Map.unmodifiable(modifiers);
 
+  FiestaRules copyWith({
+    String? ensembleName,
+    Map<String, ModifierSetting>? modifiers,
+    int? drawCount,
+    int? pick3Choices,
+    CatchUpRules? catchUp,
+  }) =>
+      FiestaRules(
+        mode: mode,
+        autoCalibrate: autoCalibrate,
+        ensembleName: ensembleName ?? this.ensembleName,
+        modifiers: modifiers ?? this.modifiers,
+        drawCount: drawCount ?? this.drawCount,
+        pick3Choices: pick3Choices ?? this.pick3Choices,
+        catchUp: catchUp ?? this.catchUp,
+      );
+
+  /// Réglage actif de [id], `null` s'il est absent ou coupé.
+  ModifierSetting? activeSetting(String id) {
+    final s = modifiers[id];
+    return s != null && s.active ? s : null;
+  }
+
   Map<String, dynamic> toJson() => {
+        'format': format,
         'mode': mode.name,
-        'symmetric': symmetric,
         'autoCalibrate': autoCalibrate,
         if (ensembleName != null) 'ensembleName': ensembleName,
         'modifiers':
             modifiers.map((id, setting) => MapEntry(id, setting.toJson())),
-        'oneOfThree': oneOfThree,
-        'catchUp': catchUp.toJson(),
         'drawCount': drawCount,
-        'oneAnswer': oneAnswer,
+        'pick3Choices': pick3Choices,
+        'catchUp': catchUp.toJson(),
       };
 
-  /// Variante tolérante : `null` si la structure est illisible (`mode` inconnu,
-  /// champ présent mais mal typé). Un champ ABSENT prend la valeur par défaut
-  /// du constructeur ([readOr], règle 7). Un réglage de modificateur d'id
-  /// inconnu ou mal formé est ignoré seul, pas l'ensemble.
+  /// Variante tolérante : `null` si la structure est illisible (forme v1,
+  /// `mode` inconnu, champ présent mais mal typé, compteur hors bornes). Un
+  /// champ ABSENT prend la valeur par défaut du constructeur ([readOr],
+  /// règle 7). Un réglage de modificateur d'id inconnu ou mal formé est
+  /// ignoré seul, pas l'ensemble.
   static FiestaRules? tryFromJson(Map<String, dynamic> json) {
+    if (json['format'] != format) return null;
     final mode = enumFromJson(FiestaMode.values, json['mode']);
-    final symmetric = readOr(json, 'symmetric', true);
     final autoCalibrate = readOr(json, 'autoCalibrate', true);
     final ensembleName = json['ensembleName'];
     final rawModifiers = readOr<Map>(json, 'modifiers', const {});
-    final oneOfThree = readOr(json, 'oneOfThree', false);
-    final rawCatchUp = readOr<Map>(json, 'catchUp', const {});
     final drawCount = readOr(json, 'drawCount', 1);
-    final oneAnswer = readOr(json, 'oneAnswer', true);
+    final pick3Choices = readOr(json, 'pick3Choices', 1);
+    final rawCatchUp = readOr<Map>(json, 'catchUp', const {});
     if (mode == null ||
-        symmetric == null ||
         autoCalibrate == null ||
         ensembleName is! String? ||
         rawModifiers == null ||
-        oneOfThree == null ||
-        rawCatchUp == null ||
         drawCount == null ||
-        oneAnswer == null) {
+        drawCount < 0 ||
+        drawCount > kMaxDrawCount ||
+        pick3Choices == null ||
+        pick3Choices < 1 ||
+        pick3Choices > kMaxPick3Choices ||
+        rawCatchUp == null) {
       return null;
     }
     final catchUp =
@@ -210,14 +281,12 @@ class FiestaRules {
 
     return FiestaRules(
       mode: mode,
-      symmetric: symmetric,
       autoCalibrate: autoCalibrate,
       ensembleName: ensembleName,
       modifiers: modifiers,
-      oneOfThree: oneOfThree,
-      catchUp: catchUp,
       drawCount: drawCount,
-      oneAnswer: oneAnswer,
+      pick3Choices: pick3Choices,
+      catchUp: catchUp,
     );
   }
 }

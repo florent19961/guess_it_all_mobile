@@ -4,6 +4,7 @@ import 'fiesta_rules.dart';
 import 'modifier_catalog.dart';
 import 'modifier_instance.dart';
 import 'symmetric_draw.dart';
+import 'turn_effects.dart';
 
 /// « 1 parmi 3 » (Personnalisé) et « Coup de pouce de l'app » (Auto), story
 /// 2-10. Tout est pur et DÉTERMINISTE par `(gameId, manche, équipe)` : une app
@@ -31,6 +32,8 @@ const Map<String, OfferStrength> kOfferStrength = {
   'mime_back_turned': OfferStrength.medium,
   'other_language': OfferStrength.medium,
   'mime_under_sheet': OfferStrength.heavy,
+  'one_answer': OfferStrength.medium,
+  'sounds_only': OfferStrength.medium,
 };
 
 /// 🔴 À RECALIBRER : seuils de la maquette, écart ≤ 3 → légère, ≤ 7 →
@@ -97,10 +100,16 @@ class Standings {
   }
 }
 
-/// Le 1 parmi 3 a-t-il lieu après la manche [round] ? (Personnalisé, `pick3`
-/// allumé, après M1 ou M2 seulement : après M3 on va aux résultats.)
+/// Le 1 parmi 3 a-t-il lieu après la manche [round] ? (Personnalisé, au moins
+/// un modificateur « 1 parmi 3 » coché sur la manche suivante, après M1 ou M2
+/// seulement : après M3 on va aux résultats.)
 bool isPickThreeOn(FiestaRules rules, int round) =>
-    rules.mode == FiestaMode.custom && rules.oneOfThree && round < 3;
+    rules.mode == FiestaMode.custom &&
+    round < 3 &&
+    rules.modifiers.values.any((s) =>
+        s.active &&
+        s.mode == ModifierMode.offer &&
+        s.rounds.contains(round + 1));
 
 /// Le coup de pouce de l'app a-t-il lieu après la manche [round] ? (Auto,
 /// « Auto-calibrage » allumé, après M1 ou M2.)
@@ -116,8 +125,10 @@ int offerSeed(String gameId, int round, String teamId) =>
 /// dans l'ordre du catalogue (le mélange doit partir de la même liste).
 ///
 /// Un bonus vise [beneficiaryId], un malus vise [leaderId] (aucun malus si
-/// `null`). Personnalisé : seuls les modificateurs actifs réglés sur
-/// « proposé à l'équipe menée » et dont la manche de départ est atteinte.
+/// `null`). Personnalisé : seuls les modificateurs actifs en « 1 parmi 3 »
+/// cochés sur la manche [round]+1. Une carte est UNE cartouche : un bonus à
+/// charge (×2, Deux mots) en porte une ; les autres gardent leur effet de
+/// manche (lane 1 : la cartouche ciblée d'un tour arrive avec la lane 2).
 /// « Bloquer un devineur » : jamais en Auto (personne ne choisit, donc
 /// personne ne désigne le devineur) ; en Personnalisé, jamais contre une
 /// équipe de [blockImmuneTeamIds].
@@ -139,17 +150,16 @@ List<ModifierInstance> _candidates({
         !isEligibleForRound(def, next)) {
       continue;
     }
-    var charges = def.defaultCharges;
     if (custom) {
-      final setting = rules.modifiers[def.id];
+      final setting = rules.activeSetting(def.id);
       if (setting == null ||
-          !setting.active ||
-          setting.arrival != ModifierArrival.offer ||
-          setting.startRound > next) {
+          setting.mode != ModifierMode.offer ||
+          !setting.rounds.contains(next)) {
         continue;
       }
-      charges = setting.charges;
     }
+    final charges =
+        kChargeBonusKeys.containsKey(def.id) ? 1 : def.defaultCharges;
     final targetTeam =
         def.nature == ModifierNature.bonus ? beneficiaryId : leaderId;
     if (targetTeam == null) continue;
@@ -172,22 +182,20 @@ List<ModifierInstance> _candidates({
   return out;
 }
 
-/// Une carte a-t-elle un effet ? Non si elle est incompatible ou dépasse le
-/// plafond pour sa cible ([maxModifiersPerTeam]), ni si le même modificateur
-/// touche déjà sa cible (tirage, choix ou cadeau précédent : la carte serait
-/// vide).
-bool _useful(
-        FiestaRules rules, List<ModifierInstance> taken, ModifierInstance c) =>
-    canAdd(taken, c, maxPerTurn: maxModifiersPerTeam(rules)) &&
+/// Une carte a-t-elle un effet ? Non si elle est incompatible pour sa cible,
+/// ni si le même modificateur touche déjà sa cible (tirage, choix ou cadeau
+/// précédent : la carte serait vide). Pas de plafond (Fiesta v2).
+bool isUsefulOffer(List<ModifierInstance> taken, ModifierInstance c) =>
+    canAdd(taken, c) &&
     !taken.any((t) => t.catalogId == c.catalogId && t.concernsSameTeamAs(c));
 
-/// Jusqu'à [count] cartes utiles (voir [_useful]) à la force de [gap],
-/// mélangées par la graine de [teamId]. Si cette force n'en a AUCUNE, on
-/// descend d'un cran (forte → moyenne → légère) ; vide seulement si tous les
-/// crans le sont.
+/// Jusqu'à [count] cartes utiles (voir [isUsefulOffer]) à la force de [gap],
+/// mélangées par la graine [seed]. Si cette force n'en a AUCUNE, on descend
+/// d'un cran (forte → moyenne → légère) ; vide seulement si tous les crans le
+/// sont. [excludedIds] : modificateurs déjà montrés (rangées précédentes).
 List<ModifierInstance> _offer({
   required FiestaRules rules,
-  required String gameId,
+  required int seed,
   required int round,
   required String teamId,
   required int gap,
@@ -196,8 +204,9 @@ List<ModifierInstance> _offer({
   required Set<String> blockImmuneTeamIds,
   required List<ModifierInstance> taken,
   required int count,
+  Set<String> excludedIds = const {},
 }) {
-  final random = Random(offerSeed(gameId, round, teamId));
+  final random = Random(seed);
   for (var s = strengthForGap(gap).index; s >= 0; s--) {
     final candidates = _candidates(
       rules: rules,
@@ -208,49 +217,64 @@ List<ModifierInstance> _offer({
       leaderId: leaderId,
       blockImmuneTeamIds: blockImmuneTeamIds,
     )..shuffle(random);
-    final picked =
-        candidates.where((c) => _useful(rules, taken, c)).take(count).toList();
+    final picked = candidates
+        .where((c) =>
+            !excludedIds.contains(c.catalogId) && isUsefulOffer(taken, c))
+        .take(count)
+        .toList();
     if (picked.isNotEmpty) return picked;
   }
   return const [];
 }
 
-/// Les offres (jusqu'à 3) montrées à [teamId] après la manche [round].
-/// Liste vide = l'équipe est sautée.
+/// Les rangées d'offres montrées à [teamId] après la manche [round] : jusqu'à
+/// `rules.pick3Choices` rangées de 3 cartes au plus, sur le même écran ;
+/// l'équipe prend une carte par rangée, les restes sont perdus. Liste vide =
+/// l'équipe est sautée ; une rangée vide n'est pas rendue.
 ///
-/// - [roundDraw] = le tirage de la manche N+1 (`roundModifiers`).
-/// - [choices] = les choix des équipes passées AVANT [teamId] dans la file
-///   (jamais le sien ni ceux des suivantes), par id de l'équipe QUI a choisi (un
-///   malus choisi vise le leader : sans cette clé, on ne saurait plus qui l'a
-///   choisi, ni qui désigne le devineur de « Bloquer un devineur »).
+/// - [roundDraw] = les règles de la manche N+1 (`roundModifiers`).
+/// - [earlierChoices] = les cartes prises par les équipes passées AVANT
+///   [teamId] dans la file (jamais les siennes : ses rangées ne bougent pas
+///   pendant qu'elle choisit, [isUsefulOffer] grise ce que ses propres choix
+///   rendent inutile).
 /// - [blockImmuneTeamIds] : équipes qui ne peuvent pas recevoir « Bloquer un
 ///   devineur » (2 joueurs ou moins).
 ///
-/// Prochaine équipe de la file = la première de [Standings.choosingOrder]
-/// absente de [choices] dont les offres ne sont pas vides.
-List<ModifierInstance> pickThreeOffers({
+/// Rangée 0 : graine `offerSeed(gameId, round, teamId)` (figée par test) ;
+/// rangée k : `offerSeed(gameId, round, '$teamId#k')`. Une rangée ne reprend
+/// aucun modificateur d'une rangée précédente.
+List<List<ModifierInstance>> pickThreeOffers({
   required FiestaRules rules,
   required String gameId,
   required int round,
   required Standings standings,
   required String teamId,
   required List<ModifierInstance> roundDraw,
-  Map<String, ModifierInstance> choices = const {},
+  List<ModifierInstance> earlierChoices = const [],
   Set<String> blockImmuneTeamIds = const {},
 }) {
   if (!standings.choosingOrder.contains(teamId)) return const [];
-  return _offer(
-    rules: rules,
-    gameId: gameId,
-    round: round,
-    teamId: teamId,
-    gap: standings.gapOf(teamId),
-    natures: ModifierNature.values.toSet(),
-    leaderId: standings.leaderId,
-    blockImmuneTeamIds: blockImmuneTeamIds,
-    taken: [...roundDraw, ...choices.values],
-    count: kOfferCount,
-  );
+  final rows = <List<ModifierInstance>>[];
+  final shown = <String>{};
+  for (var k = 0; k < rules.pick3Choices; k++) {
+    final row = _offer(
+      rules: rules,
+      seed: offerSeed(gameId, round, k == 0 ? teamId : '$teamId#$k'),
+      round: round,
+      teamId: teamId,
+      gap: standings.gapOf(teamId),
+      natures: ModifierNature.values.toSet(),
+      leaderId: standings.leaderId,
+      blockImmuneTeamIds: blockImmuneTeamIds,
+      taken: [...roundDraw, ...earlierChoices],
+      count: kOfferCount,
+      excludedIds: shown,
+    );
+    if (row.isEmpty) break;
+    rows.add(row);
+    shown.addAll(row.map((c) => c.catalogId));
+  }
+  return rows;
 }
 
 /// Coup de pouce de l'app (Auto) après la manche [round] : au plus un bonus
@@ -271,7 +295,7 @@ List<ModifierInstance> appBoost({
   void give(String teamId, ModifierNature nature) {
     gifts.addAll(_offer(
       rules: rules,
-      gameId: gameId,
+      seed: offerSeed(gameId, round, teamId),
       round: round,
       teamId: teamId,
       gap: standings.gapOf(teamId),

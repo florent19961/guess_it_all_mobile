@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'fiesta_rules.dart';
+import 'fiesta_state.dart';
 import 'modifier_catalog.dart';
 import 'modifier_instance.dart';
 
-/// Tirage symétrique et modificateurs fixés d'une manche (story 2-5).
+/// Règles de manche (`always` + tirage `draw`) et cartouches en stock d'une
+/// manche (Fiesta v2).
 ///
 /// 🔴 Tout est DÉTERMINISTE par `(gameId, manche)` : le retour arrière depuis
 /// la transition rejoue la branche « fin de manche », et une app tuée relit la
@@ -26,132 +28,184 @@ int drawSeed(String gameId, int round) {
 bool isEligibleForRound(ModifierDef def, int round) =>
     round == 3 ? !def.notInRound3 : !def.round3Only;
 
+/// Manches où [def] peut exister : {3} pour un mime, {1, 2} pour la parole,
+/// sinon les trois. L'éditeur coche celles-ci par défaut.
+Set<int> allowedRounds(ModifierDef def) => {
+      for (var r = 1; r <= 3; r++)
+        if (isEligibleForRound(def, r)) r
+    };
+
 /// Un modificateur qui vise un joueur (`block_guesser`, choisi par les
-/// adversaires) n'a pas de sens « pour toutes les équipes » : ni tiré, ni fixé.
+/// adversaires) n'a pas de sens « pour toutes les équipes ».
 bool isForAllTeams(ModifierDef def) => def.defaultTarget == ModifierTarget.both;
 
-/// Plafond de modificateurs par équipe et par manche : 2 en Auto (Q8), 3 en
-/// Personnalisé (retours device 2026-11-04). Vaut pour les fixés, le tirage
-/// et les cartes de fin de manche.
-int maxModifiersPerTeam(FiestaRules rules) =>
-    rules.mode == FiestaMode.custom ? 3 : 2;
+/// [def] peut-il être une règle de manche (`always` / `draw`) ? Non pour les
+/// exceptions « seulement en cartouche » ([kCartridgeOnlyIds]).
+bool canBeRoundRule(ModifierDef def) =>
+    isForAllTeams(def) && !kCartridgeOnlyIds.contains(def.id);
 
-/// Auto : « Une seule réponse » ([kOneAnswer]) vaut-elle pour la partie
-/// [gameId] ? Une chance sur 4, DÉTERMINISTE par partie (graine de la
-/// « manche 0 », distincte de celles du tirage des manches 1 à 3).
+/// Auto : « Une seule réponse » vaut-elle pour la partie [gameId] ? Une
+/// chance sur 4, DÉTERMINISTE par partie (graine de la « manche 0 »,
+/// distincte de celles du tirage des manches 1 à 3).
 bool drawsOneAnswer(String gameId) =>
     Random(drawSeed(gameId, 0)).nextInt(4) == 0;
 
-/// Le tirage pour toutes les équipes est-il allumé ? (définition partagée
-/// avec l'éditeur 2-3 : les DEUX drapeaux comptent).
-bool isSymmetricDrawOn(FiestaRules rules) =>
-    rules.symmetric && rules.drawCount > 0;
+/// Règles du mode Auto, exprimées dans le modèle des ensembles (spec §5) :
+/// tout le catalogue pouvant être une règle de manche est « Au tirage » sur
+/// ses manches possibles (1 ou 2 tirés par manche, [drawForRound]) ; « Une
+/// seule réponse » est « Toujours » M1-M3 si [oneAnswer], hors tirage sinon.
+/// Aucune cartouche, sauf le coup de pouce de l'app.
+FiestaRules autoRules({required bool oneAnswer, bool autoCalibrate = true}) =>
+    FiestaRules(
+      mode: FiestaMode.auto,
+      autoCalibrate: autoCalibrate,
+      modifiers: {
+        for (final def in kModifierCatalog)
+          if (def.id == 'one_answer')
+            def.id: ModifierSetting(
+              active: oneAnswer,
+              rounds: const {1, 2, 3},
+              mode: ModifierMode.always,
+            )
+          else if (canBeRoundRule(def))
+            def.id: ModifierSetting(
+              active: true,
+              rounds: allowedRounds(def),
+              mode: ModifierMode.draw,
+            ),
+      },
+    );
 
-ModifierInstance _forAll(ModifierDef def, int round, int charges) =>
-    ModifierInstance(
+ModifierInstance _forAll(ModifierDef def, int round) => ModifierInstance(
       catalogId: def.id,
       scope: ModifierScope.round,
       target: ModifierTarget.both,
-      charges: charges,
+      charges: def.defaultCharges,
       nature: def.nature,
       round: round,
     );
 
-/// Modificateurs « fixés sur la manche N » (Personnalisé, Q16) : toutes les
-/// équipes, toute la manche. Ils passent avant le tirage, qui doit leur être
-/// compatible ; le plafond ([maxModifiersPerTeam]) s'applique à eux aussi. Un fixé à cible joueur
-/// ou « manche 3 seulement » hors M3 est ignoré (l'éditeur de 2-3 devrait
-/// l'interdire).
-List<ModifierInstance> fixedForRound(FiestaRules rules, int round) {
-  final fixed = <ModifierInstance>[];
-  if (rules.mode != FiestaMode.custom) return fixed;
-  for (final def in kModifierCatalog) {
-    final setting = rules.modifiers[def.id];
-    if (setting == null ||
-        !setting.active ||
-        setting.arrival != ModifierArrival.fixed ||
-        setting.fixedRound != round ||
-        !isForAllTeams(def) ||
-        !isEligibleForRound(def, round)) {
-      continue;
-    }
-    final instance = _forAll(def, round, setting.charges);
-    if (canAdd(fixed, instance, maxPerTurn: maxModifiersPerTeam(rules))) {
-      fixed.add(instance);
-    }
-  }
-  return fixed;
+/// Le réglage de [def] le fait-il jouer en manche [round] dans le [mode] ?
+bool _plays(FiestaRules rules, ModifierDef def, ModifierMode mode, int round) {
+  final setting = rules.activeSetting(def.id);
+  return setting != null &&
+      setting.mode == mode &&
+      setting.rounds.contains(round) &&
+      isEligibleForRound(def, round);
 }
 
-/// Tirage symétrique de la manche [round], compatible avec [alreadyFixed] et
-/// avec lui-même, plafond compris ([maxModifiersPerTeam]). Moins de candidats que demandé :
-/// on en tire moins, sans erreur.
+/// Modificateurs « Toujours » de la manche [round] : toutes les équipes,
+/// toute la manche. Ils passent avant le tirage, qui doit leur être
+/// compatible. Un réglage impossible (exception cartouche, manche interdite,
+/// incompatible avec un précédent) est ignoré : l'éditeur l'interdit.
+List<ModifierInstance> alwaysForRound(FiestaRules rules, int round) {
+  final always = <ModifierInstance>[];
+  for (final def in kModifierCatalog) {
+    if (!canBeRoundRule(def) ||
+        !_plays(rules, def, ModifierMode.always, round)) {
+      continue;
+    }
+    final instance = _forAll(def, round);
+    if (canAdd(always, instance)) always.add(instance);
+  }
+  return always;
+}
+
+/// Tirage de la manche [round] parmi les modificateurs « Au tirage » cochés
+/// sur cette manche, compatible avec [already] et avec lui-même : les
+/// incompatibles sont sautés ; moins de candidats que demandé, on en tire
+/// moins. Pas de plafond (seules les incompatibilités limitent).
 ///
-/// - Auto : 1 ou 2 (50/50, Q9) dans tout le catalogue ;
-/// - Personnalisé : `drawCount` parmi les modificateurs actifs réglés sur
-///   « tiré pour tous » et dont la manche de départ est atteinte.
-///
-/// Jamais de modificateur à cible joueur ([isForAllTeams]).
-List<ModifierInstance> drawSymmetric({
+/// Personnalisé : `drawCount` (0 = aucun tirage) ; Auto : 1 ou 2 (50/50).
+List<ModifierInstance> drawForRound({
   required FiestaRules rules,
   required int round,
-  required List<ModifierInstance> alreadyFixed,
+  required List<ModifierInstance> already,
   required Random random,
 }) {
-  if (!isSymmetricDrawOn(rules)) return const [];
-
-  final auto = rules.mode == FiestaMode.auto;
-  final cap = maxModifiersPerTeam(rules);
-  final count =
-      auto ? (random.nextBool() ? 2 : 1) : rules.drawCount.clamp(0, cap);
+  final count = rules.mode == FiestaMode.auto
+      ? (random.nextBool() ? 2 : 1)
+      : rules.drawCount;
+  if (count <= 0) return const [];
 
   // Ordre du catalogue, jamais celui d'une Map relue : le mélange doit partir
   // de la même liste pour donner le même tirage.
-  final candidates = <ModifierInstance>[];
-  for (final def in kModifierCatalog) {
-    if (!isForAllTeams(def) || !isEligibleForRound(def, round)) {
-      continue;
-    }
-    if (auto) {
-      candidates.add(_forAll(def, round, def.defaultCharges));
-      continue;
-    }
-    final setting = rules.modifiers[def.id];
-    if (setting == null ||
-        !setting.active ||
-        setting.arrival != ModifierArrival.draw ||
-        setting.startRound > round) {
-      continue;
-    }
-    candidates.add(_forAll(def, round, setting.charges));
-  }
-  candidates.shuffle(random);
+  final candidates = [
+    for (final def in kModifierCatalog)
+      if (canBeRoundRule(def) && _plays(rules, def, ModifierMode.draw, round))
+        _forAll(def, round),
+  ]..shuffle(random);
 
   final drawn = <ModifierInstance>[];
   for (final candidate in candidates) {
     if (drawn.length >= count) break;
-    if (canAdd([...alreadyFixed, ...drawn], candidate, maxPerTurn: cap)) {
-      drawn.add(candidate);
-    }
+    if (canAdd([...already, ...drawn], candidate)) drawn.add(candidate);
   }
   return drawn;
 }
 
-/// Tout ce qui s'applique à toutes les équipes pendant la manche [round] :
-/// les fixés, puis le tirage. Point d'entrée unique du provider.
+/// Règles de la manche [round] pour toutes les équipes : les « Toujours »,
+/// puis le tirage. Point d'entrée unique du provider et du récap.
 List<ModifierInstance> roundModifiers(
   FiestaRules rules, {
   required String gameId,
   required int round,
 }) {
-  final fixed = fixedForRound(rules, round);
+  final always = alwaysForRound(rules, round);
   return [
-    ...fixed,
-    ...drawSymmetric(
+    ...always,
+    ...drawForRound(
       rules: rules,
       round: round,
-      alreadyFixed: fixed,
+      already: always,
       random: Random(drawSeed(gameId, round)),
     ),
   ];
+}
+
+/// Cartouches « En stock » reçues par chaque équipe de [teamIds] au début de
+/// la manche [round] : une instance par équipe et par bonus, `charges` = N
+/// (« par manche ») ou N moins ce que l'équipe a déjà dépensé dans les
+/// manches d'avant (« pour la partie », [chargesUsed]).
+///
+/// 🔴 Lane 1 : seuls les BONUS en stock jouent, par le mécanisme de charges
+/// existant (×2 et Deux mots s'allument avant le tour, Passe gratuite donne N
+/// passes gratuites par tour). Les malus en stock sont persistés mais sans
+/// effet en jeu jusqu'à l'écran « Ce tour / Réserve » (lane 2).
+List<ModifierInstance> stockForRound(
+  FiestaRules rules, {
+  required int round,
+  required Iterable<String> teamIds,
+  List<ChargeUse> chargesUsed = const [],
+}) {
+  final stock = <ModifierInstance>[];
+  for (final def in kModifierCatalog) {
+    if (def.nature != ModifierNature.bonus ||
+        !_plays(rules, def, ModifierMode.stock, round)) {
+      continue;
+    }
+    final setting = rules.activeSetting(def.id)!;
+    for (final teamId in teamIds) {
+      final spent = setting.perGame
+          ? chargesUsed
+              .where((u) =>
+                  u.catalogId == def.id &&
+                  u.teamId == teamId &&
+                  u.round < round)
+              .length
+          : 0;
+      final charges = setting.charges - spent;
+      if (charges <= 0) continue;
+      stock.add(ModifierInstance(
+        catalogId: def.id,
+        scope: ModifierScope.round,
+        target: ModifierTarget.team,
+        teamId: teamId,
+        charges: charges,
+        nature: def.nature,
+        round: round,
+      ));
+    }
+  }
+  return stock;
 }
