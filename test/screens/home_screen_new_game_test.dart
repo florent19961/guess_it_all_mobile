@@ -55,7 +55,7 @@ void main() {
     expect(disk['passPenalty'], 2);
   });
 
-  testWidgets('« Jouer » mène bien au choix du mode de jeu', (tester) async {
+  testWidgets('« Jouer » mène bien aux Paramètres', (tester) async {
     // Pendant du test précédent : préserver les réglages ne doit pas se faire en
     // ne faisant plus rien du tout.
     final provider = await pumpHome(tester);
@@ -64,6 +64,6 @@ void main() {
     await tester.runAsync(() => pumpEventQueue());
     await tester.pump();
 
-    expect(provider.game.currentScreen, AppConstants.screenGameMode);
+    expect(provider.game.currentScreen, AppConstants.screenSettings);
   });
 }

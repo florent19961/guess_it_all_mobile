@@ -42,7 +42,7 @@ bool drawsOneAnswer(String gameId) =>
     Random(drawSeed(gameId, 0)).nextInt(4) == 0;
 
 /// Le tirage pour toutes les équipes est-il allumé ? (définition partagée
-/// avec 2-3 / le Récap : les DEUX drapeaux comptent).
+/// avec l'éditeur 2-3 : les DEUX drapeaux comptent).
 bool isSymmetricDrawOn(FiestaRules rules) =>
     rules.symmetric && rules.drawCount > 0;
 

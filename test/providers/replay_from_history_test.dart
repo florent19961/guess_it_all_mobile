@@ -134,7 +134,7 @@ void main() {
   });
 
   test(
-      'Fiesta : les règles de l\'archive passent en attente (Récap), même par '
+      'Fiesta : les règles de l\'archive passent en attente (Paramètres), même par '
       'dessus une partie suspendue', () async {
     final provider = await givenProvider();
     for (final name in ['X', 'Y']) {

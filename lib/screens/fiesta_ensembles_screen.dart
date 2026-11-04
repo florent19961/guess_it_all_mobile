@@ -33,7 +33,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
   final _service = FiestaEnsembleService();
   EnsembleStore? _store;
 
-  /// Un double tap sur « Utiliser » ne doit pas naviguer deux fois.
+  /// Un double tap sur « Jouer » ne doit pas naviguer deux fois.
   bool _using = false;
 
   @override
@@ -192,7 +192,8 @@ class _EnsembleCard extends StatelessWidget {
         : 'sans tirage';
     return '$active modificateurs · '
         '${rules.oneOfThree ? 'choix 1 parmi 3' : 'pas de choix'} · '
-        '${catchUpOn(rules.catchUp) ? 'rattrapage' : 'sans rattrapage'} · $draw';
+        '${catchUpOn(rules.catchUp) ? 'rattrapage' : 'sans rattrapage'} · $draw'
+        '${rules.oneAnswer ? ' · une seule réponse' : ''}';
   }
 
   @override
@@ -238,7 +239,7 @@ class _EnsembleCard extends StatelessWidget {
             runSpacing: 8,
             children: [
               AppButton(
-                text: 'Utiliser',
+                text: 'Jouer',
                 size: AppButtonSize.small,
                 variant: AppButtonVariant.secondary,
                 onPressed: onUse,

@@ -112,30 +112,29 @@ void main() {
       round: 2,
     );
     expect(
-        ids(offersFor(s, 'bleue',
-            roundDraw: [forAll('minus_10s')],
-            choices: {
-              'verte': roseChosen,
-              'jaune': ModifierInstance(
-                catalogId: 'no_pass',
-                scope: ModifierScope.round,
-                target: ModifierTarget.team,
-                teamId: 'rose',
-                charges: 0,
-                nature: ModifierNature.malus,
-                round: 2,
-              ),
-            })),
+        ids(offersFor(s, 'bleue', roundDraw: [
+          forAll('minus_10s')
+        ], choices: {
+          'verte': roseChosen,
+          'jaune': ModifierInstance(
+            catalogId: 'no_pass',
+            scope: ModifierScope.round,
+            target: ModifierTarget.team,
+            teamId: 'rose',
+            charges: 0,
+            nature: ModifierNature.malus,
+            round: 2,
+          ),
+        })),
         unorderedEquals(['double_points', 'two_words']));
 
     // Plafond atteint à tous les crans : aucune offre, l'équipe est sautée.
     expect(
-        offersFor(s, 'bleue',
-            roundDraw: [
-              forAll('minus_10s'),
-              forAll('reversed'),
-              forAll('free_pass'),
-            ]),
+        offersFor(s, 'bleue', roundDraw: [
+          forAll('minus_10s'),
+          forAll('reversed'),
+          forAll('free_pass'),
+        ]),
         isEmpty);
   });
 

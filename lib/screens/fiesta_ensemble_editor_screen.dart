@@ -153,6 +153,7 @@ class _FiestaEnsembleEditorScreenState
                           children: [
                             for (final def in kModifierCatalog)
                               _buildModifier(def),
+                            _buildOneAnswer(),
                           ],
                         ),
                       ),
@@ -173,7 +174,6 @@ class _FiestaEnsembleEditorScreenState
                       ),
                       _buildCatchUp(),
                       _buildDraw(),
-                      _buildCommon(),
                     ],
                   ),
                 ),
@@ -374,7 +374,7 @@ class _FiestaEnsembleEditorScreenState
               _Stepper(
                 value: _rules.drawCount,
                 min: 0,
-                max: 2,
+                max: maxModifiersPerTeam(_rules),
                 onChanged: (v) =>
                     setState(() => _rules = _rules.copyWith(drawCount: v)),
               ),
@@ -383,17 +383,39 @@ class _FiestaEnsembleEditorScreenState
     );
   }
 
-  Widget _buildCommon() {
-    return _Card(
-      title: 'Règles communes',
-      child: Column(
+  /// « Une seule réponse » : un modificateur du catalogue, mais pour TOUTE
+  /// la partie (ni tiré, ni proposé, ni fixé) — d'où un simple interrupteur.
+  Widget _buildOneAnswer() {
+    final on = _rules.oneAnswer;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundMain,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
         children: [
-          _line(
-            'Une seule réponse par mot',
-            _switch(
-              _rules.oneAnswer,
-              (v) => setState(() => _rules = _rules.copyWith(oneAnswer: v)),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  kOneAnswer.name,
+                  style: AppTextStyles.label.copyWith(
+                    color: on ? Colors.white : AppColors.gray500,
+                  ),
+                ),
+                Text(
+                  on ? 'Toute la partie' : 'Désactivé',
+                  style: AppTextStyles.bodySmall
+                      .copyWith(color: AppColors.gray400, fontSize: 11),
+                ),
+              ],
             ),
+          ),
+          _switch(
+            on,
+            (v) => setState(() => _rules = _rules.copyWith(oneAnswer: v)),
           ),
         ],
       ),

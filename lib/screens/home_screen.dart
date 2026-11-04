@@ -95,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         // chaque partie. La remise à zéro explicite reste disponible
                         // depuis le bouton « Réinitialiser » de l'écran de réglages.
                         await provider.startNewGame();
-                        provider.goToScreen(AppConstants.screenGameMode);
+                        provider.goToScreen(AppConstants.screenSettings);
                       },
                     ),
                   ]
@@ -116,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         // chaque partie. La remise à zéro explicite reste disponible
                         // depuis le bouton « Réinitialiser » de l'écran de réglages.
                         await provider.startNewGame();
-                        provider.goToScreen(AppConstants.screenGameMode);
+                        provider.goToScreen(AppConstants.screenSettings);
                       },
                     ),
                   ],
@@ -194,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     // Idem : abandonner la partie en cours ne doit pas effacer
                     // les réglages du joueur.
                     await provider.startNewGame();
-                    provider.goToScreen(AppConstants.screenGameMode);
+                    provider.goToScreen(AppConstants.screenSettings);
                   },
                 ),
               ),

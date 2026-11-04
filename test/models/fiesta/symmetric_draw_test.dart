@@ -89,8 +89,7 @@ void main() {
     expect(seen['Personnalisé, tirage 3 + fixé'], contains(3));
   });
 
-  test(
-      'M3 : « Dessiner » fixé, mimes tirés pour tous → aucun mime ne sort',
+  test('M3 : « Dessiner » fixé, mimes tirés pour tous → aucun mime ne sort',
       () {
     final rules = FiestaRules(
       mode: FiestaMode.custom,

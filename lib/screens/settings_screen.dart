@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import '../models/fiesta/fiesta_rules.dart';
 import '../providers/game_provider.dart';
 import '../services/storage_service.dart';
 import '../utils/constants.dart';
@@ -15,6 +16,7 @@ import '../widgets/effects/shooting_stars.dart';
 import '../widgets/help/coach_marks.dart';
 import '../widgets/help/help_button.dart';
 import '../widgets/help/help_content.dart';
+import 'fiesta_tutorial_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -29,6 +31,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   late Animation<double> _pulseAnimation;
   bool _showAdvancedAnimation = false;
 
+  final _modeKey = GlobalKey();
   final _countsKey = GlobalKey();
   final _wordChoiceKey = GlobalKey();
   final _categoriesKey = GlobalKey();
@@ -65,6 +68,47 @@ class _SettingsScreenState extends State<SettingsScreen>
     super.dispose();
   }
 
+  static const _classic = 'Classique';
+  static const _fiesta = 'Fiesta';
+  static const _auto = 'Auto';
+  static const _custom = 'Personnalisé';
+
+  /// Garde contre le double tap : un seul tuto Fiesta.
+  bool _tutorialBusy = false;
+
+  /// Classique / Fiesta. Fiesta part en Auto ; la première fois, le tuto
+  /// Fiesta s'ouvre (clé `guessItAll_fiestaTutorialSeen`).
+  Future<void> _setMode(GameProvider provider, String mode) async {
+    if (mode == _classic) {
+      provider.setPendingFiesta(null);
+      return;
+    }
+    if (provider.pendingFiesta != null) return;
+    provider.setPendingFiesta(FiestaRules(mode: FiestaMode.auto));
+    if (_tutorialBusy) return;
+    _tutorialBusy = true;
+    try {
+      if (!await StorageService().hasSeenFiestaTutorial() && mounted) {
+        await FiestaTutorialScreen.show(context);
+      }
+    } finally {
+      _tutorialBusy = false;
+    }
+  }
+
+  /// Auto / Personnalisé (fenêtre « Avancés »). Personnalisé garde l'ensemble
+  /// déjà en attente (Rejouer) ; l'ensemble se choisit après les équipes.
+  void _setFiestaMode(GameProvider provider, String value) {
+    final custom = value == _custom;
+    final pending = provider.pendingFiesta;
+    if (pending == null || (pending.mode == FiestaMode.custom) == custom) {
+      return;
+    }
+    provider.setPendingFiesta(
+      FiestaRules(mode: custom ? FiestaMode.custom : FiestaMode.auto),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<GameProvider>();
@@ -78,12 +122,22 @@ class _SettingsScreenState extends State<SettingsScreen>
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  const SizedBox(height: 72),
+                  const SizedBox(height: 48),
                   Text(
                     'Paramètres',
                     style: AppTextStyles.subtitle(fontSize: 40),
                   ),
                   const SizedBox(height: 32),
+
+                  // Classique / Fiesta (Auto / Personnalisé : roue crantée)
+                  AppToggle(
+                    key: _modeKey,
+                    options: const [_classic, _fiesta],
+                    selected:
+                        provider.pendingFiesta == null ? _classic : _fiesta,
+                    onChange: (value) => _setMode(provider, value),
+                  ),
+                  const SizedBox(height: 24),
 
                   // Nombre de joueurs et d'équipes (une seule cible d'aide)
                   Column(
@@ -265,11 +319,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             ),
           ),
           AppBackButton(
-            onPressed: () => provider.goToScreen(
-              provider.pendingFiesta != null
-                  ? AppConstants.screenFiestaRecap
-                  : AppConstants.screenHome,
-            ),
+            onPressed: () => provider.goToScreen(AppConstants.screenHome),
           ),
           // Boutons en haut à droite : Réinitialiser + Paramètres avancés
           Positioned(
@@ -281,6 +331,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                   onPressed: () => CoachMarks.show(
                     context,
                     settingsHelp(
+                      mode: _modeKey,
                       counts: _countsKey,
                       wordChoice: _wordChoiceKey,
                       categories: _categoriesKey,
@@ -517,6 +568,33 @@ class _SettingsScreenState extends State<SettingsScreen>
                     setState(() {});
                   },
                 ),
+
+                // Fiesta : Auto / Personnalisé, seulement en mode Fiesta
+                if (provider.pendingFiesta != null) ...[
+                  const SizedBox(height: 24),
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Fiesta',
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  AppToggle(
+                    options: const [_auto, _custom],
+                    selected: provider.pendingFiesta!.mode == FiestaMode.custom
+                        ? _custom
+                        : _auto,
+                    onChange: (value) {
+                      _setFiestaMode(provider, value);
+                      setState(() {});
+                    },
+                  ),
+                ],
               ],
             ),
           );

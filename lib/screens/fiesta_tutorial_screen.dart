@@ -4,7 +4,8 @@ import '../theme/app_theme.dart';
 import '../widgets/help/tutorial_pager.dart';
 
 /// Tuto Fiesta, 3 cartes. Ouvert par `Navigator.push` (premier choix de
-/// Fiesta, ou « Revoir le tuto Fiesta » dans Règles).
+/// Fiesta sur l'interrupteur des Paramètres, ou « Revoir le tuto Fiesta »
+/// dans Règles).
 class FiestaTutorialScreen extends StatelessWidget {
   const FiestaTutorialScreen({super.key});
 
@@ -38,7 +39,8 @@ class FiestaTutorialScreen extends StatelessWidget {
           text: 'Fiesta, ce sont les 3 manches habituelles avec des '
               'modificateurs : des bonus (Mot compte double, Deux mots à la '
               'fois, Passe gratuite) et des malus (Interdit de passer, Mot à '
-              'l\'envers, mimes sans les bras…).',
+              'l\'envers, mimes sans les bras…). Parfois, pour toute la '
+              'partie : une seule réponse par mot.',
         ),
         TutorialCard(
           symbol: '⇄',
@@ -59,8 +61,9 @@ class FiestaTutorialScreen extends StatelessWidget {
           symbol: 'A',
           title: 'Auto ou Personnalisé',
           text: 'Auto : l\'app décide de tout, personne ne choisit. '
-              'Personnalisé : tu règles chaque modificateur et tu '
-              'enregistres tes réglages sous un nom, pour les réutiliser.',
+              'Personnalisé (roue crantée des Paramètres) : après les '
+              'équipes, tu choisis tes réglages, enregistrés sous un nom '
+              'pour les réutiliser.',
         ),
       ],
     );

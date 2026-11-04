@@ -20,10 +20,6 @@ import 'screens/results_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/categories_screen.dart';
 import 'screens/history_screen.dart';
-import 'screens/game_mode_screen.dart';
-import 'screens/fiesta_choice_screen.dart';
-import 'screens/fiesta_auto_screen.dart';
-import 'screens/fiesta_recap_screen.dart';
 import 'screens/fiesta_ensembles_screen.dart';
 import 'widgets/effects/startup_intro.dart';
 
@@ -94,22 +90,16 @@ class GuessItAllApp extends StatelessWidget {
         return const CategoriesScreen();
       case AppConstants.screenHistory:
         return const HistoryScreen();
-      case AppConstants.screenGameMode:
-        return const GameModeScreen();
-      case AppConstants.screenFiestaChoice:
-        return const FiestaChoiceScreen();
-      case AppConstants.screenFiestaAuto:
-        return const FiestaAutoScreen();
-      case AppConstants.screenFiestaRecap:
-        return const FiestaRecapScreen();
+      // Fiesta Personnalisé : après les équipes, le choix de l'ensemble lance
+      // la partie.
       case AppConstants.screenFiestaEnsembles:
         return Builder(builder: (context) {
           final provider = context.read<GameProvider>();
           return FiestaEnsemblesScreen(
-            onBack: () => provider.goToScreen(AppConstants.screenFiestaChoice),
+            onBack: () => provider.goToScreen(AppConstants.screenTeams),
             onUse: (ensemble) {
               provider.setPendingFiesta(ensemble.rules);
-              provider.goToScreen(AppConstants.screenFiestaRecap);
+              provider.startGame(fiesta: ensemble.rules);
             },
           );
         });
