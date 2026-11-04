@@ -123,6 +123,9 @@ tous les curseurs à chaque partie.
 
 ## Notes d'implémentation (lane B, 2026-11-03)
 
+- ⚠️ **Remplacé par `feat/ensembles-perso` (2026-11-04)** : écran unique après Paramètres,
+  `FiestaEnsemblesScreen({selected, onBack, onNext})`, éditeur en ligne ; contrat à jour dans
+  `lib/screens/CLAUDE.md`. Ancien contrat, pour mémoire :
 - **Point d'entrée pour 2-4** : `FiestaEnsemblesScreen(onBack: …, onUse: (FiestaEnsemble e) …)`
   (`lib/screens/fiesta_ensembles_screen.dart`). `onUse` reçoit l'ensemble déjà marqué
   `lastUsedId` ; `e.rules` (mode `custom`, `ensembleName` = nom) se passe tel quel à

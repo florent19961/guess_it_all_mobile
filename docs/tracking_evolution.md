@@ -813,3 +813,9 @@ La racine est le parcours, pas un correctif ponctuel : d'où l'écran unique.
 **Conséquence (règle 7).** Aucune forme persistée ne change (`guessItAll_fiestaEnsembles`
 intact, `lastUsedId` toujours écrit par `markUsed` au « Suivant »). `pendingFiesta` reste en
 mémoire seulement.
+
+**Revue r1 (2026-11-04).** Saisie non enregistrée de l'éditeur en ligne : confirmation
+« Abandonner les modifications ? » avant de la jeter (Modifier un autre, Annuler, Retour,
+Suivant) ; sélectionner pendant une modification referme l'éditeur, pour que l'écran ne montre
+jamais autre chose que ce que « Suivant » lancera. Retour système Android branché sur Joueurs,
+Équipes et Mots (même motif `PopScope` que Paramètres), destination = bouton retour visible.
