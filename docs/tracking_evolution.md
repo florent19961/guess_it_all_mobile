@@ -1038,6 +1038,10 @@ manches, écran fixe après M3.
   plus à dire « envoyé dans CET avant-tour ».
 - Vivier : au-delà de sa taille, il repart du début plutôt que de donner moins (« distinctes tant que le
   vivier le permet »).
+- Zone de cartouches : `[_fit]` resserre, puis la zone défile en dernier recours (`SingleChildScrollView`
+  dans le `LayoutBuilder`), plutôt que le `ClipRect` qui rendait des pastilles « Envoyé » inatteignables,
+  donc impossibles à annuler. « Commencer le tour » reste hors de la zone. Les 24 px sous le bouton sont
+  retirés en Fiesta : sans eux, Explosif en M3 tient sans défiler à 360 × 640 avec les barres système.
 
 **Conséquence.** Ensembles et parties Fiesta d'un autre format restent illisibles, comme avant (Fiesta
 jamais publiée). `kCurrentSchemaVersion` inchangé. L'archivage de fin de partie se fait à « Voir les

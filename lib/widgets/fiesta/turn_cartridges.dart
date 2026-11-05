@@ -15,8 +15,8 @@ import 'modifier_badge.dart';
 /// Écran avant le tour, Fiesta v2 (maquette `cartouches` B, variante a) :
 /// zone « ACTIF PENDANT VOTRE PROCHAIN TOUR » (règles de manche, malus reçus,
 /// bonus allumés) puis « VOTRE RÉSERVE » (mes cartouches, bonus / malus). Toucher = activer ou
-/// infliger ; appui long = explication. Sans défilement : la taille des
-/// cercles s'adapte à la place ([_fit]).
+/// infliger ; appui long = explication. La taille des cercles s'adapte à la
+/// place ([_fit]) ; un cas extrême qui ne tient toujours pas défile.
 class FiestaTurnZone extends StatefulWidget {
   final GameProvider provider;
   final GlobalKey thisTurnKey;
@@ -448,9 +448,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
         ),
       );
 
-      if (reserve.isEmpty) {
-        return Align(alignment: Alignment.topCenter, child: thisTurn);
-      }
+      if (reserve.isEmpty) return SingleChildScrollView(child: thisTurn);
 
       Widget column(String title, List<Cartridge> items, Color color) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -536,8 +534,9 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
           ],
         ],
       );
-      // Pas de défilement (spec) : [_fit] choisit le diamètre qui tient.
-      return Align(alignment: Alignment.topCenter, child: content);
+      // [_fit] choisit le diamètre qui tient : rien à faire défiler dans les cas
+      // réalistes. Au-delà, la zone défile : toute cartouche reste atteignable.
+      return SingleChildScrollView(child: content);
     });
   }
 

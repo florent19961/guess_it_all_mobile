@@ -280,6 +280,88 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
+  testWidgets(
+      'à 360 × 640, 7 malus envoyés : la zone défile, toute pastille reste '
+      'atteignable et annulable, Commencer reste visible', (tester) async {
+    givenPhone(tester);
+    // Barre d'état et barre de navigation d'un vrai téléphone.
+    tester.view.padding = const FakeViewPadding(top: 24, bottom: 48);
+    await givenPrefs({
+      AppConstants.tutorialSeenKey: true,
+      AppConstants.fiestaTutorialSeenKey: true,
+      AppConstants.firstGameDoneKey: true,
+    });
+    givenFakePlatformPlugins();
+    final provider = GameProvider();
+    await tester.runAsync(() => pumpEventQueue());
+    for (final name in ['Ana', 'Bob', 'Zoé', 'Max', 'Léa', 'Tom']) {
+      final id = (provider.addPlayer(name)['player'] as dynamic).id as String;
+      provider.updatePlayerWords(id, ['mot-$name']);
+    }
+    provider.createTeams();
+    provider.randomizeTeams();
+    await tester.runAsync(() => provider.startGame(
+            fiesta: FiestaRules(modifiers: {
+          for (final def in kModifierCatalog)
+            def.id: const ModifierSetting(charges: 5),
+        })));
+    await tester.pumpWidget(ChangeNotifierProvider<GameProvider>.value(
+      value: provider,
+      child: const GuessItAllApp(),
+    ));
+    await settle(tester);
+    for (var i = 0; i < 30; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(provider.reserve, hasLength(11));
+
+    final other =
+        provider.teams.firstWhere((t) => t.id != provider.getCurrentTeam()!.id);
+    for (final (i, id) in ['block_giver', 'block_guesser'].indexed) {
+      expect(provider.inflictMalus(id, other.id, playerId: other.playerIds[i]),
+          isNull);
+    }
+    for (final id in [
+      'no_pass',
+      'reversed',
+      'other_language',
+      'one_answer',
+      'minus_10s',
+    ]) {
+      expect(provider.inflictMalus(id, other.id), isNull);
+    }
+    await settle(tester);
+    expect(provider.sentThisTurn, hasLength(7));
+    expect(tester.takeException(), isNull);
+
+    final zone = find.byType(FiestaTurnZone);
+    final start = find.text('Commencer le tour');
+    expect(tester.getBottomLeft(zone).dy,
+        lessThanOrEqualTo(tester.getTopLeft(start).dy));
+    expect(tester.getBottomLeft(start).dy, lessThanOrEqualTo(640));
+
+    // La dernière pastille : on y arrive en faisant défiler la zone.
+    final last = find.text(' Envoyé').last;
+    expect(tester.getBottomLeft(last).dy,
+        greaterThan(tester.getBottomLeft(zone).dy),
+        reason: 'le contenu dépasse vraiment de la zone');
+    await tester.scrollUntilVisible(last, 40,
+        scrollable:
+            find.descendant(of: zone, matching: find.byType(Scrollable)));
+    await tester.pump();
+    expect(tester.getBottomLeft(last).dy,
+        lessThanOrEqualTo(tester.getBottomLeft(zone).dy));
+    expect(tester.getBottomLeft(start).dy, lessThanOrEqualTo(640));
+
+    await tester.tap(last);
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text('Annuler l\'envoi').last);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(provider.sentThisTurn, hasLength(6));
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 6));
+  });
+
   group('Explosif en manche 3 à 360 × 640', () {
     /// La zone tient dans son `ClipRect`, sans rien couper, et le bouton reste
     /// en dessous.
@@ -287,9 +369,16 @@ void main() {
       final bonus = provider.reserve
           .where((c) => c.nature == ModifierNature.bonus)
           .length;
-      expect(bonus, greaterThan(0));
-      expect(provider.reserve.length, greaterThan(5));
+      expect((provider.reserve.length - bonus, bonus), (11, 4));
       final zone = find.byType(FiestaTurnZone);
+      // Cas réaliste : tout tient, il n'y a rien à faire défiler.
+      expect(
+          tester
+              .state<ScrollableState>(
+                  find.descendant(of: zone, matching: find.byType(Scrollable)))
+              .position
+              .maxScrollExtent,
+          0);
       expect(
           tester.getBottomLeft(zone).dy,
           lessThanOrEqualTo(
@@ -298,9 +387,17 @@ void main() {
     }
 
     testWidgets('la réserve tient, continuation et vrai tour', (tester) async {
-      final explosive =
-          kProvidedEnsembles.firstWhere((e) => e.id == 'provided_explosive');
-      final provider = await pumpGame(tester, explosive.rules);
+      // Barre d'état et barre de navigation d'un vrai téléphone.
+      tester.view.padding = const FakeViewPadding(top: 24, bottom: 48);
+      // Le pire cas d'Explosif en M3, fixé : ses 15 cartouches, toutes différentes.
+      final provider = await pumpGame(
+          tester,
+          FiestaRules(modifiers: {
+            for (final def in kModifierCatalog)
+              if (!const {'other_language', 'mime_no_fists', 'mime_eyes_closed'}
+                  .contains(def.id))
+                def.id: const ModifierSetting(charges: 1),
+          }));
       for (var round = 1; round < 3; round++) {
         finishRound(provider);
         provider.nextRound();

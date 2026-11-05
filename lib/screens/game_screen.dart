@@ -192,14 +192,12 @@ class _GameScreenState extends State<GameScreen> {
                               ),
                             const SizedBox(height: 12),
                             // Jamais rien sous « Commencer le tour » : un cas
-                            // extrême qui ne tient pas est coupé, pas recouvrant.
+                            // extrême qui ne tient pas défile dans la zone.
                             Expanded(
-                              child: ClipRect(
-                                child: FiestaTurnZone(
-                                  provider: provider,
-                                  thisTurnKey: _thisTurnKey,
-                                  reserveKey: _reserveKey,
-                                ),
+                              child: FiestaTurnZone(
+                                provider: provider,
+                                thisTurnKey: _thisTurnKey,
+                                reserveKey: _reserveKey,
                               ),
                             ),
                             const SizedBox(height: 12),
@@ -256,7 +254,8 @@ class _GameScreenState extends State<GameScreen> {
                     },
                   ),
 
-                  const SizedBox(height: 24),
+                  // Fiesta : cette place va aux cartouches.
+                  if (!provider.isFiesta) const SizedBox(height: 24),
                 ],
               ),
             ),
