@@ -145,11 +145,10 @@ void main() {
     }
     provider.createTeams();
     provider.randomizeTeams();
-    await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
+    await provider.startGame(fiesta: classicEnsemble.rules);
     await provider.suspendGame();
 
     final rules = FiestaRules(
-      mode: FiestaMode.custom,
       ensembleName: 'Soirée',
       drawCount: 2,
     );
@@ -191,42 +190,6 @@ void main() {
     // Aléatoire (réglage de l'archive) : l'écran des mots reste fermé.
     provider.goToScreen(AppConstants.screenWords);
     expect(provider.game.currentScreen, AppConstants.screenSettings);
-  });
-
-  test(
-      'Auto / Personnalisé : rejouer une Fiesta l\'aligne, rejouer du Classique '
-      'n\'y touche pas', () async {
-    GameResult archive(FiestaRules? fiesta) => GameResult(
-          gameId: 'g',
-          playedAt: DateTime(2026, 11, 1),
-          teams: const [
-            TeamResult(
-                id: 'team-1',
-                name: 'A',
-                score: 0,
-                scoreByRound: [0, 0, 0],
-                playerNames: ['Ana']),
-            TeamResult(
-                id: 'team-2',
-                name: 'B',
-                score: 0,
-                scoreByRound: [0, 0, 0],
-                playerNames: ['Bob']),
-          ],
-          totalWords: 2,
-          turnDuration: 30,
-          roundsPlayed: 3,
-          setup: GameSetupSnapshot(settings: GameSettings(), fiesta: fiesta),
-        );
-    final provider = await givenProvider();
-
-    provider.updateSettings(fiestaMode: FiestaMode.custom);
-    await provider.replayFromHistory(archive(null));
-    expect(provider.settings.fiestaMode, FiestaMode.custom);
-
-    await provider
-        .replayFromHistory(archive(FiestaRules(mode: FiestaMode.auto)));
-    expect(provider.settings.fiestaMode, FiestaMode.auto);
   });
 
   test(
@@ -293,9 +256,9 @@ void main() {
     /// Ensembles « Soirée A » et « Soirée B », B utilisé en dernier.
     Future<(FiestaRules, FiestaRules)> givenEnsembles() async {
       final service = FiestaEnsembleService();
-      final a = await service.create(defaultEnsembleRules('Soirée A'));
+      final a = await service.create(FiestaRules(ensembleName: 'Soirée A'));
       final b = await service
-          .create(defaultEnsembleRules('Soirée B').copyWith(drawCount: 2));
+          .create(FiestaRules(ensembleName: 'Soirée B').copyWith(drawCount: 2));
       await service.markUsed(b!.id);
       return (a!.rules, b.rules);
     }
@@ -317,7 +280,7 @@ void main() {
       expect((await reopen()).pendingFiesta?.ensembleName, 'Soirée A');
     });
 
-    test('un choix explicite d\'ensemble ou de mode l\'efface', () async {
+    test('un choix explicite d\'ensemble l\'efface', () async {
       final provider = await givenProvider();
       final (a, b) = await givenEnsembles();
 
@@ -325,11 +288,6 @@ void main() {
       provider.setPendingFiesta(b);
       await pumpEventQueue();
       expect((await reopen()).pendingFiesta?.ensembleName, 'Soirée B');
-
-      await provider.replayFromHistory(archive(a));
-      provider.setPendingFiesta(FiestaRules(mode: FiestaMode.auto));
-      await pumpEventQueue();
-      expect((await reopen()).pendingFiesta?.mode, FiestaMode.auto);
 
       await provider.replayFromHistory(archive(a));
       provider.setPendingFiesta(null);

@@ -1,306 +1,104 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
-import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
-import 'package:guess_it_all_mobile/models/fiesta/round_transition.dart';
 import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
 
-ModifierSetting setting(ModifierMode mode,
-        {Set<int> rounds = const {1, 2, 3}}) =>
-    ModifierSetting(active: true, rounds: rounds, mode: mode);
+Set<String> ids(Iterable<dynamic> instances) =>
+    {for (final m in instances) m.catalogId as String};
 
-/// Personnalisé : tout le catalogue « Au tirage » sur toutes les manches (les
-/// contraintes de manche du catalogue filtrent, le mode Cartouche seule exclut
-/// les cartouches seulement), sauf `no_pass` « Toujours » si [alwaysNoPass].
-FiestaRules customAllDraw({int drawCount = 2, bool alwaysNoPass = false}) =>
-    FiestaRules(
-      mode: FiestaMode.custom,
-      drawCount: drawCount,
-      modifiers: {
-        for (final def in kModifierCatalog)
-          if (canBeRoundRule(def))
-            def.id: setting(def.id == 'no_pass' && alwaysNoPass
-                ? ModifierMode.always
-                : ModifierMode.draw),
-      },
+FiestaRules drawing(Set<String> draw, {int count = 1}) => FiestaRules(
+      drawCount: count,
+      modifiers: {for (final id in draw) id: const ModifierSetting(draw: true)},
     );
-
-final gameIds = List.generate(200, (i) => 'game-$i');
 
 void main() {
-  final configs = <String, FiestaRules>{
-    'Auto': autoRules(oneAnswer: false),
-    'Personnalisé, tirage 2': customAllDraw(),
-    'Personnalisé, tirage 5': customAllDraw(drawCount: 5),
-    'Personnalisé, tirage 5 + Toujours': customAllDraw(
-      drawCount: 5,
-      alwaysNoPass: true,
-    ),
-  };
-
-  test(
-      'pour toute config, manche et graine : au plus drawCount tirés (sans '
-      'plafond), aucune paire incompatible, au plus un de la famille « Mime », '
-      'jamais une exception cartouche, rien de « manche 3 » avant M3 ni de '
-      '« pas en M3 » en M3, résultat déterministe', () {
-    final seen = <String, Set<int>>{};
-    configs.forEach((label, rules) {
-      for (final round in [1, 2, 3]) {
-        for (final gameId in gameIds) {
-          final mods = roundModifiers(rules, gameId: gameId, round: round);
-          final ids = mods.map((m) => m.catalogId).toList();
-          final why = '$label, M$round, $gameId : $ids';
-
-          final always = label.endsWith('Toujours') ? 1 : 0;
-          final max = label == 'Auto' ? 2 : rules.drawCount;
-          expect(ids.length, lessThanOrEqualTo(max + always), reason: why);
-          (seen[label] ??= {}).add(ids.length);
-          expect(ids.where((id) => modifierById(id)!.mimeFamily).length,
-              lessThanOrEqualTo(1),
-              reason: why);
-          expect(ids.where(kCartridgeOnlyIds.contains), isEmpty, reason: why);
-          expect(ids.toSet().length, ids.length, reason: why);
-          for (var i = 0; i < ids.length; i++) {
-            for (var j = i + 1; j < ids.length; j++) {
-              expect(areCompatible(ids[i], ids[j]), isTrue, reason: why);
-            }
-          }
-          if (always == 1) expect(ids.first, 'no_pass', reason: why);
-          if (round < 3) {
-            expect(ids.where((id) => modifierById(id)!.round3Only), isEmpty,
-                reason: why);
-          } else {
-            expect(ids.where((id) => modifierById(id)!.notInRound3), isEmpty,
-                reason: why);
-          }
-          // Même graine (retour arrière, app tuée) = même tirage.
-          final again = roundModifiers(rules, gameId: gameId, round: round)
-              .map((m) => m.catalogId)
-              .toList();
-          expect(again, ids, reason: why);
-        }
-      }
-    });
-    // Pas de plafond : un tirage de 5 sort tout ce qui peut l'être, 4 depuis que
-    // bonus et −10 s ne sont plus que des cartouches (sinon le test ne prouve
-    // rien).
-    expect(seen['Personnalisé, tirage 5'], contains(4));
-    expect(seen['Auto'], {1, 2});
+  test('la graine est stable et distingue la manche', () {
+    expect(drawSeed('g', 1), drawSeed('g', 1));
+    expect(drawSeed('g', 1), isNot(drawSeed('g', 2)));
   });
 
-  test(
-      'tirage figé : une graine donne toujours les mêmes ids (une mise à jour '
-      'qui changerait l\'ordre des candidats changerait les tirages)', () {
+  test('Toujours et aléatoire : toutes les manches où il existe', () {
+    final rules = FiestaRules(modifiers: const {
+      'one_answer': ModifierSetting(always: true),
+      'draw': ModifierSetting(always: true),
+      'other_language': ModifierSetting(always: true),
+    });
+    expect(ids(alwaysForRound(rules, 1)), {'one_answer', 'other_language'});
+    expect(ids(alwaysForRound(rules, 2)), {'one_answer', 'other_language'});
+    expect(ids(alwaysForRound(rules, 3)), {'one_answer', 'draw'});
+
     expect(
-      roundModifiers(customAllDraw(), gameId: 'game-0', round: 1)
-          .map((m) => m.catalogId),
-      ['other_language', 'no_pass'],
-    );
-  });
-
-  test('M3 : « Dessiner » Toujours, mimes au tirage → aucun autre mime ne sort',
-      () {
-    final rules = FiestaRules(
-      mode: FiestaMode.custom,
-      drawCount: 3,
-      modifiers: {
-        'draw': setting(ModifierMode.always, rounds: {3}),
-        for (final def in kModifierCatalog.where((d) => d.mimeFamily))
-          if (def.id != 'draw') def.id: setting(ModifierMode.draw, rounds: {3}),
-      },
-    );
-    for (final gameId in gameIds) {
-      expect(
-        roundModifiers(rules, gameId: gameId, round: 3).map((m) => m.catalogId),
-        ['draw'],
-      );
-    }
-  });
-
-  test(
-      '« Une seule réponse » en Auto : déterministe par partie, environ 1 '
-      'fois sur 4 ; tirée = « Toujours » M1-M3, sinon jamais', () {
-    // Graine figée (« manche 0 », distincte des manches 1 à 3) : une app mise
-    // à jour retrouve le même tirage pour une partie suspendue.
-    expect(drawSeed('game-0', 0), 2787898305);
-    expect(drawSeed('game-1', 0), 286747006);
-    expect([
-      for (var i = 0; i < 12; i++) drawsOneAnswer('game-$i')
-    ], [
-      true,
-      false,
-      false,
-      true,
-      false,
-      false,
-      false,
-      false,
-      true,
-      false,
-      false,
-      false
-    ]);
-    final drawn = gameIds.where(drawsOneAnswer).length;
-    expect(drawn, inInclusiveRange(35, 65)); // 200 parties, attendu 50
-
-    for (final round in [1, 2, 3]) {
-      expect(
-        roundModifiers(autoRules(oneAnswer: true), gameId: 'g', round: round)
-            .first
-            .catalogId,
-        'one_answer',
-      );
-      for (final gameId in gameIds) {
-        expect(
-          roundModifiers(autoRules(oneAnswer: false),
-                  gameId: gameId, round: round)
-              .map((m) => m.catalogId),
-          isNot(contains('one_answer')),
-        );
-      }
-    }
-  });
-
-  test(
-      'Personnalisé : tirage à 0 = rien ; seuls les « Au tirage » cochés sur '
-      'la manche sortent', () {
+        ids(roundModifiers(drawing({'mime_no_arms'}), gameId: 'g', round: 1)),
+        isEmpty);
     expect(
-      roundModifiers(customAllDraw(drawCount: 0), gameId: 'g', round: 1),
-      isEmpty,
-    );
-    final rules = FiestaRules(
-      mode: FiestaMode.custom,
-      drawCount: 2,
-      modifiers: {
-        'reversed': setting(ModifierMode.draw, rounds: {2, 3}),
-        'no_pass': setting(ModifierMode.draw),
-        'free_pass': setting(ModifierMode.cartridge),
-      },
-    );
-    for (final gameId in gameIds) {
+        ids(roundModifiers(drawing({'mime_no_arms'}), gameId: 'g', round: 3)),
+        {'mime_no_arms'});
+    expect(
+        ids(roundModifiers(drawing({'other_language'}), gameId: 'g', round: 3)),
+        isEmpty);
+  });
+
+  test('un modificateur peut être en aléatoire ET en cartouche', () {
+    final rules = FiestaRules(drawCount: 1, modifiers: const {
+      'reversed': ModifierSetting(draw: true, charges: 2),
+    });
+    expect(ids(roundModifiers(rules, gameId: 'g', round: 1)), {'reversed'});
+    expect(rules.chargesOf('reversed'), 2);
+  });
+
+  test('tirage : déterministe, le verrouillé ne sort jamais, 0 = aucun', () {
+    final rules = FiestaRules(drawCount: 2, modifiers: const {
+      'no_pass': ModifierSetting(always: true, draw: true),
+      'reversed': ModifierSetting(draw: true),
+      'one_answer': ModifierSetting(draw: true),
+    });
+    final one = roundModifiers(rules, gameId: 'g', round: 1);
+    expect(ids(one), {'no_pass', 'reversed', 'one_answer'},
+        reason: 'no_pass une seule fois, en Toujours');
+    expect(ids(roundModifiers(rules, gameId: 'g', round: 1)), ids(one));
+    expect(
+        drawForRound(
+            rules: drawing({'reversed'}, count: 0),
+            round: 1,
+            already: const [],
+            random: Random(1)),
+        isEmpty);
+  });
+
+  test('moins de candidats que demandé : on en tire moins', () {
+    expect(
+        roundModifiers(drawing({'reversed'}, count: 5), gameId: 'g', round: 1),
+        hasLength(1));
+  });
+
+  test('les mimes s\'excluent au tirage, sauf Bruitages et drap', () {
+    for (var i = 0; i < 40; i++) {
+      final drawn = ids(roundModifiers(
+          drawing({'mime_no_arms', 'mime_eyes_closed'}, count: 2),
+          gameId: 'g$i',
+          round: 3));
+      expect(drawn, hasLength(1));
       expect(
-        roundModifiers(rules, gameId: gameId, round: 1).map((m) => m.catalogId),
-        ['no_pass'],
-      );
-      expect(
-        roundModifiers(rules, gameId: gameId, round: 2)
-            .map((m) => m.catalogId)
-            .toSet(),
-        {'no_pass', 'reversed'},
-      );
+          ids(roundModifiers(
+              drawing({'sounds_only', 'mime_under_sheet'}, count: 2),
+              gameId: 'g$i',
+              round: 3)),
+          hasLength(2));
     }
   });
 
-  test(
-      'Auto : le −10 s et les bonus (cartouches seulement) ne sont jamais '
-      'tirés, ni par un blob qui les mettrait « Au tirage »', () {
-    final forced =
-        FiestaRules(mode: FiestaMode.custom, drawCount: 5, modifiers: {
-      for (final id in kCartridgeOnlyIds) id: setting(ModifierMode.draw),
-    });
-    for (final gameId in gameIds) {
-      for (final round in [1, 2, 3]) {
-        final auto = roundModifiers(autoRules(oneAnswer: false),
-                gameId: gameId, round: round)
-            .map((m) => m.catalogId);
-        expect(auto.where(kCartridgeOnlyIds.contains), isEmpty);
-        expect(roundModifiers(forced, gameId: gameId, round: round), isEmpty);
-      }
-    }
-  });
-
-  test(
-      'Malus reçus résolus au tour de la cible : en double avec une règle de '
-      'manche, ou incompatible avec un malus retenu avant lui (ordre '
-      'd\'envoi), il est écarté', () {
-    ModifierInstance sent(String id, String from) => ModifierInstance(
-          catalogId: id,
-          scope: ModifierScope.turn,
-          target: ModifierTarget.team,
-          teamId: 'b',
-          charges: 0,
-          nature: ModifierNature.malus,
-          round: 3,
-          fromTeamId: from,
-        );
-    final rule = ModifierInstance(
-      catalogId: 'no_pass',
-      scope: ModifierScope.round,
-      target: ModifierTarget.both,
-      charges: 0,
-      nature: ModifierNature.malus,
-      round: 3,
-    );
-    final kept = modifiersForTurn([
-      rule,
-      sent('no_pass', 'a'), // doublon de la règle
-      sent('mime_no_arms', 'a'),
-      sent('draw', 'c'), // second mime : incompatible
-      sent('reversed', 'c'),
-    ], teamId: 'b', round: 3);
-    expect(kept.map((m) => '${m.catalogId}<${m.fromTeamId}'),
-        ['no_pass<null', 'mime_no_arms<a', 'reversed<c']);
-  });
-
-  group('mimes', () {
-    ModifierSetting m(ModifierMode mode) =>
-        ModifierSetting(active: true, rounds: const {3}, mode: mode);
-
-    test('un blob à deux « Toujours » sur mime : un seul reste en jeu', () {
-      final rules = FiestaRules(
-        mode: FiestaMode.custom,
-        drawCount: 0,
-        modifiers: {
-          'mime_no_arms': m(ModifierMode.always),
-          'draw': m(ModifierMode.always),
-        },
-      );
-      expect(
-          alwaysForRound(rules, 3).map((x) => x.catalogId), ['mime_no_arms']);
-    });
-
-    test('un tirage à 2 parmi plusieurs mimes n\'en sort jamais 2', () {
-      final rules = FiestaRules(
-        mode: FiestaMode.custom,
-        drawCount: 2,
-        modifiers: {
-          for (final id in [
-            'mime_no_arms',
-            'mime_no_fists',
-            'draw',
-            'mime_under_sheet',
-            'no_pass'
-          ])
-            id: m(ModifierMode.draw),
-        },
-      );
-      for (var i = 0; i < 100; i++) {
-        final ids = roundModifiers(rules, gameId: 'game-$i', round: 3)
-            .map((x) => x.catalogId);
-        expect(ids.where((id) => modifierById(id)!.mimeFamily), hasLength(1),
-            reason: 'game-$i : $ids');
-      }
-    });
-  });
-
-  test(
-      '« Toujours » : un blob à `rounds` partiel joue sur toutes les manches où '
-      'il existe', () {
-    ModifierSetting always(Set<int> rounds) => ModifierSetting(
-        active: true, rounds: rounds, mode: ModifierMode.always);
-    final rules = FiestaRules(
-      mode: FiestaMode.custom,
-      drawCount: 0,
-      modifiers: {
-        'reversed': always(const {1}),
-        'other_language': always(const {}),
-        'mime_no_arms': always(const {1}),
-      },
-    );
-    List<String> ids(int round) =>
-        alwaysForRound(rules, round).map((m) => m.catalogId).toList();
-    expect(ids(1), unorderedEquals(['reversed', 'other_language']));
-    expect(ids(2), unorderedEquals(['reversed', 'other_language']));
-    expect(ids(3), unorderedEquals(['reversed', 'mime_no_arms']));
+  test('un seul lieu de vérité pour la paire Bruitages / drap', () {
+    expect(areCompatible('sounds_only', 'mime_under_sheet'), isTrue);
+    expect(areCompatible('mime_under_sheet', 'sounds_only'), isTrue);
+    expect(areCompatible('sounds_only', 'mime_no_arms'), isFalse);
+    expect(areCompatible('mime_back_turned', 'mime_under_sheet'), isFalse);
+    expect(modifierDescription('sounds_only', ['mime_under_sheet']),
+        'Gestes et bruits sous le drap, sans parler.');
+    expect(modifierDescription('mime_under_sheet', ['sounds_only']),
+        'Gestes et bruits sous le drap, sans parler.');
+    expect(modifierDescription('sounds_only', const []),
+        modifierById('sounds_only')!.description);
   });
 }

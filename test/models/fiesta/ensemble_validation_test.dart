@@ -2,258 +2,175 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/ensemble_validation.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
+import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
 
-/// Ensemble par défaut (maquette `defaults()`) où l'on remplace des réglages.
-FiestaRules rulesWith({
-  String name = 'Soirée',
-  Map<String, ModifierSetting> overrides = const {},
-}) {
-  final base = defaultEnsembleRules(name);
-  return base.copyWith(modifiers: {...base.modifiers, ...overrides});
-}
-
-ModifierSetting setting(ModifierMode mode,
-        {Set<int> rounds = const {1, 2, 3}}) =>
-    ModifierSetting(active: true, rounds: rounds, mode: mode);
+FiestaRules named(
+  Map<String, ModifierSetting> modifiers, {
+  int drawCount = 0,
+  int trailingCount = 0,
+}) =>
+    FiestaRules(
+      ensembleName: 'Max',
+      modifiers: modifiers,
+      drawCount: drawCount,
+      trailingCount: trailingCount,
+    );
 
 void main() {
-  test(
-      'cas nominaux : l\'ensemble par défaut et les 7 ensembles fournis sont '
-      'valides, et deux à deux distincts (noms et réglages)', () {
-    // Sans ce cas, une garde qui refuse TOUT passerait les tests ci-dessous.
-    expect([
-      for (final e in kProvidedEnsembles) (e.id, e.name)
-    ], [
-      ('provided_classic', 'Fiesta classique'),
-      ('provided_pro', 'Pro Player'),
-      ('provided_straight', 'Droit au but'),
-      ('provided_explosive', 'Explosif'),
-      ('provided_pictionary', 'Pictionnary'),
-      ('provided_bilingual', 'Bilingue'),
-      ('provided_injustice', 'L\'injustice'),
-    ]);
-    expect(validateEnsemble(rulesWith(), others: kProvidedEnsembles), isEmpty);
-    for (final e in kProvidedEnsembles) {
-      expect(
-        validateEnsemble(e.rules,
-            others: kProvidedEnsembles.where((o) => o.id != e.id)),
-        isEmpty,
-        reason: e.name,
-      );
-    }
-  });
-
-  test('nom vide après trim, ou déjà pris (casse et espaces ignorés)', () {
-    expect(validateEnsemble(rulesWith(name: '   ')),
-        ['Donne un nom à l\'ensemble.']);
-    expect(
-      validateEnsemble(rulesWith(name: '  pro PLAYER '),
-          others: kProvidedEnsembles),
-      ['Ce nom est déjà pris : choisis-en un autre.'],
-    );
-  });
-
-  test('doublon : mêmes réglages qu\'un autre ensemble, hors nom → refusé', () {
-    final pro = kProvidedEnsembles.firstWhere((e) => e.name == 'Pro Player');
-    final twin = pro.rules.copyWith(
-      ensembleName: 'Soirée chez Max',
-      // Réglage d'un modificateur COUPÉ : ne change pas le jeu, donc doublon.
-      modifiers: {
-        ...pro.rules.modifiers,
-        'two_words': pro.rules.modifiers['two_words']!.copyWith(charges: 3),
-      },
-    );
-    expect(validateEnsemble(twin, others: kProvidedEnsembles),
-        ['L\'ensemble Pro Player a déjà ces paramètres.']);
-    // Une manche de moins : plus un doublon.
-    final different = twin.copyWith(modifiers: {
-      ...twin.modifiers,
-      'reversed': setting(ModifierMode.draw, rounds: {2, 3}),
-    });
-    expect(validateEnsemble(different, others: kProvidedEnsembles), isEmpty);
-    // Une cartouche de plus : un autre ensemble ; ses manches, elles, ne
-    // comptent pas (une cartouche vaut pour toute la partie).
-    final base = rulesWith();
-    final minus = base.modifiers['minus_10s']!;
-    FiestaRules withMinus(ModifierSetting s) =>
-        base.copyWith(modifiers: {...base.modifiers, 'minus_10s': s});
-    expect(settingsKey(withMinus(minus.copyWith(charges: 2))),
-        isNot(settingsKey(base)));
-    expect(
-        settingsKey(withMinus(minus.copyWith(rounds: {2}))), settingsKey(base));
-    // Le coup de pouce compte aussi.
-    expect(settingsKey(base.copyWith(boostCount: 0)), isNot(settingsKey(base)));
-  });
-
-  test('modificateur actif sans manche → refusé, coupé → ignoré', () {
-    expect(
-      validateEnsemble(rulesWith(
-          overrides: {'reversed': setting(ModifierMode.draw, rounds: {})})),
-      ['Mot à l\'envers : coche au moins une manche.'],
-    );
-    expect(
-      validateEnsemble(rulesWith(overrides: {
-        'reversed': setting(ModifierMode.draw, rounds: {}).copyWith(
-          active: false,
-        ),
-      })),
-      isEmpty,
-    );
-  });
-
-  test(
-      'exclusivité des modes : un bonus, le −10 s ou le blocage en règle de '
-      'manche, « Une seule réponse » en cartouche, des manches interdites par '
-      'le catalogue → refusés', () {
-    expect(
-      validateEnsemble(rulesWith(overrides: {
-        'double_points': setting(ModifierMode.always),
-        'plus_10s': setting(ModifierMode.draw),
-        'minus_10s': setting(ModifierMode.draw),
-        'block_guesser': setting(ModifierMode.draw),
-      })),
-      unorderedEquals([
-        'Mot compte double : seulement en cartouche.',
-        'Bonus de 10 s : seulement en cartouche.',
-        'Malus de 10 s : seulement en cartouche.',
-        'Bloquer un devineur : seulement en cartouche.',
-      ]),
-    );
-    expect(
-      validateEnsemble(rulesWith(overrides: {
-        'one_answer': setting(ModifierMode.cartridge),
-      })),
-      ['Une seule réponse : jamais en cartouche.'],
-    );
-    expect(
-      validateEnsemble(rulesWith(overrides: {
-        'mime_no_arms': setting(ModifierMode.draw, rounds: {2, 3}),
-        'other_language': setting(ModifierMode.draw, rounds: {2, 3}),
-      })),
-      unorderedEquals([
-        'Mime sans les bras n\'existe qu\'en manche 3 (mime).',
-        'Faire deviner dans une autre langue n\'existe pas en manche 3 '
-            '(mime) : manche 1 ou 2 seulement.',
-      ]),
-    );
-  });
-
-  test(
-      'cartouche à 0 : acceptée avec le coup de pouce, refusée sans ; coup de '
-      'pouce sans aucun modificateur en Cartouche → refusé ; les manches d\'une '
-      'cartouche ne sont pas jugées', () {
-    final zero = ModifierSetting(
-        active: true,
-        rounds: const {},
-        mode: ModifierMode.cartridge,
-        charges: 0);
-    final withZero = rulesWith(overrides: {'plus_10s': zero});
-    expect(validateEnsemble(withZero), isEmpty);
-    expect(validateEnsemble(withZero.copyWith(boostCount: 0)), [
-      'Bonus de 10 s : 0 cartouche sans coup de pouce, elle ne servirait '
-          'jamais. Mets-en au moins 1, ou allume le coup de pouce.'
-    ]);
-    expect(
-      validateEnsemble(FiestaRules(
-        mode: FiestaMode.custom,
-        ensembleName: 'Sans cartouche',
-        boostCount: 1,
-        modifiers: {'one_answer': setting(ModifierMode.always)},
-      )),
-      ['Le coup de pouce a besoin d\'au moins un modificateur en Cartouche.'],
-    );
-  });
-
-  group('mimes', () {
-    ModifierSetting mime(ModifierMode mode) =>
-        setting(mode, rounds: {3}).copyWith(charges: 1);
-
-    test('plusieurs en Au tirage et Cartouche, sans Toujours : permis', () {
-      expect(
-        validateEnsemble(rulesWith(overrides: {
-          'mime_no_arms': mime(ModifierMode.cartridge),
-          'mime_no_fists': mime(ModifierMode.cartridge),
-          'draw': mime(ModifierMode.draw),
-          'mime_under_sheet': mime(ModifierMode.draw),
-        })),
-        isEmpty,
-      );
+  group('Validation', () {
+    test('nom vide ou pris, sans compter casse ni espaces', () {
+      const on = {'no_pass': ModifierSetting(always: true)};
+      expect(validateEnsemble(FiestaRules(ensembleName: '  ', modifiers: on)),
+          contains('Donne un nom à l\'ensemble.'));
+      final other = FiestaEnsemble(
+          id: 'x', rules: FiestaRules(ensembleName: ' max ', allCount: 1));
+      expect(validateEnsemble(named(on), others: [other]),
+          contains('Ce nom est déjà pris : choisis-en un autre.'));
     });
 
-    test('un Toujours + un autre mime actif, quel que soit son mode : refusé',
-        () {
-      for (final other in ModifierMode.values) {
-        expect(
-          validateEnsemble(rulesWith(overrides: {
-            'mime_no_arms':
-                mime(ModifierMode.cartridge).copyWith(active: false),
-            'draw': mime(ModifierMode.always),
-            'mime_no_fists': mime(other),
-          })),
-          other == ModifierMode.always
-              ? [
-                  'Mime sans les poings est « Toujours » : retire Dessiner ou '
-                      'change son mode.'
-                ]
-              : [
-                  'Dessiner est « Toujours » : retire Mime sans les poings ou '
-                      'change son mode.'
-                ],
-          reason: other.name,
-        );
+    test('au moins un réglage qui joue', () {
+      expect(validateEnsemble(named(const {})),
+          contains('Active au moins un modificateur.'));
+      // Aléatoire sans tirage : ne joue pas.
+      expect(
+          validateEnsemble(
+              named(const {'no_pass': ModifierSetting(draw: true)})),
+          contains('Active au moins un modificateur.'));
+      expect(validateEnsemble(named(const {}, trailingCount: 1)), isEmpty);
+      expect(
+          validateEnsemble(
+              named(const {'no_pass': ModifierSetting(charges: 1)})),
+          isEmpty);
+    });
+
+    test('drawCount > 0 sans candidat', () {
+      expect(validateEnsemble(named(const {}, drawCount: 1)).single,
+          startsWith('Combien par manche'));
+      // Le seul candidat est verrouillé par son Toujours.
+      expect(
+          validateEnsemble(named(const {
+            'no_pass': ModifierSetting(always: true, draw: true),
+          }, drawCount: 1))
+              .single,
+          startsWith('Combien par manche'));
+    });
+
+    test('rien à tirer à une manche : avertissement, pas une erreur', () {
+      final mimes =
+          named(const {'draw': ModifierSetting(draw: true)}, drawCount: 1);
+      expect(validateEnsemble(mimes), isEmpty);
+      expect(roundsWithoutDraw(mimes), [1, 2]);
+      expect(roundsWithoutDraw(named(const {})), isEmpty);
+    });
+
+    test('doublon : mêmes réglages qui jouent, le reste ne compte pas', () {
+      final a = FiestaEnsemble(
+          id: 'a',
+          rules: FiestaRules(
+              ensembleName: 'A',
+              modifiers: const {'no_pass': ModifierSetting(always: true)}));
+      expect(
+          validateEnsemble(
+              named(const {
+                // `draw` et `charges` gardés sous Toujours : sans effet.
+                'no_pass':
+                    ModifierSetting(always: true, draw: true, charges: 3),
+              }),
+              others: [a]).single,
+          'L\'ensemble A a déjà ces paramètres.');
+      expect(settingsKey(FiestaRules(balance: true, trailingCount: 4)),
+          settingsKey(FiestaRules(balance: true)));
+    });
+  });
+
+  group('Verrouillage', () {
+    test('Toujours verrouille les 2 autres menus, réglages gardés', () {
+      final rules = FiestaRules(modifiers: const {
+        'reversed': ModifierSetting(always: true, draw: true, charges: 2),
+      });
+      expect(rules.lockReason('reversed', EnsembleMenu.draw), isNotNull);
+      expect(rules.lockReason('reversed', EnsembleMenu.cartridge), isNotNull);
+      expect(rules.lockReason('reversed', EnsembleMenu.always), isNull);
+      expect(rules.drawsFrom('reversed'), isFalse);
+      expect(rules.chargesOf('reversed'), 0);
+      expect(rules.settingOf('reversed').charges, 2);
+      final off = rules.copyWith(modifiers: {
+        'reversed': rules.settingOf('reversed').copyWith(always: false),
+      });
+      expect(off.drawsFrom('reversed'), isTrue);
+      expect(off.chargesOf('reversed'), 2);
+    });
+
+    test('mime en Toujours : les autres mimes partout, sauf la paire', () {
+      final rules = FiestaRules(modifiers: const {
+        'mime_under_sheet': ModifierSetting(always: true),
+      });
+      for (final menu in EnsembleMenu.values) {
+        expect(rules.lockReason('mime_no_arms', menu),
+            'Mimer sous un drap est en Toujours');
+        expect(rules.lockReason('sounds_only', menu), isNull);
       }
     });
 
-    test('un mime coupé ne gêne pas un Toujours', () {
-      expect(
-        validateEnsemble(rulesWith(overrides: {
-          'mime_no_arms': mime(ModifierMode.cartridge).copyWith(active: false),
-          'draw': mime(ModifierMode.always),
-        })),
-        isEmpty,
-      );
+    test(
+        'Interdit de passer en Toujours : Passe gratuite et Deux mots en '
+        'Cartouches seulement', () {
+      final rules = FiestaRules(modifiers: const {
+        'no_pass': ModifierSetting(always: true),
+        'free_pass': ModifierSetting(charges: 3),
+        'two_words': ModifierSetting(charges: 1),
+        'plus_10s': ModifierSetting(charges: 1),
+      });
+      expect(rules.chargesOf('free_pass'), 0);
+      expect(rules.chargesOf('two_words'), 0);
+      expect(rules.chargesOf('plus_10s'), 1);
     });
   });
 
-  group('« Toujours » vaut pour toutes les manches où il existe', () {
-    test('ses manches cochées ne sont plus jugées', () {
-      for (final rounds in [
-        <int>{},
-        {1},
-        {2, 3}
-      ]) {
-        expect(
-          validateEnsemble(rulesWith(overrides: {
-            'mime_no_arms': setting(ModifierMode.always, rounds: rounds),
-            'other_language': setting(ModifierMode.always, rounds: rounds),
-          })),
-          isEmpty,
-          reason: '$rounds',
-        );
+  group('Ensembles fournis', () {
+    FiestaRules of(String id) =>
+        kProvidedEnsembles.firstWhere((e) => e.id == id).rules;
+
+    test('8, ids provided_*, L\'injustice retirée, distincts et valides', () {
+      expect(kProvidedEnsembles.map((e) => e.id), [
+        'provided_classic',
+        'provided_last',
+        'provided_pro',
+        'provided_straight',
+        'provided_pictionary',
+        'provided_bilingual',
+        'provided_explosive',
+        'provided_expert',
+      ]);
+      expect(kProvidedEnsembles.map((e) => settingsKey(e.rules)).toSet(),
+          hasLength(8));
+      for (final e in kProvidedEnsembles) {
+        expect(validateEnsemble(e.rules), isEmpty, reason: e.name);
       }
     });
 
-    test('« Au tirage » garde ses manches', () {
-      expect(
-        validateEnsemble(rulesWith(overrides: {
-          'other_language': setting(ModifierMode.draw, rounds: {3}),
-        })),
-        isNotEmpty,
-      );
+    test('Fiesta classique : aléatoire sur tout ce qui est possible', () {
+      final rules = of('provided_classic');
+      expect(rules.drawCount, 1);
+      expect(rules.balance, isTrue);
+      for (final def in kModifierCatalog) {
+        expect(rules.drawsFrom(def.id), canBeRoundRule(def), reason: def.id);
+      }
     });
 
-    test('doublon : deux ensembles qui ne diffèrent que par ces manches', () {
-      FiestaRules withRounds(Set<int> rounds) => rulesWith(overrides: {
-            'no_pass': setting(ModifierMode.always, rounds: rounds),
-          });
-      expect(settingsKey(withRounds({1})), settingsKey(withRounds({1, 2, 3})));
-      expect(
-        validateEnsemble(withRounds({1}), others: [
-          FiestaEnsemble(
-              id: 'x', rules: withRounds({2}).copyWith(ensembleName: 'Autre')),
-        ]),
-        ['L\'ensemble Autre a déjà ces paramètres.'],
-      );
+    test('les autres', () {
+      expect(of('provided_last').trailingCount, 4);
+      expect(of('provided_explosive').allCount, 5);
+      expect(of('provided_explosive').modifiers.values.any((s) => s.always),
+          isFalse);
+      Set<String> always(String id) =>
+          of(id).modifiers.keys.where(of(id).isAlways).toSet();
+      expect(always('provided_pro'), {'no_pass', 'reversed', 'one_answer'});
+      expect(always('provided_straight'), {'one_answer'});
+      expect(always('provided_pictionary'), {'draw'});
+      expect(always('provided_bilingual'), {'other_language'});
+      expect(always('provided_expert'), {'sounds_only', 'mime_under_sheet'});
     });
   });
 }

@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:guess_it_all_mobile/models/fiesta/ensemble_validation.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_state.dart';
@@ -14,16 +13,15 @@ import '../helpers/test_prefs.dart';
 
 const key = FiestaEnsembleService.storageKey;
 
-/// Blob FIGÉ, tel qu'écrit par la version Fiesta v3 (modes et cartouches pour
-/// la partie).
+/// Blob FIGÉ, tel qu'écrit par la version Fiesta v4 (3 réglages indépendants).
 /// 🔴 Ne jamais le régénérer : s'il ne se relit plus en entier, c'est qu'un
 /// changement de `FiestaRules` effacerait les ensembles des joueurs.
 const frozenBlob = '{"schemaVersion":1,"data":{"ensembles":[{"id":"e1",'
-    '"rules":{"format":3,"mode":"custom",'
-    '"ensembleName":"Soirée chez Max","modifiers":{"no_pass":{"active":true,'
-    '"rounds":[1,2],"mode":"draw","charges":1},'
-    '"free_pass":{"active":false,"rounds":[1,2,3],"mode":"cartridge",'
-    '"charges":2}},"drawCount":2,"trailingBoost":true}}],"lastUsedId":"e1"}}';
+    '"rules":{"format":4,'
+    '"ensembleName":"Soirée chez Max","modifiers":{"no_pass":{"always":false,'
+    '"draw":true,"charges":1},'
+    '"free_pass":{"always":false,"draw":false,"charges":2}},"drawCount":2,'
+    '"allCount":3,"trailingCount":1,"balance":true}}],"lastUsedId":"e1"}}';
 
 /// Blob de la forme v2 (Fiesta v2, jamais publiée) : `stock`, `offer`,
 /// `perGame`, `pick3Choices`, `catchUp`.
@@ -50,9 +48,8 @@ void main() {
   test('aller-retour : enveloppe versionnée, réglages et dernier utilisé',
       () async {
     await givenPrefs();
-    final rules = defaultEnsembleRules('Soirée chez Max').copyWith(
+    final rules = FiestaRules(ensembleName: 'Soirée chez Max').copyWith(
       drawCount: 2,
-      boostCount: 0,
     );
 
     final created = (await service.create(rules))!;
@@ -77,10 +74,12 @@ void main() {
     final rules = store.ensembles.single.rules;
     expect(rules.ensembleName, 'Soirée chez Max');
     expect(rules.modifiers.keys, ['no_pass', 'free_pass']);
-    expect(rules.modifiers['no_pass']!.rounds, {1, 2});
+    expect(rules.modifiers['no_pass']!.draw, isTrue);
+    expect(rules.modifiers['no_pass']!.charges, 1);
     expect(rules.modifiers['free_pass']!.charges, 2);
-    expect(rules.modifiers['free_pass']!.mode, ModifierMode.cartridge);
-    expect([rules.drawCount, rules.boostCount], [2, 1]);
+    expect(rules.modifiers['free_pass']!.always, isFalse);
+    expect([rules.drawCount, rules.allCount, rules.trailingCount], [2, 3, 1]);
+    expect(rules.balance, isTrue);
   });
 
   test(
@@ -89,7 +88,7 @@ void main() {
     await givenPrefs({key: v2Blob});
 
     expect((await service.load()).ensembles, isEmpty);
-    await service.create(defaultEnsembleRules('Neuf'));
+    await service.create(FiestaRules(ensembleName: 'Neuf'));
     expect((await service.load()).ensembles.map((e) => e.name), ['Neuf']);
     final stored = (await persistedData(key))!['ensembles'] as List;
     expect(stored, anyElement(isA<Map>().having((m) => m['id'], 'id', 'old2')));
@@ -101,36 +100,19 @@ void main() {
     await givenPrefs({key: v1Blob});
 
     expect((await service.load()).ensembles, isEmpty);
-    await service.create(defaultEnsembleRules('Neuf'));
+    await service.create(FiestaRules(ensembleName: 'Neuf'));
     expect((await service.load()).ensembles.map((e) => e.name), ['Neuf']);
     final stored = (await persistedData(key))!['ensembles'] as List;
     expect(stored, anyElement(isA<Map>().having((m) => m['id'], 'id', 'old')));
   });
 
   test(
-      'ensemble à plusieurs mimes actifs : relu tel quel, plusieurs mimes en '
-      'tirage ou cartouche sont permis ; un « Toujours » avec un autre mime '
-      'est refusé à l\'enregistrement', () async {
-    String mod(String mode) => '{"active":true,"rounds":[3],"mode":"$mode"}';
-    await givenPrefs({
-      key: '{"schemaVersion":1,"data":{"ensembles":[{"id":"e1","rules":'
-          '{"format":3,"mode":"custom","ensembleName":"Vieux","modifiers":{'
-          '"draw":${mod('always')},"mime_eyes_closed":${mod('always')},'
-          '"mime_no_arms":${mod('draw')},"no_pass":${mod('draw')}}}}]}}',
-    });
-
-    final rules = (await service.load()).ensembles.single.rules;
-    expect(rules.modifiers.values.every((s) => s.active), isTrue);
-    expect(rules.modifiers['draw']!.mode, ModifierMode.always);
-    expect(validateEnsemble(rules), isNotEmpty);
-  });
-
-  test(
       'écriture figée : une clé vide ou nulle est omise (blob Fiesta et '
       'ensembles), et l\'absence se relit comme le défaut', () async {
-    final fiesta = FiestaState(rules: FiestaRules(mode: FiestaMode.auto));
-    const frozenFiesta = '{"rules":{"format":3,"mode":"auto",'
-        '"modifiers":{},"drawCount":1,"boostCount":0}}';
+    final fiesta = FiestaState(rules: FiestaRules());
+    const frozenFiesta = '{"rules":{"format":4,'
+        '"modifiers":{},"drawCount":0,"allCount":0,"trailingCount":0,'
+        '"balance":false}}';
     expect(jsonEncode(fiesta.toJson()), frozenFiesta);
     final relu = FiestaState.tryFromJson(jsonDecode(frozenFiesta))!;
     expect([relu.active, relu.turn, relu.earned, relu.rules.ensembleName],
@@ -150,16 +132,15 @@ void main() {
         '"nature":"malus","round":2}');
 
     await givenPrefs();
-    await service
-        .create(FiestaRules(mode: FiestaMode.custom, ensembleName: 'E'));
+    await service.create(FiestaRules(ensembleName: 'E'));
     final data = jsonDecode((await rawString(key))!)['data'] as Map;
     expect(data.containsKey('lastUsedId'), isFalse);
   });
 
   test('supprimer le dernier utilisé efface lastUsedId (AC6)', () async {
     await givenPrefs();
-    final a = (await service.create(defaultEnsembleRules('A')))!;
-    final b = (await service.create(defaultEnsembleRules('B')))!;
+    final a = (await service.create(FiestaRules(ensembleName: 'A')))!;
+    final b = (await service.create(FiestaRules(ensembleName: 'B')))!;
     await service.markUsed(a.id);
 
     await service.delete(a.id);
@@ -189,7 +170,7 @@ void main() {
       'dupliquer un ensemble fourni : une copie à moi, en fin de liste, nom '
       'libre ; les fournis ne sont jamais écrits', () async {
     await givenPrefs();
-    final mine = (await service.create(defaultEnsembleRules('A')))!;
+    final mine = (await service.create(FiestaRules(ensembleName: 'A')))!;
     final copy = (await service.duplicate(classicEnsemble))!;
     expect(copy.isProvided, isFalse);
     expect(copy.name, 'Fiesta classique (2)');
@@ -221,18 +202,18 @@ void main() {
     test('ensemble illisible ignoré seul, modificateur inconnu ignoré seul',
         () async {
       final good =
-          FiestaEnsemble(id: 'a', rules: defaultEnsembleRules('A')).toJson();
-      (good['rules'] as Map)['modifiers']['from_the_future'] =
-          (good['rules'] as Map)['modifiers']['no_pass'];
+          FiestaEnsemble(id: 'a', rules: FiestaRules(ensembleName: 'A'))
+              .toJson();
+      (good['rules'] as Map)['modifiers'] = {
+        'from_the_future': {'always': true},
+        'no_pass': {'always': true},
+      };
       await givenPrefs({
         key: jsonEncode(wrapWithSchema({
           'ensembles': [
             good,
             {'id': 'b', 'rules': 'cassé'},
             'x', // pas même un objet
-            // Règles Auto : un ensemble est toujours Personnalisé.
-            FiestaEnsemble(id: 'c', rules: FiestaRules(mode: FiestaMode.auto))
-                .toJson(),
           ],
           'lastUsedId': null,
         })),
@@ -246,11 +227,10 @@ void main() {
       expect(await rawString(key), isNotNull, reason: 'pas de quarantaine');
 
       // Modifier un AUTRE ensemble ne détruit pas celui qu'on ne sait pas lire.
-      await service.create(defaultEnsembleRules('C'));
+      await service.create(FiestaRules(ensembleName: 'C'));
       final stored = (await persistedData(key))!['ensembles'] as List;
       expect(stored, anyElement(equals({'id': 'b', 'rules': 'cassé'})));
       expect(stored, contains('x'));
-      expect(stored, anyElement(isA<Map>().having((m) => m['id'], 'id', 'c')));
     });
   });
 
@@ -258,18 +238,18 @@ void main() {
       () async {
     await givenPrefs();
     for (var i = 0; i < FiestaEnsembleService.maxEnsembles - 1; i++) {
-      expect(await service.create(defaultEnsembleRules('E$i')), isNotNull);
+      expect(await service.create(FiestaRules(ensembleName: 'E$i')), isNotNull);
     }
     final first = (await service.load()).ensembles.first;
 
     // Deux taps rapides à 9 : les écritures sont asynchrones, une seule passe.
     final racing = await Future.wait([
-      service.create(defaultEnsembleRules('E9')),
+      service.create(FiestaRules(ensembleName: 'E9')),
       service.duplicate(first),
     ]);
     expect(racing.whereType<FiestaEnsemble>(), hasLength(1));
 
-    expect(await service.create(defaultEnsembleRules('trop')), isNull);
+    expect(await service.create(FiestaRules(ensembleName: 'trop')), isNull);
     expect(await service.duplicate(first), isNull);
     expect((await service.load()).ensembles,
         hasLength(FiestaEnsembleService.maxEnsembles));

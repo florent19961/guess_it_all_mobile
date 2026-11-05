@@ -178,23 +178,32 @@ const List<ModifierDef> kModifierCatalog = [
     description: 'Le tour démarre avec 10 secondes de plus.',
     nature: ModifierNature.bonus,
   ),
+  // Fiesta v4 (2026-11-05) : le joueur nommé saute son prochain tour. EN FIN de
+  // liste.
+  ModifierDef(
+    id: 'block_giver',
+    name: 'Interdit de faire deviner',
+    description: 'Un joueur adverse, choisi à l\'envoi, saute son prochain '
+        'tour.',
+    nature: ModifierNature.malus,
+    defaultScope: ModifierScope.turn,
+    defaultTarget: ModifierTarget.player,
+  ),
 ];
 
-/// Seulement en cartouche (Fiesta v3) : jamais « Toujours » ni « Au tirage ».
-/// Un bonus et les malus de temps ou de joueur sont forcément one shot : un
-/// « ×2 » pour tout le monde n'en est pas un, un −10 s se joue contre une
-/// équipe, et personne ne désignerait le devineur à bloquer.
+/// Seulement en cartouche : jamais « Toujours » ni en aléatoire. Un bonus et
+/// les malus de temps ou de joueur sont forcément one shot : un « ×2 » pour tout
+/// le monde n'en est pas un, un −10 s se joue contre une équipe, et personne ne
+/// désignerait le joueur à bloquer.
 const Set<String> kCartridgeOnlyIds = {
   'block_guesser',
+  'block_giver',
   'double_points',
   'free_pass',
   'two_words',
   'plus_10s',
   'minus_10s',
 };
-
-/// Seulement règle de manche (Fiesta v3) : jamais en cartouche.
-const Set<String> kRoundRuleOnlyIds = {'one_answer'};
 
 /// Paires incompatibles (Q14 de l'epic). Chaque paire est écrite une fois :
 /// [areCompatible] est symétrique par construction. La famille « Mime » n'y
@@ -204,6 +213,21 @@ const List<(String, String)> kModifierIncompatibilities = [
   ('no_pass', 'free_pass'),
 ];
 
+/// Seule paire de mimes compatible, dans toutes les combinaisons.
+bool _isSoundsSheetPair(String a, String b) =>
+    (a == 'sounds_only' && b == 'mime_under_sheet') ||
+    (a == 'mime_under_sheet' && b == 'sounds_only');
+
+/// Texte de [id] quand les modificateurs [active] jouent avec lui : la paire
+/// Bruitages / drap change le sens de chacun (Bruitages seul interdit les
+/// gestes).
+String modifierDescription(String id, Iterable<String> active) {
+  if (active.any((other) => _isSoundsSheetPair(id, other))) {
+    return 'Gestes et bruits sous le drap, sans parler.';
+  }
+  return modifierById(id)?.description ?? '';
+}
+
 ModifierDef? modifierById(String id) {
   for (final def in kModifierCatalog) {
     if (def.id == id) return def;
@@ -212,11 +236,11 @@ ModifierDef? modifierById(String id) {
 }
 
 /// Deux membres de la famille « Mime » (`mimeFamily`, « Dessiner » compris)
-/// s'excluent toujours (retours device 2026-11-04) : un membre ajouté au
-/// catalogue l'est d'office.
+/// s'excluent (retours device 2026-11-04), sauf la paire Bruitages / drap : un
+/// membre ajouté au catalogue l'est d'office.
 bool areCompatible(String a, String b) {
   bool family(String id) => modifierById(id)?.mimeFamily ?? false;
-  if (family(a) && family(b)) return false;
+  if (family(a) && family(b)) return _isSoundsSheetPair(a, b);
   for (final (x, y) in kModifierIncompatibilities) {
     if ((x == a && y == b) || (x == b && y == a)) return false;
   }

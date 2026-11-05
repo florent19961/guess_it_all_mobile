@@ -60,7 +60,7 @@ class GameAnalytics {
   final List<String> selectedCategories;
   final List<int> selectedDifficultyLevels;
 
-  /// Mode de la partie (story 2-7) : `'fiesta_auto'` ou `'fiesta_custom'`.
+  /// Mode de la partie (story 2-7) : `'fiesta_custom'` (`'fiesta_auto'` dans les parties d'avant la v4).
   /// `null` = Classique, ou partie écrite par une version antérieure : la clé
   /// est alors ABSENTE du JSON (et du document Firestore), pas `null`.
   final String? gameMode;

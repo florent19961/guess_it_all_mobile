@@ -15,6 +15,7 @@ import 'screens/game_screen.dart';
 import 'screens/countdown_screen.dart';
 import 'screens/turn_screen.dart';
 import 'screens/verification_screen.dart';
+import 'screens/giver_blocked_screen.dart';
 import 'screens/transition_screen.dart';
 import 'screens/results_screen.dart';
 import 'screens/stats_screen.dart';
@@ -82,6 +83,8 @@ class GuessItAllApp extends StatelessWidget {
         return const VerificationScreen();
       case AppConstants.screenTransition:
         return const TransitionScreen();
+      case AppConstants.screenGiverBlocked:
+        return const GiverBlockedScreen();
       case AppConstants.screenResults:
         return const ResultsScreen();
       case AppConstants.screenStats:
@@ -90,7 +93,7 @@ class GuessItAllApp extends StatelessWidget {
         return const CategoriesScreen();
       case AppConstants.screenHistory:
         return const HistoryScreen();
-      // Fiesta Personnalisé : entre les Paramètres et les joueurs, l'ensemble
+      // Fiesta : entre les Paramètres et les joueurs, l'ensemble
       // choisi attend dans `pendingFiesta` jusqu'à « Commencer » (équipes).
       case AppConstants.screenFiestaEnsembles:
         return Builder(builder: (context) {

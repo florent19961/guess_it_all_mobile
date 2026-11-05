@@ -9,7 +9,6 @@ import '../widgets/common/game_dialogs.dart';
 import '../widgets/common/home_button.dart';
 import '../widgets/common/back_button.dart';
 import '../widgets/effects/shooting_stars.dart';
-import '../widgets/fiesta/blocked_guesser.dart';
 import '../widgets/fiesta/turn_cartridges.dart';
 import '../widgets/help/coach_marks.dart';
 import '../widgets/help/first_game_help.dart';
@@ -102,7 +101,7 @@ class _GameScreenState extends State<GameScreen> {
                   // Fiesta : hauteur fixe sous les boutons du haut, tout le
                   // reste va aux cartouches.
                   if (provider.isFiesta)
-                    const SizedBox(height: 40)
+                    const SizedBox(height: _fiestaTopGap)
                   else
                     const Spacer(),
 
@@ -145,38 +144,74 @@ class _GameScreenState extends State<GameScreen> {
                       ),
                     ],
                   ),
-                  // Fiesta : carte d'équipe compacte (nom · joueur, mots
-                  // restants dedans) pour laisser la place aux cartouches.
-                  if (provider.isFiesta) ...[
-                    const SizedBox(height: 16),
-                    _compactTeamCard(
-                        provider, currentTeam, currentPlayer, teamColor),
-                  ] else ...[
+                  // Grande carte d'équipe, Fiesta comme Classique. Fiesta sur
+                  // petit écran, dans les cas chargés seulement : elle se
+                  // resserre pour laisser tenir les cartouches sans défiler.
+                  if (provider.isFiesta)
+                    Expanded(
+                      child: LayoutBuilder(builder: (context, box) {
+                        final zoneHeight = box.maxHeight - _bigCardHeight;
+                        final big = FiestaTurnZone.fitsIn(
+                          provider,
+                          width: box.maxWidth,
+                          height: zoneHeight,
+                        );
+                        return Column(
+                          children: [
+                            if (big) ...[
+                              const SizedBox(height: 16),
+                              _teamCard(provider, currentTeam, currentPlayer,
+                                  teamColor),
+                              const SizedBox(height: 12),
+                              _wordsRow(provider),
+                            ] else ...[
+                              const SizedBox(height: 10),
+                              _compactTeamCard(provider, currentTeam,
+                                  currentPlayer, teamColor),
+                            ],
+                            if (provider.replacedPlayer case final replaced?)
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: GestureDetector(
+                                  onTap: provider.reuseReplacedChoices,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(top: 6),
+                                    child: Text(
+                                      '↻ Reprendre les choix de ${replaced.name}',
+                                      style: const TextStyle(
+                                        fontFamily: 'Poppins',
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.gray400,
+                                        decoration: TextDecoration.underline,
+                                        decorationColor: AppColors.gray400,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            const SizedBox(height: 12),
+                            // Jamais rien sous « Commencer le tour » : un cas
+                            // extrême qui ne tient pas défile dans la zone.
+                            Expanded(
+                              child: FiestaTurnZone(
+                                provider: provider,
+                                thisTurnKey: _thisTurnKey,
+                                reserveKey: _reserveKey,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                        );
+                      }),
+                    )
+                  else ...[
                     const SizedBox(height: 32),
                     _teamCard(provider, currentTeam, currentPlayer, teamColor),
                     const SizedBox(height: 16),
                     _wordsRow(provider),
-                  ],
-
-                  // Fiesta : « Ce tour » et « Réserve » juste sous l'équipe,
-                  // sans défilement (les cercles s'adaptent à la place) ;
-                  // l'espace libre reste au-dessus du bouton.
-                  if (provider.isFiesta) ...[
-                    const SizedBox(height: 18),
-                    Expanded(
-                      // Jamais rien sous « Commencer le tour » : un cas
-                      // extrême qui ne tient pas est coupé, pas recouvrant.
-                      child: ClipRect(
-                        child: FiestaTurnZone(
-                          provider: provider,
-                          thisTurnKey: _thisTurnKey,
-                          reserveKey: _reserveKey,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ] else
                     const Spacer(),
+                  ],
 
                   // Temps reporté (continuation), Classique comme Fiesta
                   if (provider.game.turnBonusTime != null) ...[
@@ -215,11 +250,12 @@ class _GameScreenState extends State<GameScreen> {
                     fullWidth: true,
                     onPressed: () {
                       if (_helpPending) return;
-                      _startTurn(context, provider, teamColor);
+                      provider.startTurn();
                     },
                   ),
 
-                  const SizedBox(height: 24),
+                  // Fiesta : cette place va aux cartouches.
+                  if (!provider.isFiesta) const SizedBox(height: 24),
                 ],
               ),
             ),
@@ -261,12 +297,16 @@ class _GameScreenState extends State<GameScreen> {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    currentTeam?.name ?? '',
-                    style: TextStyle(
-                      fontFamily: 'Bangers',
-                      fontSize: 24,
-                      color: teamColor,
+                  Flexible(
+                    child: Text(
+                      currentTeam?.name ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Bangers',
+                        fontSize: 24,
+                        color: teamColor,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -291,6 +331,11 @@ class _GameScreenState extends State<GameScreen> {
           ),
         ),
       );
+
+  /// Grande carte, sa ligne de mots et leurs marges (hauteur réservée).
+  static const _bigCardHeight = 16.0 + 96 + 12 + 26 + 18;
+
+  static const _fiestaTopGap = 40.0;
 
   /// Mots restants + mots devinés au tour précédent. Pas de score : il reste
   /// caché jusqu'aux résultats.
@@ -391,43 +436,6 @@ class _GameScreenState extends State<GameScreen> {
           ),
         ),
       );
-
-  /// Fiesta : fait d'abord choisir le devineur bloqué (`block_guesser`), puis
-  /// lance le compte à rebours. Sélecteur fermé sans choix : on reste ici.
-  /// Les malus du tour se lisent dans « Ce tour » : aucune alerte.
-  ///
-  /// 🔴 Le sélecteur est une route poussée AU-DESSUS de `home` : elle survit au
-  /// changement d'écran. Sans les gardes, un double tap en empile deux et la
-  /// seconde chaîne rappelle `startTurn()` en plein tour.
-  Future<void> _startTurn(
-      BuildContext context, GameProvider provider, Color teamColor) async {
-    // Un sélecteur déjà poussé : la route du jeu n'est plus au sommet.
-    if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
-    if (provider.needsBlockedGuesser) {
-      if (!context.mounted) return;
-      // L'équipe qui a infligé le blocage désigne le devineur.
-      final chooserName = provider.blockingTeam?.name;
-      final blocked = await BlockedGuesser.pick(
-          context, provider.blockableGuessers,
-          chooserName: chooserName);
-      if (blocked == null || !context.mounted) return;
-      await BlockedGuesser.announce(
-        context,
-        player: blocked,
-        teamName: provider.getCurrentTeam()?.name ?? '',
-        teamColor: teamColor,
-        chooserName: chooserName,
-      );
-      if (!context.mounted ||
-          provider.game.currentScreen != AppConstants.screenGame) {
-        return;
-      }
-      // Persisté APRÈS l'annonce : une app tuée pendant l'annonce redemande
-      // le choix au lieu de démarrer sans l'avoir montrée.
-      provider.setBlockedGuesser(blocked.id);
-    }
-    provider.startTurn();
-  }
 
   void _showBackToTeamsDialog(BuildContext context, GameProvider provider) {
     AppConfirmDialog.show(

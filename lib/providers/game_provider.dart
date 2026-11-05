@@ -4,9 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import '../models/player.dart';
 import '../models/team.dart';
+import '../models/fiesta/cartridge_gifts.dart';
 import '../models/fiesta/fiesta_ensemble.dart';
 import '../models/fiesta/fiesta_rules.dart';
 import '../models/fiesta/fiesta_state.dart';
+import '../models/fiesta/giver_block.dart';
 import '../models/fiesta/modifier_catalog.dart';
 import '../models/fiesta/modifier_instance.dart';
 import '../models/fiesta/modifier_recap.dart';
@@ -52,11 +54,11 @@ class GameProvider extends ChangeNotifier {
   GameState get game => _game;
   bool get isFiesta => _game.fiesta != null;
 
-  /// Choix Fiesta fait sur les Paramètres (et l'ensemble choisi en
-  /// Personnalisé), en attente de `startGame`. Nul = Classique. Les règles
-  /// restent en mémoire ; le CHOIX survit à l'app tuée et à « Nouvelle partie »
-  /// (`GameSettings.fiestaEnabled`, `fiestaMode` et `replayFiesta`, `lastUsedId`
-  /// des ensembles : [_rememberedFiesta]).
+  /// Choix Fiesta fait sur les Paramètres et l'ensemble choisi juste après, en
+  /// attente de `startGame`. Nul = Classique. Les règles restent en mémoire ; le
+  /// CHOIX survit à l'app tuée et à « Nouvelle partie »
+  /// (`GameSettings.fiestaEnabled` et `replayFiesta`, `lastUsedId` des ensembles :
+  /// [_rememberedFiesta]).
   FiestaRules? _pendingFiesta;
   FiestaRules? get pendingFiesta => _pendingFiesta;
   String? get currentEditingPlayerId => _currentEditingPlayerId;
@@ -67,14 +69,12 @@ class GameProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Écrit le choix d'attente dans les réglages. Classique : le choix Auto /
-  /// Personnalisé reste celui du joueur. [replay] : un « Rejouer » garde les
-  /// règles gelées de son ensemble ; tout choix explicite les efface.
+  /// Écrit le choix d'attente dans les réglages. [replay] : un « Rejouer » garde
+  /// les règles gelées de son ensemble ; tout choix explicite les efface.
   void _rememberFiestaChoice({bool replay = false}) {
     final keep = replay && _pendingFiesta?.ensembleName != null;
     _settings = _settings.copyWith(
       fiestaEnabled: _pendingFiesta != null,
-      fiestaMode: _pendingFiesta?.mode,
       replayFiesta: keep ? _pendingFiesta : null,
       clearReplayFiesta: !keep,
     );
@@ -82,15 +82,12 @@ class GameProvider extends ChangeNotifier {
   }
 
   /// Le dernier choix relu du stockage : Classique (nul), une partie rejouée
-  /// pas encore lancée, Auto, ou en Personnalisé le dernier ensemble utilisé
-  /// (supprimé ou illisible : Fiesta classique).
+  /// pas encore lancée, ou le dernier ensemble utilisé (supprimé ou illisible :
+  /// Fiesta classique).
   /// `FiestaEnsembleService.load` ne lève jamais.
   Future<FiestaRules?> _rememberedFiesta() async {
     if (!_settings.fiestaEnabled) return null;
     if (_settings.replayFiesta case final rules?) return rules;
-    if (_settings.fiestaMode == FiestaMode.auto) {
-      return FiestaRules(mode: FiestaMode.auto);
-    }
     final store = await FiestaEnsembleService().load();
     final ensembles = [...kProvidedEnsembles, ...store.ensembles];
     return (ensembles.where((e) => e.id == store.lastUsedId).firstOrNull ??
@@ -220,7 +217,6 @@ class GameProvider extends ChangeNotifier {
     int? passPenalty,
     List<String>? selectedCategories,
     List<int>? selectedDifficultyLevels,
-    FiestaMode? fiestaMode,
   }) {
     // Sauvegarder les anciennes valeurs pour détecter les changements
     final oldNumberOfTeams = _settings.numberOfTeams;
@@ -238,7 +234,6 @@ class GameProvider extends ChangeNotifier {
       passPenalty: passPenalty,
       selectedCategories: selectedCategories,
       selectedDifficultyLevels: selectedDifficultyLevels,
-      fiestaMode: fiestaMode,
     );
 
     // Détecter les changements
@@ -490,12 +485,10 @@ class GameProvider extends ChangeNotifier {
     // Générer un gameId unique pour cette partie
     final gameId = _userService.generateGameId();
 
-    // Auto : règles exprimées dans le modèle des ensembles (`autoRules`) ;
-    // « Une seule réponse » (toute la partie) est tirée ici, une fois sur 4,
-    // et gelée avec le reste (relue telle quelle après un kill).
-    final rules = fiesta == null || fiesta.mode != FiestaMode.auto
-        ? fiesta
-        : autoRules(oneAnswer: drawsOneAnswer(gameId));
+    final rules = fiesta;
+    final firstRules = rules == null
+        ? const <ModifierInstance>[]
+        : roundModifiers(rules, gameId: gameId, round: 1);
 
     _game = _game.copyWith(
       gameId: gameId,
@@ -519,7 +512,16 @@ class GameProvider extends ChangeNotifier {
           ? null
           : FiestaState(
               rules: rules,
-              active: roundModifiers(rules, gameId: gameId, round: 1),
+              active: firstRules,
+              earned: roundGifts(
+                rules: rules,
+                gameId: gameId,
+                finishedRound: 0,
+                scores: {for (final t in _teams) t.id: 0},
+                totalWords: shuffledWords.length,
+                roundRules: firstRules,
+                blockableTeamIds: _blockableTeamIds,
+              ),
             ),
       clearFiesta: rules == null,
     );
@@ -590,7 +592,7 @@ class GameProvider extends ChangeNotifier {
       selectedDifficultyLevels: _settings.selectedDifficultyLevels,
       wordMetadata: wordMetadata,
       // `_game.fiesta` est déjà gelé par `startGame` ; nul en Classique.
-      gameMode: _game.fiesta == null ? null : fiestaModeId(_game.fiesta!.rules),
+      gameMode: _game.fiesta == null ? null : kFiestaModeId,
       fiestaRules: _game.fiesta?.rules.toJson(),
     );
   }
@@ -654,12 +656,25 @@ class GameProvider extends ChangeNotifier {
   }
 
   void startTurnTimer() {
+    // 🔴 Le piège d'« Interdit de faire deviner » : le décompte s'est déroulé
+    // normalement, mais le chrono ne part pas et rien n'est dépensé. Rien n'est
+    // consommé avant `confirmGiverBlock` : une app tuée remontre la phrase.
+    if (_pendingGiverBlock != null) {
+      _game = _game.copyWith(currentScreen: AppConstants.screenGiverBlocked);
+      notifyListeners();
+      _saveGameState();
+      return;
+    }
     final now = DateTime.now().millisecondsSinceEpoch;
     // À lire AVANT d'effacer `turnBonusTime` : c'est lui qui dit si ce tour est
     // une continuation, et avant de dépenser les charges.
     final durationSeconds = turnTime.total;
     final durationMs = durationSeconds * 1000;
     var fiesta = _game.fiesta;
+    // Le lien « Reprendre les choix de… » ne vit que sur cet avant-tour.
+    if (fiesta != null && fiesta.turn.replaced != null) {
+      fiesta = fiesta.copyWith(turn: fiesta.turn.copyWith(clearReplaced: true));
+    }
     // Lu seulement en Fiesta : en Classique, rien n'exige une équipe ici.
     final teamId = fiesta == null ? '' : _teams[_game.currentTeamIndex].id;
     // Bonus à charge (×2, deux mots, passe gratuite, +10 s) : la charge se dépense ICI, pas à
@@ -1179,24 +1194,18 @@ class GameProvider extends ChangeNotifier {
       // Préparer la fusion pour le bonus time si pas de mots invalidés
       final shouldPrepareBonusFusion = allInvalidatedWords.isEmpty;
 
-      // Si c'est la dernière manche (manche 3), aller directement aux résultats
-      final isLastRound = _game.currentRound >= 3;
-
       _game = _game.copyWith(
         history: newHistory,
         remainingWords: newRemainingWords,
-        currentScreen: isLastRound
-            ? AppConstants.screenResults
-            : AppConstants.screenTransition,
+        // Après M3 aussi : écran fixe, dernière chance de contester le dernier
+        // tour. La partie s'archive à « Voir les résultats » (`nextRound`).
+        currentScreen: AppConstants.screenTransition,
         turnBonusTime: _game.timeRemaining,
         clearExpiredWord: true,
         fiesta: _fiestaAtRoundEnd(),
         pendingBonusTurnId: shouldPrepareBonusFusion ? _game.currentTurn : null,
         clearPendingBonusTurnId: !shouldPrepareBonusFusion,
       );
-
-      // Dernière manche terminée : la partie est finie, on l'archive.
-      if (isLastRound) _archiveGameResult();
     } else {
       // Mélanger les mots restants
       newRemainingWords.shuffle(Random());
@@ -1254,6 +1263,7 @@ class GameProvider extends ChangeNotifier {
       playerOrderForTeam: _game.playerOrderByTeam[nextTeam.id] ?? const [],
       cycleLength: cycleLength,
       turnIndex: nextTurnIndex,
+      skips: _game.fiesta?.skips[nextTeam.id] ?? 0,
     );
 
     return {
@@ -1308,12 +1318,18 @@ class GameProvider extends ChangeNotifier {
       gameId: _game.gameId ?? '',
       finishedRound: _game.currentRound,
       scores: {for (final t in _teams) t.id: t.score},
-      blockableTeamIds: {
-        for (final t in _teams)
-          if (canBlockGuesser(t.playerIds.length)) t.id,
-      },
+      totalWords: _game.allWords.length,
+      blockableTeamIds: _blockableTeamIds,
+      continuingTeamId: getCurrentTeam()?.id,
     );
   }
+
+  /// Équipes d'au moins 3 joueurs : celles qu'on peut viser avec « Bloquer un
+  /// devineur ».
+  Set<String> get _blockableTeamIds => {
+        for (final t in _teams)
+          if (canBlockGuesser(t.playerIds.length)) t.id,
+      };
 
   /// Équipe qui ouvre la manche en cours par sa continuation : celle de la
   /// dernière entrée de la manche précédente. Nulle en M1.
@@ -1347,7 +1363,9 @@ class GameProvider extends ChangeNotifier {
     final teamId = getCurrentTeam()?.id;
     if (fiesta == null || teamId == null) return const [];
     return modifiersForTurn(fiesta.active,
-        teamId: teamId, round: _game.currentRound);
+        teamId: teamId,
+        playerId: getCurrentPlayer()?.id,
+        round: _game.currentRound);
   }
 
   // ========== EFFETS DE TOUR (2-8) ==========
@@ -1388,42 +1406,128 @@ class GameProvider extends ChangeNotifier {
   /// `reversed` : le mot du tour s'affiche à l'envers (tour seulement).
   bool get isWordReversed => _has('reversed');
 
-  /// Devineurs que les adversaires peuvent bloquer : l'équipe qui joue, sauf
-  /// celui qui fait deviner. Vide si `block_guesser` ne la vise pas ou si elle
-  /// a 2 joueurs ou moins.
-  List<Player> get blockableGuessers {
-    final team = getCurrentTeam();
-    if (team == null ||
-        !_has('block_guesser') ||
-        !canBlockGuesser(team.playerIds.length)) {
-      return const [];
-    }
-    final guesserId = getCurrentPlayer()?.id;
-    return [
-      for (final id in team.playerIds)
-        if (id != guesserId) getPlayerById(id),
-    ].whereType<Player>().toList();
-  }
-
-  /// Devineur bloqué pour ce tour, choisi par les adversaires (annonce seule).
+  /// Devineur nommé à l'envoi qui ne répond pas CE tour (« Bloquer un
+  /// devineur ») : nul s'il fait deviner, le blocage attend alors son prochain
+  /// tour de devineur ([ModifierInstance.waitsFor]).
   Player? get blockedGuesser {
-    final id = _turn.blockedPlayerId;
+    final id = currentTeamModifiers
+        .where((m) => m.catalogId == 'block_guesser')
+        .firstOrNull
+        ?.playerId;
     return id == null ? null : getPlayerById(id);
   }
 
-  /// Le sélecteur doit s'ouvrir avant ce tour.
-  bool get needsBlockedGuesser =>
-      blockableGuessers.isNotEmpty && blockedGuesser == null;
+  // ========== INTERDIT DE FAIRE DEVINER ==========
 
-  void setBlockedGuesser(String playerId) {
+  /// Le blocage qui vise le joueur qui s'apprête à jouer, s'il y en a un. Jamais
+  /// sur une continuation : le tour a déjà commencé.
+  ModifierInstance? get _pendingGiverBlock {
     final fiesta = _game.fiesta;
-    if (fiesta == null || !blockableGuessers.any((p) => p.id == playerId)) {
+    final team = getCurrentTeam();
+    final player = getCurrentPlayer();
+    if (fiesta == null || team == null || player == null || isContinuation) {
+      return null;
+    }
+    return fiesta.active
+        .where((m) =>
+            m.catalogId == 'block_giver' &&
+            m.fromTeamId != null &&
+            m.teamId == team.id &&
+            m.playerId == player.id)
+        .firstOrNull;
+  }
+
+  /// Index du joueur de l'équipe qui joue, si son tour saute une fois de plus.
+  int _indexAfterSkip(Team team) => playerIndexAtTurn(
+        playerOrderForTeam: _game.playerOrderByTeam[team.id] ?? const [],
+        cycleLength: _teams.length,
+        turnIndex: _game.currentTurnIndex,
+        skips: (_game.fiesta?.skips[team.id] ?? 0) + 1,
+      );
+
+  /// Ce que dit l'écran du piège : la phrase (tirage déterministe, elle ne change
+  /// pas après une app tuée) et le joueur qui prend le téléphone.
+  ({String phrase, String nextPlayer})? get giverBlockScreen {
+    final block = _pendingGiverBlock;
+    final team = getCurrentTeam();
+    final blocked = getCurrentPlayer();
+    if (block == null || team == null || blocked == null) return null;
+    final next = team.playerIds[_indexAfterSkip(team)];
+    return (
+      phrase: giverBlockPhrase(
+        seed: giverBlockSeed(_game.gameId ?? '', _game.currentTurnIndex),
+        blocked: blocked.name,
+        blocker: getPlayerById(block.fromPlayerId ?? '')?.name ??
+            getTeamById(block.fromTeamId!)?.name ??
+            '?',
+      ),
+      nextPlayer: getPlayerById(next)?.name ?? '',
+    );
+  }
+
+  /// « Suivant » sur la phrase : le joueur saute ce tour, et son remplaçant
+  /// repart de zéro. Tout ce qu'il avait allumé ou envoyé est annulé, cartouches
+  /// rendues, et gardé pour [reuseReplacedChoices]. La rotation de son équipe se
+  /// décale pour de bon : Alice, ~~Bob~~, Frank, Alice, Bob, Frank.
+  void confirmGiverBlock() {
+    if (_game.currentScreen != AppConstants.screenGiverBlocked) return;
+    final block = _pendingGiverBlock;
+    final team = getCurrentTeam();
+    final player = getCurrentPlayer();
+    var fiesta = _game.fiesta;
+    if (block == null || team == null || player == null || fiesta == null) {
+      _game = _game.copyWith(currentScreen: AppConstants.screenGame);
+      notifyListeners();
+      _saveGameState();
       return;
     }
+    final sent = _sentBy(team.id);
+    final bonuses = [
+      for (final MapEntry(key: id, value: state) in fiesta.turn.charges.entries)
+        if (state == ChargeState.armed) id,
+    ];
+    for (final m in sent) {
+      fiesta = fiesta!.withoutSent(m);
+    }
+    final nextIndex = _indexAfterSkip(team);
     _game = _game.copyWith(
-      fiesta: fiesta.copyWith(
-          turn: fiesta.turn.copyWith(blockedPlayerId: playerId)),
+      currentScreen: AppConstants.screenGame,
+      currentPlayerIndexInTeam: nextIndex,
+      fiesta: fiesta!.copyWith(
+        active: [...fiesta.active]..remove(block),
+        skips: {...fiesta.skips, team.id: (fiesta.skips[team.id] ?? 0) + 1},
+        turn: FiestaTurnState(
+          replaced: bonuses.isEmpty && sent.isEmpty
+              ? null
+              : ReplacedChoices(
+                  playerId: player.id, bonuses: bonuses, sent: sent),
+        ),
+      ),
     );
+    notifyListeners();
+    _saveGameState();
+  }
+
+  /// Joueur dont le remplaçant peut reprendre les choix (lien de l'avant-tour).
+  Player? get replacedPlayer {
+    final choices = _turn.replaced;
+    return choices == null ? null : getPlayerById(choices.playerId);
+  }
+
+  /// Remet ce que le joueur bloqué avait préparé, tout ce qui reste possible.
+  void reuseReplacedChoices() {
+    final fiesta = _game.fiesta;
+    final choices = _turn.replaced;
+    if (fiesta == null || choices == null || !_inPreTurn) return;
+    _game = _game.copyWith(
+        fiesta:
+            fiesta.copyWith(turn: fiesta.turn.copyWith(clearReplaced: true)));
+    for (final id in choices.bonuses) {
+      _setCharge(id, true);
+    }
+    for (final m in choices.sent) {
+      inflictMalus(m.catalogId, m.teamId!, playerId: m.playerId);
+    }
     notifyListeners();
     _saveGameState();
   }
@@ -1549,18 +1653,22 @@ class GameProvider extends ChangeNotifier {
               : fiesta.turn.copyWith(secondWord: word));
 
   /// Fiesta à la VRAIE fin d'un tour : état du tour vidé, malus infligés à
-  /// l'équipe consommés. 🔴 Une fin de manche n'en est pas une : la continuation
+  /// l'équipe consommés, sauf les blocages qui attendent. 🔴 Une fin de manche n'en est pas une : la continuation
   /// en N+1 est le même tour. Nul en Classique.
   FiestaState? _fiestaAfterTurn() {
     final fiesta = _game.fiesta;
     if (fiesta == null || _teams.isEmpty) return null;
     final teamId = _teams[_game.currentTeamIndex].id;
+    final playerId = getCurrentPlayer()?.id;
     return fiesta.copyWith(
       turn: FiestaTurnState.empty,
       active: fiesta.active
           // Malus infligés à l'équipe : ils visaient CE tour (sans effet s'ils
           // étaient interdits dans sa manche).
-          .where((m) => !(m.fromTeamId != null && m.teamId == teamId))
+          .where((m) =>
+              m.fromTeamId == null ||
+              m.teamId != teamId ||
+              m.waitsFor(playerId))
           .toList(),
     );
   }
@@ -1578,7 +1686,7 @@ class GameProvider extends ChangeNotifier {
     return fiesta.copyWith(turn: fiesta.turn.afterRoundEnd());
   }
 
-  // ========== CE TOUR / RÉSERVE ==========
+  // ========== ACTIF CE TOUR / RÉSERVE ==========
   // Une cartouche = UN tour d'UNE équipe. Bonus : allumé avant le tour,
   // dépensé au départ du chrono (`startTurnTimer`). Malus : infligé à une
   // autre équipe pour SON prochain tour, dépensé tout de suite (`ChargeUse`
@@ -1648,11 +1756,12 @@ class GameProvider extends ChangeNotifier {
   /// toutes les autres (« Bloquer un devineur » : 3 joueurs ou plus).
   List<Team> targetsFor(String catalogId) {
     final me = getCurrentTeam()?.id;
-    final toPlayer =
-        modifierById(catalogId)?.defaultTarget == ModifierTarget.player;
     return [
       for (final t in _teams)
-        if (t.id != me && (!toPlayer || canBlockGuesser(t.playerIds.length))) t,
+        if (t.id != me &&
+            (catalogId != 'block_guesser' ||
+                canBlockGuesser(t.playerIds.length)))
+          t,
     ];
   }
 
@@ -1661,11 +1770,13 @@ class GameProvider extends ChangeNotifier {
       _game.fiesta != null && _game.currentScreen == AppConstants.screenGame;
 
   /// Inflige le malus [catalogId] de la réserve de l'équipe qui joue à
-  /// [targetTeamId], pour le PROCHAIN tour de celle-ci. Rend le message de
-  /// refus si ce malus (ou un malus qui ne s'y cumule pas) lui est déjà
-  /// infligé pour ce tour-là : rien n'est alors consommé. Hors avant-tour,
-  /// cartouche épuisée ou grisée, cible invalide : ignoré (`null`).
-  String? inflictMalus(String catalogId, String targetTeamId) {
+  /// [targetTeamId], pour le PROCHAIN tour de celle-ci ; un blocage nomme le
+  /// joueur [playerId]. Rend le message de refus si ce malus (ou un malus qui ne
+  /// s'y cumule pas) lui est déjà infligé pour ce tour-là : rien n'est alors
+  /// consommé. Hors avant-tour, cartouche épuisée ou grisée, cible invalide :
+  /// ignoré (`null`).
+  String? inflictMalus(String catalogId, String targetTeamId,
+      {String? playerId}) {
     final fiesta = _game.fiesta;
     final me = getCurrentTeam();
     final def = modifierById(catalogId);
@@ -1677,7 +1788,9 @@ class GameProvider extends ChangeNotifier {
         def.nature != ModifierNature.malus ||
         cartridge == null ||
         !cartridge.usable ||
-        !targetsFor(catalogId).any((t) => t.id == targetTeamId)) {
+        !targetsFor(catalogId).any((t) => t.id == targetTeamId) ||
+        (def.defaultTarget == ModifierTarget.player &&
+            !getTeamById(targetTeamId)!.playerIds.contains(playerId))) {
       return null;
     }
     final target = getTeamById(targetTeamId)!.name;
@@ -1708,10 +1821,13 @@ class GameProvider extends ChangeNotifier {
                 ? ModifierTarget.player
                 : ModifierTarget.team,
             teamId: targetTeamId,
+            playerId: playerId,
             charges: def.defaultCharges,
             nature: ModifierNature.malus,
             round: round,
             fromTeamId: me.id,
+            fromPlayerId: getCurrentPlayer()?.id,
+            sentTurnIndex: _game.currentTurnIndex,
           ),
         ],
         chargesUsed: [
@@ -1730,48 +1846,30 @@ class GameProvider extends ChangeNotifier {
   }
 
   /// Malus envoyés par l'équipe qui joue, annulables tant que son tour n'a
-  /// pas commencé (ligne « Envoyé : … → X »). Vide hors avant-tour. Manche
-  /// d'envoi = manche courante : sur une continuation, ce qui a été envoyé
-  /// avant la première partie du tour est déjà parti, plus annulable.
+  /// pas commencé (pastilles « Envoyé »). Vide hors avant-tour. Tour et manche
+  /// d'envoi = les courants : sur une continuation, ce qui a été envoyé avant la
+  /// première partie du tour est déjà parti, plus annulable ; un blocage qui
+  /// attend depuis un tour précédent aussi.
   List<ModifierInstance> get sentThisTurn {
     final me = getCurrentTeam()?.id;
     if (!_inPreTurn || me == null) return const [];
-    return _game.fiesta!.active
-        .where((m) => m.fromTeamId == me && m.round == _game.currentRound)
-        .toList();
+    return _sentBy(me);
   }
+
+  List<ModifierInstance> _sentBy(String teamId) => _game.fiesta!.active
+      .where((m) =>
+          m.fromTeamId == teamId &&
+          m.round == _game.currentRound &&
+          m.sentTurnIndex == _game.currentTurnIndex)
+      .toList();
 
   /// Annule l'envoi de [sent] (une entrée de [sentThisTurn]) : le malus
   /// quitte sa cible, la cartouche revient dans la réserve.
   void cancelSent(ModifierInstance sent) {
-    final fiesta = _game.fiesta;
     if (!sentThisTurn.contains(sent)) return;
-    final used = fiesta!.chargesUsed.lastIndexWhere((u) =>
-        u.catalogId == sent.catalogId &&
-        u.teamId == sent.fromTeamId &&
-        u.targetTeamId == sent.teamId &&
-        u.round == sent.round);
-    _game = _game.copyWith(
-      fiesta: fiesta.copyWith(
-        active: [...fiesta.active]..remove(sent),
-        chargesUsed: [
-          for (var i = 0; i < fiesta.chargesUsed.length; i++)
-            if (i != used) fiesta.chargesUsed[i],
-        ],
-      ),
-    );
+    _game = _game.copyWith(fiesta: _game.fiesta!.withoutSent(sent));
     notifyListeners();
     _saveGameState();
-  }
-
-  /// Équipe qui désigne le devineur bloqué de l'équipe qui joue : celle qui
-  /// lui a infligé « Bloquer un devineur ». `null` = les adversaires.
-  Team? get blockingTeam {
-    final from = currentTeamModifiers
-        .where((m) => m.catalogId == 'block_guesser')
-        .firstOrNull
-        ?.fromTeamId;
-    return from == null ? null : getTeamById(from);
   }
 
   /// Récap « Modificateurs de la partie », en faits (archivés). Vide en
@@ -1826,7 +1924,7 @@ class GameProvider extends ChangeNotifier {
       totalWords: _game.allWords.length,
       turnDuration: _settings.turnDuration,
       roundsPlayed: _game.currentRound,
-      mode: _game.fiesta == null ? null : fiestaModeId(_game.fiesta!.rules),
+      mode: _game.fiesta == null ? null : kFiestaModeId,
       modifierRecap: _game.fiesta == null ? null : _modifierRecapItems,
       setup: GameSetupSnapshot(
         settings: _settings.copyWith(),
@@ -1948,12 +2046,6 @@ class GameProvider extends ChangeNotifier {
     // Sans partie jouée (Rejouer de l'accueil, après `endGameAndGoHome`), la
     // config déjà en mémoire fait foi.
     if (_game.allWords.isNotEmpty) _pendingFiesta = _game.fiesta?.rules;
-    // Auto = tirage + coup de pouce toujours allumés (plus d'écran pour les
-    // couper), et « Une seule réponse » se retire à chaque partie : on ne
-    // transmet pas les règles gelées de la partie jouée.
-    if (_pendingFiesta?.mode == FiestaMode.auto) {
-      _pendingFiesta = FiestaRules(mode: FiestaMode.auto);
-    }
     _rememberFiestaChoice(replay: true);
 
     // Terminer et sauvegarder les analytics si une partie était en cours
@@ -2026,9 +2118,6 @@ class GameProvider extends ChangeNotifier {
       selectedCategories: categories.isEmpty
           ? List.of(_settings.selectedCategories)
           : categories,
-      // Rejouer du Classique, ou une archive d'avant cette clé, ne touche pas au
-      // choix Auto / Personnalisé du joueur.
-      fiestaMode: setup?.fiesta?.mode ?? _settings.fiestaMode,
     );
     _players = players;
     _teams = teams;

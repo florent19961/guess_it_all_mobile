@@ -25,15 +25,9 @@ Future<GameProvider> givenProvider(List<String> names,
 
 /// Personnalisé, sans tirage : [ids] en cartouche, 2 par équipe pour la partie.
 FiestaRules stock(List<String> ids) => FiestaRules(
-      mode: FiestaMode.custom,
       drawCount: 0,
       modifiers: {
-        for (final id in ids)
-          id: ModifierSetting(
-              active: true,
-              rounds: const {1, 2, 3},
-              mode: ModifierMode.cartridge,
-              charges: 2),
+        for (final id in ids) id: ModifierSetting(charges: 2),
       },
     );
 
@@ -209,10 +203,9 @@ void main() {
     final p = await givenProvider(['Ana', 'Bob'], wordsEach: 1);
     final rules = stock(['mime_no_arms']);
     await p.startGame(
-      fiesta: rules.copyWith(modifiers: {
+      fiesta: rules.copyWith(drawCount: 1, modifiers: {
         ...rules.modifiers,
-        'draw': ModifierSetting(
-            active: true, rounds: const {3}, mode: ModifierMode.always),
+        'draw': const ModifierSetting(draw: true),
       }),
     );
     playTurn(p, 99);

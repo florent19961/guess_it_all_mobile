@@ -24,6 +24,7 @@ const Map<String, String> kModifierIcons = {
   'one_answer': '☝',
   'sounds_only': '🔊',
   'plus_10s': '+10',
+  'block_giver': '🚫',
 };
 
 String modifierIcon(String id) => kModifierIcons[id] ?? '✦';
@@ -58,13 +59,19 @@ class ModifierBadge extends StatelessWidget {
   });
 
   factory ModifierBadge.of(ModifierInstance instance,
-          {BadgeExplainWrapper? wrapExplain, Key? key}) =>
+          {Iterable<String> playingWith = const [],
+          BadgeExplainWrapper? wrapExplain,
+          Key? key}) =>
       ModifierBadge.catalog(instance.catalogId,
-          nature: instance.nature, wrapExplain: wrapExplain, key: key);
+          nature: instance.nature,
+          playingWith: playingWith,
+          wrapExplain: wrapExplain,
+          key: key);
 
   /// Badge d'un modificateur du catalogue, sans instance (×2, Deux mots…).
   factory ModifierBadge.catalog(String id,
       {required ModifierNature nature,
+      Iterable<String> playingWith = const [],
       BadgeExplainWrapper? wrapExplain,
       Key? key}) {
     final def = modifierById(id);
@@ -73,7 +80,7 @@ class ModifierBadge extends StatelessWidget {
       icon: modifierIcon(id),
       label: def?.name ?? id,
       nature: nature,
-      description: def?.description,
+      description: def == null ? null : modifierDescription(id, playingWith),
       wrapExplain: wrapExplain,
     );
   }
@@ -157,6 +164,9 @@ class ModifierBadge extends StatelessWidget {
 }
 
 /// Les badges des [modifiers], centrés et repliés sur plusieurs lignes.
+///
+/// Le texte d'un modificateur dépend de ceux qui jouent avec lui
+/// ([modifierDescription]).
 class ModifierBadges extends StatelessWidget {
   final List<ModifierInstance> modifiers;
   final List<Widget> extra;
@@ -178,7 +188,9 @@ class ModifierBadges extends StatelessWidget {
         runSpacing: 6,
         children: [
           for (final m in modifiers)
-            ModifierBadge.of(m, wrapExplain: wrapExplain),
+            ModifierBadge.of(m,
+                playingWith: modifiers.map((other) => other.catalogId),
+                wrapExplain: wrapExplain),
           ...extra,
         ],
       );

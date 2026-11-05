@@ -1,8 +1,8 @@
+import 'cartridge_gifts.dart';
 import 'fiesta_state.dart';
 import 'modifier_catalog.dart';
 import 'modifier_instance.dart';
 import 'symmetric_draw.dart';
-import 'trailing_boost.dart';
 
 /// Passage de la manche N à N+1 : tout ce qu'il pose.
 ///
@@ -18,38 +18,70 @@ class RoundTransitionPlan {
   /// équipes.
   final List<ModifierInstance> draw;
 
-  /// Cartouches gagnées par le coup de pouce à l'équipe menée.
-  final List<EarnedCartridge> boost;
+  /// Cartouches au hasard du début de N+1.
+  final List<EarnedCartridge> gifts;
+
+  /// Équipe qui poursuit son tour en N+1 : ses malus reçus sont déjà appliqués,
+  /// ils ne se rendent pas.
+  final String? continuingTeamId;
 
   const RoundTransitionPlan({
     required this.round,
     required this.draw,
-    this.boost = const [],
+    this.gifts = const [],
+    this.continuingTeamId,
   });
 
   /// L'état Fiesta d'entrée de N+1.
   ///
   /// Les règles de N partent : celles de N+1 s'appliquent tout de suite, y
   /// compris à la continuation. Seul un malus infligé survit : il attend le
-  /// prochain tour de sa cible, quelle que soit la manche.
-  FiestaState apply(FiestaState fiesta) => fiesta.copyWith(
-        active: [
-          ...fiesta.active.where((m) => m.fromTeamId != null),
-          ...draw,
-        ],
-        earned: [...fiesta.earned, ...boost],
-      );
+  /// prochain tour de sa cible, quelle que soit la manche. S'il y devient
+  /// impossible ([crossesRules]), sa cartouche est RENDUE à l'envoyeur. Le malus
+  /// déjà en cours sur le tour qui continue n'est pas rendu : il tombe seul
+  /// ([modifiersForTurn]).
+  FiestaState apply(FiestaState fiesta) {
+    var next = fiesta.copyWith(
+      active: [
+        ...fiesta.active.where((m) => m.fromTeamId != null),
+        ...draw,
+      ],
+      earned: [...fiesta.earned, ...gifts],
+    );
+    for (final m in fiesta.active) {
+      if (m.fromTeamId != null &&
+          m.teamId != continuingTeamId &&
+          crossesRules(m, rules: draw, round: round)) {
+        next = next.withoutSent(m);
+      }
+    }
+    return next;
+  }
 }
+
+/// Le malus infligé [malus] ne peut pas jouer sous les règles [rules] de la
+/// manche [round] : interdit dans la manche, identique ou incompatible.
+bool crossesRules(
+  ModifierInstance malus, {
+  required List<ModifierInstance> rules,
+  required int round,
+}) =>
+    !isEligibleForRound(modifierById(malus.catalogId)!, round) ||
+    rules.any((r) =>
+        r.catalogId == malus.catalogId ||
+        !areCompatible(r.catalogId, malus.catalogId));
 
 /// Plan du passage après la manche [finishedRound], sur les [scores] de fin de
 /// manche. `null` après M3 (on va aux résultats). [blockableTeamIds] : équipes
-/// d'au moins 3 joueurs (`trailingBoostGifts`).
+/// d'au moins 3 joueurs (`roundGifts`).
 RoundTransitionPlan? planRoundTransition({
   required FiestaState fiesta,
   required String gameId,
   required int finishedRound,
   required Map<String, int> scores,
+  required int totalWords,
   required Set<String> blockableTeamIds,
+  String? continuingTeamId,
 }) {
   if (finishedRound >= 3) return null;
   final round = finishedRound + 1;
@@ -57,31 +89,35 @@ RoundTransitionPlan? planRoundTransition({
   return RoundTransitionPlan(
     round: round,
     draw: draw,
-    boost: trailingBoostGifts(
+    continuingTeamId: continuingTeamId,
+    gifts: roundGifts(
       rules: fiesta.rules,
       gameId: gameId,
       finishedRound: finishedRound,
-      standings: Standings(scores),
+      scores: scores,
+      totalWords: totalWords,
       roundRules: draw,
       blockableTeamIds: blockableTeamIds,
     ),
   );
 }
 
-/// Instances qui pèsent sur [teamId] pendant son tour : les règles de la manche
-/// [round] (la manche COURANTE, y compris pour une continuation : les règles
-/// de N+1 s'appliquent directement au temps reporté).
+/// Instances qui pèsent sur [teamId] pendant le tour de [playerId] : les règles
+/// de la manche [round] (la manche COURANTE, y compris pour une continuation :
+/// les règles de N+1 s'appliquent directement au temps reporté).
 ///
 /// 🔴 Malus infligés ([ModifierInstance.fromTeamId]) : SEULE résolution, au
 /// tour de la cible (quelle que soit la manche d'envoi). Un malus interdit
 /// dans la manche, déjà en jeu (même id) ou incompatible avec une règle de
-/// manche ou un malus déjà retenu pour ce tour est écarté : sans effet, il part
-/// à la fin de ce tour (`_fiestaAfterTurn`). En continuation, un malus reçu est
-/// jugé contre la manche courante : « Autre langue » reçu en M2 tombe en M3, où
-/// on mime.
+/// manche ou un malus déjà retenu pour ce tour est écarté : sans effet. En
+/// continuation, un malus reçu est jugé contre la manche courante : « Autre
+/// langue » reçu en M2 tombe en M3, où on mime.
+///
+/// Les blocages qui attendent sont écartés ([ModifierInstance.waitsFor]).
 List<ModifierInstance> modifiersForTurn(
   List<ModifierInstance> active, {
   required String teamId,
+  required String? playerId,
   required int round,
 }) {
   final rules =
@@ -92,7 +128,8 @@ List<ModifierInstance> modifiersForTurn(
   final received = <ModifierInstance>{};
   for (final m in active) {
     if (m.fromTeamId == null || m.teamId != teamId) continue;
-    if (!isEligibleForRound(modifierById(m.catalogId)!, round) ||
+    if (m.waitsFor(playerId) ||
+        !isEligibleForRound(modifierById(m.catalogId)!, round) ||
         weighing.any((w) => w.catalogId == m.catalogId) ||
         !weighing.every((w) => areCompatible(w.catalogId, m.catalogId))) {
       continue;

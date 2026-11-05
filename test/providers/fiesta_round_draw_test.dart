@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
 import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
@@ -56,7 +57,7 @@ void main() {
       'après une app tuée sur la transition, et remplace celui de M1 dès le '
       '« Manche suivante », continuation comprise', () async {
     final provider = await givenReadyProvider();
-    await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
+    await provider.startGame(fiesta: classicEnsemble.rules);
     expect(provider.game.fiesta!.active, isNotEmpty);
     expect(provider.game.fiesta!.active.every((m) => m.round == 1), isTrue);
 
@@ -121,11 +122,9 @@ void main() {
     final provider = await givenReadyProvider();
     await provider.startGame(
       fiesta: FiestaRules(
-        mode: FiestaMode.custom,
         drawCount: 0,
         modifiers: {
-          'no_pass': ModifierSetting(
-              active: true, rounds: const {1}, mode: ModifierMode.always),
+          'no_pass': const ModifierSetting(always: true),
         },
       ),
     );

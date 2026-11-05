@@ -20,17 +20,12 @@ void main() {
         selectedDifficultyLevels: const [2, 3],
       ),
       fiesta: FiestaRules(
-        mode: FiestaMode.custom,
         ensembleName: 'Soirée',
         modifiers: {
-          'no_pass': ModifierSetting(
-            active: true,
-            rounds: const {2},
-            mode: ModifierMode.always,
-          ),
+          'no_pass': const ModifierSetting(always: true),
         },
         drawCount: 2,
-        boostCount: 1,
+        trailingCount: 1,
       ),
     );
 

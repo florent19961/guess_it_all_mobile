@@ -23,14 +23,9 @@ Future<GameProvider> givenReadyProvider(List<String> names) async {
 /// Personnalisé : « Mot compte double » en cartouche, 1 par équipe pour la
 /// partie.
 final doubleOnce = FiestaRules(
-  mode: FiestaMode.custom,
   drawCount: 0,
   modifiers: {
-    'double_points': ModifierSetting(
-      active: true,
-      rounds: const {1, 2, 3},
-      mode: ModifierMode.cartridge,
-    ),
+    'double_points': ModifierSetting(charges: 1),
   },
 );
 

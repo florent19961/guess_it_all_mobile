@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
-import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
 import 'package:guess_it_all_mobile/services/storage_service.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
@@ -29,21 +29,12 @@ void main() {
         'ne change pas la partie', () async {
       final provider = await givenReadyProvider();
       final sourceModifiers = <String, ModifierSetting>{
-        'no_pass': ModifierSetting(
-          active: true,
-          rounds: const {1, 2, 3},
-          mode: ModifierMode.draw,
-        ),
+        'no_pass': const ModifierSetting(draw: true),
       };
-      final rules =
-          FiestaRules(mode: FiestaMode.custom, modifiers: sourceModifiers);
+      final rules = FiestaRules(drawCount: 1, modifiers: sourceModifiers);
 
       await provider.startGame(fiesta: rules);
-      sourceModifiers['draw'] = ModifierSetting(
-        active: true,
-        rounds: const {3},
-        mode: ModifierMode.always,
-      );
+      sourceModifiers['draw'] = const ModifierSetting(always: true);
 
       expect(provider.isFiesta, isTrue);
       expect(provider.game.fiesta!.rules.modifiers.keys, ['no_pass']);
@@ -51,26 +42,10 @@ void main() {
       expect(provider.game.fiesta!.active.map((m) => m.catalogId), ['no_pass']);
     });
 
-    test(
-        '« Une seule réponse » en Auto : tirée par partie (graine du gameId), '
-        'gelée en « Toujours » M1-M3 dans les règles de la partie', () async {
-      final provider = await givenReadyProvider();
-      final outcomes = <bool>{};
-      for (var i = 0; i < 40; i++) {
-        await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
-        final rules = provider.game.fiesta!.rules;
-        final oneAnswer = rules.activeSetting('one_answer') != null;
-        expect(oneAnswer, drawsOneAnswer(provider.game.gameId!));
-        expect(provider.isOneAnswer, oneAnswer);
-        outcomes.add(oneAnswer);
-      }
-      expect(outcomes, {true, false});
-    });
-
     test('startGame() sans argument efface la Fiesta de la partie précédente',
         () async {
       final provider = await givenReadyProvider();
-      await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
+      await provider.startGame(fiesta: classicEnsemble.rules);
       expect(provider.isFiesta, isTrue);
 
       await provider.startGame();
@@ -81,7 +56,7 @@ void main() {
 
     test('le retour arrière restaure l\'état Fiesta capturé', () async {
       final provider = await givenReadyProvider();
-      await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
+      await provider.startGame(fiesta: classicEnsemble.rules);
       provider.startTurn();
       provider.startTurnTimer();
       provider.endTurn();
@@ -105,7 +80,7 @@ void main() {
       'proprement au démarrage, jamais reprise en Classique ni de crash',
       () async {
     final provider = await givenReadyProvider();
-    await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
+    await provider.startGame(fiesta: classicEnsemble.rules);
     await pumpEventQueue();
     final saved = (await StorageService().loadGameState())!;
     // Les règles telles que les écrivait la forme v2.
@@ -134,7 +109,7 @@ void main() {
       'snapshot de retour arrière en forme v2 dans une partie v3 : retour '
       'arrière refusé sans rien muter, jamais restauré en Classique', () async {
     final provider = await givenReadyProvider();
-    await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
+    await provider.startGame(fiesta: classicEnsemble.rules);
     provider.startTurn();
     provider.startTurnTimer();
     provider.endTurn();

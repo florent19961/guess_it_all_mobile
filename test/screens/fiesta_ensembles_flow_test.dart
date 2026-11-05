@@ -55,7 +55,7 @@ Future<GameProvider> pumpCustomFiesta(WidgetTester tester, String screen,
   givenFakePlatformPlugins();
   final provider = GameProvider();
   await tester.runAsync(() => pumpEventQueue());
-  provider.setPendingFiesta(FiestaRules(mode: FiestaMode.custom));
+  provider.setPendingFiesta(FiestaRules());
   provider.goToScreen(screen);
 
   await tester.pumpWidget(ChangeNotifierProvider<GameProvider>.value(
@@ -84,7 +84,7 @@ void main() {
     const nameError = 'Donne un nom à l\'ensemble.';
     Finder error() => find.text(nameError, skipOffstage: false);
 
-    // Sous les 7 ensembles fournis : liste paresseuse, on y fait défiler.
+    // Sous les 8 ensembles fournis : liste paresseuse, on y fait défiler.
     await tester.scrollUntilVisible(find.text('Créer un ensemble'), 300,
         scrollable: find.byType(Scrollable).first);
     await tapText(tester, 'Créer un ensemble');
@@ -98,6 +98,11 @@ void main() {
     await tester.pump();
     expect(error(), findsNothing, reason: 'nom saisi : plus d\'erreur');
 
+    // Un ensemble vide ne s'enregistre pas : une cartouche pour tout le monde.
+    await tester.scrollUntilVisible(find.byTooltip('Plus').first, 100,
+        scrollable: find.byType(Scrollable).first);
+    await tester.tap(find.byTooltip('Plus').first);
+    await tester.pump();
     await tapText(tester, 'Enregistrer');
     expect(find.text('Nouvel ensemble'), findsNothing, reason: 'retour liste');
     expect(error(), findsNothing);
@@ -117,7 +122,7 @@ void main() {
     FiestaEnsemblesScreen.drafts.clear();
     addTearDown(FiestaEnsemblesScreen.drafts.clear);
     await pumpCustomFiesta(tester, AppConstants.screenFiestaEnsembles,
-        ensembles: [defaultEnsembleRules('Mien')]);
+        ensembles: [FiestaRules(ensembleName: 'Mien')]);
     Future<void> scrollTo(String text) =>
         tester.scrollUntilVisible(find.text(text), 300,
             scrollable: find.byType(Scrollable).first);

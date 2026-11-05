@@ -23,9 +23,14 @@ class FiestaState {
   /// utilisées ». Clé omise tant que la liste est vide.
   final List<ChargeUse> chargesUsed;
 
-  /// Cartouches gagnées par le coup de pouce (Fiesta v3), dans l'ordre : stock
-  /// et récap. Clé omise tant que la liste est vide (`readOr` : absente = vide).
+  /// Cartouches au hasard reçues, dans l'ordre : stock et récap. Clé omise tant
+  /// que la liste est vide (`readOr` : absente = vide).
   final List<EarnedCartridge> earned;
+
+  /// Tours sautés par équipe (« Interdit de faire deviner ») : décalage de sa
+  /// rotation de joueurs (`playerIndexAtTurn`). Clé omise tant que la table est
+  /// vide.
+  final Map<String, int> skips;
 
   FiestaState({
     required this.rules,
@@ -33,20 +38,20 @@ class FiestaState {
     FiestaTurnState? turn,
     List<ChargeUse> chargesUsed = const [],
     List<EarnedCartridge> earned = const [],
+    Map<String, int> skips = const {},
   })  : active = List.unmodifiable(active),
         turn = turn ?? FiestaTurnState.empty,
         chargesUsed = List.unmodifiable(chargesUsed),
-        earned = List.unmodifiable(earned);
+        earned = List.unmodifiable(earned),
+        skips = Map.unmodifiable(skips);
 
   /// Cartouches [catalogId] de [teamId] pour toute la partie : celles de
-  /// l'ensemble ([ModifierMode.cartridge]) plus celles gagnées.
-  int cartridgesOwned(String catalogId, String teamId) {
-    final setting = rules.activeSetting(catalogId);
-    return (setting?.mode == ModifierMode.cartridge ? setting!.charges : 0) +
-        earned
-            .where((e) => e.catalogId == catalogId && e.teamId == teamId)
-            .length;
-  }
+  /// l'ensemble plus celles gagnées.
+  int cartridgesOwned(String catalogId, String teamId) =>
+      rules.chargesOf(catalogId) +
+      earned
+          .where((e) => e.catalogId == catalogId && e.teamId == teamId)
+          .length;
 
   /// Stock restant : possédées moins dépensées, toutes manches.
   int cartridgesLeft(String catalogId, String teamId) =>
@@ -55,11 +60,29 @@ class FiestaState {
           .where((u) => u.catalogId == catalogId && u.teamId == teamId)
           .length;
 
+  /// Le malus envoyé [sent] retiré de sa cible, sa cartouche rendue à
+  /// l'envoyeur.
+  FiestaState withoutSent(ModifierInstance sent) {
+    final used = chargesUsed.lastIndexWhere((u) =>
+        u.catalogId == sent.catalogId &&
+        u.teamId == sent.fromTeamId &&
+        u.targetTeamId == sent.teamId &&
+        u.round == sent.round);
+    return copyWith(
+      active: [...active]..remove(sent),
+      chargesUsed: [
+        for (var i = 0; i < chargesUsed.length; i++)
+          if (i != used) chargesUsed[i],
+      ],
+    );
+  }
+
   FiestaState copyWith({
     List<ModifierInstance>? active,
     FiestaTurnState? turn,
     List<ChargeUse>? chargesUsed,
     List<EarnedCartridge>? earned,
+    Map<String, int>? skips,
   }) =>
       FiestaState(
         rules: rules,
@@ -67,6 +90,7 @@ class FiestaState {
         turn: turn ?? this.turn,
         chargesUsed: chargesUsed ?? this.chargesUsed,
         earned: earned ?? this.earned,
+        skips: skips ?? this.skips,
       );
 
   Map<String, dynamic> toJson() => {
@@ -77,6 +101,7 @@ class FiestaState {
         if (chargesUsed.isNotEmpty)
           'chargesUsed': chargesUsed.map((e) => e.toJson()).toList(),
         if (earned.isNotEmpty) 'earned': earned.map((e) => e.toJson()).toList(),
+        if (skips.isNotEmpty) 'skips': skips,
       };
 
   /// Variante tolérante : `null` (= Classique) si les règles sont illisibles.
@@ -102,6 +127,7 @@ class FiestaState {
     final rawTurn = json['turn'];
     final rawUsed = json['chargesUsed'];
     final rawEarned = json['earned'];
+    final rawSkips = json['skips'];
     return FiestaState(
       rules: rules,
       active: active,
@@ -123,6 +149,12 @@ class FiestaState {
               .whereType<EarnedCartridge>()
               .toList()
           : const [],
+      skips: rawSkips is Map
+          ? {
+              for (final MapEntry(:key, :value) in rawSkips.entries)
+                if (key is String && value is int) key: value,
+            }
+          : const {},
     );
   }
 }
@@ -170,8 +202,7 @@ class ChargeUse {
   }
 }
 
-/// Une cartouche gagnée par le coup de pouce à l'équipe menée : [teamId] la
-/// détient dès la manche [round] et jusqu'à la fin de la partie. Écrite par
+/// Une cartouche au hasard : [teamId] la détient dès la manche [round] et jusqu'à la fin de la partie. Écrite par
 /// `nextRound` seulement (`RoundTransitionPlan.apply`) : ni un retour arrière
 /// ni une app tuée sur la transition ne peuvent la doubler ou la perdre.
 class EarnedCartridge {

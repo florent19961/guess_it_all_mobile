@@ -100,7 +100,7 @@ class _TeamsScreenState extends State<TeamsScreen> {
                           fullWidth: true,
                           disabled: !allTeamsValid,
                           onPressed: allTeamsValid
-                              // Personnalisé : l'ensemble, choisi avant les
+                              // Fiesta : l'ensemble, choisi avant les
                               // joueurs, attend dans `pendingFiesta`.
                               ? () => provider.startGame(
                                     fiesta: provider.pendingFiesta,

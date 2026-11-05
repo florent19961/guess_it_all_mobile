@@ -1,4 +1,5 @@
 import 'modifier_catalog.dart';
+import 'modifier_instance.dart';
 
 /// Effets de tour (story 2-8) : règles pures sur les modificateurs qui pèsent
 /// sur l'équipe qui joue. Le provider ne fait que brancher.
@@ -27,9 +28,6 @@ class FiestaTurnState {
   /// Passes gratuites déjà utilisées ce tour (2-8).
   final int freePassesUsed;
 
-  /// Devineur bloqué, désigné avant le tour (2-8, 2-10).
-  final String? blockedPlayerId;
-
   /// Charges du tour par id de catalogue ([kChargeBonusKeys]).
   final Map<String, ChargeState> charges;
 
@@ -39,12 +37,16 @@ class FiestaTurnState {
   /// Carte B encore à l'écran quand le chrono est tombé, à vérifier.
   final String? secondExpiredWord;
 
+  /// Ce qu'avait préparé le joueur qui vient de sauter son tour, à reprendre en
+  /// un toucher par son remplaçant.
+  final ReplacedChoices? replaced;
+
   FiestaTurnState({
     this.freePassesUsed = 0,
-    this.blockedPlayerId,
     Map<String, ChargeState> charges = const {},
     this.secondWord,
     this.secondExpiredWord,
+    this.replaced,
   }) : charges = Map.unmodifiable(charges);
 
   static final empty = FiestaTurnState();
@@ -53,21 +55,22 @@ class FiestaTurnState {
 
   FiestaTurnState copyWith({
     int? freePassesUsed,
-    String? blockedPlayerId,
     Map<String, ChargeState>? charges,
     String? secondWord,
     bool clearSecondWord = false,
     String? secondExpiredWord,
     bool clearSecondExpiredWord = false,
+    ReplacedChoices? replaced,
+    bool clearReplaced = false,
   }) =>
       FiestaTurnState(
         freePassesUsed: freePassesUsed ?? this.freePassesUsed,
-        blockedPlayerId: blockedPlayerId ?? this.blockedPlayerId,
         charges: charges ?? this.charges,
         secondWord: clearSecondWord ? null : secondWord ?? this.secondWord,
         secondExpiredWord: clearSecondExpiredWord
             ? null
             : secondExpiredWord ?? this.secondExpiredWord,
+        replaced: clearReplaced ? null : replaced ?? this.replaced,
       );
 
   /// La charge [catalogId] passée à [state] (nul = éteinte).
@@ -84,19 +87,19 @@ class FiestaTurnState {
 
   Map<String, dynamic> toJson() => {
         if (freePassesUsed > 0) 'freePassesUsed': freePassesUsed,
-        if (blockedPlayerId != null) 'blockedPlayerId': blockedPlayerId,
         for (final MapEntry(key: id, value: key) in kChargeBonusKeys.entries)
           if (charges[id] != null) key: charges[id]!.name,
         if (secondWord != null) 'secondWord': secondWord,
         if (secondExpiredWord != null) 'secondExpiredWord': secondExpiredWord,
+        if (replaced != null) 'replaced': replaced!.toJson(),
       };
 
   factory FiestaTurnState.fromJson(Map<String, dynamic> json) {
     String? string(String key) => json[key] is String ? json[key] : null;
     final used = json['freePassesUsed'];
+    final replaced = json['replaced'];
     return FiestaTurnState(
       freePassesUsed: used is int ? used : 0,
-      blockedPlayerId: string('blockedPlayerId'),
       charges: {
         for (final MapEntry(key: id, value: key) in kChargeBonusKeys.entries)
           if (enumFromJson(ChargeState.values, json[key]) case final state?)
@@ -104,6 +107,49 @@ class FiestaTurnState {
       },
       secondWord: string('secondWord'),
       secondExpiredWord: string('secondExpiredWord'),
+      replaced: replaced is Map
+          ? ReplacedChoices.tryFromJson(Map<String, dynamic>.from(replaced))
+          : null,
+    );
+  }
+}
+
+/// Ce qu'un joueur bloqué avait préparé pour son tour annulé : ses bonus
+/// allumés et ses malus envoyés (id, équipe, joueur nommé).
+class ReplacedChoices {
+  final String playerId;
+  final List<String> bonuses;
+  final List<ModifierInstance> sent;
+
+  const ReplacedChoices({
+    required this.playerId,
+    this.bonuses = const [],
+    this.sent = const [],
+  });
+
+  Map<String, dynamic> toJson() => {
+        'playerId': playerId,
+        if (bonuses.isNotEmpty) 'bonuses': bonuses,
+        if (sent.isNotEmpty) 'sent': sent.map((m) => m.toJson()).toList(),
+      };
+
+  static ReplacedChoices? tryFromJson(Map<String, dynamic> json) {
+    final playerId = json['playerId'];
+    final bonuses = json['bonuses'];
+    final sent = json['sent'];
+    if (playerId is! String) return null;
+    return ReplacedChoices(
+      playerId: playerId,
+      bonuses:
+          bonuses is List ? bonuses.whereType<String>().toList() : const [],
+      sent: sent is List
+          ? sent
+              .whereType<Map>()
+              .map((e) =>
+                  ModifierInstance.tryFromJson(Map<String, dynamic>.from(e)))
+              .whereType<ModifierInstance>()
+              .toList()
+          : const [],
     );
   }
 }
@@ -129,8 +175,7 @@ class FiestaTurnState {
 /// un devineur à bloquer ET un autre qui puisse encore répondre.
 bool canBlockGuesser(int teamSize) => teamSize > 2;
 
-/// Une cartouche de la réserve de l'équipe qui joue (écran « Ce tour /
-/// Réserve », Fiesta v3) : [left] restantes pour la partie (0 = épuisée),
+/// Une cartouche de la réserve de l'équipe qui joue (écran avant le tour) : [left] restantes pour la partie (0 = épuisée),
 /// [blockedReason] (« incompatible avec … ») si elle ne peut pas servir ce
 /// tour. Calculée par le provider, jamais persistée.
 class Cartridge {

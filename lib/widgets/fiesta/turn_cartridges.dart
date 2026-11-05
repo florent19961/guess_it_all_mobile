@@ -13,10 +13,10 @@ import '../common/app_confirm_dialog.dart';
 import 'modifier_badge.dart';
 
 /// Écran avant le tour, Fiesta v2 (maquette `cartouches` B, variante a) :
-/// zone « CE TOUR » (règles de manche, malus reçus, bonus allumés) puis
-/// « RÉSERVE » (mes cartouches, bonus / malus). Toucher = activer ou
-/// infliger ; appui long = explication. Sans défilement : la taille des
-/// cercles s'adapte à la place ([_fit]).
+/// zone « ACTIF PENDANT VOTRE PROCHAIN TOUR » (règles de manche, malus reçus,
+/// bonus allumés) puis « VOTRE RÉSERVE » (mes cartouches, bonus / malus). Toucher = activer ou
+/// infliger ; appui long = explication. La taille des cercles s'adapte à la
+/// place ([_fit]) ; un cas extrême qui ne tient toujours pas défile.
 class FiestaTurnZone extends StatefulWidget {
   final GameProvider provider;
   final GlobalKey thisTurnKey;
@@ -29,6 +29,25 @@ class FiestaTurnZone extends StatefulWidget {
     super.key,
   });
 
+  /// La zone tient-elle dans [height] avec des cercles confortables ? Sinon
+  /// l'écran avant le tour resserre sa carte d'équipe.
+  static bool fitsIn(GameProvider provider,
+      {required double width, required double height}) {
+    final reserve = provider.reserve;
+    return _FiestaTurnZoneState.neededHeight(
+          width: width,
+          bonus: reserve.where((c) => c.nature == ModifierNature.bonus).length,
+          malus: reserve.where((c) => c.nature == ModifierNature.malus).length,
+          sent: provider.sentThisTurn.length,
+          thisTurn: provider.roundRulesThisTurn.length +
+              provider.receivedThisTurn.length +
+              provider.bonusesThisTurn.length,
+          blockedLine: provider.blockedGuesser != null,
+          diameter: _comfortSize,
+        ) <=
+        height;
+  }
+
   @override
   State<FiestaTurnZone> createState() => _FiestaTurnZoneState();
 }
@@ -40,8 +59,11 @@ const _gap = 6.0;
 const _maxSize = 50.0;
 const _minSize = 36.0;
 
+/// Sous ce diamètre, mieux vaut resserrer la carte d'équipe.
+const _comfortSize = 44.0;
+
 /// Puce « Envoyé » : taille FIXE, pour que [_FiestaTurnZoneState._fit]
-/// compte exactement ses rangées (nom d'équipe coupé à 8 caractères).
+/// compte exactement ses rangées (nom coupé à 8 caractères).
 const _sentChipWidth = 96.0;
 const _sentChipHeight = 26.0;
 
@@ -113,11 +135,24 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
   Future<void> _useReserve(Cartridge c, BuildContext circle) async {
     final name = _name(c.catalogId);
     if (c.blockedReason != null) {
-      return _showSnack('$name : ${c.blockedReason}.');
+      // Bloquée par la règle de manche : elle attend la suite.
+      final later =
+          c.blockedReason!.endsWith('cette manche') && _p.game.currentRound < 3
+              ? ' La cartouche te reste pour la manche suivante.'
+              : '';
+      return _showSnack('$name : ${c.blockedReason}.$later');
     }
     if (c.left <= 0) return _showSnack('Plus de cartouche « $name ».');
     if (c.nature == ModifierNature.bonus) {
       return _moveBonus(c.catalogId, circle, to: 'on');
+    }
+    if (modifierById(c.catalogId)!.defaultTarget == ModifierTarget.player) {
+      final picked = await _pickPlayer(c.catalogId);
+      if (picked == null || !mounted) return;
+      final refused =
+          _p.inflictMalus(c.catalogId, picked.team, playerId: picked.player);
+      if (refused != null) _showSnack(refused);
+      return;
     }
     final targets = _p.targetsFor(c.catalogId);
     final target = _p.teams.length == 2
@@ -126,6 +161,58 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
     if (target == null || !mounted) return;
     final refused = _p.inflictMalus(c.catalogId, target.id);
     if (refused != null) _showSnack(refused);
+  }
+
+  /// La fenêtre des deux blocages : joueurs listés par équipe, le joueur se
+  /// choisit À L'ENVOI. Équipe de 2 joueurs grisée pour « Bloquer un devineur ».
+  Future<({String team, String player})?> _pickPlayer(String id) {
+    final me = _p.getCurrentTeam()?.id;
+    final possible = _p.targetsFor(id);
+    return showModalBottomSheet<({String team, String player})>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.backgroundMain,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        side: BorderSide(color: AppColors.malus, width: 2),
+      ),
+      builder: (sheet) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 18, 16, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                id == 'block_giver'
+                    ? 'Qui ne fera pas deviner ?'
+                    : 'Qui ne devinera pas ?',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.subtitle(fontSize: 26),
+              ),
+              for (final team in _p.teams)
+                if (team.id != me)
+                  _TeamPlayers(
+                    team: team,
+                    color: AppColors.getTeamColor(_p.teams.indexOf(team)),
+                    enabled: possible.contains(team),
+                    nameOf: (playerId) =>
+                        _p.getPlayerById(playerId)?.name ?? '',
+                    onPick: (playerId) => Navigator.of(sheet)
+                        .pop((team: team.id, player: playerId)),
+                  ),
+              if (id == 'block_giver') ...[
+                const SizedBox(height: 14),
+                Text('Il saute son prochain tour.',
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.bodySmall
+                        .copyWith(fontSize: 12, color: AppColors.gray400)),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   /// Allume / éteint un bonus, et le fait voler d'une zone à l'autre
@@ -240,7 +327,9 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
               Text('${modifierIcon(id)} ${def.name}',
                   textAlign: TextAlign.center,
                   style: AppTextStyles.subtitle(fontSize: 26)),
-              if (from != null) Text('Reçu de l\'équipe $from', style: hint),
+              // À 2 équipes, on sait d'où ça vient.
+              if (from != null && _p.teams.length > 2)
+                Text('Reçu de l\'équipe $from', style: hint),
               if (kind == _Kind.rule)
                 Text('Toute la manche, pour toutes les équipes', style: hint),
               if (blockedReason != null)
@@ -248,7 +337,11 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                     textAlign: TextAlign.center,
                     style: hint.copyWith(color: AppColors.warning)),
               const SizedBox(height: 10),
-              Text(def.description,
+              Text(
+                  modifierDescription(id, [
+                    ..._p.roundRulesThisTurn.map((m) => m.catalogId),
+                    ..._p.receivedThisTurn.map((m) => m.catalogId),
+                  ]),
                   textAlign: TextAlign.center,
                   style: AppTextStyles.bodySmall.copyWith(color: Colors.white)),
               const SizedBox(height: 16),
@@ -277,8 +370,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
         reserve.where((c) => c.nature == ModifierNature.bonus).toList();
     final malus =
         reserve.where((c) => c.nature == ModifierNature.malus).toList();
-    final me = _p.getCurrentTeam()?.id;
-    final others = _p.teams.where((t) => t.id != me).toList();
+    final blockedGuesser = _p.blockedGuesser;
 
     return LayoutBuilder(builder: (context, box) {
       final thisTurnCount = rules.length + received.length + armed.length;
@@ -289,6 +381,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
         malus: malus.length,
         sent: sent.length,
         thisTurn: thisTurnCount,
+        blockedLine: blockedGuesser != null,
       );
 
       final thisTurn = Container(
@@ -303,13 +396,13 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const _ZoneTitle('CE TOUR'),
+            const _ZoneTitle('ACTIF PENDANT VOTRE PROCHAIN TOUR'),
             const SizedBox(height: 6),
             if (thisTurnCount == 0)
               SizedBox(
                 height: size,
                 child: Center(
-                  child: Text('Rien ce tour',
+                  child: Text('Rien pour l\'instant.',
                       style: AppTextStyles.bodySmall
                           .copyWith(fontSize: 12, color: AppColors.gray500)),
                 ),
@@ -345,27 +438,23 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                     ),
                 ],
               ),
+            if (blockedGuesser != null) ...[
+              const SizedBox(height: 8),
+              Text('${blockedGuesser.name} ne répond pas ce tour.',
+                  style: AppTextStyles.bodySmall.copyWith(
+                      fontSize: 12, height: 1.3, color: AppColors.malus)),
+            ],
           ],
         ),
       );
 
-      if (reserve.isEmpty) {
-        return Align(alignment: Alignment.topCenter, child: thisTurn);
-      }
+      if (reserve.isEmpty) return SingleChildScrollView(child: thisTurn);
 
-      Widget column(String title, List<Cartridge> items, Color color,
-              {String? note}) =>
-          Column(
+      Widget column(String title, List<Cartridge> items, Color color) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text.rich(
-                TextSpan(text: title, children: [
-                  if (note != null)
-                    TextSpan(
-                        text: ' · $note',
-                        style: const TextStyle(
-                            letterSpacing: 0, fontWeight: FontWeight.w500)),
-                ]),
+              Text(
+                title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
@@ -414,7 +503,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
             key: widget.reserveKey,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const _ZoneTitle('RÉSERVE'),
+              const _ZoneTitle('VOTRE RÉSERVE'),
               const SizedBox(height: 4),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -423,12 +512,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                       width: bonusWidth,
                       child: column('BONUS', bonus, AppColors.success)),
                   const SizedBox(width: 12),
-                  Expanded(
-                    child: column('MALUS', malus, AppColors.malus,
-                        note: others.length == 1 && malus.isNotEmpty
-                            ? 'contre ${others.single.name}'
-                            : null),
-                  ),
+                  Expanded(child: column('MALUS', malus, AppColors.malus)),
                 ],
               ),
             ],
@@ -450,22 +534,29 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
           ],
         ],
       );
-      // Pas de défilement (spec) : [_fit] choisit le diamètre qui tient.
-      return Align(alignment: Alignment.topCenter, child: content);
+      // [_fit] choisit le diamètre qui tient : rien à faire défiler dans les cas
+      // réalistes. Au-delà, la zone défile : toute cartouche reste atteignable.
+      return SingleChildScrollView(child: content);
     });
   }
 
-  /// Puce « [icône] → X » d'un malus envoyé ; un appui propose de l'annuler.
+  /// Puce d'un malus envoyé : le joueur nommé pour un blocage ; sinon l'équipe
+  /// visée, ou « Envoyé » à 2 équipes. Un appui propose de l'annuler.
   Widget _sentChip(ModifierInstance m) {
     final index = _p.teams.indexWhere((t) => t.id == m.teamId);
     final team = _p.getTeamById(m.teamId!)?.name ?? '';
+    final player = m.playerId == null ? null : _p.getPlayerById(m.playerId!);
+    final label = player?.name ??
+        (_p.teams.length == 2
+            ? 'Envoyé'
+            : '→ ${team.length > 8 ? '${team.substring(0, 8)}…' : team}');
     return GestureDetector(
       onTap: () async {
         final cancel = await AppConfirmDialog.show(
           context,
           title: 'Annuler l\'envoi ?',
-          message: '${_name(m.catalogId)} → $team : la cartouche revient '
-              'dans ta réserve.',
+          message: '${_name(m.catalogId)} → ${player?.name ?? team} : la '
+              'cartouche revient dans ta réserve.',
           confirmText: 'Annuler l\'envoi',
           cancelText: 'Garder',
         );
@@ -500,14 +591,16 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
             ),
             Expanded(
               child: Text(
-                ' → ${team.length > 8 ? '${team.substring(0, 8)}…' : team}',
+                ' $label',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.bodySmall.copyWith(
                     fontSize: 12,
                     height: 1.2,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.getTeamColor(index < 0 ? 0 : index)),
+                    color: _p.teams.length == 2 && player == null
+                        ? Colors.white
+                        : AppColors.getTeamColor(index < 0 ? 0 : index)),
               ),
             ),
           ],
@@ -532,13 +625,61 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
         ),
       );
 
+  /// Largeur de la colonne Bonus (4 cartouches au plus) qui minimise le nombre
+  /// de rangées, et ce nombre ; la colonne Malus prend le reste.
+  static ({int rows, double bonusWidth}) _columns(
+      {required double width,
+      required int bonus,
+      required int malus,
+      required double d}) {
+    const minColumn = 64.0; // l'en-tête « BONUS » / « MALUS »
+    int rowsOf(int n, double space) => (n / _perRowOf(space, d)).ceil();
+    var best = (rows: 1 << 30, bonusWidth: minColumn);
+    for (var k = 1; k <= max(1, bonus); k++) {
+      final w = max(minColumn, k * (d + _gap) - _gap);
+      final rows = max(rowsOf(bonus, w), rowsOf(malus, width - 12 - w));
+      if (rows < best.rows) best = (rows: rows, bonusWidth: w);
+    }
+    return best;
+  }
+
+  /// Hauteur de la zone : « Actif » (repliée sur plusieurs rangées s'il le faut,
+  /// cercles de [diameter]), « Réserve » (cercles de [reserve], deux colonnes
+  /// repliées), puces « Envoyé », et l'aide si [help].
+  static double neededHeight({
+    required double width,
+    required int bonus,
+    required int malus,
+    required int sent,
+    required int thisTurn,
+    required bool blockedLine,
+    required double diameter,
+    double? reserve,
+    bool help = false,
+  }) {
+    final r = reserve ?? diameter;
+    // Puces « Envoyé » : largeur fixe, donc rangées exactes.
+    final sentRows = (sent / _perRowOf(width, _sentChipWidth)).ceil();
+    final sentHeight = sent == 0 ? 0 : 6 + sentRows * (_sentChipHeight + 4) - 4;
+    final thisTurnRows =
+        max(1, (thisTurn / _perRowOf(width - 26, diameter)).ceil());
+    const thisTurnFixed = 10 + 15 + 6 + 10 + 2;
+    const reserveTitles = 10 + 15 + 4 + 14 + 4;
+    final rows = _columns(width: width, bonus: bonus, malus: malus, d: r).rows;
+    return thisTurnFixed +
+        thisTurnRows * (diameter + _thisTurnRunSpacing) -
+        _thisTurnRunSpacing +
+        (blockedLine ? 8 + 16 : 0) +
+        reserveTitles +
+        rows * (r + _gap) -
+        _gap +
+        sentHeight +
+        (help ? 6 + 16 : 0);
+  }
+
   /// Plus grand diamètre (50 au plus, [_minSize] au moins) qui fait tenir la
-  /// zone dans [height] : « Ce tour » (repliée sur plusieurs rangées s'il le
-  /// faut), « Réserve » (deux colonnes repliées), puces « Envoyé », aide. En
-  /// dernier recours, la RÉSERVE seule descend jusqu'à [_reserveMinSize], puis
-  /// l'aide (rappelée par le « ? ») disparaît.
-  /// La colonne Bonus (4 cartouches au plus) prend la largeur qui minimise le
-  /// nombre de rangées ; la colonne Malus, le reste.
+  /// zone dans [height]. En dernier recours, la RÉSERVE seule descend jusqu'à
+  /// [_reserveMinSize], puis l'aide (rappelée par le « ? ») disparaît.
   static ({double size, double reserveSize, double bonusWidth, bool showHelp})
       _fit({
     required double width,
@@ -547,37 +688,19 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
     required int malus,
     required int sent,
     required int thisTurn,
+    required bool blockedLine,
   }) {
-    const minColumn = 64.0; // l'en-tête « BONUS » / « MALUS »
-    int perRow(double space, double d) => _perRowOf(space, d);
-    int rowsOf(int n, double space, double d) => (n / perRow(space, d)).ceil();
-    ({int rows, double bonusWidth}) columns(double d) {
-      var best = (rows: 1 << 30, bonusWidth: minColumn);
-      for (var k = 1; k <= max(1, bonus); k++) {
-        final w = max(minColumn, k * (d + _gap) - _gap);
-        final rows = max(rowsOf(bonus, w, d), rowsOf(malus, width - 12 - w, d));
-        if (rows < best.rows) best = (rows: rows, bonusWidth: w);
-      }
-      return best;
-    }
-
-    // Puces « Envoyé » : largeur fixe, donc rangées exactes.
-    final sentRows = (sent / _perRowOf(width, _sentChipWidth)).ceil();
-    final sentHeight = sent == 0 ? 0 : 6 + sentRows * (_sentChipHeight + 4) - 4;
-    double needed(double t, double r) {
-      final thisTurnRows = max(1, rowsOf(thisTurn, width - 26, t));
-      const thisTurnFixed = 10 + 15 + 6 + 10 + 2;
-      const reserveTitles = 10 + 15 + 4 + 14 + 4;
-      const help = 6 + 16;
-      return thisTurnFixed +
-          thisTurnRows * (t + _thisTurnRunSpacing) -
-          _thisTurnRunSpacing +
-          reserveTitles +
-          columns(r).rows * (r + _gap) -
-          _gap +
-          sentHeight +
-          help;
-    }
+    double needed(double t, double r) => neededHeight(
+          width: width,
+          bonus: bonus,
+          malus: malus,
+          sent: sent,
+          thisTurn: thisTurn,
+          blockedLine: blockedLine,
+          diameter: t,
+          reserve: r,
+          help: true,
+        );
 
     var d = _maxSize;
     while (d > _minSize && needed(d, d) > height) {
@@ -590,7 +713,8 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
     return (
       size: d,
       reserveSize: r,
-      bonusWidth: columns(r).bonusWidth,
+      bonusWidth:
+          _columns(width: width, bonus: bonus, malus: malus, d: r).bonusWidth,
       showHelp: needed(d, r) <= height,
     );
   }
@@ -753,6 +877,78 @@ class _Circle extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Une équipe et ses joueurs dans la fenêtre des blocages. [enabled] faux : 2
+/// joueurs, impossible.
+class _TeamPlayers extends StatelessWidget {
+  final Team team;
+  final Color color;
+  final bool enabled;
+  final String Function(String playerId) nameOf;
+  final ValueChanged<String> onPick;
+
+  const _TeamPlayers({
+    required this.team,
+    required this.color,
+    required this.enabled,
+    required this.nameOf,
+    required this.onPick,
+  });
+
+  @override
+  Widget build(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 10),
+          Text.rich(
+            TextSpan(text: team.name, children: [
+              if (!enabled)
+                const TextSpan(
+                  text: '  2 joueurs, impossible',
+                  style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 11,
+                      color: AppColors.gray400),
+                ),
+            ]),
+            style: TextStyle(fontFamily: 'Bangers', fontSize: 18, color: color),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final playerId in team.playerIds)
+                Opacity(
+                  opacity: enabled ? 1 : 0.35,
+                  child: GestureDetector(
+                    onTap: enabled ? () => onPick(playerId) : null,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 9),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(13),
+                        border: Border.all(color: color, width: 2),
+                      ),
+                      child: Text(
+                        nameOf(playerId),
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: color,
+                          decoration:
+                              enabled ? null : TextDecoration.lineThrough,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      );
 }
 
 /// Carte d'équipe de la feuille « Contre quelle équipe ? » (style habituel

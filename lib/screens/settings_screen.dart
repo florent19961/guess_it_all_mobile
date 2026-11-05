@@ -70,22 +70,20 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   static const _classic = 'Classique';
   static const _fiesta = 'Fiesta';
-  static const _auto = 'Auto';
-  static const _custom = 'Personnalisé';
 
   /// Garde contre le double tap : un seul tuto Fiesta.
   bool _tutorialBusy = false;
 
-  /// Classique / Fiesta. Fiesta part sur le mode sauvegardé dans les réglages
-  /// (Auto / Personnalisé, fenêtre « Avancés ») ; la première fois, le tuto
-  /// Fiesta s'ouvre (clé `guessItAll_fiestaTutorialSeen`).
+  /// Classique / Fiesta. L'ensemble se choisit juste après cet écran ; la
+  /// première fois, le tuto Fiesta s'ouvre (clé
+  /// `guessItAll_fiestaTutorialSeen`).
   Future<void> _setMode(GameProvider provider, String mode) async {
     if (mode == _classic) {
       provider.setPendingFiesta(null);
       return;
     }
     if (provider.pendingFiesta != null) return;
-    provider.setPendingFiesta(FiestaRules(mode: provider.settings.fiestaMode));
+    provider.setPendingFiesta(FiestaRules());
     if (_tutorialBusy) return;
     _tutorialBusy = true;
     try {
@@ -97,27 +95,12 @@ class _SettingsScreenState extends State<SettingsScreen>
     }
   }
 
-  /// Fiesta Personnalisé : l'écran des ensembles vient avant les joueurs.
+  /// Fiesta : la liste des ensembles vient avant les joueurs.
   void _goNext(GameProvider provider) => provider.goToScreen(
-        provider.pendingFiesta?.mode == FiestaMode.custom
+        provider.pendingFiesta != null
             ? AppConstants.screenFiestaEnsembles
             : AppConstants.screenPlayers,
       );
-
-  /// Auto / Personnalisé (fenêtre « Avancés »). Personnalisé garde l'ensemble
-  /// déjà en attente (Rejouer) ; l'ensemble se choisit juste après.
-  void _setFiestaMode(GameProvider provider, String value) {
-    final custom = value == _custom;
-    provider.updateSettings(
-        fiestaMode: custom ? FiestaMode.custom : FiestaMode.auto);
-    final pending = provider.pendingFiesta;
-    if (pending == null || (pending.mode == FiestaMode.custom) == custom) {
-      return;
-    }
-    provider.setPendingFiesta(
-      FiestaRules(mode: custom ? FiestaMode.custom : FiestaMode.auto),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +172,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     ),
                     const SizedBox(height: _sectionGap),
 
-                    // Classique / Fiesta (Auto / Personnalisé : roue crantée)
+                    // Classique / Fiesta
                     _buildSection(
                       title: 'Mode de jeu',
                       child: AppToggle(
@@ -582,36 +565,6 @@ class _SettingsScreenState extends State<SettingsScreen>
                     setState(() {});
                   },
                 ),
-
-                // Fiesta : Auto / Personnalisé, visible aussi en Classique
-                // (appliqué au passage en Fiesta).
-                ...[
-                  const SizedBox(height: 8),
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Fiesta',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  AppToggle(
-                    options: const [_auto, _custom],
-                    selected: (provider.pendingFiesta?.mode ??
-                                provider.settings.fiestaMode) ==
-                            FiestaMode.custom
-                        ? _custom
-                        : _auto,
-                    onChange: (value) {
-                      _setFiestaMode(provider, value);
-                      setState(() {});
-                    },
-                  ),
-                ],
 
                 // Réinitialiser (ancien bouton rond du coin haut droit) : ferme
                 // « Avancés », puis la même confirmation qu'avant. Un peu d'air

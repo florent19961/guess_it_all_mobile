@@ -103,7 +103,7 @@ void main() {
       final provider = await givenProvider();
 
       provider.updateSettings(turnDuration: 45, passPenalty: 2);
-      provider.setPendingFiesta(FiestaRules(mode: FiestaMode.auto));
+      provider.setPendingFiesta(classicEnsemble.rules);
       await pumpEventQueue();
 
       await provider.clearLocalStorage();
@@ -145,7 +145,6 @@ void main() {
         passPenalty: 2,
         selectedCategories: const ['musique'],
         selectedDifficultyLevels: const [2, 4],
-        fiestaMode: FiestaMode.custom,
       );
       await pumpEventQueue();
 
@@ -158,7 +157,6 @@ void main() {
       expect(s.passPenalty, 2);
       expect(s.selectedCategories, ['musique']);
       expect(s.selectedDifficultyLevels, [2, 4]);
-      expect(s.fiestaMode, FiestaMode.custom);
     });
 
     test('réglages d\'avant cette clé : Classique', () {
@@ -168,16 +166,16 @@ void main() {
           isFalse);
     });
 
-    test('Classique reste Classique, Fiesta Auto reste Auto', () async {
+    test('Classique reste Classique, Fiesta reste Fiesta', () async {
       final provider = await givenProvider();
       expect((await reopen()).pendingFiesta, isNull);
 
-      provider.setPendingFiesta(FiestaRules(mode: FiestaMode.auto));
+      provider.setPendingFiesta(classicEnsemble.rules);
       await pumpEventQueue();
       final reopened = await reopen();
-      expect(reopened.pendingFiesta?.mode, FiestaMode.auto);
+      expect(reopened.pendingFiesta?.ensembleName, 'Fiesta classique');
       await reopened.startNewGame();
-      expect(reopened.pendingFiesta?.mode, FiestaMode.auto);
+      expect(reopened.pendingFiesta?.ensembleName, 'Fiesta classique');
 
       provider.setPendingFiesta(null);
       await pumpEventQueue();
@@ -189,7 +187,7 @@ void main() {
         'Fiesta classique', () async {
       final provider = await givenProvider();
       final service = FiestaEnsembleService();
-      final mine = (await service.create(defaultEnsembleRules('Soirée')))!;
+      final mine = (await service.create(FiestaRules(ensembleName: 'Soirée')))!;
       await service.markUsed(mine.id);
       provider.setPendingFiesta(mine.rules);
       await pumpEventQueue();
@@ -229,7 +227,7 @@ void main() {
       }
       provider.createTeams();
       provider.randomizeTeams();
-      provider.setPendingFiesta(FiestaRules(mode: FiestaMode.auto));
+      provider.setPendingFiesta(classicEnsemble.rules);
       await provider.startGame();
       await pumpEventQueue();
 
@@ -239,7 +237,7 @@ void main() {
           reason: 'en partie, `pendingFiesta` = `fiesta?.rules`');
       expect(classicGame.settings.fiestaEnabled, isTrue);
       await classicGame.startNewGame();
-      expect(classicGame.pendingFiesta?.mode, FiestaMode.auto);
+      expect(classicGame.pendingFiesta?.ensembleName, 'Fiesta classique');
     });
 
     testWidgets(
@@ -248,12 +246,12 @@ void main() {
       await givenPrefs();
       final first = GameProvider();
       await tester.runAsync(() => pumpEventQueue());
-      first.setPendingFiesta(FiestaRules(mode: FiestaMode.auto));
+      first.setPendingFiesta(classicEnsemble.rules);
       await tester.runAsync(() => pumpEventQueue());
 
       final provider = GameProvider();
       await tester.runAsync(() => pumpEventQueue());
-      expect(provider.pendingFiesta?.mode, FiestaMode.auto);
+      expect(provider.pendingFiesta?.ensembleName, 'Fiesta classique');
       await tester.pumpWidget(
         ChangeNotifierProvider<GameProvider>.value(
           value: provider,

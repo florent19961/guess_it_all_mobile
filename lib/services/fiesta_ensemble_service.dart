@@ -21,7 +21,7 @@ class EnsembleStore {
   static const empty = EnsembleStore([], null);
 }
 
-/// Les ensembles du mode Personnalisé, enregistrés sur le téléphone.
+/// Les ensembles Fiesta, enregistrés sur le téléphone.
 ///
 /// Sur le modèle de `GameHistoryService` : écriture enveloppée
 /// (`wrapWithSchema`), quarantaine d'un blob illisible ou venu du futur,

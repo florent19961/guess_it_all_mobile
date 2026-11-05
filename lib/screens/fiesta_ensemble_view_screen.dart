@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/fiesta/fiesta_ensemble.dart';
-import '../models/fiesta/fiesta_rules.dart';
 import '../models/fiesta/modifier_catalog.dart';
-import '../models/fiesta/symmetric_draw.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common/app_back_button.dart';
 import '../widgets/common/app_button.dart';
@@ -34,44 +32,35 @@ class FiestaEnsembleViewScreen extends StatelessWidget {
       )) ??
       false;
 
-  /// Les modificateurs actifs dans [mode], dans l'ordre du catalogue.
-  List<(ModifierDef, ModifierSetting)> _inMode(ModifierMode mode) => [
-        for (final def in kModifierCatalog)
-          if (ensemble.rules.activeSetting(def.id) case final setting?
-              when setting.mode == mode)
-            (def, setting),
-      ];
+  /// Seule une contrainte du catalogue (mime, parole) mérite d'être dite.
+  static String? _roundsLabel(ModifierDef def) => def.round3Only
+      ? 'Manche 3 seulement'
+      : def.notInRound3
+          ? 'Manches 1 et 2 seulement'
+          : null;
 
-  static String _roundsLabel(Set<int> rounds) {
-    final sorted = rounds.toList()..sort();
-    return sorted.length == 3
-        ? 'Toutes les manches'
-        : '${sorted.length > 1 ? 'Manches' : 'Manche'} ${sorted.join(', ')}';
-  }
-
-  /// Une cartouche vaut pour toute la partie : seule une contrainte du
-  /// catalogue (mime, parole) mérite d'être dite.
-  static String _chargesLabel(ModifierDef def, int charges) {
-    final allowed = allowedRounds(def);
-    return [
-      charges == 0 ? 'Gagnées seulement' : '×$charges',
-      if (allowed.length < 3) _roundsLabel(allowed),
-    ].join(' · ');
-  }
-
-  /// « Toujours » vaut pour toutes les manches où il existe : seule une
-  /// contrainte du catalogue (mime, parole) mérite d'être dite.
-  static String? _alwaysLabel(ModifierDef def) {
-    final allowed = allowedRounds(def);
-    return allowed.length < 3 ? _roundsLabel(allowed) : null;
-  }
+  static String _plural(int n, String word) => '$n $word${n > 1 ? 's' : ''}';
 
   @override
   Widget build(BuildContext context) {
     final rules = ensemble.rules;
-    final always = _inMode(ModifierMode.always);
-    final draw = _inMode(ModifierMode.draw);
-    final cartridges = _inMode(ModifierMode.cartridge);
+    final always = kModifierCatalog.where((d) => rules.isAlways(d.id)).toList();
+    final draw = rules.drawCount == 0
+        ? const <ModifierDef>[]
+        : kModifierCatalog.where((d) => rules.drawsFrom(d.id)).toList();
+    final cartridges =
+        kModifierCatalog.where((d) => rules.chargesOf(d.id) > 0).toList();
+    final alwaysIds = always.map((d) => d.id);
+    final random = [
+      if (rules.balance)
+        'Équilibrer la partie : plus une équipe est distancée, plus elle '
+            'reçoit de cartouches'
+      else if (rules.trailingCount > 0)
+        'Aux équipes menées : ${_plural(rules.trailingCount, 'cartouche')} '
+            'après les manches 1 et 2',
+      if (rules.allCount > 0)
+        'À tous, à chaque manche : ${_plural(rules.allCount, 'cartouche')}',
+    ];
     return Scaffold(
       backgroundColor: AppColors.backgroundMain,
       body: ShootingStars(
@@ -94,32 +83,39 @@ class FiestaEnsembleViewScreen extends StatelessWidget {
                           _Section(
                             title: 'Toujours',
                             rows: [
-                              for (final (def, _) in always)
-                                _Row(def, _alwaysLabel(def)),
+                              for (final def in always)
+                                _Row(
+                                  def,
+                                  _roundsLabel(def),
+                                  description:
+                                      modifierDescription(def.id, alwaysIds),
+                                ),
                             ],
                           ),
                         if (draw.isNotEmpty)
                           _Section(
-                            title: 'Au tirage (${rules.drawCount} par manche)',
+                            title:
+                                'Aléatoire par manche (${rules.drawCount} par manche)',
                             rows: [
-                              for (final (def, s) in draw)
-                                _Row(def, _roundsLabel(s.rounds)),
+                              for (final def in draw)
+                                _Row(def, _roundsLabel(def)),
                             ],
                           ),
-                        if (cartridges.isNotEmpty)
+                        if (cartridges.isNotEmpty || random.isNotEmpty)
                           _Section(
-                            title: 'Cartouches pour la partie',
+                            title: 'Cartouches',
+                            lines: random,
                             rows: [
-                              for (final (def, s) in cartridges)
-                                _Row(def, _chargesLabel(def, s.charges)),
+                              for (final def in cartridges)
+                                _Row(
+                                  def,
+                                  [
+                                    '×${rules.chargesOf(def.id)} pour chaque équipe',
+                                    if (_roundsLabel(def) case final rounds?)
+                                      rounds,
+                                  ].join(' · '),
+                                ),
                             ],
-                          ),
-                        if (rules.boostCount > 0)
-                          _Section(
-                            title: 'Coup de pouce à l\'équipe menée',
-                            text: '${rules.boostCount} cartouche'
-                                '${rules.boostCount > 1 ? 's' : ''} au hasard '
-                                'après chaque manche',
                           ),
                       ],
                     ),
@@ -152,9 +148,13 @@ class FiestaEnsembleViewScreen extends StatelessWidget {
 class _Section extends StatelessWidget {
   final String title;
   final List<_Row> rows;
-  final String? text;
+  final List<String> lines;
 
-  const _Section({required this.title, this.rows = const [], this.text});
+  const _Section({
+    required this.title,
+    this.rows = const [],
+    this.lines = const [],
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -175,13 +175,16 @@ class _Section extends StatelessWidget {
                 .copyWith(color: AppColors.secondaryCyan, fontSize: 12),
           ),
           const SizedBox(height: 8),
-          ...rows,
-          if (text != null)
-            Text(
-              text!,
-              style: AppTextStyles.bodySmall
-                  .copyWith(color: Colors.white, fontSize: 13),
+          for (final line in lines)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text(
+                line,
+                style: AppTextStyles.bodySmall
+                    .copyWith(color: Colors.white, fontSize: 13),
+              ),
             ),
+          ...rows,
         ],
       ),
     );
@@ -192,8 +195,9 @@ class _Section extends StatelessWidget {
 class _Row extends StatelessWidget {
   final ModifierDef def;
   final String? when;
+  final String? description;
 
-  const _Row(this.def, this.when);
+  const _Row(this.def, this.when, {this.description});
 
   @override
   Widget build(BuildContext context) {
@@ -230,7 +234,7 @@ class _Row extends StatelessWidget {
                         .copyWith(color: AppColors.secondaryCyan, fontSize: 12),
                   ),
                 Text(
-                  def.description,
+                  description ?? def.description,
                   style: AppTextStyles.bodySmall
                       .copyWith(color: AppColors.gray400, fontSize: 12),
                 ),

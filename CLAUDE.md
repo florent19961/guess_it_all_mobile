@@ -128,7 +128,7 @@ Hors cycle : bug / test rouge / comportement inattendu → `bmad-investigate` ; 
 ## Flux de jeu
 
 1. **Configuration** (Paramètres, premier écran de toute partie) — **Classique ou Fiesta**
-   (Classique à la première ouverture, puis le dernier choix ; en Fiesta, Auto ou Personnalisé dans « Avancés »), nombre d'équipes,
+   (Classique à la première ouverture, puis le dernier choix), nombre d'équipes,
    joueurs, nombre total de mots (20-100, défaut 40), durée du tour, pénalité de passe.
 2. **Inscription joueurs** — saisie des noms.
 3. **Formation des équipes** — manuelle ou aléatoire (composition mise en cache et persistée ; si
@@ -138,9 +138,8 @@ Hors cycle : bug / test rouge / comportement inattendu → `bmad-investigate` ; 
 5. **Partie** — 3 manches, tous les mots remis dans le pool à chaque manche.
 6. **Résultats** — scores par équipe et par manche.
 
-> **Mode Fiesta** (modificateurs de jeu) : en **Personnalisé** seulement, l'écran « Fiesta
-> personnalisée » (choix ou création de l'ensemble) s'insère juste après les Paramètres, avant
-> les joueurs ; Auto n'ajoute aucun écran. Détail →
+> **Mode Fiesta** (modificateurs de jeu) : la liste des ensembles s'insère juste après les
+> Paramètres, avant les joueurs, Fiesta classique présélectionné. Détail →
 > `lib/screens/CLAUDE.md`.
 
 ## Conventions de code

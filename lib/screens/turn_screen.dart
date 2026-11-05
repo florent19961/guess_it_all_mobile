@@ -333,22 +333,32 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                         currentTeam,
                         provider,
                         AppColors.getTeamColor(provider.game.currentTeamIndex)),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '${currentPlayer?.name ?? ''} - ${currentTeam?.name ?? ''}',
-                          style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 14,
-                            color: AppColors.gray400,
+                    // Marges des boutons du coin : un nom long passe à la ligne,
+                    // jamais sous le « ? » (`HelpButton.besideCornerButton`).
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 96),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              '${currentPlayer?.name ?? ''} - ${currentTeam?.name ?? ''}',
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 14,
+                                color: AppColors.gray400,
+                              ),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.info_outline,
-                            size: 14, color: AppColors.gray400),
-                      ],
+                          const SizedBox(width: 4),
+                          const Icon(Icons.info_outline,
+                              size: 14, color: AppColors.gray400),
+                        ],
+                      ),
                     ),
                   ),
 
@@ -399,6 +409,18 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                                 ),
                             ],
                           ),
+                          if (provider.blockedGuesser case final blocked?) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              '${blocked.name} ne répond pas ce tour.',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 13,
+                                color: AppColors.malus,
+                              ),
+                            ),
+                          ],
                           if (provider.freePasses > 0) ...[
                             const SizedBox(height: 8),
                             Text(

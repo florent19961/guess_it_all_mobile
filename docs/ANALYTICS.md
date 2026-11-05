@@ -177,7 +177,7 @@ class GameAnalytics {
   final Map<String, WordStats> wordStats;
 
   // Fiesta (story 2-7) : cles ABSENTES en Classique
-  final String? gameMode;                 // 'fiesta_auto' | 'fiesta_custom'
+  final String? gameMode;                 // 'fiesta_custom' ('fiesta_auto' avant Fiesta v4)
   final Map<String, dynamic>? fiestaRules; // FiestaRules.toJson() gelees au lancement
 }
 ```

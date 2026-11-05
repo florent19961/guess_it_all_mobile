@@ -1,82 +1,53 @@
 import 'modifier_catalog.dart';
 
-enum FiestaMode { auto, custom }
+/// Les trois menus de l'éditeur, où un modificateur peut être verrouillé.
+enum EnsembleMenu { always, draw, cartridge }
 
-/// Mode d'un modificateur dans un ensemble (Fiesta v3), UN seul par
-/// modificateur :
-/// - [always] : actif pour toutes les équipes, à TOUTES les manches où il existe
-///   (`allowedRounds`) ;
-/// - [draw] : candidat au tirage du début de chaque manche cochée ;
-/// - [cartridge] : réserve de chaque équipe pour TOUTE LA PARTIE, jouée au
-///   tour de son choix.
-enum ModifierMode { always, draw, cartridge }
-
-/// Réglage d'UN modificateur dans un ensemble.
+/// Réglage d'UN modificateur dans un ensemble (Fiesta v4) : trois réglages
+/// INDÉPENDANTS. Un modificateur peut être à la fois en aléatoire et en
+/// cartouche. Ce qui est réglé mais verrouillé est gardé sans jouer
+/// ([FiestaRules.lockReason]) : décocher le « Toujours » le restaure.
 class ModifierSetting {
-  final bool active;
+  /// Actif pour toutes les équipes, à toutes les manches où il existe.
+  final bool always;
 
-  /// Manches cochées, parmi {1, 2, 3}. Ne compte que pour [ModifierMode.draw]
-  /// (au moins une si [active]).
-  final Set<int> rounds;
-  final ModifierMode mode;
+  /// Candidat au tirage du début de chaque manche où il existe.
+  final bool draw;
 
-  /// [ModifierMode.cartridge] : cartouches par équipe pour TOUTE LA PARTIE.
-  /// 0 = aucune au départ, elle ne s'obtient que par le coup de pouce.
+  /// Cartouches données à chaque équipe au début de la partie, de 0 à
+  /// [kMaxCount].
   final int charges;
 
-  ModifierSetting({
-    required this.active,
-    required Set<int> rounds,
-    required this.mode,
-    this.charges = 1,
-  }) : rounds = Set.unmodifiable(rounds);
+  const ModifierSetting({
+    this.always = false,
+    this.draw = false,
+    this.charges = 0,
+  });
 
-  ModifierSetting copyWith({
-    bool? active,
-    Set<int>? rounds,
-    ModifierMode? mode,
-    int? charges,
-  }) =>
+  ModifierSetting copyWith({bool? always, bool? draw, int? charges}) =>
       ModifierSetting(
-        active: active ?? this.active,
-        rounds: rounds ?? this.rounds,
-        mode: mode ?? this.mode,
+        always: always ?? this.always,
+        draw: draw ?? this.draw,
         charges: charges ?? this.charges,
       );
 
-  Map<String, dynamic> toJson() => {
-        'active': active,
-        // Trié : deux réglages égaux ont le même JSON (doublons, `_loaded`).
-        'rounds': rounds.toList()..sort(),
-        'mode': mode.name,
-        'charges': charges,
-      };
+  Map<String, dynamic> toJson() =>
+      {'always': always, 'draw': draw, 'charges': charges};
 
-  /// `null` si illisible (champ manquant ou mal typé, manche hors 1-3, charges
-  /// négatives ; la borne haute dépend de l'id : `FiestaRules.tryFromJson`).
+  /// `null` si illisible (champ mal typé, charges hors bornes). Clé absente =
+  /// valeur par défaut ([readOr], règle 7).
   static ModifierSetting? tryFromJson(Map<String, dynamic> json) {
-    final active = json['active'];
-    final rawRounds = json['rounds'];
-    final mode = enumFromJson(ModifierMode.values, json['mode']);
-    final charges = readOr(json, 'charges', 1);
-    if (active is! bool ||
-        rawRounds is! List ||
-        mode == null ||
+    final always = readOr(json, 'always', false);
+    final draw = readOr(json, 'draw', false);
+    final charges = readOr(json, 'charges', 0);
+    if (always == null ||
+        draw == null ||
         charges == null ||
-        charges < 0) {
+        charges < 0 ||
+        charges > kMaxCount) {
       return null;
     }
-    final rounds = <int>{};
-    for (final r in rawRounds) {
-      if (r is! int || r < 1 || r > 3) return null;
-      rounds.add(r);
-    }
-    return ModifierSetting(
-      active: active,
-      rounds: rounds,
-      mode: mode,
-      charges: charges,
-    );
+    return ModifierSetting(always: always, draw: draw, charges: charges);
   }
 }
 
@@ -92,104 +63,140 @@ T? readOr<T extends Object>(Map<String, dynamic> json, String key, T fallback) {
   return raw is T ? raw : null;
 }
 
-/// Borne des règles de la partie (éditeur et relecture).
-const int kMaxDrawCount = 5;
-
-/// Borne du coup de pouce : cartouches reçues après chaque manche (éditeur et
-/// relecture).
-const int kMaxBoostCount = 3;
-
-/// Cartouches par équipe au plus pour le modificateur [id] (éditeur et
-/// relecture) : la Passe gratuite va plus loin, chacune ne vaut qu'un tour.
-int maxCartridges(String id) => id == 'free_pass' ? 5 : 3;
+/// Borne de tous les compteurs des règles (éditeur et relecture) : cartouches
+/// d'un modificateur, tirés par manche, au hasard par équipe.
+const int kMaxCount = 5;
 
 /// La configuration Fiesta d'une partie, GELÉE dans `GameState` au lancement.
 ///
 /// Immuable : les collections sont copiées en lecture seule à la construction,
 /// donc modifier l'ensemble source après `startGame` ne touche pas la partie.
 ///
-/// Forme v3 (Fiesta v3, 2026-11-05) : JSON marqué `format: 3`. Un blob d'un
+/// Forme v4 (Fiesta v4, 2026-11-05) : JSON marqué `format: 4`. Un blob d'un
 /// autre format est ILLISIBLE : la Fiesta n'a jamais été publiée, on ne
 /// traduit pas, l'appelant ignore l'ensemble ou abandonne la partie.
 class FiestaRules {
-  static const int format = 3;
+  static const int format = 4;
 
-  final FiestaMode mode;
-
-  /// Personnalisé : nom de l'ensemble.
+  /// Nom de l'ensemble.
   final String? ensembleName;
 
-  /// Réglage par id de catalogue. Un id absent = modificateur non réglé
-  /// (inactif).
+  /// Réglage par id de catalogue. Un id absent = rien de réglé.
   final Map<String, ModifierSetting> modifiers;
 
-  /// Modificateurs tirés pour tous à chaque manche, 0 (aucun tirage) à
-  /// [kMaxDrawCount], parmi ceux en [ModifierMode.draw]. Ignoré en Auto
-  /// (1 ou 2 par manche, au hasard de la graine).
+  /// Modificateurs tirés pour tous à chaque manche, de 0 à [kMaxCount].
   final int drawCount;
 
-  /// Coup de pouce à l'équipe menée : après M1 et M2, chaque équipe non en tête
-  /// reçoit [boostCount] cartouches au hasard (`trailing_boost.dart`), de 0
-  /// (éteint) à [kMaxBoostCount]. 1 en Auto (`autoRules`).
-  final int boostCount;
+  /// « À tous, à chaque manche » : cartouches au hasard pour chaque équipe au
+  /// début de chaque manche, M1 comprise.
+  final int allCount;
+
+  /// « Aux équipes menées » : cartouches au hasard pour chaque équipe non en
+  /// tête après M1 et M2. Sans effet si [balance].
+  final int trailingCount;
+
+  /// « Équilibrer la partie » : remplace [trailingCount], le nombre de
+  /// cartouches suit l'écart avec le leader (`balanceGiftCount`).
+  final bool balance;
 
   FiestaRules({
-    required this.mode,
     this.ensembleName,
     Map<String, ModifierSetting> modifiers = const {},
-    this.drawCount = 1,
-    this.boostCount = 0,
+    this.drawCount = 0,
+    this.allCount = 0,
+    this.trailingCount = 0,
+    this.balance = false,
   }) : modifiers = Map.unmodifiable(modifiers);
 
   FiestaRules copyWith({
     String? ensembleName,
     Map<String, ModifierSetting>? modifiers,
     int? drawCount,
-    int? boostCount,
+    int? allCount,
+    int? trailingCount,
+    bool? balance,
   }) =>
       FiestaRules(
-        mode: mode,
         ensembleName: ensembleName ?? this.ensembleName,
         modifiers: modifiers ?? this.modifiers,
         drawCount: drawCount ?? this.drawCount,
-        boostCount: boostCount ?? this.boostCount,
+        allCount: allCount ?? this.allCount,
+        trailingCount: trailingCount ?? this.trailingCount,
+        balance: balance ?? this.balance,
       );
 
-  /// Réglage actif de [id], `null` s'il est absent ou coupé.
-  ModifierSetting? activeSetting(String id) {
-    final s = modifiers[id];
-    return s != null && s.active ? s : null;
+  ModifierSetting settingOf(String id) =>
+      modifiers[id] ?? const ModifierSetting();
+
+  bool isAlways(String id) => modifiers[id]?.always ?? false;
+
+  /// Pourquoi [id] est verrouillé dans [menu], `null` s'il ne l'est pas.
+  /// Verrouillé = réglages gardés, mais sans effet en partie :
+  /// - en « Toujours », un modificateur l'est dans les 2 autres menus ;
+  /// - un mime en « Toujours » y verrouille les autres mimes, partout, sauf la
+  ///   paire Bruitages / drap ;
+  /// - « Interdit de passer » en « Toujours » verrouille Passe gratuite et Deux
+  ///   mots en cartouche, qui ne serviraient jamais.
+  String? lockReason(String id, EnsembleMenu menu) {
+    if (menu != EnsembleMenu.always && isAlways(id)) return 'Actif en Toujours';
+    final def = modifierById(id);
+    if (def != null && def.mimeFamily) {
+      for (final other in kModifierCatalog) {
+        if (other.id != id &&
+            other.mimeFamily &&
+            isAlways(other.id) &&
+            !areCompatible(other.id, id)) {
+          return '${other.name} est en Toujours';
+        }
+      }
+    }
+    if (menu == EnsembleMenu.cartridge &&
+        isAlways('no_pass') &&
+        !areCompatible('no_pass', id)) {
+      return '${modifierById('no_pass')!.name} est en Toujours';
+    }
+    return null;
   }
+
+  /// [id] est candidat au tirage (activé et non verrouillé).
+  bool drawsFrom(String id) =>
+      settingOf(id).draw && lockReason(id, EnsembleMenu.draw) == null;
+
+  /// Cartouches [id] données à chaque équipe en début de partie (0 si
+  /// verrouillé).
+  int chargesOf(String id) => lockReason(id, EnsembleMenu.cartridge) == null
+      ? settingOf(id).charges
+      : 0;
 
   Map<String, dynamic> toJson() => {
         'format': format,
-        'mode': mode.name,
         if (ensembleName != null) 'ensembleName': ensembleName,
         'modifiers':
             modifiers.map((id, setting) => MapEntry(id, setting.toJson())),
         'drawCount': drawCount,
-        'boostCount': boostCount,
+        'allCount': allCount,
+        'trailingCount': trailingCount,
+        'balance': balance,
       };
 
   /// Variante tolérante : `null` si la structure est illisible (autre format,
-  /// `mode` inconnu, champ présent mais mal typé, compteur hors bornes). Un
-  /// champ ABSENT prend la valeur par défaut du constructeur ([readOr],
-  /// règle 7). Un réglage de modificateur d'id inconnu ou mal formé est
-  /// ignoré seul, pas l'ensemble.
+  /// champ présent mais mal typé, compteur hors bornes). Un champ ABSENT prend
+  /// la valeur par défaut du constructeur ([readOr], règle 7). Un réglage de
+  /// modificateur d'id inconnu ou mal formé est ignoré seul, pas l'ensemble.
   static FiestaRules? tryFromJson(Map<String, dynamic> json) {
     if (json['format'] != format) return null;
-    final mode = enumFromJson(FiestaMode.values, json['mode']);
     final ensembleName = json['ensembleName'];
     final rawModifiers = readOr<Map>(json, 'modifiers', const {});
-    final drawCount = readOr(json, 'drawCount', 1);
-    final boostCount = _readBoostCount(json);
-    if (mode == null ||
-        ensembleName is! String? ||
+    final drawCount = _readCount(json, 'drawCount');
+    final allCount = _readCount(json, 'allCount');
+    final trailingCount = _readCount(json, 'trailingCount');
+    final balance = readOr(json, 'balance', false);
+    if (ensembleName is! String? ||
         rawModifiers == null ||
         drawCount == null ||
-        drawCount < 0 ||
-        drawCount > kMaxDrawCount ||
-        boostCount == null) {
+        allCount == null ||
+        trailingCount == null ||
+        balance == null) {
       return null;
     }
 
@@ -200,28 +207,21 @@ class FiestaRules {
       if (id is! String || modifierById(id) == null || raw is! Map) continue;
       final setting =
           ModifierSetting.tryFromJson(Map<String, dynamic>.from(raw));
-      if (setting != null && setting.charges <= maxCartridges(id)) {
-        modifiers[id] = setting;
-      }
+      if (setting != null) modifiers[id] = setting;
     }
 
     return FiestaRules(
-      mode: mode,
       ensembleName: ensembleName,
       modifiers: modifiers,
       drawCount: drawCount,
-      boostCount: boostCount,
+      allCount: allCount,
+      trailingCount: trailingCount,
+      balance: balance,
     );
   }
 
-  /// `boostCount` ; absent, l'ancien booléen `trailingBoost` (vrai = 1). `null`
-  /// si mal typé ou hors bornes, comme `drawCount`.
-  static int? _readBoostCount(Map<String, dynamic> json) {
-    if (json['boostCount'] == null) {
-      final legacy = readOr(json, 'trailingBoost', false);
-      return legacy == null ? null : (legacy ? 1 : 0);
-    }
-    final count = readOr(json, 'boostCount', 0);
-    return count == null || count < 0 || count > kMaxBoostCount ? null : count;
+  static int? _readCount(Map<String, dynamic> json, String key) {
+    final count = readOr(json, key, 0);
+    return count == null || count < 0 || count > kMaxCount ? null : count;
   }
 }
