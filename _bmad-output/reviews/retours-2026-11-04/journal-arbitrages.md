@@ -43,3 +43,11 @@ date · story · question · choix · raison · état
 - 2026-11-05 · fiesta-v3 fixes (#41) · MAJOR Codex : garde d'écran dans endTurn() · second appel faussait l'analytics et le temps reporté · appliqué
 - 2026-11-05 · fiesta-v3 (#41, #42) · merge sans 2ᵉ passage Codex, delta r2 relu par l'orchestrateur · correctifs courts, testés · appliqué
 - 2026-11-05 · fiesta-v3 · non corrigé : à 360 px, un nom d'équipe long passe sous le « ? » en haut de l'écran du tour · hors demande · à valider
+- 2026-11-05 · fiesta-v3.1 (#43) · cartouches jouables en continuation, cartouches gagnées comprises ; +10 s ajouté au temps reporté · demande Florent · appliqué
+- 2026-11-05 · fiesta-v3.1 (#43) · « Toujours » = toutes les manches où le modificateur existe, cases à cocher retirées (conservées pour Au tirage) · demande Florent · appliqué
+- 2026-11-05 · fiesta-v3.1 (#43) · exclusivité des mimes limitée à « Toujours », erreur à la création ; Explosif et L'injustice avec tous les mimes · demande Florent · appliqué
+- 2026-11-05 · fiesta-v3.1 (#43) · coup de pouce en compteur 0-3 ; cartouches gagnées distinctes tant que le vivier le permet ; L'injustice à 3 · demande Florent, distinct arbitré par l'orchestrateur · à valider
+- 2026-11-05 · fiesta-v3.1 (#43) · MAJOR Codex : config rejouée perdue après un kill avant le lancement · gardée dans les réglages jusqu'au lancement ou à un choix explicite · appliqué
+- 2026-11-05 · fiesta-v3.1 (#43) · au-delà de 3 malus envoyés sur une continuation à 360×640, le bas de la zone est coupé · cas extrême accepté · à valider
+- 2026-11-05 · fiesta-v3.1 (#43) · rejouer une archive dont l'ensemble a été modifié ou supprimé présélectionne le dernier ensemble utilisé · limite existante, hors périmètre · à valider
+- 2026-11-05 · fiesta-v3.1 (#43) · merge sans 2ᵉ passage Codex, delta r2 relu par l'orchestrateur · correctif testé rouge puis vert, suite verte · appliqué
