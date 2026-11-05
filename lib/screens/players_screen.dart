@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/game_provider.dart';
 import '../models/word_stats.dart';
-import '../models/fiesta/fiesta_rules.dart';
 import '../utils/constants.dart';
 import '../utils/word_categories/word_categories.dart';
 import '../widgets/common/app_button.dart';
@@ -316,9 +315,9 @@ class _PlayersScreenState extends State<PlayersScreen> {
           provider.updatePlayer(player.id, name: name);
         }
       }
-      // Fiesta Personnalisé : retour à l'écran des ensembles.
+      // Fiesta : retour à la liste des ensembles.
       provider.goToScreen(
-        provider.pendingFiesta?.mode == FiestaMode.custom
+        provider.pendingFiesta != null
             ? AppConstants.screenFiestaEnsembles
             : AppConstants.screenSettings,
       );

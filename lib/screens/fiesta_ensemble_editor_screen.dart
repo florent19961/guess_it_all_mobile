@@ -6,7 +6,7 @@ import '../models/fiesta/ensemble_validation.dart';
 import '../models/fiesta/fiesta_ensemble.dart';
 import '../models/fiesta/fiesta_rules.dart';
 import '../models/fiesta/modifier_catalog.dart';
-import '../models/fiesta/symmetric_draw.dart';
+import '../models/fiesta/symmetric_draw.dart' show canBeRoundRule;
 import '../services/fiesta_ensemble_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common/app_back_button.dart';
@@ -69,8 +69,8 @@ class FiestaEnsembleEditorScreen extends StatefulWidget {
 class _FiestaEnsembleEditorScreenState
     extends State<FiestaEnsembleEditorScreen> {
   final _scroll = ScrollController();
-  final _rulesKey = GlobalKey();
-  final _malusKey = GlobalKey();
+  final _tabsKey = GlobalKey();
+  final _menuKey = GlobalKey();
   final _saveKey = GlobalKey();
 
   late FiestaRules _rules;
@@ -79,7 +79,7 @@ class _FiestaEnsembleEditorScreenState
   /// Ce qui a été chargé (JSON) : « rien modifié » = identique.
   late final String _loaded;
 
-  String? _open;
+  late EnsembleMenu _tab;
   bool _tried = false;
   bool _saving = false;
   bool _leaving = false;
@@ -87,9 +87,10 @@ class _FiestaEnsembleEditorScreenState
   @override
   void initState() {
     super.initState();
-    final start = widget.initial?.rules ?? defaultEnsembleRules('');
+    final start = widget.initial?.rules ?? FiestaRules(ensembleName: '');
     _loaded = jsonEncode(start.toJson());
     _rules = widget.draft ?? start;
+    _tab = _firstTab(_rules);
     _name = TextEditingController(text: _rules.ensembleName ?? '');
     // Le nom est lu sur le contrôleur, jamais recopié : une seule source.
     _name.addListener(() => setState(() {}));
@@ -106,23 +107,67 @@ class _FiestaEnsembleEditorScreenState
 
   bool get _dirty => jsonEncode(_current.toJson()) != _loaded;
 
-  ModifierSetting _settingFor(ModifierDef def) =>
-      _rules.modifiers[def.id] ?? defaultSetting(def);
-
-  void _set(ModifierDef def, ModifierSetting setting) => setState(() {
-        _rules =
-            _rules.copyWith(modifiers: {..._rules.modifiers, def.id: setting});
-      });
-
-  void _toggle(ModifierDef def, bool on) {
-    setState(() {
-      _rules = _rules.copyWith(modifiers: {
-        ..._rules.modifiers,
-        def.id: _settingFor(def).copyWith(active: on),
-      });
-      if (on) _open = def.id;
-    });
+  /// Le menu où l'ensemble a quelque chose à montrer (maquette `load`).
+  static EnsembleMenu _firstTab(FiestaRules r) {
+    final draws = kModifierCatalog.any((d) => r.settingOf(d.id).draw);
+    if (draws) return EnsembleMenu.draw;
+    final always = kModifierCatalog.any((d) => r.isAlways(d.id));
+    return always && r.trailingCount == 0 && r.allCount == 0
+        ? EnsembleMenu.always
+        : EnsembleMenu.cartridge;
   }
+
+  void _setting(String id, ModifierSetting Function(ModifierSetting) change) =>
+      setState(() {
+        _rules = _rules.copyWith(modifiers: {
+          ..._rules.modifiers,
+          id: change(_rules.settingOf(id)),
+        });
+      });
+
+  void _info(String text) => ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(text)));
+
+  /// « Toujours » allumé : ce qu'il met de côté dans les autres menus est gardé
+  /// en mémoire, et le joueur le sait.
+  void _toggleAlways(ModifierDef def, bool on) {
+    final before = _rules;
+    _setting(def.id, (s) => s.copyWith(always: on));
+    if (!on) return;
+    if (def.mimeFamily) {
+      final hit = kModifierCatalog
+          .where((m) =>
+              m.mimeFamily &&
+              m.id != def.id &&
+              !areCompatible(m.id, def.id) &&
+              (before.settingOf(m.id).draw ||
+                  before.settingOf(m.id).charges > 0))
+          .length;
+      if (hit > 0) {
+        final s = hit > 1 ? 's' : '';
+        _info('${def.name} est en Toujours : $hit autre$s mime$s bloqué$s. '
+            '${hit > 1 ? 'Ils reviennent' : 'Il revient'} si tu le décoches.');
+      }
+    } else if (before.settingOf(def.id).draw ||
+        before.settingOf(def.id).charges > 0) {
+      _info('${def.name} passe en Toujours : son réglage dans les autres menus '
+          'est mis de côté.');
+    }
+  }
+
+  /// Un interrupteur aléatoire allumé sans rien à tirer serait sans effet : le
+  /// premier fait passer « Combien par manche » de 0 à 1.
+  void _setDraw(Iterable<ModifierDef> defs, bool on) => setState(() {
+        _rules = _rules.copyWith(
+          drawCount: on && _rules.drawCount == 0 ? 1 : _rules.drawCount,
+          modifiers: {
+            ..._rules.modifiers,
+            for (final def in defs)
+              def.id: _rules.settingOf(def.id).copyWith(draw: on),
+          },
+        );
+      });
 
   Future<void> _save() async {
     if (_saving) return;
@@ -223,58 +268,59 @@ class _FiestaEnsembleEditorScreenState
                 child: Column(
                   children: [
                     Expanded(
-                      child: ListView(
+                      child: CustomScrollView(
                         controller: _scroll,
-                        padding: const EdgeInsets.fromLTRB(20, 72, 20, 24),
-                        children: [
-                          Text(
-                            widget.initial == null
-                                ? 'Nouvel ensemble'
-                                : 'Modifier l\'ensemble',
-                            style: AppTextStyles.subtitle(fontSize: 34),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 20),
-                          _Card(
-                            title: 'Nom de l\'ensemble',
-                            child: AppInput(
-                              controller: _name,
-                              placeholder: 'ex. Soirée chez Max',
-                              maxLength: FiestaEnsembleService.maxNameLength,
-                              textCapitalization: TextCapitalization.sentences,
-                              error: nameError,
-                            ),
-                          ),
-                          KeyedSubtree(key: _rulesKey, child: _rulesCard()),
-                          KeyedSubtree(
-                            key: _malusKey,
-                            child: _Card(
-                              title: 'Malus',
-                              color: AppColors.malus,
+                        slivers: [
+                          SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(20, 72, 20, 0),
+                            sliver: SliverToBoxAdapter(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  for (final def in kModifierCatalog)
-                                    if (def.nature == ModifierNature.malus &&
-                                        !def.mimeFamily)
-                                      _modifierRow(def),
-                                  const _SubHead('MIMES'),
-                                  for (final def in kModifierCatalog)
-                                    if (def.mimeFamily) _modifierRow(def),
+                                  Text(
+                                    widget.initial == null
+                                        ? 'Nouvel ensemble'
+                                        : 'Modifier l\'ensemble',
+                                    style: AppTextStyles.subtitle(fontSize: 34),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 20),
+                                  _Card(
+                                    title: 'Nom de l\'ensemble',
+                                    child: AppInput(
+                                      controller: _name,
+                                      placeholder: 'ex. Soirée chez Max',
+                                      maxLength:
+                                          FiestaEnsembleService.maxNameLength,
+                                      textCapitalization:
+                                          TextCapitalization.sentences,
+                                      error: nameError,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
                           ),
-                          _Card(
-                            title: 'Bonus',
-                            color: AppColors.success,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                for (final def in kModifierCatalog)
-                                  if (def.nature == ModifierNature.bonus)
-                                    _modifierRow(def),
-                              ],
+                          SliverPersistentHeader(
+                            pinned: true,
+                            delegate: _TabsHeader(
+                              child: KeyedSubtree(
+                                key: _tabsKey,
+                                child: _tabs(),
+                              ),
+                            ),
+                          ),
+                          SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                            sliver: SliverToBoxAdapter(
+                              child: KeyedSubtree(
+                                key: _menuKey,
+                                child: switch (_tab) {
+                                  EnsembleMenu.always => _menuAlways(),
+                                  EnsembleMenu.draw => _menuDraw(),
+                                  EnsembleMenu.cartridge => _menuCartridges(),
+                                },
+                              ),
                             ),
                           ),
                         ],
@@ -289,8 +335,8 @@ class _FiestaEnsembleEditorScreenState
                 onPressed: () => CoachMarks.show(
                   context,
                   fiestaEditorHelp(
-                    rules: _rulesKey,
-                    modifiers: _malusKey,
+                    tabs: _tabsKey,
+                    menu: _menuKey,
                     save: _saveKey,
                   ),
                 ),
@@ -330,240 +376,593 @@ class _FiestaEnsembleEditorScreenState
         ),
       );
 
-  Widget _rulesCard() {
-    final r = _rules;
-    return _Card(
-      title: 'Règles de la partie',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const _SubHead('AU TIRAGE', first: true),
-          _line(
-            'Modificateurs tirés par manche',
-            _Stepper(
-              value: r.drawCount,
-              min: 0,
-              max: kMaxDrawCount,
-              onChanged: (v) =>
-                  setState(() => _rules = _rules.copyWith(drawCount: v)),
-            ),
-          ),
-          const _Hint('Parmi ceux en « Au tirage », incompatibles sautés. '
-              '0 = aucun tirage.'),
-          const _SubHead('TOUTE LA PARTIE'),
-          _line(
-            'Coup de pouce à l\'équipe menée',
-            _Stepper(
-              value: r.boostCount,
-              min: 0,
-              max: kMaxBoostCount,
-              onChanged: (v) =>
-                  setState(() => _rules = _rules.copyWith(boostCount: v)),
-            ),
-          ),
-          const _Hint('Cartouches au hasard pour chaque équipe non en tête, '
-              'après M1 et M2.'),
-        ],
-      ),
-    );
-  }
+  // ---------- Les 3 menus ----------
 
-  static const _modeLabels = {
-    ModifierMode.always: 'Toujours',
-    ModifierMode.draw: 'Au tirage',
-    ModifierMode.cartridge: 'Cartouche',
-  };
+  int _count(EnsembleMenu menu) => switch (menu) {
+        EnsembleMenu.always =>
+          kModifierCatalog.where((d) => _rules.isAlways(d.id)).length,
+        EnsembleMenu.draw =>
+          kModifierCatalog.where((d) => _rules.drawsFrom(d.id)).length,
+        EnsembleMenu.cartridge => kModifierCatalog.fold<int>(
+                0, (sum, d) => sum + _rules.chargesOf(d.id)) +
+            (_rules.balance ? 1 : _rules.trailingCount) +
+            _rules.allCount,
+      };
 
-  static const _modeHints = {
-    ModifierMode.always: 'Actif pour toutes les équipes, à chaque manche où il '
-        'existe.',
-    ModifierMode.draw: 'Entre dans le tirage du début de manche (nombre réglé '
-        'dans « Règles de la partie »).',
-    ModifierMode.cartridge: 'Dans la réserve de chaque équipe pour toute la '
-        'partie : elle la joue au tour de son choix.',
-  };
-
-  String _chargesLabel(int charges) => charges == 0
-      ? 'Gagnées seulement'
-      : '$charges cartouche${charges > 1 ? 's' : ''} pour la partie';
-
-  String _summary(ModifierDef def, ModifierSetting s) {
-    if (!s.active) return 'Désactivé';
-    if (s.mode == ModifierMode.cartridge) return _chargesLabel(s.charges);
-    final always = s.mode == ModifierMode.always;
-    final rounds = (always ? allowedRounds(def) : s.rounds).toList()..sort();
-    if (always && rounds.length == 3) return _modeLabels[s.mode]!;
-    return [
-      rounds.isEmpty
-          ? 'Aucune manche'
-          : '${rounds.length > 1 ? 'Manches' : 'Manche'} ${rounds.join(', ')}',
-      _modeLabels[s.mode]!,
-    ].join(' · ');
-  }
-
-  /// Compteur de cartouches pour la partie (0 = seulement par le coup de
-  /// pouce).
-  Widget _chargesLine(ModifierDef def, ModifierSetting s) {
-    final maxCharges = maxCartridges(def.id);
-    return _line(
-      'Cartouches pour la partie',
-      _Stepper(
-        value: s.charges.clamp(0, maxCharges),
-        min: 0,
-        max: maxCharges,
-        onChanged: (v) => _set(def, s.copyWith(charges: v)),
-      ),
-    );
-  }
-
-  Widget _modifierRow(ModifierDef def) {
-    final s = _settingFor(def);
-    // Seulement en cartouche : un interrupteur et un compteur, rien à régler.
-    final cartridgeOnly = !canBeRoundRule(def);
-    final open = s.active && _open == def.id && !cartridgeOnly;
-    final color = modifierColor(def.nature);
-    final allowed = allowedRounds(def);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundMain,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: color.withValues(alpha: s.active ? 0.18 : 0.08),
-                  border: Border.all(
-                      color: color.withValues(alpha: s.active ? 0.6 : 0.25)),
-                ),
-                child: Text(
-                  modifierIcon(def.id),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: s.active ? color : AppColors.gray500,
-                  ),
+  Widget _tabs() => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: const Color(0xFF17202F),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            for (final (menu, label) in const [
+              (EnsembleMenu.always, 'Toujours'),
+              (EnsembleMenu.draw, 'Aléatoire par manche'),
+              (EnsembleMenu.cartridge, 'Cartouches'),
+            ])
+              Expanded(
+                child: _TabButton(
+                  label: label,
+                  count: _count(menu),
+                  selected: _tab == menu,
+                  onTap: () => setState(() => _tab = menu),
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+          ],
+        ),
+      );
+
+  /// Les modificateurs de [group], maquette `M`.
+  static const _talkMalus = [
+    'no_pass',
+    'reversed',
+    'other_language',
+    'one_answer',
+    'minus_10s',
+    'block_guesser',
+    'block_giver',
+  ];
+
+  static List<ModifierDef> _inGroup(_Group group) => switch (group) {
+        _Group.malus => [for (final id in _talkMalus) modifierById(id)!],
+        _Group.mimes => kModifierCatalog.where((d) => d.mimeFamily).toList(),
+        _Group.bonus => kModifierCatalog
+            .where((d) => d.nature == ModifierNature.bonus)
+            .toList(),
+      };
+
+  static String? _roundsLabel(ModifierDef def) => def.round3Only
+      ? 'Manche 3 seulement'
+      : def.notInRound3
+          ? 'Manches 1 et 2 seulement'
+          : null;
+
+  /// Ligne d'un modificateur : verrouillée, elle dit pourquoi.
+  Widget _modifierRow(ModifierDef def, EnsembleMenu menu, Widget control) {
+    final lock = _rules.lockReason(def.id, menu);
+    final color = modifierColor(def.nature);
+    final sub = lock ?? _roundsLabel(def);
+    return Opacity(
+      opacity: lock == null ? 1 : 0.55,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A2536),
+          borderRadius: BorderRadius.circular(13),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color.withValues(alpha: 0.14),
+                border: Border.all(color: color, width: 1.5),
+              ),
+              child: Text(
+                modifierIcon(def.id),
+                style: TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w700, color: color),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(def.name,
+                      style: AppTextStyles.label.copyWith(fontSize: 13.5)),
+                  if (sub != null)
                     Text(
-                      def.name,
-                      style: AppTextStyles.label.copyWith(
-                        color: s.active ? Colors.white : AppColors.gray500,
+                      sub,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        fontSize: 11,
+                        color: lock != null
+                            ? AppColors.warning
+                            : AppColors.gray400,
                       ),
                     ),
-                    Text(
-                      _summary(def, s),
-                      style: AppTextStyles.bodySmall
-                          .copyWith(color: AppColors.gray400, fontSize: 11),
-                    ),
-                  ],
-                ),
+                ],
               ),
-              if (s.active && !cartridgeOnly)
-                TextButton(
-                  onPressed: () => setState(() => _open = open ? null : def.id),
-                  child: Text(
-                    open ? 'Fermer' : 'Régler',
-                    style: const TextStyle(color: AppColors.secondaryCyan),
-                  ),
-                ),
-              _switch(s.active, (v) => _toggle(def, v)),
-            ],
-          ),
-          if (s.active && cartridgeOnly) _chargesLine(def, s),
-          if (open) ...[
-            const SizedBox(height: 8),
-            _Choices<ModifierMode>(
-              values: [
-                ModifierMode.always,
-                ModifierMode.draw,
-                if (canBeCartridge(def)) ModifierMode.cartridge,
-              ],
-              selected: s.mode,
-              label: (m) => _modeLabels[m]!,
-              onSelect: (m) => _set(def, s.copyWith(mode: m)),
             ),
-            const SizedBox(height: 4),
-            _Hint(_modeHints[s.mode]!),
-            if (s.mode == ModifierMode.cartridge)
-              _chargesLine(def, s)
-            else ...[
-              if (s.mode == ModifierMode.draw)
-                _line(
-                  'Manches',
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (var r = 1; r <= 3; r++)
-                        if (def.round3Only)
-                          if (r == 3)
-                            const _RoundBox(round: 3, on: true, locked: true)
-                          else
-                            const SizedBox.shrink()
-                        else
-                          _RoundBox(
-                            round: r,
-                            on: s.rounds.contains(r),
-                            enabled: allowed.contains(r),
-                            onTap: () => _set(
-                              def,
-                              s.copyWith(
-                                rounds: s.rounds.contains(r)
-                                    ? (s.rounds.toSet()..remove(r))
-                                    : {...s.rounds, r},
-                              ),
-                            ),
-                          ),
-                    ],
-                  ),
-                ),
-              if (def.round3Only) const _Hint('Manche 3 seulement (mime).'),
-              if (def.notInRound3)
-                const _Hint('Jamais en manche 3 (on y mime).'),
-            ],
+            const SizedBox(width: 6),
+            control,
           ],
-        ],
+        ),
       ),
     );
   }
 
-  Widget _switch(bool value, ValueChanged<bool> onChanged) => Switch(
+  Widget _switch(bool value, ValueChanged<bool>? onChanged) => Switch(
         value: value,
         onChanged: onChanged,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         activeTrackColor: AppColors.secondaryCyan,
       );
 
-  Widget _line(String label, Widget trailing) => Padding(
+  Widget _groupHead(_Group group, Widget? trailing) => Padding(
+        padding: const EdgeInsets.fromLTRB(2, 14, 2, 6),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 32),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  group.label,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                    color: group == _Group.bonus
+                        ? AppColors.success
+                        : AppColors.malus,
+                  ),
+                ),
+              ),
+              if (trailing != null) trailing,
+            ],
+          ),
+        ),
+      );
+
+  Widget _groupControl(String label, Widget control) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label,
+              style: AppTextStyles.bodySmall
+                  .copyWith(fontSize: 11, color: AppColors.gray400)),
+          const SizedBox(width: 8),
+          control,
+        ],
+      );
+
+  Widget _menuAlways() => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _Frame(
+            title: 'Modificateur de toute la partie',
+            subtitle:
+                'Actif du début à la fin de la partie, pour toutes les équipes.',
+          ),
+          for (final group in const [_Group.malus, _Group.mimes])
+            ..._groupRows(group, EnsembleMenu.always),
+          const _Hint('Jamais en Toujours : les 4 bonus, Malus de 10 s, '
+              'Bloquer un devineur, Interdit de faire deviner.'),
+        ],
+      );
+
+  /// Modificateurs d'un groupe qui existent dans [menu] : Toujours et Aléatoire
+  /// excluent ce qui n'est que cartouche.
+  Iterable<ModifierDef> _available(_Group group, EnsembleMenu menu) =>
+      _inGroup(group).where(
+          (def) => menu == EnsembleMenu.cartridge || canBeRoundRule(def));
+
+  List<Widget> _groupRows(_Group group, EnsembleMenu menu) {
+    final defs = _available(group, menu);
+    final free = defs.where((d) => _rules.lockReason(d.id, menu) == null);
+    return [
+      _groupHead(
+        group,
+        switch (menu) {
+          EnsembleMenu.always => defs.any((d) => _rules.isAlways(d.id))
+              ? TextButton(
+                  onPressed: () => setState(() {
+                    _rules = _rules.copyWith(modifiers: {
+                      ..._rules.modifiers,
+                      for (final def in defs)
+                        def.id:
+                            _rules.settingOf(def.id).copyWith(always: false),
+                    });
+                  }),
+                  child: const Text(
+                    'Tout décocher',
+                    style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 12,
+                        color: AppColors.secondaryCyan),
+                  ),
+                )
+              : null,
+          EnsembleMenu.draw => free.isEmpty
+              ? null
+              : _groupControl(
+                  'Tout',
+                  _switch(
+                    free.every((d) => _rules.settingOf(d.id).draw),
+                    (on) => _setDraw(free, on),
+                  ),
+                ),
+          EnsembleMenu.cartridge => free.isEmpty
+              ? null
+              : _groupControl(
+                  'Tous',
+                  _Stepper(
+                    value: _commonCharges(free),
+                    onChanged: (v) => setState(() {
+                      _rules = _rules.copyWith(modifiers: {
+                        ..._rules.modifiers,
+                        for (final def in free)
+                          def.id: _rules.settingOf(def.id).copyWith(charges: v),
+                      });
+                    }),
+                  ),
+                ),
+        },
+      ),
+      for (final def in defs)
+        _modifierRow(
+            def,
+            menu,
+            switch (menu) {
+              EnsembleMenu.always => _switch(
+                  _rules.isAlways(def.id),
+                  _rules.lockReason(def.id, menu) != null
+                      ? null
+                      : (on) => _toggleAlways(def, on),
+                ),
+              EnsembleMenu.draw => _switch(
+                  _rules.drawsFrom(def.id),
+                  _rules.lockReason(def.id, menu) != null
+                      ? null
+                      : (on) => _setDraw([def], on),
+                ),
+              EnsembleMenu.cartridge => _Stepper(
+                  value: _rules.chargesOf(def.id),
+                  enabled: _rules.lockReason(def.id, menu) == null,
+                  onChanged: (v) =>
+                      _setting(def.id, (s) => s.copyWith(charges: v)),
+                ),
+            }),
+    ];
+  }
+
+  /// Valeur affichée par « Tous » : la valeur commune, sinon 0.
+  int _commonCharges(Iterable<ModifierDef> defs) {
+    final values = {for (final d in defs) _rules.settingOf(d.id).charges};
+    return values.length == 1 ? values.single : 0;
+  }
+
+  Widget _menuDraw() {
+    final missing = roundsWithoutDraw(_rules);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Frame(
+          title: 'Modificateur aléatoire de manche',
+          info: () => _info('Au début de chaque manche, l\'app tire au sort '
+              'parmi ceux que tu actives. Il vaut toute la manche, pour toutes '
+              'les équipes.'),
+          children: [
+            _line(
+              'Combien par manche',
+              _Stepper(
+                value: _rules.drawCount,
+                onChanged: (v) =>
+                    setState(() => _rules = _rules.copyWith(drawCount: v)),
+              ),
+            ),
+            if (missing.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  'Rien à tirer en manche ${missing.join(' et ')}.',
+                  style: AppTextStyles.bodySmall
+                      .copyWith(fontSize: 11, color: AppColors.warning),
+                ),
+              ),
+          ],
+        ),
+        for (final group in const [_Group.malus, _Group.mimes])
+          ..._groupRows(group, EnsembleMenu.draw),
+        const _Hint('Jamais en aléatoire de manche : les 4 bonus, Malus de '
+            '10 s, Bloquer un devineur, Interdit de faire deviner.'),
+      ],
+    );
+  }
+
+  Widget _menuCartridges() => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(2, 0, 2, 10),
+            child: Text(
+              'Une cartouche est à usage unique : elle vaut pour un seul tour.',
+              style: AppTextStyles.label.copyWith(fontSize: 13),
+            ),
+          ),
+          _Frame(
+            title: 'Au hasard',
+            subtitle: 'L\'app choisit parmi tous les bonus / malus.',
+            children: [
+              _line(
+                'Équilibrer la partie',
+                _switch(
+                  _rules.balance,
+                  (on) => setState(() => _rules = _rules.copyWith(balance: on)),
+                ),
+                info: () => _info('Plus une équipe est distancée, plus elle '
+                    'reçoit de cartouches.'),
+              ),
+              if (!_rules.balance)
+                _line(
+                  'Aux équipes menées',
+                  _Stepper(
+                    value: _rules.trailingCount,
+                    onChanged: (v) => setState(
+                        () => _rules = _rules.copyWith(trailingCount: v)),
+                  ),
+                  sub: 'Nombre fixe après les manches 1 et 2',
+                ),
+              _line(
+                'À tous, à chaque manche',
+                _Stepper(
+                  value: _rules.allCount,
+                  onChanged: (v) =>
+                      setState(() => _rules = _rules.copyWith(allCount: v)),
+                ),
+              ),
+            ],
+          ),
+          _Frame(
+            title: 'Pour tout le monde',
+            subtitle: 'Tu choisis : chaque équipe reçoit exactement ça au '
+                'début de la partie.',
+            children: [
+              for (final group in _Group.values)
+                ..._groupRows(group, EnsembleMenu.cartridge),
+            ],
+          ),
+        ],
+      );
+
+  Widget _line(String label, Widget trailing,
+          {String? sub, VoidCallback? info}) =>
+      Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           children: [
-            Expanded(child: Text(label, style: AppTextStyles.bodySmall)),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(label,
+                            style:
+                                AppTextStyles.label.copyWith(fontSize: 13.5)),
+                      ),
+                      if (info != null) _InfoButton(onTap: info),
+                    ],
+                  ),
+                  if (sub != null)
+                    Text(sub,
+                        style: AppTextStyles.bodySmall
+                            .copyWith(fontSize: 11, color: AppColors.gray400)),
+                ],
+              ),
+            ),
             trailing,
           ],
         ),
       );
 }
 
+enum _Group {
+  malus('MALUS'),
+  mimes('MIMES'),
+  bonus('BONUS');
+
+  final String label;
+  const _Group(this.label);
+}
+
+/// Onglets épinglés en haut pendant le défilement.
+class _TabsHeader extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  const _TabsHeader({required this.child});
+
+  static const _height = 78.0;
+
+  @override
+  double get minExtent => _height;
+  @override
+  double get maxExtent => _height;
+
+  @override
+  Widget build(context, shrinkOffset, overlapsContent) =>
+      ColoredBox(color: AppColors.backgroundMain, child: child);
+
+  @override
+  bool shouldRebuild(_TabsHeader oldDelegate) => true;
+}
+
+class _TabButton extends StatelessWidget {
+  final String label;
+  final int count;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _TabButton({
+    required this.label,
+    required this.count,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? AppColors.backgroundMain : Colors.white;
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          height: 58,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.secondaryCyan : Colors.transparent,
+            borderRadius: BorderRadius.circular(11),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '$count',
+                style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 16,
+                    height: 1.1,
+                    fontWeight: FontWeight.w700,
+                    color: color),
+              ),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 11.5,
+                    height: 1.1,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    color: color),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Cadre vert d'un menu (maquette `.frame`).
+class _Frame extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final VoidCallback? info;
+  final List<Widget> children;
+
+  const _Frame({
+    required this.title,
+    this.subtitle,
+    this.info,
+    this.children = const [],
+  });
+
+  @override
+  Widget build(BuildContext context) => Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0x8C263348),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.success, width: 2),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontFamily: 'Bangers',
+                      fontSize: 22,
+                      letterSpacing: 0.6,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(
+                            offset: Offset(1, 1),
+                            color: AppColors.primaryPinkDark),
+                      ],
+                    ),
+                  ),
+                ),
+                if (info != null) _InfoButton(onTap: info!),
+              ],
+            ),
+            if (subtitle != null)
+              Text(subtitle!,
+                  style: AppTextStyles.bodySmall
+                      .copyWith(fontSize: 12, color: const Color(0xFFCBD5E1))),
+            if (children.isNotEmpty) const SizedBox(height: 6),
+            ...children,
+          ],
+        ),
+      );
+}
+
+/// Petit « i » : l'explication s'affiche en bas de l'écran.
+class _InfoButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _InfoButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: 'Explication',
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Container(
+            width: 22,
+            height: 22,
+            margin: const EdgeInsets.only(left: 6),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.gray400, width: 1.5),
+            ),
+            child: const Text(
+              'i',
+              style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 13,
+                  height: 1,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.gray400),
+            ),
+          ),
+        ),
+      );
+}
+
 class _Card extends StatelessWidget {
   final String title;
-  final Color? color;
   final Widget child;
 
-  const _Card({required this.title, required this.child, this.color});
+  const _Card({required this.title, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -581,7 +980,7 @@ class _Card extends StatelessWidget {
           Text(
             title.toUpperCase(),
             style: AppTextStyles.label
-                .copyWith(color: color ?? AppColors.gray400, fontSize: 12),
+                .copyWith(color: AppColors.gray400, fontSize: 12),
           ),
           const SizedBox(height: 8),
           child,
@@ -589,22 +988,6 @@ class _Card extends StatelessWidget {
       ),
     );
   }
-}
-
-class _SubHead extends StatelessWidget {
-  final String text;
-  final bool first;
-  const _SubHead(this.text, {this.first = false});
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: EdgeInsets.only(top: first ? 0 : 12, bottom: 4),
-        child: Text(
-          text,
-          style: AppTextStyles.label
-              .copyWith(color: AppColors.gray400, fontSize: 11),
-        ),
-      );
 }
 
 class _Hint extends StatelessWidget {
@@ -619,157 +1002,49 @@ class _Hint extends StatelessWidget {
       );
 }
 
-/// Case d'une manche (1, 2, 3) : cochée, décochée, interdite (grisée) ou
-/// verrouillée (mime : manche 3 d'office).
-class _RoundBox extends StatelessWidget {
-  final int round;
-  final bool on;
-  final bool enabled;
-  final bool locked;
-  final VoidCallback? onTap;
-
-  const _RoundBox({
-    required this.round,
-    required this.on,
-    this.enabled = true,
-    this.locked = false,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final active = enabled && !locked;
-    return Semantics(
-      button: active,
-      checked: on,
-      enabled: active,
-      label: locked ? 'Manche $round, verrouillée' : 'Manche $round',
-      child: GestureDetector(
-        onTap: active ? onTap : null,
-        child: Container(
-          margin: const EdgeInsets.only(left: 6),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: on && enabled
-                ? AppColors.secondaryCyan
-                : AppColors.backgroundCard,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-                color: enabled ? AppColors.gray600 : AppColors.gray700),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '$round',
-                style: AppTextStyles.label.copyWith(
-                  color: !enabled
-                      ? AppColors.gray600
-                      : on
-                          ? AppColors.backgroundMain
-                          : Colors.white,
-                ),
-              ),
-              if (locked) ...[
-                const SizedBox(width: 4),
-                const Icon(Icons.lock,
-                    size: 13, color: AppColors.backgroundMain),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Compteur compact −/+.
+/// Compteur compact −/+ de 0 à [kMaxCount].
 class _Stepper extends StatelessWidget {
   final int value;
-  final int min;
-  final int max;
+  final bool enabled;
   final ValueChanged<int> onChanged;
 
   const _Stepper({
     required this.value,
-    required this.min,
-    required this.max,
     required this.onChanged,
+    this.enabled = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    Widget button(IconData icon, int next, bool enabled, String label) =>
+    Widget button(IconData icon, int next, bool can, String label) =>
         IconButton(
           tooltip: label,
-          onPressed: enabled ? () => onChanged(next) : null,
-          icon: Icon(icon, size: 18),
+          onPressed: enabled && can ? () => onChanged(next) : null,
+          icon: Icon(icon, size: 16),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints.tightFor(width: 30, height: 30),
           color: Colors.white,
           disabledColor: AppColors.gray600,
-          style: IconButton.styleFrom(backgroundColor: AppColors.gray700),
+          style: IconButton.styleFrom(
+            backgroundColor: AppColors.gray700,
+            disabledBackgroundColor: AppColors.gray700,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
         );
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        button(Icons.remove, value - 1, value > min, 'Moins'),
+        button(Icons.remove, value - 1, value > 0, 'Moins'),
         SizedBox(
-          width: 28,
+          width: 24,
           child: Text(
             '$value',
-            style: AppTextStyles.label,
+            style: AppTextStyles.label
+                .copyWith(color: value == 0 ? AppColors.gray500 : Colors.white),
             textAlign: TextAlign.center,
           ),
         ),
-        button(Icons.add, value + 1, value < max, 'Plus'),
-      ],
-    );
-  }
-}
-
-/// Choix exclusif entre quelques options.
-class _Choices<T> extends StatelessWidget {
-  final List<T> values;
-  final T selected;
-  final String Function(T) label;
-  final ValueChanged<T> onSelect;
-
-  const _Choices({
-    required this.values,
-    required this.selected,
-    required this.label,
-    required this.onSelect,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        for (final value in values)
-          Expanded(
-            child: GestureDetector(
-              onTap: () => onSelect(value),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                decoration: BoxDecoration(
-                  color: value == selected
-                      ? AppColors.secondaryCyan
-                      : AppColors.backgroundCard,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  label(value),
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.bodySmall.copyWith(
-                    fontSize: 11,
-                    color: value == selected
-                        ? AppColors.backgroundMain
-                        : Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ),
+        button(Icons.add, value + 1, value < kMaxCount, 'Plus'),
       ],
     );
   }

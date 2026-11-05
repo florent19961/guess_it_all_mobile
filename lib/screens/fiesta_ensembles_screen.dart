@@ -17,14 +17,13 @@ import '../widgets/help/help_content.dart';
 import 'fiesta_ensemble_editor_screen.dart';
 import 'fiesta_ensemble_view_screen.dart';
 
-/// « Fiesta personnalisée » : juste après les Paramètres, avant les joueurs
-/// (Fiesta Personnalisé seulement). Les ensembles fournis par l'app puis les
+/// La liste des ensembles : juste après les Paramètres, avant les joueurs
+/// (Fiesta seulement). Les ensembles fournis par l'app puis les
 /// miens (un tap sélectionne), « Créer un ensemble » qui POUSSE l'éditeur
 /// (`FiestaEnsembleEditorScreen`), en bas « Suivant ».
 ///
 /// L'écran ne connaît ni le provider ni la navigation de l'app : [onNext]
-/// reçoit les règles de l'ensemble choisi (mode `custom`, `ensembleName` =
-/// nom), prêtes à attendre dans `pendingFiesta`. [selected] (l'attente
+/// reçoit les règles de l'ensemble choisi (`ensembleName` = nom), prêtes à attendre dans `pendingFiesta`. [selected] (l'attente
 /// courante, ex. après « Rejouer ») présélectionne l'ensemble aux mêmes
 /// règles ; sinon le dernier utilisé, sinon « Fiesta classique ».
 class FiestaEnsemblesScreen extends StatefulWidget {
@@ -346,15 +345,23 @@ class _EnsembleCard extends StatelessWidget {
     required this.onDelete,
   });
 
-  /// « N malus · M bonus » (maquette `summaryOf`).
+  /// « N malus · M bonus » (maquette `summaryOf`) : ce qui joue réellement,
+  /// plus les cartouches au hasard.
   String get _summary {
+    final rules = ensemble.rules;
     var malus = 0;
     var bonus = 0;
     for (final def in kModifierCatalog) {
-      if (ensemble.rules.activeSetting(def.id) == null) continue;
+      if (!rules.isAlways(def.id) &&
+          rules.chargesOf(def.id) == 0 &&
+          !(rules.drawCount > 0 && rules.drawsFrom(def.id))) {
+        continue;
+      }
       def.nature == ModifierNature.malus ? malus++ : bonus++;
     }
-    return '$malus malus · $bonus bonus';
+    final random =
+        rules.balance || rules.trailingCount > 0 || rules.allCount > 0;
+    return '$malus malus · $bonus bonus${random ? ' · cartouches au hasard' : ''}';
   }
 
   @override
