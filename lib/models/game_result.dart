@@ -58,21 +58,17 @@ enum RecapKind {
   /// Tiré ou fixé pour toutes les équipes en manche [ModifierRecapItem.round].
   draw,
 
-  /// Rattrapage dû à [ModifierRecapItem.teamId] à l'entrée de la manche.
-  catchUp,
-
-  /// Carte 1 parmi 3 choisie par [ModifierRecapItem.chooserId].
-  choice,
-
-  /// Coup de pouce de l'app (Auto) pour [ModifierRecapItem.teamId].
+  /// Cartouche gagnée par [ModifierRecapItem.teamId] (coup de pouce à
+  /// l'équipe menée). Les faits d'un genre retiré depuis, relus d'une archive,
+  /// sont ignorés seuls ([ModifierRecapItem.tryFromJson]).
   boost,
 
   /// Charge dépensée par [ModifierRecapItem.teamId].
   bonusUsed,
 }
 
-/// Un fait du récap des modificateurs, archivé en DONNÉES (ids, manche,
-/// secondes) et jamais en phrases : le texte est formé à l'affichage
+/// Un fait du récap des modificateurs, archivé en DONNÉES (ids, manche) et
+/// jamais en phrases : le texte est formé à l'affichage
 /// (`formatModifierRecap`), donc traduisible plus tard (epic i18n).
 @immutable
 class ModifierRecapItem {
@@ -81,7 +77,6 @@ class ModifierRecapItem {
   final String? catalogId;
   final String? teamId;
   final String? chooserId;
-  final int? seconds;
 
   const ModifierRecapItem(
     this.kind, {
@@ -89,7 +84,6 @@ class ModifierRecapItem {
     this.catalogId,
     this.teamId,
     this.chooserId,
-    this.seconds,
   });
 
   Map<String, dynamic> toJson() => {
@@ -98,7 +92,6 @@ class ModifierRecapItem {
         if (catalogId != null) 'catalogId': catalogId,
         if (teamId != null) 'teamId': teamId,
         if (chooserId != null) 'chooserId': chooserId,
-        if (seconds != null) 'seconds': seconds,
       };
 
   /// `null` si le fait est illisible (dont une ligne `{title, detail}`
@@ -114,7 +107,6 @@ class ModifierRecapItem {
       catalogId: string('catalogId'),
       teamId: string('teamId'),
       chooserId: string('chooserId'),
-      seconds: json['seconds'] is int ? json['seconds'] : null,
     );
   }
 }

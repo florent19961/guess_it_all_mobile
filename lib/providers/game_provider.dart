@@ -9,7 +9,6 @@ import '../models/fiesta/fiesta_state.dart';
 import '../models/fiesta/modifier_catalog.dart';
 import '../models/fiesta/modifier_instance.dart';
 import '../models/fiesta/modifier_recap.dart';
-import '../models/fiesta/offers.dart';
 import '../models/fiesta/round_transition.dart';
 import '../models/fiesta/symmetric_draw.dart';
 import '../models/fiesta/turn_effects.dart';
@@ -459,10 +458,7 @@ class GameProvider extends ChangeNotifier {
     // et gelée avec le reste (relue telle quelle après un kill).
     final rules = fiesta == null || fiesta.mode != FiestaMode.auto
         ? fiesta
-        : autoRules(
-            oneAnswer: drawsOneAnswer(gameId),
-            autoCalibrate: fiesta.autoCalibrate,
-          );
+        : autoRules(oneAnswer: drawsOneAnswer(gameId));
 
     _game = _game.copyWith(
       gameId: gameId,
@@ -486,11 +482,7 @@ class GameProvider extends ChangeNotifier {
           ? null
           : FiestaState(
               rules: rules,
-              active: [
-                ...roundModifiers(rules, gameId: gameId, round: 1),
-                ...stockForRound(rules,
-                    round: 1, teamIds: _teams.map((t) => t.id)),
-              ],
+              active: roundModifiers(rules, gameId: gameId, round: 1),
             ),
       clearFiesta: rules == null,
     );
@@ -590,15 +582,11 @@ class GameProvider extends ChangeNotifier {
   /// modificateur (Q5). En Classique : `turnBonusTime ?? turnDuration`, comme
   /// avant.
   TurnTime get turnTime {
-    final fiesta = _game.fiesta;
-    final due = fiesta == null || _teams.isEmpty
-        ? 0
-        : fiesta.catchUpDue[_teams[_game.currentTeamIndex].id] ?? 0;
     return composeTurnSeconds(
       baseSeconds: _settings.turnDuration,
       carriedSeconds: _game.turnBonusTime,
-      catchUpSeconds: max(0, due),
-      leaderMalusSeconds: max(0, -due),
+      // Allumé ou dépensé : l'aperçu et le chrono comptent la même chose.
+      plus10sCount: _charge('plus_10s') == null ? 0 : 1,
       minus10sCount:
           currentTeamModifiers.where((m) => m.catalogId == 'minus_10s').length,
     );
@@ -619,20 +607,13 @@ class GameProvider extends ChangeNotifier {
   void startTurnTimer() {
     final now = DateTime.now().millisecondsSinceEpoch;
     // À lire AVANT d'effacer `turnBonusTime` : c'est lui qui dit si ce tour est
-    // une continuation, donc si le rattrapage s'applique et se consomme.
+    // une continuation, et avant de dépenser les charges.
     final durationSeconds = turnTime.total;
     final durationMs = durationSeconds * 1000;
     var fiesta = _game.fiesta;
     // Lu seulement en Fiesta : en Classique, rien n'exige une équipe ici.
     final teamId = fiesta == null ? '' : _teams[_game.currentTeamIndex].id;
-    if (fiesta != null &&
-        _game.turnBonusTime == null &&
-        fiesta.catchUpDue.containsKey(teamId)) {
-      // Consommé une fois, effacé : même principe que `turnBonusTime`.
-      fiesta = fiesta.copyWith(
-          catchUpDue: Map.of(fiesta.catchUpDue)..remove(teamId));
-    }
-    // Bonus à charge (×2, deux mots) : la charge se dépense ICI, pas à
+    // Bonus à charge (×2, deux mots, passe gratuite, +10 s) : la charge se dépense ICI, pas à
     // l'interrupteur. Éteindre avant le départ ou revenir en arrière n'a donc
     // rien à rendre.
     for (final id in kChargeBonusKeys.keys) {
@@ -653,8 +634,7 @@ class GameProvider extends ChangeNotifier {
     final currentWord = _game.currentWord;
     String? drawnSecond;
     if (fiesta != null &&
-        (fiesta.turn.charges['two_words'] == ChargeState.spent ||
-            _isRoundRule('two_words')) &&
+        fiesta.turn.charges['two_words'] == ChargeState.spent &&
         fiesta.turn.secondWord == null &&
         currentWord != null) {
       drawnSecond = drawOtherCard(
@@ -1239,8 +1219,6 @@ class GameProvider extends ChangeNotifier {
     // rappelait `nextRound` depuis l'écran de jeu de la manche suivante et
     // sautait une manche (M1 → M3). Seul l'écran de transition fait avancer.
     if (_game.currentScreen != AppConstants.screenTransition) return;
-    // 1 parmi 3 : la garde est ICI, pas sur le bouton (double tap, reprise).
-    if (nextChooserId != null) return;
     final nextRoundNumber = _game.currentRound + 1;
 
     if (nextRoundNumber > 3) {
@@ -1271,9 +1249,8 @@ class GameProvider extends ChangeNotifier {
   }
 
   /// Plan du passage à la manche suivante, recalculé sur l'état de fin de
-  /// manche (scores, graine, choix persistés) : montré par la transition
-  /// ([nextRoundModifiers], [appBoostPreview], [catchUpPreview]) et appliqué
-  /// tel quel par `nextRound`. Nul en Classique et après M3.
+  /// manche (scores, graine) et appliqué une seule fois par `nextRound`. Nul en
+  /// Classique et après M3.
   RoundTransitionPlan? get _transitionPlan {
     final fiesta = _game.fiesta;
     if (fiesta == null) return null;
@@ -1282,25 +1259,21 @@ class GameProvider extends ChangeNotifier {
       gameId: _game.gameId ?? '',
       finishedRound: _game.currentRound,
       scores: {for (final t in _teams) t.id: t.score},
+      blockableTeamIds: {
+        for (final t in _teams)
+          if (canBlockGuesser(t.playerIds.length)) t.id,
+      },
     );
   }
 
-  /// Rattrapage qui s'appliquera à la manche suivante (vide à égalité ou
-  /// rattrapage éteint).
-  List<CatchUpEntry> get catchUpPreview => _transitionPlan?.catchUp ?? const [];
-
-  /// Fixés + tirage pour toutes les équipes à la manche suivante.
-  List<ModifierInstance> get nextRoundModifiers =>
-      _transitionPlan?.draw ?? const [];
-
   /// Équipe qui ouvre la manche en cours par sa continuation : celle de la
   /// dernière entrée de la manche précédente. Nulle en M1.
-  String? get _continuingTeamId => _continuingTeamOf(_game.currentRound);
-
-  /// Équipe qui ouvre la manche [round] par sa continuation (nulle en M1).
-  String? _continuingTeamOf(int round) => round <= 1
+  String? get _continuingTeamId => _game.currentRound <= 1
       ? null
-      : _game.history.where((h) => h.round == round - 1).lastOrNull?.teamId;
+      : _game.history
+          .where((h) => h.round == _game.currentRound - 1)
+          .lastOrNull
+          ?.teamId;
 
   int _entriesThisRound(String teamId) => _game.history
       .where((h) => h.round == _game.currentRound && h.teamId == teamId)
@@ -1317,15 +1290,15 @@ class GameProvider extends ChangeNotifier {
         _entriesThisRound(teamId) == 0;
   }
 
-  /// Modificateurs qui pèsent sur l'équipe qui joue (badges) : ceux de la
-  /// manche LOGIQUE du tour, N pour une continuation ([modifiersForTurn]).
+  /// Modificateurs qui pèsent sur l'équipe qui joue (badges) : les règles de la
+  /// manche COURANTE, continuation comprise, et ses malus reçus
+  /// ([modifiersForTurn]).
   List<ModifierInstance> get currentTeamModifiers {
     final fiesta = _game.fiesta;
     final teamId = getCurrentTeam()?.id;
     if (fiesta == null || teamId == null) return const [];
     return modifiersForTurn(fiesta.active,
-        teamId: teamId,
-        logicalRound: _game.currentRound - (isContinuation ? 1 : 0));
+        teamId: teamId, round: _game.currentRound);
   }
 
   // ========== EFFETS DE TOUR (2-8) ==========
@@ -1338,16 +1311,11 @@ class GameProvider extends ChangeNotifier {
   /// `no_pass` pèse sur l'équipe qui joue.
   bool get passBlocked => _has('no_pass');
 
-  /// Passes gratuites du tour, et celles déjà utilisées : celles d'une règle
-  /// de manche (`free_pass` ×N), plus celles d'une cartouche dépensée au
-  /// départ du tour (Fiesta v2 : une cartouche = un tour de N passes).
-  int get freePasses =>
-      chargeAllowance(
-          currentTeamModifiers.where((m) => !_isCartridge(m)).toList(),
-          'free_pass') +
-      (_charge('free_pass') == ChargeState.spent
-          ? modifierById('free_pass')!.defaultCharges
-          : 0);
+  /// Passes gratuites du tour, et celles déjà utilisées : celles de la
+  /// cartouche dépensée au départ du tour (une cartouche = un tour de N passes).
+  int get freePasses => _charge('free_pass') == ChargeState.spent
+      ? modifierById('free_pass')!.defaultCharges
+      : 0;
   int get freePassesUsed => _turn.freePassesUsed;
 
   /// Il reste une passe gratuite ce tour. Toujours faux en Classique.
@@ -1411,65 +1379,42 @@ class GameProvider extends ChangeNotifier {
     _saveGameState();
   }
 
-  // ========== BONUS À CHARGE : ×2 (2-9), DEUX MOTS (2-11) ==========
+  // ========== BONUS À CHARGE : ×2 (2-9), DEUX MOTS (2-11), +10 S ==========
   // Une table (`kChargeBonusKeys`), une implémentation : chaque getter public
   // n'est qu'un id de catalogue.
 
-  /// Une instance « pour tous » (cible `both`) vient d'une règle de manche
-  /// (« Toujours » / « Au tirage ») : elle s'applique d'elle-même, sans
-  /// activation ni charge. Les cartouches (stock, 1 parmi 3, coup de pouce)
-  /// visent une équipe.
-  static bool _isCartridge(ModifierInstance m) =>
-      m.target != ModifierTarget.both;
-
-  /// [id] pèse sur l'équipe qui joue comme règle de manche.
-  bool _isRoundRule(String id) =>
-      currentTeamModifiers.any((m) => m.catalogId == id && !_isCartridge(m));
-
   /// Modificateurs EN JEU pendant le tour (badges du tour, tags analytics) :
-  /// une cartouche à charge non activée n'en est pas un (activée : badge et
-  /// tag à part) ; une règle de manche (ex. « Deux mots » Toujours) en est un.
-  List<ModifierInstance> get turnModifiers => currentTeamModifiers
-      .where((m) =>
-          !(kChargeBonusKeys.containsKey(m.catalogId) && _isCartridge(m)))
-      .toList();
+  /// règles de manche et malus reçus. Un bonus activé a son badge à part
+  /// ([spentBonuses]).
+  List<ModifierInstance> get turnModifiers => currentTeamModifiers;
+
+  /// Bonus dépensés pour CE tour (badges du tour), dans l'ordre de la table.
+  List<String> get spentBonuses => [
+        for (final id in kChargeBonusKeys.keys)
+          if (_charge(id) == ChargeState.spent) id,
+      ];
 
   ChargeState? _charge(String id) => _turn.charges[id];
 
-  /// Cartouches de la manche en cours détenues par l'équipe qui joue : ses
-  /// bonus à charge, et ses malus en réserve (à infliger).
-  List<ModifierInstance> get _heldCartridges {
-    final teamId = getCurrentTeam()?.id;
-    return [
-      ...currentTeamModifiers.where(
-          (m) => _isCartridge(m) && kChargeBonusKeys.containsKey(m.catalogId)),
-      for (final m in _game.fiesta?.active ?? const <ModifierInstance>[])
-        if (m.reserve && m.teamId == teamId && m.round == _game.currentRound) m,
-    ];
-  }
-
-  /// Cartouches [id] restantes de l'équipe qui joue pour la manche en cours
-  /// (celles des manches finies sont perdues ; un bonus allumé compte encore,
-  /// il se dépense au départ). Aucune sur une continuation : c'est le même
-  /// tour que la fin de N, on n'y joue rien, et les cartouches de N+1
-  /// commencent au premier vrai tour.
+  /// Cartouches [id] restantes de l'équipe qui joue pour le reste de la partie
+  /// (un bonus allumé compte encore, il se dépense au départ). Aucune sur une
+  /// continuation : c'est le même tour que la fin de N, on n'y joue rien.
   int _chargesLeft(String id) {
-    if (isContinuation) return 0;
+    final fiesta = _game.fiesta;
     final teamId = getCurrentTeam()?.id;
-    final used = (_game.fiesta?.chargesUsed ?? const <ChargeUse>[])
-        .where((u) =>
-            u.catalogId == id &&
-            u.teamId == teamId &&
-            u.round == _game.currentRound)
-        .length;
-    return chargeAllowance(_heldCartridges, id) - used;
+    if (fiesta == null || teamId == null || isContinuation) return 0;
+    return fiesta.cartridgesLeft(id, teamId);
   }
 
   /// Pourquoi le bonus [id] ne peut pas s'allumer ce tour (`null` = il
-  /// peut) : déjà en jeu, ou incompatible avec un modificateur du tour (règle
-  /// de manche, malus reçu) ou un autre bonus allumé. Fiesta v2 : plus de
-  /// plafond, seules les incompatibilités limitent.
+  /// peut) : sans effet sur un temps reporté (qui reste exact), déjà en jeu, ou
+  /// incompatible avec un modificateur du tour (règle de manche, malus reçu) ou
+  /// un autre bonus allumé. Pas de plafond : seules les incompatibilités
+  /// limitent.
   String? _conflict(String id) {
+    if (kTimeModifierIds.contains(id) && _game.turnBonusTime != null) {
+      return 'sans effet sur un temps reporté';
+    }
     for (final other in [
       ...turnModifiers.map((m) => m.catalogId),
       ...kChargeBonusKeys.keys
@@ -1515,10 +1460,8 @@ class GameProvider extends ChangeNotifier {
   /// Deux mots à l'écran pendant CE tour (continuation comprise).
   bool get isTwoWordsArmed => _charge('two_words') != null;
 
-  /// Deux cartes à l'écran : cartouche dépensée, ou règle de manche (qui
-  /// s'applique d'elle-même à chaque tour).
-  bool get isTwoWordsOn =>
-      _charge('two_words') == ChargeState.spent || _isRoundRule('two_words');
+  /// Deux cartes à l'écran : cartouche dépensée.
+  bool get isTwoWordsOn => _charge('two_words') == ChargeState.spent;
   int get twoWordsLeft => _chargesLeft('two_words');
   bool get twoWordsBlocked => _blocked('two_words');
   void setTwoWords(bool on) => _setCharge('two_words', on);
@@ -1557,28 +1500,19 @@ class GameProvider extends ChangeNotifier {
               ? fiesta.turn.copyWith(clearSecondWord: true)
               : fiesta.turn.copyWith(secondWord: word));
 
-  /// Fiesta à la VRAIE fin d'un tour : état du tour vidé, instances de portée
-  /// tour qui ont pesé sur ce tour consommées. 🔴 Une fin de manche n'en est
-  /// pas une : la continuation en N+1 est le même tour. À la fin d'une
-  /// continuation, les instances de N, qui ne servaient qu'à elle, partent.
-  /// Nul en Classique.
+  /// Fiesta à la VRAIE fin d'un tour : état du tour vidé, malus infligés à
+  /// l'équipe consommés. 🔴 Une fin de manche n'en est pas une : la continuation
+  /// en N+1 est le même tour. Nul en Classique.
   FiestaState? _fiestaAfterTurn() {
     final fiesta = _game.fiesta;
     if (fiesta == null || _teams.isEmpty) return null;
-    final applied = currentTeamModifiers;
-    final continuation = isContinuation;
     final teamId = _teams[_game.currentTeamIndex].id;
     return fiesta.copyWith(
       turn: FiestaTurnState.empty,
       active: fiesta.active
-          .where((m) =>
-              !(m.scope == ModifierScope.turn && applied.contains(m)) &&
-              // Malus infligés à l'équipe : ils visaient CE tour (sans effet
-              // s'ils étaient interdits dans sa manche).
-              !(m.fromTeamId != null && m.teamId == teamId) &&
-              !(continuation &&
-                  m.fromTeamId == null &&
-                  m.round < _game.currentRound))
+          // Malus infligés à l'équipe : ils visaient CE tour (sans effet s'ils
+          // étaient interdits dans sa manche).
+          .where((m) => !(m.fromTeamId != null && m.teamId == teamId))
           .toList(),
     );
   }
@@ -1596,32 +1530,7 @@ class GameProvider extends ChangeNotifier {
     return fiesta.copyWith(turn: fiesta.turn.afterRoundEnd());
   }
 
-  /// Malus à révéler en plein écran avant le tour : ceux de l'équipe qui joue,
-  /// à son premier tour de la manche LOGIQUE du tour (celle de ses effets).
-  /// Une continuation ordinaire ne révèle rien (l'équipe a déjà joué en N) ;
-  /// une continuation en chaîne révèle les malus de N+1, qu'elle subit pour
-  /// la première fois, sauf les malus de temps : une continuation joue
-  /// exactement son temps reporté, un « −10 s » annoncé n'y serait pas
-  /// appliqué. L'entrée de la continuation ne compte jamais comme un tour de
-  /// sa manche. Dérivé de l'historique : rien à persister.
-  List<ModifierInstance> get malusToReveal {
-    final teamId = getCurrentTeam()?.id;
-    if (_game.fiesta == null || teamId == null) return const [];
-    final round = _game.currentRound - (isContinuation ? 1 : 0);
-    final realTurns = _game.history
-            .where((h) => h.round == round && h.teamId == teamId)
-            .length -
-        (teamId == _continuingTeamOf(round) ? 1 : 0);
-    if (realTurns > 0) return const [];
-    final continuation = isContinuation;
-    return currentTeamModifiers
-        .where((m) =>
-            m.nature == ModifierNature.malus &&
-            !(continuation && kTimeModifierIds.contains(m.catalogId)))
-        .toList();
-  }
-
-  // ========== CE TOUR / RÉSERVE (Fiesta v2, lane 2) ==========
+  // ========== CE TOUR / RÉSERVE ==========
   // Une cartouche = UN tour d'UNE équipe. Bonus : allumé avant le tour,
   // dépensé au départ du chrono (`startTurnTimer`). Malus : infligé à une
   // autre équipe pour SON prochain tour, dépensé tout de suite (`ChargeUse`
@@ -1630,26 +1539,27 @@ class GameProvider extends ChangeNotifier {
 
   /// Règles de manche qui pèsent sur ce tour (« Ce tour », cercles neutres).
   List<ModifierInstance> get roundRulesThisTurn =>
-      currentTeamModifiers.where((m) => !_isCartridge(m)).toList();
+      currentTeamModifiers.where((m) => m.fromTeamId == null).toList();
 
-  /// Malus reçus pour ce tour : infligés par une équipe (`fromTeamId`), ou
-  /// coup de pouce de l'app (Auto) contre le leader.
-  List<ModifierInstance> get receivedThisTurn => currentTeamModifiers
-      .where((m) => _isCartridge(m) && m.nature == ModifierNature.malus)
-      .toList();
+  /// Malus infligés par une autre équipe pour ce tour.
+  List<ModifierInstance> get receivedThisTurn =>
+      currentTeamModifiers.where((m) => m.fromTeamId != null).toList();
 
   /// Bonus allumés pour ce tour (ou déjà dépensés), dans l'ordre d'allumage.
   List<String> get bonusesThisTurn => _turn.charges.keys.toList();
 
   /// Réserve de l'équipe qui joue, dans l'ordre du catalogue : ses
-  /// cartouches de la manche, bonus et malus, épuisées comprises (un bonus
-  /// allumé a quitté la réserve). Vide hors Fiesta et sur une continuation.
+  /// cartouches pour la partie, bonus et malus, épuisées comprises (un bonus
+  /// allumé a quitté la réserve). Une cartouche impossible dans la manche
+  /// (un mime avant M3) est cachée. Vide hors Fiesta et sur une continuation.
   List<Cartridge> get reserve {
-    if (_game.fiesta == null || isContinuation) return const [];
-    final held = _heldCartridges.map((m) => m.catalogId).toSet();
+    final fiesta = _game.fiesta;
+    final teamId = getCurrentTeam()?.id;
+    if (fiesta == null || teamId == null || isContinuation) return const [];
     return [
       for (final def in kModifierCatalog)
-        if (held.contains(def.id))
+        if (isEligibleForRound(def, _game.currentRound) &&
+            fiesta.cartridgesOwned(def.id, teamId) > 0)
           Cartridge(
             def.id,
             left: _chargesLeft(def.id) - (_charge(def.id) != null ? 1 : 0),
@@ -1798,137 +1708,6 @@ class GameProvider extends ChangeNotifier {
     _saveGameState();
   }
 
-  // ========== 1 PARMI 3 / COUP DE POUCE (2-10) ==========
-  // Tout est RECALCULÉ depuis les scores, le tirage de N+1 et la graine
-  // `(gameId, manche, équipe)` : retour arrière et app tuée retrouvent les
-  // mêmes offres. Seuls les choix faits sont persistés (`offerChoices`).
-
-  /// Classement de fin de manche (scores actuels, dans l'ordre des équipes).
-  Standings get standings => Standings({for (final t in _teams) t.id: t.score});
-
-  /// Choix déjà faits sur la transition en cours, dans l'ordre.
-  List<OfferChoice> get _pendingChoices => [
-        for (final c in _game.fiesta?.offerChoices ?? const <OfferChoice>[])
-          if (c.modifier.round == _game.currentRound + 1) c,
-      ];
-
-  bool get _isPickThreeOn {
-    final fiesta = _game.fiesta;
-    return fiesta != null &&
-        _game.currentScreen == AppConstants.screenTransition &&
-        isPickThreeOn(fiesta.rules, _game.currentRound);
-  }
-
-  /// Rangées d'offres de [teamId] sur la transition (une carte à prendre par
-  /// rangée), compte tenu des règles de N+1 et des choix des équipes passées
-  /// AVANT elle dans la file : ses rangées ne bougent pas pendant qu'elle
-  /// choisit. Vide hors 1 parmi 3.
-  List<List<ModifierInstance>> offersFor(String teamId) {
-    if (!_isPickThreeOn) return const [];
-    final order = standings.choosingOrder;
-    final before = order.takeWhile((id) => id != teamId).toSet();
-    return pickThreeOffers(
-      rules: _game.fiesta!.rules,
-      gameId: _game.gameId ?? '',
-      round: _game.currentRound,
-      standings: standings,
-      teamId: teamId,
-      roundDraw: nextRoundModifiers,
-      earlierChoices: [
-        for (final c in _pendingChoices)
-          if (before.contains(c.chooserId)) c.modifier,
-      ],
-      blockImmuneTeamIds: {
-        for (final t in _teams)
-          if (!canBlockGuesser(t.playerIds.length)) t.id,
-      },
-    );
-  }
-
-  /// Cartes déjà prises par [teamId] sur cette transition, par rangée.
-  Map<int, ModifierInstance> chosenBy(String teamId) => {
-        for (final c in _pendingChoices)
-          if (c.chooserId == teamId) c.row: c.modifier,
-      };
-
-  /// La carte n° [index] de la rangée [row] de [teamId] a-t-elle encore un
-  /// effet, compte tenu de ses propres choix dans les autres rangées (déjà
-  /// faits, plus [alsoTaken] : ceux sélectionnés à l'écran, pas encore
-  /// validés) ?
-  bool canChooseOffer(String teamId, int row, int index,
-      {List<ModifierInstance> alsoTaken = const []}) {
-    final rows = offersFor(teamId);
-    if (row < 0 || row >= rows.length) return false;
-    if (index < 0 || index >= rows[row].length) return false;
-    final mine = chosenBy(teamId);
-    if (mine.containsKey(row)) return false;
-    final order = standings.choosingOrder;
-    final before = order.takeWhile((id) => id != teamId).toSet();
-    return isUsefulOffer([
-      ...nextRoundModifiers,
-      for (final c in _pendingChoices)
-        if (before.contains(c.chooserId)) c.modifier,
-      ...mine.values,
-      ...alsoTaken,
-    ], rows[row][index]);
-  }
-
-  /// [teamId] a fini de choisir : une carte prise dans chaque rangée, ou plus
-  /// aucune carte utile dans les rangées restantes.
-  bool _doneChoosing(String teamId) {
-    final rows = offersFor(teamId);
-    final mine = chosenBy(teamId);
-    for (var r = 0; r < rows.length; r++) {
-      if (mine.containsKey(r)) continue;
-      for (var i = 0; i < rows[r].length; i++) {
-        if (canChooseOffer(teamId, r, i)) return false;
-      }
-    }
-    return true;
-  }
-
-  /// Prochaine équipe de la file : la première de l'ordre de choix qui n'a
-  /// pas fini de choisir. `null` = file vide (ou pas de 1 parmi 3) :
-  /// « Manche suivante » est permis.
-  String? get nextChooserId {
-    if (!_isPickThreeOn) return null;
-    for (final id in standings.choosingOrder) {
-      if (!_doneChoosing(id)) return id;
-    }
-    return null;
-  }
-
-  /// La carte « 1 parmi 3 » a lieu sur cette transition (au moins un choix à
-  /// faire ou déjà fait).
-  bool get hasPickThree =>
-      nextChooserId != null || (_isPickThreeOn && _pendingChoices.isNotEmpty);
-
-  /// [teamId] prend la carte n° [index] de sa rangée [row]. Refusé si ce
-  /// n'est pas son tour, si la rangée a déjà sa carte, ou si la carte n'a
-  /// plus d'effet.
-  void chooseOffer(String teamId, int row, int index) {
-    if (teamId != nextChooserId || !canChooseOffer(teamId, row, index)) {
-      return;
-    }
-    final fiesta = _game.fiesta!;
-    _game = _game.copyWith(
-      fiesta: fiesta.copyWith(offerChoices: [
-        ...fiesta.offerChoices,
-        OfferChoice(
-            chooserId: teamId,
-            row: row,
-            modifier: offersFor(teamId)[row][index]),
-      ]),
-    );
-    notifyListeners();
-    _saveGameState();
-  }
-
-  /// Coup de pouce de l'app (Auto) pour la manche suivante. Vide hors Auto +
-  /// auto-calibrage, après M3 ou à égalité.
-  List<ModifierInstance> get appBoostPreview =>
-      _transitionPlan?.gifts ?? const [];
-
   /// Équipe qui désigne le devineur bloqué de l'équipe qui joue : celle qui
   /// lui a infligé « Bloquer un devineur ». `null` = les adversaires.
   Team? get blockingTeam {
@@ -1947,9 +1726,8 @@ class GameProvider extends ChangeNotifier {
     return buildModifierRecap(
       rules: fiesta.rules,
       chargesUsed: fiesta.chargesUsed,
-      offerChoices: fiesta.offerChoices,
+      earned: fiesta.earned,
       gameId: _game.gameId ?? '',
-      teams: _teams,
       roundsPlayed: _game.currentRound,
     );
   }

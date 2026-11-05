@@ -102,7 +102,7 @@ const List<ModifierDef> kModifierCatalog = [
   ModifierDef(
     id: 'double_points',
     name: 'Mot compte double',
-    description: 'Une fois par manche, les points du tour comptent double.',
+    description: 'Les points du tour comptent double.',
     nature: ModifierNature.bonus,
     defaultCharges: 1,
   ),
@@ -171,12 +171,30 @@ const List<ModifierDef> kModifierCatalog = [
     round3Only: true,
     mimeFamily: true,
   ),
+  // Fiesta v3 (2026-11-05) : symétrique de « Malus de 10 s ». EN FIN de liste.
+  ModifierDef(
+    id: 'plus_10s',
+    name: 'Bonus de 10 s',
+    description: 'Le tour démarre avec 10 secondes de plus.',
+    nature: ModifierNature.bonus,
+  ),
 ];
 
-/// Seulement en cartouche (Fiesta v2) : jamais « Toujours » ni « Au tirage »
-/// (une règle de manche pour tous n'aurait pas de sens : personne pour
-/// désigner le devineur, un « ×2 » pour tout le monde n'en est pas un).
-const Set<String> kCartridgeOnlyIds = {'block_guesser', 'double_points'};
+/// Seulement en cartouche (Fiesta v3) : jamais « Toujours » ni « Au tirage ».
+/// Un bonus et les malus de temps ou de joueur sont forcément one shot : un
+/// « ×2 » pour tout le monde n'en est pas un, un −10 s se joue contre une
+/// équipe, et personne ne désignerait le devineur à bloquer.
+const Set<String> kCartridgeOnlyIds = {
+  'block_guesser',
+  'double_points',
+  'free_pass',
+  'two_words',
+  'plus_10s',
+  'minus_10s',
+};
+
+/// Seulement règle de manche (Fiesta v3) : jamais en cartouche.
+const Set<String> kRoundRuleOnlyIds = {'one_answer'};
 
 /// Paires incompatibles (Q14 de l'epic). Chaque paire est écrite une fois :
 /// [areCompatible] est symétrique par construction. La famille « Mime » n'y

@@ -36,7 +36,7 @@ class EnsembleDraftKept extends EnsembleEditorResult {
   const EnsembleDraftKept(this.rules);
 }
 
-/// « Nouvel ensemble » / « Modifier » (maquette `cartouches`, section A) :
+/// « Nouvel ensemble » / « Modifier » :
 /// écran poussé depuis « Fiesta personnalisée ».
 ///
 /// - [initial] nul = création, sinon modification sur place (renommage
@@ -341,7 +341,6 @@ class _FiestaEnsembleEditorScreenState
 
   Widget _rulesCard() {
     final r = _rules;
-    final catchUp = catchUpOn(r.catchUp);
     return _Card(
       title: 'Règles de la partie',
       child: Column(
@@ -360,35 +359,16 @@ class _FiestaEnsembleEditorScreenState
           ),
           const _Hint('Parmi ceux en « Au tirage », incompatibles sautés. '
               '0 = aucun tirage.'),
-          const _SubHead('1 PARMI 3'),
-          _line(
-            'Choix 1 parmi 3 par manche',
-            _Stepper(
-              value: r.pick3Choices,
-              min: 1,
-              max: kMaxPick3Choices,
-              onChanged: (v) =>
-                  setState(() => _rules = _rules.copyWith(pick3Choices: v)),
-            ),
-          ),
-          const _Hint('Avec 2, l\'équipe voit 2 rangées de 3 cartes sur le '
-              'même écran et prend une carte par rangée ; les restes sont '
-              'perdus. Après M1 et M2, chaque équipe non en tête choisit, de '
-              'la dernière à la meilleure.'),
           const _SubHead('TOUTE LA PARTIE'),
           _line(
-            'Rattrapage',
+            'Coup de pouce à l\'équipe menée',
             _switch(
-              catchUp,
-              (v) => setState(() => _rules = _rules.copyWith(
-                    catchUp: v ? CatchUpRules.auto : kCatchUpOff,
-                  )),
+              r.trailingBoost,
+              (v) => setState(() => _rules = _rules.copyWith(trailingBoost: v)),
             ),
           ),
-          _Hint(catchUp
-              ? 'Temps en plus pour les équipes menées, en moins pour le '
-                  'leader.'
-              : 'Pas de temps en plus ni en moins selon le score.'),
+          const _Hint('Après les manches 1 et 2, chaque équipe non en tête '
+              'reçoit une cartouche au hasard, parmi celles en Cartouche.'),
         ],
       ),
     );
@@ -397,8 +377,7 @@ class _FiestaEnsembleEditorScreenState
   static const _modeLabels = {
     ModifierMode.always: 'Toujours',
     ModifierMode.draw: 'Au tirage',
-    ModifierMode.stock: 'En stock',
-    ModifierMode.offer: '1 parmi 3',
+    ModifierMode.cartridge: 'Cartouche',
   };
 
   static const _modeHints = {
@@ -406,33 +385,48 @@ class _FiestaEnsembleEditorScreenState
         'les manches cochées.',
     ModifierMode.draw: 'Entre dans le tirage du début de manche (nombre réglé '
         'dans « Règles de la partie »).',
-    ModifierMode.stock: 'Cartouches reçues au début de chaque manche cochée ; '
-        'l\'équipe choisit le tour où la jouer.',
-    ModifierMode.offer: 'Gagnée entre deux manches par les équipes en retard '
-        '(choix 1 parmi 3).',
+    ModifierMode.cartridge: 'Dans la réserve de chaque équipe pour toute la '
+        'partie : elle la joue au tour de son choix.',
   };
 
-  String _summary(ModifierDef def, ModifierSetting s) {
+  String _chargesLabel(int charges) => charges == 0
+      ? 'Gagnées seulement'
+      : '$charges cartouche${charges > 1 ? 's' : ''} pour la partie';
+
+  String _summary(ModifierSetting s) {
     if (!s.active) return 'Désactivé';
+    if (s.mode == ModifierMode.cartridge) return _chargesLabel(s.charges);
     final rounds = s.rounds.toList()..sort();
     return [
       rounds.isEmpty
           ? 'Aucune manche'
           : '${rounds.length > 1 ? 'Manches' : 'Manche'} ${rounds.join(', ')}',
-      if (s.mode == ModifierMode.stock)
-        '${s.charges} cartouche${s.charges > 1 ? 's' : ''}'
-            '${s.perGame ? ' pour la partie' : ''}',
       _modeLabels[s.mode]!,
     ].join(' · ');
   }
 
+  /// Compteur de cartouches pour la partie (0 = seulement par le coup de
+  /// pouce).
+  Widget _chargesLine(ModifierDef def, ModifierSetting s) {
+    final maxCharges = def.id == 'free_pass' ? 5 : 3;
+    return _line(
+      'Cartouches pour la partie',
+      _Stepper(
+        value: s.charges.clamp(0, maxCharges),
+        min: 0,
+        max: maxCharges,
+        onChanged: (v) => _set(def, s.copyWith(charges: v)),
+      ),
+    );
+  }
+
   Widget _modifierRow(ModifierDef def) {
     final s = _settingFor(def);
-    final open = s.active && _open == def.id;
-    final color = modifierColor(def.nature);
+    // Seulement en cartouche : un interrupteur et un compteur, rien à régler.
     final cartridgeOnly = !canBeRoundRule(def);
+    final open = s.active && _open == def.id && !cartridgeOnly;
+    final color = modifierColor(def.nature);
     final allowed = allowedRounds(def);
-    final maxCharges = def.id == 'free_pass' ? 5 : 3;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -476,14 +470,14 @@ class _FiestaEnsembleEditorScreenState
                       ),
                     ),
                     Text(
-                      _summary(def, s),
+                      _summary(s),
                       style: AppTextStyles.bodySmall
                           .copyWith(color: AppColors.gray400, fontSize: 11),
                     ),
                   ],
                 ),
               ),
-              if (s.active)
+              if (s.active && !cartridgeOnly)
                 TextButton(
                   onPressed: () => setState(() => _open = open ? null : def.id),
                   child: Text(
@@ -494,78 +488,55 @@ class _FiestaEnsembleEditorScreenState
               _switch(s.active, (v) => _toggle(def, v)),
             ],
           ),
+          if (s.active && cartridgeOnly) _chargesLine(def, s),
           if (open) ...[
             const SizedBox(height: 8),
-            _line(
-              'Manches',
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (var r = 1; r <= 3; r++)
-                    if (def.round3Only)
-                      if (r == 3)
-                        const _RoundBox(round: 3, on: true, locked: true)
-                      else
-                        const SizedBox.shrink()
-                    else
-                      _RoundBox(
-                        round: r,
-                        on: s.rounds.contains(r),
-                        enabled: allowed.contains(r),
-                        onTap: () => _set(
-                          def,
-                          s.copyWith(
-                            rounds: s.rounds.contains(r)
-                                ? (s.rounds.toSet()..remove(r))
-                                : {...s.rounds, r},
-                          ),
-                        ),
-                      ),
-                ],
-              ),
-            ),
-            if (def.round3Only) const _Hint('Manche 3 seulement (mime).'),
-            if (def.notInRound3) const _Hint('Jamais en manche 3 (on y mime).'),
-            _line('Mode', const SizedBox.shrink()),
-            const _Family('Toute la manche, pour tous'),
             _Choices<ModifierMode>(
-              values: const [ModifierMode.always, ModifierMode.draw],
-              selected: s.mode,
-              enabled: !cartridgeOnly,
-              label: (m) => _modeLabels[m]!,
-              onSelect: (m) => _set(def, s.copyWith(mode: m)),
-            ),
-            if (cartridgeOnly) const _Hint('Seulement en cartouche.'),
-            const _Family('Cartouche · un tour'),
-            _Choices<ModifierMode>(
-              values: const [ModifierMode.stock, ModifierMode.offer],
+              values: [
+                ModifierMode.always,
+                ModifierMode.draw,
+                if (canBeCartridge(def)) ModifierMode.cartridge,
+              ],
               selected: s.mode,
               label: (m) => _modeLabels[m]!,
               onSelect: (m) => _set(def, s.copyWith(mode: m)),
             ),
             const SizedBox(height: 4),
             _Hint(_modeHints[s.mode]!),
-            if (s.mode == ModifierMode.stock) ...[
+            if (s.mode == ModifierMode.cartridge)
+              _chargesLine(def, s)
+            else ...[
               _line(
-                'Cartouches',
-                _Stepper(
-                  value: s.charges.clamp(1, maxCharges),
-                  min: 1,
-                  max: maxCharges,
-                  onChanged: (v) => _set(def, s.copyWith(charges: v)),
+                'Manches',
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (var r = 1; r <= 3; r++)
+                      if (def.round3Only)
+                        if (r == 3)
+                          const _RoundBox(round: 3, on: true, locked: true)
+                        else
+                          const SizedBox.shrink()
+                      else
+                        _RoundBox(
+                          round: r,
+                          on: s.rounds.contains(r),
+                          enabled: allowed.contains(r),
+                          onTap: () => _set(
+                            def,
+                            s.copyWith(
+                              rounds: s.rounds.contains(r)
+                                  ? (s.rounds.toSet()..remove(r))
+                                  : {...s.rounds, r},
+                            ),
+                          ),
+                        ),
+                  ],
                 ),
               ),
-              _Choices<bool>(
-                values: const [false, true],
-                selected: s.perGame,
-                label: (perGame) => perGame ? 'pour la partie' : 'par manche',
-                onSelect: (perGame) => _set(def, s.copyWith(perGame: perGame)),
-              ),
-              const SizedBox(height: 4),
-              _Hint(s.perGame
-                  ? 'Les cartouches ne reviennent pas : elles servent pour '
-                      'toute la partie.'
-                  : 'Les cartouches reviennent à chaque manche.'),
+              if (def.round3Only) const _Hint('Manche 3 seulement (mime).'),
+              if (def.notInRound3)
+                const _Hint('Jamais en manche 3 (on y mime).'),
             ],
           ],
         ],
@@ -634,21 +605,6 @@ class _SubHead extends StatelessWidget {
         child: Text(
           text,
           style: AppTextStyles.label
-              .copyWith(color: AppColors.gray400, fontSize: 11),
-        ),
-      );
-}
-
-class _Family extends StatelessWidget {
-  final String text;
-  const _Family(this.text);
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(top: 6, bottom: 4),
-        child: Text(
-          text,
-          style: AppTextStyles.bodySmall
               .copyWith(color: AppColors.gray400, fontSize: 11),
         ),
       );
@@ -773,12 +729,10 @@ class _Stepper extends StatelessWidget {
   }
 }
 
-/// Choix exclusif entre quelques options. [selected] hors de [values] = rien
-/// de surligné (l'autre famille de modes est choisie).
+/// Choix exclusif entre quelques options.
 class _Choices<T> extends StatelessWidget {
   final List<T> values;
   final T selected;
-  final bool enabled;
   final String Function(T) label;
   final ValueChanged<T> onSelect;
 
@@ -787,7 +741,6 @@ class _Choices<T> extends StatelessWidget {
     required this.selected,
     required this.label,
     required this.onSelect,
-    this.enabled = true,
   });
 
   @override
@@ -797,7 +750,7 @@ class _Choices<T> extends StatelessWidget {
         for (final value in values)
           Expanded(
             child: GestureDetector(
-              onTap: enabled ? () => onSelect(value) : null,
+              onTap: () => onSelect(value),
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 2),
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
@@ -812,11 +765,9 @@ class _Choices<T> extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: AppTextStyles.bodySmall.copyWith(
                     fontSize: 11,
-                    color: !enabled
-                        ? AppColors.gray600
-                        : value == selected
-                            ? AppColors.backgroundMain
-                            : Colors.white,
+                    color: value == selected
+                        ? AppColors.backgroundMain
+                        : Colors.white,
                   ),
                 ),
               ),

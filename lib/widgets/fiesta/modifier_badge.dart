@@ -23,6 +23,7 @@ const Map<String, String> kModifierIcons = {
   'other_language': '🌐',
   'one_answer': '☝',
   'sounds_only': '🔊',
+  'plus_10s': '+10',
 };
 
 String modifierIcon(String id) => kModifierIcons[id] ?? '✦';

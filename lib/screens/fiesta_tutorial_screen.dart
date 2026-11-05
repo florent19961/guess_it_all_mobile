@@ -38,8 +38,9 @@ class FiestaTutorialScreen extends StatelessWidget {
           title: 'Bonus et malus',
           text: 'Fiesta, ce sont les 3 manches habituelles avec des '
               'modificateurs : des bonus (Mot compte double, Deux mots à la '
-              'fois, Passe gratuite) et des malus (Interdit de passer, Mot à '
-              'l\'envers, Une seule réponse, mimes sans les bras…).',
+              'fois, Passe gratuite, Bonus de 10 s) et des malus (Interdit de '
+              'passer, Mot à l\'envers, Une seule réponse, mimes sans les '
+              'bras…).',
         ),
         TutorialCard(
           symbol: '⇄',
@@ -49,11 +50,14 @@ class FiestaTutorialScreen extends StatelessWidget {
                 'En début de manche, pour toutes les équipes.'),
             TutorialRow(
                 '2',
-                'Entre deux manches',
-                'Personnalisé : les équipes menées choisissent 1 carte parmi 3. '
-                    'Auto : l\'app leur donne un coup de pouce.'),
+                'Cartouches',
+                'Chaque équipe garde les siennes toute la partie : un bonus '
+                    'pour son tour, ou un malus à infliger.'),
             TutorialRow(
-                '3', 'Rattrapage', 'Du temps en plus pour l\'équipe menée.'),
+                '3',
+                'Coup de pouce',
+                'Après les manches 1 et 2, chaque équipe menée reçoit une '
+                    'cartouche au hasard.'),
           ],
         ),
         TutorialCard(
