@@ -236,14 +236,14 @@ void main() {
     await p.startGame(
       fiesta: FiestaRules(
         mode: FiestaMode.custom,
-        drawCount: 0,
+        drawCount: 1,
         modifiers: {
           'double_points': cartridge(2),
           'plus_10s': cartridge(2),
           'reversed': ModifierSetting(
-              active: true, rounds: const {2}, mode: ModifierMode.always),
+              active: true, rounds: const {2}, mode: ModifierMode.draw),
           'no_pass': ModifierSetting(
-              active: true, rounds: const {1}, mode: ModifierMode.always),
+              active: true, rounds: const {1}, mode: ModifierMode.draw),
         },
       ),
     );
@@ -292,12 +292,12 @@ void main() {
     await p.startGame(
       fiesta: FiestaRules(
         mode: FiestaMode.custom,
-        drawCount: 0,
+        drawCount: 1,
         modifiers: {
           'reversed': ModifierSetting(
-              active: true, rounds: const {2}, mode: ModifierMode.always),
+              active: true, rounds: const {2}, mode: ModifierMode.draw),
           'no_pass': ModifierSetting(
-              active: true, rounds: const {3}, mode: ModifierMode.always),
+              active: true, rounds: const {3}, mode: ModifierMode.draw),
         },
       ),
     );

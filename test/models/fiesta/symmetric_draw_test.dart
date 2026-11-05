@@ -282,4 +282,25 @@ void main() {
       }
     });
   });
+
+  test(
+      '« Toujours » : un blob à `rounds` partiel joue sur toutes les manches où '
+      'il existe', () {
+    ModifierSetting always(Set<int> rounds) => ModifierSetting(
+        active: true, rounds: rounds, mode: ModifierMode.always);
+    final rules = FiestaRules(
+      mode: FiestaMode.custom,
+      drawCount: 0,
+      modifiers: {
+        'reversed': always(const {1}),
+        'other_language': always(const {}),
+        'mime_no_arms': always(const {1}),
+      },
+    );
+    List<String> ids(int round) =>
+        alwaysForRound(rules, round).map((m) => m.catalogId).toList();
+    expect(ids(1), unorderedEquals(['reversed', 'other_language']));
+    expect(ids(2), unorderedEquals(['reversed', 'other_language']));
+    expect(ids(3), unorderedEquals(['reversed', 'mime_no_arms']));
+  });
 }

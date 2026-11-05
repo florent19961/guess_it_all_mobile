@@ -9,6 +9,7 @@ import 'package:guess_it_all_mobile/providers/game_provider.dart';
 import 'package:guess_it_all_mobile/screens/fiesta_ensemble_editor_screen.dart';
 import 'package:guess_it_all_mobile/screens/fiesta_ensembles_screen.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
+import 'package:guess_it_all_mobile/widgets/common/app_back_button.dart';
 import 'package:guess_it_all_mobile/widgets/fiesta/modifier_badge.dart';
 import 'package:guess_it_all_mobile/widgets/fiesta/turn_cartridges.dart';
 import 'package:provider/provider.dart';
@@ -304,17 +305,25 @@ void main() {
           find.descendant(of: of, matching: find.text(text));
       expect(inside(freePass, 'Cartouches pour la partie'), findsOneWidget);
       expect(inside(freePass, 'Régler'), findsNothing);
-      expect(find.text('Toujours'), findsNothing);
+      expect(inside(freePass, 'Toujours'), findsNothing);
       expect(find.text('En stock'), findsNothing);
 
       // « Une seule réponse » : deux modes.
       await scrollToText(tester, 'Une seule réponse');
       await tester.tap(inside(rowOf('Une seule réponse'), 'Régler'));
       await tester.pump();
-      expect(find.text('Toujours'), findsOneWidget);
+      // Le résumé de la ligne et le choix du mode.
+      expect(inside(rowOf('Une seule réponse'), 'Toujours'), findsNWidgets(2));
       expect(find.text('Au tirage'), findsOneWidget);
       expect(find.text('Cartouche'), findsNothing);
+      // « Toujours » : toutes les manches, rien à cocher.
+      expect(find.text('Manches'), findsNothing);
+      await tester.tap(find.text('Au tirage'));
+      await tester.pump();
       expect(find.text('Manches'), findsOneWidget);
+      await tester.tap(inside(rowOf('Une seule réponse'), 'Toujours'));
+      await tester.pump();
+      expect(find.text('Manches'), findsNothing);
 
       // Mot à l'envers : les 3 ; en Cartouche, le compteur remplace les manches.
       await scrollToText(tester, 'Mot à l\'envers');
@@ -355,8 +364,13 @@ void main() {
       await tester.tap(find.descendant(
           of: rowOf('Mime sans les bras'), matching: find.text('Régler')));
       await tester.pump();
-      await tester.tap(find.text('Toujours'));
+      final armsAlways = find.descendant(
+          of: rowOf('Mime sans les bras'), matching: find.text('Toujours'));
+      await tester.tap(armsAlways);
       await tester.pump();
+      expect(find.text('Manche 3 · Toujours'), findsOneWidget);
+      expect(find.text('Manches'), findsNothing);
+      expect(find.text('Manche 3 seulement (mime).'), findsOneWidget);
       await tester.tap(find.text('Enregistrer'));
       await settle(tester);
       expect(
@@ -464,5 +478,16 @@ void main() {
     expect(find.textContaining('AU TIRAGE'), findsNothing);
     expect(find.text('CARTOUCHES POUR LA PARTIE'), findsNothing);
     expect(find.textContaining('COUP DE POUCE'), findsNothing);
+    // « Toujours » : pas de manches quand c'est toutes.
+    expect(find.text('Toutes les manches'), findsNothing);
+    expect(find.textContaining('Manche'), findsNothing);
+    await tester.tap(find.byType(AppBackButton));
+    await settle(tester);
+
+    await tester.tap(find
+        .text('Voir')
+        .at(kProvidedEnsembles.indexWhere((e) => e.name == 'Bilingue')));
+    await settle(tester);
+    expect(find.text('Manches 1, 2'), findsOneWidget);
   });
 }

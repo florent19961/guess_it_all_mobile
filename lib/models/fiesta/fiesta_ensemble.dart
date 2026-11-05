@@ -76,7 +76,7 @@ FiestaRules defaultEnsembleRules(String name) {
 
 /// Clé des RÉGLAGES d'un ensemble, hors nom : deux ensembles de même clé
 /// jouent pareil (doublon refusé). Seuls les modificateurs actifs comptent,
-/// leurs manches seulement en règle de manche, leurs cartouches seulement en
+/// leurs manches seulement en Au tirage, leurs cartouches seulement en
 /// Cartouche.
 String settingsKey(FiestaRules rules) {
   final ids = rules.modifiers.keys
@@ -90,9 +90,9 @@ String settingsKey(FiestaRules rules) {
       for (final id in ids)
         id: {
           'mode': rules.modifiers[id]!.mode.name,
-          if (isRoundRuleMode(rules.modifiers[id]!.mode))
+          if (rules.modifiers[id]!.mode == ModifierMode.draw)
             'rounds': rules.modifiers[id]!.rounds.toList()..sort()
-          else
+          else if (rules.modifiers[id]!.mode == ModifierMode.cartridge)
             'charges': rules.modifiers[id]!.charges,
         },
     },

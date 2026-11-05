@@ -55,8 +55,8 @@ class GameProvider extends ChangeNotifier {
   /// Choix Fiesta fait sur les Paramètres (et l'ensemble choisi en
   /// Personnalisé), en attente de `startGame`. Nul = Classique. Les règles
   /// restent en mémoire ; le CHOIX survit à l'app tuée et à « Nouvelle partie »
-  /// (`GameSettings.fiestaEnabled` et `fiestaMode`, `lastUsedId` des ensembles :
-  /// [_rememberedFiesta]).
+  /// (`GameSettings.fiestaEnabled`, `fiestaMode` et `replayFiesta`, `lastUsedId`
+  /// des ensembles : [_rememberedFiesta]).
   FiestaRules? _pendingFiesta;
   FiestaRules? get pendingFiesta => _pendingFiesta;
   String? get currentEditingPlayerId => _currentEditingPlayerId;
@@ -68,20 +68,26 @@ class GameProvider extends ChangeNotifier {
   }
 
   /// Écrit le choix d'attente dans les réglages. Classique : le choix Auto /
-  /// Personnalisé reste celui du joueur.
-  void _rememberFiestaChoice() {
+  /// Personnalisé reste celui du joueur. [replay] : un « Rejouer » garde les
+  /// règles gelées de son ensemble ; tout choix explicite les efface.
+  void _rememberFiestaChoice({bool replay = false}) {
+    final keep = replay && _pendingFiesta?.ensembleName != null;
     _settings = _settings.copyWith(
       fiestaEnabled: _pendingFiesta != null,
       fiestaMode: _pendingFiesta?.mode,
+      replayFiesta: keep ? _pendingFiesta : null,
+      clearReplayFiesta: !keep,
     );
     _saveSettings();
   }
 
-  /// Le dernier choix relu du stockage : Classique (nul), Auto, ou en
-  /// Personnalisé le dernier ensemble utilisé (supprimé ou illisible : Fiesta
-  /// classique). `FiestaEnsembleService.load` ne lève jamais.
+  /// Le dernier choix relu du stockage : Classique (nul), une partie rejouée
+  /// pas encore lancée, Auto, ou en Personnalisé le dernier ensemble utilisé
+  /// (supprimé ou illisible : Fiesta classique).
+  /// `FiestaEnsembleService.load` ne lève jamais.
   Future<FiestaRules?> _rememberedFiesta() async {
     if (!_settings.fiestaEnabled) return null;
+    if (_settings.replayFiesta case final rules?) return rules;
     if (_settings.fiestaMode == FiestaMode.auto) {
       return FiestaRules(mode: FiestaMode.auto);
     }
@@ -517,6 +523,12 @@ class GameProvider extends ChangeNotifier {
             ),
       clearFiesta: rules == null,
     );
+
+    // La partie rejouée est lancée : elle ne prime plus sur le dernier choix.
+    if (_settings.replayFiesta != null) {
+      _settings = _settings.copyWith(clearReplayFiesta: true);
+      _saveSettings();
+    }
 
     // Initialiser le tracking analytics
     await _initializeAnalytics(gameId, shuffledWords);
@@ -1942,7 +1954,7 @@ class GameProvider extends ChangeNotifier {
     if (_pendingFiesta?.mode == FiestaMode.auto) {
       _pendingFiesta = FiestaRules(mode: FiestaMode.auto);
     }
-    _rememberFiestaChoice();
+    _rememberFiestaChoice(replay: true);
 
     // Terminer et sauvegarder les analytics si une partie était en cours
     if (_analytics.isTracking) {

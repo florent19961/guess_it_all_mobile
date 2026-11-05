@@ -1003,3 +1003,13 @@ L'injustice incluent tous les mimes.
   avec des malus envoyés, la ligne d'aide cède sa place (rappelée par le « ? »). Au-delà de 3 puces
   « Envoyé » sur une continuation à 360 × 640, le bas reste coupé par le `ClipRect` : cas extrême
   assumé, pour ne pas alourdir l'écran.
+
+**Revue r1 et décision de Florent (même jour).**
+- *Config rejouée* : `replayFromHistory` et le « Rejouer » gardaient les règles gelées en mémoire
+  seulement ; après un kill, `lastUsedId` reconstruisait un autre ensemble. `GameSettings.replayFiesta`
+  les garde jusqu'au lancement ou à un choix explicite, plutôt qu'une nouvelle clé `guessItAll_*` :
+  même écriture, relecture tolérante. Pas pour Auto, dont les règles sont recalculées.
+- *« Toujours ça veut dire toujours »* : un « Toujours » vaut pour toutes les manches où il existe
+  (`allowedRounds`), `rounds` n'est plus lu ni jugé, ni compté dans `settingsKey`. La forme JSON ne
+  bouge pas : un ensemble au `rounds` partiel se relit et joue sur toutes ses manches possibles.
+  L'erreur d'incompatibilité ne nomme plus de manche : elle vaudrait pour chacune.

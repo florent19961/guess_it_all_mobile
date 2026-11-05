@@ -4,23 +4,19 @@ enum FiestaMode { auto, custom }
 
 /// Mode d'un modificateur dans un ensemble (Fiesta v3), UN seul par
 /// modificateur :
-/// - [always] : actif pour toutes les équipes, toute la manche, sur chaque
-///   manche cochée ;
+/// - [always] : actif pour toutes les équipes, à TOUTES les manches où il existe
+///   (`allowedRounds`) ;
 /// - [draw] : candidat au tirage du début de chaque manche cochée ;
 /// - [cartridge] : réserve de chaque équipe pour TOUTE LA PARTIE, jouée au
 ///   tour de son choix.
 enum ModifierMode { always, draw, cartridge }
 
-/// Les modes « règle de manche », les seuls où les manches cochées comptent.
-bool isRoundRuleMode(ModifierMode mode) =>
-    mode == ModifierMode.always || mode == ModifierMode.draw;
-
 /// Réglage d'UN modificateur dans un ensemble.
 class ModifierSetting {
   final bool active;
 
-  /// Manches cochées, parmi {1, 2, 3}. Ne compte que pour [ModifierMode.always]
-  /// et [ModifierMode.draw] (au moins une si [active]).
+  /// Manches cochées, parmi {1, 2, 3}. Ne compte que pour [ModifierMode.draw]
+  /// (au moins une si [active]).
   final Set<int> rounds;
   final ModifierMode mode;
 

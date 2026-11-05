@@ -375,8 +375,8 @@ class _FiestaEnsembleEditorScreenState
   };
 
   static const _modeHints = {
-    ModifierMode.always: 'Actif pour toutes les équipes, toute la manche, sur '
-        'les manches cochées.',
+    ModifierMode.always: 'Actif pour toutes les équipes, à chaque manche où il '
+        'existe.',
     ModifierMode.draw: 'Entre dans le tirage du début de manche (nombre réglé '
         'dans « Règles de la partie »).',
     ModifierMode.cartridge: 'Dans la réserve de chaque équipe pour toute la '
@@ -387,10 +387,12 @@ class _FiestaEnsembleEditorScreenState
       ? 'Gagnées seulement'
       : '$charges cartouche${charges > 1 ? 's' : ''} pour la partie';
 
-  String _summary(ModifierSetting s) {
+  String _summary(ModifierDef def, ModifierSetting s) {
     if (!s.active) return 'Désactivé';
     if (s.mode == ModifierMode.cartridge) return _chargesLabel(s.charges);
-    final rounds = s.rounds.toList()..sort();
+    final always = s.mode == ModifierMode.always;
+    final rounds = (always ? allowedRounds(def) : s.rounds).toList()..sort();
+    if (always && rounds.length == 3) return _modeLabels[s.mode]!;
     return [
       rounds.isEmpty
           ? 'Aucune manche'
@@ -464,7 +466,7 @@ class _FiestaEnsembleEditorScreenState
                       ),
                     ),
                     Text(
-                      _summary(s),
+                      _summary(def, s),
                       style: AppTextStyles.bodySmall
                           .copyWith(color: AppColors.gray400, fontSize: 11),
                     ),
@@ -500,34 +502,35 @@ class _FiestaEnsembleEditorScreenState
             if (s.mode == ModifierMode.cartridge)
               _chargesLine(def, s)
             else ...[
-              _line(
-                'Manches',
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (var r = 1; r <= 3; r++)
-                      if (def.round3Only)
-                        if (r == 3)
-                          const _RoundBox(round: 3, on: true, locked: true)
+              if (s.mode == ModifierMode.draw)
+                _line(
+                  'Manches',
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (var r = 1; r <= 3; r++)
+                        if (def.round3Only)
+                          if (r == 3)
+                            const _RoundBox(round: 3, on: true, locked: true)
+                          else
+                            const SizedBox.shrink()
                         else
-                          const SizedBox.shrink()
-                      else
-                        _RoundBox(
-                          round: r,
-                          on: s.rounds.contains(r),
-                          enabled: allowed.contains(r),
-                          onTap: () => _set(
-                            def,
-                            s.copyWith(
-                              rounds: s.rounds.contains(r)
-                                  ? (s.rounds.toSet()..remove(r))
-                                  : {...s.rounds, r},
+                          _RoundBox(
+                            round: r,
+                            on: s.rounds.contains(r),
+                            enabled: allowed.contains(r),
+                            onTap: () => _set(
+                              def,
+                              s.copyWith(
+                                rounds: s.rounds.contains(r)
+                                    ? (s.rounds.toSet()..remove(r))
+                                    : {...s.rounds, r},
+                              ),
                             ),
                           ),
-                        ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
               if (def.round3Only) const _Hint('Manche 3 seulement (mime).'),
               if (def.notInRound3)
                 const _Hint('Jamais en manche 3 (on y mime).'),

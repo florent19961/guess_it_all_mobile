@@ -216,12 +216,12 @@ void main() {
         round: 1,
         fromTeamId: 'b',
       );
-      final rules = boosted(['plus_10s']).copyWith(modifiers: {
+      final rules = boosted(['plus_10s']).copyWith(drawCount: 1, modifiers: {
         'plus_10s': cartridge(),
         'no_pass': ModifierSetting(
-            active: true, rounds: const {1}, mode: ModifierMode.always),
+            active: true, rounds: const {1}, mode: ModifierMode.draw),
         'one_answer': ModifierSetting(
-            active: true, rounds: const {2}, mode: ModifierMode.always),
+            active: true, rounds: const {2}, mode: ModifierMode.draw),
       });
       final before = FiestaState(
         rules: rules,

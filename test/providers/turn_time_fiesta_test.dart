@@ -89,7 +89,7 @@ void main() {
     await provider.startGame(
       fiesta: FiestaRules(
         mode: FiestaMode.custom,
-        drawCount: 0,
+        drawCount: 1,
         modifiers: {
           for (final id in ['plus_10s', 'minus_10s'])
             id: ModifierSetting(
@@ -99,7 +99,7 @@ void main() {
                 charges: 2),
           // Une règle de M2, sans effet sur le temps.
           'no_pass': ModifierSetting(
-              active: true, rounds: const {2}, mode: ModifierMode.always),
+              active: true, rounds: const {2}, mode: ModifierMode.draw),
         },
       ),
     );

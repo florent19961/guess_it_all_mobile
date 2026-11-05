@@ -214,4 +214,46 @@ void main() {
       );
     });
   });
+
+  group('« Toujours » vaut pour toutes les manches où il existe', () {
+    test('ses manches cochées ne sont plus jugées', () {
+      for (final rounds in [
+        <int>{},
+        {1},
+        {2, 3}
+      ]) {
+        expect(
+          validateEnsemble(rulesWith(overrides: {
+            'mime_no_arms': setting(ModifierMode.always, rounds: rounds),
+            'other_language': setting(ModifierMode.always, rounds: rounds),
+          })),
+          isEmpty,
+          reason: '$rounds',
+        );
+      }
+    });
+
+    test('« Au tirage » garde ses manches', () {
+      expect(
+        validateEnsemble(rulesWith(overrides: {
+          'other_language': setting(ModifierMode.draw, rounds: {3}),
+        })),
+        isNotEmpty,
+      );
+    });
+
+    test('doublon : deux ensembles qui ne diffèrent que par ces manches', () {
+      FiestaRules withRounds(Set<int> rounds) => rulesWith(overrides: {
+            'no_pass': setting(ModifierMode.always, rounds: rounds),
+          });
+      expect(settingsKey(withRounds({1})), settingsKey(withRounds({1, 2, 3})));
+      expect(
+        validateEnsemble(withRounds({1}), others: [
+          FiestaEnsemble(
+              id: 'x', rules: withRounds({2}).copyWith(ensembleName: 'Autre')),
+        ]),
+        ['L\'ensemble Autre a déjà ces paramètres.'],
+      );
+    });
+  });
 }
