@@ -184,6 +184,7 @@ class GameProvider extends ChangeNotifier {
     int? passPenalty,
     List<String>? selectedCategories,
     List<int>? selectedDifficultyLevels,
+    FiestaMode? fiestaMode,
   }) {
     // Sauvegarder les anciennes valeurs pour détecter les changements
     final oldNumberOfTeams = _settings.numberOfTeams;
@@ -201,6 +202,7 @@ class GameProvider extends ChangeNotifier {
       passPenalty: passPenalty,
       selectedCategories: selectedCategories,
       selectedDifficultyLevels: selectedDifficultyLevels,
+      fiestaMode: fiestaMode,
     );
 
     // Détecter les changements
@@ -2187,6 +2189,9 @@ class GameProvider extends ChangeNotifier {
       selectedCategories: categories.isEmpty
           ? List.of(_settings.selectedCategories)
           : categories,
+      // Rejouer du Classique, ou une archive d'avant cette clé, ne touche pas au
+      // choix Auto / Personnalisé du joueur.
+      fiestaMode: setup?.fiesta?.mode ?? _settings.fiestaMode,
     );
     _players = players;
     _teams = teams;

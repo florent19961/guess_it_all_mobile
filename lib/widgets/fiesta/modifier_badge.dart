@@ -95,8 +95,7 @@ class ModifierBadge extends StatelessWidget {
               Text(
                 '$icon $label',
                 textAlign: TextAlign.center,
-                style:
-                    AppTextStyles.subtitle(fontSize: 26).copyWith(color: color),
+                style: AppTextStyles.subtitle(fontSize: 26),
               ),
               const SizedBox(height: 10),
               Text(

@@ -76,12 +76,8 @@ class _SettingsScreenState extends State<SettingsScreen>
   /// Garde contre le double tap : un seul tuto Fiesta.
   bool _tutorialBusy = false;
 
-  /// Auto / Personnalisé choisi dans « Avancés » alors que le mode est
-  /// Classique : appliqué au passage en Fiesta (réglage visible dans les deux
-  /// modes, retours 2026-11-04).
-  FiestaMode _fiestaMode = FiestaMode.auto;
-
-  /// Classique / Fiesta. Fiesta part en Auto ; la première fois, le tuto
+  /// Classique / Fiesta. Fiesta part sur le mode sauvegardé dans les réglages
+  /// (Auto / Personnalisé, fenêtre « Avancés ») ; la première fois, le tuto
   /// Fiesta s'ouvre (clé `guessItAll_fiestaTutorialSeen`).
   Future<void> _setMode(GameProvider provider, String mode) async {
     if (mode == _classic) {
@@ -89,7 +85,7 @@ class _SettingsScreenState extends State<SettingsScreen>
       return;
     }
     if (provider.pendingFiesta != null) return;
-    provider.setPendingFiesta(FiestaRules(mode: _fiestaMode));
+    provider.setPendingFiesta(FiestaRules(mode: provider.settings.fiestaMode));
     if (_tutorialBusy) return;
     _tutorialBusy = true;
     try {
@@ -112,7 +108,8 @@ class _SettingsScreenState extends State<SettingsScreen>
   /// déjà en attente (Rejouer) ; l'ensemble se choisit juste après.
   void _setFiestaMode(GameProvider provider, String value) {
     final custom = value == _custom;
-    _fiestaMode = custom ? FiestaMode.custom : FiestaMode.auto;
+    provider.updateSettings(
+        fiestaMode: custom ? FiestaMode.custom : FiestaMode.auto);
     final pending = provider.pendingFiesta;
     if (pending == null || (pending.mode == FiestaMode.custom) == custom) {
       return;
@@ -604,7 +601,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                   const SizedBox(height: 8),
                   AppToggle(
                     options: const [_auto, _custom],
-                    selected: (provider.pendingFiesta?.mode ?? _fiestaMode) ==
+                    selected: (provider.pendingFiesta?.mode ??
+                                provider.settings.fiestaMode) ==
                             FiestaMode.custom
                         ? _custom
                         : _auto,

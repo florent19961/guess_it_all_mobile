@@ -192,6 +192,42 @@ void main() {
   });
 
   test(
+      'Auto / Personnalisé : rejouer une Fiesta l\'aligne, rejouer du Classique '
+      'n\'y touche pas', () async {
+    GameResult archive(FiestaRules? fiesta) => GameResult(
+          gameId: 'g',
+          playedAt: DateTime(2026, 11, 1),
+          teams: const [
+            TeamResult(
+                id: 'team-1',
+                name: 'A',
+                score: 0,
+                scoreByRound: [0, 0, 0],
+                playerNames: ['Ana']),
+            TeamResult(
+                id: 'team-2',
+                name: 'B',
+                score: 0,
+                scoreByRound: [0, 0, 0],
+                playerNames: ['Bob']),
+          ],
+          totalWords: 2,
+          turnDuration: 30,
+          roundsPlayed: 3,
+          setup: GameSetupSnapshot(settings: GameSettings(), fiesta: fiesta),
+        );
+    final provider = await givenProvider();
+
+    provider.updateSettings(fiestaMode: FiestaMode.custom);
+    await provider.replayFromHistory(archive(null));
+    expect(provider.settings.fiestaMode, FiestaMode.custom);
+
+    await provider
+        .replayFromHistory(archive(FiestaRules(mode: FiestaMode.auto)));
+    expect(provider.settings.fiestaMode, FiestaMode.auto);
+  });
+
+  test(
       'rejouer par-dessus une partie suspendue la clôt UNE fois : historique '
       'des mots incrémenté une fois, plus de tracking en cours', () async {
     final provider = await givenProvider();
