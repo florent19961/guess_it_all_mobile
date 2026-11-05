@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guess_it_all_mobile/services/game_history_service.dart';
 import 'package:guess_it_all_mobile/widgets/help/coach_marks.dart';
 import 'package:guess_it_all_mobile/widgets/help/help_content.dart';
 
@@ -58,6 +59,72 @@ void main() {
           contains('Chacun a ses boutons'));
       expect(
           titled(steps(underWord: true), 'Le mot').text, contains('dessous'));
+    });
+  });
+
+  group('Résultats et Historique : le texte suit ce qui est affiché', () {
+    String statsText(bool played) => resultsHelp(
+          podium: GlobalKey(),
+          details: GlobalKey(),
+          back: GlobalKey(),
+          replay: GlobalKey(),
+          stats: GlobalKey(),
+          hasPlayedCartridges: played,
+        ).last.text;
+
+    test('Statistiques : les bonus et malus seulement s\'il y en a eu', () {
+      expect(statsText(false), isNot(contains('bonus')));
+      expect(statsText(true), contains('bonus et malus joués'));
+      expect(statsText(false), contains('Cherry on the cake'));
+    });
+
+    List<CoachStep> history(
+            {HistoryTrends stats = HistoryTrends.empty,
+            bool hasPlayers = true,
+            bool hasSetup = true}) =>
+        historyHelp(
+          trends: GlobalKey(),
+          firstGame: GlobalKey(),
+          replay: GlobalKey(),
+          stats: stats,
+          hasPlayers: hasPlayers,
+          hasSetup: hasSetup,
+        );
+
+    test('Tendances : seules les lignes affichées, sur 10 parties au plus', () {
+      final none = history().first.text;
+      expect(none, contains('10 dernières parties'));
+      expect(none, contains('Points par partie'));
+      expect(none, isNot(contains('Meilleur score')));
+      expect(none, isNot(contains('Victoires')));
+      expect(none, isNot(contains('assidu')));
+      final all = history(
+        stats: const HistoryTrends(
+          gamesPlayed: 1,
+          averageScorePerGame: 20,
+          bestScore: 12,
+          bestScoreTeam: 'Rouge',
+          winsByTeam: {'Rouge': 1},
+          playerAppearances: [MapEntry('Ana', 1)],
+        ),
+      ).first.text;
+      expect(
+          all,
+          allOf(contains('Meilleur score'), contains('Victoires'),
+              contains('assidu')));
+    });
+
+    test('Rejouer : une ancienne archive ne promet pas les mêmes réglages', () {
+      expect(history().last.text, contains('mêmes réglages'));
+      final old = history(hasSetup: false).last.text;
+      expect(old, isNot(contains('mêmes réglages')));
+      expect(old, contains('en Classique'));
+    });
+
+    test('Une partie : les joueurs seulement s\'ils sont archivés', () {
+      expect(history()[1].text, contains('leurs joueurs'));
+      expect(
+          history(hasPlayers: false)[1].text, isNot(contains('leurs joueurs')));
     });
   });
 }

@@ -1,12 +1,18 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/app.dart';
+import 'package:guess_it_all_mobile/models/game_result.dart';
 import 'package:guess_it_all_mobile/models/player.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
 import 'package:guess_it_all_mobile/screens/fiesta_ensemble_editor_screen.dart';
 import 'package:guess_it_all_mobile/screens/fiesta_tutorial_screen.dart';
 import 'package:guess_it_all_mobile/screens/rules_tutorial_screen.dart';
+import 'package:guess_it_all_mobile/services/game_history_service.dart';
+import 'package:guess_it_all_mobile/services/persisted_schema.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
+import 'package:guess_it_all_mobile/widgets/help/help_button.dart';
 import 'package:provider/provider.dart';
 
 import '../helpers/coach_walk.dart';
@@ -158,6 +164,147 @@ void main() {
         ['Mots du dernier tour', 'Retour', 'Voir les résultats']);
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 5));
+  });
+
+  group('Résultats', () {
+    testWidgets('fin de partie : le retour vers la vérification a son étape',
+        (tester) async {
+      final provider = await pumpGame(tester, null);
+      finishRound(provider);
+      provider.nextRound();
+      finishRound(provider);
+      provider.nextRound();
+      finishRound(provider);
+      provider.nextRound();
+      provider.markScoreRevealSeen();
+      for (var i = 0; i < 3; i++) {
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+      expect(provider.game.currentScreen, AppConstants.screenResults);
+      expect(provider.canGoBackToVerification, isTrue);
+      expect(await walkHelp(tester), [
+        'Le podium',
+        'Détails par manche',
+        'Retour',
+        'Rejouer',
+        'Statistiques',
+      ]);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 5));
+    });
+
+    testWidgets('rouvert après un kill : pas de retour, pas d\'étape',
+        (tester) async {
+      givenPhone(tester);
+      await givenPrefs({
+        AppConstants.tutorialSeenKey: true,
+        AppConstants.firstGameDoneKey: true,
+        AppConstants.gameStateKey: jsonEncode(wrapWithSchema({
+          'players': [
+            {'id': 'p1', 'name': 'Ana', 'words': <String>[]},
+            {'id': 'p2', 'name': 'Bob', 'words': <String>[]},
+          ],
+          'teams': [
+            {
+              'id': 't1',
+              'name': 'Rouge',
+              'playerIds': ['p1'],
+              'score': 1,
+              'scoreByRound': [1, 0, 0],
+            },
+            {
+              'id': 't2',
+              'name': 'Bleu',
+              'playerIds': ['p2'],
+              'score': 9,
+              'scoreByRound': [2, 3, 4],
+            },
+          ],
+          'game': {
+            'gameId': 'g',
+            'currentRound': 3,
+            'currentScreen': AppConstants.screenResults,
+            'scoreRevealSeen': true,
+            'teamPlayOrder': [0, 1],
+          },
+        })),
+      });
+      givenFakePlatformPlugins();
+      final provider = GameProvider();
+      await tester.runAsync(() => pumpEventQueue());
+      await tester.pumpWidget(ChangeNotifierProvider<GameProvider>.value(
+        value: provider,
+        child: const GuessItAllApp(),
+      ));
+      await settle(tester);
+      for (var i = 0; i < 30; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      expect(provider.canGoBackToVerification, isFalse);
+      expect(await walkHelp(tester),
+          ['Le podium', 'Détails par manche', 'Rejouer', 'Statistiques']);
+    });
+  });
+
+  group('Historique', () {
+    GameResult game(String id) => GameResult(
+          gameId: id,
+          playedAt: DateTime(2026, 3, 14, 21, 5),
+          teams: [
+            for (final name in ['Rouge', 'Bleu'])
+              TeamResult(
+                id: name,
+                name: name,
+                score: 5,
+                scoreByRound: const [5, 0, 0],
+                playerNames: ['$name-1', '$name-2'],
+              ),
+          ],
+          totalWords: 40,
+          turnDuration: 30,
+          roundsPlayed: 3,
+        );
+
+    Future<void> pumpHistory(
+        WidgetTester tester, List<GameResult> newestLast) async {
+      givenPhone(tester);
+      await givenPrefs({
+        AppConstants.tutorialSeenKey: true,
+        AppConstants.firstGameDoneKey: true,
+      });
+      givenFakePlatformPlugins();
+      for (final g in newestLast) {
+        await tester.runAsync(() => GameHistoryService().record(g));
+      }
+      final provider = GameProvider();
+      await tester.runAsync(() => pumpEventQueue());
+      provider.goToScreen(AppConstants.screenHistory);
+      await tester.pumpWidget(ChangeNotifierProvider<GameProvider>.value(
+        value: provider,
+        child: const GuessItAllApp(),
+      ));
+      await settle(tester);
+      for (var i = 0; i < 30; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+    }
+
+    testWidgets('vide : pas de « ? »', (tester) async {
+      await pumpHistory(tester, const []);
+      expect(find.byType(HelpButton), findsNothing);
+    });
+
+    testWidgets('une partie : les étapes restent dans l\'écran',
+        (tester) async {
+      await pumpHistory(tester, [game('g')]);
+      expect(await walkHelp(tester), ['Tendances', 'Une partie', 'Rejouer']);
+    });
+
+    testWidgets('dix parties : les étapes restent dans l\'écran',
+        (tester) async {
+      await pumpHistory(tester, [for (var i = 0; i < 10; i++) game('g$i')]);
+      expect(await walkHelp(tester), ['Tendances', 'Une partie', 'Rejouer']);
+    });
   });
 
   Future<int> walkPager(WidgetTester tester, Widget tutorial) async {

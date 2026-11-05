@@ -130,6 +130,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     trends: _trendsKey,
                     firstGame: _firstGameKey,
                     replay: _replayKey,
+                    stats: computeTrends(snapshot.data!),
+                    hasPlayers: snapshot.data!.first.teams
+                        .any((t) => t.playerNames.isNotEmpty),
+                    hasSetup: snapshot.data!.first.setup != null,
                   ),
                 ),
               );

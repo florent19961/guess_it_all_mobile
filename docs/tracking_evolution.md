@@ -1200,4 +1200,3 @@ l'avant-tour Fiesta n'explique que ce qu'il affiche.
   absence de clé sous « Interdit de passer » laissait un bouton sans explication.
 - `results_screen` et `history_screen` ne sont pas modifiés (autre lane). Écart connu : récap Fiesta et bouton
   retour des Résultats sans étape.
-

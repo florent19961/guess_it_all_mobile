@@ -46,8 +46,8 @@ class FiestaTutorialScreen extends StatelessWidget {
           symbol: '⇄',
           title: 'Comment ils arrivent',
           rows: [
-            TutorialRow(
-                '1', 'Toujours', 'Toute la partie, pour toutes les équipes.'),
+            TutorialRow('1', 'Toujours',
+                'Toute la partie, dans les manches où il existe, pour toutes les équipes.'),
             TutorialRow('2', 'Tirés au sort pour tous',
                 'En début de manche, pour toutes les équipes.'),
             TutorialRow(

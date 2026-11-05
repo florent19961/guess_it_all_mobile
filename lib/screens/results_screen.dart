@@ -23,6 +23,7 @@ class ResultsScreen extends StatefulWidget {
 class _ResultsScreenState extends State<ResultsScreen> {
   final _podiumKey = GlobalKey();
   final _detailsKey = GlobalKey();
+  final _backKey = GlobalKey();
   final _replayKey = GlobalKey();
   final _statsKey = GlobalKey();
 
@@ -104,14 +105,18 @@ class _ResultsScreenState extends State<ResultsScreen> {
               resultsHelp(
                 podium: _podiumKey,
                 details: _detailsKey,
+                back: _backKey,
                 replay: _replayKey,
                 stats: _statsKey,
+                hasPlayedCartridges:
+                    provider.game.fiesta?.chargesUsed.isNotEmpty ?? false,
               ),
             ),
           ),
           // Back button pour revenir à l'écran de vérification
           if (provider.canGoBackToVerification)
             GameBackButton(
+              key: _backKey,
               onPressed: () => showBackToVerificationDialog(context, provider),
             ),
         ],
@@ -149,50 +154,54 @@ class _ResultsScreenState extends State<ResultsScreen> {
     final rank1 = sortedTeams.length > 1 ? _getRank(sortedTeams, 1) : -1;
     final rank2 = sortedTeams.length > 2 ? _getRank(sortedTeams, 2) : -1;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        // 2nd place (ou ex æquo)
-        if (sortedTeams.length > 1)
+    // Trois marches de 100 px : plus large que l'écran sur un 360 px.
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // 2nd place (ou ex æquo)
+          if (sortedTeams.length > 1)
+            _buildPodiumPosition(
+              context: context,
+              provider: provider,
+              team: sortedTeams[1],
+              originalIndex: provider.teams.indexOf(sortedTeams[1]),
+              rank: rank1,
+              height: _getPodiumHeight(rank1),
+            )
+          else
+            const SizedBox(width: 100),
+
+          const SizedBox(width: 8),
+
+          // 1st place
           _buildPodiumPosition(
             context: context,
             provider: provider,
-            team: sortedTeams[1],
-            originalIndex: provider.teams.indexOf(sortedTeams[1]),
-            rank: rank1,
-            height: _getPodiumHeight(rank1),
-          )
-        else
-          const SizedBox(width: 100),
+            team: sortedTeams[0],
+            originalIndex: provider.teams.indexOf(sortedTeams[0]),
+            rank: rank0,
+            height: _getPodiumHeight(rank0),
+          ),
 
-        const SizedBox(width: 8),
+          const SizedBox(width: 8),
 
-        // 1st place
-        _buildPodiumPosition(
-          context: context,
-          provider: provider,
-          team: sortedTeams[0],
-          originalIndex: provider.teams.indexOf(sortedTeams[0]),
-          rank: rank0,
-          height: _getPodiumHeight(rank0),
-        ),
-
-        const SizedBox(width: 8),
-
-        // 3rd place (ou ex æquo)
-        if (sortedTeams.length > 2)
-          _buildPodiumPosition(
-            context: context,
-            provider: provider,
-            team: sortedTeams[2],
-            originalIndex: provider.teams.indexOf(sortedTeams[2]),
-            rank: rank2,
-            height: _getPodiumHeight(rank2),
-          )
-        else
-          const SizedBox(width: 100),
-      ],
+          // 3rd place (ou ex æquo)
+          if (sortedTeams.length > 2)
+            _buildPodiumPosition(
+              context: context,
+              provider: provider,
+              team: sortedTeams[2],
+              originalIndex: provider.teams.indexOf(sortedTeams[2]),
+              rank: rank2,
+              height: _getPodiumHeight(rank2),
+            )
+          else
+            const SizedBox(width: 100),
+        ],
+      ),
     );
   }
 

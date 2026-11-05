@@ -40,7 +40,8 @@ résultats finaux en montrent.
 | `turn_screen` | `turnHelp(passPenalty: provider.currentPassPenalty, passState, reversed, buttonsUnderWord, secondWordShown)` — pas `settings.passPenalty` : la Passe gratuite Fiesta la met à 0. `passState` donne le titre et le texte de « Passer » (disponible, bloqué, dernier mot, pas assez de temps) | `timer`, `modifiers` (badges du tour), `blockedGuesser`, `freePasses`, `word`, `guessed`, `pass`, `pause`, `endTurn`. Deux mots : pas de `guessed` ni `pass`, l'étape du mot explique les boutons de chaque carte | `right: besideCornerButton` (pause à droite). 🔴 `provider.pauseTurn()` **avant** `CoachMarks.show`, reprise **après** : le chrono ne doit jamais tourner sous l'aide |
 | `verification_screen` | `verificationHelp` | `doubled` (ligne « Mot compte double »), `wordList` (la liste défilante entière), `expired` (section « Mot en cours »), `passed` (section « Mots passés »), `validate` | `right: 16` (HomeButton à gauche) |
 | `transition_screen` (écran fixe après M3 seulement) | `transitionHelp` | `previousTurn` (« Voir les N mots devinés »), `back` (`GameBackButton`), `next` (« Voir les résultats ») — dans cet ordre, l'action finale en dernier | coin haut droit |
-| `results_screen` | `resultsHelp` | `podium` (la rangée du podium), `details` (Détails par manche), `replay`, `stats` | `right: besideCornerButton` |
+| `history_screen` | `historyHelp(stats, hasPlayers, hasSetup)` : texte des tendances selon les lignes affichées, et de « Rejouer » selon que l'archive a ses réglages | `trends`, `firstGame`, `replay` (1re carte) ; pas de « ? » sans partie | coin haut droit |
+| `results_screen` | `resultsHelp(hasPlayedCartridges: …)` | `podium` (la rangée du podium), `details` (Détails par manche), `back` (retour, s'il est affiché), `replay`, `stats` | `right: besideCornerButton` |
 
 ## Les seules aides automatiques
 

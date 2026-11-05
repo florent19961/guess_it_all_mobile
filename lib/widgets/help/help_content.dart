@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import '../../models/fiesta/fiesta_rules.dart';
+import '../../services/game_history_service.dart';
 import 'coach_marks.dart';
 
 /// Textes des aides, écran par écran.
@@ -58,7 +59,8 @@ List<CoachStep> homeHelp({
       CoachStep(
         target: history,
         title: 'Historique',
-        text: 'Toutes les parties jouées sur ce téléphone.',
+        text: 'Les ${GameHistoryService.maxEntries} dernières parties jouées '
+            'sur ce téléphone.',
       ),
     ];
 
@@ -260,7 +262,8 @@ List<CoachStep> fiestaEditorHelp({
       CoachStep(
         target: tabs,
         title: 'Les 3 menus',
-        text: 'Toujours : actif toute la partie pour toutes les équipes. '
+        text: 'Toujours : toute la partie, dans les manches où il existe, pour '
+            'toutes les équipes. '
             'Aléatoire par manche : tiré au sort à chaque manche. Cartouches : '
             'à usage unique, jouées au tour de son choix.'
             '${hasCounts ? ' Le chiffre sur un menu : ce qu\'il active.' : ''}',
@@ -269,7 +272,8 @@ List<CoachStep> fiestaEditorHelp({
         EnsembleMenu.always => CoachStep(
             target: menu,
             title: 'Toujours',
-            text: 'Allume ce qui reste actif toute la partie. Les bonus, Malus '
+            text: 'Allume ce qui reste actif toute la partie, dans les manches '
+                'où il existe. Les bonus, Malus '
                 'de 10 s et les deux blocages n\'y sont pas : ils ne sont que '
                 'des cartouches.',
           ),
@@ -318,29 +322,44 @@ List<CoachStep> fiestaEditorHelp({
 
 // ========== HISTORIQUE ==========
 
+/// [trends] : seules les lignes affichées sont expliquées. [hasPlayers] et
+/// [hasSetup] : ce que la première partie, cible des étapes, a archivé.
 List<CoachStep> historyHelp({
   required GlobalKey trends,
   required GlobalKey firstGame,
   required GlobalKey replay,
+  required HistoryTrends stats,
+  required bool hasPlayers,
+  required bool hasSetup,
 }) =>
     [
       CoachStep(
         target: trends,
         title: 'Tendances',
-        text: 'Quelques chiffres sur toutes les parties jouées sur ce '
-            'téléphone.',
+        text: 'Sur les ${GameHistoryService.maxEntries} dernières parties au '
+            'plus. Points par partie : la moyenne, toutes équipes réunies.'
+            '${stats.bestScoreTeam != null ? ' Meilleur score : le plus haut '
+                'd\'une équipe.' : ''}'
+            '${stats.winsByTeam.isNotEmpty ? ' Victoires : par nom d\'équipe.' : ''}'
+            '${stats.playerAppearances.isNotEmpty ? ' Le plus assidu : le joueur '
+                'présent dans le plus de parties.' : ''}',
       ),
       CoachStep(
         target: firstGame,
         title: 'Une partie',
-        text: 'Touche une partie pour voir le détail : les équipes, leurs '
-            'joueurs et les points.',
+        text: 'Touche une partie pour voir le détail : les équipes, '
+            '${hasPlayers ? 'leurs joueurs, ' : ''}les points par manche et ses '
+            'réglages.',
       ),
       CoachStep(
         target: replay,
         title: 'Rejouer',
-        text: 'Relance cette partie avec les mêmes joueurs, les mêmes équipes '
-            'et les mêmes réglages. Les mots, eux, sont nouveaux.',
+        text: hasSetup
+            ? 'Relance cette partie avec les mêmes joueurs, les mêmes équipes '
+                'et les mêmes réglages. Les mots, eux, sont nouveaux.'
+            : 'Relance cette partie avec les mêmes joueurs et les mêmes '
+                'équipes, en Classique. Ancienne partie : seuls le nombre de '
+                'mots et la durée du tour sont repris. Les mots sont nouveaux.',
       ),
     ];
 
@@ -581,8 +600,10 @@ List<CoachStep> transitionHelp({
 List<CoachStep> resultsHelp({
   required GlobalKey podium,
   required GlobalKey details,
+  required GlobalKey back,
   required GlobalKey replay,
   required GlobalKey stats,
+  required bool hasPlayedCartridges,
 }) =>
     [
       CoachStep(
@@ -597,6 +618,11 @@ List<CoachStep> resultsHelp({
         text: 'Les points de chaque équipe, manche par manche.',
       ),
       CoachStep(
+        target: back,
+        title: 'Retour',
+        text: 'Reviens à la vérification du dernier tour pour corriger un mot.',
+      ),
+      CoachStep(
         target: replay,
         title: 'Rejouer',
         text: 'Relance une partie avec les mêmes joueurs.',
@@ -604,8 +630,10 @@ List<CoachStep> resultsHelp({
       CoachStep(
         target: stats,
         title: 'Statistiques',
-        text: 'L\'évolution des scores, les meilleurs joueurs et le temps '
-            'moyen par mot.',
+        text: 'Les meilleurs joueurs et l\'évolution des scores'
+            '${hasPlayedCartridges ? ', avec un filtre pour les bonus et malus joués' : ''}. Le '
+            'temps moyen par mot et le détail par manche sont sous « Cherry on '
+            'the cake ».',
       ),
     ];
 
