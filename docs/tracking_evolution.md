@@ -1162,3 +1162,9 @@ filtre « Bonus et malus joués », éteint à chaque visite, qui pose les badge
 - Faits archivés gardés (`GameResult.modifierRecap`). `formatModifierRecap` et `provider.modifierRecap` n'ont
   plus d'écran, seulement des tests qui vérifient ces faits.
 
+### Revue de la PR : archive sans équipe
+
+Une entrée sans équipe lisible est ignorée à la lecture, comme les autres entrées illisibles : elle affichait
+« — gagne », faussait les tendances et occupait une place de rétention. Aucune partie ne peut s'archiver ainsi.
+`GameResult` reste constructible sans équipe : les gardes de `history_screen` restent.
+

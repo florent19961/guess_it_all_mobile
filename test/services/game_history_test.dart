@@ -129,6 +129,25 @@ void main() {
       expect((await history.load()).map((g) => g.gameId), contains('bon'));
     });
 
+    test('une entrée sans équipe lisible est ignorée', () async {
+      Map<String, dynamic> avec(String id, Object? teams) =>
+          game(id: id).toJson()..['teams'] = teams;
+      await givenPrefs({
+        GameHistoryService.storageKey: jsonEncode(wrapWithSchema({
+          'entries': [
+            game(id: 'saine').toJson(),
+            avec('objet', <String, dynamic>{}),
+            avec('vide', <dynamic>[]),
+            avec('illisibles', [1, 'x']),
+            game(id: 'absente').toJson()..remove('teams'),
+          ],
+        })),
+      });
+
+      final loaded = await GameHistoryService().load();
+      expect(loaded.map((g) => g.gameId), ['saine']);
+    });
+
     test('un champ au mauvais type ne coûte que son entrée', () async {
       // `as int?` levait hors de `tryFromJson` : `load()` rendait alors une liste
       // vide, et le `record()` suivant écrasait toutes les parties saines.

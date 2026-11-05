@@ -235,23 +235,24 @@ class GameResult {
     }
   }
 
-  static GameResult _fromJson(
+  static GameResult? _fromJson(
       Map<String, dynamic> json, String gameId, DateTime playedAt) {
+    // 🔴 Pas de cast dur : `as List<dynamic>?` LÈVE si `teams` est un objet.
+    // Sans équipe lisible, l'entrée est ignorée comme toute entrée illisible :
+    // la partie ne peut pas être archivée ainsi (`_archiveGameResult`), elle
+    // s'afficherait « — gagne » et occuperait une place de rétention.
+    final teams = json['teams'] is List
+        ? (json['teams'] as List<dynamic>)
+            .whereType<Map<String, dynamic>>()
+            .map(TeamResult.fromJson)
+            .toList()
+        : const <TeamResult>[];
+    if (teams.isEmpty) return null;
+
     return GameResult(
       gameId: gameId,
       playedAt: playedAt,
-      // 🔴 `as List<dynamic>?` LÈVE si `teams` est autre chose qu'un tableau —
-      // un objet, par exemple. L'exception remontait hors du `.map()` (évalué
-      // paresseusement par le `.toList()` de l'appelant), tombait dans le
-      // `catch` générique de `load()`, et l'historique repartait VIDE sans
-      // quarantaine : le `record()` suivant écrasait alors toutes les parties
-      // saines. Le commentaire de `load()` promettait exactement l'inverse.
-      teams: json['teams'] is List
-          ? (json['teams'] as List<dynamic>)
-              .whereType<Map<String, dynamic>>()
-              .map(TeamResult.fromJson)
-              .toList()
-          : const <TeamResult>[],
+      teams: teams,
       totalWords: json['totalWords'] as int? ?? 0,
       turnDuration: json['turnDuration'] as int? ?? 0,
       roundsPlayed: json['roundsPlayed'] as int? ?? 0,
