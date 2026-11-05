@@ -69,6 +69,7 @@ class FiestaEnsembleEditorScreen extends StatefulWidget {
 class _FiestaEnsembleEditorScreenState
     extends State<FiestaEnsembleEditorScreen> {
   final _scroll = ScrollController();
+  final _introKey = GlobalKey();
   final _tabsKey = GlobalKey();
   final _menuKey = GlobalKey();
   final _saveKey = GlobalKey();
@@ -277,10 +278,11 @@ class _FiestaEnsembleEditorScreenState
                         controller: _scroll,
                         slivers: [
                           SliverPadding(
-                            padding: EdgeInsets.fromLTRB(
-                                20, 72 - _cornerButtonsHeight, 20, 0),
+                            padding: const EdgeInsets.fromLTRB(
+                                20, _introTopPadding, 20, 0),
                             sliver: SliverToBoxAdapter(
                               child: Column(
+                                key: _introKey,
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   Text(
@@ -396,6 +398,14 @@ class _FiestaEnsembleEditorScreenState
             (_rules.challenges ? 1 : 0),
       };
 
+  /// Page défilée au-delà de l'épinglage des onglets : retour à ce point, le
+  /// nouveau menu s'ouvre à son début. Sinon, elle ne bouge pas.
+  void _selectTab(EnsembleMenu menu) {
+    final pinAt = _introKey.currentContext!.size!.height + _introTopPadding;
+    if (_scroll.offset > pinAt) _scroll.jumpTo(pinAt);
+    setState(() => _tab = menu);
+  }
+
   Widget _tabs() => Container(
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
         padding: const EdgeInsets.all(4),
@@ -415,7 +425,7 @@ class _FiestaEnsembleEditorScreenState
                   label: label,
                   count: _count(menu),
                   selected: _tab == menu,
-                  onTap: () => setState(() => _tab = menu),
+                  onTap: () => _selectTab(menu),
                 ),
               ),
           ],
@@ -821,6 +831,9 @@ enum _Group {
 
 /// Hauteur des boutons retour et « ? » en haut d'écran : 16 de marge + 48.
 const double _cornerButtonsHeight = 64;
+
+/// Au-dessus du titre, dans la page qui défile sous cette bande.
+const double _introTopPadding = 72 - _cornerButtonsHeight;
 
 /// Onglets épinglés en haut pendant le défilement.
 class _TabsHeader extends SliverPersistentHeaderDelegate {

@@ -21,11 +21,12 @@ Future<void> _pumpEditor(WidgetTester tester, Size size) async {
   await tester.pump(const Duration(milliseconds: 300));
 }
 
+ScrollableState _pageScrollable(WidgetTester tester) =>
+    tester.stateList<ScrollableState>(find.byType(Scrollable)).reduce((a, b) =>
+        a.position.maxScrollExtent >= b.position.maxScrollExtent ? a : b);
+
 Future<void> _scrollToEnd(WidgetTester tester) async {
-  final scrollable = tester
-      .stateList<ScrollableState>(find.byType(Scrollable))
-      .reduce((a, b) =>
-          a.position.maxScrollExtent >= b.position.maxScrollExtent ? a : b);
+  final scrollable = _pageScrollable(tester);
   // Plusieurs fois : le contenu paresseux allonge la page en se construisant.
   for (var i = 0; i < 5; i++) {
     scrollable.position.jumpTo(scrollable.position.maxScrollExtent);
@@ -64,6 +65,44 @@ void main() {
       }
       expect(find.byIcon(Icons.chevron_left).hitTestable(), findsOneWidget);
       expect(find.text('?').hitTestable(), findsOneWidget);
+    });
+
+    testWidgets('$label, changer d\'onglet après l\'épinglage : début du menu',
+        (tester) async {
+      await _pumpEditor(tester, size);
+      await _scrollToEnd(tester);
+      final pinned = tester.getTopLeft(find.text('Toujours')).dy;
+
+      await tester.tap(find.text('Toujours'));
+      await tester.pump();
+
+      expect(tester.getTopLeft(find.text('Toujours')).dy, pinned);
+      final head = find.text('Modificateur de toute la partie');
+      expect(head.hitTestable(), findsOneWidget);
+      final tabsBottom = tester.getBottomLeft(find.text('Toujours')).dy;
+      expect(tester.getTopLeft(head).dy - tabsBottom, inInclusiveRange(0, 60));
+    });
+
+    testWidgets('$label, changer d\'onglet avant l\'épinglage : page immobile',
+        (tester) async {
+      await _pumpEditor(tester, size);
+      final scrollable = _pageScrollable(tester);
+      scrollable.position.jumpTo(50);
+      await tester.pump();
+
+      await tester.tap(find.text('Toujours'));
+      await tester.pump();
+      expect(scrollable.position.pixels, 50);
+    });
+
+    testWidgets('$label, changer d\'onglet sans défiler : page immobile',
+        (tester) async {
+      await _pumpEditor(tester, size);
+      final top = tester.getTopLeft(find.text('Toujours')).dy;
+      await tester.tap(find.text('Toujours'));
+      await tester.pump();
+      expect(_pageScrollable(tester).position.pixels, 0);
+      expect(tester.getTopLeft(find.text('Toujours')).dy, top);
     });
 
     testWidgets('$label, page non défilée : titre à sa place', (tester) async {
