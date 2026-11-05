@@ -8,8 +8,6 @@ import '../widgets/common/game_dialogs.dart';
 import '../widgets/common/home_button.dart';
 import '../widgets/common/back_button.dart';
 import '../widgets/effects/shooting_stars.dart';
-import '../widgets/fiesta/fiesta_setup_widgets.dart';
-import '../models/fiesta/modifier_recap.dart';
 import '../widgets/help/coach_marks.dart';
 import '../widgets/help/first_game_help.dart';
 import '../widgets/help/help_button.dart';
@@ -68,12 +66,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
                     key: _detailsKey,
                     child: _buildDetailedScores(context, provider, sortedTeams),
                   ),
-
-                  // Fiesta seulement (maquette `results`).
-                  if (provider.isFiesta) ...[
-                    const SizedBox(height: 16),
-                    _buildModifierRecap(provider),
-                  ],
 
                   const SizedBox(height: 32),
 
@@ -387,29 +379,6 @@ class _ResultsScreenState extends State<ResultsScreen> {
           }),
         ],
       ),
-    );
-  }
-
-  Widget _buildModifierRecap(GameProvider provider) {
-    final rules = provider.pendingFiesta;
-    final lines = provider.modifierRecap;
-    return FiestaCard(
-      title: 'Modificateurs de la partie',
-      trailing: rules == null
-          ? null
-          : Text(
-              fiestaModeLabel(rules),
-              style: AppTextStyles.bodySmall.copyWith(
-                fontSize: 11,
-                color: AppColors.gray400,
-              ),
-            ),
-      children: [
-        if (lines.isEmpty)
-          const FiestaHint('Aucun modificateur pendant cette partie.'),
-        for (final line in lines)
-          FiestaLine(label: line.title, detail: line.detail),
-      ],
     );
   }
 

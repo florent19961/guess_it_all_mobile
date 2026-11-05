@@ -9,11 +9,7 @@ import 'symmetric_draw.dart';
 /// depuis la fin du mode Auto : les archives `fiesta_auto` restent lisibles.
 const String kFiestaModeId = 'fiesta_custom';
 
-/// Libellé du mode pour la carte des résultats (maquette `results`).
-String fiestaModeLabel(FiestaRules rules) =>
-    rules.ensembleName == null ? 'Fiesta' : 'Fiesta · ${rules.ensembleName}';
-
-/// Une ligne AFFICHÉE du récap « Modificateurs de la partie » : titre et
+/// Une ligne du récap « Modificateurs de la partie » : titre et
 /// détail formés depuis les faits archivés. Jamais persistée.
 class ModifierRecapLine {
   final String title;

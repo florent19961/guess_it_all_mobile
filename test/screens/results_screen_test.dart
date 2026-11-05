@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+import 'package:guess_it_all_mobile/models/fiesta/fiesta_state.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
 import 'package:guess_it_all_mobile/screens/results_screen.dart';
 import 'package:guess_it_all_mobile/services/persisted_schema.dart';
@@ -10,7 +12,8 @@ import 'package:provider/provider.dart';
 
 import '../helpers/test_prefs.dart';
 
-Future<void> pumpResults(WidgetTester tester) async {
+Future<void> pumpResults(WidgetTester tester,
+    {Map<String, dynamic>? fiesta}) async {
   await givenPrefs({
     AppConstants.gameStateKey: jsonEncode(wrapWithSchema({
       'players': [
@@ -37,6 +40,7 @@ Future<void> pumpResults(WidgetTester tester) async {
         'gameId': 'g',
         'currentRound': 3,
         'teamPlayOrder': [0, 1],
+        if (fiesta != null) 'fiesta': fiesta,
       },
     })),
   });
@@ -67,5 +71,32 @@ void main() {
     final debut = textes.indexOf('Total') + 1;
     expect(textes.sublist(debut, debut + 10),
         ['Bleu', '2', '3', '4', '9', 'Rouge', '1', '0', '0', '1']);
+  });
+
+  testWidgets(
+      'Fiesta : plus de carte des modificateurs, le reste de l\'écran ne bouge pas',
+      (tester) async {
+    await pumpResults(tester,
+        fiesta: FiestaState(
+          rules: FiestaRules(
+            drawCount: 0,
+            trailingCount: 0,
+            modifiers: const {'plus_10s': ModifierSetting(charges: 1)},
+          ),
+          chargesUsed: const [
+            ChargeUse(catalogId: 'plus_10s', teamId: 't1', round: 1, turn: 1),
+          ],
+        ).toJson());
+    final provider =
+        tester.element(find.byType(ResultsScreen)).read<GameProvider>();
+    expect(provider.isFiesta, isTrue);
+
+    expect(find.text('Modificateurs de la partie'), findsNothing);
+    expect(find.textContaining('Bonus de 10 s'), findsNothing);
+    expect(find.text('9 pts'), findsOneWidget);
+    expect(find.text('Rejouer'), findsOneWidget);
+    expect(find.text('Voir les statistiques'), findsOneWidget);
+    // Les faits restent, pour l'archive.
+    expect(provider.modifierRecap.single.title, 'Cartouches utilisées');
   });
 }
