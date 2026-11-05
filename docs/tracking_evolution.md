@@ -945,3 +945,8 @@ La couleur reste sur la bordure, « Compris », les pastilles et les cercles.
 mot, avec une version `compact` de 64 px pour les boutons. Les mots se partagent la hauteur restante
 et rétrécissent jusqu'à 16 px. Rendus regardés en 360 × 640 et 390 × 844 avec de longs mots et trois
 badges.
+
+**Revue r1.** `endTurn` est idempotent : il ne fait rien hors de `screenTurn`. Le chrono et la
+confirmation « Terminer » peuvent se croiser, et un second appel ajoutait un événement `expired`
+pour le même mot. Il remettait aussi à zéro le temps reporté d'une manche finie en avance. Les seuls
+appelants sont dans `TurnScreen`, monté uniquement sur `screenTurn`, reprise de partie comprise.

@@ -903,6 +903,10 @@ class GameProvider extends ChangeNotifier {
   }
 
   void endTurn() {
+    // Idempotent : le chrono et la confirmation « Terminer » peuvent se croiser.
+    // Un second appel ajouterait un événement `expired` pour le même mot.
+    if (_game.currentScreen != AppConstants.screenTurn) return;
+
     final now = DateTime.now().millisecondsSinceEpoch;
     // Passe par l'horloge : si le tour était GELÉ (app en arrière-plan, dialogue
     // ouvert), c'est le reste gelé qui compte — pas une deadline périmée.
@@ -912,9 +916,7 @@ class GameProvider extends ChangeNotifier {
     final isRoundFinished = _game.remainingWords.isEmpty;
     final expiredWord = isRoundFinished ? null : _game.currentWord;
 
-    // Deux mots : la carte B part aussi à la vérification, sous sa propre
-    // clé. Touché seulement si B est à l'écran : un second `endTurn` (chrono
-    // + dialogue) ne l'efface donc pas.
+    // Deux mots : la carte B part aussi à la vérification, sous sa propre clé.
     final second = secondWord;
     var fiesta = _game.fiesta;
     if (second != null) {
