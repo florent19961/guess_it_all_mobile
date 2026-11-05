@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
@@ -81,6 +82,44 @@ Future<void> pumpStats(WidgetTester tester, Map<String, Object> seed) async {
   await tester.pump();
 }
 
+/// Une partie dont l'historique est donné tel quel, scores recalculés à la main
+/// par le test : équipes t1 (p1) et t2 (p2).
+Map<String, Object> _partieAvec(List<Map<String, dynamic>> history) => {
+      AppConstants.gameStateKey: jsonEncode(wrapWithSchema({
+        'players': [
+          {'id': 'p1', 'name': 'Alice', 'words': <String>[]},
+          {'id': 'p2', 'name': 'Bob', 'words': <String>[]},
+        ],
+        'teams': [
+          {
+            'id': 't1',
+            'name': 'Rouge',
+            'playerIds': ['p1'],
+          },
+          {
+            'id': 't2',
+            'name': 'Bleu',
+            'playerIds': ['p2'],
+          },
+        ],
+        'game': {'gameId': 'g', 'currentRound': 3, 'history': history},
+      })),
+    };
+
+Map<String, dynamic> _entree(int round, String equipe, int mots, int temps,
+        {bool continuation = false}) =>
+    {
+      'round': round,
+      'turn': 1,
+      'teamId': equipe,
+      'playerId': equipe == 't1' ? 'p1' : 'p2',
+      'wordsGuessed': List.generate(mots, (i) => 'm$round-$equipe-$i'),
+      'wordsInvalidated': <String>[],
+      'wordsPassed': <String>[],
+      'timeSpent': temps,
+      'isBonusContinuation': continuation,
+    };
+
 void main() {
   testWidgets('les classements s\'affichent avec les vrais joueurs',
       (tester) async {
@@ -147,5 +186,128 @@ void main() {
     expect(find.text('Statistiques'), findsOneWidget);
     expect(find.text('Top joueurs'), findsNothing,
         reason: 'sans donnée, la carte ne doit pas être montée du tout');
+  });
+
+  group('Évolution des scores', () {
+    List<VerticalLine> barres(WidgetTester tester) => tester
+        .widget<LineChart>(find.byType(LineChart))
+        .data
+        .extraLinesData
+        .verticalLines;
+
+    testWidgets('une manche jouée en continuation garde sa barre et son nom',
+        (tester) async {
+      // t1 finit M1 à son 2e tour, joue TOUTE la M2 sur le temps reporté, et
+      // ouvre la M3 de même. t2 ne rejoue qu'ensuite : aucun tour normal en M2.
+      await pumpStats(
+          tester,
+          _partieAvec([
+            _entree(1, 't1', 3, 30),
+            _entree(1, 't2', 2, 30),
+            _entree(1, 't1', 1, 20),
+            _entree(2, 't1', 6, 8, continuation: true),
+            _entree(3, 't1', 2, 2, continuation: true),
+            _entree(3, 't2', 4, 30),
+          ]));
+
+      final lignes = barres(tester);
+      expect(lignes.map((l) => l.label.labelResolver(l)), ['M1', 'M2', 'M3']);
+      // M1 au départ ; M2 et M3 démarrent toutes deux au 2e tour de t1.
+      expect(lignes.map((l) => l.x), [0, 2, 2]);
+    });
+
+    testWidgets('la barre de M2 suit la continuation, pas le tour d\'après',
+        (tester) async {
+      // t2 finit M1 à son 2e tour : la courbe de t2 en x=2 contient déjà des
+      // mots de M2, la barre ne peut pas être à droite de ce point.
+      await pumpStats(
+          tester,
+          _partieAvec([
+            _entree(1, 't1', 3, 30),
+            _entree(1, 't2', 2, 30),
+            _entree(1, 't1', 1, 30),
+            _entree(1, 't2', 2, 20),
+            _entree(2, 't2', 3, 10, continuation: true),
+            _entree(2, 't1', 4, 30),
+          ]));
+
+      expect(barres(tester).map((l) => l.x), [0, 2]);
+    });
+
+    testWidgets('l\'axe des scores ne double pas son dernier repère',
+        (tester) async {
+      // Maximum 47 : axe jusqu'à 51,7, repères tous les 12. Le dernier repère
+      // automatique (51) mordait sur le 48.
+      await pumpStats(
+          tester,
+          _partieAvec([
+            _entree(1, 't1', 47, 30),
+            _entree(1, 't2', 5, 30),
+          ]));
+
+      expect(find.text('48'), findsOneWidget);
+      expect(find.text('51'), findsNothing);
+    });
+
+    testWidgets('score maximal à 1 : un seul repère « 1 »', (tester) async {
+      await pumpStats(
+          tester,
+          _partieAvec([
+            _entree(1, 't1', 1, 30),
+          ]));
+
+      final axe =
+          find.descendant(of: find.byType(LineChart), matching: find.text('1'));
+      // Un repère vertical et un horizontal (tour 1), pas un de plus.
+      expect(axe, findsNWidgets(2));
+    });
+
+    testWidgets('une entrée d\'équipe inconnue ne fait pas tomber l\'écran',
+        (tester) async {
+      // `HistoryEntry.fromJson` met '' à un teamId absent, pour qu'une entrée
+      // incomplète ne rende pas la partie illisible.
+      await pumpStats(
+          tester,
+          _partieAvec([
+            _entree(1, 't1', 3, 30),
+            _entree(1, '', 2, 30),
+            _entree(2, '', 1, 5, continuation: true),
+          ]));
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Évolution des scores'), findsOneWidget);
+    });
+  });
+
+  testWidgets(
+      'temps moyen : le plus rapide a la barre la plus longue, même à 0 s',
+      (tester) async {
+    // Dernier mot trouvé dans la première seconde d'une continuation : 0 s
+    // comptée (secondes arrondies au supérieur à l'écran).
+    await pumpStats(
+        tester,
+        _partieAvec([
+          _entree(3, 't1', 1, 0, continuation: true),
+          _entree(3, 't2', 2, 8),
+        ]));
+    await tester.ensureVisible(find.text('Cherry on the cake'));
+    await tester.pump();
+    await tester.tap(find.text('Cherry on the cake'));
+    await tester.pump();
+
+    final barres = tester
+        .widgetList<FractionallySizedBox>(find.descendant(
+          of: find
+              .ancestor(
+                of: find.text('Temps moyen par mot (partie entière)'),
+                matching: find.byType(Container),
+              )
+              .first,
+          matching: find.byType(FractionallySizedBox),
+        ))
+        .map((b) => b.widthFactor)
+        .toList();
+    // Alice 0,0 s puis Bob 4,0 s.
+    expect(barres, [1.0, 0.2]);
   });
 }

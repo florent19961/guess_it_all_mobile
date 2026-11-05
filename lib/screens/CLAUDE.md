@@ -33,7 +33,7 @@ HomeScreen → SettingsScreen (Classique / Fiesta)
 | `surprise_challenge_screen.dart` | Défi surprise, autonome et piloté par ses paramètres : VS coupé, règle, action, « Qui a gagné ? », roulette, « Les Moulins gagnent ! » en couleur d'équipe sans ombre. « Passer ce défi » jusqu'à « Continuer » (rien n'est donné avant), retour système bloqué, sons coupés à la sortie, animations réduites respectées |
 | `challenge_route_screen.dart` | Branche `SurpriseChallengeScreen` sur le provider : `currentChallenge` traduit en noms et couleurs, issue rendue à `finishChallenge` |
 | `results_screen.dart` | Podium anime, tableau scores par manche, carte « Modificateurs de la partie » (Fiesta seulement), boutons Rejouer/Stats |
-| `stats_screen.dart` | Stats detaillees : graphique evolution scores (fl_chart), top joueurs, temps moyen |
+| `stats_screen.dart` | Stats detaillees : graphique evolution scores (fl_chart), top joueurs, temps moyen. Barre de manche = premiere entree de la manche, continuation comprise, nommee par son numero de manche ; le graphique ignore une entree d'equipe inconnue. Axe des scores : seuls les multiples de l'intervalle sont ecrits (fl_chart ajoute le haut de l'axe) |
 | `rules_screen.dart` | Regles completes du jeu (3 manches) + Revoir le tuto / le tuto Fiesta / les aides |
 | `rules_tutorial_screen.dart` | Tuto des regles, 4 cartes (`Navigator.push` via `show`), pénalité de passe lue dans les reglages |
 | `fiesta_tutorial_screen.dart` | Tuto Fiesta, 3 cartes (`Navigator.push` via `show`) |

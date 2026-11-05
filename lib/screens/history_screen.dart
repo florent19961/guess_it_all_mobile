@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/game_result.dart';
+import '../models/score_timeline.dart';
 import '../providers/game_provider.dart';
 import '../services/game_history_service.dart';
 import '../theme/app_theme.dart';
@@ -201,7 +202,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Text('Tendances', style: AppTextStyles.subtitle(fontSize: 20)),
           const SizedBox(height: 12),
           _statLine(
-            'Mots devinés par partie',
+            'Points par partie',
             trends.averageScorePerGame.toStringAsFixed(1),
           ),
           if (trends.bestScoreTeam != null)
@@ -236,19 +237,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Text(
-              label,
-              style: AppTextStyles.bodySmall.copyWith(color: AppColors.gray400),
-            ),
+          Text(
+            label,
+            style: AppTextStyles.bodySmall.copyWith(color: AppColors.gray400),
           ),
           const SizedBox(width: 12),
-          Text(
-            value,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
+          // La valeur (noms d'équipes) se replie, pas le libellé.
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -324,7 +328,9 @@ class _GameCardState extends State<_GameCard> {
                         Text(
                           game.isTie
                               ? 'Égalité — ${game.winners.map((t) => t.name).join(' & ')}'
-                              : '${game.winners.isEmpty ? '—' : game.winners.first.name} gagne',
+                              : game.winners.isEmpty
+                                  ? '— gagne'
+                                  : winnerLine(game.winners.first.name),
                           style: AppTextStyles.subtitle(fontSize: 18),
                         ),
                       ],
@@ -351,7 +357,9 @@ class _GameCardState extends State<_GameCard> {
                 children: [
                   const Divider(color: AppColors.gray700),
                   for (var i = 0; i < ranking.length; i++)
-                    _teamRow(ranking[i], widget.colorFor(i)),
+                    // La couleur de l'équipe dans la partie, pas celle de son rang.
+                    _teamRow(ranking[i],
+                        widget.colorFor(game.teams.indexOf(ranking[i]))),
                   const SizedBox(height: 8),
                   Text(
                     '${game.totalWords} mots · tours de ${game.turnDuration}s '

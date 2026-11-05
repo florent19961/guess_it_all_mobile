@@ -1120,3 +1120,29 @@ critère jamais affiché. Un seul interrupteur, sans le choix défi par défi de
 
 **Conséquence.** Le joueur le moins rapide compte tous ses tours, y compris sans mot ; un joueur sans temps
 de jeu n'est pas mesuré. Les sons restent à écouter sur appareil, Android et iOS.
+
+---
+
+## 2026-11-05 — Audit des statistiques et des résultats
+
+**Quoi.** Relecture de chaque chiffre de Résultats, Statistiques, Historique et de la révélation, avec une
+partie Fiesta calculée à la main (`stats_consistency_test`) et, hors commit, 90 parties aléatoires de 2 à
+4 équipes, Classique et Fiesta. Scores, manches, mots, temps et archive concordaient déjà. Défauts corrigés :
+
+- Graphique : barre de manche placée au premier tour NORMAL. Une manche jouée toute en continuation perdait
+  sa barre, et M3 s'affichait « M2 ». La barre suit maintenant la première entrée de la manche.
+- Graphique : le haut de l'axe (51) s'écrivait sur le dernier repère (48), et « 1 » deux fois.
+- Graphique : une entrée sans équipe connue faisait tomber l'écran.
+- Temps moyen : le plus rapide à 0,0 s avait une barre vide.
+- Révélation : une cartouche jouée juste après une continuation tombait sur le tour de l'équipe précédente.
+- Historique : couleur donnée par le rang et non par l'équipe ; « Victoires » illisible ou en débordement à
+  360 px ; « Les Moulins gagne » ; un champ de mauvais type vidait l'historique, puis l'écrasait.
+- Résultats : « 1 pts ».
+
+**Pourquoi ces choix.**
+
+- « Mots devinés par partie » devient « Points par partie » : le chiffre compte les points, et l'archive ne
+  garde pas le nombre de mots. La valeur ne change pas, anciennes parties comprises ; seul le libellé change.
+- Temps moyen et tours sans mot : exclus comme avant, c'est le choix documenté de `stats_aggregation`.
+
+**Conséquence.** Reste un défaut de jeu, non corrigé ici : voir le rapport de la PR (continuation à 0 s).

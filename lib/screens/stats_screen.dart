@@ -230,13 +230,10 @@ class _StatsScreenState extends State<StatsScreen> {
                         ? '🥉'
                         : '';
 
-            final remplissage = echelle <= 0
-                ? 0.0
-                : inverse
-                    ? (row.value > 0
-                        ? (1 - (row.value / echelle)) * 0.8 + 0.2
-                        : 0.0)
-                    : row.value / echelle;
+            // En inversé, 0 s est le meilleur temps possible : barre pleine.
+            final remplissage = inverse
+                ? (echelle > 0 ? (1 - row.value / echelle) * 0.8 + 0.2 : 1.0)
+                : (echelle > 0 ? row.value / echelle : 0.0);
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -341,13 +338,15 @@ class _StatsScreenState extends State<StatsScreen> {
       teamTurnCount[team.id] = 0;
     }
 
-    // Détecter le premier tour de chaque manche (pour les barres verticales)
-    Map<int, int> roundStartX = {}; // round -> premier X (teamTurnCount)
-    Map<String, int> lastRoundSeen = {}; // teamId -> dernière manche vue
+    // Le début de chaque manche (pour les barres verticales) : son premier tour,
+    // qui est d'ordinaire une continuation.
+    final Map<int, int> roundStartX = {}; // round -> X de la première entrée
 
     // Parcourir l'historique
     for (final entry in provider.game.history) {
       final teamId = entry.teamId;
+      // Entrée incomplète (`teamId` absent) : aucune courbe à qui l'attribuer.
+      if (!teamSpots.containsKey(teamId)) continue;
       // Points du tour, pas nombre de mots : un tour à ×2 compte double.
       teamCumulativeScore[teamId] =
           (teamCumulativeScore[teamId] ?? 0) + entry.points;
@@ -366,27 +365,22 @@ class _StatsScreenState extends State<StatsScreen> {
         // Nouveau tour : incrémenter le compteur et ajouter un point
         teamTurnCount[teamId] = (teamTurnCount[teamId] ?? 0) + 1;
 
-        // Détecter si c'est le premier tour d'une nouvelle manche
-        final lastRound = lastRoundSeen[teamId] ?? 0;
-        if (entry.round > lastRound && !roundStartX.containsKey(entry.round)) {
-          roundStartX[entry.round] = teamTurnCount[teamId]!;
-        }
-        lastRoundSeen[teamId] = entry.round;
-
         teamSpots[teamId]!.add(FlSpot(
           teamTurnCount[teamId]!.toDouble(),
           teamCumulativeScore[teamId]!.toDouble(),
         ));
       }
+      roundStartX.putIfAbsent(entry.round, () => teamTurnCount[teamId]!);
     }
 
-    // Créer la liste des positions X pour les barres M1, M2 et M3
+    // Barres M1, M2 et M3, chacune avec le numéro de SA manche.
     // M1 est toujours à x=0 (début du graphique)
-    final List<double> mancheStartsX = [
-      0,
-      if (roundStartX.containsKey(2)) roundStartX[2]!.toDouble(),
-      if (roundStartX.containsKey(3)) roundStartX[3]!.toDouble(),
-    ];
+    final Map<int, double> mancheStartsX = {
+      1: 0,
+      for (final round in [2, 3])
+        if (roundStartX.containsKey(round))
+          round: roundStartX[round]!.toDouble(),
+    };
 
     // Trouver les max pour les axes
     int maxTurn = 1;
@@ -397,6 +391,10 @@ class _StatsScreenState extends State<StatsScreen> {
         if (spot.y > maxScore) maxScore = spot.y.toInt();
       }
     }
+
+    // Repères de l'axe des scores : fl_chart ajoute toujours le haut de l'axe
+    // (maxScore × 1,1), qui n'est pas un repère et mord sur le dernier.
+    final scoreInterval = (maxScore / 4).ceilToDouble().clamp(1.0, 100.0);
 
     // Créer les lignes (courbes lisses)
     final List<LineChartBarData> lines = [];
@@ -484,8 +482,7 @@ class _StatsScreenState extends State<StatsScreen> {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  horizontalInterval:
-                      (maxScore / 4).ceilToDouble().clamp(1, 100),
+                  horizontalInterval: scoreInterval,
                   getDrawingHorizontalLine: (value) {
                     return FlLine(
                       color: AppColors.gray600,
@@ -498,8 +495,11 @@ class _StatsScreenState extends State<StatsScreen> {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 30,
-                      interval: (maxScore / 4).ceilToDouble().clamp(1, 100),
+                      interval: scoreInterval,
                       getTitlesWidget: (value, meta) {
+                        if (value % scoreInterval != 0) {
+                          return const SizedBox.shrink();
+                        }
                         return Text(
                           value.toInt().toString(),
                           style: const TextStyle(
@@ -546,16 +546,17 @@ class _StatsScreenState extends State<StatsScreen> {
                 maxY: maxScore.toDouble() * 1.1,
                 extraLinesData: ExtraLinesData(
                   verticalLines: [
-                    for (int i = 0; i < mancheStartsX.length; i++)
+                    for (final MapEntry(key: round, value: x)
+                        in mancheStartsX.entries)
                       VerticalLine(
-                        x: mancheStartsX[i],
+                        x: x,
                         color: Colors.white.withOpacity(0.4),
                         strokeWidth: 2,
                         dashArray: [5, 5],
                         label: VerticalLineLabel(
                           show: true,
                           alignment: Alignment.topRight,
-                          labelResolver: (_) => 'M${i + 1}',
+                          labelResolver: (_) => 'M$round',
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 10,

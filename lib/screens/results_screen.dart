@@ -232,7 +232,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            '${team.score} pts',
+            '${team.score} ${team.score <= 1 ? 'pt' : 'pts'}',
             style: TextStyle(
               fontFamily: 'Bangers',
               fontSize: 24,
