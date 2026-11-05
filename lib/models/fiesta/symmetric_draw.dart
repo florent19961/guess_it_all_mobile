@@ -66,13 +66,16 @@ List<ModifierInstance> alwaysForRound(FiestaRules rules, int round) {
 
 /// Tirage de la manche [round] parmi les interrupteurs aléatoires actifs et non
 /// verrouillés, qui existent dans cette manche, compatible avec [already] et
-/// avec lui-même : les incompatibles sont sautés ; moins de candidats que
-/// demandé, on en tire moins. `drawCount` : 0 = aucun tirage.
+/// avec lui-même : les incompatibles sont sautés. Les modificateurs de [spent]
+/// (déjà sortis) ne viennent qu'en complément, une fois tous les frais possibles
+/// pris ; même ainsi trop peu de candidats, on en tire moins. `drawCount` : 0 =
+/// aucun tirage.
 List<ModifierInstance> drawForRound({
   required FiestaRules rules,
   required int round,
   required List<ModifierInstance> already,
   required Random random,
+  Set<String> spent = const {},
 }) {
   final count = rules.drawCount;
   if (count <= 0) return const [];
@@ -88,28 +91,47 @@ List<ModifierInstance> drawForRound({
   ]..shuffle(random);
 
   final drawn = <ModifierInstance>[];
-  for (final candidate in candidates) {
+  for (final candidate in [
+    ...candidates.where((c) => !spent.contains(c.catalogId)),
+    ...candidates.where((c) => spent.contains(c.catalogId)),
+  ]) {
     if (drawn.length >= count) break;
     if (canAdd([...already, ...drawn], candidate)) drawn.add(candidate);
   }
   return drawn;
 }
 
+/// Ce qui reste sorti après le tirage [drawn] d'une manche. Un déjà sorti retiré
+/// veut dire que le vivier s'est rempli : seul ce complément compte alors, les
+/// frais pris juste avant lui reviennent avec le vivier plein.
+Set<String> _spentAfter(Set<String> spent, List<ModifierInstance> drawn) {
+  final ids = {for (final m in drawn) m.catalogId};
+  final refilled = ids.intersection(spent);
+  return refilled.isEmpty ? {...spent, ...ids} : refilled;
+}
+
 /// Règles de la manche [round] pour toutes les équipes : les « Toujours »,
 /// puis le tirage. Point d'entrée unique du provider et du récap.
+///
+/// 🔴 Tirage sans remise sur la partie, sans rien stocker : les manches
+/// précédentes sont recalculées depuis leur propre graine pour savoir ce qui est
+/// déjà sorti.
 List<ModifierInstance> roundModifiers(
   FiestaRules rules, {
   required String gameId,
   required int round,
 }) {
-  final always = alwaysForRound(rules, round);
-  return [
-    ...always,
-    ...drawForRound(
-      rules: rules,
-      round: round,
-      already: always,
-      random: Random(drawSeed(gameId, round)),
-    ),
-  ];
+  List<ModifierInstance> drawOf(int r, Set<String> spent) => drawForRound(
+        rules: rules,
+        round: r,
+        already: alwaysForRound(rules, r),
+        random: Random(drawSeed(gameId, r)),
+        spent: spent,
+      );
+
+  var spent = <String>{};
+  for (var past = 1; past < round; past++) {
+    spent = _spentAfter(spent, drawOf(past, spent));
+  }
+  return [...alwaysForRound(rules, round), ...drawOf(round, spent)];
 }
