@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+import 'package:guess_it_all_mobile/models/fiesta/fiesta_state.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
 import 'package:guess_it_all_mobile/screens/stats_screen.dart';
 import 'package:guess_it_all_mobile/services/persisted_schema.dart';
@@ -84,7 +86,9 @@ Future<void> pumpStats(WidgetTester tester, Map<String, Object> seed) async {
 
 /// Une partie dont l'historique est donné tel quel, scores recalculés à la main
 /// par le test : équipes t1 (p1) et t2 (p2).
-Map<String, Object> _partieAvec(List<Map<String, dynamic>> history) => {
+Map<String, Object> _partieAvec(List<Map<String, dynamic>> history,
+        {List<ChargeUse>? fiesta}) =>
+    {
       AppConstants.gameStateKey: jsonEncode(wrapWithSchema({
         'players': [
           {'id': 'p1', 'name': 'Alice', 'words': <String>[]},
@@ -102,7 +106,16 @@ Map<String, Object> _partieAvec(List<Map<String, dynamic>> history) => {
             'playerIds': ['p2'],
           },
         ],
-        'game': {'gameId': 'g', 'currentRound': 3, 'history': history},
+        'game': {
+          'gameId': 'g',
+          'currentRound': 3,
+          'history': history,
+          if (fiesta != null)
+            'fiesta': FiestaState(
+              rules: FiestaRules(drawCount: 0, trailingCount: 0),
+              chargesUsed: fiesta,
+            ).toJson(),
+        },
       })),
     };
 
@@ -309,5 +322,102 @@ void main() {
         .toList();
     // Alice 0,0 s puis Bob 4,0 s.
     expect(barres, [1.0, 0.2]);
+  });
+
+  group('Bonus et malus sur « Évolution des scores »', () {
+    // t1 : 3 mots, puis 1 mot et sa continuation ; t2 : 2 mots puis 4. Numéro de
+    // tour partagé en M2, comme en vrai (la continuation ne l'avance pas).
+    final historique = [
+      {..._entree(1, 't1', 3, 30), 'turn': 1},
+      {..._entree(1, 't2', 2, 30), 'turn': 2},
+      {..._entree(1, 't1', 1, 20), 'turn': 3},
+      {..._entree(2, 't1', 6, 8, continuation: true), 'turn': 3},
+      {..._entree(2, 't2', 4, 30), 'turn': 3},
+    ];
+    Map<String, Object> partie(List<ChargeUse> jouees) =>
+        _partieAvec(historique, fiesta: jouees);
+    const dix =
+        ChargeUse(catalogId: 'plus_10s', teamId: 't1', round: 1, turn: 1);
+    const doublePts =
+        ChargeUse(catalogId: 'double_points', teamId: 't2', round: 2, turn: 3);
+    const moinsDix = ChargeUse(
+        catalogId: 'minus_10s',
+        teamId: 't2',
+        round: 2,
+        targetTeamId: 't1',
+        turn: 3);
+    final filtre = find.byType(Switch);
+    final badge = find.byKey(const ValueKey('chart-badge'));
+
+    testWidgets('masqués par défaut, affichés par le filtre, sur leur tour',
+        (tester) async {
+      await pumpStats(tester, partie(const [dix, doublePts, moinsDix]));
+
+      expect(find.text('Bonus et malus joués'), findsOneWidget);
+      expect(tester.widget<Switch>(filtre).value, isFalse);
+      expect(badge, findsNothing);
+
+      await tester.ensureVisible(filtre);
+      await tester.pump();
+      await tester.tap(filtre);
+      await tester.pump();
+
+      expect(tester.widget<Switch>(filtre).value, isTrue);
+      expect(badge, findsNWidgets(3));
+      expect(find.text('+10'), findsOneWidget);
+      expect(find.text('×2'), findsOneWidget);
+      expect(find.text('−10'), findsOneWidget);
+
+      // Chaque badge est au-dessus du point de fin de SON tour : x = tour de son
+      // équipe, y = score de son équipe, axe de 0 à 10 × 1,1 et de 0 à 2 tours.
+      final chart = tester.getRect(find.byType(LineChart));
+      Offset point(double tour, double score) => Offset(
+            chart.left + 30 + tour / 2 * (chart.width - 30),
+            chart.top + (1 - score / 11) * (chart.height - 24),
+          );
+      void estAuDessus(String texte, Offset cible, {int rang = 0}) {
+        final centre = tester
+            .getCenter(find.ancestor(of: find.text(texte), matching: badge));
+        expect(
+            centre.dx,
+            moreOrLessEquals(cible.dx.clamp(chart.left + 12, chart.right - 12),
+                epsilon: 0.5));
+        expect(centre.dy,
+            moreOrLessEquals(cible.dy - 16 - rang * 24, epsilon: 0.5));
+      }
+
+      estAuDessus('+10', point(1, 3));
+      estAuDessus('×2', point(2, 6));
+      estAuDessus('−10', point(2, 6), rang: 1);
+
+      await tester.tap(filtre);
+      await tester.pump();
+      expect(badge, findsNothing);
+    });
+
+    testWidgets('pas de filtre en Classique', (tester) async {
+      await pumpStats(tester, _partieAvec(historique));
+
+      expect(filtre, findsNothing);
+      expect(find.text('Bonus et malus joués'), findsNothing);
+    });
+
+    testWidgets('pas de filtre pour une partie Fiesta sans cartouche jouée',
+        (tester) async {
+      await pumpStats(tester, partie(const []));
+
+      expect(filtre, findsNothing);
+    });
+
+    testWidgets('pas de filtre pour une partie sans numéro de tour archivé',
+        (tester) async {
+      await pumpStats(
+          tester,
+          partie(const [
+            ChargeUse(catalogId: 'plus_10s', teamId: 't1', round: 1),
+          ]));
+
+      expect(filtre, findsNothing);
+    });
   });
 }

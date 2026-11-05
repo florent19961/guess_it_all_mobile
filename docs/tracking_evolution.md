@@ -1146,3 +1146,19 @@ partie Fiesta calculée à la main (`stats_consistency_test`) et, hors commit, 9
 - Temps moyen et tours sans mot : exclus comme avant, c'est le choix documenté de `stats_aggregation`.
 
 **Conséquence.** Reste un défaut de jeu, non corrigé ici : voir le rapport de la PR (continuation à 0 s).
+
+### Demande de Florent : modificateurs hors des Résultats, badges sur le graphique
+
+**Quoi.** La carte « Modificateurs de la partie » quitte les Résultats. « Évolution des scores » reçoit un
+filtre « Bonus et malus joués », éteint à chaque visite, qui pose les badges des cartouches jouées.
+
+**Pourquoi ces choix.**
+
+- Premier graphique = « Évolution des scores », le seul vrai graphique de l'écran. Il n'avait aucun badge :
+  ils viennent de `ChargeUse.turn`.
+- Un badge est à la fin du tour de l'équipe qui a joué la cartouche, malus compris, comme à la révélation.
+- Filtre absent quand il n'y a rien à poser : Classique, aucune cartouche, partie sans `turn`. Une règle de
+  manche tirée n'est pas une cartouche jouée : seule, elle ne fait pas apparaître le filtre.
+- Faits archivés gardés (`GameResult.modifierRecap`). `formatModifierRecap` et `provider.modifierRecap` n'ont
+  plus d'écran, seulement des tests qui vérifient ces faits.
+

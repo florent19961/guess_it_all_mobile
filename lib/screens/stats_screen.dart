@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../theme/app_theme.dart';
+import '../models/fiesta/fiesta_state.dart';
+import '../models/fiesta/modifier_catalog.dart';
+import '../models/score_timeline.dart';
 import '../models/stats_aggregation.dart';
 import '../providers/game_provider.dart';
 import '../utils/constants.dart';
 import '../widgets/common/app_back_button.dart';
+import '../widgets/fiesta/modifier_badge.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -16,6 +20,13 @@ class StatsScreen extends StatefulWidget {
 
 class _StatsScreenState extends State<StatsScreen> {
   bool _showAdvancedStats = false;
+
+  /// Badges des cartouches sur « Évolution des scores ». Non mémorisé.
+  bool _showChargeBadges = false;
+
+  // Marges de la zone de tracé du graphique, dans le repère du `LineChart`.
+  static const double _chartLeftTitles = 30;
+  static const double _chartBottomTitles = 24;
 
   @override
   Widget build(BuildContext context) {
@@ -342,8 +353,11 @@ class _StatsScreenState extends State<StatsScreen> {
     // qui est d'ordinaire une continuation.
     final Map<int, int> roundStartX = {}; // round -> X de la première entrée
 
+    // Abscisse de chaque entrée, sur la courbe de son équipe.
+    final Map<int, int> entryX = {};
+
     // Parcourir l'historique
-    for (final entry in provider.game.history) {
+    for (final (index, entry) in provider.game.history.indexed) {
       final teamId = entry.teamId;
       // Entrée incomplète (`teamId` absent) : aucune courbe à qui l'attribuer.
       if (!teamSpots.containsKey(teamId)) continue;
@@ -371,6 +385,7 @@ class _StatsScreenState extends State<StatsScreen> {
         ));
       }
       roundStartX.putIfAbsent(entry.round, () => teamTurnCount[teamId]!);
+      entryX[index] = teamTurnCount[teamId]!;
     }
 
     // Barres M1, M2 et M3, chacune avec le numéro de SA manche.
@@ -395,6 +410,23 @@ class _StatsScreenState extends State<StatsScreen> {
     // Repères de l'axe des scores : fl_chart ajoute toujours le haut de l'axe
     // (maxScore × 1,1), qui n'est pas un repère et mord sur le dernier.
     final scoreInterval = (maxScore / 4).ceilToDouble().clamp(1.0, 100.0);
+
+    // Cartouches jouées, chacune à la fin de son tour sur la courbe de l'équipe
+    // qui l'a jouée (malus compris, comme la révélation). Sans numéro de tour
+    // (partie antérieure), on ne sait pas où la poser.
+    final List<_ChargeBadge> badges = [];
+    for (final use
+        in provider.game.fiesta?.chargesUsed ?? const <ChargeUse>[]) {
+      final x = entryX[entryOfCharge(use, provider.game.history)];
+      if (x == null) continue;
+      badges.add(_ChargeBadge(
+        catalogId: use.catalogId,
+        x: x,
+        score: teamSpots[use.teamId]![x].y,
+        stack: badges.where((b) => b.teamId == use.teamId && b.x == x).length,
+        teamId: use.teamId,
+      ));
+    }
 
     // Créer les lignes (courbes lisses)
     final List<LineChartBarData> lines = [];
@@ -471,106 +503,210 @@ class _StatsScreenState extends State<StatsScreen> {
               );
             }).toList(),
           ),
+          if (badges.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Bonus et malus joués',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      color: AppColors.gray400,
+                    ),
+                  ),
+                ),
+                Switch(
+                  value: _showChargeBadges,
+                  activeTrackColor: AppColors.secondaryCyan,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  onChanged: (on) => setState(() => _showChargeBadges = on),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 16),
 
           // Graphique
           SizedBox(
             height: 200,
-            child: LineChart(
-              LineChartData(
-                lineBarsData: lines,
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: scoreInterval,
-                  getDrawingHorizontalLine: (value) {
-                    return FlLine(
-                      color: AppColors.gray600,
-                      strokeWidth: 1,
-                    );
-                  },
-                ),
-                titlesData: FlTitlesData(
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 30,
-                      interval: scoreInterval,
-                      getTitlesWidget: (value, meta) {
-                        if (value % scoreInterval != 0) {
-                          return const SizedBox.shrink();
-                        }
-                        return Text(
-                          value.toInt().toString(),
-                          style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 10,
-                            color: AppColors.gray400,
-                          ),
-                        );
-                      },
+            child: Stack(fit: StackFit.expand, children: [
+              LineChart(
+                LineChartData(
+                  lineBarsData: lines,
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    horizontalInterval: scoreInterval,
+                    getDrawingHorizontalLine: (value) {
+                      return FlLine(
+                        color: AppColors.gray600,
+                        strokeWidth: 1,
+                      );
+                    },
+                  ),
+                  titlesData: FlTitlesData(
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: _chartLeftTitles,
+                        interval: scoreInterval,
+                        getTitlesWidget: (value, meta) {
+                          if (value % scoreInterval != 0) {
+                            return const SizedBox.shrink();
+                          }
+                          return Text(
+                            value.toInt().toString(),
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 10,
+                              color: AppColors.gray400,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: _chartBottomTitles,
+                        interval:
+                            maxTurn <= 10 ? 1 : (maxTurn / 5).ceilToDouble(),
+                        getTitlesWidget: (value, meta) {
+                          if (value == 0) return const Text('');
+                          if (value != value.roundToDouble())
+                            return const Text('');
+                          return Text(
+                            value.toInt().toString(),
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 10,
+                              color: AppColors.gray400,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
                     ),
                   ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 24,
-                      interval:
-                          maxTurn <= 10 ? 1 : (maxTurn / 5).ceilToDouble(),
-                      getTitlesWidget: (value, meta) {
-                        if (value == 0) return const Text('');
-                        if (value != value.roundToDouble())
-                          return const Text('');
-                        return Text(
-                          value.toInt().toString(),
-                          style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 10,
-                            color: AppColors.gray400,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                ),
-                borderData: FlBorderData(show: false),
-                minX: 0,
-                maxX: maxTurn.toDouble(),
-                minY: 0,
-                maxY: maxScore.toDouble() * 1.1,
-                extraLinesData: ExtraLinesData(
-                  verticalLines: [
-                    for (final MapEntry(key: round, value: x)
-                        in mancheStartsX.entries)
-                      VerticalLine(
-                        x: x,
-                        color: Colors.white.withOpacity(0.4),
-                        strokeWidth: 2,
-                        dashArray: [5, 5],
-                        label: VerticalLineLabel(
-                          show: true,
-                          alignment: Alignment.topRight,
-                          labelResolver: (_) => 'M$round',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                  borderData: FlBorderData(show: false),
+                  minX: 0,
+                  maxX: maxTurn.toDouble(),
+                  minY: 0,
+                  maxY: maxScore.toDouble() * 1.1,
+                  extraLinesData: ExtraLinesData(
+                    verticalLines: [
+                      for (final MapEntry(key: round, value: x)
+                          in mancheStartsX.entries)
+                        VerticalLine(
+                          x: x,
+                          color: Colors.white.withOpacity(0.4),
+                          strokeWidth: 2,
+                          dashArray: [5, 5],
+                          label: VerticalLineLabel(
+                            show: true,
+                            alignment: Alignment.topRight,
+                            labelResolver: (_) => 'M$round',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
+              if (_showChargeBadges)
+                _buildChargeBadges(badges,
+                    maxTurn: maxTurn.toDouble(), maxY: maxScore * 1.1),
+            ]),
           ),
         ],
       ),
     );
   }
+
+  /// Calque des badges, dans le repère du `LineChart` : posé au-dessus du point
+  /// de son tour, les badges d'un même point empilés.
+  Widget _buildChargeBadges(List<_ChargeBadge> badges,
+      {required double maxTurn, required double maxY}) {
+    const size = 24.0;
+    return LayoutBuilder(builder: (context, box) {
+      final plotWidth = box.maxWidth - _chartLeftTitles;
+      final plotHeight = box.maxHeight - _chartBottomTitles;
+      return Stack(
+        clipBehavior: Clip.none,
+        children: [
+          for (final badge in badges)
+            Positioned(
+              left: (_chartLeftTitles + badge.x / maxTurn * plotWidth)
+                      .clamp(size / 2, box.maxWidth - size / 2) -
+                  size / 2,
+              top: ((1 - badge.score / maxY) * plotHeight -
+                          16 -
+                          badge.stack * size)
+                      .clamp(size / 2, plotHeight) -
+                  size / 2,
+              child: _chargeBadge(badge.catalogId, size),
+            ),
+        ],
+      );
+    });
+  }
+
+  Widget _chargeBadge(String catalogId, double size) {
+    final color =
+        modifierColor(modifierById(catalogId)?.nature ?? ModifierNature.malus);
+    return Tooltip(
+      message: modifierById(catalogId)?.name ?? catalogId,
+      child: Container(
+        key: const ValueKey('chart-badge'),
+        width: size,
+        height: size,
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundMain,
+          shape: BoxShape.circle,
+          border: Border.all(color: color, width: 1.5),
+        ),
+        child: FittedBox(
+          child: Text(
+            modifierIcon(catalogId),
+            style: TextStyle(
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Une cartouche jouée, placée sur le graphique des scores.
+class _ChargeBadge {
+  final String catalogId;
+  final String teamId;
+  final int x;
+  final double score;
+
+  /// Rang parmi les badges de la même équipe au même point.
+  final int stack;
+
+  const _ChargeBadge({
+    required this.catalogId,
+    required this.teamId,
+    required this.x,
+    required this.score,
+    required this.stack,
+  });
 }

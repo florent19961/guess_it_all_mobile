@@ -109,13 +109,19 @@ ScoreTimeline buildScoreTimeline({
   return ScoreTimeline(series: series, rounds: rounds, events: events);
 }
 
-/// L'étape où la cartouche a été jouée : le début de son tour, sinon la fin de
-/// sa manche (partie antérieure, sans numéro de tour). L'équipe compte : une
+/// L'entrée d'historique du tour où la cartouche a été jouée, -1 sans numéro de
+/// tour (partie antérieure) ou tour introuvable. L'équipe compte : une
 /// continuation partage son numéro de tour avec le tour qui la suit.
+int entryOfCharge(ChargeUse use, List<HistoryEntry> history) => use.turn == null
+    ? -1
+    : history.indexWhere((h) =>
+        h.turn == use.turn && h.round == use.round && h.teamId == use.teamId);
+
+/// L'étape où la cartouche a été jouée : le début de son tour, sinon la fin de
+/// sa manche.
 int _stepOf(ChargeUse use, List<HistoryEntry> history, List<RoundSpan> rounds) {
-  final entry = history.indexWhere((h) =>
-      h.turn == use.turn && h.round == use.round && h.teamId == use.teamId);
-  if (use.turn != null && entry != -1) return entry;
+  final entry = entryOfCharge(use, history);
+  if (entry != -1) return entry;
   return rounds.where((r) => r.round == use.round).firstOrNull?.end ??
       history.length;
 }
