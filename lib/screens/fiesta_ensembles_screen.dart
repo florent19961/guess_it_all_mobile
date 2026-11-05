@@ -1,24 +1,53 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
+import '../models/fiesta/ensemble_summary.dart';
 import '../models/fiesta/fiesta_ensemble.dart';
 import '../models/fiesta/fiesta_rules.dart';
+import '../models/fiesta/modifier_catalog.dart';
 import '../services/fiesta_ensemble_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common/app_back_button.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/app_confirm_dialog.dart';
 import '../widgets/effects/shooting_stars.dart';
+import '../widgets/fiesta/modifier_badge.dart';
 import '../widgets/help/coach_marks.dart';
 import '../widgets/help/help_button.dart';
 import '../widgets/help/help_content.dart';
 import 'fiesta_ensemble_editor_screen.dart';
 import 'fiesta_ensemble_view_screen.dart';
 
+/// Icône d'un ensemble : choisie à la main pour les fournis, déduite des règles
+/// pour les miens (ni étape dans l'éditeur, ni stockage).
+IconData ensembleIcon(FiestaEnsemble ensemble) {
+  final provided = _providedIcons[ensemble.id];
+  if (provided != null) return provided;
+  if (rulesDraw(ensemble.rules)) return Icons.casino_outlined;
+  if (rulesHaveCartridges(ensemble.rules)) return Icons.bolt;
+  return _crown;
+}
+
+/// Material Icons n'a pas de couronne : la coupe, au plus près.
+const IconData _crown = Icons.emoji_events_outlined;
+
+const Map<String, IconData> _providedIcons = {
+  kClassicEnsembleId: Icons.casino_outlined,
+  '${kProvidedIdPrefix}last': Icons.trending_up,
+  '${kProvidedIdPrefix}pro': _crown,
+  '${kProvidedIdPrefix}straight': Icons.track_changes,
+  '${kProvidedIdPrefix}pictionary': Icons.edit_outlined,
+  '${kProvidedIdPrefix}bilingual': Icons.language,
+  '${kProvidedIdPrefix}explosive': Icons.bolt,
+  '${kProvidedIdPrefix}expert': Icons.volume_up_outlined,
+};
+
 /// La liste des ensembles : juste après les Paramètres, avant les joueurs
 /// (Fiesta seulement). Les ensembles fournis par l'app puis les
-/// miens (un tap sélectionne), « Créer un ensemble » qui POUSSE l'éditeur
+/// miens (un tap sélectionne et déplie), « Créer un ensemble » qui POUSSE l'éditeur
 /// (`FiestaEnsembleEditorScreen`), en bas « Suivant ».
 ///
 /// L'écran ne connaît ni le provider ni la navigation de l'app : [onNext]
@@ -51,12 +80,17 @@ class FiestaEnsemblesScreen extends StatefulWidget {
   State<FiestaEnsemblesScreen> createState() => _FiestaEnsemblesScreenState();
 }
 
+/// Hauteur de la bande des boutons retour et « ? », au-dessus de la liste.
+const double _topInset = 72;
+
 class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
   final _service = FiestaEnsembleService();
   final _readyKey = GlobalKey();
   final _firstMineKey = GlobalKey();
   final _createKey = GlobalKey();
   final _nextKey = GlobalKey();
+  final _selectedRowKey = GlobalKey();
+  final _scroll = ScrollController();
 
   EnsembleStore? _store;
   String? _selectedId;
@@ -68,6 +102,12 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
   }
 
   List<FiestaEnsemble> get _mine => _store?.ensembles ?? const [];
@@ -92,6 +132,34 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
             .firstOrNull;
     final lastUsed = _ready.where((e) => e.id == store.lastUsedId).firstOrNull;
     setState(() => _selectedId = (match ?? lastUsed)?.id ?? kClassicEnsembleId);
+    _revealSelected();
+  }
+
+  void _select(String id) {
+    setState(() => _selectedId = id);
+    _revealSelected();
+  }
+
+  /// Après le dépliage, la ligne sélectionnée doit tenir entre les boutons du
+  /// haut et la barre « Suivant ». Plus haute que cet espace : son haut d'abord.
+  void _revealSelected() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final row = _selectedRowKey.currentContext?.findRenderObject();
+      if (row == null || !_scroll.hasClients) return;
+      final viewport = RenderAbstractViewport.of(row);
+      final position = _scroll.position;
+      final showBottom = viewport.getOffsetToReveal(row, 1).offset;
+      final showTop = viewport.getOffsetToReveal(row, 0).offset - _topInset;
+      final target = math
+          .min(math.max(position.pixels, showBottom), showTop)
+          .clamp(position.minScrollExtent, position.maxScrollExtent);
+      if (target == position.pixels) return;
+      _scroll.animateTo(
+        target,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
+    });
   }
 
   Future<void> _reload({String? select}) async {
@@ -104,6 +172,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
         _selectedId = kClassicEnsembleId;
       }
     });
+    _revealSelected();
   }
 
   /// Ouvre l'éditeur : création (reprend le brouillon s'il y en a un) ou
@@ -230,6 +299,12 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
                     next: _nextKey,
                     hasMine: _mine.isNotEmpty,
                     full: _full,
+                    selectedHasModifiers: _ready
+                        .where((e) => e.id == _selectedId)
+                        .any((e) => ensembleSummary(e)
+                            .chips
+                            .whereType<ModifierChip>()
+                            .isNotEmpty),
                     hasDraft: FiestaEnsemblesScreen.drafts
                         .containsKey(FiestaEnsemblesScreen.newDraftKey),
                   ),
@@ -245,10 +320,12 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
   Widget _buildBody() {
     final newDraft = FiestaEnsemblesScreen.drafts
         .containsKey(FiestaEnsemblesScreen.newDraftKey);
+    final count = '${_mine.length} / ${FiestaEnsembleService.maxEnsembles}';
     // Pas de ListView : l'aide vise « Créer un ensemble », à monter même sous
     // une longue liste.
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 72, 16, 24),
+      controller: _scroll,
+      padding: const EdgeInsets.fromLTRB(16, _topInset, 16, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -257,36 +334,20 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
             style: AppTextStyles.subtitle(fontSize: 34),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           KeyedSubtree(
             key: _readyKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'PRÊTS À JOUER',
-                        style: AppTextStyles.label
-                            .copyWith(color: AppColors.gray400, fontSize: 12),
-                      ),
-                    ),
-                    Text(
-                      '${_mine.length} / ${FiestaEnsembleService.maxEnsembles}',
-                      style: AppTextStyles.bodySmall
-                          .copyWith(color: AppColors.gray400),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
                 for (final ensemble in _ready)
                   _EnsembleCard(
                     key: ensemble == _mine.firstOrNull ? _firstMineKey : null,
+                    rowKey: ensemble.id == _selectedId ? _selectedRowKey : null,
                     ensemble: ensemble,
                     selected: ensemble.id == _selectedId,
                     canDuplicate: !_full,
-                    onTap: () => setState(() => _selectedId = ensemble.id),
+                    onTap: () => _select(ensemble.id),
                     onView: () => _view(ensemble),
                     onEdit: () => _openEditor(ensemble: ensemble),
                     onDuplicate: () => _duplicate(ensemble),
@@ -295,22 +356,17 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
           KeyedSubtree(
             key: _createKey,
             child: _full && !newDraft
                 ? _Alert(
                     'Limite de ${FiestaEnsembleService.maxEnsembles} ensembles '
                     'atteinte. Supprime un ensemble pour en créer un nouveau.',
+                    count: count,
                   )
-                : AppButton(
-                    text: newDraft
-                        ? 'Reprendre le brouillon'
-                        : 'Créer un ensemble',
-                    icon: const Icon(Icons.add, size: 20),
-                    variant: AppButtonVariant.secondary,
-                    size: AppButtonSize.medium,
-                    fullWidth: true,
+                : _CreateButton(
+                    text: '${newDraft ? 'Reprendre le brouillon' : 'Créer un '
+                        'ensemble'} · $count',
                     onPressed: () => _openEditor(),
                   ),
           ),
@@ -337,6 +393,8 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
 }
 
 class _EnsembleCard extends StatelessWidget {
+  /// Posée sur la ligne sélectionnée, que l'écran garde visible.
+  final Key? rowKey;
   final FiestaEnsemble ensemble;
   final bool selected;
   final bool canDuplicate;
@@ -347,6 +405,7 @@ class _EnsembleCard extends StatelessWidget {
   final VoidCallback onDelete;
 
   const _EnsembleCard({
+    required this.rowKey,
     required this.ensemble,
     required this.selected,
     required this.canDuplicate,
@@ -358,52 +417,200 @@ class _EnsembleCard extends StatelessWidget {
     super.key,
   });
 
-  /// La sélection se lit au cadre : pas d'icône de plus, la ligne est comptée.
   @override
   Widget build(BuildContext context) {
-    final provided = ensemble.isProvided;
-    return Semantics(
-      selected: selected,
-      button: true,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
-          decoration: BoxDecoration(
-            color: selected
-                ? AppColors.secondaryCyan.withValues(alpha: 0.12)
-                : AppColors.backgroundCard,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: selected ? AppColors.secondaryCyan : AppColors.gray700,
-              width: 2,
+    final summary = ensembleSummary(ensemble);
+    return Container(
+      key: rowKey,
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: selected
+            ? AppColors.secondaryCyan.withValues(alpha: 0.12)
+            : AppColors.backgroundCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: selected ? AppColors.secondaryCyan : AppColors.gray700,
+          width: 2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            selected: selected,
+            button: true,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onTap,
+              child: _header(summary),
             ),
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  ensemble.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.label,
+          if (selected) _details(summary),
+        ],
+      ),
+    );
+  }
+
+  Widget _header(EnsembleSummary summary) => Padding(
+        padding: const EdgeInsets.fromLTRB(8, 8, 12, 8),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: selected
+                    ? AppColors.secondaryCyan
+                    : AppColors.secondaryCyan.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                ensembleIcon(ensemble),
+                size: 30,
+                color: selected
+                    ? AppColors.backgroundMain
+                    : AppColors.secondaryCyan,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    spacing: 6,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        ensemble.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.label
+                            .copyWith(fontSize: 15, height: 1.25),
+                      ),
+                      if (!ensemble.isProvided) const _PersoBadge(),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    summary.short,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodySmall.copyWith(
+                        fontSize: 12, height: 1.3, color: AppColors.gray400),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: selected ? AppColors.secondaryCyan : null,
+                border: Border.all(
+                  color: selected ? AppColors.secondaryCyan : AppColors.gray500,
+                  width: 2,
                 ),
               ),
-              if (!provided) const _PersoBadge(),
+              child: selected
+                  ? const Icon(Icons.check,
+                      size: 14, color: AppColors.backgroundMain)
+                  : null,
+            ),
+          ],
+        ),
+      );
+
+  /// Ce qui ne s'affiche que sur la ligne sélectionnée.
+  Widget _details(EnsembleSummary summary) {
+    final rules = ensemble.rules;
+    final always = kModifierCatalog
+        .where((d) => rules.isAlways(d.id))
+        .map((d) => d.id)
+        .toList();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 2, 6, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  summary.long,
+                  style: AppTextStyles.bodySmall
+                      .copyWith(fontSize: 13, height: 1.45),
+                ),
+                if (summary.chips.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      for (final chip in summary.chips)
+                        switch (chip) {
+                          ModifierChip(:final id, :final count) =>
+                            ModifierBadge.catalog(
+                              id,
+                              nature: modifierById(id)!.nature,
+                              count: count,
+                              playingWith: count == null ? always : const [],
+                            ),
+                          InfoChip(:final label) => _InfoChip(label),
+                        },
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
               _Action(Icons.visibility_outlined, 'Voir', onView),
-              if (!provided) _Action(Icons.edit_outlined, 'Modifier', onEdit),
+              if (!ensemble.isProvided)
+                _Action(Icons.edit_outlined, 'Modifier', onEdit),
               _Action(Icons.content_copy, 'Dupliquer',
                   canDuplicate ? onDuplicate : null),
-              if (!provided)
+              if (!ensemble.isProvided)
                 _Action(Icons.delete_outline, 'Supprimer', onDelete,
                     color: AppColors.error),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
+}
+
+/// Pastille neutre, à la forme de `ModifierBadge`.
+class _InfoChip extends StatelessWidget {
+  final String label;
+  const _InfoChip(this.label);
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+        decoration: BoxDecoration(
+          color: AppColors.gray400.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(99),
+          border: Border.all(color: AppColors.gray400.withValues(alpha: 0.4)),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: AppColors.gray400,
+          ),
+        ),
+      );
 }
 
 /// Une action d'ensemble : icône seule, libellé pour l'accessibilité, 44 px.
@@ -435,7 +642,6 @@ class _PersoBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(left: 6),
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
         decoration: BoxDecoration(
           color: AppColors.warning.withValues(alpha: 0.15),
@@ -454,12 +660,89 @@ class _PersoBadge extends StatelessWidget {
       );
 }
 
-class _Alert extends StatelessWidget {
+/// « Créer un ensemble », en contour pointillé.
+class _CreateButton extends StatelessWidget {
   final String text;
-  const _Alert(this.text);
+  final VoidCallback onPressed;
+
+  const _CreateButton({required this.text, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(16);
+    return Semantics(
+      button: true,
+      child: Material(
+        color: AppColors.secondaryCyan.withValues(alpha: 0.08),
+        borderRadius: radius,
+        child: InkWell(
+          borderRadius: radius,
+          onTap: onPressed,
+          child: CustomPaint(
+            painter: _DashedBorderPainter(),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 52),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.add,
+                        size: 20, color: AppColors.secondaryCyan),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        text,
+                        style: AppTextStyles.label.copyWith(
+                            fontSize: 15, color: AppColors.secondaryCyan),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DashedBorderPainter extends CustomPainter {
+  static const _dash = 6.0;
+  static const _gap = 4.0;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.secondaryCyan
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    final border = RRect.fromRectAndRadius(
+      (Offset.zero & size).deflate(1),
+      const Radius.circular(15),
+    );
+    for (final metric in (Path()..addRRect(border)).computeMetrics()) {
+      for (var d = 0.0; d < metric.length; d += _dash + _gap) {
+        canvas.drawPath(metric.extractPath(d, d + _dash), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorderPainter oldDelegate) => false;
+}
+
+class _Alert extends StatelessWidget {
+  final String text;
+  final String count;
+  const _Alert(this.text, {required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final style = AppTextStyles.bodySmall
+        .copyWith(color: AppColors.warning, fontSize: 13);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -467,10 +750,13 @@ class _Alert extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.warning.withValues(alpha: 0.35)),
       ),
-      child: Text(
-        text,
-        style: AppTextStyles.bodySmall
-            .copyWith(color: AppColors.warning, fontSize: 13),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: Text(text, style: style)),
+          const SizedBox(width: 12),
+          Text(count, style: style.copyWith(fontWeight: FontWeight.w600)),
+        ],
       ),
     );
   }

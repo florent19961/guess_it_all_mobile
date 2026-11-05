@@ -85,9 +85,10 @@ void main() {
     Finder error() => find.text(nameError, skipOffstage: false);
 
     // Sous les 8 ensembles fournis : liste paresseuse, on y fait défiler.
-    await tester.scrollUntilVisible(find.text('Créer un ensemble'), 300,
+    await tester.scrollUntilVisible(
+        find.text('Créer un ensemble · 0 / 10'), 300,
         scrollable: find.byType(Scrollable).first);
-    await tapText(tester, 'Créer un ensemble');
+    await tapText(tester, 'Créer un ensemble · 0 / 10');
     expect(find.text('Nouvel ensemble'), findsOneWidget);
     expect(error(), findsNothing, reason: 'rien tenté : pas d\'erreur');
 
@@ -126,6 +127,12 @@ void main() {
     Future<void> scrollTo(String text) =>
         tester.scrollUntilVisible(find.text(text), 300,
             scrollable: find.byType(Scrollable).first);
+    Future<void> selectRow(String name) async {
+      await scrollTo(name);
+      await tester.tap(find.text(name));
+      await settle(tester);
+    }
+
     String nameField() =>
         tester.widget<TextField>(find.byType(TextField)).controller!.text;
     Future<void> back() async {
@@ -137,16 +144,16 @@ void main() {
     }
 
     // A : création, nom déjà pris → incomplet, gardé.
-    await scrollTo('Créer un ensemble');
-    await tapText(tester, 'Créer un ensemble');
+    await scrollTo('Créer un ensemble · 1 / 10');
+    await tapText(tester, 'Créer un ensemble · 1 / 10');
     await tester.enterText(find.byType(TextField), 'Pro Player');
     await tester.pump();
     await back();
     expect(find.text('Nouvel ensemble'), findsNothing);
 
-    // B : modification de « Mien », nom vidé → incomplet, gardé.
-    await tester.scrollUntilVisible(find.byTooltip('Modifier'), 300,
-        scrollable: find.byType(Scrollable).first);
+    // B : modification de « Mien », nom vidé → incomplet, gardé. Les actions
+    // ne sont que sur la ligne sélectionnée.
+    await selectRow('Mien');
     await tester.tap(find.byTooltip('Modifier'));
     await settle(tester);
     expect(nameField(), 'Mien');
@@ -155,12 +162,12 @@ void main() {
     await back();
 
     // Reprise de A, intacte ; puis de B, intacte.
-    await scrollTo('Reprendre le brouillon');
-    await tapText(tester, 'Reprendre le brouillon');
+    await scrollTo('Reprendre le brouillon · 1 / 10');
+    await tapText(tester, 'Reprendre le brouillon · 1 / 10');
     expect(nameField(), 'Pro Player');
     await back();
-    await tester.scrollUntilVisible(find.byTooltip('Modifier'), 300,
-        scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(find.byTooltip('Modifier'));
+    await tester.pump();
     await tester.tap(find.byTooltip('Modifier'));
     await settle(tester);
     expect(nameField(), '');

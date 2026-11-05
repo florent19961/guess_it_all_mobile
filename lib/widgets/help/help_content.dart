@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import '../../models/fiesta/fiesta_rules.dart';
+import '../../services/fiesta_ensemble_service.dart';
 import '../../services/game_history_service.dart';
 import 'coach_marks.dart';
 
@@ -201,44 +202,50 @@ List<CoachStep> fiestaEnsemblesHelp({
   required bool hasMine,
   required bool full,
   required bool hasDraft,
+  required bool selectedHasModifiers,
 }) =>
     [
       CoachStep(
         target: ready,
-        title: 'Prêts à jouer',
+        title: 'Les ensembles',
         text:
-            'Les ensembles fournis par l\'app${hasMine ? ', puis les tiens' : ''}. '
-            'Touche-en un pour le choisir. L\'œil montre ce qu\'il fait, '
-            'l\'icône de copie le duplique : c\'est ainsi qu\'on modifie un '
-            'ensemble de l\'app.'
+            'Ceux fournis par l\'app${hasMine ? ', puis les tiens' : ''}. Touche-en '
+            'un pour le choisir : il se déplie et dit ce qu\'il fait. L\'œil '
+            'montre son détail, l\'icône de copie le duplique : c\'est ainsi '
+            'qu\'on modifie un ensemble de l\'app.'
+            '${selectedHasModifiers ? ' Touche une pastille rouge ou verte pour '
+                'son explication.' : ''}'
             '${full ? ' Ta liste est pleine : la copie reste grisée tant que tu '
                 'n\'en supprimes pas un.' : ''}',
       ),
       CoachStep(
         target: firstMine,
         title: 'Tes ensembles',
-        text: 'Le badge « Perso » les distingue. Le crayon en modifie un, la '
-            'corbeille le supprime.',
+        text: 'Le badge « Perso » les distingue. Touche un des tiens pour le '
+            'modifier avec le crayon ou le supprimer avec la corbeille.',
       ),
       if (hasDraft)
         CoachStep(
           target: create,
           title: 'Reprendre le brouillon',
           text: 'Rouvre l\'ensemble que tu n\'as pas fini, là où tu l\'as '
-              'laissé.',
+              'laissé. Le compteur : tes ensembles enregistrés, '
+              '${FiestaEnsembleService.maxEnsembles} au plus.',
         )
       else if (full)
         CoachStep(
           target: create,
           title: 'Limite atteinte',
-          text: 'Supprime un de tes ensembles pour en créer un nouveau.',
+          text: 'Le compteur est au maximum. Pour créer un nouvel ensemble, '
+              'touche un des tiens, puis sa corbeille.',
         )
       else
         CoachStep(
           target: create,
           title: 'Créer un ensemble',
           text: 'Ouvre l\'éditeur : un nom, les 3 menus de réglages, puis '
-              '« Enregistrer ».',
+              '« Enregistrer ». Le compteur : tes ensembles enregistrés, '
+              '${FiestaEnsembleService.maxEnsembles} au plus.',
         ),
       CoachStep(
         target: next,

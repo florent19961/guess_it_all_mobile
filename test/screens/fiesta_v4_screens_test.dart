@@ -638,9 +638,9 @@ void main() {
         home: FiestaEnsemblesScreen(onBack: () {}, onNext: (_) {})));
     await settle(tester);
 
-    await tester.tap(find
-        .byTooltip('Voir')
-        .at(kProvidedEnsembles.indexWhere((e) => e.name == 'Droit au but')));
+    await tester.tap(find.text('Droit au but'));
+    await settle(tester);
+    await tester.tap(find.byTooltip('Voir'));
     await settle(tester);
     expect(find.text('TOUJOURS'), findsOneWidget);
     expect(find.textContaining('ALÉATOIRE'), findsNothing);
@@ -651,9 +651,9 @@ void main() {
     await tester.tap(find.byType(AppBackButton));
     await settle(tester);
 
-    await tester.tap(find
-        .byTooltip('Voir')
-        .at(kProvidedEnsembles.indexWhere((e) => e.name == 'Bilingue')));
+    await tester.tap(find.text('Bilingue'));
+    await settle(tester);
+    await tester.tap(find.byTooltip('Voir'));
     await settle(tester);
     expect(find.text('Manches 1 et 2 seulement'), findsOneWidget);
   });

@@ -69,8 +69,10 @@ class ModifierBadge extends StatelessWidget {
           key: key);
 
   /// Badge d'un modificateur du catalogue, sans instance (×2, Deux mots…).
+  /// [count] : ses cartouches, dites dans le libellé.
   factory ModifierBadge.catalog(String id,
       {required ModifierNature nature,
+      int? count,
       Iterable<String> playingWith = const [],
       BadgeExplainWrapper? wrapExplain,
       Key? key}) {
@@ -78,7 +80,7 @@ class ModifierBadge extends StatelessWidget {
     return ModifierBadge(
       key: key,
       icon: modifierIcon(id),
-      label: def?.name ?? id,
+      label: '${def?.name ?? id}${count == null ? '' : ' ×$count'}',
       nature: nature,
       description: def == null ? null : modifierDescription(id, playingWith),
       wrapExplain: wrapExplain,
