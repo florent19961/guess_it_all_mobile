@@ -13,3 +13,7 @@ Effets visuels et animations.
 Wrappe son `child` dans un `Material(type: transparent)` pour supporter les `TextField` imbriques.
 
 Utilise sur tous les ecrans comme fond d'ecran.
+
+## `score_reveal_chart.dart`
+
+`ScoreRevealPainter` : le graphique de la révélation des scores, dessiné depuis une `ScoreTimeline` et une animation de 0 à 1. Aucun chiffre. Pas de logique de jeu.

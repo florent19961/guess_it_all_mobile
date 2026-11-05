@@ -118,7 +118,7 @@ class HistoryTrends {
   final int bestScore;
   final String? bestScoreTeam;
 
-  /// Nombre de victoires par nom d'équipe (les égalités comptent pour chacune).
+  /// Nombre de victoires par nom d'équipe (sur une archive sans ordre de jeu, une égalité compte pour chacune).
   final Map<String, int> winsByTeam;
 
   /// Nombre d'apparitions par joueur, du plus régulier au moins régulier.
@@ -166,8 +166,8 @@ HistoryTrends computeTrends(List<GameResult> results) {
       }
     }
 
-    // En cas d'égalité, chaque équipe en tête compte une victoire : le jeu ne
-    // départage pas, donc l'historique ne doit pas trancher à sa place.
+    // Une seule gagnante, sauf archive antérieure sans ordre de jeu : là,
+    // chaque équipe en tête compte une victoire, sans inventer de vainqueur.
     for (final winner in game.winners) {
       wins[winner.name] = (wins[winner.name] ?? 0) + 1;
     }

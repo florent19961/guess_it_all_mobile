@@ -64,3 +64,16 @@ int playerIndexAtTurn({
   return playerOrderForTeam[
       (playCount - 1 + skips) % playerOrderForTeam.length];
 }
+
+/// Classement final : le meilleur score, puis à égalité de points l'équipe qui
+/// a commencé à jouer le plus tard. Il n'y a jamais d'égalité. [startA] et
+/// [startB] = rang dans l'ordre de jeu.
+int compareFinalRank({
+  required int scoreA,
+  required int scoreB,
+  required int startA,
+  required int startB,
+}) {
+  final byScore = scoreB.compareTo(scoreA);
+  return byScore != 0 ? byScore : startB.compareTo(startA);
+}

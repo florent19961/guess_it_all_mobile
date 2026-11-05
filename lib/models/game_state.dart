@@ -132,6 +132,11 @@ class GameState {
   /// JSON quand nul, pour que le blob d'une partie Classique ne change pas.
   FiestaState? fiesta;
 
+  /// La révélation des scores a déjà été montrée pour cette partie : l'écran
+  /// Résultats s'affiche directement (retour depuis les stats, correction du
+  /// dernier tour). Clé écrite seulement une fois vraie.
+  bool scoreRevealSeen;
+
   GameState({
     this.gameId,
     this.currentScreen = AppConstants.screenHome,
@@ -162,6 +167,7 @@ class GameState {
     this.preValidationSnapshot,
     this.restoredValidatedWords,
     this.fiesta,
+    this.scoreRevealSeen = false,
   })  : teamPlayOrder = teamPlayOrder ?? [],
         playerOrderByTeam = playerOrderByTeam ?? {},
         allWords = allWords ?? [],
@@ -217,6 +223,7 @@ class GameState {
     bool clearRestoredValidatedWords = false,
     FiestaState? fiesta,
     bool clearFiesta = false,
+    bool? scoreRevealSeen,
   }) {
     return GameState(
       gameId: clearGameId ? null : (gameId ?? this.gameId),
@@ -271,6 +278,7 @@ class GameState {
           ? null
           : (restoredValidatedWords ?? this.restoredValidatedWords),
       fiesta: clearFiesta ? null : (fiesta ?? this.fiesta),
+      scoreRevealSeen: scoreRevealSeen ?? this.scoreRevealSeen,
     );
   }
 
@@ -310,6 +318,7 @@ class GameState {
       if (turnAllottedSeconds != null)
         'turnAllottedSeconds': turnAllottedSeconds,
       if (fiesta != null) 'fiesta': fiesta!.toJson(),
+      if (scoreRevealSeen) 'scoreRevealSeen': true,
     };
   }
 
@@ -376,6 +385,12 @@ class GameState {
           ? FiestaState.tryFromJson(
               Map<String, dynamic>.from(json['fiesta'] as Map))
           : null,
+      // Clé absente sur les résultats ou les stats : partie finie avant cette
+      // version, ou app tuée pendant la révélation. Dans les deux cas, on ne
+      // la rejoue pas.
+      scoreRevealSeen: json['scoreRevealSeen'] as bool? ??
+          (json['currentScreen'] == AppConstants.screenResults ||
+              json['currentScreen'] == AppConstants.screenStats),
     );
   }
 }

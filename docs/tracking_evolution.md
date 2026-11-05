@@ -1046,3 +1046,46 @@ manches, écran fixe après M3.
 **Conséquence.** Ensembles et parties Fiesta d'un autre format restent illisibles, comme avant (Fiesta
 jamais publiée). `kCurrentSchemaVersion` inchangé. L'archivage de fin de partie se fait à « Voir les
 résultats ». Les seuils d'équilibrage sont des constantes à recalibrer après des parties réelles.
+
+## 2026-11-05 — Révélation des scores en fin de partie (Fiesta v4, lot 2A)
+
+**Quoi.** Classique et Fiesta : avant l'écran Résultats, inchangé, les courbes de scores se tracent
+tour par tour en 4,5 s, sans chiffres, puis le vainqueur. En Fiesta, les cartouches jouées tombent
+sur la courbe de l'équipe qui les a jouées. `ChargeUse.turn` (optionnel) date la cartouche ; clé
+absente : en fin de manche.
+
+**Pourquoi ces choix.**
+- *Aiguillage sur `screenResults` plutôt qu'un écran de plus* : tous les chemins vers les résultats
+  (« Voir les résultats » de l'écran fixe après M3, via `nextRound`) restent tels quels, et les
+  tests et le bouton accueil qui lisent `screenResults` aussi. Seul un drapeau décide.
+- *`GameState.scoreRevealSeen`, clé écrite une fois vraie, gardé à la restauration* : le snapshot de
+  retour arrière précède la révélation, une correction du dernier tour ne doit pas la rejouer. Clé
+  absente sur résultats ou stats = vue : une partie finie avant cette version ne la joue pas, une
+  app tuée pendant la révélation repart sur les résultats. `kCurrentSchemaVersion` inchangé.
+- *Une étape par entrée d'historique* : une continuation a sa propre étape dans sa manche, sinon ses
+  points tomberaient du mauvais côté du séparateur. Une cartouche se place par (tour, manche) : le
+  numéro de tour seul ne distingue pas les deux parties d'une continuation.
+- *Effets sans focus audio* : sur Android, un second player qui prend le focus met le premier en
+  pause (`WrappedPlayer.onLoss` d'audioplayers), la musique s'arrêterait à la première cartouche.
+- *Pas de réglage de son* : l'app n'en a pas, les sons de la révélation jouent toujours, comme les
+  autres.
+- *Musique maison, décision de Florent* : `scripts/render_reveal_music.py` rend hors ligne la
+  composition de la maquette (`music(4.5)`, gong à 4,5 s) et le dépôt public peut la porter. Pas de
+  piste d'un reel. Le gong et l'accord final jouent le rôle de l'impact prévu : la révélation
+  n'utilise pas `impact-bass-1`, qui reste aux animations de manche.
+- *Départ commun* : l'animation attend que `startMusic` rende la main (0,8 s au plus), sinon le
+  chargement du fichier décalerait le gong. À la fin normale, pas de fondu : la queue d'environ 3 s
+  est déjà un fondu, et le bouton de fin ne la coupe pas. Le fondu ne sert qu'à passer pendant le tracé. Lecture en échec : révélation muette.
+
+**Revue et décision de Florent (même jour) : il n'y a jamais d'égalité.**
+- *Règle unique* : à égalité de points, l'équipe qui a commencé à jouer le plus tard gagne.
+  `compareFinalRank` (`play_rotation.dart`) la porte seule, pour `getTeamsSortedByScore` et pour
+  l'archive. La révélation annonce le premier du classement.
+- *`GameResult.playOrder`* : ids des équipes dans l'ordre de jeu, clé additive. L'historique et
+  « Victoires » appliquent la règle aux nouvelles parties. Une archive sans cet ordre, ou avec un
+  ordre incomplet, garde son affichage « Égalité » et sa victoire à chacune : rien ne permet de la
+  départager après coup.
+- *Effets coupés à la sortie* : compteur de lecture plutôt qu'un simple `stop`, car un effet en cours
+  de préparation partirait après un `stop` déjà passé, donc sur l'écran Résultats.
+- *Place qui manque* : carte de fin à la hauteur de la police, texte défilant et bouton fixe. Le
+  titre puis la légende cèdent leur place au graphique, les courbes portant déjà les noms.

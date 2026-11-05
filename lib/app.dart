@@ -17,7 +17,7 @@ import 'screens/turn_screen.dart';
 import 'screens/verification_screen.dart';
 import 'screens/giver_blocked_screen.dart';
 import 'screens/transition_screen.dart';
-import 'screens/results_screen.dart';
+import 'screens/score_reveal_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/categories_screen.dart';
 import 'screens/history_screen.dart';
@@ -86,7 +86,7 @@ class GuessItAllApp extends StatelessWidget {
       case AppConstants.screenGiverBlocked:
         return const GiverBlockedScreen();
       case AppConstants.screenResults:
-        return const ResultsScreen();
+        return const EndOfGameScreen();
       case AppConstants.screenStats:
         return const StatsScreen();
       case AppConstants.screenCategories:

@@ -223,5 +223,74 @@ void main() {
       expect(g.isTie, isTrue);
       expect(g.winners, hasLength(2));
     });
+
+    GameResult tied(List<String>? order) => GameResult(
+          gameId: 'x',
+          playedAt: DateTime(2026),
+          teams: const [
+            TeamResult(
+                id: 'r',
+                name: 'Rouge',
+                score: 9,
+                scoreByRound: [],
+                playerNames: []),
+            TeamResult(
+                id: 'b',
+                name: 'Bleu',
+                score: 9,
+                scoreByRound: [],
+                playerNames: []),
+            TeamResult(
+                id: 'v',
+                name: 'Vert',
+                score: 3,
+                scoreByRound: [],
+                playerNames: []),
+          ],
+          totalWords: 21,
+          turnDuration: 30,
+          roundsPlayed: 3,
+          playOrder: order,
+        );
+
+    test('ordre de jeu connu : jamais d\'égalité, le dernier à commencer gagne',
+        () {
+      final g = tied(['v', 'b', 'r']);
+      expect(g.ranking.map((t) => t.id), ['r', 'b', 'v']);
+      expect(g.winners.map((t) => t.id), ['r']);
+      expect(g.isTie, isFalse);
+      final reversed = tied(['r', 'b', 'v']);
+      expect(reversed.winners.map((t) => t.id), ['b']);
+    });
+
+    test('archive antérieure ou ordre incomplet : affichage inchangé', () {
+      for (final order in [
+        null,
+        <String>['r']
+      ]) {
+        final g = tied(order);
+        expect(g.isTie, isTrue);
+        expect(g.winners.map((t) => t.id), ['r', 'b']);
+        expect(g.ranking.map((t) => t.id), ['r', 'b', 'v']);
+      }
+    });
+
+    test('ordre de jeu relu ; clé absente ou mal typée tolérée', () {
+      final json = tied(['v', 'b', 'r']).toJson();
+      expect(GameResult.tryFromJson(json)!.playOrder, ['v', 'b', 'r']);
+      expect(tied(null).toJson().containsKey('playOrder'), isFalse);
+      expect(GameResult.tryFromJson(tied(null).toJson())!.playOrder, isNull);
+      expect(GameResult.tryFromJson({...json, 'playOrder': 'x'})!.playOrder,
+          isNull);
+    });
+
+    test('statistiques : une seule victoire si l\'ordre est connu', () {
+      expect(
+          computeTrends([
+            tied(['v', 'b', 'r'])
+          ]).winsByTeam,
+          {'Rouge': 1});
+      expect(computeTrends([tied(null)]).winsByTeam, {'Rouge': 1, 'Bleu': 1});
+    });
   });
 }

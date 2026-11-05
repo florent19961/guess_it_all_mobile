@@ -10,7 +10,7 @@ HomeScreen → SettingsScreen (Classique / Fiesta)
   → [Fiesta seulement : FiestaEnsemblesScreen, « Suivant » → joueurs]
   → PlayersScreen → (WordsScreen) → TeamsScreen (« Commencer » lance la partie)
   → GameScreen → CountdownScreen → [GiverBlockedScreen, le piège] → TurnScreen → VerificationScreen
-  → TransitionScreen (animation après M1 et M2, écran fixe après M3) → ResultsScreen → StatsScreen
+  → TransitionScreen (animation après M1 et M2, écran fixe après M3) → [ScoreRevealScreen, une fois] → ResultsScreen → StatsScreen
 ```
 
 ## Ecrans
@@ -29,6 +29,7 @@ HomeScreen → SettingsScreen (Classique / Fiesta)
 | `verification_screen.dart` | Validation post-tour : toggle valid/invalide par mot, sauvegarde snapshot |
 | `transition_screen.dart` | Fin de manche, Classique et Fiesta, aucun score. Apres M1 et M2 : animation ~2,8 s (`_RoundStage`, sons `impact-bass-1` et `whoosh-short`, vibration, un toucher fait passer, animations reduites respectees) puis `nextRound`, directement vers l'avant-tour. Apres M3 : ecran fixe (retour, « Voir les N mots devines », « Voir les resultats ») |
 | `giver_blocked_screen.dart` | Le piege d'« Interdit de faire deviner » : phrase, « Passe le telephone a X. », « Suivant » (`confirmGiverBlock`). Rien n'est consomme avant : une app tuee la remontre |
+| `score_reveal_screen.dart` | `EndOfGameScreen`, ce que montre `screenResults` : `ScoreRevealScreen` tant que `GameState.scoreRevealSeen` est faux, sinon `ResultsScreen`. Aucun écran ni chemin de plus : tout ce qui mène aux résultats passe par cet aiguillage, l'historique n'y passe jamais. `ScoreRevealScreen` (maquette `curve(2)`) : graphique fixe tracé en 4,5 s sans chiffres (`ScoreRevealPainter`), légende dans l'ordre des équipes pour ne rien dévoiler, cartouches jouées qui tombent ; fin : vainqueur (jamais d'égalité, `getTeamsSortedByScore`), scores, « Voir les résultats ». Un toucher ou le retour système va aux résultats. L'animation attend le départ de la musique (0,8 s au plus) pour que son gong tombe à la fin du tracé. Animations réduites : la fin directement, sans aucun son. Le graphique passe avant le titre et la légende quand la place manque, le bouton reste toujours visible. Une app tuée pendant la révélation rouvre sur les résultats |
 | `results_screen.dart` | Podium anime, tableau scores par manche, carte « Modificateurs de la partie » (Fiesta seulement), boutons Rejouer/Stats |
 | `stats_screen.dart` | Stats detaillees : graphique evolution scores (fl_chart), top joueurs, temps moyen |
 | `rules_screen.dart` | Regles completes du jeu (3 manches) + Revoir le tuto / le tuto Fiesta / les aides |
