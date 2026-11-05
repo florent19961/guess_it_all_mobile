@@ -117,6 +117,9 @@ pour `avoid_print` (un `debugPrint` conditionnel, ou une exclusion assumée dans
 
 ## 2026-11-03 — « Rejouer » de l'accueil après un kill : la config Fiesta est perdue
 
+> ✅ **Résolu (Fiesta v3.1, 2026-11-05).** Le dernier choix est persisté : `GameSettings.fiestaEnabled`
+> + `fiestaMode`, `lastUsedId` des ensembles (`GameProvider._rememberedFiesta`).
+
 **Contexte.** Story 2-4. Après une partie Fiesta, le bouton maison des résultats efface l'état de
 jeu (`endGameAndGoHome` → `clearGameState`). La config reste en mémoire seulement (Q10). Si l'app
 est tuée ensuite, le « Rejouer » de l'accueil repart en Classique (Paramètres).
