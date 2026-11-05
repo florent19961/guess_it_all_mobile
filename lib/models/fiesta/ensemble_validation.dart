@@ -38,6 +38,7 @@ List<int> roundsWithoutDraw(FiestaRules rules) => [
 /// Au moins un réglage joue réellement.
 bool hasActiveSetting(FiestaRules rules) =>
     rules.balance ||
+    rules.challenges ||
     rules.trailingCount > 0 ||
     rules.allCount > 0 ||
     kModifierCatalog.any((def) =>

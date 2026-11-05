@@ -69,11 +69,13 @@ class FiestaEnsembleEditorScreen extends StatefulWidget {
 class _FiestaEnsembleEditorScreenState
     extends State<FiestaEnsembleEditorScreen> {
   final _scroll = ScrollController();
+  final _introKey = GlobalKey();
   final _tabsKey = GlobalKey();
   final _menuKey = GlobalKey();
   final _saveKey = GlobalKey();
 
   late FiestaRules _rules;
+  late bool _moreOpen;
   late final TextEditingController _name;
 
   /// Ce qui a été chargé (JSON) : « rien modifié » = identique.
@@ -91,6 +93,7 @@ class _FiestaEnsembleEditorScreenState
     _loaded = jsonEncode(start.toJson());
     _rules = widget.draft ?? start;
     _tab = _firstTab(_rules);
+    _moreOpen = _rules.challenges;
     _name = TextEditingController(text: _rules.ensembleName ?? '');
     // Le nom est lu sur le contrôleur, jamais recopié : une seule source.
     _name.addListener(() => setState(() {}));
@@ -267,14 +270,19 @@ class _FiestaEnsembleEditorScreenState
               SafeArea(
                 child: Column(
                   children: [
+                    // La bande des boutons retour et « ? » : la page défile
+                    // en dessous, les onglets épinglés ne passent pas dessous.
+                    const SizedBox(height: _cornerButtonsHeight),
                     Expanded(
                       child: CustomScrollView(
                         controller: _scroll,
                         slivers: [
                           SliverPadding(
-                            padding: const EdgeInsets.fromLTRB(20, 72, 20, 0),
+                            padding: const EdgeInsets.fromLTRB(
+                                20, _introTopPadding, 20, 0),
                             sliver: SliverToBoxAdapter(
                               child: Column(
+                                key: _introKey,
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   Text(
@@ -386,8 +394,17 @@ class _FiestaEnsembleEditorScreenState
         EnsembleMenu.cartridge => kModifierCatalog.fold<int>(
                 0, (sum, d) => sum + _rules.chargesOf(d.id)) +
             (_rules.balance ? 1 : _rules.trailingCount) +
-            _rules.allCount,
+            _rules.allCount +
+            (_rules.challenges ? 1 : 0),
       };
+
+  /// Page défilée au-delà de l'épinglage des onglets : retour à ce point, le
+  /// nouveau menu s'ouvre à son début. Sinon, elle ne bouge pas.
+  void _selectTab(EnsembleMenu menu) {
+    final pinAt = _introKey.currentContext!.size!.height + _introTopPadding;
+    if (_scroll.offset > pinAt) _scroll.jumpTo(pinAt);
+    setState(() => _tab = menu);
+  }
 
   Widget _tabs() => Container(
         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
@@ -408,7 +425,7 @@ class _FiestaEnsembleEditorScreenState
                   label: label,
                   count: _count(menu),
                   selected: _tab == menu,
-                  onTap: () => setState(() => _tab = menu),
+                  onTap: () => _selectTab(menu),
                 ),
               ),
           ],
@@ -739,6 +756,34 @@ class _FiestaEnsembleEditorScreenState
                 ..._groupRows(group, EnsembleMenu.cartridge),
             ],
           ),
+          OutlinedButton(
+            onPressed: () => setState(() => _moreOpen = !_moreOpen),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.white,
+              side: const BorderSide(color: AppColors.gray500),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            child: Text(
+              'Si tu veux vraiment pousser plus loin ${_moreOpen ? '▴' : '▾'}',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.label.copyWith(fontSize: 13),
+            ),
+          ),
+          if (_moreOpen) ...[
+            const SizedBox(height: 10),
+            _Frame(
+              title: 'Défis surprises',
+              subtitle: '1 ou 2 fois dans la partie, entre deux joueurs des '
+                  'équipes les plus en retard.',
+              trailing: _switch(
+                _rules.challenges,
+                (on) =>
+                    setState(() => _rules = _rules.copyWith(challenges: on)),
+              ),
+            ),
+          ],
         ],
       );
 
@@ -783,6 +828,12 @@ enum _Group {
   final String label;
   const _Group(this.label);
 }
+
+/// Hauteur des boutons retour et « ? » en haut d'écran : 16 de marge + 48.
+const double _cornerButtonsHeight = 64;
+
+/// Au-dessus du titre, dans la page qui défile sous cette bande.
+const double _introTopPadding = 72 - _cornerButtonsHeight;
 
 /// Onglets épinglés en haut pendant le défilement.
 class _TabsHeader extends SliverPersistentHeaderDelegate {
@@ -870,12 +921,14 @@ class _Frame extends StatelessWidget {
   final String title;
   final String? subtitle;
   final VoidCallback? info;
+  final Widget? trailing;
   final List<Widget> children;
 
   const _Frame({
     required this.title,
     this.subtitle,
     this.info,
+    this.trailing,
     this.children = const [],
   });
 
@@ -894,6 +947,7 @@ class _Frame extends StatelessWidget {
             Row(
               children: [
                 Flexible(
+                  fit: trailing != null ? FlexFit.tight : FlexFit.loose,
                   child: Text(
                     title,
                     style: const TextStyle(
@@ -910,6 +964,7 @@ class _Frame extends StatelessWidget {
                   ),
                 ),
                 if (info != null) _InfoButton(onTap: info!),
+                if (trailing != null) trailing!,
               ],
             ),
             if (subtitle != null)

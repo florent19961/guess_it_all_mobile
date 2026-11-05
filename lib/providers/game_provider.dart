@@ -12,7 +12,9 @@ import '../models/fiesta/giver_block.dart';
 import '../models/fiesta/modifier_catalog.dart';
 import '../models/fiesta/modifier_instance.dart';
 import '../models/fiesta/modifier_recap.dart';
+import '../models/fiesta/challenge_plan.dart';
 import '../models/fiesta/round_transition.dart';
+import '../models/fiesta/surprise_challenge.dart';
 import '../models/fiesta/symmetric_draw.dart';
 import '../models/fiesta/turn_effects.dart';
 import '../models/fiesta/turn_time.dart';
@@ -1302,7 +1304,9 @@ class GameProvider extends ChangeNotifier {
         currentWord: nextCurrentWord,
         wordsGuessedThisTurn: [],
         passedWordsThisTurn: [],
-        currentScreen: AppConstants.screenGame,
+        currentScreen: _challengeAfter(_game.currentRound) != null
+            ? AppConstants.screenChallenge
+            : AppConstants.screenGame,
         // Calculé AVANT le changement de manche : le plan de la transition.
         fiesta: _transitionPlan?.apply(_game.fiesta!),
       );
@@ -1327,6 +1331,65 @@ class GameProvider extends ChangeNotifier {
       blockableTeamIds: _blockableTeamIds,
       continuingTeamId: getCurrentTeam()?.id,
     );
+  }
+
+  /// Le défi surprise qui suit la manche [finishedRound], recalculé sur la
+  /// partie. Scores et historique ne bougent pas entre la fin de manche et la fin
+  /// du défi : une app tuée retrouve le même.
+  ChallengePlan? _challengeAfter(int finishedRound) {
+    final fiesta = _game.fiesta;
+    if (fiesta == null) return null;
+    return planChallenge(
+      fiesta: fiesta,
+      gameId: _game.gameId ?? '',
+      finishedRound: finishedRound,
+      scores: {for (final t in _teams) t.id: t.score},
+      rosters: {for (final t in _teams) t.id: t.playerIds},
+      turns: [
+        for (final h in _game.history)
+          TurnPace(
+            playerId: h.playerId,
+            words: h.wordsGuessed.length,
+            seconds: h.timeSpent,
+          ),
+      ],
+      guessedWords: _game.history.expand((h) => h.wordsGuessed),
+      blockableTeamIds: _blockableTeamIds,
+    );
+  }
+
+  /// Le défi à l'écran, `null` hors de l'écran du défi.
+  ChallengePlan? get currentChallenge =>
+      _game.currentScreen == AppConstants.screenChallenge
+          ? _challengeAfter(_game.currentRound - 1)
+          : null;
+
+  /// Fin du défi, vers l'écran avant le tour : [winnerTeamId] reçoit sa
+  /// cartouche ; `null` = défi passé. Rien n'est écrit avant : une app tuée
+  /// pendant le défi le rejoue. Terminé, il ne revient plus.
+  void finishChallenge({String? winnerTeamId}) {
+    if (_game.currentScreen != AppConstants.screenChallenge) return;
+    final plan = currentChallenge;
+    final winner = [plan?.first, plan?.second]
+        .where((side) => side != null && side.teamId == winnerTeamId)
+        .firstOrNull;
+    _game = _game.copyWith(
+      currentScreen: AppConstants.screenGame,
+      fiesta: plan == null
+          ? null
+          : _game.fiesta!.withChallengeDone(
+              plan.finishedRound,
+              winner == null
+                  ? null
+                  : EarnedCartridge(
+                      catalogId: winner.prizeId,
+                      teamId: winner.teamId,
+                      round: plan.finishedRound + 1,
+                    ),
+            ),
+    );
+    notifyListeners();
+    _saveGameState();
   }
 
   /// Équipes d'au moins 3 joueurs : celles qu'on peut viser avec « Bloquer un
@@ -2354,8 +2417,10 @@ class GameProvider extends ChangeNotifier {
 
     final validatedWords = snapshot['validatedWords'];
 
-    _game = GameState.fromJson(gameJson).copyWith(
+    final restored = GameState.fromJson(gameJson);
+    _game = restored.copyWith(
       currentScreen: AppConstants.screenVerification,
+      fiesta: restored.fiesta?.keepingChallengesOf(_game.fiesta),
       clearPreValidationSnapshot: true,
       restoredValidatedWords:
           validatedWords is List ? validatedWords.cast<String>() : null,

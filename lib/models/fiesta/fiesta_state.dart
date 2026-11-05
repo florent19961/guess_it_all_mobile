@@ -32,6 +32,10 @@ class FiestaState {
   /// vide.
   final Map<String, int> skips;
 
+  /// Défis surprises terminés, gagnés ou passés. Clé omise tant que la liste est
+  /// vide.
+  final List<ChallengeResult> challenges;
+
   FiestaState({
     required this.rules,
     List<ModifierInstance> active = const [],
@@ -39,11 +43,13 @@ class FiestaState {
     List<ChargeUse> chargesUsed = const [],
     List<EarnedCartridge> earned = const [],
     Map<String, int> skips = const {},
+    List<ChallengeResult> challenges = const [],
   })  : active = List.unmodifiable(active),
         turn = turn ?? FiestaTurnState.empty,
         chargesUsed = List.unmodifiable(chargesUsed),
         earned = List.unmodifiable(earned),
-        skips = Map.unmodifiable(skips);
+        skips = Map.unmodifiable(skips),
+        challenges = List.unmodifiable(challenges);
 
   /// Cartouches [catalogId] de [teamId] pour toute la partie : celles de
   /// l'ensemble plus celles gagnées.
@@ -59,6 +65,29 @@ class FiestaState {
       chargesUsed
           .where((u) => u.catalogId == catalogId && u.teamId == teamId)
           .length;
+
+  /// Le défi de la manche [finishedRound] terminé, sa cartouche [prize] donnée.
+  FiestaState withChallengeDone(int finishedRound, EarnedCartridge? prize) =>
+      copyWith(
+        challenges: [
+          ...challenges,
+          ChallengeResult(finishedRound: finishedRound, prize: prize),
+        ],
+        earned: [...earned, if (prize != null) prize],
+      );
+
+  /// Un état restauré par le retour arrière, avec les défis terminés depuis dans
+  /// [later] : un défi joué ne se rejoue pas et sa cartouche reste acquise. Ceux
+  /// que l'état connaît déjà ne sont pas redonnés.
+  FiestaState keepingChallengesOf(FiestaState? later) {
+    var kept = this;
+    for (final result in later?.challenges ?? const <ChallengeResult>[]) {
+      if (!challenges.any((c) => c.finishedRound == result.finishedRound)) {
+        kept = kept.withChallengeDone(result.finishedRound, result.prize);
+      }
+    }
+    return kept;
+  }
 
   /// Le malus envoyé [sent] retiré de sa cible, sa cartouche rendue à
   /// l'envoyeur.
@@ -83,6 +112,7 @@ class FiestaState {
     List<ChargeUse>? chargesUsed,
     List<EarnedCartridge>? earned,
     Map<String, int>? skips,
+    List<ChallengeResult>? challenges,
   }) =>
       FiestaState(
         rules: rules,
@@ -91,6 +121,7 @@ class FiestaState {
         chargesUsed: chargesUsed ?? this.chargesUsed,
         earned: earned ?? this.earned,
         skips: skips ?? this.skips,
+        challenges: challenges ?? this.challenges,
       );
 
   Map<String, dynamic> toJson() => {
@@ -102,6 +133,8 @@ class FiestaState {
           'chargesUsed': chargesUsed.map((e) => e.toJson()).toList(),
         if (earned.isNotEmpty) 'earned': earned.map((e) => e.toJson()).toList(),
         if (skips.isNotEmpty) 'skips': skips,
+        if (challenges.isNotEmpty)
+          'challenges': challenges.map((e) => e.toJson()).toList(),
       };
 
   /// Variante tolérante : `null` (= Classique) si les règles sont illisibles.
@@ -128,6 +161,7 @@ class FiestaState {
     final rawUsed = json['chargesUsed'];
     final rawEarned = json['earned'];
     final rawSkips = json['skips'];
+    final rawChallenges = json['challenges'];
     return FiestaState(
       rules: rules,
       active: active,
@@ -155,6 +189,14 @@ class FiestaState {
                 if (key is String && value is int) key: value,
             }
           : const {},
+      challenges: rawChallenges is List
+          ? rawChallenges
+              .whereType<Map>()
+              .map((e) =>
+                  ChallengeResult.tryFromJson(Map<String, dynamic>.from(e)))
+              .whereType<ChallengeResult>()
+              .toList()
+          : const [],
     );
   }
 }
@@ -207,9 +249,37 @@ class ChargeUse {
   }
 }
 
+/// Un défi surprise terminé, après la manche [finishedRound]. [prize] : la
+/// cartouche gagnée, `null` si le défi a été passé.
+class ChallengeResult {
+  final int finishedRound;
+  final EarnedCartridge? prize;
+
+  const ChallengeResult({required this.finishedRound, this.prize});
+
+  Map<String, dynamic> toJson() => {
+        'round': finishedRound,
+        if (prize != null) 'prize': prize!.toJson(),
+      };
+
+  /// Variante tolérante : une entrée illisible est ignorée seule.
+  static ChallengeResult? tryFromJson(Map<String, dynamic> json) {
+    final round = json['round'];
+    final prize = json['prize'];
+    if (round is! int) return null;
+    return ChallengeResult(
+      finishedRound: round,
+      prize: prize is Map
+          ? EarnedCartridge.tryFromJson(Map<String, dynamic>.from(prize))
+          : null,
+    );
+  }
+}
+
 /// Une cartouche au hasard : [teamId] la détient dès la manche [round] et jusqu'à la fin de la partie. Écrite par
-/// `nextRound` seulement (`RoundTransitionPlan.apply`) : ni un retour arrière
-/// ni une app tuée sur la transition ne peuvent la doubler ou la perdre.
+/// `nextRound` (`RoundTransitionPlan.apply`) et par la fin d'un défi
+/// ([FiestaState.withChallengeDone]) : ni un retour arrière ni une app tuée ne
+/// peuvent la doubler ou la perdre.
 class EarnedCartridge {
   final String catalogId;
   final String teamId;

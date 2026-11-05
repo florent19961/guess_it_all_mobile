@@ -60,6 +60,8 @@ class FiestaEnsembleViewScreen extends StatelessWidget {
             'après les manches 1 et 2',
       if (rules.allCount > 0)
         'À tous, à chaque manche : ${_plural(rules.allCount, 'cartouche')}',
+      if (rules.challenges)
+        'Défis surprises : 1 ou 2 fois dans la partie, une cartouche à gagner',
     ];
     return Scaffold(
       backgroundColor: AppColors.backgroundMain,

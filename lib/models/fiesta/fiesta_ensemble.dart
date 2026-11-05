@@ -49,6 +49,7 @@ String settingsKey(FiestaRules rules) {
     'allCount': rules.allCount,
     'trailingCount': rules.balance ? 0 : rules.trailingCount,
     'balance': rules.balance,
+    if (rules.challenges) 'challenges': true,
     'modifiers': {
       for (final def in kModifierCatalog)
         if (rules.isAlways(def.id) ||
