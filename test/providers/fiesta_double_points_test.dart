@@ -116,8 +116,10 @@ void main() {
     provider.nextRound();
     expect(provider.getCurrentTeam()!.id, teamId);
     expect(provider.isDoublePointsOn, isTrue);
-    // Rien à allumer sur une continuation ; la charge de M2 reste intacte.
+    // Dépensé sur ce tour : il tient, sans se rallumer ni se recompter.
     expect(provider.doublePointsLeft, 0);
+    provider.setDoublePoints(true);
+    expect(provider.isDoublePointsOn, isTrue);
 
     provider.startTurn();
     provider.startTurnTimer();
@@ -138,9 +140,8 @@ void main() {
   });
 
   test(
-      'Continuation NON activée en fin de M1 : la charge de M2 ne s\'y allume '
-      'pas ; elle sert au premier vrai tour de M2 de l\'équipe (AC8, epic fix)',
-      () async {
+      'Continuation NON activée en fin de M1 : la charge s\'y allume et compte '
+      'pour la continuation seule (retours Fiesta v3.1)', () async {
     final provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
     await provider.startGame(fiesta: doubleOnce);
     final teamId = provider.getCurrentTeam()!.id;
@@ -164,13 +165,14 @@ void main() {
     expect(provider.getCurrentTeam()!.id, teamId);
     expect(provider.game.turnBonusTime, isNot(anyOf(isNull, 0)));
     provider.setDoublePoints(true);
-    expect(provider.isDoublePointsArmed, isFalse);
-    playOne((w) => w); // la continuation : 1 point
+    expect(provider.isDoublePointsArmed, isTrue);
+    playOne((w) => w); // la continuation : 2 points
+    expect(teamRounds(provider, teamId), [4, 2, 0]);
+    expect(provider.isDoublePointsArmed, isFalse, reason: 'fin du tour');
     playOne((w) => const []); // l'autre équipe
 
     expect(provider.getCurrentTeam()!.id, teamId);
-    expect(provider.doublePointsLeft, 1);
-    provider.setDoublePoints(true);
+    expect(provider.doublePointsLeft, 0, reason: 'dépensée en continuation');
     playOne((w) => w);
     expect(teamRounds(provider, teamId), [4, 3, 0]);
     expect(

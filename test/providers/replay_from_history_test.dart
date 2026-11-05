@@ -1,12 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/models/game_result.dart';
 import 'package:guess_it_all_mobile/models/game_settings.dart';
 import 'package:guess_it_all_mobile/models/game_setup_snapshot.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
 import 'package:guess_it_all_mobile/services/analytics_service.dart';
+import 'package:guess_it_all_mobile/services/fiesta_ensemble_service.dart';
 import 'package:guess_it_all_mobile/services/game_history_service.dart';
 import 'package:guess_it_all_mobile/services/word_history_service.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
@@ -255,5 +257,109 @@ void main() {
     for (final w in words) {
       expect(WordHistoryService().getSeenCount(w), 1, reason: w);
     }
+  });
+
+  group('config rejouée, app tuée avant le lancement', () {
+    GameResult archive(FiestaRules fiesta) => GameResult(
+          gameId: 'g',
+          playedAt: DateTime(2026, 11, 1),
+          teams: const [
+            TeamResult(
+                id: 'team-1',
+                name: 'A',
+                score: 1,
+                scoreByRound: [1, 0, 0],
+                playerNames: ['Ana']),
+            TeamResult(
+                id: 'team-2',
+                name: 'B',
+                score: 0,
+                scoreByRound: [0, 0, 0],
+                playerNames: ['Bob']),
+          ],
+          totalWords: 2,
+          turnDuration: 30,
+          roundsPlayed: 3,
+          mode: 'fiesta_custom',
+          setup: GameSetupSnapshot(settings: GameSettings(), fiesta: fiesta),
+        );
+
+    Future<GameProvider> reopen() async {
+      final provider = GameProvider();
+      await pumpEventQueue();
+      return provider;
+    }
+
+    /// Ensembles « Soirée A » et « Soirée B », B utilisé en dernier.
+    Future<(FiestaRules, FiestaRules)> givenEnsembles() async {
+      final service = FiestaEnsembleService();
+      final a = await service.create(defaultEnsembleRules('Soirée A'));
+      final b = await service
+          .create(defaultEnsembleRules('Soirée B').copyWith(drawCount: 2));
+      await service.markUsed(b!.id);
+      return (a!.rules, b.rules);
+    }
+
+    test(
+        'l\'archive survit au kill et au « Rejouer » de l\'accueil, sans '
+        'céder au dernier ensemble', () async {
+      final provider = await givenProvider();
+      final (a, _) = await givenEnsembles();
+      await provider.replayFromHistory(archive(a));
+      await pumpEventQueue();
+
+      final reopened = await reopen();
+      expect(reopened.pendingFiesta?.ensembleName, 'Soirée A');
+      expect(reopened.pendingFiesta?.toJson(), a.toJson());
+
+      await reopened.restartWithSamePlayers();
+      await pumpEventQueue();
+      expect((await reopen()).pendingFiesta?.ensembleName, 'Soirée A');
+    });
+
+    test('un choix explicite d\'ensemble ou de mode l\'efface', () async {
+      final provider = await givenProvider();
+      final (a, b) = await givenEnsembles();
+
+      await provider.replayFromHistory(archive(a));
+      provider.setPendingFiesta(b);
+      await pumpEventQueue();
+      expect((await reopen()).pendingFiesta?.ensembleName, 'Soirée B');
+
+      await provider.replayFromHistory(archive(a));
+      provider.setPendingFiesta(FiestaRules(mode: FiestaMode.auto));
+      await pumpEventQueue();
+      expect((await reopen()).pendingFiesta?.mode, FiestaMode.auto);
+
+      await provider.replayFromHistory(archive(a));
+      provider.setPendingFiesta(null);
+      await pumpEventQueue();
+      expect((await reopen()).pendingFiesta, isNull);
+    });
+
+    test('le lancement l\'efface', () async {
+      final provider = await givenProvider();
+      final (a, _) = await givenEnsembles();
+      await provider.replayFromHistory(archive(a));
+      for (final player in provider.players) {
+        provider.updatePlayerWords(player.id, ['mot-${player.name}']);
+      }
+      await provider.startGame(fiesta: provider.pendingFiesta);
+      await pumpEventQueue();
+
+      final disk = await persistedData(AppConstants.settingsKey);
+      expect(disk!.containsKey('replayFiesta'), isFalse);
+    });
+
+    test('relecture tolérante : illisible = le dernier ensemble', () {
+      expect(GameSettings.fromJson(const {'replayFiesta': 'x'}).replayFiesta,
+          isNull);
+      expect(
+          GameSettings.fromJson(const {
+            'replayFiesta': {'format': 2}
+          }).replayFiesta,
+          isNull);
+      expect(GameSettings.fromJson(const {}).replayFiesta, isNull);
+    });
   });
 }

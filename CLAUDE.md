@@ -128,7 +128,7 @@ Hors cycle : bug / test rouge / comportement inattendu → `bmad-investigate` ; 
 ## Flux de jeu
 
 1. **Configuration** (Paramètres, premier écran de toute partie) — **Classique ou Fiesta**
-   (Classique par défaut ; en Fiesta, Auto ou Personnalisé dans « Avancés »), nombre d'équipes,
+   (Classique à la première ouverture, puis le dernier choix ; en Fiesta, Auto ou Personnalisé dans « Avancés »), nombre d'équipes,
    joueurs, nombre total de mots (20-100, défaut 40), durée du tour, pénalité de passe.
 2. **Inscription joueurs** — saisie des noms.
 3. **Formation des équipes** — manuelle ou aléatoire (composition mise en cache et persistée ; si

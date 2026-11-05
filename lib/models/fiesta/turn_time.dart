@@ -3,10 +3,6 @@ import 'dart:math';
 /// Temps du tour (story 2-6) : composition de la durée de départ. Tout est
 /// pur ; le provider ne fait que brancher.
 
-/// Modificateurs de TEMPS : sans effet sur une continuation, qui joue
-/// exactement ses secondes reportées ([composeTurnSeconds]).
-const Set<String> kTimeModifierIds = {'minus_10s', 'plus_10s'};
-
 /// Plancher de la durée de départ d'un tour, après tous les malus (Q4).
 const int kTurnFloorSeconds = 10;
 
@@ -33,8 +29,9 @@ class TurnTime {
 /// 🔴 Seule source de la durée : l'aperçu d'avant-tour (`startTurn`) et le
 /// chrono (`startTurnTimer`) passent tous deux par ici.
 ///
-/// - [carriedSeconds] non nul = tour de continuation : exactement ces
-///   secondes, sans aucun modificateur de temps (Q1, Q5).
+/// - [carriedSeconds] non nul = tour de continuation : ces secondes, + 10 s par
+///   [plus10sCount] (un +10 s allumé pour cette partie du tour). Un −10 s reçu
+///   a déjà pesé sur le début du tour : il ne se réapplique pas, sans plancher.
 /// - Sinon : base + 10 s par [plus10sCount] − 10 s par [minus10sCount], jamais
 ///   sous [kTurnFloorSeconds] (Q4). Sans modificateur (Classique), c'est la
 ///   base.
@@ -46,8 +43,11 @@ TurnTime composeTurnSeconds({
 }) {
   if (carriedSeconds != null) {
     return TurnTime(
-      total: carriedSeconds,
-      lines: [TurnTimeLine('Temps reporté', carriedSeconds)],
+      total: carriedSeconds + 10 * plus10sCount,
+      lines: [
+        TurnTimeLine('Temps reporté', carriedSeconds),
+        if (plus10sCount > 0) TurnTimeLine('Bonus de 10 s', 10 * plus10sCount),
+      ],
     );
   }
   final lines = [

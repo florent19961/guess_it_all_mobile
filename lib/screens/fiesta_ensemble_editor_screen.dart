@@ -116,19 +116,10 @@ class _FiestaEnsembleEditorScreenState
 
   void _toggle(ModifierDef def, bool on) {
     setState(() {
-      final modifiers = {
+      _rules = _rules.copyWith(modifiers: {
         ..._rules.modifiers,
         def.id: _settingFor(def).copyWith(active: on),
-      };
-      // Famille « Mime » : un seul à la fois, allumer l'un coupe les autres.
-      if (on && def.mimeFamily) {
-        for (final other in kModifierCatalog) {
-          if (other.mimeFamily && other.id != def.id) {
-            modifiers[other.id] = _settingFor(other).copyWith(active: false);
-          }
-        }
-      }
-      _rules = _rules.copyWith(modifiers: modifiers);
+      });
       if (on) _open = def.id;
     });
   }
@@ -267,7 +258,7 @@ class _FiestaEnsembleEditorScreenState
                                     if (def.nature == ModifierNature.malus &&
                                         !def.mimeFamily)
                                       _modifierRow(def),
-                                  const _SubHead('MIMES · UN SEUL À LA FOIS'),
+                                  const _SubHead('MIMES'),
                                   for (final def in kModifierCatalog)
                                     if (def.mimeFamily) _modifierRow(def),
                                 ],
@@ -362,13 +353,16 @@ class _FiestaEnsembleEditorScreenState
           const _SubHead('TOUTE LA PARTIE'),
           _line(
             'Coup de pouce à l\'équipe menée',
-            _switch(
-              r.trailingBoost,
-              (v) => setState(() => _rules = _rules.copyWith(trailingBoost: v)),
+            _Stepper(
+              value: r.boostCount,
+              min: 0,
+              max: kMaxBoostCount,
+              onChanged: (v) =>
+                  setState(() => _rules = _rules.copyWith(boostCount: v)),
             ),
           ),
-          const _Hint('Après les manches 1 et 2, chaque équipe non en tête '
-              'reçoit une cartouche au hasard, parmi celles en Cartouche.'),
+          const _Hint('Cartouches au hasard pour chaque équipe non en tête, '
+              'après M1 et M2.'),
         ],
       ),
     );
@@ -381,8 +375,8 @@ class _FiestaEnsembleEditorScreenState
   };
 
   static const _modeHints = {
-    ModifierMode.always: 'Actif pour toutes les équipes, toute la manche, sur '
-        'les manches cochées.',
+    ModifierMode.always: 'Actif pour toutes les équipes, à chaque manche où il '
+        'existe.',
     ModifierMode.draw: 'Entre dans le tirage du début de manche (nombre réglé '
         'dans « Règles de la partie »).',
     ModifierMode.cartridge: 'Dans la réserve de chaque équipe pour toute la '
@@ -393,10 +387,12 @@ class _FiestaEnsembleEditorScreenState
       ? 'Gagnées seulement'
       : '$charges cartouche${charges > 1 ? 's' : ''} pour la partie';
 
-  String _summary(ModifierSetting s) {
+  String _summary(ModifierDef def, ModifierSetting s) {
     if (!s.active) return 'Désactivé';
     if (s.mode == ModifierMode.cartridge) return _chargesLabel(s.charges);
-    final rounds = s.rounds.toList()..sort();
+    final always = s.mode == ModifierMode.always;
+    final rounds = (always ? allowedRounds(def) : s.rounds).toList()..sort();
+    if (always && rounds.length == 3) return _modeLabels[s.mode]!;
     return [
       rounds.isEmpty
           ? 'Aucune manche'
@@ -470,7 +466,7 @@ class _FiestaEnsembleEditorScreenState
                       ),
                     ),
                     Text(
-                      _summary(s),
+                      _summary(def, s),
                       style: AppTextStyles.bodySmall
                           .copyWith(color: AppColors.gray400, fontSize: 11),
                     ),
@@ -506,34 +502,35 @@ class _FiestaEnsembleEditorScreenState
             if (s.mode == ModifierMode.cartridge)
               _chargesLine(def, s)
             else ...[
-              _line(
-                'Manches',
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (var r = 1; r <= 3; r++)
-                      if (def.round3Only)
-                        if (r == 3)
-                          const _RoundBox(round: 3, on: true, locked: true)
+              if (s.mode == ModifierMode.draw)
+                _line(
+                  'Manches',
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (var r = 1; r <= 3; r++)
+                        if (def.round3Only)
+                          if (r == 3)
+                            const _RoundBox(round: 3, on: true, locked: true)
+                          else
+                            const SizedBox.shrink()
                         else
-                          const SizedBox.shrink()
-                      else
-                        _RoundBox(
-                          round: r,
-                          on: s.rounds.contains(r),
-                          enabled: allowed.contains(r),
-                          onTap: () => _set(
-                            def,
-                            s.copyWith(
-                              rounds: s.rounds.contains(r)
-                                  ? (s.rounds.toSet()..remove(r))
-                                  : {...s.rounds, r},
+                          _RoundBox(
+                            round: r,
+                            on: s.rounds.contains(r),
+                            enabled: allowed.contains(r),
+                            onTap: () => _set(
+                              def,
+                              s.copyWith(
+                                rounds: s.rounds.contains(r)
+                                    ? (s.rounds.toSet()..remove(r))
+                                    : {...s.rounds, r},
+                              ),
                             ),
                           ),
-                        ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
               if (def.round3Only) const _Hint('Manche 3 seulement (mime).'),
               if (def.notInRound3)
                 const _Hint('Jamais en manche 3 (on y mime).'),

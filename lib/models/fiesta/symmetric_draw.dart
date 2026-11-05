@@ -54,7 +54,7 @@ bool drawsOneAnswer(String gameId) =>
 /// Aucune cartouche au départ, seulement celles du coup de pouce.
 FiestaRules autoRules({required bool oneAnswer}) => FiestaRules(
       mode: FiestaMode.auto,
-      trailingBoost: true,
+      boostCount: 1,
       modifiers: {
         for (final def in kModifierCatalog)
           if (def.id == 'one_answer')
@@ -86,12 +86,13 @@ bool _plays(FiestaRules rules, ModifierDef def, ModifierMode mode, int round) {
   final setting = rules.activeSetting(def.id);
   return setting != null &&
       setting.mode == mode &&
-      setting.rounds.contains(round) &&
+      // « Toujours » vaut pour toutes les manches où il existe.
+      (mode == ModifierMode.always || setting.rounds.contains(round)) &&
       isEligibleForRound(def, round);
 }
 
-/// Modificateurs « Toujours » de la manche [round] : toutes les équipes,
-/// toute la manche. Ils passent avant le tirage, qui doit leur être
+/// Modificateurs « Toujours » de la manche [round] (toutes celles où ils
+/// existent, `rounds` ne compte pas) : toutes les équipes, toute la manche. Ils passent avant le tirage, qui doit leur être
 /// compatible. Un réglage impossible (exception cartouche, manche interdite,
 /// incompatible avec un précédent) est ignoré : l'éditeur l'interdit.
 List<ModifierInstance> alwaysForRound(FiestaRules rules, int round) {

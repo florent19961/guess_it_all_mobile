@@ -282,7 +282,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
 
     return LayoutBuilder(builder: (context, box) {
       final thisTurnCount = rules.length + received.length + armed.length;
-      final (:size, :reserveSize, :bonusWidth) = _fit(
+      final (:size, :reserveSize, :bonusWidth, :showHelp) = _fit(
         width: box.maxWidth,
         height: box.maxHeight,
         bonus: bonus.length,
@@ -338,10 +338,9 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                           child: _Circle(id: id, kind: _Kind.armed, size: size),
                         ),
                       ),
-                      onTap: (circle) =>
-                          _p.reserve.any((c) => c.catalogId == id)
-                              ? _moveBonus(id, circle, to: 'res')
-                              : null,
+                      onTap: (circle) => _p.isBonusArmed(id)
+                          ? _moveBonus(id, circle, to: 'res')
+                          : null,
                       onLongPress: () => _explain(id, _Kind.armed),
                     ),
                 ],
@@ -442,11 +441,13 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
               children: [for (final m in sent) _sentChip(m)],
             ),
           ],
-          const SizedBox(height: 6),
-          Text('Touche : activer · Appui long : explication',
-              textAlign: TextAlign.center,
-              style: AppTextStyles.bodySmall.copyWith(
-                  fontSize: 11, height: 1.4, color: AppColors.gray500)),
+          if (showHelp) ...[
+            const SizedBox(height: 6),
+            Text('Touche : activer · Appui long : explication',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodySmall.copyWith(
+                    fontSize: 11, height: 1.4, color: AppColors.gray500)),
+          ],
         ],
       );
       // Pas de défilement (spec) : [_fit] choisit le diamètre qui tient.
@@ -534,10 +535,12 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
   /// Plus grand diamètre (50 au plus, [_minSize] au moins) qui fait tenir la
   /// zone dans [height] : « Ce tour » (repliée sur plusieurs rangées s'il le
   /// faut), « Réserve » (deux colonnes repliées), puces « Envoyé », aide. En
-  /// dernier recours, la RÉSERVE seule descend jusqu'à [_reserveMinSize].
-  /// La colonne Bonus (3 cartouches au plus) prend la largeur qui minimise le
+  /// dernier recours, la RÉSERVE seule descend jusqu'à [_reserveMinSize], puis
+  /// l'aide (rappelée par le « ? ») disparaît.
+  /// La colonne Bonus (4 cartouches au plus) prend la largeur qui minimise le
   /// nombre de rangées ; la colonne Malus, le reste.
-  static ({double size, double reserveSize, double bonusWidth}) _fit({
+  static ({double size, double reserveSize, double bonusWidth, bool showHelp})
+      _fit({
     required double width,
     required double height,
     required int bonus,
@@ -584,7 +587,12 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
     while (r > _reserveMinSize && needed(d, r) > height) {
       r -= 2;
     }
-    return (size: d, reserveSize: r, bonusWidth: columns(r).bonusWidth);
+    return (
+      size: d,
+      reserveSize: r,
+      bonusWidth: columns(r).bonusWidth,
+      showHelp: needed(d, r) <= height,
+    );
   }
 }
 

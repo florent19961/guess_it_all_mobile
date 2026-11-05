@@ -198,14 +198,14 @@ List<CoachStep> fiestaEditorHelp({
         title: 'Règles de la partie',
         text: 'Combien de modificateurs sont tirés à chaque manche, et le coup '
             'de pouce : après les manches 1 et 2, chaque équipe menée reçoit '
-            'une cartouche au hasard.',
+            'ce nombre de cartouches au hasard.',
       ),
       CoachStep(
         target: modifiers,
         title: 'Malus et bonus',
-        text: 'Allume un modificateur, puis règle-le. « Toujours » et « Au '
-            'tirage » valent pour toutes les équipes toute la manche ; une '
-            'cartouche se joue au tour de son choix, et le compteur vaut pour '
+        text: 'Allume un modificateur, puis règle-le. « Toujours » vaut pour '
+            'toutes les équipes à chaque manche où il existe ; « Au tirage » '
+            'entre dans le tirage des manches cochées ; une cartouche se joue au tour de son choix, et le compteur vaut pour '
             'toute la partie. Les bonus (dont le +10 s) ne sont que des '
             'cartouches.',
       ),

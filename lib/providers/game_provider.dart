@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import '../models/player.dart';
 import '../models/team.dart';
+import '../models/fiesta/fiesta_ensemble.dart';
 import '../models/fiesta/fiesta_rules.dart';
 import '../models/fiesta/fiesta_state.dart';
 import '../models/fiesta/modifier_catalog.dart';
@@ -21,6 +22,7 @@ import '../models/game_result.dart';
 import '../models/play_rotation.dart';
 import '../models/turn_resolution.dart';
 import '../models/word_stats.dart';
+import '../services/fiesta_ensemble_service.dart';
 import '../services/game_history_service.dart';
 import '../services/storage_service.dart';
 import '../services/analytics_service.dart';
@@ -51,16 +53,49 @@ class GameProvider extends ChangeNotifier {
   bool get isFiesta => _game.fiesta != null;
 
   /// Choix Fiesta fait sur les Paramètres (et l'ensemble choisi en
-  /// Personnalisé), en attente de `startGame` (Q10) :
-  /// en mémoire seulement, jamais persisté. Nul = Classique. Une app tuée avant
-  /// le lancement repart donc d'un choix vide.
+  /// Personnalisé), en attente de `startGame`. Nul = Classique. Les règles
+  /// restent en mémoire ; le CHOIX survit à l'app tuée et à « Nouvelle partie »
+  /// (`GameSettings.fiestaEnabled`, `fiestaMode` et `replayFiesta`, `lastUsedId`
+  /// des ensembles : [_rememberedFiesta]).
   FiestaRules? _pendingFiesta;
   FiestaRules? get pendingFiesta => _pendingFiesta;
   String? get currentEditingPlayerId => _currentEditingPlayerId;
 
   void setPendingFiesta(FiestaRules? rules) {
     _pendingFiesta = rules;
+    _rememberFiestaChoice();
     notifyListeners();
+  }
+
+  /// Écrit le choix d'attente dans les réglages. Classique : le choix Auto /
+  /// Personnalisé reste celui du joueur. [replay] : un « Rejouer » garde les
+  /// règles gelées de son ensemble ; tout choix explicite les efface.
+  void _rememberFiestaChoice({bool replay = false}) {
+    final keep = replay && _pendingFiesta?.ensembleName != null;
+    _settings = _settings.copyWith(
+      fiestaEnabled: _pendingFiesta != null,
+      fiestaMode: _pendingFiesta?.mode,
+      replayFiesta: keep ? _pendingFiesta : null,
+      clearReplayFiesta: !keep,
+    );
+    _saveSettings();
+  }
+
+  /// Le dernier choix relu du stockage : Classique (nul), une partie rejouée
+  /// pas encore lancée, Auto, ou en Personnalisé le dernier ensemble utilisé
+  /// (supprimé ou illisible : Fiesta classique).
+  /// `FiestaEnsembleService.load` ne lève jamais.
+  Future<FiestaRules?> _rememberedFiesta() async {
+    if (!_settings.fiestaEnabled) return null;
+    if (_settings.replayFiesta case final rules?) return rules;
+    if (_settings.fiestaMode == FiestaMode.auto) {
+      return FiestaRules(mode: FiestaMode.auto);
+    }
+    final store = await FiestaEnsembleService().load();
+    final ensembles = [...kProvidedEnsembles, ...store.ensembles];
+    return (ensembles.where((e) => e.id == store.lastUsedId).firstOrNull ??
+            classicEnsemble)
+        .rules;
   }
 
   // Setter pour le joueur en cours d'édition
@@ -86,6 +121,7 @@ class GameProvider extends ChangeNotifier {
       if (savedSettings != null) {
         _settings = GameSettings.fromJson(savedSettings);
       }
+      _pendingFiesta = await _rememberedFiesta();
 
       // 2. Charger la session (joueurs/équipes sans mots)
       final savedSession = await _storage.loadGameSession();
@@ -130,7 +166,8 @@ class GameProvider extends ChangeNotifier {
         // Partie Fiesta reprise après un kill : remettre sa config gelée en
         // attente, sinon « Retour aux équipes » + « Lancer » la relancerait en
         // Classique. Invariant : en partie, `pendingFiesta` = `fiesta?.rules`.
-        _pendingFiesta = _game.fiesta?.rules;
+        // Une partie suspendue garde sa config, sans toucher au dernier choix.
+        if (_game.allWords.isNotEmpty) _pendingFiesta = _game.fiesta?.rules;
 
         // 🔴 Reprendre AUSSI le tracking, pas seulement l'état de jeu. Sans ça,
         // une partie rouverte après un kill terminait sans jamais incrémenter
@@ -487,6 +524,12 @@ class GameProvider extends ChangeNotifier {
       clearFiesta: rules == null,
     );
 
+    // La partie rejouée est lancée : elle ne prime plus sur le dernier choix.
+    if (_settings.replayFiesta != null) {
+      _settings = _settings.copyWith(clearReplayFiesta: true);
+      _saveSettings();
+    }
+
     // Initialiser le tracking analytics
     await _initializeAnalytics(gameId, shuffledWords);
 
@@ -578,15 +621,21 @@ class GameProvider extends ChangeNotifier {
   ///
   /// 🔴 SEULE source de la durée : `startTurn` (aperçu) et `startTurnTimer`
   /// (chrono) la lisent tous deux, sinon l'avant-tour annonce 30 s et le chrono
-  /// part à 48. Continuation (`turnBonusTime` posé) = ses secondes, sans
-  /// modificateur (Q5). En Classique : `turnBonusTime ?? turnDuration`, comme
-  /// avant.
+  /// part à 48. Continuation (`turnBonusTime` posé) = ses secondes, + 10 s si
+  /// le bonus y est allumé. En Classique : `turnBonusTime ?? turnDuration`,
+  /// comme avant.
   TurnTime get turnTime {
+    final plus10s = _charge('plus_10s');
     return composeTurnSeconds(
       baseSeconds: _settings.turnDuration,
       carriedSeconds: _game.turnBonusTime,
-      // Allumé ou dépensé : l'aperçu et le chrono comptent la même chose.
-      plus10sCount: _charge('plus_10s') == null ? 0 : 1,
+      // Allumé ou dépensé : l'aperçu et le chrono comptent la même chose. Sur
+      // un report, dépensé = déjà compté dans ces secondes.
+      plus10sCount: (_game.turnBonusTime == null
+              ? plus10s != null
+              : plus10s == ChargeState.armed)
+          ? 1
+          : 0,
       minus10sCount:
           currentTeamModifiers.where((m) => m.catalogId == 'minus_10s').length,
     );
@@ -1397,24 +1446,19 @@ class GameProvider extends ChangeNotifier {
   ChargeState? _charge(String id) => _turn.charges[id];
 
   /// Cartouches [id] restantes de l'équipe qui joue pour le reste de la partie
-  /// (un bonus allumé compte encore, il se dépense au départ). Aucune sur une
-  /// continuation : c'est le même tour que la fin de N, on n'y joue rien.
+  /// (un bonus allumé compte encore, il se dépense au départ).
   int _chargesLeft(String id) {
     final fiesta = _game.fiesta;
     final teamId = getCurrentTeam()?.id;
-    if (fiesta == null || teamId == null || isContinuation) return 0;
+    if (fiesta == null || teamId == null) return 0;
     return fiesta.cartridgesLeft(id, teamId);
   }
 
   /// Pourquoi le bonus [id] ne peut pas s'allumer ce tour (`null` = il
-  /// peut) : sans effet sur un temps reporté (qui reste exact), déjà en jeu, ou
-  /// incompatible avec un modificateur du tour (règle de manche, malus reçu) ou
-  /// un autre bonus allumé. Pas de plafond : seules les incompatibilités
-  /// limitent.
+  /// peut) : déjà en jeu, ou incompatible avec un modificateur du tour (règle de
+  /// manche, malus reçu) ou un autre bonus allumé. Pas de plafond : seules les
+  /// incompatibilités limitent.
   String? _conflict(String id) {
-    if (kTimeModifierIds.contains(id) && _game.turnBonusTime != null) {
-      return 'sans effet sur un temps reporté';
-    }
     for (final other in [
       ...turnModifiers.map((m) => m.catalogId),
       ...kChargeBonusKeys.keys
@@ -1446,6 +1490,10 @@ class GameProvider extends ChangeNotifier {
     notifyListeners();
     _saveGameState();
   }
+
+  /// Bonus allumé pour le prochain départ, donc encore annulable (dépensé sur
+  /// la première partie d'un tour continué : non).
+  bool isBonusArmed(String id) => _charge(id) == ChargeState.armed;
 
   /// Interrupteur de l'avant-tour allumé (ou charge déjà dépensée).
   bool get isDoublePointsArmed => _charge('double_points') != null;
@@ -1551,20 +1599,26 @@ class GameProvider extends ChangeNotifier {
   /// Réserve de l'équipe qui joue, dans l'ordre du catalogue : ses
   /// cartouches pour la partie, bonus et malus, épuisées comprises (un bonus
   /// allumé a quitté la réserve). Une cartouche impossible dans la manche
-  /// (un mime avant M3) est cachée. Vide hors Fiesta et sur une continuation.
+  /// (un mime avant M3) est cachée. Vide hors Fiesta. Continuation : la même
+  /// réserve ; un bonus dépensé sur la partie d'avant reste en cours, ni
+  /// recompté ni rallumable.
   List<Cartridge> get reserve {
     final fiesta = _game.fiesta;
     final teamId = getCurrentTeam()?.id;
-    if (fiesta == null || teamId == null || isContinuation) return const [];
+    if (fiesta == null || teamId == null) return const [];
     return [
       for (final def in kModifierCatalog)
         if (isEligibleForRound(def, _game.currentRound) &&
             fiesta.cartridgesOwned(def.id, teamId) > 0)
           Cartridge(
             def.id,
-            left: _chargesLeft(def.id) - (_charge(def.id) != null ? 1 : 0),
+            left: _chargesLeft(def.id) - (isBonusArmed(def.id) ? 1 : 0),
             blockedReason: def.nature == ModifierNature.bonus
-                ? (_charge(def.id) != null ? null : _conflict(def.id))
+                ? switch (_charge(def.id)) {
+                    ChargeState.spent => 'déjà en cours ce tour',
+                    ChargeState.armed => null,
+                    null => _conflict(def.id),
+                  }
                 : _malusBlock(def),
           ),
     ];
@@ -1602,11 +1656,9 @@ class GameProvider extends ChangeNotifier {
     ];
   }
 
-  /// Avant-tour d'un vrai tour : seul moment où la réserve se joue.
+  /// Avant-tour, continuation comprise : seul moment où la réserve se joue.
   bool get _inPreTurn =>
-      _game.fiesta != null &&
-      _game.currentScreen == AppConstants.screenGame &&
-      !isContinuation;
+      _game.fiesta != null && _game.currentScreen == AppConstants.screenGame;
 
   /// Inflige le malus [catalogId] de la réserve de l'équipe qui joue à
   /// [targetTeamId], pour le PROCHAIN tour de celle-ci. Rend le message de
@@ -1678,11 +1730,15 @@ class GameProvider extends ChangeNotifier {
   }
 
   /// Malus envoyés par l'équipe qui joue, annulables tant que son tour n'a
-  /// pas commencé (ligne « Envoyé : … → X »). Vide hors avant-tour.
+  /// pas commencé (ligne « Envoyé : … → X »). Vide hors avant-tour. Manche
+  /// d'envoi = manche courante : sur une continuation, ce qui a été envoyé
+  /// avant la première partie du tour est déjà parti, plus annulable.
   List<ModifierInstance> get sentThisTurn {
     final me = getCurrentTeam()?.id;
     if (!_inPreTurn || me == null) return const [];
-    return _game.fiesta!.active.where((m) => m.fromTeamId == me).toList();
+    return _game.fiesta!.active
+        .where((m) => m.fromTeamId == me && m.round == _game.currentRound)
+        .toList();
   }
 
   /// Annule l'envoi de [sent] (une entrée de [sentThisTurn]) : le malus
@@ -1881,7 +1937,7 @@ class GameProvider extends ChangeNotifier {
     _players = [];
     _teams = [];
     _game = GameState.initial();
-    _pendingFiesta = null;
+    _pendingFiesta = await _rememberedFiesta();
     notifyListeners();
   }
 
@@ -1898,6 +1954,7 @@ class GameProvider extends ChangeNotifier {
     if (_pendingFiesta?.mode == FiestaMode.auto) {
       _pendingFiesta = FiestaRules(mode: FiestaMode.auto);
     }
+    _rememberFiestaChoice(replay: true);
 
     // Terminer et sauvegarder les analytics si une partie était en cours
     if (_analytics.isTracking) {

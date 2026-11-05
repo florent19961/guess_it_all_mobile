@@ -30,7 +30,7 @@ void main() {
           ),
         },
         drawCount: 2,
-        trailingBoost: true,
+        boostCount: 1,
       ),
     );
 

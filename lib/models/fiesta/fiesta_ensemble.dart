@@ -36,30 +36,8 @@ class FiestaEnsemble {
     // Un ensemble est toujours Personnalisé : des règles Auto ici ne
     // viennent pas de l'éditeur, on ne les propose pas au choix.
     if (rules == null || rules.mode != FiestaMode.custom) return null;
-    return FiestaEnsemble(id: id, rules: oneMimeAtMost(rules));
+    return FiestaEnsemble(id: id, rules: rules);
   }
-}
-
-/// Famille « Mime » : un ensemble n'en garde qu'UN actif (choix exclusif de
-/// l'éditeur). Normalisation déterministe d'un blob qui en aurait plusieurs :
-/// le premier « Toujours » dans l'ordre du catalogue, sinon le premier actif ;
-/// les autres sont désactivés, réglages conservés.
-FiestaRules oneMimeAtMost(FiestaRules rules) {
-  final active = [
-    for (final def in kModifierCatalog)
-      if (def.mimeFamily && rules.activeSetting(def.id) != null) def.id
-  ];
-  if (active.length < 2) return rules;
-  final keep = active.firstWhere(
-    (id) => rules.modifiers[id]!.mode == ModifierMode.always,
-    orElse: () => active.first,
-  );
-  return rules.copyWith(modifiers: {
-    for (final MapEntry(key: id, value: setting) in rules.modifiers.entries)
-      id: active.contains(id) && id != keep
-          ? setting.copyWith(active: false)
-          : setting,
-  });
 }
 
 /// Réglage par défaut de [def] dans un nouvel ensemble : coupé, manches
@@ -74,7 +52,7 @@ ModifierSetting defaultSetting(ModifierDef def) => ModifierSetting(
 
 /// Règles d'un nouvel ensemble : Malus de 10 s, Mot à l'envers, Mime sans les
 /// bras, Passe gratuite, Mot compte double en cartouche ; « Une seule réponse »
-/// Toujours ; 1 tiré par manche, coup de pouce allumé.
+/// Toujours ; 1 tiré par manche, coup de pouce à 1 cartouche.
 FiestaRules defaultEnsembleRules(String name) {
   const on = {
     'minus_10s',
@@ -92,13 +70,13 @@ FiestaRules defaultEnsembleRules(String name) {
         def.id: defaultSetting(def).copyWith(active: on.contains(def.id)),
     },
     drawCount: 1,
-    trailingBoost: true,
+    boostCount: 1,
   );
 }
 
 /// Clé des RÉGLAGES d'un ensemble, hors nom : deux ensembles de même clé
 /// jouent pareil (doublon refusé). Seuls les modificateurs actifs comptent,
-/// leurs manches seulement en règle de manche, leurs cartouches seulement en
+/// leurs manches seulement en Au tirage, leurs cartouches seulement en
 /// Cartouche.
 String settingsKey(FiestaRules rules) {
   final ids = rules.modifiers.keys
@@ -107,14 +85,14 @@ String settingsKey(FiestaRules rules) {
     ..sort();
   return jsonEncode({
     'drawCount': rules.drawCount,
-    'trailingBoost': rules.trailingBoost,
+    'boostCount': rules.boostCount,
     'modifiers': {
       for (final id in ids)
         id: {
           'mode': rules.modifiers[id]!.mode.name,
-          if (isRoundRuleMode(rules.modifiers[id]!.mode))
+          if (rules.modifiers[id]!.mode == ModifierMode.draw)
             'rounds': rules.modifiers[id]!.rounds.toList()..sort()
-          else
+          else if (rules.modifiers[id]!.mode == ModifierMode.cartridge)
             'charges': rules.modifiers[id]!.charges,
         },
     },
@@ -139,7 +117,7 @@ FiestaEnsemble _provided(
   required Map<String, ModifierMode> modes,
   int drawCount = 0,
   int charges = 0,
-  bool trailingBoost = false,
+  int boostCount = 0,
 }) =>
     FiestaEnsemble(
       id: '$kProvidedIdPrefix$key',
@@ -155,22 +133,18 @@ FiestaEnsemble _provided(
             ),
         },
         drawCount: drawCount,
-        trailingBoost: trailingBoost,
+        boostCount: boostCount,
       ),
     );
 
-/// Tout le catalogue en cartouche, hors « Une seule réponse », un seul mime
-/// (« Mime sans les bras », règle « un seul mime à la fois »).
+/// Tout le catalogue en cartouche, hors « Une seule réponse ».
 Map<String, ModifierMode> _allCartridges() => {
       for (final def in kModifierCatalog)
-        if (canBeCartridge(def) &&
-            (!def.mimeFamily || def.id == 'mime_no_arms'))
-          def.id: ModifierMode.cartridge,
+        if (canBeCartridge(def)) def.id: ModifierMode.cartridge,
     };
 
 final List<FiestaEnsemble> kProvidedEnsembles = [
-  // Malus au tirage (1 par manche), « Dessiner » toute la manche 3, « Une seule
-  // réponse » toute la partie ; bonus, −10 s et « Bloquer un devineur »
+  // Tout au tirage (1 par manche) ; bonus, −10 s et « Bloquer un devineur »
   // seulement gagnés par le coup de pouce (cartouches à 0).
   _provided(
     'classic',
@@ -179,13 +153,13 @@ final List<FiestaEnsemble> kProvidedEnsembles = [
       'no_pass': ModifierMode.draw,
       'reversed': ModifierMode.draw,
       'other_language': ModifierMode.draw,
-      'draw': ModifierMode.always,
-      'one_answer': ModifierMode.always,
+      'draw': ModifierMode.draw,
+      'one_answer': ModifierMode.draw,
       for (final def in kModifierCatalog)
         if (kCartridgeOnlyIds.contains(def.id)) def.id: ModifierMode.cartridge,
     },
     drawCount: 1,
-    trailingBoost: true,
+    boostCount: 1,
   ),
   _provided(
     'pro',
@@ -222,7 +196,7 @@ final List<FiestaEnsemble> kProvidedEnsembles = [
     'injustice',
     'L\'injustice',
     modes: _allCartridges(),
-    trailingBoost: true,
+    boostCount: 3,
   ),
 ];
 

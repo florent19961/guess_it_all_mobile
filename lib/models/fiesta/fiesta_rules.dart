@@ -4,23 +4,19 @@ enum FiestaMode { auto, custom }
 
 /// Mode d'un modificateur dans un ensemble (Fiesta v3), UN seul par
 /// modificateur :
-/// - [always] : actif pour toutes les équipes, toute la manche, sur chaque
-///   manche cochée ;
+/// - [always] : actif pour toutes les équipes, à TOUTES les manches où il existe
+///   (`allowedRounds`) ;
 /// - [draw] : candidat au tirage du début de chaque manche cochée ;
 /// - [cartridge] : réserve de chaque équipe pour TOUTE LA PARTIE, jouée au
 ///   tour de son choix.
 enum ModifierMode { always, draw, cartridge }
 
-/// Les modes « règle de manche », les seuls où les manches cochées comptent.
-bool isRoundRuleMode(ModifierMode mode) =>
-    mode == ModifierMode.always || mode == ModifierMode.draw;
-
 /// Réglage d'UN modificateur dans un ensemble.
 class ModifierSetting {
   final bool active;
 
-  /// Manches cochées, parmi {1, 2, 3}. Ne compte que pour [ModifierMode.always]
-  /// et [ModifierMode.draw] (au moins une si [active]).
+  /// Manches cochées, parmi {1, 2, 3}. Ne compte que pour [ModifierMode.draw]
+  /// (au moins une si [active]).
   final Set<int> rounds;
   final ModifierMode mode;
 
@@ -99,6 +95,10 @@ T? readOr<T extends Object>(Map<String, dynamic> json, String key, T fallback) {
 /// Borne des règles de la partie (éditeur et relecture).
 const int kMaxDrawCount = 5;
 
+/// Borne du coup de pouce : cartouches reçues après chaque manche (éditeur et
+/// relecture).
+const int kMaxBoostCount = 3;
+
 /// Cartouches par équipe au plus pour le modificateur [id] (éditeur et
 /// relecture) : la Passe gratuite va plus loin, chacune ne vaut qu'un tour.
 int maxCartridges(String id) => id == 'free_pass' ? 5 : 3;
@@ -129,30 +129,30 @@ class FiestaRules {
   final int drawCount;
 
   /// Coup de pouce à l'équipe menée : après M1 et M2, chaque équipe non en tête
-  /// reçoit une cartouche au hasard (`trailing_boost.dart`). Toujours vrai en
-  /// Auto (`autoRules`).
-  final bool trailingBoost;
+  /// reçoit [boostCount] cartouches au hasard (`trailing_boost.dart`), de 0
+  /// (éteint) à [kMaxBoostCount]. 1 en Auto (`autoRules`).
+  final int boostCount;
 
   FiestaRules({
     required this.mode,
     this.ensembleName,
     Map<String, ModifierSetting> modifiers = const {},
     this.drawCount = 1,
-    this.trailingBoost = false,
+    this.boostCount = 0,
   }) : modifiers = Map.unmodifiable(modifiers);
 
   FiestaRules copyWith({
     String? ensembleName,
     Map<String, ModifierSetting>? modifiers,
     int? drawCount,
-    bool? trailingBoost,
+    int? boostCount,
   }) =>
       FiestaRules(
         mode: mode,
         ensembleName: ensembleName ?? this.ensembleName,
         modifiers: modifiers ?? this.modifiers,
         drawCount: drawCount ?? this.drawCount,
-        trailingBoost: trailingBoost ?? this.trailingBoost,
+        boostCount: boostCount ?? this.boostCount,
       );
 
   /// Réglage actif de [id], `null` s'il est absent ou coupé.
@@ -168,7 +168,7 @@ class FiestaRules {
         'modifiers':
             modifiers.map((id, setting) => MapEntry(id, setting.toJson())),
         'drawCount': drawCount,
-        'trailingBoost': trailingBoost,
+        'boostCount': boostCount,
       };
 
   /// Variante tolérante : `null` si la structure est illisible (autre format,
@@ -182,14 +182,14 @@ class FiestaRules {
     final ensembleName = json['ensembleName'];
     final rawModifiers = readOr<Map>(json, 'modifiers', const {});
     final drawCount = readOr(json, 'drawCount', 1);
-    final trailingBoost = readOr(json, 'trailingBoost', false);
+    final boostCount = _readBoostCount(json);
     if (mode == null ||
         ensembleName is! String? ||
         rawModifiers == null ||
         drawCount == null ||
         drawCount < 0 ||
         drawCount > kMaxDrawCount ||
-        trailingBoost == null) {
+        boostCount == null) {
       return null;
     }
 
@@ -210,7 +210,18 @@ class FiestaRules {
       ensembleName: ensembleName,
       modifiers: modifiers,
       drawCount: drawCount,
-      trailingBoost: trailingBoost,
+      boostCount: boostCount,
     );
+  }
+
+  /// `boostCount` ; absent, l'ancien booléen `trailingBoost` (vrai = 1). `null`
+  /// si mal typé ou hors bornes, comme `drawCount`.
+  static int? _readBoostCount(Map<String, dynamic> json) {
+    if (json['boostCount'] == null) {
+      final legacy = readOr(json, 'trailingBoost', false);
+      return legacy == null ? null : (legacy ? 1 : 0);
+    }
+    final count = readOr(json, 'boostCount', 0);
+    return count == null || count < 0 || count > kMaxBoostCount ? null : count;
   }
 }

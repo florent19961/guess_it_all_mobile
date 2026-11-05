@@ -15,6 +15,16 @@ class GameSettings {
   /// Auto / Personnalisé (« Avancés ») : le mode pris en passant en Fiesta.
   FiestaMode fiestaMode;
 
+  /// Dernier choix « Mode de jeu » : Fiesta (vrai) ou Classique. Relu au
+  /// démarrage et à une nouvelle partie (`GameProvider._rememberedFiesta`).
+  bool fiestaEnabled;
+
+  /// Personnalisé : règles gelées d'une partie rejouée, en attente de lancement.
+  /// Elles priment sur le dernier ensemble utilisé, jusqu'au lancement ou à un
+  /// choix explicite (`GameProvider._rememberFiestaChoice`). Clé absente ou
+  /// illisible : nul.
+  FiestaRules? replayFiesta;
+
   GameSettings({
     this.numberOfTeams = AppConstants.defaultNumberOfTeams,
     this.numberOfPlayers = AppConstants.defaultNumberOfPlayers,
@@ -25,6 +35,8 @@ class GameSettings {
     List<String>? selectedCategories,
     List<int>? selectedDifficultyLevels,
     this.fiestaMode = FiestaMode.auto,
+    this.fiestaEnabled = false,
+    this.replayFiesta,
   })  : selectedCategories =
             selectedCategories ?? List.from(AppConstants.defaultCategories),
         selectedDifficultyLevels = selectedDifficultyLevels ??
@@ -44,6 +56,9 @@ class GameSettings {
     List<String>? selectedCategories,
     List<int>? selectedDifficultyLevels,
     FiestaMode? fiestaMode,
+    bool? fiestaEnabled,
+    FiestaRules? replayFiesta,
+    bool clearReplayFiesta = false,
   }) {
     return GameSettings(
       numberOfTeams: numberOfTeams ?? this.numberOfTeams,
@@ -57,6 +72,9 @@ class GameSettings {
       selectedDifficultyLevels:
           selectedDifficultyLevels ?? List.from(this.selectedDifficultyLevels),
       fiestaMode: fiestaMode ?? this.fiestaMode,
+      fiestaEnabled: fiestaEnabled ?? this.fiestaEnabled,
+      replayFiesta:
+          clearReplayFiesta ? null : replayFiesta ?? this.replayFiesta,
     );
   }
 
@@ -71,6 +89,8 @@ class GameSettings {
       'selectedCategories': selectedCategories,
       'selectedDifficultyLevels': selectedDifficultyLevels,
       'fiestaMode': fiestaMode.name,
+      'fiestaEnabled': fiestaEnabled,
+      if (replayFiesta != null) 'replayFiesta': replayFiesta!.toJson(),
     };
   }
 
@@ -96,6 +116,12 @@ class GameSettings {
       // Clé absente (réglages d'avant) ou valeur inconnue : Auto.
       fiestaMode: enumFromJson(FiestaMode.values, json['fiestaMode']) ??
           FiestaMode.auto,
+      // Clé absente (réglages d'avant) ou mal typée : Classique.
+      fiestaEnabled: json['fiestaEnabled'] == true,
+      replayFiesta: json['replayFiesta'] is Map
+          ? FiestaRules.tryFromJson(
+              Map<String, dynamic>.from(json['replayFiesta'] as Map))
+          : null,
     );
   }
 }

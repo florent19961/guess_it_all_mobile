@@ -59,6 +59,13 @@ class FiestaEnsembleViewScreen extends StatelessWidget {
     ].join(' · ');
   }
 
+  /// « Toujours » vaut pour toutes les manches où il existe : seule une
+  /// contrainte du catalogue (mime, parole) mérite d'être dite.
+  static String? _alwaysLabel(ModifierDef def) {
+    final allowed = allowedRounds(def);
+    return allowed.length < 3 ? _roundsLabel(allowed) : null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final rules = ensemble.rules;
@@ -87,8 +94,8 @@ class FiestaEnsembleViewScreen extends StatelessWidget {
                           _Section(
                             title: 'Toujours',
                             rows: [
-                              for (final (def, s) in always)
-                                _Row(def, _roundsLabel(s.rounds)),
+                              for (final (def, _) in always)
+                                _Row(def, _alwaysLabel(def)),
                             ],
                           ),
                         if (draw.isNotEmpty)
@@ -107,11 +114,12 @@ class FiestaEnsembleViewScreen extends StatelessWidget {
                                 _Row(def, _chargesLabel(def, s.charges)),
                             ],
                           ),
-                        if (rules.trailingBoost)
-                          const _Section(
+                        if (rules.boostCount > 0)
+                          _Section(
                             title: 'Coup de pouce à l\'équipe menée',
-                            text: 'Après les manches 1 et 2, chaque équipe non '
-                                'en tête reçoit une cartouche au hasard.',
+                            text: '${rules.boostCount} cartouche'
+                                '${rules.boostCount > 1 ? 's' : ''} au hasard '
+                                'après chaque manche',
                           ),
                       ],
                     ),
@@ -183,7 +191,7 @@ class _Section extends StatelessWidget {
 /// Un modificateur : icône, nom, quand il joue, description courte.
 class _Row extends StatelessWidget {
   final ModifierDef def;
-  final String when;
+  final String? when;
 
   const _Row(this.def, this.when);
 
@@ -215,11 +223,12 @@ class _Row extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(def.name, style: AppTextStyles.label),
-                Text(
-                  when,
-                  style: AppTextStyles.bodySmall
-                      .copyWith(color: AppColors.secondaryCyan, fontSize: 12),
-                ),
+                if (when != null)
+                  Text(
+                    when!,
+                    style: AppTextStyles.bodySmall
+                        .copyWith(color: AppColors.secondaryCyan, fontSize: 12),
+                  ),
                 Text(
                   def.description,
                   style: AppTextStyles.bodySmall

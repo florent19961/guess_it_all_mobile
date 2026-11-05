@@ -973,3 +973,43 @@ ensemble.
   archive d'historique reste lisible : ses faits `catchUp` / `choice` sont ignorés seuls.
 - *Aucune cartouche ne se joue sur une continuation* (inchangé : c'est le même tour). Le +10 s y
   serait de toute façon sans effet ; `_conflict` le garde pour la raison affichée.
+
+## 2026-11-05 — Fiesta v3.1 : second lot de retours de Florent
+
+**Ce qui change.** Fiesta classique : tout au tirage. Réserve complète sur l'avant-tour d'une
+continuation, cartouches gagnées à l'instant comprises ; `plus_10s` y ajoute 10 s au temps reporté.
+Le dernier choix des paramètres survit à l'app tuée et à « Nouvelle partie » (lève Q10). Coup de
+pouce : `boostCount` 0-3 remplace `trailingBoost`, cartouches distinctes. Mimes : plusieurs actifs
+permis, un « Toujours » exclut les autres à l'enregistrement ; `oneMimeAtMost` retiré, Explosif et
+L'injustice incluent tous les mimes.
+
+**Pourquoi ces choix.**
+- *Continuation* : la dépense reste au départ du chrono et le stock reste calculé, donc aucun état
+  nouveau. Une charge `spent` n'est plus décomptée une seconde fois par `reserve` et affiche
+  « déjà en cours ce tour ». `turnTime` ne compte sur un report que le +10 s `armed` : celui dépensé
+  avant est déjà dans les secondes reportées.
+- *`sentThisTurn` filtré sur la manche d'envoi* : sans ça, l'avant-tour d'une continuation rendrait
+  annulable un malus envoyé avant la première partie du tour, déjà annoncé et « parti ».
+- *Choix dans `GameSettings`* (`fiestaEnabled`, clé absente = Classique, règle 7) plutôt qu'une clé
+  dédiée : même écriture et même relecture que le reste de l'écran. On ne persiste pas les règles :
+  en Personnalisé `_rememberedFiesta` résout le `lastUsedId` vers de vraies règles (repli Fiesta
+  classique), si bien qu'une app tuée sur Joueurs ou Équipes ne lance jamais un ensemble vide.
+- *`boostCount` à la relecture* : absent → ancien booléen, pour les ensembles et les parties en
+  cours ; `format` reste 3, `kCurrentSchemaVersion` inchangé. Mélange par la graine plutôt que des
+  tirages successifs : distinctes par construction, déterministe. Le cadeau figé d'une graine
+  change (`nextInt` → `shuffle`) : sans risque, il n'est recalculé qu'à une transition à venir et
+  la Fiesta n'est pas publiée.
+- *`_fit`* : 11 malus + 4 bonus tiennent à 360 × 640, temps bonus compris. Sur une continuation
+  avec des malus envoyés, la ligne d'aide cède sa place (rappelée par le « ? »). Au-delà de 3 puces
+  « Envoyé » sur une continuation à 360 × 640, le bas reste coupé par le `ClipRect` : cas extrême
+  assumé, pour ne pas alourdir l'écran.
+
+**Revue r1 et décision de Florent (même jour).**
+- *Config rejouée* : `replayFromHistory` et le « Rejouer » gardaient les règles gelées en mémoire
+  seulement ; après un kill, `lastUsedId` reconstruisait un autre ensemble. `GameSettings.replayFiesta`
+  les garde jusqu'au lancement ou à un choix explicite, plutôt qu'une nouvelle clé `guessItAll_*` :
+  même écriture, relecture tolérante. Pas pour Auto, dont les règles sont recalculées.
+- *« Toujours ça veut dire toujours »* : un « Toujours » vaut pour toutes les manches où il existe
+  (`allowedRounds`), `rounds` n'est plus lu ni jugé, ni compté dans `settingsKey`. La forme JSON ne
+  bouge pas : un ensemble au `rounds` partiel se relit et joue sur toutes ses manches possibles.
+  L'erreur d'incompatibilité ne nomme plus de manche : elle vaudrait pour chacune.

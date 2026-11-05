@@ -34,7 +34,7 @@ List<String> validateEnsemble(
     if (ensembleNameError(rules, others: others) case final error?) error,
   ];
 
-  final alwaysByRound = <int, List<ModifierDef>>{};
+  final always = <ModifierDef>[];
   for (final def in kModifierCatalog) {
     final setting = rules.activeSetting(def.id);
     if (setting == null) continue;
@@ -42,10 +42,17 @@ List<String> validateEnsemble(
 
     if (setting.mode == ModifierMode.cartridge) {
       if (!canBeCartridge(def)) errors.add('$name : jamais en cartouche.');
-      if (setting.charges == 0 && !rules.trailingBoost) {
+      if (setting.charges == 0 && rules.boostCount == 0) {
         errors.add('$name : 0 cartouche sans coup de pouce, elle ne servirait '
             'jamais. Mets-en au moins 1, ou allume le coup de pouce.');
       }
+      continue;
+    }
+
+    // « Toujours » vaut pour toutes les manches où il existe : rien à cocher.
+    if (setting.mode == ModifierMode.always) {
+      if (!canBeRoundRule(def)) errors.add('$name : seulement en cartouche.');
+      always.add(def);
       continue;
     }
 
@@ -63,29 +70,44 @@ List<String> validateEnsemble(
       errors.add('$name n\'existe pas en manche 3 (mime) : manche 1 ou 2 '
           'seulement.');
     }
-    if (setting.mode == ModifierMode.always) {
-      for (final r in setting.rounds) {
-        (alwaysByRound[r] ??= []).add(def);
-      }
-    }
   }
 
-  if (rules.trailingBoost &&
+  if (rules.boostCount > 0 &&
       !rules.modifiers.values
           .any((s) => s.active && s.mode == ModifierMode.cartridge)) {
     errors.add('Le coup de pouce a besoin d\'au moins un modificateur en '
         'Cartouche.');
   }
 
-  // Deux « Toujours » incompatibles sur une même manche : l'un des deux ne
-  // s'appliquerait pas.
-  for (final MapEntry(key: round, value: defs) in alwaysByRound.entries) {
-    for (var i = 0; i < defs.length; i++) {
-      for (var j = i + 1; j < defs.length; j++) {
-        if (!areCompatible(defs[i].id, defs[j].id)) {
-          errors.add('${defs[i].name} et ${defs[j].name} sont incompatibles : '
-              'pas « Toujours » tous les deux en manche $round.');
-        }
+  // Un mime « Toujours » exclut tout autre mime actif, quel que soit son mode
+  // (en partie, deux mimes ne jouent jamais ensemble : `areCompatible`).
+  final mimes = [
+    for (final def in kModifierCatalog)
+      if (def.mimeFamily && rules.activeSetting(def.id) != null) def,
+  ];
+  for (var i = 0; i < mimes.length; i++) {
+    for (var j = i + 1; j < mimes.length; j++) {
+      final (first, second) = (mimes[i], mimes[j]);
+      if (always.contains(first)) {
+        errors.add('${first.name} est « Toujours » : retire ${second.name} ou '
+            'change son mode.');
+      } else if (always.contains(second)) {
+        errors.add('${second.name} est « Toujours » : retire ${first.name} ou '
+            'change son mode.');
+      }
+    }
+  }
+
+  // Deux « Toujours » incompatibles qui existent sur une même manche : l'un
+  // des deux ne s'appliquerait pas. Les mimes ont leur message ci-dessus.
+  for (var i = 0; i < always.length; i++) {
+    for (var j = i + 1; j < always.length; j++) {
+      final (first, second) = (always[i], always[j]);
+      if (!areCompatible(first.id, second.id) &&
+          !(first.mimeFamily && second.mimeFamily) &&
+          allowedRounds(first).intersection(allowedRounds(second)).isNotEmpty) {
+        errors.add('${first.name} et ${second.name} sont incompatibles : '
+            'pas « Toujours » tous les deux.');
       }
     }
   }

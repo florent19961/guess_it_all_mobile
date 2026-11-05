@@ -17,7 +17,7 @@ ModifierSetting cartridge([int charges = 0]) => ModifierSetting(
 FiestaRules boosted(List<String> ids) => FiestaRules(
       mode: FiestaMode.custom,
       drawCount: 0,
-      trailingBoost: true,
+      boostCount: 1,
       modifiers: {for (final id in ids) id: cartridge()},
     );
 
@@ -74,9 +74,29 @@ void main() {
           ['c']);
     });
 
-    test('interrupteur coupé : rien', () {
-      expect(
-          gifts(allCartridges.copyWith(trailingBoost: false), {'a': 5, 'b': 0}),
+    test(
+        'n cartouches distinctes par équipe menée, mêmes au rejeu ; moins si '
+        'le vivier est plus petit', () {
+      final three = allCartridges.copyWith(boostCount: 3);
+      for (final gameId in gameIds) {
+        final out = gifts(three, {'a': 9, 'b': 4, 'c': 1}, gameId: gameId);
+        for (final team in ['b', 'c']) {
+          final ids =
+              out.where((e) => e.teamId == team).map((e) => e.catalogId);
+          expect(ids.toSet(), hasLength(3), reason: gameId);
+        }
+        expect(
+            gifts(three, {'a': 9, 'b': 4, 'c': 1}, gameId: gameId)
+                .map((e) => e.catalogId),
+            out.map((e) => e.catalogId));
+      }
+      final small = boosted(['plus_10s', 'free_pass']).copyWith(boostCount: 3);
+      expect(gifts(small, {'a': 2, 'b': 0}).map((e) => e.catalogId).toSet(),
+          {'plus_10s', 'free_pass'});
+    });
+
+    test('compteur à 0 : rien', () {
+      expect(gifts(allCartridges.copyWith(boostCount: 0), {'a': 5, 'b': 0}),
           isEmpty);
     });
   });
@@ -84,8 +104,8 @@ void main() {
   group('tirage déterministe par (gameId, manche, équipe)', () {
     test('figé : une mise à jour qui changerait le tirage se voit', () {
       expect(boostSeed('game-0', 1, 'b'), 1618404491);
-      expect(gifts(allCartridges, {'a': 5, 'b': 0}).single.catalogId,
-          'block_guesser');
+      expect(
+          gifts(allCartridges, {'a': 5, 'b': 0}).single.catalogId, 'no_pass');
     });
 
     test('même partie = même cadeau ; il ne dépend pas des autres équipes', () {
@@ -118,7 +138,7 @@ void main() {
         () {
       final rules = FiestaRules(
         mode: FiestaMode.custom,
-        trailingBoost: true,
+        boostCount: 1,
         modifiers: {
           'plus_10s': cartridge(),
           'free_pass': cartridge().copyWith(active: false),
@@ -144,7 +164,7 @@ void main() {
       ).map((d) => d.id);
       expect(pool, isNot(contains('one_answer')));
       expect(pool, containsAll(['plus_10s', 'minus_10s', 'mime_no_arms']));
-      expect(autoRules(oneAnswer: false).trailingBoost, isTrue);
+      expect(autoRules(oneAnswer: false).boostCount, 1);
     });
 
     test('un mime seulement si M3 suit, la parole jamais avant M3', () {
@@ -196,12 +216,12 @@ void main() {
         round: 1,
         fromTeamId: 'b',
       );
-      final rules = boosted(['plus_10s']).copyWith(modifiers: {
+      final rules = boosted(['plus_10s']).copyWith(drawCount: 1, modifiers: {
         'plus_10s': cartridge(),
         'no_pass': ModifierSetting(
-            active: true, rounds: const {1}, mode: ModifierMode.always),
+            active: true, rounds: const {1}, mode: ModifierMode.draw),
         'one_answer': ModifierSetting(
-            active: true, rounds: const {2}, mode: ModifierMode.always),
+            active: true, rounds: const {2}, mode: ModifierMode.draw),
       });
       final before = FiestaState(
         rules: rules,
@@ -247,7 +267,7 @@ void main() {
 
     test('Fiesta classique : bonus, −10 s et blocage gagnés seulement', () {
       final r = provided('provided_classic');
-      expect(r.trailingBoost, isTrue);
+      expect(r.boostCount, 1);
       expect(r.drawCount, 1);
       final a = active(r);
       for (final id in kCartridgeOnlyIds) {
@@ -256,26 +276,36 @@ void main() {
       for (final id in ['no_pass', 'reversed', 'other_language']) {
         expect(a[id]!.$1, ModifierMode.draw, reason: id);
       }
-      expect(a['draw']!.$1, ModifierMode.always);
-      expect(a['one_answer']!.$1, ModifierMode.always);
+      // Plus rien en « Toujours » : tout passe par le tirage.
+      expect(a['draw']!.$1, ModifierMode.draw);
+      expect(a['one_answer']!.$1, ModifierMode.draw);
       expect(a.length, kCartridgeOnlyIds.length + 5);
+      expect(a.values.map((v) => v.$1), isNot(contains(ModifierMode.always)));
     });
 
     test(
         'Explosif et L\'injustice : tout en cartouche, hors une seule réponse, '
-        'un seul mime', () {
+        'TOUS les mimes', () {
       for (final (id, charges, boost) in [
-        ('provided_explosive', 3, false),
-        ('provided_injustice', 0, true),
+        ('provided_explosive', 3, 0),
+        ('provided_injustice', 0, 3),
       ]) {
         final r = provided(id);
-        expect(r.trailingBoost, boost);
+        expect(r.boostCount, boost);
         final a = active(r);
         expect(a.containsKey('one_answer'), isFalse);
-        expect(
-            a.keys.where((m) => modifierById(m)!.mimeFamily), ['mime_no_arms']);
+        expect(a.keys.where((m) => modifierById(m)!.mimeFamily).toSet(), {
+          for (final def in kModifierCatalog)
+            if (def.mimeFamily) def.id,
+        });
         expect(a.containsKey('plus_10s'), isTrue);
         expect(a.values.toSet(), {(ModifierMode.cartridge, charges)});
+      }
+    });
+
+    test('coup de pouce des autres fournis : 0', () {
+      for (final id in ['pro', 'straight', 'pictionary', 'bilingual']) {
+        expect(provided('provided_$id').boostCount, 0, reason: id);
       }
     });
 
@@ -288,10 +318,11 @@ void main() {
       }
     });
 
-    test('nouvel ensemble : cartouches à 1, Passe gratuite à 2, coup de pouce',
+    test(
+        'nouvel ensemble : cartouches à 1, Passe gratuite à 2, coup de pouce à 1',
         () {
       final r = defaultEnsembleRules('X');
-      expect(r.trailingBoost, isTrue);
+      expect(r.boostCount, 1);
       expect(r.drawCount, 1);
       expect(active(r), {
         'minus_10s': (ModifierMode.cartridge, 1),

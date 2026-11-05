@@ -177,7 +177,6 @@ void main() {
       playTurn(p, 99);
       p.nextRound();
     }
-    expect(p.reserve, isEmpty, reason: 'continuation : rien ne s\'y joue');
     final t0 = playTurn(p); // continuation
     final x = p.getCurrentTeam()!.id;
     expect(p.inflictMalus('mime_no_arms', t0), isNull);
@@ -189,6 +188,44 @@ void main() {
     expect(left(p, 'mime_eyes_closed'), 2);
     expect(p.inflictMalus('mime_eyes_closed', x), isNull);
     expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null).length, 2);
+  });
+
+  test('Une équipe peut détenir deux mimes différents en réserve', () async {
+    final p = await givenProvider(['Ana', 'Bob'], wordsEach: 1);
+    await p.startGame(fiesta: stock(['mime_no_arms', 'mime_no_fists']));
+    expect(p.reserve, isEmpty, reason: 'pas de mime avant M3');
+    playTurn(p, 99);
+    p.nextRound();
+    playTurn(p, 99);
+    p.nextRound();
+
+    expect(p.game.currentRound, 3);
+    expect(
+        p.reserve.map((c) => c.catalogId), ['mime_no_arms', 'mime_no_fists']);
+    expect(p.reserve.every((c) => c.usable), isTrue);
+  });
+
+  test('Mime en réserve grisé si un mime de manche est en jeu', () async {
+    final p = await givenProvider(['Ana', 'Bob'], wordsEach: 1);
+    final rules = stock(['mime_no_arms']);
+    await p.startGame(
+      fiesta: rules.copyWith(modifiers: {
+        ...rules.modifiers,
+        'draw': ModifierSetting(
+            active: true, rounds: const {3}, mode: ModifierMode.always),
+      }),
+    );
+    playTurn(p, 99);
+    p.nextRound();
+    playTurn(p, 99);
+    p.nextRound();
+
+    final mime = p.reserve.single;
+    expect(mime.usable, isFalse);
+    expect(mime.blockedReason, 'incompatible avec Dessiner cette manche');
+    final other = p.teams.singleWhere((t) => t.id != p.getCurrentTeam()!.id);
+    expect(p.inflictMalus('mime_no_arms', other.id), isNull);
+    expect(p.game.fiesta!.chargesUsed, isEmpty, reason: 'rien n\'est consommé');
   });
 
   test(

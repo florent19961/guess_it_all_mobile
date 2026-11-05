@@ -241,4 +241,66 @@ void main() {
     expect(kept.map((m) => '${m.catalogId}<${m.fromTeamId}'),
         ['no_pass<null', 'mime_no_arms<a', 'reversed<c']);
   });
+
+  group('mimes', () {
+    ModifierSetting m(ModifierMode mode) =>
+        ModifierSetting(active: true, rounds: const {3}, mode: mode);
+
+    test('un blob à deux « Toujours » sur mime : un seul reste en jeu', () {
+      final rules = FiestaRules(
+        mode: FiestaMode.custom,
+        drawCount: 0,
+        modifiers: {
+          'mime_no_arms': m(ModifierMode.always),
+          'draw': m(ModifierMode.always),
+        },
+      );
+      expect(
+          alwaysForRound(rules, 3).map((x) => x.catalogId), ['mime_no_arms']);
+    });
+
+    test('un tirage à 2 parmi plusieurs mimes n\'en sort jamais 2', () {
+      final rules = FiestaRules(
+        mode: FiestaMode.custom,
+        drawCount: 2,
+        modifiers: {
+          for (final id in [
+            'mime_no_arms',
+            'mime_no_fists',
+            'draw',
+            'mime_under_sheet',
+            'no_pass'
+          ])
+            id: m(ModifierMode.draw),
+        },
+      );
+      for (var i = 0; i < 100; i++) {
+        final ids = roundModifiers(rules, gameId: 'game-$i', round: 3)
+            .map((x) => x.catalogId);
+        expect(ids.where((id) => modifierById(id)!.mimeFamily), hasLength(1),
+            reason: 'game-$i : $ids');
+      }
+    });
+  });
+
+  test(
+      '« Toujours » : un blob à `rounds` partiel joue sur toutes les manches où '
+      'il existe', () {
+    ModifierSetting always(Set<int> rounds) => ModifierSetting(
+        active: true, rounds: rounds, mode: ModifierMode.always);
+    final rules = FiestaRules(
+      mode: FiestaMode.custom,
+      drawCount: 0,
+      modifiers: {
+        'reversed': always(const {1}),
+        'other_language': always(const {}),
+        'mime_no_arms': always(const {1}),
+      },
+    );
+    List<String> ids(int round) =>
+        alwaysForRound(rules, round).map((m) => m.catalogId).toList();
+    expect(ids(1), unorderedEquals(['reversed', 'other_language']));
+    expect(ids(2), unorderedEquals(['reversed', 'other_language']));
+    expect(ids(3), unorderedEquals(['reversed', 'mime_no_arms']));
+  });
 }

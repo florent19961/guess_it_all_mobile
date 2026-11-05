@@ -82,8 +82,7 @@ void main() {
     expect(
         settingsKey(withMinus(minus.copyWith(rounds: {2}))), settingsKey(base));
     // Le coup de pouce compte aussi.
-    expect(settingsKey(base.copyWith(trailingBoost: false)),
-        isNot(settingsKey(base)));
+    expect(settingsKey(base.copyWith(boostCount: 0)), isNot(settingsKey(base)));
   });
 
   test('modificateur actif sans manche → refusé, coupé → ignoré', () {
@@ -150,7 +149,7 @@ void main() {
         charges: 0);
     final withZero = rulesWith(overrides: {'plus_10s': zero});
     expect(validateEnsemble(withZero), isEmpty);
-    expect(validateEnsemble(withZero.copyWith(trailingBoost: false)), [
+    expect(validateEnsemble(withZero.copyWith(boostCount: 0)), [
       'Bonus de 10 s : 0 cartouche sans coup de pouce, elle ne servirait '
           'jamais. Mets-en au moins 1, ou allume le coup de pouce.'
     ]);
@@ -158,23 +157,103 @@ void main() {
       validateEnsemble(FiestaRules(
         mode: FiestaMode.custom,
         ensembleName: 'Sans cartouche',
-        trailingBoost: true,
+        boostCount: 1,
         modifiers: {'one_answer': setting(ModifierMode.always)},
       )),
       ['Le coup de pouce a besoin d\'au moins un modificateur en Cartouche.'],
     );
   });
 
-  test('deux « Toujours » incompatibles sur une même manche → refusé', () {
-    expect(
-      validateEnsemble(rulesWith(overrides: {
-        'draw': setting(ModifierMode.always, rounds: {3}),
-        'mime_no_arms': setting(ModifierMode.always, rounds: {3}),
-      })),
-      [
-        'Mime sans les bras et Dessiner sont incompatibles : pas « Toujours » '
-            'tous les deux en manche 3.'
-      ],
-    );
+  group('mimes', () {
+    ModifierSetting mime(ModifierMode mode) =>
+        setting(mode, rounds: {3}).copyWith(charges: 1);
+
+    test('plusieurs en Au tirage et Cartouche, sans Toujours : permis', () {
+      expect(
+        validateEnsemble(rulesWith(overrides: {
+          'mime_no_arms': mime(ModifierMode.cartridge),
+          'mime_no_fists': mime(ModifierMode.cartridge),
+          'draw': mime(ModifierMode.draw),
+          'mime_under_sheet': mime(ModifierMode.draw),
+        })),
+        isEmpty,
+      );
+    });
+
+    test('un Toujours + un autre mime actif, quel que soit son mode : refusé',
+        () {
+      for (final other in ModifierMode.values) {
+        expect(
+          validateEnsemble(rulesWith(overrides: {
+            'mime_no_arms':
+                mime(ModifierMode.cartridge).copyWith(active: false),
+            'draw': mime(ModifierMode.always),
+            'mime_no_fists': mime(other),
+          })),
+          other == ModifierMode.always
+              ? [
+                  'Mime sans les poings est « Toujours » : retire Dessiner ou '
+                      'change son mode.'
+                ]
+              : [
+                  'Dessiner est « Toujours » : retire Mime sans les poings ou '
+                      'change son mode.'
+                ],
+          reason: other.name,
+        );
+      }
+    });
+
+    test('un mime coupé ne gêne pas un Toujours', () {
+      expect(
+        validateEnsemble(rulesWith(overrides: {
+          'mime_no_arms': mime(ModifierMode.cartridge).copyWith(active: false),
+          'draw': mime(ModifierMode.always),
+        })),
+        isEmpty,
+      );
+    });
+  });
+
+  group('« Toujours » vaut pour toutes les manches où il existe', () {
+    test('ses manches cochées ne sont plus jugées', () {
+      for (final rounds in [
+        <int>{},
+        {1},
+        {2, 3}
+      ]) {
+        expect(
+          validateEnsemble(rulesWith(overrides: {
+            'mime_no_arms': setting(ModifierMode.always, rounds: rounds),
+            'other_language': setting(ModifierMode.always, rounds: rounds),
+          })),
+          isEmpty,
+          reason: '$rounds',
+        );
+      }
+    });
+
+    test('« Au tirage » garde ses manches', () {
+      expect(
+        validateEnsemble(rulesWith(overrides: {
+          'other_language': setting(ModifierMode.draw, rounds: {3}),
+        })),
+        isNotEmpty,
+      );
+    });
+
+    test('doublon : deux ensembles qui ne diffèrent que par ces manches', () {
+      FiestaRules withRounds(Set<int> rounds) => rulesWith(overrides: {
+            'no_pass': setting(ModifierMode.always, rounds: rounds),
+          });
+      expect(settingsKey(withRounds({1})), settingsKey(withRounds({1, 2, 3})));
+      expect(
+        validateEnsemble(withRounds({1}), others: [
+          FiestaEnsemble(
+              id: 'x', rules: withRounds({2}).copyWith(ensembleName: 'Autre')),
+        ]),
+        ['L\'ensemble Autre a déjà ces paramètres.'],
+      );
+    });
   });
 }
