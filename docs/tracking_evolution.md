@@ -1013,3 +1013,32 @@ L'injustice incluent tous les mimes.
   (`allowedRounds`), `rounds` n'est plus lu ni jugé, ni compté dans `settingsKey`. La forme JSON ne
   bouge pas : un ensemble au `rounds` partiel se relit et joue sur toutes ses manches possibles.
   L'erreur d'incompatibilité ne nomme plus de manche : elle vaudrait pour chacune.
+
+## 2026-11-05 — Fiesta v4, lot 1 : éditeur en 3 menus, blocages nommés, passage de manche
+
+**Quoi.** Modèle `format: 4` : trois réglages indépendants par modificateur (`always`, `draw`, `charges`),
+`drawCount`, `allCount`, `trailingCount`, `balance`. Fin du mode Auto. 8 ensembles fournis, sans règle
+cachée. Nouveau malus `block_giver`, `one_answer` possible en cartouche, paire Bruitages / drap
+compatible. Blocages nommés à l'envoi, piège d'« Interdit de faire deviner ». Animation entre les
+manches, écran fixe après M3.
+
+**Pourquoi ces choix.**
+- `lockReason` dans `FiestaRules`, lu par le moteur et l'éditeur : un réglage verrouillé est gardé pour
+  être restauré, donc ne doit jamais jouer. `isAlways` / `drawsFrom` / `chargesOf` sont la seule lecture
+  en partie.
+- Malus rendu dans `RoundTransitionPlan.apply` : c'est le seul moment où une règle nouvelle peut croiser
+  un malus en attente, et le plan est recalculé, donc retour arrière et app tuée ne rendent rien deux
+  fois. L'équipe qui continue en est exclue : son malus est déjà appliqué.
+- Rotation : `fiesta.skips` par équipe, ajouté à l'index de `playerIndexAtTurn`, plutôt que de réécrire
+  l'ordre. Alice, ~~Bob~~, Frank, Alice, Bob, Frank sort directement, y compris à 2 joueurs, et le retour
+  arrière restaure tout par le snapshot habituel.
+- Le piège passe par `startTurnTimer`, seul point qui démarre le chrono : un écran persisté
+  (`screenGiverBlocked`), rien de consommé avant « Suivant », donc une app tuée remontre la phrase.
+- `sentTurnIndex` sur les malus : un blocage peut attendre plusieurs tours, la manche d'envoi ne suffisait
+  plus à dire « envoyé dans CET avant-tour ».
+- Vivier : au-delà de sa taille, il repart du début plutôt que de donner moins (« distinctes tant que le
+  vivier le permet »).
+
+**Conséquence.** Ensembles et parties Fiesta d'un autre format restent illisibles, comme avant (Fiesta
+jamais publiée). `kCurrentSchemaVersion` inchangé. L'archivage de fin de partie se fait à « Voir les
+résultats ». Les seuils d'équilibrage sont des constantes à recalibrer après des parties réelles.
