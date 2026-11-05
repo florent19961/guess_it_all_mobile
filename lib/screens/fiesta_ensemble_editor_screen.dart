@@ -269,12 +269,16 @@ class _FiestaEnsembleEditorScreenState
               SafeArea(
                 child: Column(
                   children: [
+                    // La bande des boutons retour et « ? » : la page défile
+                    // en dessous, les onglets épinglés ne passent pas dessous.
+                    const SizedBox(height: _cornerButtonsHeight),
                     Expanded(
                       child: CustomScrollView(
                         controller: _scroll,
                         slivers: [
                           SliverPadding(
-                            padding: const EdgeInsets.fromLTRB(20, 72, 20, 0),
+                            padding: EdgeInsets.fromLTRB(
+                                20, 72 - _cornerButtonsHeight, 20, 0),
                             sliver: SliverToBoxAdapter(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -814,6 +818,9 @@ enum _Group {
   final String label;
   const _Group(this.label);
 }
+
+/// Hauteur des boutons retour et « ? » en haut d'écran : 16 de marge + 48.
+const double _cornerButtonsHeight = 64;
 
 /// Onglets épinglés en haut pendant le défilement.
 class _TabsHeader extends SliverPersistentHeaderDelegate {
