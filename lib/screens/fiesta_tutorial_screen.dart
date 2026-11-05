@@ -56,8 +56,8 @@ class FiestaTutorialScreen extends StatelessWidget {
             TutorialRow(
                 '3',
                 'Coup de pouce',
-                'Après les manches 1 et 2, chaque équipe menée reçoit une '
-                    'cartouche au hasard.'),
+                'Après les manches 1 et 2, chaque équipe menée reçoit des '
+                    'cartouches au hasard.'),
           ],
         ),
         TutorialCard(

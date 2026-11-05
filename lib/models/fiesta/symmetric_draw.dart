@@ -54,7 +54,7 @@ bool drawsOneAnswer(String gameId) =>
 /// Aucune cartouche au départ, seulement celles du coup de pouce.
 FiestaRules autoRules({required bool oneAnswer}) => FiestaRules(
       mode: FiestaMode.auto,
-      trailingBoost: true,
+      boostCount: 1,
       modifiers: {
         for (final def in kModifierCatalog)
           if (def.id == 'one_answer')

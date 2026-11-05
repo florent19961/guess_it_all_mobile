@@ -15,6 +15,10 @@ class GameSettings {
   /// Auto / Personnalisé (« Avancés ») : le mode pris en passant en Fiesta.
   FiestaMode fiestaMode;
 
+  /// Dernier choix « Mode de jeu » : Fiesta (vrai) ou Classique. Relu au
+  /// démarrage et à une nouvelle partie (`GameProvider._rememberedFiesta`).
+  bool fiestaEnabled;
+
   GameSettings({
     this.numberOfTeams = AppConstants.defaultNumberOfTeams,
     this.numberOfPlayers = AppConstants.defaultNumberOfPlayers,
@@ -25,6 +29,7 @@ class GameSettings {
     List<String>? selectedCategories,
     List<int>? selectedDifficultyLevels,
     this.fiestaMode = FiestaMode.auto,
+    this.fiestaEnabled = false,
   })  : selectedCategories =
             selectedCategories ?? List.from(AppConstants.defaultCategories),
         selectedDifficultyLevels = selectedDifficultyLevels ??
@@ -44,6 +49,7 @@ class GameSettings {
     List<String>? selectedCategories,
     List<int>? selectedDifficultyLevels,
     FiestaMode? fiestaMode,
+    bool? fiestaEnabled,
   }) {
     return GameSettings(
       numberOfTeams: numberOfTeams ?? this.numberOfTeams,
@@ -57,6 +63,7 @@ class GameSettings {
       selectedDifficultyLevels:
           selectedDifficultyLevels ?? List.from(this.selectedDifficultyLevels),
       fiestaMode: fiestaMode ?? this.fiestaMode,
+      fiestaEnabled: fiestaEnabled ?? this.fiestaEnabled,
     );
   }
 
@@ -71,6 +78,7 @@ class GameSettings {
       'selectedCategories': selectedCategories,
       'selectedDifficultyLevels': selectedDifficultyLevels,
       'fiestaMode': fiestaMode.name,
+      'fiestaEnabled': fiestaEnabled,
     };
   }
 
@@ -96,6 +104,8 @@ class GameSettings {
       // Clé absente (réglages d'avant) ou valeur inconnue : Auto.
       fiestaMode: enumFromJson(FiestaMode.values, json['fiestaMode']) ??
           FiestaMode.auto,
+      // Clé absente (réglages d'avant) ou mal typée : Classique.
+      fiestaEnabled: json['fiestaEnabled'] == true,
     );
   }
 }

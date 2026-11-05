@@ -142,7 +142,7 @@ void main() {
                 mode: ModifierMode.always,
               ),
             },
-            trailingBoost: true,
+            boostCount: 1,
             drawCount: 2,
           ),
           active: const [instance],
@@ -211,19 +211,29 @@ void main() {
       final json = GameState(gameId: 'abc', fiesta: fiestaState()).toJson();
       final rules = (json['fiesta'] as Map<String, dynamic>)['rules']
           as Map<String, dynamic>;
-      rules.remove('trailingBoost');
+      rules.remove('boostCount');
       rules['fromTheFuture'] = 42;
 
       final restored = GameState.fromJson(json);
 
       expect(restored.fiesta, isNotNull);
-      expect(restored.fiesta!.rules.trailingBoost, isFalse);
+      expect(restored.fiesta!.rules.boostCount, 0);
       expect(restored.fiesta!.rules.drawCount, 2,
           reason: 'les présents restent');
 
+      rules['boostCount'] = 'oui';
+      expect(GameState.fromJson(json).fiesta, isNull);
+      rules['boostCount'] = 4;
+      expect(GameState.fromJson(json).fiesta, isNull, reason: 'hors bornes');
+      rules.remove('boostCount');
+      rules['trailingBoost'] = true;
+      expect(GameState.fromJson(json).fiesta!.rules.boostCount, 1,
+          reason: 'l\'ancien booléen, à la place de `boostCount` absent');
       rules['trailingBoost'] = 'oui';
       expect(GameState.fromJson(json).fiesta, isNull);
-      rules['trailingBoost'] = true;
+      rules['boostCount'] = 2;
+      expect(GameState.fromJson(json).fiesta!.rules.boostCount, 2,
+          reason: '`boostCount` présent : l\'ancien booléen ne compte plus');
       rules['drawCount'] = 9;
       expect(GameState.fromJson(json).fiesta, isNull, reason: 'hors bornes');
     });

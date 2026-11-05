@@ -52,7 +52,7 @@ void main() {
     await givenPrefs();
     final rules = defaultEnsembleRules('Soirée chez Max').copyWith(
       drawCount: 2,
-      trailingBoost: false,
+      boostCount: 0,
     );
 
     final created = (await service.create(rules))!;
@@ -80,7 +80,7 @@ void main() {
     expect(rules.modifiers['no_pass']!.rounds, {1, 2});
     expect(rules.modifiers['free_pass']!.charges, 2);
     expect(rules.modifiers['free_pass']!.mode, ModifierMode.cartridge);
-    expect([rules.drawCount, rules.trailingBoost], [2, true]);
+    expect([rules.drawCount, rules.boostCount], [2, 1]);
   });
 
   test(
@@ -108,9 +108,9 @@ void main() {
   });
 
   test(
-      'ensemble à plusieurs mimes actifs (blob non écrit par l\'éditeur) : '
-      'relu sans planter, un seul mime gardé : le 1er « Toujours » dans '
-      'l\'ordre du catalogue', () async {
+      'ensemble à plusieurs mimes actifs : relu tel quel, plusieurs mimes en '
+      'tirage ou cartouche sont permis ; un « Toujours » avec un autre mime '
+      'est refusé à l\'enregistrement', () async {
     String mod(String mode) => '{"active":true,"rounds":[3],"mode":"$mode"}';
     await givenPrefs({
       key: '{"schemaVersion":1,"data":{"ensembles":[{"id":"e1","rules":'
@@ -120,21 +120,9 @@ void main() {
     });
 
     final rules = (await service.load()).ensembles.single.rules;
-    // Les « Toujours » passent avant le tirage, dans l'ordre du catalogue :
-    // `mime_eyes_closed` d'abord, puis « Dessiner » et `mime_no_arms` (tiré)
-    // seraient refusés comme incompatibles.
-    expect(
-      {for (final e in rules.modifiers.entries) e.key: e.value.active},
-      {
-        'draw': false,
-        'mime_eyes_closed': true,
-        'mime_no_arms': false,
-        'no_pass': true,
-      },
-    );
-    expect(rules.modifiers['draw']!.mode, ModifierMode.always,
-        reason: 'réglages conservés, seul `active` change');
-    expect(validateEnsemble(rules), isEmpty);
+    expect(rules.modifiers.values.every((s) => s.active), isTrue);
+    expect(rules.modifiers['draw']!.mode, ModifierMode.always);
+    expect(validateEnsemble(rules), isNotEmpty);
   });
 
   test(
@@ -142,7 +130,7 @@ void main() {
       'ensembles), et l\'absence se relit comme le défaut', () async {
     final fiesta = FiestaState(rules: FiestaRules(mode: FiestaMode.auto));
     const frozenFiesta = '{"rules":{"format":3,"mode":"auto",'
-        '"modifiers":{},"drawCount":1,"trailingBoost":false}}';
+        '"modifiers":{},"drawCount":1,"boostCount":0}}';
     expect(jsonEncode(fiesta.toJson()), frozenFiesta);
     final relu = FiestaState.tryFromJson(jsonDecode(frozenFiesta))!;
     expect([relu.active, relu.turn, relu.earned, relu.rules.ensembleName],

@@ -32,17 +32,20 @@ void main() {
           15);
     });
 
-    test(
-        'continuation : ses secondes exactes, sans aucun modificateur de temps',
+    test('continuation : ses secondes, + 10 s allumés ; le −10 s ne compte pas',
         () {
-      final time = composeTurnSeconds(
+      final carried = composeTurnSeconds(
+          baseSeconds: 30, carriedSeconds: 7, minus10sCount: 1);
+      expect(carried.total, 7, reason: 'sous le plancher aussi : exact');
+      expect(carried.lines.single.label, 'Temps reporté');
+
+      final boosted = composeTurnSeconds(
           baseSeconds: 30,
           carriedSeconds: 7,
           plus10sCount: 1,
           minus10sCount: 1);
-      expect(time.total, 7);
-      // Sous le plancher aussi : le temps reporté reste exact.
-      expect(time.lines.single.label, 'Temps reporté');
+      expect(boosted.total, 17);
+      expect(boosted.lines.map((l) => l.seconds), [7, 10]);
     });
   });
 }

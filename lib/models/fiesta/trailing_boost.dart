@@ -71,9 +71,10 @@ List<ModifierDef> boostPool({
           def,
     ];
 
-/// Cartouches gagnées après la manche [finishedRound] : exactement UNE au
-/// hasard par équipe non en tête, si `rules.trailingBoost`. Égalité générale
-/// ou vivier vide : rien. Le tirage d'une équipe ne dépend pas des autres.
+/// Cartouches gagnées après la manche [finishedRound] : `rules.boostCount` au
+/// hasard par équipe non en tête, DISTINCTES (le vivier mélangé par la graine,
+/// puis ses premières) ; moins si le vivier est plus petit. Égalité générale ou
+/// vivier vide : rien. Le tirage d'une équipe ne dépend pas des autres.
 List<EarnedCartridge> trailingBoostGifts({
   required FiestaRules rules,
   required String gameId,
@@ -82,7 +83,7 @@ List<EarnedCartridge> trailingBoostGifts({
   required List<ModifierInstance> roundRules,
   required Set<String> blockableTeamIds,
 }) {
-  if (!rules.trailingBoost) return const [];
+  if (rules.boostCount == 0) return const [];
   final next = finishedRound + 1;
   return [
     for (final teamId in standings.choosingOrder)
@@ -93,13 +94,10 @@ List<EarnedCartridge> trailingBoostGifts({
         teamId: teamId,
         blockableTeamIds: blockableTeamIds,
       )
-          case final pool when pool.isNotEmpty)
-        EarnedCartridge(
-          catalogId: pool[Random(boostSeed(gameId, finishedRound, teamId))
-                  .nextInt(pool.length)]
-              .id,
-          teamId: teamId,
-          round: next,
-        ),
+          case final pool)
+        for (final def in (pool
+              ..shuffle(Random(boostSeed(gameId, finishedRound, teamId))))
+            .take(rules.boostCount))
+          EarnedCartridge(catalogId: def.id, teamId: teamId, round: next),
   ];
 }

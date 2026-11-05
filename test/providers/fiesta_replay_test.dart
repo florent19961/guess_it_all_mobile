@@ -59,9 +59,10 @@ void main() {
     expect(reloaded.isFiesta, isTrue);
     expect(reloaded.pendingFiesta?.mode, FiestaMode.auto);
 
-    // « Nouvelle partie » repart d'un choix vide.
+    // « Nouvelle partie » retrouve le dernier choix, sans les règles gelées.
     await reloaded.startNewGame();
-    expect(reloaded.pendingFiesta, isNull);
+    expect(reloaded.pendingFiesta!.toJson(),
+        FiestaRules(mode: FiestaMode.auto).toJson());
 
     // Partie Classique lancée alors qu'une config traîne en attente : Rejouer
     // suit la partie jouée, pas l'attente.

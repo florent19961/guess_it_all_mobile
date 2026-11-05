@@ -107,11 +107,12 @@ class FiestaEnsembleViewScreen extends StatelessWidget {
                                 _Row(def, _chargesLabel(def, s.charges)),
                             ],
                           ),
-                        if (rules.trailingBoost)
-                          const _Section(
+                        if (rules.boostCount > 0)
+                          _Section(
                             title: 'Coup de pouce à l\'équipe menée',
-                            text: 'Après les manches 1 et 2, chaque équipe non '
-                                'en tête reçoit une cartouche au hasard.',
+                            text: '${rules.boostCount} cartouche'
+                                '${rules.boostCount > 1 ? 's' : ''} au hasard '
+                                'après chaque manche',
                           ),
                       ],
                     ),

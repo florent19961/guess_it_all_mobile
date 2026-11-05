@@ -198,7 +198,7 @@ List<CoachStep> fiestaEditorHelp({
         title: 'Règles de la partie',
         text: 'Combien de modificateurs sont tirés à chaque manche, et le coup '
             'de pouce : après les manches 1 et 2, chaque équipe menée reçoit '
-            'une cartouche au hasard.',
+            'ce nombre de cartouches au hasard.',
       ),
       CoachStep(
         target: modifiers,

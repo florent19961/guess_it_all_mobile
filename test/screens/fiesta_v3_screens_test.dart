@@ -4,11 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/app.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
 import 'package:guess_it_all_mobile/screens/fiesta_ensemble_editor_screen.dart';
 import 'package:guess_it_all_mobile/screens/fiesta_ensembles_screen.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
 import 'package:guess_it_all_mobile/widgets/fiesta/modifier_badge.dart';
+import 'package:guess_it_all_mobile/widgets/fiesta/turn_cartridges.dart';
 import 'package:provider/provider.dart';
 
 import '../helpers/test_prefs.dart';
@@ -159,6 +161,105 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
   });
 
+  group('Explosif en manche 3 à 360 × 640', () {
+    /// La zone tient dans son `ClipRect`, sans rien couper, et le bouton reste
+    /// en dessous.
+    void expectFits(WidgetTester tester, GameProvider provider) {
+      final bonus = provider.reserve
+          .where((c) => c.nature == ModifierNature.bonus)
+          .length;
+      expect((provider.reserve.length - bonus, bonus), (11, 4));
+      final help = find.text('Touche : activer · Appui long : explication');
+      final zone = find.byType(FiestaTurnZone);
+      expect(tester.getBottomLeft(help).dy,
+          lessThanOrEqualTo(tester.getBottomLeft(zone).dy));
+      expect(
+          tester.getBottomLeft(zone).dy,
+          lessThanOrEqualTo(
+              tester.getTopLeft(find.text('Commencer le tour')).dy));
+      expect(tester.takeException(), isNull);
+    }
+
+    testWidgets('11 malus + 4 bonus tiennent, continuation et vrai tour',
+        (tester) async {
+      final explosive =
+          kProvidedEnsembles.firstWhere((e) => e.id == 'provided_explosive');
+      final provider = await pumpGame(tester, explosive.rules);
+      for (var round = 1; round < 3; round++) {
+        finishRound(provider);
+        provider.nextRound();
+      }
+      await settle(tester);
+      expect(provider.isContinuation, isTrue);
+      expectFits(tester, provider);
+
+      // Bonus allumé : il a quitté la réserve, « Ce tour » se remplit.
+      provider.toggleBonus('plus_10s');
+      await settle(tester);
+      expectFits(tester, provider);
+      expect(find.text('Temps bonus : ${provider.turnTime.total}s'),
+          findsOneWidget);
+      provider.toggleBonus('plus_10s');
+
+      // Continuation chargée : 2 bonus allumés, 3 malus envoyés. L'aide cède sa
+      // place, rien n'est coupé.
+      provider.toggleBonus('plus_10s');
+      provider.toggleBonus('double_points');
+      final other =
+          provider.teams.singleWhere((t) => t != provider.getCurrentTeam());
+      for (final id in ['no_pass', 'reversed', 'mime_no_arms']) {
+        expect(provider.inflictMalus(id, other.id), isNull);
+      }
+      await settle(tester);
+      expect(tester.takeException(), isNull);
+      expect(find.text('Touche : activer · Appui long : explication'),
+          findsNothing);
+      expect(
+          tester.getBottomLeft(find.textContaining('→').first).dy,
+          lessThanOrEqualTo(
+              tester.getBottomLeft(find.byType(FiestaTurnZone)).dy));
+      for (final m in List.of(provider.sentThisTurn)) {
+        provider.cancelSent(m);
+      }
+      provider.toggleBonus('plus_10s');
+      provider.toggleBonus('double_points');
+
+      provider.startTurn();
+      provider.startTurnTimer();
+      provider.endTurn();
+      provider.savePreValidationState(const []);
+      provider.validateWords(const []);
+      await settle(tester);
+      expect(provider.isContinuation, isFalse);
+      expectFits(tester, provider);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 1));
+    });
+
+    testWidgets(
+        'sur une continuation, un bonus déjà en cours ne se rend pas à la '
+        'réserve au toucher', (tester) async {
+      final explosive =
+          kProvidedEnsembles.firstWhere((e) => e.id == 'provided_explosive');
+      final provider = await pumpGame(tester, explosive.rules);
+      provider.toggleBonus('double_points');
+      finishRound(provider);
+      provider.nextRound();
+      await settle(tester);
+      expect(provider.isDoublePointsOn, isTrue);
+
+      final circles = find.descendant(
+          of: find.byType(FiestaTurnZone),
+          matching: find.text(modifierIcon('double_points')));
+      await tester.tap(circles.first);
+      await settle(tester);
+      expect(provider.isDoublePointsOn, isTrue);
+      expect(provider.game.fiesta!.chargesUsed, hasLength(1));
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 1));
+    });
+  });
+
   testWidgets(
       'Tour : le +10 s allumé a son badge sous le chrono, et le chrono '
       'part de 40 s', (tester) async {
@@ -229,6 +330,42 @@ void main() {
     });
 
     testWidgets(
+        'allumer un mime n\'éteint pas les autres ; le sous-titre ne parle plus '
+        'd\'exclusivité ; un Toujours avec un autre mime est refusé en les '
+        'nommant', (tester) async {
+      await pumpEditor(tester);
+      await tester.enterText(find.byType(TextField), 'Soirée');
+      await tester.pump();
+      await scrollToText(tester, 'MIMES');
+      expect(find.textContaining('UN SEUL'), findsNothing);
+
+      await scrollToText(tester, 'Mime sans les poings');
+      await tester.tap(find.descendant(
+          of: rowOf('Mime sans les poings'), matching: find.byType(Switch)));
+      await tester.pump();
+      await scrollToText(tester, 'Mime sans les bras');
+      expect(
+          tester
+              .widget<Switch>(find.descendant(
+                  of: rowOf('Mime sans les bras'),
+                  matching: find.byType(Switch)))
+              .value,
+          isTrue);
+
+      await tester.tap(find.descendant(
+          of: rowOf('Mime sans les bras'), matching: find.text('Régler')));
+      await tester.pump();
+      await tester.tap(find.text('Toujours'));
+      await tester.pump();
+      await tester.tap(find.text('Enregistrer'));
+      await settle(tester);
+      expect(
+          find.text('Mime sans les bras est « Toujours » : retire Mime sans '
+              'les poings ou change son mode.'),
+          findsOneWidget);
+    });
+
+    testWidgets(
         'cartouche à 0 sans coup de pouce : refusée avec un message clair',
         (tester) async {
       await pumpEditor(tester);
@@ -245,13 +382,19 @@ void main() {
       await tester.pump();
       expect(find.text('Gagnées seulement'), findsOneWidget);
 
-      // Le premier interrupteur de l'écran : le coup de pouce.
+      // Le compteur du coup de pouce, ramené à 0.
       tester
           .state<ScrollableState>(find.byType(Scrollable).first)
           .position
           .jumpTo(0);
       await tester.pump();
-      await tester.tap(find.byType(Switch).first);
+      final boost = find
+          .ancestor(
+              of: find.text('Coup de pouce à l\'équipe menée'),
+              matching: find.byType(Row))
+          .first;
+      await tester
+          .tap(find.descendant(of: boost, matching: find.byTooltip('Moins')));
       await tester.pump();
       await tester.tap(find.text('Enregistrer'));
       await settle(tester);
@@ -280,10 +423,12 @@ void main() {
     await tester.tap(find.text('Voir').first); // Fiesta classique
     await settle(tester);
     expect(find.text('Fiesta classique'), findsOneWidget);
-    expect(find.text('TOUJOURS'), findsOneWidget);
+    expect(find.text('TOUJOURS'), findsNothing, reason: 'tout au tirage');
     expect(find.text('AU TIRAGE (1 PAR MANCHE)'), findsOneWidget);
     expect(find.text('CARTOUCHES POUR LA PARTIE'), findsOneWidget);
     expect(find.text('COUP DE POUCE À L\'ÉQUIPE MENÉE'), findsOneWidget);
+    expect(
+        find.text('1 cartouche au hasard après chaque manche'), findsOneWidget);
     expect(find.text('Bonus de 10 s'), findsOneWidget);
     expect(find.text('Gagnées seulement'), findsWidgets);
     expect(find.text('Modifier'), findsNothing);

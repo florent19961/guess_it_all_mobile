@@ -194,7 +194,7 @@ class _GameScreenState extends State<GameScreen> {
                               color: AppColors.warning, size: 18),
                           const SizedBox(width: 8),
                           Text(
-                            'Temps bonus : ${provider.game.turnBonusTime}s',
+                            'Temps bonus : ${provider.turnTime.total}s',
                             style: const TextStyle(
                               fontFamily: 'Poppins',
                               fontSize: 14,

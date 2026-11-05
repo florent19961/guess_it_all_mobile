@@ -36,7 +36,7 @@ FiestaRules cartridges(List<String> ids,
     FiestaRules(
       mode: FiestaMode.custom,
       drawCount: 0,
-      trailingBoost: boost,
+      boostCount: boost ? 1 : 0,
       modifiers: {for (final id in ids) id: cartridge(charges)},
     );
 
@@ -230,8 +230,8 @@ void main() {
 
   test(
       'continuation : les règles de N+1 s\'appliquent tout de suite, le temps '
-      'reporté reste exact, le ×2 dépensé vit jusqu\'à la fin du tour, rien ne '
-      's\'y allume', () async {
+      'reporté reste exact, le ×2 dépensé vit jusqu\'à la fin du tour et ne se '
+      'rallume pas, le +10 s s\'y ajoute', () async {
     final p = await givenProvider(['Ana', 'Bob']);
     await p.startGame(
       fiesta: FiestaRules(
@@ -267,13 +267,17 @@ void main() {
     expect(p.isWordReversed, isTrue);
     expect(p.passBlocked, isFalse);
     expect(p.currentTeamModifiers.map((m) => m.catalogId), ['reversed']);
-    // Le temps n'a pas bougé, le ×2 dépensé tient, le +10 s ne s'allume pas.
+    // Le temps n'a pas bougé, le ×2 dépensé tient, le +10 s s'allume.
     expect(p.turnTime.total, carried);
     expect(p.isDoublePointsOn, isTrue);
-    expect(p.reserve, isEmpty);
+    expect(
+        p.reserve
+            .firstWhere((c) => c.catalogId == 'double_points')
+            .blockedReason,
+        'déjà en cours ce tour');
     p.toggleBonus('plus_10s');
-    expect(p.turnTime.total, carried);
-    expect(p.game.fiesta!.turn.charges.containsKey('plus_10s'), isFalse);
+    expect(p.turnTime.total, carried + 10);
+    p.toggleBonus('plus_10s');
 
     // Même lecture après un kill.
     final reloaded = await reload();
