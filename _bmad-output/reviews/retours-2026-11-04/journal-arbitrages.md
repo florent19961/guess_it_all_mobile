@@ -51,3 +51,13 @@ date · story · question · choix · raison · état
 - 2026-11-05 · fiesta-v3.1 (#43) · au-delà de 3 malus envoyés sur une continuation à 360×640, le bas de la zone est coupé · cas extrême accepté · à valider
 - 2026-11-05 · fiesta-v3.1 (#43) · rejouer une archive dont l'ensemble a été modifié ou supprimé présélectionne le dernier ensemble utilisé · limite existante, hors périmètre · à valider
 - 2026-11-05 · fiesta-v3.1 (#43) · merge sans 2ᵉ passage Codex, delta r2 relu par l'orchestrateur · correctif testé rouge puis vert, suite verte · appliqué
+
+## 2026-11-05 : Fiesta v4 (PR #44, #45, #46, mergées, non publiées)
+
+- Lot 1 (#45) : éditeur en 3 menus, format 4, fin du mode Auto, 8 ensembles, équilibrage, blocages nommés, piège d'Interdit de faire deviner, animation entre les manches.
+- Lot 2A (#44) : révélation des scores, composition maison (`scripts/render_reveal_music.py`). La musique du reel n'a jamais été commitée : source inconnue, Florent a choisi le son maison.
+- Lot 2B (#46) : 5 défis surprises entre les manches.
+- Décisions de Florent : jamais d'égalité, l'équipe qui a commencé le plus tard gagne (anciennes archives inchangées) ; podium à 360 px laissé tel quel ; mot du téléphone arabe affiché.
+- Arbitrage : le dernier ensemble joué reste présélectionné plutôt que Fiesta classique, pour respecter le cache des réglages.
+- Rejeté de la revue Codex : BLOCKER de compilation de #44 (faux, `flutter analyze` propre) ; révélation rejouée une fois si l'app est tuée dans la fenêtre d'écriture.
+- Restent : recette sur appareil, licences Pixabay à vérifier avant publication, build store sur go de Florent, icône Play à téléverser à la main.
