@@ -56,7 +56,8 @@ class ModifierSetting {
         'charges': charges,
       };
 
-  /// `null` si illisible (champ manquant ou mal typé, manche hors 1-3).
+  /// `null` si illisible (champ manquant ou mal typé, manche hors 1-3, charges
+  /// négatives ; la borne haute dépend de l'id : `FiestaRules.tryFromJson`).
   static ModifierSetting? tryFromJson(Map<String, dynamic> json) {
     final active = json['active'];
     final rawRounds = json['rounds'];
@@ -97,6 +98,10 @@ T? readOr<T extends Object>(Map<String, dynamic> json, String key, T fallback) {
 
 /// Borne des règles de la partie (éditeur et relecture).
 const int kMaxDrawCount = 5;
+
+/// Cartouches par équipe au plus pour le modificateur [id] (éditeur et
+/// relecture) : la Passe gratuite va plus loin, chacune ne vaut qu'un tour.
+int maxCartridges(String id) => id == 'free_pass' ? 5 : 3;
 
 /// La configuration Fiesta d'une partie, GELÉE dans `GameState` au lancement.
 ///
@@ -195,7 +200,9 @@ class FiestaRules {
       if (id is! String || modifierById(id) == null || raw is! Map) continue;
       final setting =
           ModifierSetting.tryFromJson(Map<String, dynamic>.from(raw));
-      if (setting != null) modifiers[id] = setting;
+      if (setting != null && setting.charges <= maxCartridges(id)) {
+        modifiers[id] = setting;
+      }
     }
 
     return FiestaRules(

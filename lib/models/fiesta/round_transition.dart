@@ -76,7 +76,9 @@ RoundTransitionPlan? planRoundTransition({
 /// tour de la cible (quelle que soit la manche d'envoi). Un malus interdit
 /// dans la manche, déjà en jeu (même id) ou incompatible avec une règle de
 /// manche ou un malus déjà retenu pour ce tour est écarté : sans effet, il part
-/// à la fin de ce tour (`_fiestaAfterTurn`).
+/// à la fin de ce tour (`_fiestaAfterTurn`). En continuation, un malus reçu est
+/// jugé contre la manche courante : « Autre langue » reçu en M2 tombe en M3, où
+/// on mime.
 List<ModifierInstance> modifiersForTurn(
   List<ModifierInstance> active, {
   required String teamId,

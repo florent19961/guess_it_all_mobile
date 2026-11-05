@@ -210,4 +210,35 @@ void main() {
     playTurn(p);
     expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null), isEmpty);
   });
+
+  test(
+      'Continuation : un malus reçu est jugé contre la manche courante. '
+      '« Autre langue » reçu en M2 pèse sur la fin de M2, tombe dans la '
+      'continuation en M3 (on y mime), puis part à la fin de ce tour',
+      () async {
+    final p = await givenProvider(['Ana', 'Bob'], wordsEach: 1);
+    await p.startGame(fiesta: stock(['other_language']));
+    final a = playTurn(p, 99); // a finit M1
+    p.nextRound();
+    expect(playTurn(p), a); // continuation de a en M2
+    final b = p.getCurrentTeam()!.id;
+
+    expect(p.inflictMalus('other_language', a), isNull);
+    expect(playTurn(p), b);
+
+    expect(p.getCurrentTeam()!.id, a);
+    expect(received(p), ['other_language<$b']);
+    playTurn(p, 99); // a finit M2 sous le malus
+    expect(
+        p.game.fiesta!.active.where((m) => m.fromTeamId != null), hasLength(1),
+        reason: 'la continuation est le même tour');
+    p.nextRound();
+
+    expect(p.game.currentRound, 3);
+    expect(p.getCurrentTeam()!.id, a);
+    expect(p.isContinuation, isTrue);
+    expect(p.receivedThisTurn, isEmpty);
+    playTurn(p);
+    expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null), isEmpty);
+  });
 }

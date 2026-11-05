@@ -279,6 +279,15 @@ void main() {
       }
     });
 
+    test('tous dans les bornes de l\'éditeur', () {
+      for (final e in kProvidedEnsembles) {
+        for (final m in e.rules.modifiers.entries) {
+          expect(m.value.charges, lessThanOrEqualTo(maxCartridges(m.key)),
+              reason: '${e.name} / ${m.key}');
+        }
+      }
+    });
+
     test('nouvel ensemble : cartouches à 1, Passe gratuite à 2, coup de pouce',
         () {
       final r = defaultEnsembleRules('X');

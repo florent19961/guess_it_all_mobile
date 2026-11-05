@@ -8,6 +8,7 @@ import 'package:guess_it_all_mobile/providers/game_provider.dart';
 import 'package:guess_it_all_mobile/screens/fiesta_ensemble_editor_screen.dart';
 import 'package:guess_it_all_mobile/screens/fiesta_ensembles_screen.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
+import 'package:guess_it_all_mobile/widgets/fiesta/modifier_badge.dart';
 import 'package:provider/provider.dart';
 
 import '../helpers/test_prefs.dart';
@@ -156,6 +157,36 @@ void main() {
     expect(find.text('Compris'), findsNothing);
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 5));
+  });
+
+  testWidgets(
+      'Tour : le +10 s allumé a son badge sous le chrono, et le chrono '
+      'part de 40 s', (tester) async {
+    final provider = await pumpGame(
+      tester,
+      FiestaRules(mode: FiestaMode.custom, drawCount: 0, modifiers: {
+        'plus_10s': ModifierSetting(
+            active: true,
+            rounds: const {1, 2, 3},
+            mode: ModifierMode.cartridge),
+      }),
+    );
+    provider.toggleBonus('plus_10s');
+    provider.startTurn();
+    provider.startTurnTimer();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(provider.game.currentScreen, AppConstants.screenTurn);
+    expect(provider.game.turnAllottedSeconds, 40);
+    final badge = find.byType(ModifierBadge);
+    expect(badge, findsOneWidget);
+    expect(tester.widget<ModifierBadge>(badge).label, 'Bonus de 10 s');
+    expect(tester.widget<ModifierBadge>(badge).icon, '+10');
+    expect(tester.getTopLeft(badge).dy,
+        greaterThan(tester.getBottomLeft(find.text('40s')).dy));
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 1));
   });
 
   group('Éditeur', () {

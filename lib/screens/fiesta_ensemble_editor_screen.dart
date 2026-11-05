@@ -408,7 +408,7 @@ class _FiestaEnsembleEditorScreenState
   /// Compteur de cartouches pour la partie (0 = seulement par le coup de
   /// pouce).
   Widget _chargesLine(ModifierDef def, ModifierSetting s) {
-    final maxCharges = def.id == 'free_pass' ? 5 : 3;
+    final maxCharges = maxCartridges(def.id);
     return _line(
       'Cartouches pour la partie',
       _Stepper(

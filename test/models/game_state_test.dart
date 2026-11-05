@@ -322,6 +322,31 @@ void main() {
     });
 
     test(
+        'cartouches hors des bornes de l\'éditeur : réglage illisible, ignoré '
+        'seul', () {
+      Map<String, dynamic> setting(int charges) => {
+            'active': true,
+            'rounds': [1],
+            'mode': 'cartridge',
+            'charges': charges,
+          };
+      final rules = FiestaRules.tryFromJson({
+        'format': FiestaRules.format,
+        'mode': 'custom',
+        'modifiers': {
+          'free_pass': setting(maxCartridges('free_pass')),
+          'plus_10s': setting(maxCartridges('plus_10s')),
+          'double_points': setting(maxCartridges('double_points') + 1),
+          'two_words': setting(-1),
+          'minus_10s': setting(0),
+        },
+      })!;
+      expect(rules.modifiers.keys, ['free_pass', 'plus_10s', 'minus_10s']);
+      expect(rules.modifiers['free_pass']!.charges, 5);
+      expect(rules.modifiers['plus_10s']!.charges, 3);
+    });
+
+    test(
         'un `fiesta` qui n\'est pas un objet, ou aux règles illisibles, '
         'donne une partie Classique', () {
       final base = GameState(gameId: 'abc').toJson();
