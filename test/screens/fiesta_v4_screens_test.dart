@@ -606,7 +606,7 @@ void main() {
     ));
     await settle(tester);
 
-    await tester.tap(find.text('Voir').first); // Fiesta classique
+    await tester.tap(find.byTooltip('Voir').first); // Fiesta classique
     await settle(tester);
     expect(find.text('Fiesta classique'), findsOneWidget);
     expect(find.text('TOUJOURS'), findsNothing, reason: 'tout en aléatoire');
@@ -639,7 +639,7 @@ void main() {
     await settle(tester);
 
     await tester.tap(find
-        .text('Voir')
+        .byTooltip('Voir')
         .at(kProvidedEnsembles.indexWhere((e) => e.name == 'Droit au but')));
     await settle(tester);
     expect(find.text('TOUJOURS'), findsOneWidget);
@@ -652,7 +652,7 @@ void main() {
     await settle(tester);
 
     await tester.tap(find
-        .text('Voir')
+        .byTooltip('Voir')
         .at(kProvidedEnsembles.indexWhere((e) => e.name == 'Bilingue')));
     await settle(tester);
     expect(find.text('Manches 1 et 2 seulement'), findsOneWidget);

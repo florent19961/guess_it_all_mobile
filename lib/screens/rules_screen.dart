@@ -125,7 +125,7 @@ class RulesScreen extends StatelessWidget {
                         'Un mot passé reste dans la manche et peut être deviné plus tard, '
                         'même s\'il revient à un autre joueur ou à un autre moment.\n\n'
                         'Exemple : Vous passez "Hippopotame" car trop difficile. Il reviendra '
-                        'plus tard dans votre tour ou dans celui d\'un autre joueur de votre équipe.',
+                        'plus tard dans votre tour ou dans celui d\'un autre joueur.',
                     icon: '🔄',
                   ),
                   _buildRuleSection(

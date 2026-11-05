@@ -10,6 +10,7 @@ import '../../models/team.dart';
 import '../../providers/game_provider.dart';
 import '../../theme/app_theme.dart';
 import '../common/app_confirm_dialog.dart';
+import '../help/help_content.dart';
 import 'modifier_badge.dart';
 
 /// Écran avant le tour, Fiesta v2 (maquette `cartouches` B, variante a) :
@@ -19,13 +20,11 @@ import 'modifier_badge.dart';
 /// place ([_fit]) ; un cas extrême qui ne tient toujours pas défile.
 class FiestaTurnZone extends StatefulWidget {
   final GameProvider provider;
-  final GlobalKey thisTurnKey;
-  final GlobalKey reserveKey;
+  final FiestaPreTurnKeys helpKeys;
 
   const FiestaTurnZone({
     required this.provider,
-    required this.thisTurnKey,
-    required this.reserveKey,
+    required this.helpKeys,
     super.key,
   });
 
@@ -371,6 +370,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
     final malus =
         reserve.where((c) => c.nature == ModifierNature.malus).toList();
     final blockedGuesser = _p.blockedGuesser;
+    final firstUnusable = reserve.where((c) => !c.usable).firstOrNull;
 
     return LayoutBuilder(builder: (context, box) {
       final thisTurnCount = rules.length + received.length + armed.length;
@@ -384,8 +384,10 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
         blockedLine: blockedGuesser != null,
       );
 
+      final keys = widget.helpKeys;
       final thisTurn = Container(
-        key: widget.thisTurnKey,
+        // Pas de clé sur « Rien pour l'instant » : pas d'étape d'aide.
+        key: thisTurnCount > 0 || blockedGuesser != null ? keys.thisTurn : null,
         padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
         decoration: BoxDecoration(
           color: _ink.withValues(alpha: 0.6),
@@ -414,16 +416,19 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                 children: [
                   for (final m in rules)
                     _slot(
+                        key: m == rules.first ? keys.firstRule : null,
                         _Circle(id: m.catalogId, kind: _Kind.rule, size: size),
                         onLongPress: () => _explain(m.catalogId, _Kind.rule)),
                   for (final m in received)
                     _slot(
+                        key: m == received.first ? keys.firstReceived : null,
                         _Circle(
                             id: m.catalogId, kind: _Kind.received, size: size),
                         onLongPress: () => _explain(m.catalogId, _Kind.received,
                             from: _p.getTeamById(m.fromTeamId!)?.name)),
                   for (final id in armed)
                     _slot(
+                      key: id == armed.first ? keys.firstArmed : null,
                       KeyedSubtree(
                         key: _keyOf('on-$id'),
                         child: Opacity(
@@ -441,6 +446,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
             if (blockedGuesser != null) ...[
               const SizedBox(height: 8),
               Text('${blockedGuesser.name} ne répond pas ce tour.',
+                  key: keys.blockedGuesser,
                   style: AppTextStyles.bodySmall.copyWith(
                       fontSize: 12, height: 1.3, color: AppColors.malus)),
             ],
@@ -450,7 +456,11 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
 
       if (reserve.isEmpty) return SingleChildScrollView(child: thisTurn);
 
-      Widget column(String title, List<Cartridge> items, Color color) => Column(
+      Widget column(String title, List<Cartridge> items, Color color,
+              GlobalKey key) =>
+          Column(
+            // Colonne vide (titre seul) : pas de clé, pas d'étape d'aide.
+            key: items.isEmpty ? null : key,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -473,6 +483,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                 children: [
                   for (final c in items)
                     _slot(
+                      key: c == firstUnusable ? keys.firstUnusable : null,
                       KeyedSubtree(
                         key: _keyOf('res-${c.catalogId}'),
                         child: Opacity(
@@ -500,7 +511,6 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
           thisTurn,
           const SizedBox(height: 10),
           Column(
-            key: widget.reserveKey,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const _ZoneTitle('VOTRE RÉSERVE'),
@@ -510,9 +520,12 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                 children: [
                   SizedBox(
                       width: bonusWidth,
-                      child: column('BONUS', bonus, AppColors.success)),
+                      child: column('BONUS', bonus, AppColors.success,
+                          keys.reserveBonus)),
                   const SizedBox(width: 12),
-                  Expanded(child: column('MALUS', malus, AppColors.malus)),
+                  Expanded(
+                      child: column(
+                          'MALUS', malus, AppColors.malus, keys.reserveMalus)),
                 ],
               ),
             ],
@@ -520,6 +533,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
           if (sent.isNotEmpty) ...[
             const SizedBox(height: 6),
             Wrap(
+              key: keys.sent,
               spacing: _gap,
               runSpacing: 4,
               children: [for (final m in sent) _sentChip(m)],
@@ -611,9 +625,11 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
 
   /// Un cercle de « Ce tour » (marge entre cercles) ou de la réserve.
   Widget _slot(Widget circle,
-          {void Function(BuildContext circle)? onTap,
+          {Key? key,
+          void Function(BuildContext circle)? onTap,
           required VoidCallback onLongPress}) =>
       Builder(
+        key: key,
         builder: (circleContext) => Semantics(
           button: onTap != null,
           child: GestureDetector(

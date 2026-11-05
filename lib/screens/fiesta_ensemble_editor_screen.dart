@@ -37,7 +37,7 @@ class EnsembleDraftKept extends EnsembleEditorResult {
 }
 
 /// « Nouvel ensemble » / « Modifier » :
-/// écran poussé depuis « Fiesta personnalisée ».
+/// écran poussé depuis la liste des ensembles.
 ///
 /// - [initial] nul = création, sinon modification sur place (renommage
 ///   compris). [draft] : brouillon à reprendre (réglages en cours).
@@ -72,6 +72,9 @@ class _FiestaEnsembleEditorScreenState
   final _introKey = GlobalKey();
   final _tabsKey = GlobalKey();
   final _menuKey = GlobalKey();
+  final _noDrawKey = GlobalKey();
+  final _lockedKey = GlobalKey();
+  final _challengesKey = GlobalKey();
   final _saveKey = GlobalKey();
 
   late FiestaRules _rules;
@@ -345,7 +348,12 @@ class _FiestaEnsembleEditorScreenState
                   fiestaEditorHelp(
                     tabs: _tabsKey,
                     menu: _menuKey,
+                    noDraw: _noDrawKey,
+                    locked: _lockedKey,
+                    challenges: _challengesKey,
                     save: _saveKey,
+                    tab: _tab,
+                    hasCounts: EnsembleMenu.values.any((m) => _count(m) > 0),
                   ),
                 ),
               ),
@@ -457,12 +465,24 @@ class _FiestaEnsembleEditorScreenState
           ? 'Manches 1 et 2 seulement'
           : null;
 
+  /// La première ligne verrouillée de [menu], où pointe l'aide.
+  String? _firstLockedId(EnsembleMenu menu) => [
+        _Group.malus,
+        _Group.mimes,
+        if (menu == EnsembleMenu.cartridge) _Group.bonus,
+      ]
+          .expand((group) => _available(group, menu))
+          .where((def) => _rules.lockReason(def.id, menu) != null)
+          .firstOrNull
+          ?.id;
+
   /// Ligne d'un modificateur : verrouillée, elle dit pourquoi.
   Widget _modifierRow(ModifierDef def, EnsembleMenu menu, Widget control) {
     final lock = _rules.lockReason(def.id, menu);
     final color = modifierColor(def.nature);
     final sub = lock ?? _roundsLabel(def);
     return Opacity(
+      key: def.id == _firstLockedId(menu) ? _lockedKey : null,
       opacity: lock == null ? 1 : 0.55,
       child: Container(
         margin: const EdgeInsets.only(bottom: 6),
@@ -687,6 +707,7 @@ class _FiestaEnsembleEditorScreenState
             ),
             if (missing.isNotEmpty)
               Padding(
+                key: _noDrawKey,
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
                   'Rien à tirer en manche ${missing.join(' et ')}.',
@@ -774,6 +795,7 @@ class _FiestaEnsembleEditorScreenState
           if (_moreOpen) ...[
             const SizedBox(height: 10),
             _Frame(
+              key: _challengesKey,
               title: 'Défis surprises',
               subtitle: '1 ou 2 fois dans la partie, entre deux joueurs des '
                   'équipes les plus en retard.',
@@ -930,6 +952,7 @@ class _Frame extends StatelessWidget {
     this.info,
     this.trailing,
     this.children = const [],
+    super.key,
   });
 
   @override

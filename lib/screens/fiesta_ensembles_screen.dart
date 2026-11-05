@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../models/fiesta/fiesta_ensemble.dart';
 import '../models/fiesta/fiesta_rules.dart';
-import '../models/fiesta/modifier_catalog.dart';
 import '../services/fiesta_ensemble_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common/app_back_button.dart';
@@ -55,6 +54,7 @@ class FiestaEnsemblesScreen extends StatefulWidget {
 class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
   final _service = FiestaEnsembleService();
   final _readyKey = GlobalKey();
+  final _firstMineKey = GlobalKey();
   final _createKey = GlobalKey();
   final _nextKey = GlobalKey();
 
@@ -225,8 +225,13 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
                   context,
                   fiestaEnsemblesHelp(
                     ready: _readyKey,
+                    firstMine: _firstMineKey,
                     create: _createKey,
                     next: _nextKey,
+                    hasMine: _mine.isNotEmpty,
+                    full: _full,
+                    hasDraft: FiestaEnsemblesScreen.drafts
+                        .containsKey(FiestaEnsemblesScreen.newDraftKey),
                   ),
                 ),
               ),
@@ -240,70 +245,77 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
   Widget _buildBody() {
     final newDraft = FiestaEnsemblesScreen.drafts
         .containsKey(FiestaEnsemblesScreen.newDraftKey);
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 72, 20, 24),
-      children: [
-        Text(
-          'Fiesta personnalisée',
-          style: AppTextStyles.subtitle(fontSize: 34),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 20),
-        KeyedSubtree(
-          key: _readyKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'PRÊTS À JOUER',
-                      style: AppTextStyles.label
-                          .copyWith(color: AppColors.gray400, fontSize: 12),
-                    ),
-                  ),
-                  Text(
-                    '${_mine.length} / ${FiestaEnsembleService.maxEnsembles}',
-                    style: AppTextStyles.bodySmall
-                        .copyWith(color: AppColors.gray400),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              for (final ensemble in _ready)
-                _EnsembleCard(
-                  ensemble: ensemble,
-                  selected: ensemble.id == _selectedId,
-                  canDuplicate: !_full,
-                  onTap: () => setState(() => _selectedId = ensemble.id),
-                  onView: () => _view(ensemble),
-                  onEdit: () => _openEditor(ensemble: ensemble),
-                  onDuplicate: () => _duplicate(ensemble),
-                  onDelete: () => _delete(ensemble),
-                ),
-            ],
+    // Pas de ListView : l'aide vise « Créer un ensemble », à monter même sous
+    // une longue liste.
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 72, 16, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Ensembles Fiesta',
+            style: AppTextStyles.subtitle(fontSize: 34),
+            textAlign: TextAlign.center,
           ),
-        ),
-        const SizedBox(height: 12),
-        KeyedSubtree(
-          key: _createKey,
-          child: _full && !newDraft
-              ? _Alert(
-                  'Limite de ${FiestaEnsembleService.maxEnsembles} ensembles '
-                  'atteinte. Supprime un ensemble pour en créer un nouveau.',
-                )
-              : AppButton(
-                  text:
-                      newDraft ? 'Reprendre le brouillon' : 'Créer un ensemble',
-                  icon: const Icon(Icons.add, size: 20),
-                  variant: AppButtonVariant.secondary,
-                  size: AppButtonSize.medium,
-                  fullWidth: true,
-                  onPressed: () => _openEditor(),
+          const SizedBox(height: 20),
+          KeyedSubtree(
+            key: _readyKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'PRÊTS À JOUER',
+                        style: AppTextStyles.label
+                            .copyWith(color: AppColors.gray400, fontSize: 12),
+                      ),
+                    ),
+                    Text(
+                      '${_mine.length} / ${FiestaEnsembleService.maxEnsembles}',
+                      style: AppTextStyles.bodySmall
+                          .copyWith(color: AppColors.gray400),
+                    ),
+                  ],
                 ),
-        ),
-      ],
+                const SizedBox(height: 8),
+                for (final ensemble in _ready)
+                  _EnsembleCard(
+                    key: ensemble == _mine.firstOrNull ? _firstMineKey : null,
+                    ensemble: ensemble,
+                    selected: ensemble.id == _selectedId,
+                    canDuplicate: !_full,
+                    onTap: () => setState(() => _selectedId = ensemble.id),
+                    onView: () => _view(ensemble),
+                    onEdit: () => _openEditor(ensemble: ensemble),
+                    onDuplicate: () => _duplicate(ensemble),
+                    onDelete: () => _delete(ensemble),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          KeyedSubtree(
+            key: _createKey,
+            child: _full && !newDraft
+                ? _Alert(
+                    'Limite de ${FiestaEnsembleService.maxEnsembles} ensembles '
+                    'atteinte. Supprime un ensemble pour en créer un nouveau.',
+                  )
+                : AppButton(
+                    text: newDraft
+                        ? 'Reprendre le brouillon'
+                        : 'Créer un ensemble',
+                    icon: const Icon(Icons.add, size: 20),
+                    variant: AppButtonVariant.secondary,
+                    size: AppButtonSize.medium,
+                    fullWidth: true,
+                    onPressed: () => _openEditor(),
+                  ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -343,27 +355,10 @@ class _EnsembleCard extends StatelessWidget {
     required this.onEdit,
     required this.onDuplicate,
     required this.onDelete,
+    super.key,
   });
 
-  /// « N malus · M bonus » (maquette `summaryOf`) : ce qui joue réellement,
-  /// plus les cartouches au hasard.
-  String get _summary {
-    final rules = ensemble.rules;
-    var malus = 0;
-    var bonus = 0;
-    for (final def in kModifierCatalog) {
-      if (!rules.isAlways(def.id) &&
-          rules.chargesOf(def.id) == 0 &&
-          !(rules.drawCount > 0 && rules.drawsFrom(def.id))) {
-        continue;
-      }
-      def.nature == ModifierNature.malus ? malus++ : bonus++;
-    }
-    final random =
-        rules.balance || rules.trailingCount > 0 || rules.allCount > 0;
-    return '$malus malus · $bonus bonus${random ? ' · cartouches au hasard' : ''}';
-  }
-
+  /// La sélection se lit au cadre : pas d'icône de plus, la ligne est comptée.
   @override
   Widget build(BuildContext context) {
     final provided = ensemble.isProvided;
@@ -373,8 +368,8 @@ class _EnsembleCard extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
           decoration: BoxDecoration(
             color: selected
                 ? AppColors.secondaryCyan.withValues(alpha: 0.12)
@@ -385,69 +380,78 @@ class _EnsembleCard extends StatelessWidget {
               width: 2,
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(ensemble.name, style: AppTextStyles.label),
-                  ),
-                  Icon(
-                    selected
-                        ? Icons.check_circle
-                        : Icons.radio_button_unchecked,
-                    color:
-                        selected ? AppColors.secondaryCyan : AppColors.gray500,
-                  ),
-                ],
+              Expanded(
+                child: Text(
+                  ensemble.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.label,
+                ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                provided ? 'Fourni par l\'app · $_summary' : _summary,
-                style: AppTextStyles.bodySmall
-                    .copyWith(color: AppColors.gray400, fontSize: 12),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  AppButton(
-                    text: 'Voir',
-                    size: AppButtonSize.small,
-                    variant: AppButtonVariant.ghost,
-                    onPressed: onView,
-                  ),
-                  if (!provided)
-                    AppButton(
-                      text: 'Modifier',
-                      size: AppButtonSize.small,
-                      variant: AppButtonVariant.ghost,
-                      onPressed: onEdit,
-                    ),
-                  AppButton(
-                    text: 'Dupliquer',
-                    size: AppButtonSize.small,
-                    variant: AppButtonVariant.ghost,
-                    disabled: !canDuplicate,
-                    onPressed: onDuplicate,
-                  ),
-                  if (!provided)
-                    AppButton(
-                      text: 'Supprimer',
-                      size: AppButtonSize.small,
-                      variant: AppButtonVariant.danger,
-                      onPressed: onDelete,
-                    ),
-                ],
-              ),
+              if (!provided) const _PersoBadge(),
+              _Action(Icons.visibility_outlined, 'Voir', onView),
+              if (!provided) _Action(Icons.edit_outlined, 'Modifier', onEdit),
+              _Action(Icons.content_copy, 'Dupliquer',
+                  canDuplicate ? onDuplicate : null),
+              if (!provided)
+                _Action(Icons.delete_outline, 'Supprimer', onDelete,
+                    color: AppColors.error),
             ],
           ),
         ),
       ),
     );
   }
+}
+
+/// Une action d'ensemble : icône seule, libellé pour l'accessibilité, 44 px.
+class _Action extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+  final Color color;
+
+  const _Action(this.icon, this.label, this.onPressed,
+      {this.color = AppColors.gray400});
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+        icon: Icon(icon, size: 20),
+        tooltip: label,
+        color: color,
+        disabledColor: AppColors.gray600,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(width: 44, height: 44),
+        style: IconButton.styleFrom(
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+        onPressed: onPressed,
+      );
+}
+
+class _PersoBadge extends StatelessWidget {
+  const _PersoBadge();
+
+  @override
+  Widget build(BuildContext context) => Container(
+        margin: const EdgeInsets.only(left: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+        decoration: BoxDecoration(
+          color: AppColors.warning.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: AppColors.warning),
+        ),
+        child: const Text(
+          'Perso',
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: AppColors.warning,
+          ),
+        ),
+      );
 }
 
 class _Alert extends StatelessWidget {

@@ -43,3 +43,4 @@ Les ~400 lignes de getters Fiesta (modèle de lecture) restent ici pour l'instan
 ### Dependances
 
 Utilise `StorageService`, `AnalyticsService`, `UserService` (singletons).
+- **Noms des joueurs** : `_savedNames` (`guessItAll_savedPlayerNames`) survit à `startNewGame`, `clearLocalStorage` et au retrait d'un joueur par le réglage. Seul `updatePlayer` avec un nom effacé ou corrigé en retire un. `nextSavedName` remplit les joueurs ajoutés par l'écran Joueurs.

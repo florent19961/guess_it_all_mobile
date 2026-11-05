@@ -52,6 +52,11 @@ class GameProvider extends ChangeNotifier {
   // Getters
   GameSettings get settings => _settings;
   List<Player> get players => _players;
+
+  /// Noms déjà saisis, dans l'ordre, y compris ceux hors de la partie (moins
+  /// de joueurs qu'avant). Seule une saisie les retire : ni « Nouvelle partie »,
+  /// ni la réinitialisation, ni un joueur retiré par le réglage.
+  List<String> _savedNames = [];
   List<Team> get teams => _teams;
   GameState get game => _game;
   bool get isFiesta => _game.fiesta != null;
@@ -133,6 +138,19 @@ class GameProvider extends ChangeNotifier {
                 ?.map((t) => Team.fromJson(t as Map<String, dynamic>))
                 .toList() ??
             [];
+      }
+
+      // Clé absente (version en store) : reprendre les noms de la session.
+      final savedNames = await _storage.loadSavedPlayerNames();
+      if (savedNames != null) {
+        _savedNames = savedNames;
+      } else {
+        _savedNames = _players
+            .map((p) => p.name.trim())
+            .where((n) => n.isNotEmpty)
+            .toSet()
+            .toList();
+        await _storage.saveSavedPlayerNames(_savedNames);
       }
 
       // 3. Charger l'état de jeu si existant (partie en cours avec mots)
@@ -310,6 +328,7 @@ class GameProvider extends ChangeNotifier {
 
     final newPlayer = Player.create(trimmedName);
     _players.add(newPlayer);
+    _rememberName(_players.length - 1, '', trimmedName);
     notifyListeners();
     _saveGameSession();
 
@@ -319,11 +338,37 @@ class GameProvider extends ChangeNotifier {
   void updatePlayer(String playerId, {String? name}) {
     final index = _players.indexWhere((p) => p.id == playerId);
     if (index != -1) {
+      final previous = _players[index].name;
       _players[index] = _players[index].copyWith(name: name);
+      _rememberName(index, previous, name ?? previous);
       notifyListeners();
       _saveGameSession();
     }
   }
+
+  /// Le joueur [index] passe de [previous] à [name]. Un nom corrigé garde sa
+  /// place ; effacé, il disparaît, sauf s'il sert encore à un autre joueur.
+  void _rememberName(int index, String previous, String name) {
+    final from = previous.trim();
+    final to = name.trim();
+    if (from == to) return;
+    var at = index;
+    final known = _savedNames.indexOf(from);
+    if (known >= 0 && !_players.any((p) => p.name.trim() == from)) {
+      _savedNames.removeAt(known);
+      at = known;
+    }
+    if (to.isNotEmpty && !_savedNames.contains(to)) {
+      _savedNames.insert(at.clamp(0, _savedNames.length), to);
+    }
+    _storage.saveSavedPlayerNames(_savedNames);
+  }
+
+  /// Le premier nom connu qui n'est pas déjà à la table : de quoi remplir un
+  /// joueur ajouté par l'écran Joueurs.
+  String? get nextSavedName => _savedNames
+      .where((name) => !_players.any((p) => p.name.trim() == name))
+      .firstOrNull;
 
   void updatePlayerWords(String playerId, List<String> words) {
     final index = _players.indexWhere((p) => p.id == playerId);
@@ -2105,7 +2150,7 @@ class GameProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Nouvelle partie complète → efface session ET state, garde settings
+  // Nouvelle partie complète → efface session ET state, garde settings et noms
   Future<void> startNewGame() async {
     // Terminer et sauvegarder les analytics si une partie était en cours
     if (_analytics.isTracking) {
@@ -2203,6 +2248,11 @@ class GameProvider extends ChangeNotifier {
     );
     _players = players;
     _teams = teams;
+    _savedNames = {
+      ...players.map((p) => p.name.trim()).where((n) => n.isNotEmpty),
+      ..._savedNames,
+    }.take(AppConstants.maxPlayers).toList();
+    unawaited(_storage.saveSavedPlayerNames(_savedNames));
     _pendingFiesta = setup?.fiesta;
     // Sans ce reset, `restartWithSamePlayers` relirait la Fiesta de la partie
     // suspendue par-dessus celle de l'archive.
@@ -2211,7 +2261,8 @@ class GameProvider extends ChangeNotifier {
     await restartWithSamePlayers();
   }
 
-  // Réinitialise TOUT : paramètres, joueurs, mots, équipes, état de jeu
+  // Réinitialise paramètres, joueurs, mots, équipes, état de jeu. Les noms
+  // restent à pré-remplir : seule une saisie les retire.
   Future<void> clearLocalStorage() async {
     await _storage.clearGameState();
     await _storage.clearGameSession();

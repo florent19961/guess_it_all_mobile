@@ -154,6 +154,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 replay: _replayKey,
                 rules: _rulesKey,
                 history: _historyKey,
+                // Sans partie ni session, le bouton s'appelle « Jouer ».
+                playLabel: hasSuspendedGame || hasGameSession
+                    ? 'Nouvelle partie'
+                    : 'Jouer',
               ),
             ),
           ),

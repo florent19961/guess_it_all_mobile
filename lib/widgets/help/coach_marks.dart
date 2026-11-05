@@ -71,6 +71,11 @@ class _CoachOverlayState extends State<_CoachOverlay> {
       alignment: 0.3,
       duration: const Duration(milliseconds: 250),
     );
+    // La dernière image du défilement n'est pas encore mise en page : mesurer
+    // ici placerait le trou à côté de la cible. `ensureVisualUpdate` : rien ne
+    // défilait, aucune image n'est demandée, et l'attente ne finirait jamais.
+    WidgetsBinding.instance.ensureVisualUpdate();
+    await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return;
     // Cible démontée pendant le défilement : on passe à la suite plutôt que de
     // laisser un voile sans bulle (sur iOS, aucune autre issue).
@@ -107,7 +112,7 @@ class _CoachOverlayState extends State<_CoachOverlay> {
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () {},
-              child: CustomPaint(painter: _VeilPainter(hole)),
+              child: CustomPaint(painter: CoachVeilPainter(hole)),
             ),
           ),
           if (hole != null) _bubble(context, hole, step, isLast),
@@ -220,10 +225,11 @@ class _CoachOverlayState extends State<_CoachOverlay> {
   }
 }
 
-class _VeilPainter extends CustomPainter {
+/// Public pour que les tests vérifient que la cible est bien dans l'écran.
+class CoachVeilPainter extends CustomPainter {
   final Rect? hole;
 
-  _VeilPainter(this.hole);
+  CoachVeilPainter(this.hole);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -257,5 +263,5 @@ class _VeilPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_VeilPainter old) => old.hole != hole;
+  bool shouldRepaint(CoachVeilPainter old) => old.hole != hole;
 }

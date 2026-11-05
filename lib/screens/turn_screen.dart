@@ -28,6 +28,10 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
   bool _wentBackground = false;
 
   final _timerKey = GlobalKey();
+  final _modifiersKey = GlobalKey();
+  final _blockedGuesserKey = GlobalKey();
+  final _freePassesKey = GlobalKey();
+  final _endTurnKey = GlobalKey();
   final _wordKey = GlobalKey();
   final _guessedKey = GlobalKey();
   final _passKey = GlobalKey();
@@ -397,6 +401,7 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                             provider.spentBonuses.isNotEmpty) ...[
                           const SizedBox(height: 8),
                           ModifierBadges(
+                            key: _modifiersKey,
                             modifiers: provider.turnModifiers,
                             wrapExplain: (show) => _whilePaused(provider, show),
                             extra: [
@@ -413,6 +418,7 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                             const SizedBox(height: 6),
                             Text(
                               '${blocked.name} ne répond pas ce tour.',
+                              key: _blockedGuesserKey,
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 fontFamily: 'Poppins',
@@ -425,6 +431,7 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                             const SizedBox(height: 8),
                             Text(
                               'Passes gratuites : ${provider.freePassesUsed} / ${provider.freePasses}',
+                              key: _freePassesKey,
                               style: const TextStyle(
                                 fontFamily: 'Poppins',
                                 fontSize: 13,
@@ -495,7 +502,7 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                   if (!twoWords) ...[
                     const SizedBox(height: 32),
                     TurnActionButtons(
-                      passKey: provider.passBlocked ? null : _passKey,
+                      passKey: _passKey,
                       guessedKey: _guessedKey,
                       passLabel: passLabel,
                       passDetail: passDetail,
@@ -573,6 +580,20 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                 context,
                 turnHelp(
                   timer: _timerKey,
+                  modifiers: _modifiersKey,
+                  blockedGuesser: _blockedGuesserKey,
+                  freePasses: _freePassesKey,
+                  endTurn: _endTurnKey,
+                  passState: provider.passBlocked
+                      ? PassState.blocked
+                      : !hasWordsToPassTo
+                          ? PassState.lastWord
+                          : canPass
+                              ? PassState.available
+                              : PassState.notEnoughTime,
+                  reversed: provider.isWordReversed,
+                  buttonsUnderWord: twoWords,
+                  secondWordShown: provider.secondWord != null,
                   word: _wordKey,
                   guessed: _guessedKey,
                   pass: _passKey,
@@ -587,6 +608,7 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
             bottom: MediaQuery.of(context).padding.bottom + 24,
             right: 24,
             child: GestureDetector(
+              key: _endTurnKey,
               onTap: () => _handleEndTurnPress(context, provider),
               child: Container(
                 width: 48,

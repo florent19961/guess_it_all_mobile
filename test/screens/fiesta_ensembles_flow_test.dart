@@ -145,8 +145,10 @@ void main() {
     expect(find.text('Nouvel ensemble'), findsNothing);
 
     // B : modification de « Mien », nom vidé → incomplet, gardé.
-    await scrollTo('Modifier');
-    await tapText(tester, 'Modifier');
+    await tester.scrollUntilVisible(find.byTooltip('Modifier'), 300,
+        scrollable: find.byType(Scrollable).first);
+    await tester.tap(find.byTooltip('Modifier'));
+    await settle(tester);
     expect(nameField(), 'Mien');
     await tester.enterText(find.byType(TextField), '');
     await tester.pump();
@@ -157,8 +159,10 @@ void main() {
     await tapText(tester, 'Reprendre le brouillon');
     expect(nameField(), 'Pro Player');
     await back();
-    await scrollTo('Modifier');
-    await tapText(tester, 'Modifier');
+    await tester.scrollUntilVisible(find.byTooltip('Modifier'), 300,
+        scrollable: find.byType(Scrollable).first);
+    await tester.tap(find.byTooltip('Modifier'));
+    await settle(tester);
     expect(nameField(), '');
     expect(FiestaEnsemblesScreen.drafts.keys,
         unorderedEquals([FiestaEnsemblesScreen.newDraftKey, isNotEmpty]));

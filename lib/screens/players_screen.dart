@@ -52,7 +52,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
 
     // 1. Ajuster le nombre de joueurs si nécessaire
     while (provider.players.length < settings.numberOfPlayers) {
-      provider.addPlayer('', allowEmpty: true);
+      provider.addPlayer(provider.nextSavedName ?? '', allowEmpty: true);
     }
     while (provider.players.length > settings.numberOfPlayers) {
       provider.removePlayer(provider.players.last.id);
@@ -514,6 +514,8 @@ class _PlayersScreenState extends State<PlayersScreen> {
                   firstPlayer: _firstPlayerKey,
                   words: _wordsKey,
                   next: _nextKey,
+                  randomWords: provider.settings.wordChoice ==
+                      AppConstants.wordChoiceRandom,
                 ),
               ),
             ),
