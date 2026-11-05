@@ -54,6 +54,7 @@ class FiestaEnsemblesScreen extends StatefulWidget {
 class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
   final _service = FiestaEnsembleService();
   final _readyKey = GlobalKey();
+  final _firstMineKey = GlobalKey();
   final _createKey = GlobalKey();
   final _nextKey = GlobalKey();
 
@@ -224,8 +225,13 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
                   context,
                   fiestaEnsemblesHelp(
                     ready: _readyKey,
+                    firstMine: _firstMineKey,
                     create: _createKey,
                     next: _nextKey,
+                    hasMine: _mine.isNotEmpty,
+                    full: _full,
+                    hasDraft: FiestaEnsemblesScreen.drafts
+                        .containsKey(FiestaEnsemblesScreen.newDraftKey),
                   ),
                 ),
               ),
@@ -276,6 +282,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
                 const SizedBox(height: 8),
                 for (final ensemble in _ready)
                   _EnsembleCard(
+                    key: ensemble == _mine.firstOrNull ? _firstMineKey : null,
                     ensemble: ensemble,
                     selected: ensemble.id == _selectedId,
                     canDuplicate: !_full,
@@ -348,6 +355,7 @@ class _EnsembleCard extends StatelessWidget {
     required this.onEdit,
     required this.onDuplicate,
     required this.onDelete,
+    super.key,
   });
 
   /// La sélection se lit au cadre : pas d'icône de plus, la ligne est comptée.

@@ -370,6 +370,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
     final malus =
         reserve.where((c) => c.nature == ModifierNature.malus).toList();
     final blockedGuesser = _p.blockedGuesser;
+    final firstUnusable = reserve.where((c) => !c.usable).firstOrNull;
 
     return LayoutBuilder(builder: (context, box) {
       final thisTurnCount = rules.length + received.length + armed.length;
@@ -445,6 +446,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
             if (blockedGuesser != null) ...[
               const SizedBox(height: 8),
               Text('${blockedGuesser.name} ne répond pas ce tour.',
+                  key: keys.blockedGuesser,
                   style: AppTextStyles.bodySmall.copyWith(
                       fontSize: 12, height: 1.3, color: AppColors.malus)),
             ],
@@ -481,6 +483,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                 children: [
                   for (final c in items)
                     _slot(
+                      key: c == firstUnusable ? keys.firstUnusable : null,
                       KeyedSubtree(
                         key: _keyOf('res-${c.catalogId}'),
                         child: Opacity(

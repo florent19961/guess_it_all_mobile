@@ -10,7 +10,8 @@ chaque écran, pour en ajouter un ou vérifier un branchement.
    jamais en `static` : deux montages = clé en double).
 2. Une `GlobalKey` par contrôle à expliquer, posée en `key:` sur le widget (ou un
    `KeyedSubtree(key: …, child: …)` autour). Une clé posée sur un widget absent dans l'état
-   courant de l'écran est **sautée** : passer toutes les clés, toujours.
+   courant de l'écran est **sautée** : passer toutes les clés, toujours. 🔴 Règle : élément
+   affiché = une étape l'explique ; élément absent = pas d'étape, et aucun texte n'en parle.
 3. Dernier enfant du `Stack` de l'écran :
    ```dart
    HelpButton(onPressed: () => CoachMarks.show(context, xxxHelp(...)))
@@ -29,15 +30,15 @@ résultats finaux en montrent.
 | Écran | Fonction | Clés à poser | Bouton « ? » |
 |---|---|---|---|
 | `home_screen` | `homeHelp(playLabel: …)` (« Jouer » ou « Nouvelle partie », le libellé du bouton) | `play` (« Jouer » **ou** « Nouvelle partie »), `resume` (« Reprendre »), `replay` (« Rejouer »), `rules`, `history` | `right: 16` |
-| `settings_screen` | `settingsHelp(passPenalty: provider.settings.passPenalty)` | `counts` (cartes Joueurs + Équipes), `mode` (interrupteur Classique / Fiesta de la section « Mode de jeu »), `wordChoice`, `categories` (bouton Catégories & Difficultés), `advanced` (bouton Avancés ; « Réinitialiser les paramètres » vit en bas de cette fenêtre) | `HelpButton.inline` en tête de la `Row` « ? » / Avancés |
-| `players_screen` | `playersHelp` | `firstPlayer` (ligne du joueur 1), `words` (bouton Saisir/Voir mots du joueur 1), `next` | `right: 16` |
-| `fiesta_ensembles_screen` | `fiestaEnsemblesHelp` | `ready` (liste « Prêts à jouer » : une ligne par ensemble, icônes œil / crayon / copie / corbeille, badge « Perso »), `create` (« Créer un ensemble » / « Reprendre le brouillon », ou l'alerte de limite), `next` (« Suivant ») | `right: 16` |
-| `fiesta_ensemble_editor_screen` | `fiestaEditorHelp` | `tabs` (les 3 menus), `menu` (le menu ouvert), `save` (« Enregistrer ») | `right: 16` |
-| `teams_screen` | `teamsHelp` | `firstTeam` (carte de la 1re équipe), `shuffle`, `start` (« Commencer ») | `right: 16` |
-| `game_screen` (avant-tour) | `preTurnHelp(playerName: …)` | `team` (nom d'équipe + joueur), `roundRules` (icône info de la manche), `previousTurn` (« N mots », dès le 2e tour), `bonusTime` (« Temps bonus », seulement s'il y a du temps reporté), `start` | `right: besideCornerButton` |
-| `game_screen` Fiesta | `fiestaPreTurnHelp(FiestaPreTurnKeys)` | Une clé par type d'élément, posée seulement s'il est à l'écran (`FiestaTurnZone`, sauf `reuseChoices`) : pas d'élément, pas d'étape. `reuseChoices`, `thisTurn` (cadre « Actif », sans clé sur « Rien pour l'instant »), `firstRule`, `firstReceived`, `firstArmed`, `reserveBonus`, `reserveMalus`, `sent` | même bouton : `preTurnHelp(fiesta: fiestaPreTurnHelp(...))`, étapes insérées avant « Commencer le tour » |
-| `turn_screen` | `turnHelp(passPenalty: provider.currentPassPenalty)` — pas `settings.passPenalty` : la Passe gratuite Fiesta la met à 0. Malus « Interdit de passer » : ne pas poser la clé `pass` (bouton désactivé, le texte « Passe-le » serait faux) | `timer`, `word`, `guessed`, `pass`, `pause` | `right: besideCornerButton` (pause à droite). 🔴 `provider.pauseTurn()` **avant** `CoachMarks.show`, reprise **après** : le chrono ne doit jamais tourner sous l'aide |
-| `verification_screen` | `verificationHelp` | `wordList` (la liste défilante entière), `validate` | `right: 16` (HomeButton à gauche) |
+| `settings_screen` | `settingsHelp(passPenalty: provider.settings.passPenalty)` | `counts` (cartes Joueurs + Équipes), `mode` (interrupteur Classique / Fiesta de la section « Mode de jeu »), `wordChoice`, `categories` (bouton Catégories & Difficultés), `longGame` (avertissement « partie longue », au-delà de 50 mots), `advanced` (bouton Avancés ; « Réinitialiser les paramètres » vit en bas de cette fenêtre) | `HelpButton.inline` en tête de la `Row` « ? » / Avancés |
+| `players_screen` | `playersHelp(randomWords: …)` (texte du bouton de mots selon le mode) | `firstPlayer` (ligne du joueur 1), `words` (bouton Saisir/Voir mots du joueur 1), `next` | `right: 16` |
+| `fiesta_ensembles_screen` | `fiestaEnsemblesHelp(hasMine, full, hasDraft)` | `ready` (liste « Prêts à jouer »), `firstMine` (1re ligne personnelle, badge et crayon / corbeille, absente sans ensemble personnel), `create` (titre selon l'état : créer, reprendre le brouillon, limite atteinte), `next` (« Suivant ») | `right: 16` |
+| `fiesta_ensemble_editor_screen` | `fiestaEditorHelp(tab, hasCounts)` : seul le menu ouvert est expliqué | `tabs`, `menu` (le menu ouvert), `noDraw` (« Rien à tirer »), `locked` (1re ligne verrouillée du menu ouvert), `challenges` (cadre Défis surprises, ouvert), `save` (« Enregistrer ») | `right: 16` |
+| `teams_screen` | `teamsHelp` | `firstTeam` (carte de la 1re équipe), `shuffle`, `incomplete` (message, si une équipe a moins de 2 joueurs), `start` (« Commencer ») | `right: 16` |
+| `game_screen` (avant-tour) | `preTurnHelp(playerName: …, firstTurnOfGame: …)` | `team` (nom d'équipe + joueur), `roundRules` (icône info de la manche), `previousTurn` (« N mots », dès le 2e tour), `bonusTime` (« Temps bonus », seulement s'il y a du temps reporté), `back` (retour, s'il est affiché ; le titre dit où il mène), `start` | `right: besideCornerButton` |
+| `game_screen` Fiesta | `fiestaPreTurnHelp(FiestaPreTurnKeys)` | Une clé par type d'élément, posée seulement s'il est à l'écran (`FiestaTurnZone`, sauf `reuseChoices`) : pas d'élément, pas d'étape. `reuseChoices`, `thisTurn` (cadre « Actif », sans clé sur « Rien pour l'instant »), `firstRule`, `firstReceived`, `firstArmed`, `blockedGuesser`, `reserveBonus`, `reserveMalus`, `firstUnusable` (1re cartouche grisée), `sent` | même bouton : `preTurnHelp(fiesta: fiestaPreTurnHelp(...))`, étapes insérées avant « Commencer le tour » |
+| `turn_screen` | `turnHelp(passPenalty: provider.currentPassPenalty, passState, reversed, buttonsUnderWord, secondWordShown)` — pas `settings.passPenalty` : la Passe gratuite Fiesta la met à 0. `passState` donne le titre et le texte de « Passer » (disponible, bloqué, dernier mot, pas assez de temps) | `timer`, `modifiers` (badges du tour), `blockedGuesser`, `freePasses`, `word`, `guessed`, `pass`, `pause`, `endTurn`. Deux mots : pas de `guessed` ni `pass`, l'étape du mot explique les boutons de chaque carte | `right: besideCornerButton` (pause à droite). 🔴 `provider.pauseTurn()` **avant** `CoachMarks.show`, reprise **après** : le chrono ne doit jamais tourner sous l'aide |
+| `verification_screen` | `verificationHelp` | `doubled` (ligne « Mot compte double »), `wordList` (la liste défilante entière), `expired` (section « Mot en cours »), `passed` (section « Mots passés »), `validate` | `right: 16` (HomeButton à gauche) |
 | `transition_screen` (écran fixe après M3 seulement) | `transitionHelp` | `previousTurn` (« Voir les N mots devinés »), `back` (`GameBackButton`), `next` (« Voir les résultats ») — dans cet ordre, l'action finale en dernier | coin haut droit |
 | `results_screen` | `resultsHelp` | `podium` (la rangée du podium), `details` (Détails par manche), `replay`, `stats` | `right: besideCornerButton` |
 
@@ -98,7 +99,7 @@ peut pas faire basculer une install neuve. Un `false` écrit (« Revoir les aide
 
 ## Test
 
-`test/widgets/help_walkthrough_test.dart` et `test/screens/preturn_help_test.dart` font défiler
+`test/widgets/help_walkthrough_test.dart`, `test/widgets/help_conditional_test.dart` et `test/screens/preturn_help_test.dart` font défiler
 les aides à 360 × 640 (`test/helpers/coach_walk.dart`) : chaque étape doit percer le voile sur une
 cible dans l'écran. Un nouvel écran avec aide s'y ajoute.
 

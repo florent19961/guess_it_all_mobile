@@ -1195,4 +1195,9 @@ l'avant-tour Fiesta n'explique que ce qu'il affiche.
 - Avant-tour : les clés ne sont posées que sur ce qui est affiché, `CoachMarks` saute déjà les autres. Pas de
   condition dupliquée entre l'écran et l'aide. L'aide automatique de première partie reste sans étapes Fiesta
   (décision de Florent, `WIRING.md`).
+- Règle générale des aides, écran par écran : élément affiché = une étape, élément absent = pas d'étape, et aucun
+  texte n'en parle. L'étape « Passer » reste affichée quand le bouton est désactivé, avec la raison : l'ancienne
+  absence de clé sous « Interdit de passer » laissait un bouton sans explication.
+- `results_screen` et `history_screen` ne sont pas modifiés (autre lane). Écart connu : récap Fiesta et bouton
+  retour des Résultats sans étape.
 

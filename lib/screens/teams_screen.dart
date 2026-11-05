@@ -21,6 +21,7 @@ class TeamsScreen extends StatefulWidget {
 class _TeamsScreenState extends State<TeamsScreen> {
   final _firstTeamKey = GlobalKey();
   final _shuffleKey = GlobalKey();
+  final _incompleteKey = GlobalKey();
   final _startKey = GlobalKey();
 
   @override
@@ -81,9 +82,10 @@ class _TeamsScreenState extends State<TeamsScreen> {
                     child: Column(
                       children: [
                         if (!allTeamsValid)
-                          const Padding(
-                            padding: EdgeInsets.only(bottom: 12),
-                            child: Text(
+                          Padding(
+                            key: _incompleteKey,
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: const Text(
                               'Chaque équipe doit avoir au moins 2 joueurs',
                               style: TextStyle(
                                 fontFamily: 'Poppins',
@@ -120,6 +122,7 @@ class _TeamsScreenState extends State<TeamsScreen> {
                 teamsHelp(
                   firstTeam: _firstTeamKey,
                   shuffle: _shuffleKey,
+                  incomplete: _incompleteKey,
                   start: _startKey,
                 ),
               ),

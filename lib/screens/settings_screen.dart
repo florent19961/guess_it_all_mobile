@@ -36,6 +36,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   final _wordChoiceKey = GlobalKey();
   final _categoriesKey = GlobalKey();
   final _advancedKey = GlobalKey();
+  final _longGameKey = GlobalKey();
 
   @override
   void initState() {
@@ -259,6 +260,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     // Avertissement si trop de mots
                     if (settings.totalWords > 50)
                       Padding(
+                        key: _longGameKey,
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -342,6 +344,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         counts: _countsKey,
                         wordChoice: _wordChoiceKey,
                         categories: _categoriesKey,
+                        longGame: _longGameKey,
                         advanced: _advancedKey,
                         passPenalty: provider.settings.passPenalty,
                       ),

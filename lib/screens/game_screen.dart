@@ -27,6 +27,7 @@ class _GameScreenState extends State<GameScreen> {
   final _roundRulesKey = GlobalKey();
   final _previousTurnKey = GlobalKey();
   final _bonusTimeKey = GlobalKey();
+  final _backKey = GlobalKey();
   final _startKey = GlobalKey();
   final _fiestaKeys = FiestaPreTurnKeys();
 
@@ -71,6 +72,8 @@ class _GameScreenState extends State<GameScreen> {
         roundRules: _roundRulesKey,
         previousTurn: _previousTurnKey,
         bonusTime: _bonusTimeKey,
+        back: _backKey,
+        firstTurnOfGame: context.read<GameProvider>().isFirstTurnOfGame,
         start: _startKey,
         playerName: playerName,
         fiesta: fiesta,
@@ -272,10 +275,12 @@ class _GameScreenState extends State<GameScreen> {
           // Back button conditionnel
           if (provider.isFirstTurnOfGame)
             GameBackButton(
+              key: _backKey,
               onPressed: () => _showBackToTeamsDialog(context, provider),
             )
           else if (provider.canGoBackToVerification)
             GameBackButton(
+              key: _backKey,
               onPressed: () => showBackToVerificationDialog(context, provider),
             ),
         ],

@@ -71,6 +71,11 @@ class _CoachOverlayState extends State<_CoachOverlay> {
       alignment: 0.3,
       duration: const Duration(milliseconds: 250),
     );
+    // La dernière image du défilement n'est pas encore mise en page : mesurer
+    // ici placerait le trou à côté de la cible. `ensureVisualUpdate` : rien ne
+    // défilait, aucune image n'est demandée, et l'attente ne finirait jamais.
+    WidgetsBinding.instance.ensureVisualUpdate();
+    await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return;
     // Cible démontée pendant le défilement : on passe à la suite plutôt que de
     // laisser un voile sans bulle (sur iOS, aucune autre issue).

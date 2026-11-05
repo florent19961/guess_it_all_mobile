@@ -66,6 +66,17 @@ void main() {
         ['Rejouer', 'Nouvelle partie', 'Règles', 'Historique']);
   });
 
+  testWidgets('Accueil, partie suspendue : Reprendre, puis Nouvelle partie',
+      (tester) async {
+    final provider =
+        await pumpScreen(tester, AppConstants.screenHome, withPlayers: true);
+    await tester.runAsync(provider.startGame);
+    await tester.runAsync(provider.suspendGame);
+    await settle(tester);
+    expect(await walkHelp(tester),
+        ['Reprendre', 'Nouvelle partie', 'Règles', 'Historique']);
+  });
+
   testWidgets('Paramètres', (tester) async {
     await pumpScreen(tester, AppConstants.screenSettings);
     expect(await walkHelp(tester), [
@@ -100,7 +111,8 @@ void main() {
     await tester.pumpWidget(
         const MaterialApp(home: FiestaEnsembleEditorScreen(others: [])));
     await settle(tester);
-    expect(await walkHelp(tester), ['Les 3 menus', 'Réglages', 'Enregistrer']);
+    expect(
+        await walkHelp(tester), ['Les 3 menus', 'Cartouches', 'Enregistrer']);
   });
 
   testWidgets('le tour, la vérification, puis l\'écran fixe après M3',
@@ -118,13 +130,20 @@ void main() {
     provider.startTurn();
     provider.startTurnTimer();
     await pumps();
-    expect(await walkHelp(tester),
-        ['Le chrono', 'Le mot', 'Trouvé', 'Passer', 'Pause']);
+    expect(await walkHelp(tester), [
+      'Le chrono',
+      'Le mot',
+      'Trouvé',
+      'Passer',
+      'Pause',
+      'Terminer le tour'
+    ]);
 
     provider.endTurn();
     await pumps();
     expect(provider.game.currentScreen, AppConstants.screenVerification);
-    expect(await walkHelp(tester), ['Vérifie les mots', 'Valider']);
+    expect(await walkHelp(tester),
+        ['Vérifie les mots', 'Temps écoulé', 'Valider']);
     provider.savePreValidationState(const []);
     provider.validateWords(const []);
 

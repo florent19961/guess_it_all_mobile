@@ -514,6 +514,8 @@ class _PlayersScreenState extends State<PlayersScreen> {
                   firstPlayer: _firstPlayerKey,
                   words: _wordsKey,
                   next: _nextKey,
+                  randomWords: provider.settings.wordChoice ==
+                      AppConstants.wordChoiceRandom,
                 ),
               ),
             ),

@@ -20,11 +20,19 @@ class VerificationScreen extends StatefulWidget {
 class _VerificationScreenState extends State<VerificationScreen> {
   late Set<String> _validatedWords;
 
+  final _doubledKey = GlobalKey();
   final _wordListKey = GlobalKey();
+  final _expiredKey = GlobalKey();
+  final _passedKey = GlobalKey();
   final _validateKey = GlobalKey();
 
-  List<CoachStep> get _helpSteps =>
-      verificationHelp(wordList: _wordListKey, validate: _validateKey);
+  List<CoachStep> get _helpSteps => verificationHelp(
+        doubled: _doubledKey,
+        wordList: _wordListKey,
+        expired: _expiredKey,
+        passed: _passedKey,
+        validate: _validateKey,
+      );
 
   /// Première partie sur ce téléphone : l'aide s'ouvre seule à la première
   /// vérification de chaque joueur.
@@ -147,6 +155,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                 if (doubled) ...[
                   const SizedBox(height: 8),
                   Text(
+                    key: _doubledKey,
                     'Mots devinés ${_validatedWords.length} · '
                     'Mot compte double ×2 · Points du tour $points',
                     style: const TextStyle(
@@ -188,6 +197,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                         // Expired word section
                         if (expiredWords.isNotEmpty) ...[
                           Row(
+                            key: _expiredKey,
                             children: [
                               Text(
                                 expiredWords.length > 1
@@ -233,6 +243,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                         // Passed words section
                         if (passedWords.isNotEmpty) ...[
                           Row(
+                            key: _passedKey,
                             children: [
                               const Text(
                                 'Mots passés',

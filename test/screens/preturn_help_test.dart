@@ -22,6 +22,7 @@ const _armed = 'Bonus activé';
 const _bonus = 'Réserve : tes bonus';
 const _malus = 'Réserve : tes malus';
 const _sent = 'Malus envoyés';
+const _dimmed = 'Cartouche indisponible';
 
 /// Titres d'étapes propres à ce qui est affiché, sans le socle commun.
 Future<List<String>> fiestaSteps(WidgetTester tester) async {
@@ -29,7 +30,10 @@ Future<List<String>> fiestaSteps(WidgetTester tester) async {
   expect(titles.first, startsWith(_base[0]));
   expect(titles[1], _base[1]);
   expect(titles.last, _start, reason: 'l\'action finale, après ce qu\'on voit');
-  return titles.sublist(2, titles.length - 1);
+  return titles
+      .sublist(2, titles.length - 1)
+      .where((t) => !t.startsWith('Retour'))
+      .toList();
 }
 
 /// Relit la partie sur disque, comme après un kill.
@@ -107,8 +111,8 @@ void main() {
     provider.inflictMalus('no_pass',
         provider.teams.firstWhere((t) => t != provider.getCurrentTeam()).id);
     await settle(tester);
-    expect(
-        await fiestaSteps(tester), [_thisTurn, _armed, _bonus, _malus, _sent]);
+    expect(await fiestaSteps(tester),
+        [_thisTurn, _armed, _bonus, _malus, _dimmed, _sent]);
   });
 
   testWidgets('malus reçu : son étape', (tester) async {
