@@ -1,6 +1,5 @@
 import '../utils/constants.dart';
 import 'fiesta/fiesta_rules.dart';
-import 'fiesta/modifier_catalog.dart';
 
 class GameSettings {
   int numberOfTeams;
@@ -12,14 +11,11 @@ class GameSettings {
   List<String> selectedCategories;
   List<int> selectedDifficultyLevels;
 
-  /// Auto / Personnalisé (« Avancés ») : le mode pris en passant en Fiesta.
-  FiestaMode fiestaMode;
-
   /// Dernier choix « Mode de jeu » : Fiesta (vrai) ou Classique. Relu au
   /// démarrage et à une nouvelle partie (`GameProvider._rememberedFiesta`).
   bool fiestaEnabled;
 
-  /// Personnalisé : règles gelées d'une partie rejouée, en attente de lancement.
+  /// Règles gelées d'une partie rejouée, en attente de lancement.
   /// Elles priment sur le dernier ensemble utilisé, jusqu'au lancement ou à un
   /// choix explicite (`GameProvider._rememberFiestaChoice`). Clé absente ou
   /// illisible : nul.
@@ -34,7 +30,6 @@ class GameSettings {
     this.passPenalty = AppConstants.defaultPassPenalty,
     List<String>? selectedCategories,
     List<int>? selectedDifficultyLevels,
-    this.fiestaMode = FiestaMode.auto,
     this.fiestaEnabled = false,
     this.replayFiesta,
   })  : selectedCategories =
@@ -55,7 +50,6 @@ class GameSettings {
     int? passPenalty,
     List<String>? selectedCategories,
     List<int>? selectedDifficultyLevels,
-    FiestaMode? fiestaMode,
     bool? fiestaEnabled,
     FiestaRules? replayFiesta,
     bool clearReplayFiesta = false,
@@ -71,7 +65,6 @@ class GameSettings {
           selectedCategories ?? List.from(this.selectedCategories),
       selectedDifficultyLevels:
           selectedDifficultyLevels ?? List.from(this.selectedDifficultyLevels),
-      fiestaMode: fiestaMode ?? this.fiestaMode,
       fiestaEnabled: fiestaEnabled ?? this.fiestaEnabled,
       replayFiesta:
           clearReplayFiesta ? null : replayFiesta ?? this.replayFiesta,
@@ -88,7 +81,6 @@ class GameSettings {
       'passPenalty': passPenalty,
       'selectedCategories': selectedCategories,
       'selectedDifficultyLevels': selectedDifficultyLevels,
-      'fiestaMode': fiestaMode.name,
       'fiestaEnabled': fiestaEnabled,
       if (replayFiesta != null) 'replayFiesta': replayFiesta!.toJson(),
     };
@@ -113,9 +105,6 @@ class GameSettings {
       selectedDifficultyLevels:
           (json['selectedDifficultyLevels'] as List<dynamic>?)?.cast<int>() ??
               List.from(AppConstants.defaultDifficultyLevels),
-      // Clé absente (réglages d'avant) ou valeur inconnue : Auto.
-      fiestaMode: enumFromJson(FiestaMode.values, json['fiestaMode']) ??
-          FiestaMode.auto,
       // Clé absente (réglages d'avant) ou mal typée : Classique.
       fiestaEnabled: json['fiestaEnabled'] == true,
       replayFiesta: json['replayFiesta'] is Map

@@ -27,15 +27,9 @@ Future<GameProvider> givenReadyProvider() async {
 /// Personnalisé, sans tirage : [ids] en cartouche, 1 par équipe pour la partie
 /// (à allumer avant le tour).
 FiestaRules fixedOnRound1(List<String> ids) => FiestaRules(
-      mode: FiestaMode.custom,
       drawCount: 0,
       modifiers: {
-        for (final id in ids)
-          id: ModifierSetting(
-            active: true,
-            rounds: const {1},
-            mode: ModifierMode.cartridge,
-          ),
+        for (final id in ids) id: ModifierSetting(charges: 1),
       },
     );
 
@@ -206,16 +200,12 @@ void main() {
     final p = await givenReadyProvider();
     await p.startGame(
       fiesta: FiestaRules(
-        mode: FiestaMode.custom,
         drawCount: 0,
         modifiers: {
-          'no_pass': ModifierSetting(
-              active: true, rounds: const {1}, mode: ModifierMode.always),
-          'reversed': ModifierSetting(
-              active: true, rounds: const {1}, mode: ModifierMode.always),
+          'no_pass': const ModifierSetting(always: true),
+          'reversed': const ModifierSetting(always: true),
           for (final id in ['two_words', 'double_points'])
-            id: ModifierSetting(
-                active: true, rounds: const {1}, mode: ModifierMode.cartridge),
+            id: ModifierSetting(charges: 1),
         },
       ),
     );
@@ -225,7 +215,7 @@ void main() {
     expect(p.twoWordsBlocked, isTrue);
     p.setTwoWords(true);
     expect(p.isTwoWordsArmed, isFalse);
-    expect(p.twoWordsLeft, 1);
+    expect(p.twoWordsLeft, 0, reason: 'verrouillée par le Toujours');
     // ×2 s'allume malgré 2 modificateurs déjà en jeu.
     p.setDoublePoints(true);
     expect(p.isDoublePointsArmed, isTrue);

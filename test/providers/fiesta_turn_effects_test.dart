@@ -27,24 +27,18 @@ Future<GameProvider> givenReadyProvider(
 /// Personnalisé, sans tirage : [fixed] « Toujours » sur la manche 1 (les
 /// charges sont celles du catalogue : 2 passes gratuites).
 FiestaRules fixedOnRound1(Map<String, int> fixed) => FiestaRules(
-      mode: FiestaMode.custom,
       drawCount: 0,
       modifiers: {
         for (final e in fixed.entries)
-          e.key: ModifierSetting(
-              active: true, rounds: const {1}, mode: ModifierMode.always),
+          e.key: const ModifierSetting(always: true),
       },
     );
 
 /// Passe gratuite en cartouche, à allumer avant le tour.
 FiestaRules freePassCartridge() => FiestaRules(
-      mode: FiestaMode.custom,
       drawCount: 0,
       modifiers: {
-        'free_pass': ModifierSetting(
-            active: true,
-            rounds: const {1, 2, 3},
-            mode: ModifierMode.cartridge),
+        'free_pass': ModifierSetting(charges: 1),
       },
     );
 
@@ -131,31 +125,8 @@ void main() {
   });
 
   test(
-      'block_guesser : sans effet à 2 joueurs, sinon jamais celui qui fait '
-      'deviner (AC5)', () async {
-    var provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
-    await provider.startGame(fiesta: fixedOnRound1({}));
-    provider = await withTurnInstance(provider, 'block_guesser');
-    expect(provider.blockableGuessers, isEmpty);
-    expect(provider.needsBlockedGuesser, isFalse);
-
-    provider = await givenReadyProvider(['A', 'B', 'C', 'D', 'E', 'F']);
-    await provider.startGame(fiesta: fixedOnRound1({}));
-    provider = await withTurnInstance(provider, 'block_guesser');
-    final guesser = provider.getCurrentPlayer()!;
-    expect(provider.blockableGuessers.map((p) => p.id),
-        isNot(contains(guesser.id)));
-    expect(provider.blockableGuessers, hasLength(2));
-
-    provider.setBlockedGuesser(guesser.id); // refusé
-    expect(provider.needsBlockedGuesser, isTrue);
-    provider.setBlockedGuesser(provider.blockableGuessers.first.id);
-    expect(provider.needsBlockedGuesser, isFalse);
-  });
-
-  test(
       'Un seul tour : la continuation de fin de manche garde instances de '
-      'portée tour, passes gratuites utilisées et devineur bloqué, puis tout '
+      'portée tour et passes gratuites utilisées, puis tout '
       'tombe à la fin de CE tour', () async {
     var provider = await givenReadyProvider(['A', 'B', 'C', 'D', 'E', 'F']);
     await provider.startGame(fiesta: freePassCartridge());
@@ -165,8 +136,6 @@ void main() {
     provider.toggleBonus('free_pass');
     bool held() =>
         provider.game.fiesta!.active.any((m) => m.scope == ModifierScope.turn);
-    final blocked = provider.blockableGuessers.first;
-    provider.setBlockedGuesser(blocked.id);
 
     // Une passe gratuite, puis l'équipe fait deviner les 6 mots : fin de
     // manche, elle poursuivra en M2.
@@ -183,8 +152,6 @@ void main() {
     expect(provider.getCurrentTeam()!.id, teamId);
     expect(held(), isTrue);
     expect(provider.freePassesUsed, 1);
-    expect(provider.blockedGuesser?.id, blocked.id);
-    expect(provider.needsBlockedGuesser, isFalse);
 
     // Fin du tour de continuation : tout tombe.
     provider.startTurn();
@@ -194,6 +161,5 @@ void main() {
     provider.validateWords(const []);
     expect(held(), isFalse);
     expect(provider.freePassesUsed, 0);
-    expect(provider.blockedGuesser, isNull);
   });
 }

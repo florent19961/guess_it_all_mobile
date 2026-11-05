@@ -50,13 +50,17 @@ int teamPlayCountAtTurn({required int cycleLength, required int turnIndex}) {
 }
 
 /// Index, dans son équipe, du joueur qui fait deviner au tour [turnIndex].
+/// [skips] : tours déjà sautés par l'équipe (Fiesta, « Interdit de faire
+/// deviner »), qui décalent sa rotation.
 int playerIndexAtTurn({
   required List<int> playerOrderForTeam,
   required int cycleLength,
   required int turnIndex,
+  int skips = 0,
 }) {
   if (playerOrderForTeam.isEmpty) return 0;
   final playCount =
       teamPlayCountAtTurn(cycleLength: cycleLength, turnIndex: turnIndex);
-  return playerOrderForTeam[(playCount - 1) % playerOrderForTeam.length];
+  return playerOrderForTeam[
+      (playCount - 1 + skips) % playerOrderForTeam.length];
 }

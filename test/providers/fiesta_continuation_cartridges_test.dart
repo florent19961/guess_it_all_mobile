@@ -25,16 +25,10 @@ Future<GameProvider> givenProvider({int wordsEach = 3}) async {
 /// Sans tirage : [ids] en cartouche, [charges] par équipe pour la partie.
 FiestaRules stock(List<String> ids, {int charges = 2, int boostCount = 0}) =>
     FiestaRules(
-      mode: FiestaMode.custom,
       drawCount: 0,
-      boostCount: boostCount,
+      trailingCount: boostCount,
       modifiers: {
-        for (final id in ids)
-          id: ModifierSetting(
-              active: true,
-              rounds: const {1, 2, 3},
-              mode: ModifierMode.cartridge,
-              charges: charges),
+        for (final id in ids) id: ModifierSetting(charges: charges),
       },
     );
 
@@ -74,8 +68,8 @@ void main() {
     expect(p.getCurrentTeam()!.id, trailing);
     expect(p.getCurrentTeam()!.id, isNot(leader));
     expect(p.isContinuation, isTrue);
-    expect(left(p, 'plus_10s'), 1);
-    expect(p.reserve.single.usable, isTrue);
+    expect(p.reserve.single.catalogId, p.game.fiesta!.earned.single.catalogId);
+    expect(p.reserve.single.left, 1);
   });
 
   test(
@@ -232,6 +226,8 @@ void main() {
     p.setDoublePoints(true);
     playTurn(p, 99);
     expect(rounds(), [2, 4, 4]);
+    expect(p.game.currentScreen, AppConstants.screenTransition);
+    p.nextRound();
     expect(p.game.currentScreen, AppConstants.screenResults);
     final name = p.getTeamById(team)!.name;
     expect(p.modifierRecap.last.detail,

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
 
@@ -32,13 +32,13 @@ void main() {
       '« Rejouer » remet la config Fiesta gelée en attente et revient aux '
       'Paramètres ; après une partie Classique, rien en attente', () async {
     final provider = await givenReadyProvider();
-    provider.setPendingFiesta(FiestaRules(mode: FiestaMode.auto));
+    provider.setPendingFiesta(classicEnsemble.rules);
     await provider.startGame(fiesta: provider.pendingFiesta);
 
     await provider.restartWithSamePlayers();
 
     expect(provider.game.currentScreen, AppConstants.screenSettings);
-    expect(provider.pendingFiesta!.mode, FiestaMode.auto);
+    expect(provider.pendingFiesta!.ensembleName, 'Fiesta classique');
 
     // Même chose via l'accueil : fin de partie, puis « Rejouer » de l'accueil.
     givenWords(provider);
@@ -47,22 +47,21 @@ void main() {
     await provider.restartWithSamePlayers();
 
     expect(provider.game.currentScreen, AppConstants.screenSettings);
-    expect(provider.pendingFiesta!.mode, FiestaMode.auto);
+    expect(provider.pendingFiesta!.ensembleName, 'Fiesta classique');
 
     // App tuée en pleine partie Fiesta : la relance remet la config en attente,
     // sinon « Retour aux équipes » puis « Lancer » repartirait en Classique.
     givenWords(provider);
-    await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
+    await provider.startGame(fiesta: classicEnsemble.rules);
     await pumpEventQueue();
     final reloaded = GameProvider();
     await pumpEventQueue();
     expect(reloaded.isFiesta, isTrue);
-    expect(reloaded.pendingFiesta?.mode, FiestaMode.auto);
+    expect(reloaded.pendingFiesta?.ensembleName, 'Fiesta classique');
 
     // « Nouvelle partie » retrouve le dernier choix, sans les règles gelées.
     await reloaded.startNewGame();
-    expect(reloaded.pendingFiesta!.toJson(),
-        FiestaRules(mode: FiestaMode.auto).toJson());
+    expect(reloaded.pendingFiesta!.toJson(), classicEnsemble.rules.toJson());
 
     // Partie Classique lancée alors qu'une config traîne en attente : Rejouer
     // suit la partie jouée, pas l'attente.

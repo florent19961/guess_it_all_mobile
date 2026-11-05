@@ -4,7 +4,7 @@ import 'fiesta_rules.dart';
 import 'modifier_catalog.dart';
 import 'symmetric_draw.dart';
 
-/// Un ensemble du mode Personnalisé : des `FiestaRules` nommées. Les miens
+/// Un ensemble Fiesta : des `FiestaRules` nommées. Les miens
 /// sont enregistrés sur le téléphone (`FiestaEnsembleService`) ; ceux fournis
 /// par l'app ([kProvidedEnsembles]) sont du code, jamais écrits.
 ///
@@ -24,7 +24,7 @@ class FiestaEnsemble {
 
   Map<String, dynamic> toJson() => {'id': id, 'rules': rules.toJson()};
 
-  /// `null` si l'ensemble est illisible (dont un autre format que Fiesta v3) :
+  /// `null` si l'ensemble est illisible (dont un autre format que Fiesta v4) :
   /// l'appelant l'ignore seul.
   static FiestaEnsemble? tryFromJson(Map<String, dynamic> json) {
     final id = json['id'];
@@ -33,68 +33,32 @@ class FiestaEnsemble {
       return null;
     }
     final rules = FiestaRules.tryFromJson(Map<String, dynamic>.from(rawRules));
-    // Un ensemble est toujours Personnalisé : des règles Auto ici ne
-    // viennent pas de l'éditeur, on ne les propose pas au choix.
-    if (rules == null || rules.mode != FiestaMode.custom) return null;
+    if (rules == null) return null;
     return FiestaEnsemble(id: id, rules: rules);
   }
 }
 
-/// Réglage par défaut de [def] dans un nouvel ensemble : coupé, manches
-/// possibles cochées, « Cartouche » (« Toujours » pour ce qui ne peut pas en
-/// être une), 1 cartouche (2 pour la Passe gratuite).
-ModifierSetting defaultSetting(ModifierDef def) => ModifierSetting(
-      active: false,
-      rounds: allowedRounds(def),
-      mode: canBeCartridge(def) ? ModifierMode.cartridge : ModifierMode.always,
-      charges: def.id == 'free_pass' ? 2 : 1,
-    );
-
-/// Règles d'un nouvel ensemble : Malus de 10 s, Mot à l'envers, Mime sans les
-/// bras, Passe gratuite, Mot compte double en cartouche ; « Une seule réponse »
-/// Toujours ; 1 tiré par manche, coup de pouce à 1 cartouche.
-FiestaRules defaultEnsembleRules(String name) {
-  const on = {
-    'minus_10s',
-    'reversed',
-    'mime_no_arms',
-    'free_pass',
-    'double_points',
-    'one_answer',
-  };
-  return FiestaRules(
-    mode: FiestaMode.custom,
-    ensembleName: name,
-    modifiers: {
-      for (final def in kModifierCatalog)
-        def.id: defaultSetting(def).copyWith(active: on.contains(def.id)),
-    },
-    drawCount: 1,
-    boostCount: 1,
-  );
-}
-
 /// Clé des RÉGLAGES d'un ensemble, hors nom : deux ensembles de même clé
-/// jouent pareil (doublon refusé). Seuls les modificateurs actifs comptent,
-/// leurs manches seulement en Au tirage, leurs cartouches seulement en
-/// Cartouche.
+/// jouent pareil (doublon refusé). Seul ce qui joue compte : pas les réglages
+/// verrouillés, ni l'aléatoire sans tirage, ni le nombre fixe sous « Équilibrer
+/// la partie ».
 String settingsKey(FiestaRules rules) {
-  final ids = rules.modifiers.keys
-      .where((id) => rules.activeSetting(id) != null)
-      .toList()
-    ..sort();
+  final draws = rules.drawCount > 0;
   return jsonEncode({
     'drawCount': rules.drawCount,
-    'boostCount': rules.boostCount,
+    'allCount': rules.allCount,
+    'trailingCount': rules.balance ? 0 : rules.trailingCount,
+    'balance': rules.balance,
     'modifiers': {
-      for (final id in ids)
-        id: {
-          'mode': rules.modifiers[id]!.mode.name,
-          if (rules.modifiers[id]!.mode == ModifierMode.draw)
-            'rounds': rules.modifiers[id]!.rounds.toList()..sort()
-          else if (rules.modifiers[id]!.mode == ModifierMode.cartridge)
-            'charges': rules.modifiers[id]!.charges,
-        },
+      for (final def in kModifierCatalog)
+        if (rules.isAlways(def.id) ||
+            (draws && rules.drawsFrom(def.id)) ||
+            rules.chargesOf(def.id) > 0)
+          def.id: {
+            if (rules.isAlways(def.id)) 'always': true,
+            if (draws && rules.drawsFrom(def.id)) 'draw': true,
+            if (rules.chargesOf(def.id) > 0) 'charges': rules.chargesOf(def.id),
+          },
     },
   });
 }
@@ -114,89 +78,52 @@ const String kClassicEnsembleId = '${kProvidedIdPrefix}classic';
 FiestaEnsemble _provided(
   String key,
   String name, {
-  required Map<String, ModifierMode> modes,
+  Set<String> always = const {},
+  Set<String> draw = const {},
   int drawCount = 0,
-  int charges = 0,
-  int boostCount = 0,
+  int allCount = 0,
+  int trailingCount = 0,
+  bool balance = false,
 }) =>
     FiestaEnsemble(
       id: '$kProvidedIdPrefix$key',
       rules: FiestaRules(
-        mode: FiestaMode.custom,
         ensembleName: name,
         modifiers: {
-          for (final def in kModifierCatalog)
-            def.id: defaultSetting(def).copyWith(
-              active: modes.containsKey(def.id),
-              mode: modes[def.id],
-              charges: charges,
+          for (final id in {...always, ...draw})
+            id: ModifierSetting(
+              always: always.contains(id),
+              draw: draw.contains(id),
             ),
         },
         drawCount: drawCount,
-        boostCount: boostCount,
+        allCount: allCount,
+        trailingCount: trailingCount,
+        balance: balance,
       ),
     );
 
-/// Tout le catalogue en cartouche, hors « Une seule réponse ».
-Map<String, ModifierMode> _allCartridges() => {
-      for (final def in kModifierCatalog)
-        if (canBeCartridge(def)) def.id: ModifierMode.cartridge,
-    };
-
 final List<FiestaEnsemble> kProvidedEnsembles = [
-  // Tout au tirage (1 par manche) ; bonus, −10 s et « Bloquer un devineur »
-  // seulement gagnés par le coup de pouce (cartouches à 0).
   _provided(
     'classic',
     'Fiesta classique',
-    modes: {
-      'no_pass': ModifierMode.draw,
-      'reversed': ModifierMode.draw,
-      'other_language': ModifierMode.draw,
-      'draw': ModifierMode.draw,
-      'one_answer': ModifierMode.draw,
+    draw: {
       for (final def in kModifierCatalog)
-        if (kCartridgeOnlyIds.contains(def.id)) def.id: ModifierMode.cartridge,
+        if (canBeRoundRule(def)) def.id,
     },
     drawCount: 1,
-    boostCount: 1,
+    balance: true,
   ),
+  _provided('last', 'Les derniers seront les premiers', trailingCount: 4),
+  _provided('pro', 'Pro Player', always: {'no_pass', 'reversed', 'one_answer'}),
+  _provided('straight', 'Droit au but', always: {'one_answer'}),
+  _provided('pictionary', 'Pictionnary', always: {'draw'}),
+  _provided('bilingual', 'Bilingue', always: {'other_language'}),
+  _provided('explosive', 'Explosif', allCount: 5),
   _provided(
-    'pro',
-    'Pro Player',
-    modes: {
-      'no_pass': ModifierMode.draw,
-      'reversed': ModifierMode.draw,
-      'one_answer': ModifierMode.always,
-    },
-    drawCount: 1,
-  ),
-  _provided(
-    'straight',
-    'Droit au but',
-    modes: {'one_answer': ModifierMode.always},
-  ),
-  _provided(
-    'explosive',
-    'Explosif',
-    modes: _allCartridges(),
-    charges: 3,
-  ),
-  _provided(
-    'pictionary',
-    'Pictionnary',
-    modes: {'draw': ModifierMode.always},
-  ),
-  _provided(
-    'bilingual',
-    'Bilingue',
-    modes: {'other_language': ModifierMode.always},
-  ),
-  _provided(
-    'injustice',
-    'L\'injustice',
-    modes: _allCartridges(),
-    boostCount: 3,
+    'expert',
+    'Mimeur expert',
+    always: {'sounds_only', 'mime_under_sheet'},
   ),
 ];
 

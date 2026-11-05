@@ -5,14 +5,13 @@ import 'fiesta_state.dart';
 import 'modifier_catalog.dart';
 import 'symmetric_draw.dart';
 
-/// Id du mode Fiesta pour les analytics et l'historique (story 2-7).
-String fiestaModeId(FiestaRules rules) =>
-    rules.mode == FiestaMode.auto ? 'fiesta_auto' : 'fiesta_custom';
+/// Id Fiesta pour les analytics et l'historique (story 2-7). Une seule valeur
+/// depuis la fin du mode Auto : les archives `fiesta_auto` restent lisibles.
+const String kFiestaModeId = 'fiesta_custom';
 
 /// Libellé du mode pour la carte des résultats (maquette `results`).
-String fiestaModeLabel(FiestaRules rules) => rules.mode == FiestaMode.auto
-    ? 'Fiesta · Auto'
-    : 'Fiesta · ${rules.ensembleName ?? 'Personnalisé'}';
+String fiestaModeLabel(FiestaRules rules) =>
+    rules.ensembleName == null ? 'Fiesta' : 'Fiesta · ${rules.ensembleName}';
 
 /// Une ligne AFFICHÉE du récap « Modificateurs de la partie » : titre et
 /// détail formés depuis les faits archivés. Jamais persistée.
@@ -26,7 +25,7 @@ class ModifierRecapLine {
 /// Récap « Modificateurs de la partie » en fin de partie, en FAITS (ids,
 /// manche) : c'est ce qui est archivé, le texte est formé à l'affichage par
 /// [formatModifierRecap]. Le tirage est recalculé par la graine `(gameId,
-/// manche)`, le reste relu de l'état : coup de pouce ([earned]) et cartouches
+/// manche)`, le reste relu de l'état : cartouches au hasard ([earned]) et cartouches
 /// utilisées ([chargesUsed]).
 List<ModifierRecapItem> buildModifierRecap({
   required FiestaRules rules,
@@ -78,7 +77,7 @@ List<ModifierRecapLine> formatModifierRecap(
 
   if (of(RecapKind.boost).isNotEmpty) {
     lines.add(ModifierRecapLine(
-      title: 'Coup de pouce à l\'équipe menée',
+      title: 'Cartouches au hasard',
       detail: joined(RecapKind.boost,
           (i) => '${team(i.teamId)} reçoit ${mod(i.catalogId)} (M${i.round})'),
     ));

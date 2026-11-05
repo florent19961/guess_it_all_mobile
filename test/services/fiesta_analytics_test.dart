@@ -30,7 +30,7 @@ Future<void> _start(AnalyticsService a, String id, {bool fiesta = false}) =>
         'chien':
             WordMetadata(word: 'chien', categoryId: 'nature', difficulty: 1),
       },
-      gameMode: fiesta ? 'fiesta_auto' : null,
+      gameMode: fiesta ? 'fiesta_custom' : null,
       fiestaRules: fiesta ? const {'mode': 'auto'} : null,
     );
 
@@ -148,7 +148,7 @@ void main() {
     await analytics.saveCurrentGame();
 
     final reread = (await analytics.loadGameAnalytics('fiesta'))!;
-    expect(reread.gameMode, 'fiesta_auto');
+    expect(reread.gameMode, 'fiesta_custom');
     expect(reread.fiestaRules, {'mode': 'auto'});
     expect(reread.events.map((e) => e.eventType), [
       WordEventType.shown,
@@ -221,7 +221,7 @@ void main() {
       expect(
           formatModifierRecap(reread.modifierRecap!,
               teamNames: const {'b': 'Bleue'}).map((l) => l.title),
-          contains('Coup de pouce à l\'équipe menée'));
+          contains('Cartouches au hasard'));
     });
   });
 }

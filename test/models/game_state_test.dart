@@ -127,22 +127,12 @@ void main() {
 
     FiestaState fiestaState() => FiestaState(
           rules: FiestaRules(
-            mode: FiestaMode.custom,
             ensembleName: 'Soirée chez Max',
             modifiers: {
-              'free_pass': ModifierSetting(
-                active: true,
-                rounds: const {2, 3},
-                mode: ModifierMode.cartridge,
-                charges: 3,
-              ),
-              'draw': ModifierSetting(
-                active: true,
-                rounds: const {3},
-                mode: ModifierMode.always,
-              ),
+              'free_pass': ModifierSetting(charges: 3),
+              'draw': const ModifierSetting(always: true),
             },
-            boostCount: 1,
+            trailingCount: 1,
             drawCount: 2,
           ),
           active: const [instance],
@@ -211,29 +201,21 @@ void main() {
       final json = GameState(gameId: 'abc', fiesta: fiestaState()).toJson();
       final rules = (json['fiesta'] as Map<String, dynamic>)['rules']
           as Map<String, dynamic>;
-      rules.remove('boostCount');
+      rules.remove('trailingCount');
       rules['fromTheFuture'] = 42;
 
       final restored = GameState.fromJson(json);
 
       expect(restored.fiesta, isNotNull);
-      expect(restored.fiesta!.rules.boostCount, 0);
+      expect(restored.fiesta!.rules.trailingCount, 0);
       expect(restored.fiesta!.rules.drawCount, 2,
           reason: 'les présents restent');
 
-      rules['boostCount'] = 'oui';
+      rules['allCount'] = 'oui';
       expect(GameState.fromJson(json).fiesta, isNull);
-      rules['boostCount'] = 4;
+      rules['allCount'] = 6;
       expect(GameState.fromJson(json).fiesta, isNull, reason: 'hors bornes');
-      rules.remove('boostCount');
-      rules['trailingBoost'] = true;
-      expect(GameState.fromJson(json).fiesta!.rules.boostCount, 1,
-          reason: 'l\'ancien booléen, à la place de `boostCount` absent');
-      rules['trailingBoost'] = 'oui';
-      expect(GameState.fromJson(json).fiesta, isNull);
-      rules['boostCount'] = 2;
-      expect(GameState.fromJson(json).fiesta!.rules.boostCount, 2,
-          reason: '`boostCount` présent : l\'ancien booléen ne compte plus');
+      rules.remove('allCount');
       rules['drawCount'] = 9;
       expect(GameState.fromJson(json).fiesta, isNull, reason: 'hors bornes');
     });
@@ -313,15 +295,11 @@ void main() {
       ];
       // Un réglage d'id inconnu dans les règles est ignoré seul, lui aussi.
       (fiesta['rules'] as Map<String, dynamic>)['modifiers']['unknown'] = {
-        'active': true,
-        'rounds': [1],
-        'mode': 'draw',
+        'draw': true,
       };
-      // Un réglage aux manches hors 1-3 est ignoré seul, lui aussi.
+      // Un réglage hors bornes est ignoré seul, lui aussi.
       (fiesta['rules'] as Map<String, dynamic>)['modifiers']['reversed'] = {
-        'active': true,
-        'rounds': [4],
-        'mode': 'draw',
+        'charges': kMaxCount + 1,
       };
 
       final restored = GameState.fromJson(json);
@@ -342,17 +320,16 @@ void main() {
           };
       final rules = FiestaRules.tryFromJson({
         'format': FiestaRules.format,
-        'mode': 'custom',
         'modifiers': {
-          'free_pass': setting(maxCartridges('free_pass')),
-          'plus_10s': setting(maxCartridges('plus_10s')),
-          'double_points': setting(maxCartridges('double_points') + 1),
+          'free_pass': setting(kMaxCount),
+          'plus_10s': setting(3),
+          'double_points': setting(kMaxCount + 1),
           'two_words': setting(-1),
           'minus_10s': setting(0),
         },
       })!;
       expect(rules.modifiers.keys, ['free_pass', 'plus_10s', 'minus_10s']);
-      expect(rules.modifiers['free_pass']!.charges, 5);
+      expect(rules.modifiers['free_pass']!.charges, kMaxCount);
       expect(rules.modifiers['plus_10s']!.charges, 3);
     });
 

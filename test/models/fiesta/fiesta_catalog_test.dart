@@ -17,7 +17,7 @@ ModifierInstance _instance(String id,
 void main() {
   group('Catalogue Fiesta', () {
     test(
-        '17 ids uniques, et la table d\'incompatibilités ne cite que des ids '
+        '18 ids uniques, et la table d\'incompatibilités ne cite que des ids '
         'du catalogue', () {
       // 🔴 Ids FIGÉS : ils sont persistés dans les parties en cours et les
       // ensembles enregistrés. En renommer un rend ces données illisibles.
@@ -40,6 +40,7 @@ void main() {
         'one_answer',
         'sounds_only',
         'plus_10s',
+        'block_giver',
       ]);
 
       for (final (a, b) in kModifierIncompatibilities) {
@@ -72,7 +73,9 @@ void main() {
       });
       for (final a in family) {
         for (final b in family) {
-          expect(areCompatible(a.id, b.id), isFalse, reason: '${a.id}/${b.id}');
+          final pair =
+              {a.id, b.id}.containsAll(['sounds_only', 'mime_under_sheet']);
+          expect(areCompatible(a.id, b.id), pair, reason: '${a.id}/${b.id}');
         }
         expect(areCompatible(a.id, 'reversed'), isTrue, reason: a.id);
       }

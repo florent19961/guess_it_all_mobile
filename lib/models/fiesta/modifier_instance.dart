@@ -14,11 +14,20 @@ class ModifierInstance {
   final int round;
 
   /// Malus INFLIGÉ par l'équipe [fromTeamId] à l'équipe [teamId] avec une
-  /// cartouche de sa réserve (écran « Ce tour / Réserve ») : il pèse sur le
+  /// cartouche de sa réserve (écran avant le tour) : il pèse sur le
   /// PROCHAIN tour de [teamId], quelle que soit la manche ([round] = manche
   /// d'envoi, pour mémoire), puis part à la vraie fin de ce tour. Clé JSON
   /// `from`, omise si nul.
   final String? fromTeamId;
+
+  /// Joueur qui a envoyé le malus (nommé par la phrase d'« Interdit de faire
+  /// deviner »). Clé JSON `fromPlayer`, omise si nul.
+  final String? fromPlayerId;
+
+  /// `currentTurnIndex` de l'envoi : seul l'avant-tour de cet envoi peut
+  /// l'annuler (un blocage en attente survit à plusieurs tours). Clé JSON
+  /// `sentTurn`, omise si nul.
+  final int? sentTurnIndex;
 
   /// Contrat : une cible `team` ou `player` porte toujours son [teamId] (le
   /// joueur est repéré par son équipe pour le plafond par équipe).
@@ -32,8 +41,18 @@ class ModifierInstance {
     required this.nature,
     required this.round,
     this.fromTeamId,
+    this.fromPlayerId,
+    this.sentTurnIndex,
   }) : assert(target == ModifierTarget.both || teamId != null,
             'une cible team/player exige un teamId');
+
+  /// Blocage nommé en attente, sans effet sur le tour de [giverId] :
+  /// « Interdit de faire deviner » ne pèse jamais sur un tour (il l'annule à son
+  /// départ, `GameProvider.startTurnTimer`) ; « Bloquer un devineur » attend le
+  /// prochain tour où son joueur devine.
+  bool waitsFor(String? giverId) =>
+      catalogId == 'block_giver' ||
+      (catalogId == 'block_guesser' && playerId == giverId);
 
   /// Vrai si les deux instances pèsent sur la même équipe : une cible `both`
   /// touche toutes les équipes, sinon c'est le même `teamId`.
@@ -54,6 +73,8 @@ class ModifierInstance {
         'nature': nature.name,
         'round': round,
         if (fromTeamId != null) 'from': fromTeamId,
+        if (fromPlayerId != null) 'fromPlayer': fromPlayerId,
+        if (sentTurnIndex != null) 'sentTurn': sentTurnIndex,
       };
 
   /// Variante tolérante : rend `null` au lieu de lever.
@@ -73,7 +94,11 @@ class ModifierInstance {
     final teamId = json['teamId'];
     final playerId = json['playerId'];
     final from = json['from'];
+    final fromPlayer = json['fromPlayer'];
+    final sentTurn = json['sentTurn'];
     if (from is! String? ||
+        fromPlayer is! String? ||
+        sentTurn is! int? ||
         scope == null ||
         target == null ||
         nature == null ||
@@ -94,6 +119,8 @@ class ModifierInstance {
       nature: nature,
       round: round,
       fromTeamId: from,
+      fromPlayerId: fromPlayer,
+      sentTurnIndex: sentTurn,
     );
   }
 }

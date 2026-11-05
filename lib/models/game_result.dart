@@ -58,8 +58,7 @@ enum RecapKind {
   /// Tiré ou fixé pour toutes les équipes en manche [ModifierRecapItem.round].
   draw,
 
-  /// Cartouche gagnée par [ModifierRecapItem.teamId] (coup de pouce à
-  /// l'équipe menée). Les faits d'un genre retiré depuis, relus d'une archive,
+  /// Cartouche au hasard reçue par [ModifierRecapItem.teamId]. Les faits d'un genre retiré depuis, relus d'une archive,
   /// sont ignorés seuls ([ModifierRecapItem.tryFromJson]).
   boost,
 
@@ -133,7 +132,7 @@ class GameResult {
   final int turnDuration;
   final int roundsPlayed;
 
-  /// `'fiesta_auto'` / `'fiesta_custom'` (story 2-7). `null` = Classique, ou
+  /// `'fiesta_custom'` ; `'fiesta_auto'` dans les archives d'avant la v4 (story 2-7). `null` = Classique, ou
   /// partie archivée par une version antérieure : clé ABSENTE du JSON.
   final String? mode;
 

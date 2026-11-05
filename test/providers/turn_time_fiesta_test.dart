@@ -88,18 +88,12 @@ void main() {
     final provider = await givenReadyProvider();
     await provider.startGame(
       fiesta: FiestaRules(
-        mode: FiestaMode.custom,
         drawCount: 1,
         modifiers: {
           for (final id in ['plus_10s', 'minus_10s'])
-            id: ModifierSetting(
-                active: true,
-                rounds: const {1, 2, 3},
-                mode: ModifierMode.cartridge,
-                charges: 2),
+            id: ModifierSetting(charges: 2),
           // Une règle de M2, sans effet sur le temps.
-          'no_pass': ModifierSetting(
-              active: true, rounds: const {2}, mode: ModifierMode.draw),
+          'other_language': const ModifierSetting(draw: true),
         },
       ),
     );
@@ -138,7 +132,8 @@ void main() {
     // Continuation : le +10 s déjà dépensé n'ajoute rien, seules les secondes
     // reportées comptent ; la règle de M2 s'applique, elle.
     expect(provider.isContinuation, isTrue);
-    expect(provider.passBlocked, isTrue);
+    expect(provider.currentTeamModifiers.map((m) => m.catalogId),
+        contains('other_language'));
     expect(provider.turnTime.total, 35);
     provider.startTurn();
     provider.startTurnTimer();
