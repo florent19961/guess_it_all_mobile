@@ -32,3 +32,14 @@ date · story · question · choix · raison · état
 - 2026-11-04 · fiesta-v2 lane 2 (#40) · Coup de pouce Auto : bonus deviennent des cartouches (Passe gratuite = 1 tour), malus frappe toujours le leader toute la manche · pas de choix de cible en Auto · à valider
 - 2026-11-04 · fiesta-v2 lane 2 (#40) · récap « Bonus utilisés » → « Cartouches utilisées » (« X contre Y ») ; réserve cachée pendant une continuation · choix de l'implémenteur · à valider
 - 2026-11-04 · fiesta-v2 lane 2 (#40) · 3ᵉ tour de revue arbitré par l'orchestrateur après lecture du delta et du rendu 360×640 à 7 envois ; résidu : puces d'équipes aux 8 premiers caractères identiques se ressemblent · non-convergence évitée · appliqué
+- 2026-11-05 · fiesta-v3 (#42) · remplacement du 1 parmi 3 : « Coup de pouce à l'équipe menée », interrupteur par ensemble, 1 cartouche aléatoire à chaque équipe non en tête après M1 et M2, vivier = modificateurs en Cartouche, compteur possible à 0 · demande Florent, mécanisme arbitré par l'orchestrateur · à valider
+- 2026-11-05 · fiesta-v3 (#42) · Auto : le coup de pouce remplace le malus au leader toute la manche · même mécanisme partout · à valider
+- 2026-11-05 · fiesta-v3 (#42) · ensembles personnels v2 ignorés et partie Fiesta suspendue renvoyée à l'accueil (format 3) · même politique que v1→v2 · à valider
+- 2026-11-05 · fiesta-v3 (#42) · Explosif à 3 cartouches de chaque pour la partie · choix de l'orchestrateur · à valider
+- 2026-11-05 · fiesta-v3 (#42) · manches à cocher conservées pour Toujours et Au tirage · Florent n'a retiré la programmation que pour les cartouches · à valider
+- 2026-11-05 · fiesta-v3 (#42) · « Temps bonus conservé » retiré de la transition en Classique aussi, encart avant le tour conservé · écran partagé · à valider
+- 2026-11-05 · fiesta-v3 (#42) · réserve vide pendant une continuation : pas de cartouche sur du temps reporté, +10 s compris · comportement existant conservé · à valider
+- 2026-11-05 · fiesta-v3 (#42) · MAJOR Codex rejeté : « Autre langue » reçu en M2 tombe dans une continuation en M3 · sans objet quand on mime · appliqué, épinglé par test
+- 2026-11-05 · fiesta-v3 fixes (#41) · MAJOR Codex : garde d'écran dans endTurn() · second appel faussait l'analytics et le temps reporté · appliqué
+- 2026-11-05 · fiesta-v3 (#41, #42) · merge sans 2ᵉ passage Codex, delta r2 relu par l'orchestrateur · correctifs courts, testés · appliqué
+- 2026-11-05 · fiesta-v3 · non corrigé : à 360 px, un nom d'équipe long passe sous le « ? » en haut de l'écran du tour · hors demande · à valider
