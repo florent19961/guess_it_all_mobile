@@ -161,18 +161,21 @@ class FiestaState {
 
 /// Une cartouche dépensée : [teamId] a utilisé [catalogId] en manche
 /// [round] : un bonus pour elle, ou un malus infligé à [targetTeamId] (clé
-/// `target` omise pour un bonus).
+/// `target` omise pour un bonus). [turn] = numéro du tour où elle a été jouée
+/// (révélation des scores) ; nul sur une partie antérieure, clé alors absente.
 class ChargeUse {
   final String catalogId;
   final String teamId;
   final int round;
   final String? targetTeamId;
+  final int? turn;
 
   const ChargeUse({
     required this.catalogId,
     required this.teamId,
     required this.round,
     this.targetTeamId,
+    this.turn,
   });
 
   Map<String, dynamic> toJson() => {
@@ -180,6 +183,7 @@ class ChargeUse {
         'teamId': teamId,
         'round': round,
         if (targetTeamId != null) 'target': targetTeamId,
+        if (turn != null) 'turn': turn,
       };
 
   /// Variante tolérante : une entrée illisible est ignorée seule.
@@ -198,7 +202,8 @@ class ChargeUse {
         catalogId: catalogId,
         teamId: teamId,
         round: round,
-        targetTeamId: target);
+        targetTeamId: target,
+        turn: json['turn'] is int ? json['turn'] as int : null);
   }
 }
 

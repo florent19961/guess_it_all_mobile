@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'game_setup_snapshot.dart';
+import 'play_rotation.dart';
 
 /// Résultat d'une équipe sur une partie terminée.
 @immutable
@@ -143,6 +144,10 @@ class GameResult {
   /// archive antérieure (clé absente) ou snapshot illisible.
   final GameSetupSnapshot? setup;
 
+  /// Ids des équipes dans l'ordre de jeu, pour départager les ex æquo. `null` =
+  /// archive antérieure (clé absente) : ses égalités restent affichées.
+  final List<String>? playOrder;
+
   const GameResult({
     required this.gameId,
     required this.playedAt,
@@ -153,19 +158,36 @@ class GameResult {
     this.mode,
     this.modifierRecap,
     this.setup,
+    this.playOrder,
   });
 
-  /// Équipes triées par score décroissant.
+  /// L'ordre de jeu couvre toutes les équipes : la règle du jeu s'applique.
+  bool get _canBreakTies =>
+      playOrder != null && teams.every((t) => playOrder!.contains(t.id));
+
+  /// Équipes dans l'ordre du classement final ; sans ordre de jeu, par score
+  /// décroissant seulement.
   List<TeamResult> get ranking {
     final sorted = List<TeamResult>.from(teams);
-    sorted.sort((a, b) => b.score.compareTo(a.score));
+    if (_canBreakTies) {
+      sorted.sort((a, b) => compareFinalRank(
+            scoreA: a.score,
+            scoreB: b.score,
+            startA: playOrder!.indexOf(a.id),
+            startB: playOrder!.indexOf(b.id),
+          ));
+    } else {
+      sorted.sort((a, b) => b.score.compareTo(a.score));
+    }
     return sorted;
   }
 
-  /// La ou les équipes en tête. Plusieurs en cas d'égalité — le jeu ne
-  /// départage pas, donc l'historique ne doit pas inventer un vainqueur.
+  /// L'équipe gagnante. Plusieurs seulement sur une archive sans ordre de jeu,
+  /// où rien ne permet de les départager : l'historique n'invente pas de
+  /// vainqueur.
   List<TeamResult> get winners {
     if (teams.isEmpty) return const [];
+    if (_canBreakTies) return [ranking.first];
     final best = teams.map((t) => t.score).reduce((a, b) => a > b ? a : b);
     return teams.where((t) => t.score == best).toList();
   }
@@ -189,6 +211,7 @@ class GameResult {
         if (modifierRecap != null)
           'modifierRecap': modifierRecap!.map((l) => l.toJson()).toList(),
         if (setup != null) 'setup': setup!.toJson(),
+        if (playOrder != null) 'playOrder': playOrder,
       };
 
   /// Rend `null` si l'entrée est inexploitable, plutôt que de lever : une
@@ -228,6 +251,9 @@ class GameResult {
               .toList()
           : null,
       setup: GameSetupSnapshot.tryFromJson(json['setup']),
+      playOrder: json['playOrder'] is List
+          ? (json['playOrder'] as List<dynamic>).whereType<String>().toList()
+          : null,
     );
   }
 }

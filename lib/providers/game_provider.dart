@@ -492,6 +492,7 @@ class GameProvider extends ChangeNotifier {
 
     _game = _game.copyWith(
       gameId: gameId,
+      scoreRevealSeen: false,
       currentScreen: AppConstants.screenGame,
       currentRound: 1,
       currentTurn: 1,
@@ -688,7 +689,11 @@ class GameProvider extends ChangeNotifier {
         turn: fiesta.turn.withCharge(id, ChargeState.spent),
         chargesUsed: [
           ...fiesta.chargesUsed,
-          ChargeUse(catalogId: id, teamId: teamId, round: _game.currentRound),
+          ChargeUse(
+              catalogId: id,
+              teamId: teamId,
+              round: _game.currentRound,
+              turn: _game.currentTurn),
         ],
       );
     }
@@ -1836,7 +1841,8 @@ class GameProvider extends ChangeNotifier {
               catalogId: catalogId,
               teamId: me.id,
               round: round,
-              targetTeamId: targetTeamId),
+              targetTeamId: targetTeamId,
+              turn: _game.currentTurn),
         ],
       ),
     );
@@ -1930,6 +1936,10 @@ class GameProvider extends ChangeNotifier {
         settings: _settings.copyWith(),
         fiesta: _game.fiesta?.rules,
       ),
+      playOrder: [
+        for (final i in _game.teamPlayOrder.take(_teams.length))
+          if (i < _teams.length) _teams[i].id,
+      ],
     );
 
     unawaited(_history.record(result));
@@ -1949,6 +1959,15 @@ class GameProvider extends ChangeNotifier {
     if (_game.isGameSuspended || _game.allWords.isNotEmpty) {
       _saveGameState();
     }
+  }
+
+  /// Fin de la révélation des scores : l'écran Résultats prend sa place, et
+  /// elle ne se rejouera plus pour cette partie.
+  void markScoreRevealSeen() {
+    if (_game.scoreRevealSeen) return;
+    _game = _game.copyWith(scoreRevealSeen: true);
+    notifyListeners();
+    _saveGameState();
   }
 
   Future<void> suspendGame() async {
@@ -2190,18 +2209,14 @@ class GameProvider extends ChangeNotifier {
   List<Team> getTeamsSortedByScore() {
     final sortedTeams = List<Team>.from(_teams);
     sortedTeams.sort((a, b) {
-      // D'abord par score décroissant
-      final scoreCompare = b.score.compareTo(a.score);
-      if (scoreCompare != 0) return scoreCompare;
-
-      // En cas d'égalité, celui qui a commencé plus tard gagne
       final indexA = _teams.indexWhere((t) => t.id == a.id);
       final indexB = _teams.indexWhere((t) => t.id == b.id);
-      final orderA = _game.teamPlayOrder.indexOf(indexA);
-      final orderB = _game.teamPlayOrder.indexOf(indexB);
-
-      // Plus grand = a commencé plus tard = meilleur classement
-      return orderB.compareTo(orderA);
+      return compareFinalRank(
+        scoreA: a.score,
+        scoreB: b.score,
+        startA: _game.teamPlayOrder.indexOf(indexA),
+        startB: _game.teamPlayOrder.indexOf(indexB),
+      );
     });
     return sortedTeams;
   }
@@ -2344,6 +2359,8 @@ class GameProvider extends ChangeNotifier {
       clearPreValidationSnapshot: true,
       restoredValidatedWords:
           validatedWords is List ? validatedWords.cast<String>() : null,
+      // Le snapshot précède la révélation : une correction ne la rejoue pas.
+      scoreRevealSeen: _game.scoreRevealSeen,
     );
 
     notifyListeners();
