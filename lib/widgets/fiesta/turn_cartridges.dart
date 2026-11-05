@@ -240,8 +240,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
             children: [
               Text('${modifierIcon(id)} ${def.name}',
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.subtitle(fontSize: 26)
-                      .copyWith(color: color)),
+                  style: AppTextStyles.subtitle(fontSize: 26)),
               if (from != null)
                 Text('Reçu de l\'équipe $from', style: hint)
               else if (noSender)

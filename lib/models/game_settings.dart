@@ -1,4 +1,6 @@
 import '../utils/constants.dart';
+import 'fiesta/fiesta_rules.dart';
+import 'fiesta/modifier_catalog.dart';
 
 class GameSettings {
   int numberOfTeams;
@@ -10,6 +12,9 @@ class GameSettings {
   List<String> selectedCategories;
   List<int> selectedDifficultyLevels;
 
+  /// Auto / Personnalisé (« Avancés ») : le mode pris en passant en Fiesta.
+  FiestaMode fiestaMode;
+
   GameSettings({
     this.numberOfTeams = AppConstants.defaultNumberOfTeams,
     this.numberOfPlayers = AppConstants.defaultNumberOfPlayers,
@@ -19,6 +24,7 @@ class GameSettings {
     this.passPenalty = AppConstants.defaultPassPenalty,
     List<String>? selectedCategories,
     List<int>? selectedDifficultyLevels,
+    this.fiestaMode = FiestaMode.auto,
   })  : selectedCategories =
             selectedCategories ?? List.from(AppConstants.defaultCategories),
         selectedDifficultyLevels = selectedDifficultyLevels ??
@@ -37,6 +43,7 @@ class GameSettings {
     int? passPenalty,
     List<String>? selectedCategories,
     List<int>? selectedDifficultyLevels,
+    FiestaMode? fiestaMode,
   }) {
     return GameSettings(
       numberOfTeams: numberOfTeams ?? this.numberOfTeams,
@@ -49,6 +56,7 @@ class GameSettings {
           selectedCategories ?? List.from(this.selectedCategories),
       selectedDifficultyLevels:
           selectedDifficultyLevels ?? List.from(this.selectedDifficultyLevels),
+      fiestaMode: fiestaMode ?? this.fiestaMode,
     );
   }
 
@@ -62,6 +70,7 @@ class GameSettings {
       'passPenalty': passPenalty,
       'selectedCategories': selectedCategories,
       'selectedDifficultyLevels': selectedDifficultyLevels,
+      'fiestaMode': fiestaMode.name,
     };
   }
 
@@ -84,6 +93,9 @@ class GameSettings {
       selectedDifficultyLevels:
           (json['selectedDifficultyLevels'] as List<dynamic>?)?.cast<int>() ??
               List.from(AppConstants.defaultDifficultyLevels),
+      // Clé absente (réglages d'avant) ou valeur inconnue : Auto.
+      fiestaMode: enumFromJson(FiestaMode.values, json['fiestaMode']) ??
+          FiestaMode.auto,
     );
   }
 }

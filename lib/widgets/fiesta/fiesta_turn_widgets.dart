@@ -1,17 +1,15 @@
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 
-import '../../theme/app_theme.dart';
-import '../../utils/reversed_word.dart';
+import '../common/turn_play_widgets.dart';
 
 /// Durée de l'animation d'apparition d'un mot, qui est aussi la durée du
 /// verrou des boutons : un tap ne peut pas valider un mot qui vient de
 /// remplacer le précédent sous le doigt (2-11, critère 9).
 const Duration kWordCardLock = Duration(milliseconds: 300);
 
-/// Carte d'un mot pendant le tour Fiesta : le mot (à l'envers si [reversed]),
-/// et les actions Passer / Trouvé. Purement visuelle : la logique de jeu
-/// reste dans les callbacks.
+/// Un mot pendant le tour Fiesta, au même rendu que le tour à un mot : le mot
+/// (à l'envers si [reversed]) sur le fond de l'écran, et les boutons Passer /
+/// Trouvé. Purement visuelle : la logique de jeu reste dans les callbacks.
 ///
 /// À chaque nouveau mot (montage, ou [word] qui change), la carte s'anime et
 /// ignore les taps pendant [kWordCardLock]. Ce verrou est un état de widget :
@@ -26,13 +24,11 @@ class FiestaWordCard extends StatefulWidget {
   /// `null` = bouton désactivé (pause, `no_pass`, plus de mot à passer…).
   final VoidCallback? onPass;
 
-  /// Libellé du bouton Passer : « Passer · −3 s », « Passer (bloqué) »…
+  /// Libellé du bouton Passer : « Passer », « Passer (bloqué) ».
   final String passLabel;
 
-  /// Petit libellé au-dessus du mot (« Mot A »), absent si `null`.
-  final String? label;
-
-  final double fontSize;
+  /// Sous le libellé : pénalité ou « gratuit ».
+  final String? passDetail;
 
   const FiestaWordCard({
     required this.word,
@@ -40,8 +36,7 @@ class FiestaWordCard extends StatefulWidget {
     this.onGuessed,
     this.onPass,
     this.passLabel = 'Passer',
-    this.label,
-    this.fontSize = 56,
+    this.passDetail,
     super.key,
   });
 
@@ -83,48 +78,22 @@ class _FiestaWordCardState extends State<FiestaWordCard>
   }
 
   @override
-  Widget build(BuildContext context) {
-    final label = widget.label;
-    return FadeTransition(
-      opacity: _opacity,
-      child: ScaleTransition(
-        scale: _scale,
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
+  Widget build(BuildContext context) => FadeTransition(
+        opacity: _opacity,
+        child: ScaleTransition(
+          scale: _scale,
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (label != null)
-                Text(
-                  label.toUpperCase(),
-                  style: AppTextStyles.bodySmall.copyWith(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1,
-                    color: AppColors.gray500,
-                  ),
-                ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: AutoSizeText(
-                  widget.reversed
-                      ? reversedWordDisplay(widget.word)
-                      : widget.word,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  minFontSize: 24,
-                  wrapWords: false,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'Bangers',
-                    fontSize: widget.fontSize,
-                    letterSpacing: 1,
-                    color: AppColors.backgroundMain,
+              Expanded(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: TurnWordText(
+                      word: widget.word,
+                      reversed: widget.reversed,
+                      maxLines: 2,
+                      minFontSize: 16,
+                    ),
                   ),
                 ),
               ),
@@ -134,79 +103,24 @@ class _FiestaWordCardState extends State<FiestaWordCard>
                   ignoring: _entry.isAnimating,
                   child: child,
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _CardButton(
-                        label: widget.passLabel,
-                        color: AppColors.gray600,
-                        textColor: Colors.white,
-                        onTap: _locked(widget.onPass),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _CardButton(
-                        label: 'Trouvé ✓',
-                        color: AppColors.secondaryCyan,
-                        textColor: AppColors.backgroundMain,
-                        onTap: _locked(widget.onGuessed),
-                      ),
-                    ),
-                  ],
+                child: TurnActionButtons(
+                  compact: true,
+                  passLabel: widget.passLabel,
+                  passDetail: widget.passDetail,
+                  onPass: _locked(widget.onPass),
+                  onGuessed: _locked(widget.onGuessed),
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
+      );
 }
 
-class _CardButton extends StatelessWidget {
-  final String label;
-  final Color color;
-  final Color textColor;
-  final VoidCallback? onTap;
-
-  const _CardButton({
-    required this.label,
-    required this.color,
-    required this.textColor,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final enabled = onTap != null;
-    return Material(
-      color: enabled ? color : AppColors.gray700,
-      borderRadius: BorderRadius.circular(24),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTextStyles.bodySmall.copyWith(
-              fontWeight: FontWeight.w600,
-              color: enabled ? textColor : AppColors.gray500,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Bonus « Deux mots à la fois » (2-11) : deux [FiestaWordCard] empilées, une
-/// paire de callbacks par carte. Une seule carte, sans place vide, quand
-/// [secondWord] est `null` (dernier mot de la manche).
+/// Bonus « Deux mots à la fois » (2-11) : deux [FiestaWordCard] superposées qui
+/// se partagent la hauteur reçue (à borner), une paire de callbacks par carte.
+/// Une seule carte, sans place vide, quand [secondWord] est `null` (dernier mot
+/// de la manche).
 class TwoWordsLayout extends StatelessWidget {
   final String firstWord;
   final String? secondWord;
@@ -216,6 +130,7 @@ class TwoWordsLayout extends StatelessWidget {
   final VoidCallback? onGuessedSecond;
   final VoidCallback? onPassSecond;
   final String passLabel;
+  final String? passDetail;
 
   const TwoWordsLayout({
     required this.firstWord,
@@ -226,6 +141,7 @@ class TwoWordsLayout extends StatelessWidget {
     this.onGuessedSecond,
     this.onPassSecond,
     this.passLabel = 'Passer',
+    this.passDetail,
     super.key,
   });
 
@@ -233,34 +149,32 @@ class TwoWordsLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final second = secondWord;
     return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Clé = le mot (A ≠ B, doublons refusés à la saisie) : la carte B qui
         // passe seule en tête garde son état, sans se ré-animer ni se reverrouiller.
-        FiestaWordCard(
+        Expanded(
           key: ValueKey(firstWord),
-          word: firstWord,
-          reversed: reversed,
-          label: second == null ? null : 'Mot A',
-          fontSize: second == null ? 56 : 40,
-          passLabel: passLabel,
-          onGuessed: onGuessedFirst,
-          onPass: onPassFirst,
-        ),
-        if (second != null) ...[
-          const SizedBox(height: 12),
-          FiestaWordCard(
-            key: ValueKey(second),
-            word: second,
+          child: FiestaWordCard(
+            word: firstWord,
             reversed: reversed,
-            label: 'Mot B',
-            fontSize: 40,
             passLabel: passLabel,
-            onGuessed: onGuessedSecond,
-            onPass: onPassSecond,
+            passDetail: passDetail,
+            onGuessed: onGuessedFirst,
+            onPass: onPassFirst,
           ),
-        ],
+        ),
+        if (second != null)
+          Expanded(
+            key: ValueKey(second),
+            child: FiestaWordCard(
+              word: second,
+              reversed: reversed,
+              passLabel: passLabel,
+              passDetail: passDetail,
+              onGuessed: onGuessedSecond,
+              onPass: onPassSecond,
+            ),
+          ),
       ],
     );
   }

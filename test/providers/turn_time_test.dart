@@ -1,5 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guess_it_all_mobile/models/word_event.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
+import 'package:guess_it_all_mobile/services/analytics_service.dart';
+import 'package:guess_it_all_mobile/utils/constants.dart';
 
 import '../helpers/test_prefs.dart';
 
@@ -160,6 +165,60 @@ void main() {
   });
 
   group('Temps du tour — fin de tour', () {
+    // Revue de la PR #41 : le chrono et la confirmation « Terminer » peuvent
+    // se croiser. Le second appel ajoutait un `expired` pour le même mot, et
+    // remettait à zéro le temps reporté d'une manche finie en avance.
+    Future<GameProvider> givenGameTurn() async {
+      await givenPrefs();
+      givenFakePlatformPlugins();
+      final provider = GameProvider();
+      await pumpEventQueue();
+      for (final name in ['A', 'B', 'C', 'D']) {
+        final id = (provider.addPlayer(name)['player'] as dynamic).id as String;
+        provider.updatePlayerWords(id, ['$name-1', '$name-2']);
+      }
+      provider.createTeams();
+      provider.randomizeTeams();
+      await provider.startGame();
+      provider.startTurn();
+      provider.startTurnTimer();
+      return provider;
+    }
+
+    test('un second endTurn ne change ni l\'état ni les événements', () async {
+      final provider = await givenGameTurn();
+      final word = provider.game.currentWord!;
+
+      provider.endTurn();
+      expect(provider.game.currentScreen, AppConstants.screenVerification);
+      final state = jsonEncode(provider.game.toJson());
+      final events = List.of(AnalyticsService().currentGame!.events);
+
+      provider.endTurn();
+
+      expect(jsonEncode(provider.game.toJson()), state);
+      expect(AnalyticsService().currentGame!.events, events);
+      expect(
+        events.where(
+            (e) => e.word == word && e.eventType == WordEventType.expired),
+        hasLength(1),
+      );
+    });
+
+    test('endTurn après une manche finie en avance garde le temps reporté',
+        () async {
+      final provider = await givenGameTurn();
+      while (provider.game.remainingWords.isNotEmpty) {
+        provider.markWordAsGuessed();
+      }
+      final carried = provider.game.turnBonusTime;
+      expect(carried, greaterThan(0));
+
+      provider.endTurn();
+
+      expect(provider.game.turnBonusTime, carried);
+    });
+
     test(
         'terminer un tour GELÉ utilise le reste gelé, pas une deadline périmée',
         () async {

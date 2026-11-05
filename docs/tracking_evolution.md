@@ -923,3 +923,30 @@ en puces « [icône] → X » (un appui propose d'annuler). La zone est coupée 
 de passer sous « Commencer le tour ». Rendus locaux : Explosif M1 et M3 chargés (3 malus reçus,
 une règle, un bonus allumé, 2 envois), Explosif M3 2 équipes et Fiesta classique tiennent en
 360 × 640 et 360 × 740. Le titre de manche rétrécit au lieu de déborder (« Description libre »).
+
+## 2026-11-05 — Fiesta : quatre retours device (fin de tour, Auto / Personnalisé, fiches, Deux mots)
+
+**Fin de tour (bug).** Le chrono à zéro appelait `endTurn` dans un `addPostFrameCallback`, qui ne
+demande pas de frame. Pendant la dernière seconde rien ne notifie ni n'anime l'écran : le tour
+restait sur « 1s » jusqu'à un toucher. `endTurn` est appelé directement dans le callback du Timer,
+qui n'est pas une phase de build. Test sans aucun `pump` après le départ : rouge sur l'ancien code,
+vert sur l'ancien code avec une seule frame, vert sur le nouveau.
+
+**Auto / Personnalisé.** Passe d'un champ local de l'écran à `GameSettings.fiestaMode` (clé
+`fiestaMode`, optionnelle : absente ou inconnue = Auto, `kCurrentSchemaVersion` inchangé). Rejouer
+une Fiesta depuis l'historique aligne le réglage sur son mode ; rejouer une archive Classique, ou
+une archive sans cette clé, ne touche pas au choix du joueur (sinon elle le remettrait en Auto).
+
+**Fiches des badges.** Titre `AppTextStyles.subtitle` sans changer la couleur (blanc, ombre rouge).
+La couleur reste sur la bordure, « Compris », les pastilles et les cercles.
+
+**Deux mots.** Plus de cartes blanches, d'étiquettes ni de défilement : `TurnWordText` et
+`TurnActionButtons` (`widgets/common/turn_play_widgets.dart`) sont factorisés depuis le tour à un
+mot, avec une version `compact` de 64 px pour les boutons. Les mots se partagent la hauteur restante
+et rétrécissent jusqu'à 16 px. Rendus regardés en 360 × 640 et 390 × 844 avec de longs mots et trois
+badges.
+
+**Revue r1.** `endTurn` est idempotent : il ne fait rien hors de `screenTurn`. Le chrono et la
+confirmation « Terminer » peuvent se croiser, et un second appel ajoutait un événement `expired`
+pour le même mot. Il remettait aussi à zéro le temps reporté d'une manche finie en avance. Les seuls
+appelants sont dans `TurnScreen`, monté uniquement sur `screenTurn`, reprise de partie comprise.
