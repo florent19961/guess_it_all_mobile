@@ -1,5 +1,6 @@
-import 'dart:convert';
 import 'dart:math';
+
+import 'symmetric_draw.dart';
 
 /// Défis surprises entre deux manches (Fiesta v4, lot 2B).
 ///
@@ -88,7 +89,7 @@ String slowestPlayer({
 /// Le programme de la partie [gameId] : manche qui vient de finir (1 ou 2) →
 /// défi. Une ou deux entrées, deux défis toujours différents.
 Map<int, SurpriseChallenge> drawChallengeSchedule(String gameId) {
-  final random = Random(_seed('$gameId#challenges'));
+  final random = Random(drawSeed('$gameId#challenges', 0));
   final challenges = [...SurpriseChallenge.values]..shuffle(random);
   final rounds = random.nextBool()
       ? const [1, 2]
@@ -108,16 +109,6 @@ String? pickGuessedWord({
 }) {
   final words = guessedWords.toSet().toList()..sort();
   if (words.isEmpty) return null;
-  final random = Random(_seed('$gameId#word#$finishedRound'));
+  final random = Random(drawSeed('$gameId#word', finishedRound));
   return words[random.nextInt(words.length)];
-}
-
-/// FNV-1a 32 bits : `String.hashCode` n'est pas stable d'une exécution à
-/// l'autre.
-int _seed(String key) {
-  var hash = 0x811c9dc5;
-  for (final byte in utf8.encode(key)) {
-    hash = ((hash ^ byte) * 0x01000193) & 0xffffffff;
-  }
-  return hash;
 }

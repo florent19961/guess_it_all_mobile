@@ -12,3 +12,6 @@ Source : [Pixabay](https://pixabay.com/) (Pixabay Content License).
 - `click-soft.mp3`
 - `impact-bass-1.mp3`
 - `whoosh-short.mp3`
+- `impact-bass-2.mp3`
+- `sparkle.mp3`
+- `whoosh-cinematic.mp3`

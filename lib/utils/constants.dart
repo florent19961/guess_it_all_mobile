@@ -48,6 +48,7 @@ class AppConstants {
   static const String screenTransition = 'transition';
   // Fiesta : le piège d'« Interdit de faire deviner », après le décompte.
   static const String screenGiverBlocked = 'giverBlocked';
+  static const String screenChallenge = 'challenge';
   static const String screenResults = 'results';
   static const String screenStats = 'stats';
   static const String screenCategories = 'categories';

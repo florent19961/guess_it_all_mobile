@@ -74,6 +74,7 @@ class _FiestaEnsembleEditorScreenState
   final _saveKey = GlobalKey();
 
   late FiestaRules _rules;
+  late bool _moreOpen;
   late final TextEditingController _name;
 
   /// Ce qui a été chargé (JSON) : « rien modifié » = identique.
@@ -91,6 +92,7 @@ class _FiestaEnsembleEditorScreenState
     _loaded = jsonEncode(start.toJson());
     _rules = widget.draft ?? start;
     _tab = _firstTab(_rules);
+    _moreOpen = _rules.challenges;
     _name = TextEditingController(text: _rules.ensembleName ?? '');
     // Le nom est lu sur le contrôleur, jamais recopié : une seule source.
     _name.addListener(() => setState(() {}));
@@ -386,7 +388,8 @@ class _FiestaEnsembleEditorScreenState
         EnsembleMenu.cartridge => kModifierCatalog.fold<int>(
                 0, (sum, d) => sum + _rules.chargesOf(d.id)) +
             (_rules.balance ? 1 : _rules.trailingCount) +
-            _rules.allCount,
+            _rules.allCount +
+            (_rules.challenges ? 1 : 0),
       };
 
   Widget _tabs() => Container(
@@ -739,6 +742,34 @@ class _FiestaEnsembleEditorScreenState
                 ..._groupRows(group, EnsembleMenu.cartridge),
             ],
           ),
+          OutlinedButton(
+            onPressed: () => setState(() => _moreOpen = !_moreOpen),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.white,
+              side: const BorderSide(color: AppColors.gray500),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            child: Text(
+              'Si tu veux vraiment pousser plus loin ${_moreOpen ? '▴' : '▾'}',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.label.copyWith(fontSize: 13),
+            ),
+          ),
+          if (_moreOpen) ...[
+            const SizedBox(height: 10),
+            _Frame(
+              title: 'Défis surprises',
+              subtitle: '1 ou 2 fois dans la partie, entre deux joueurs des '
+                  'équipes les plus en retard.',
+              trailing: _switch(
+                _rules.challenges,
+                (on) =>
+                    setState(() => _rules = _rules.copyWith(challenges: on)),
+              ),
+            ),
+          ],
         ],
       );
 
@@ -870,12 +901,14 @@ class _Frame extends StatelessWidget {
   final String title;
   final String? subtitle;
   final VoidCallback? info;
+  final Widget? trailing;
   final List<Widget> children;
 
   const _Frame({
     required this.title,
     this.subtitle,
     this.info,
+    this.trailing,
     this.children = const [],
   });
 
@@ -894,6 +927,7 @@ class _Frame extends StatelessWidget {
             Row(
               children: [
                 Flexible(
+                  fit: trailing != null ? FlexFit.tight : FlexFit.loose,
                   child: Text(
                     title,
                     style: const TextStyle(
@@ -910,6 +944,7 @@ class _Frame extends StatelessWidget {
                   ),
                 ),
                 if (info != null) _InfoButton(onTap: info!),
+                if (trailing != null) trailing!,
               ],
             ),
             if (subtitle != null)

@@ -1089,3 +1089,32 @@ absente : en fin de manche.
   de préparation partirait après un `stop` déjà passé, donc sur l'écran Résultats.
 - *Place qui manque* : carte de fin à la hauteur de la police, texte défilant et bouton fixe. Le
   titre puis la légende cèdent leur place au graphique, les courbes portant déjà les noms.
+
+---
+
+## 2026-11-05 — Fiesta v4, lot 2B : défis surprises entre les manches
+
+**Quoi.** Réglage « Défis surprises » en bas du menu Cartouches. Après M1 et/ou M2 (1 ou 2 fois, tirage
+par `gameId`) : animation de manche, défi, écran avant le tour. L'équipe gagnante reçoit une cartouche
+tirée dans le vivier du hasard ; passer le défi ne donne rien.
+
+**Pourquoi ces choix.**
+
+- Format 4 et `kCurrentSchemaVersion` inchangés : `rules.challenges` et `fiesta.challenges` sont deux clés
+  omises quand elles sont vides, et une clé absente se relit « coupé » / « aucun ».
+- Plan recalculé, jamais persisté (`planChallenge`) : joueurs, défi, mot et les 2 cartouches possibles
+  sortent de l'état de fin de manche, qui ne bouge pas pendant le défi. Une app tuée retrouve le même.
+  Rien n'est écrit avant la fin : elle le rejoue sans rien avoir donné.
+- 🔴 Seul point qui ne suit pas la règle « le snapshot restaure tout » : un défi terminé survit au retour
+  arrière (`keepingChallengesOf`), sinon on pourrait le rejouer pour gagner une autre cartouche. Sa
+  cartouche reste acquise, même si la correction rouvre la manche. Il n'est donné qu'une fois, par manche
+  de fin.
+- Un défi passé compte comme terminé, pour la même raison.
+- Pas de défi plutôt qu'un défi boiteux : vivier vide d'une des deux équipes, ou téléphone arabe sans mot
+  deviné. Le défi n'est pas remplacé, la partie en a alors un de moins.
+
+**Écarts avec la maquette.** Le sous-titre de l'éditeur ne dit pas « les moins rapides » : la spec veut ce
+critère jamais affiché. Un seul interrupteur, sans le choix défi par défi de la maquette, absent de la spec.
+
+**Conséquence.** Le joueur le moins rapide compte tous ses tours, y compris sans mot ; un joueur sans temps
+de jeu n'est pas mesuré. Les sons restent à écouter sur appareil, Android et iOS.

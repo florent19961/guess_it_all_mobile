@@ -99,6 +99,9 @@ class FiestaRules {
   /// cartouches suit l'écart avec le leader (`balanceGiftCount`).
   final bool balance;
 
+  /// « Défis surprises » : 1 ou 2 défis entre les manches. Clé omise si coupé.
+  final bool challenges;
+
   FiestaRules({
     this.ensembleName,
     Map<String, ModifierSetting> modifiers = const {},
@@ -106,6 +109,7 @@ class FiestaRules {
     this.allCount = 0,
     this.trailingCount = 0,
     this.balance = false,
+    this.challenges = false,
   }) : modifiers = Map.unmodifiable(modifiers);
 
   FiestaRules copyWith({
@@ -115,6 +119,7 @@ class FiestaRules {
     int? allCount,
     int? trailingCount,
     bool? balance,
+    bool? challenges,
   }) =>
       FiestaRules(
         ensembleName: ensembleName ?? this.ensembleName,
@@ -123,6 +128,7 @@ class FiestaRules {
         allCount: allCount ?? this.allCount,
         trailingCount: trailingCount ?? this.trailingCount,
         balance: balance ?? this.balance,
+        challenges: challenges ?? this.challenges,
       );
 
   ModifierSetting settingOf(String id) =>
@@ -177,6 +183,7 @@ class FiestaRules {
         'allCount': allCount,
         'trailingCount': trailingCount,
         'balance': balance,
+        if (challenges) 'challenges': true,
       };
 
   /// Variante tolérante : `null` si la structure est illisible (autre format,
@@ -191,12 +198,14 @@ class FiestaRules {
     final allCount = _readCount(json, 'allCount');
     final trailingCount = _readCount(json, 'trailingCount');
     final balance = readOr(json, 'balance', false);
+    final challenges = readOr(json, 'challenges', false);
     if (ensembleName is! String? ||
         rawModifiers == null ||
         drawCount == null ||
         allCount == null ||
         trailingCount == null ||
-        balance == null) {
+        balance == null ||
+        challenges == null) {
       return null;
     }
 
@@ -217,6 +226,7 @@ class FiestaRules {
       allCount: allCount,
       trailingCount: trailingCount,
       balance: balance,
+      challenges: challenges,
     );
   }
 
