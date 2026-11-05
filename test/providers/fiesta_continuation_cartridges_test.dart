@@ -213,7 +213,7 @@ void main() {
     final p = await givenProvider(wordsEach: 1);
     await p.startGame(fiesta: stock(['double_points']));
     final team = playTurn(p, 99);
-    final rounds = () => p.getTeamById(team)!.scoreByRound;
+    List<int> rounds() => p.getTeamById(team)!.scoreByRound;
     expect(rounds(), [2, 0, 0]);
     p.nextRound();
 
