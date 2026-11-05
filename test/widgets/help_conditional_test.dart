@@ -387,19 +387,44 @@ void main() {
       expect(find.textContaining('Perso'), findsNothing);
       expect(find.textContaining('corbeille'), findsNothing);
       expect(await walkOpenHelp(tester),
-          ['Prêts à jouer', 'Créer un ensemble', 'Suivant']);
+          ['Les ensembles', 'Créer un ensemble', 'Suivant']);
     });
 
     testWidgets('avec un ensemble personnel : son étape', (tester) async {
       await pumpList(tester, 1);
       expect(await walkHelp(tester),
-          ['Prêts à jouer', 'Tes ensembles', 'Créer un ensemble', 'Suivant']);
+          ['Les ensembles', 'Tes ensembles', 'Créer un ensemble', 'Suivant']);
     });
 
     testWidgets('liste pleine : l\'étape parle de la limite', (tester) async {
       await pumpList(tester, FiestaEnsembleService.maxEnsembles);
       expect(await walkHelp(tester),
-          ['Prêts à jouer', 'Tes ensembles', 'Limite atteinte', 'Suivant']);
+          ['Les ensembles', 'Tes ensembles', 'Limite atteinte', 'Suivant']);
+    });
+
+    testWidgets(
+        'le crayon et la corbeille se disent derrière une sélection ; la '
+        'pastille seulement si la ligne dépliée en a', (tester) async {
+      await pumpList(tester, 1);
+      await tester.tap(find.text('?'));
+      await pumps(tester);
+      expect(find.text('Les ensembles'), findsOneWidget,
+          reason: 'aide ouverte');
+      expect(find.textContaining('pastille'), findsNothing,
+          reason: 'Fiesta classique : pastilles neutres, sans explication');
+      await walkOpenHelp(tester);
+
+      // L'aide a défilé jusqu'à « Suivant » : on remonte à la ligne.
+      await tester.ensureVisible(find.text('Pro Player'));
+      await pumps(tester);
+      await tester.tap(find.text('Pro Player'));
+      await pumps(tester);
+      await tester.tap(find.text('?'));
+      await pumps(tester);
+      expect(find.textContaining('pastille rouge ou verte'), findsOneWidget);
+      await tester.tap(find.text('Suivant').last);
+      await pumps(tester);
+      expect(find.textContaining('Touche un des tiens'), findsOneWidget);
     });
 
     testWidgets('brouillon en attente : l\'étape dit « Reprendre »',

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/fiesta/ensemble_summary.dart';
 import '../models/fiesta/fiesta_ensemble.dart';
 import '../models/fiesta/modifier_catalog.dart';
 import '../theme/app_theme.dart';
@@ -39,8 +40,6 @@ class FiestaEnsembleViewScreen extends StatelessWidget {
           ? 'Manches 1 et 2 seulement'
           : null;
 
-  static String _plural(int n, String word) => '$n $word${n > 1 ? 's' : ''}';
-
   @override
   Widget build(BuildContext context) {
     final rules = ensemble.rules;
@@ -51,18 +50,7 @@ class FiestaEnsembleViewScreen extends StatelessWidget {
     final cartridges =
         kModifierCatalog.where((d) => rules.chargesOf(d.id) > 0).toList();
     final alwaysIds = always.map((d) => d.id);
-    final random = [
-      if (rules.balance)
-        'Équilibrer la partie : plus une équipe est distancée, plus elle '
-            'reçoit de cartouches'
-      else if (rules.trailingCount > 0)
-        'Aux équipes menées : ${_plural(rules.trailingCount, 'cartouche')} '
-            'après les manches 1 et 2',
-      if (rules.allCount > 0)
-        'À tous, à chaque manche : ${_plural(rules.allCount, 'cartouche')}',
-      if (rules.challenges)
-        'Défis surprises : 1 ou 2 fois dans la partie, une cartouche à gagner',
-    ];
+    final random = randomCartridgeLines(rules);
     return Scaffold(
       backgroundColor: AppColors.backgroundMain,
       body: ShootingStars(
@@ -112,7 +100,7 @@ class FiestaEnsembleViewScreen extends StatelessWidget {
                                 _Row(
                                   def,
                                   [
-                                    '×${rules.chargesOf(def.id)} pour chaque équipe',
+                                    perTeamLabel(rules.chargesOf(def.id)),
                                     if (_roundsLabel(def) case final rounds?)
                                       rounds,
                                   ].join(' · '),

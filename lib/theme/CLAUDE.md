@@ -6,7 +6,7 @@ Theme visuel de l'application. **Fichier unique : `app_theme.dart`.**
 
 Ce document decrivait une palette qui n'existe pas dans l'app : fond noir
 `#0A0A0A`, rose vif `#FF3B7F`, cyan electrique `#00E5FF`, « 5 niveaux de gris ».
-Le code dit tout autre chose — fond bleu ardoise, rose poudre, vert d'eau, 4 gris.
+Le code dit tout autre chose — fond bleu ardoise, rose poudre, vert d'eau, d'autres gris.
 Un agent qui faisait confiance a cette page ecrivait donc du code hors-charte en
 croyant la respecter.
 

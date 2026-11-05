@@ -108,7 +108,7 @@ void main() {
   testWidgets('Liste des ensembles', (tester) async {
     await pumpScreen(tester, AppConstants.screenFiestaEnsembles);
     expect(await walkHelp(tester),
-        ['Prêts à jouer', 'Créer un ensemble', 'Suivant']);
+        ['Les ensembles', 'Créer un ensemble', 'Suivant']);
   });
 
   testWidgets('Éditeur d\'ensemble', (tester) async {

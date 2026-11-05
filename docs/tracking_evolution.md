@@ -1224,3 +1224,33 @@ avec le joueur suivant. Décision de Florent. Un report d'au moins 1 s reste une
 **Conséquence.** Une sauvegarde écrite par une version antérieure, déjà sur une fin de manche à 0 s, joue
 encore ce tour une dernière fois : rien n'est perdu, et aucun code de reprise n'est gardé pour ce cas.
 
+---
+
+## 2026-11-05 — Liste des ensembles : maquette B2
+
+**Quoi.** Chaque ensemble a une tuile et une icône, un nom sur 2 lignes et une ligne courte. La ligne sélectionnée
+se déplie : explication, pastilles, actions en icônes. Les autres n'ont plus d'actions. « Prêts à jouer » disparaît,
+le compteur passe dans « Créer un ensemble » ou dans l'alerte de limite. Maquette validée par Florent.
+
+**Pourquoi ces choix.**
+
+- Textes dans `ensemble_summary.dart` : à la main pour les fournis, générés pour les perso, sans stockage ni
+  migration. Un test compare les pastilles écrites à la main aux règles que le moteur joue : un texte ne peut pas
+  mentir sans le faire tomber.
+- « Seul ce qui joue compte » va un peu plus loin que `settingsKey` : un `drawCount` sans rien à tirer (refusé par
+  l'éditeur, mais lisible sur le disque) ne donne ni texte de tirage ni dé.
+- Ligne courte bornée en longueur, puis « et plus » : le test mesure toutes les combinaisons à 360 px. Le dépliage
+  dit le reste.
+- Pas de couronne dans Material Icons : la coupe (`emoji_events_outlined`) pour Pro Player et les perso sans tirage
+  ni cartouche.
+- `gray300` ajouté à `AppColors` : la maquette validée l'utilise pour la ligne courte, les pastilles neutres et les
+  actions, et `gray400` y était trop sombre.
+- La liste commence sous les boutons du haut, le titre défile avec elle. Avant, liste défilée, le « ? » tombait sur
+  le rond de sélection et le retour sur les tuiles.
+- Défilement calculé d'un seul geste (`getOffsetToReveal`), pas deux `ensureVisible`. Plus haute que la liste, une
+  ligne montre son haut d'abord.
+- Pastille de cartouche sans pictogramme : « ×2 Mot compte double ×1 » se lisait mal. Les autres badges ne changent
+  pas.
+- Dépliage sans animation de taille : une ligne se replie au-dessus au même moment, le calcul du défilement
+  devrait attendre la fin de deux animations pour rien.
+
