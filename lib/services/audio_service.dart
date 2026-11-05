@@ -23,6 +23,26 @@ class AudioService {
     }
   }
 
+  // Impact du passage de manche
+  static Future<void> playImpact() async {
+    try {
+      await _player.stop();
+      await _player.play(AssetSource('sounds/impact-bass-1.mp3'));
+    } catch (e) {
+      // Ignorer les erreurs audio sur web
+    }
+  }
+
+  // Arrivée du texte de la manche suivante
+  static Future<void> playWhooshShort() async {
+    try {
+      await _player.stop();
+      await _player.play(AssetSource('sounds/whoosh-short.mp3'));
+    } catch (e) {
+      // Ignorer les erreurs audio sur web
+    }
+  }
+
   // Son de fin de tour
   static Future<void> playKlaxon() async {
     try {

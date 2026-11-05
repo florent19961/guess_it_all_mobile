@@ -77,9 +77,8 @@ List<CoachStep> settingsHelp({
         target: mode,
         title: 'Classique ou Fiesta',
         text: 'Classique : les 3 manches habituelles. Fiesta : les mêmes '
-            'manches, pimentées de bonus et de malus. En Fiesta, la roue '
-            'crantée choisit Auto (l\'app décide de tout) ou Personnalisé '
-            '(tes propres réglages, choisis juste après cet écran).',
+            'manches, pimentées de bonus et de malus : l\'ensemble de règles '
+            'se choisit juste après cet écran.',
       ),
       CoachStep(
         target: wordChoice,
@@ -97,9 +96,8 @@ List<CoachStep> settingsHelp({
         title: 'Avancés',
         text: 'Le nombre de mots, la durée d\'un tour et la pénalité quand on '
             'passe un mot. Avec tes réglages : '
-            '${passPenaltySentence(passPenalty).toLowerCase()} En Fiesta, '
-            'c\'est aussi là qu\'on passe d\'Auto à Personnalisé. Tout en '
-            'bas : réinitialiser les paramètres.',
+            '${passPenaltySentence(passPenalty).toLowerCase()} Tout en bas : '
+            'réinitialiser les paramètres.',
       ),
     ];
 
@@ -159,7 +157,7 @@ List<CoachStep> teamsHelp({
       ),
     ];
 
-// ========== FIESTA PERSONNALISÉE ==========
+// ========== ENSEMBLES FIESTA ==========
 
 List<CoachStep> fiestaEnsemblesHelp({
   required GlobalKey ready,
@@ -177,8 +175,8 @@ List<CoachStep> fiestaEnsemblesHelp({
       CoachStep(
         target: create,
         title: 'Créer un ensemble',
-        text: 'Ouvre l\'éditeur : un nom, les règles de la partie, les malus '
-            'et bonus, puis « Enregistrer ».',
+        text: 'Ouvre l\'éditeur : un nom, les 3 menus de réglages, puis '
+            '« Enregistrer ».',
       ),
       CoachStep(
         target: next,
@@ -188,26 +186,25 @@ List<CoachStep> fiestaEnsemblesHelp({
     ];
 
 List<CoachStep> fiestaEditorHelp({
-  required GlobalKey rules,
-  required GlobalKey modifiers,
+  required GlobalKey tabs,
+  required GlobalKey menu,
   required GlobalKey save,
 }) =>
     [
       CoachStep(
-        target: rules,
-        title: 'Règles de la partie',
-        text: 'Combien de modificateurs sont tirés à chaque manche, et le coup '
-            'de pouce : après les manches 1 et 2, chaque équipe menée reçoit '
-            'ce nombre de cartouches au hasard.',
+        target: tabs,
+        title: 'Les 3 menus',
+        text: 'Toujours : actif toute la partie pour toutes les équipes. '
+            'Aléatoire par manche : tiré au sort à chaque manche. Cartouches : '
+            'à usage unique, jouées au tour de son choix.',
       ),
       CoachStep(
-        target: modifiers,
-        title: 'Malus et bonus',
-        text: 'Allume un modificateur, puis règle-le. « Toujours » vaut pour '
-            'toutes les équipes à chaque manche où il existe ; « Au tirage » '
-            'entre dans le tirage des manches cochées ; une cartouche se joue au tour de son choix, et le compteur vaut pour '
-            'toute la partie. Les bonus (dont le +10 s) ne sont que des '
-            'cartouches.',
+        target: menu,
+        title: 'Réglages',
+        text:
+            'Chaque menu ne montre que ce qui y est possible. Un modificateur '
+            'en Toujours se verrouille dans les 2 autres menus, ses réglages y '
+            'sont gardés. Les bonus ne sont que des cartouches.',
       ),
       CoachStep(
         target: save,
@@ -350,22 +347,14 @@ List<CoachStep> verificationHelp({
 
 // ========== ENTRE DEUX MANCHES (transition_screen) ==========
 
-/// [fiesta] (`fiestaTransitionHelp`) se place à l'ordre de l'écran : sous le
-/// héros et les mots du dernier tour, avant les boutons.
+/// Après la manche 3 : le seul écran fixe entre deux manches, les autres sont
+/// une animation.
 List<CoachStep> transitionHelp({
-  required GlobalKey nextRound,
   required GlobalKey previousTurn,
   required GlobalKey next,
   required GlobalKey back,
-  required GlobalKey home,
 }) =>
     [
-      CoachStep(
-        target: nextRound,
-        title: 'La manche suivante',
-        text: 'Sa nouvelle règle, puis qui commence. Ce sont exactement les '
-            'mêmes mots qu\'à la manche d\'avant.',
-      ),
       CoachStep(
         target: previousTurn,
         title: 'Mots du dernier tour',
@@ -373,19 +362,13 @@ List<CoachStep> transitionHelp({
       ),
       CoachStep(
         target: next,
-        title: 'Lancer la manche',
-        text: 'Lance la manche suivante.',
+        title: 'Voir les résultats',
+        text: 'Termine la partie et affiche les scores.',
       ),
       CoachStep(
         target: back,
         title: 'Retour',
         text: 'Reviens à la vérification du dernier tour pour corriger un mot.',
-      ),
-      CoachStep(
-        target: home,
-        title: 'Accueil',
-        text: 'Met la partie en pause et revient à l\'accueil. Tu pourras la '
-            'reprendre avec « Reprendre ».',
       ),
     ];
 
@@ -431,14 +414,14 @@ List<CoachStep> fiestaPreTurnHelp({
     [
       CoachStep(
         target: thisTurn,
-        title: 'Ce tour',
+        title: 'Actif pendant votre prochain tour',
         text: 'Tout ce qui s\'applique à ton tour : les règles de la manche, '
             'les malus reçus d\'une autre équipe et les bonus que tu as '
             'activés. Appui long sur un cercle pour l\'explication.',
       ),
       CoachStep(
         target: reserve,
-        title: 'Réserve',
+        title: 'Votre réserve',
         text:
             'Tes cartouches pour toute la partie, un tour chacune. Touche un bonus pour '
             'l\'activer ce tour ; touche un malus pour l\'infliger à une '

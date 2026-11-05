@@ -55,18 +55,17 @@ class FiestaTutorialScreen extends StatelessWidget {
                     'pour son tour, ou un malus à infliger.'),
             TutorialRow(
                 '3',
-                'Coup de pouce',
-                'Après les manches 1 et 2, chaque équipe menée reçoit des '
-                    'cartouches au hasard.'),
+                'Cartouches au hasard',
+                'Selon l\'ensemble : à chaque manche, ou pour les équipes '
+                    'menées après les manches 1 et 2.'),
           ],
         ),
         TutorialCard(
-          symbol: 'A',
-          title: 'Auto ou Personnalisé',
-          text: 'Auto : l\'app décide de tout, personne ne choisit. '
-              'Personnalisé (roue crantée des Paramètres) : après les '
-              'équipes, tu choisis tes réglages, enregistrés sous un nom '
-              'pour les réutiliser.',
+          symbol: '★',
+          title: 'Les ensembles',
+          text: 'Juste après les Paramètres, choisis un ensemble de règles : '
+              'Fiesta classique, un de ceux fournis par l\'app, ou le tien, '
+              'enregistré sous un nom pour le réutiliser.',
         ),
       ],
     );

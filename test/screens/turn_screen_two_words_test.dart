@@ -47,15 +47,9 @@ Future<GameProvider> _givenLongTwoWordsTurn(WidgetTester tester) async {
     provider.randomizeTeams();
     await provider.startGame(
       fiesta: FiestaRules(
-        mode: FiestaMode.custom,
         drawCount: 0,
         modifiers: {
-          for (final id in _bonuses)
-            id: ModifierSetting(
-              active: true,
-              rounds: const {1},
-              mode: ModifierMode.cartridge,
-            ),
+          for (final id in _bonuses) id: ModifierSetting(charges: 1),
         },
       ),
     );
