@@ -14,16 +14,26 @@ import '../helpers/test_prefs.dart';
 
 const key = FiestaEnsembleService.storageKey;
 
-/// Blob FIGÉ, tel qu'écrit par la version Fiesta v2 (modèle des modes).
+/// Blob FIGÉ, tel qu'écrit par la version Fiesta v3 (modes et cartouches pour
+/// la partie).
 /// 🔴 Ne jamais le régénérer : s'il ne se relit plus en entier, c'est qu'un
 /// changement de `FiestaRules` effacerait les ensembles des joueurs.
 const frozenBlob = '{"schemaVersion":1,"data":{"ensembles":[{"id":"e1",'
+    '"rules":{"format":3,"mode":"custom",'
+    '"ensembleName":"Soirée chez Max","modifiers":{"no_pass":{"active":true,'
+    '"rounds":[1,2],"mode":"draw","charges":1},'
+    '"free_pass":{"active":false,"rounds":[1,2,3],"mode":"cartridge",'
+    '"charges":2}},"drawCount":2,"trailingBoost":true}}],"lastUsedId":"e1"}}';
+
+/// Blob de la forme v2 (Fiesta v2, jamais publiée) : `stock`, `offer`,
+/// `perGame`, `pick3Choices`, `catchUp`.
+const v2Blob = '{"schemaVersion":1,"data":{"ensembles":[{"id":"old2",'
     '"rules":{"format":2,"mode":"custom","autoCalibrate":true,'
     '"ensembleName":"Soirée chez Max","modifiers":{"no_pass":{"active":true,'
     '"rounds":[1,2],"mode":"draw","charges":1,"perGame":false},'
     '"free_pass":{"active":false,"rounds":[2,3],"mode":"stock","charges":2,'
     '"perGame":true}},"drawCount":2,"pick3Choices":2,"catchUp":{"b1":0,'
-    '"b2":0,"cap":0,"mal":0,"malCap":0}}}],"lastUsedId":"e1"}}';
+    '"b2":0,"cap":0,"mal":0,"malCap":0}}}],"lastUsedId":"old2"}}';
 
 /// Blob de la forme v1 (avant Fiesta v2, jamais publiée) : `arrival`,
 /// `symmetric`, `oneOfThree`, `oneAnswer`.
@@ -42,8 +52,7 @@ void main() {
     await givenPrefs();
     final rules = defaultEnsembleRules('Soirée chez Max').copyWith(
       drawCount: 2,
-      pick3Choices: 3,
-      catchUp: const CatchUpRules(b1: 1, b2: 2, cap: 10, mal: 0, malCap: 0),
+      trailingBoost: false,
     );
 
     final created = (await service.create(rules))!;
@@ -60,7 +69,7 @@ void main() {
     expect(jsonEncode(restored.rules.toJson()), jsonEncode(rules.toJson()));
   });
 
-  test('format figé Fiesta v2 : relu en entier', () async {
+  test('format figé Fiesta v3 : relu en entier', () async {
     await givenPrefs({key: frozenBlob});
 
     final store = await service.load();
@@ -70,9 +79,20 @@ void main() {
     expect(rules.modifiers.keys, ['no_pass', 'free_pass']);
     expect(rules.modifiers['no_pass']!.rounds, {1, 2});
     expect(rules.modifiers['free_pass']!.charges, 2);
-    expect(rules.modifiers['free_pass']!.perGame, isTrue);
-    expect([rules.drawCount, rules.pick3Choices], [2, 2]);
-    expect(catchUpOn(rules.catchUp), isFalse);
+    expect(rules.modifiers['free_pass']!.mode, ModifierMode.cartridge);
+    expect([rules.drawCount, rules.trailingBoost], [2, true]);
+  });
+
+  test(
+      'ensemble de la forme v2 (avant Fiesta v3) : ignoré sans planter, jamais '
+      'détruit par une écriture', () async {
+    await givenPrefs({key: v2Blob});
+
+    expect((await service.load()).ensembles, isEmpty);
+    await service.create(defaultEnsembleRules('Neuf'));
+    expect((await service.load()).ensembles.map((e) => e.name), ['Neuf']);
+    final stored = (await persistedData(key))!['ensembles'] as List;
+    expect(stored, anyElement(isA<Map>().having((m) => m['id'], 'id', 'old2')));
   });
 
   test(
@@ -94,7 +114,7 @@ void main() {
     String mod(String mode) => '{"active":true,"rounds":[3],"mode":"$mode"}';
     await givenPrefs({
       key: '{"schemaVersion":1,"data":{"ensembles":[{"id":"e1","rules":'
-          '{"format":2,"mode":"custom","ensembleName":"Vieux","modifiers":{'
+          '{"format":3,"mode":"custom","ensembleName":"Vieux","modifiers":{'
           '"draw":${mod('always')},"mime_eyes_closed":${mod('always')},'
           '"mime_no_arms":${mod('draw')},"no_pass":${mod('draw')}}}}]}}',
     });
@@ -121,12 +141,11 @@ void main() {
       'écriture figée : une clé vide ou nulle est omise (blob Fiesta et '
       'ensembles), et l\'absence se relit comme le défaut', () async {
     final fiesta = FiestaState(rules: FiestaRules(mode: FiestaMode.auto));
-    const frozenFiesta = '{"rules":{"format":2,"mode":"auto",'
-        '"autoCalibrate":true,"modifiers":{},"drawCount":1,"pick3Choices":1,'
-        '"catchUp":{"b1":3,"b2":5,"cap":30,"mal":1,"malCap":15}}}';
+    const frozenFiesta = '{"rules":{"format":3,"mode":"auto",'
+        '"modifiers":{},"drawCount":1,"trailingBoost":false}}';
     expect(jsonEncode(fiesta.toJson()), frozenFiesta);
     final relu = FiestaState.tryFromJson(jsonDecode(frozenFiesta))!;
-    expect([relu.active, relu.turn, relu.catchUpDue, relu.rules.ensembleName],
+    expect([relu.active, relu.turn, relu.earned, relu.rules.ensembleName],
         [isEmpty, isEmpty, isEmpty, isNull]);
 
     const forAll = ModifierInstance(

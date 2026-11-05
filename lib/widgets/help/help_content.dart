@@ -171,7 +171,8 @@ List<CoachStep> fiestaEnsemblesHelp({
         target: ready,
         title: 'Prêts à jouer',
         text: 'Les ensembles fournis par l\'app, puis les tiens. Touche-en un '
-            'pour le choisir. Ceux de l\'app se dupliquent pour les modifier.',
+            'pour le choisir, « Voir » pour savoir ce qu\'il fait. Ceux de '
+            'l\'app se dupliquent pour les modifier.',
       ),
       CoachStep(
         target: create,
@@ -195,17 +196,18 @@ List<CoachStep> fiestaEditorHelp({
       CoachStep(
         target: rules,
         title: 'Règles de la partie',
-        text: 'Combien de modificateurs sont tirés à chaque manche, combien '
-            'de cartes « 1 parmi 3 » chaque équipe en retard prend, et le '
-            'rattrapage.',
+        text: 'Combien de modificateurs sont tirés à chaque manche, et le coup '
+            'de pouce : après les manches 1 et 2, chaque équipe menée reçoit '
+            'une cartouche au hasard.',
       ),
       CoachStep(
         target: modifiers,
         title: 'Malus et bonus',
-        text: 'Allume un modificateur, puis « Régler » : ses manches et son '
-            'mode. « Toujours » et « Au tirage » valent pour toutes les '
-            'équipes toute la manche ; « En stock » et « 1 parmi 3 » sont des '
-            'cartouches d\'un tour.',
+        text: 'Allume un modificateur, puis règle-le. « Toujours » et « Au '
+            'tirage » valent pour toutes les équipes toute la manche ; une '
+            'cartouche se joue au tour de son choix, et le compteur vaut pour '
+            'toute la partie. Les bonus (dont le +10 s) ne sont que des '
+            'cartouches.',
       ),
       CoachStep(
         target: save,
@@ -356,27 +358,23 @@ List<CoachStep> transitionHelp({
   required GlobalKey next,
   required GlobalKey back,
   required GlobalKey home,
-  List<CoachStep> fiesta = const [],
 }) =>
     [
       CoachStep(
         target: nextRound,
         title: 'La manche suivante',
-        text: 'Sa nouvelle règle, puis qui commence et le temps reporté '
-            's\'il en reste. Ce sont exactement les mêmes mots qu\'à la '
-            'manche d\'avant.',
+        text: 'Sa nouvelle règle, puis qui commence. Ce sont exactement les '
+            'mêmes mots qu\'à la manche d\'avant.',
       ),
       CoachStep(
         target: previousTurn,
         title: 'Mots du dernier tour',
         text: 'Revois les mots trouvés pendant le dernier tour.',
       ),
-      ...fiesta,
       CoachStep(
         target: next,
         title: 'Lancer la manche',
-        text: 'Lance la manche suivante. En Fiesta, il attend que chaque '
-            'équipe menée ait choisi sa carte.',
+        text: 'Lance la manche suivante.',
       ),
       CoachStep(
         target: back,
@@ -441,39 +439,10 @@ List<CoachStep> fiestaPreTurnHelp({
       CoachStep(
         target: reserve,
         title: 'Réserve',
-        text: 'Tes cartouches, un tour chacune. Touche un bonus pour '
+        text:
+            'Tes cartouches pour toute la partie, un tour chacune. Touche un bonus pour '
             'l\'activer ce tour ; touche un malus pour l\'infliger à une '
             'autre équipe, pour son prochain tour (annulable tant que ton '
             'tour n\'a pas commencé).',
-      ),
-    ];
-
-// ========== FIESTA : FIN DE MANCHE ==========
-
-List<CoachStep> fiestaTransitionHelp({
-  required GlobalKey catchUp,
-  required GlobalKey pickThree,
-  required GlobalKey appBoost,
-}) =>
-    [
-      CoachStep(
-        target: catchUp,
-        title: 'Rattrapage',
-        text: 'L\'équipe menée gagne du temps à la manche suivante, l\'équipe '
-            'en tête en perd un peu. Seulement au premier tour de chaque '
-            'équipe dans la manche (pas quand un tour coupé se poursuit).',
-      ),
-      CoachStep(
-        target: pickThree,
-        title: 'Choix 1 parmi 3',
-        text: 'L\'équipe menée prend le téléphone et choisit une carte : un '
-            'bonus pour elle, ou un malus qu\'elle infligera à l\'équipe '
-            'de son choix avant l\'un de ses tours.',
-      ),
-      CoachStep(
-        target: appBoost,
-        title: 'Coup de pouce',
-        text: 'En mode Auto, personne ne choisit : l\'app donne elle-même un '
-            'coup de pouce à l\'équipe menée.',
       ),
     ];

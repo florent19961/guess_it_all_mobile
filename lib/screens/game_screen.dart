@@ -10,7 +10,6 @@ import '../widgets/common/home_button.dart';
 import '../widgets/common/back_button.dart';
 import '../widgets/effects/shooting_stars.dart';
 import '../widgets/fiesta/blocked_guesser.dart';
-import '../widgets/fiesta/malus_reveal.dart';
 import '../widgets/fiesta/turn_cartridges.dart';
 import '../widgets/help/coach_marks.dart';
 import '../widgets/help/first_game_help.dart';
@@ -393,34 +392,20 @@ class _GameScreenState extends State<GameScreen> {
         ),
       );
 
-  /// Fiesta : révèle d'abord les malus de l'équipe à son premier tour de la
-  /// manche, puis fait choisir le devineur bloqué (`block_guesser`), puis
+  /// Fiesta : fait d'abord choisir le devineur bloqué (`block_guesser`), puis
   /// lance le compte à rebours. Sélecteur fermé sans choix : on reste ici.
+  /// Les malus du tour se lisent dans « Ce tour » : aucune alerte.
   ///
-  /// 🔴 Les révélations sont des routes poussées AU-DESSUS de `home` : elles
-  /// survivent au changement d'écran. Sans les deux gardes, un double tap
-  /// empile deux révélations et la seconde chaîne rappelle `startTurn()` en
-  /// plein tour (revue 2-5 r1, MAJOR-1).
+  /// 🔴 Le sélecteur est une route poussée AU-DESSUS de `home` : elle survit au
+  /// changement d'écran. Sans les gardes, un double tap en empile deux et la
+  /// seconde chaîne rappelle `startTurn()` en plein tour.
   Future<void> _startTurn(
       BuildContext context, GameProvider provider, Color teamColor) async {
-    // Une révélation déjà poussée : la route du jeu n'est plus au sommet.
+    // Un sélecteur déjà poussé : la route du jeu n'est plus au sommet.
     if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
-    final maluses = provider.malusToReveal;
-    if (maluses.isNotEmpty) {
-      await MalusReveal.showAll(
-        context,
-        maluses: maluses,
-        teamName: provider.getCurrentTeam()?.name ?? '',
-        teamColor: teamColor,
-      );
-      if (!context.mounted ||
-          provider.game.currentScreen != AppConstants.screenGame) {
-        return;
-      }
-    }
     if (provider.needsBlockedGuesser) {
       if (!context.mounted) return;
-      // 2-10 : la carte vient du 1 parmi 3, l'équipe qui l'a choisie désigne.
+      // L'équipe qui a infligé le blocage désigne le devineur.
       final chooserName = provider.blockingTeam?.name;
       final blocked = await BlockedGuesser.pick(
           context, provider.blockableGuessers,

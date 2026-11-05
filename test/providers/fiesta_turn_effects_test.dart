@@ -36,7 +36,19 @@ FiestaRules fixedOnRound1(Map<String, int> fixed) => FiestaRules(
       },
     );
 
-/// Pose [catalogId] (portée tour, sur l'équipe qui joue) dans l'état
+/// Passe gratuite en cartouche, à allumer avant le tour.
+FiestaRules freePassCartridge() => FiestaRules(
+      mode: FiestaMode.custom,
+      drawCount: 0,
+      modifiers: {
+        'free_pass': ModifierSetting(
+            active: true,
+            rounds: const {1, 2, 3},
+            mode: ModifierMode.cartridge),
+      },
+    );
+
+/// Pose [catalogId] (malus infligé à l'équipe qui joue) dans l'état
 /// persisté, puis relit la partie. Aucun écrivain ne pose encore d'instance de
 /// portée tour ni de `block_guesser` (2-10) : `fixed` et le tirage les excluent.
 Future<GameProvider> withTurnInstance(
@@ -51,6 +63,8 @@ Future<GameProvider> withTurnInstance(
     charges: 1,
     nature: modifierById(catalogId)!.nature,
     round: provider.game.currentRound,
+    fromTeamId:
+        provider.teams.firstWhere((t) => t != provider.getCurrentTeam()).id,
   ).toJson());
   await StorageService().saveGameState(saved);
   final reloaded = GameProvider();
@@ -67,7 +81,8 @@ void main() {
       '0 au tour suivant, rendu par le retour arrière (AC2, AC3, AC4, AC8)',
       () async {
     var provider = await givenReadyProvider();
-    await provider.startGame(fiesta: fixedOnRound1({'free_pass': 2}));
+    await provider.startGame(fiesta: freePassCartridge());
+    provider.toggleBonus('free_pass');
     provider.startTurn();
     provider.startTurnTimer();
     // AC3 : la garde porte sur la pénalité EFFECTIVE (2 s affichées suffisent).
@@ -143,10 +158,9 @@ void main() {
       'portée tour, passes gratuites utilisées et devineur bloqué, puis tout '
       'tombe à la fin de CE tour', () async {
     var provider = await givenReadyProvider(['A', 'B', 'C', 'D', 'E', 'F']);
-    await provider.startGame(fiesta: fixedOnRound1({}));
+    await provider.startGame(fiesta: freePassCartridge());
     final teamId = provider.getCurrentTeam()!.id;
     // Une cartouche Passe gratuite (un tour de 2 passes), allumée.
-    provider = await withTurnInstance(provider, 'free_pass');
     provider = await withTurnInstance(provider, 'block_guesser');
     provider.toggleBonus('free_pass');
     bool held() =>

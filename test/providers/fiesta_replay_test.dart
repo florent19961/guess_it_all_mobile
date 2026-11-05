@@ -32,18 +32,13 @@ void main() {
       '« Rejouer » remet la config Fiesta gelée en attente et revient aux '
       'Paramètres ; après une partie Classique, rien en attente', () async {
     final provider = await givenReadyProvider();
-    provider.setPendingFiesta(
-      FiestaRules(mode: FiestaMode.auto, autoCalibrate: false),
-    );
+    provider.setPendingFiesta(FiestaRules(mode: FiestaMode.auto));
     await provider.startGame(fiesta: provider.pendingFiesta);
 
     await provider.restartWithSamePlayers();
 
     expect(provider.game.currentScreen, AppConstants.screenSettings);
     expect(provider.pendingFiesta!.mode, FiestaMode.auto);
-    // Auto n'a plus d'interrupteurs : un « auto-calibrage coupé » d'une
-    // partie d'avant la mise à jour n'est pas transmis à la suivante.
-    expect(provider.pendingFiesta!.autoCalibrate, isTrue);
 
     // Même chose via l'accueil : fin de partie, puis « Rejouer » de l'accueil.
     givenWords(provider);
@@ -57,13 +52,12 @@ void main() {
     // App tuée en pleine partie Fiesta : la relance remet la config en attente,
     // sinon « Retour aux équipes » puis « Lancer » repartirait en Classique.
     givenWords(provider);
-    await provider.startGame(
-        fiesta: FiestaRules(mode: FiestaMode.auto, autoCalibrate: false));
+    await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
     await pumpEventQueue();
     final reloaded = GameProvider();
     await pumpEventQueue();
     expect(reloaded.isFiesta, isTrue);
-    expect(reloaded.pendingFiesta?.autoCalibrate, isFalse);
+    expect(reloaded.pendingFiesta?.mode, FiestaMode.auto);
 
     // « Nouvelle partie » repart d'un choix vide.
     await reloaded.startNewGame();

@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
-import '../models/fiesta/modifier_instance.dart';
 import '../providers/game_provider.dart';
 import '../utils/constants.dart';
 import '../widgets/common/app_button.dart';
 import '../widgets/common/game_dialogs.dart';
 import '../widgets/common/home_button.dart';
 import '../widgets/common/back_button.dart';
-import '../widgets/fiesta/modifier_card.dart';
-import '../widgets/fiesta/offer_widgets.dart';
-import '../widgets/fiesta/turn_time_cards.dart';
-import '../models/fiesta/turn_time.dart';
 import '../widgets/help/coach_marks.dart';
 import '../widgets/help/help_button.dart';
 import '../widgets/help/help_content.dart';
@@ -29,11 +24,8 @@ class _TransitionScreenState extends State<TransitionScreen> {
   final _nextKey = GlobalKey();
   final _backKey = GlobalKey();
   final _homeKey = GlobalKey();
-  final _catchUpKey = GlobalKey();
-  final _pickThreeKey = GlobalKey();
-  final _appBoostKey = GlobalKey();
 
-  void _showHelp(GameProvider provider) {
+  void _showHelp() {
     CoachMarks.show(
       context,
       transitionHelp(
@@ -42,13 +34,6 @@ class _TransitionScreenState extends State<TransitionScreen> {
         next: _nextKey,
         back: _backKey,
         home: _homeKey,
-        fiesta: provider.isFiesta
-            ? fiestaTransitionHelp(
-                catchUp: _catchUpKey,
-                pickThree: _pickThreeKey,
-                appBoost: _appBoostKey,
-              )
-            : const [],
       ),
     );
   }
@@ -58,19 +43,11 @@ class _TransitionScreenState extends State<TransitionScreen> {
     final provider = context.watch<GameProvider>();
     final currentRound = provider.game.currentRound;
     final nextRound = currentRound + 1;
-    final fiestaRules = provider.game.fiesta?.rules;
-    final catchUpRules =
-        fiestaRules == null ? null : effectiveCatchUp(fiestaRules);
-    // 1 parmi 3 : « Manche suivante » attend la fin de la file (le provider
-    // refuse aussi, cf. `nextRound`).
-    final chooserId = provider.nextChooserId;
-    final chooser = chooserId == null ? null : provider.getTeamById(chooserId);
     // `nextRound` ne touche pas à l'équipe ni au joueur courants : ce sont
     // ceux que l'avant-tour de la manche suivante affichera.
     final starterTeam = provider.getCurrentTeam();
     final starterPlayer = provider.getCurrentPlayer();
     final starterColor = AppColors.getTeamColor(provider.game.currentTeamIndex);
-    final bonus = provider.game.turnBonusTime ?? 0;
 
     return Material(
       color: AppColors.backgroundMain,
@@ -118,18 +95,6 @@ class _TransitionScreenState extends State<TransitionScreen> {
                               color: starterColor,
                             ),
                           ],
-                          if (bonus > 0) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              'Temps bonus conservé : ${bonus}s',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 14,
-                                color: AppColors.warning,
-                              ),
-                            ),
-                          ],
                           // Bouton pour consulter les mots devinés du tour
                           // précédent.
                           if (provider.game.history.isNotEmpty) ...[
@@ -166,38 +131,6 @@ class _TransitionScreenState extends State<TransitionScreen> {
                               ),
                             ),
                           ],
-                          const SizedBox(height: 16),
-                          // Fiesta : sous le héros. Vides en Classique.
-                          RoundDrawLine(
-                            round: nextRound,
-                            modifiers: provider.nextRoundModifiers,
-                          ),
-                          if (catchUpRules != null)
-                            CatchUpLine(
-                              // Ligne vide (aucun rattrapage) : pas d'aide.
-                              key: provider.catchUpPreview.isEmpty
-                                  ? null
-                                  : _catchUpKey,
-                              entries: provider.catchUpPreview,
-                              teams: provider.teams,
-                            ),
-                          // Fiesta Auto : coup de pouce de l'app.
-                          AppBoostLine(
-                            key: provider.appBoostPreview.isEmpty
-                                ? null
-                                : _appBoostKey,
-                            teams: provider.teams,
-                            gifts: provider.appBoostPreview,
-                          ),
-                          // Fiesta Personnalisé : choix 1 parmi 3.
-                          if (provider.hasPickThree)
-                            PickThreeCard(
-                              key: _pickThreeKey,
-                              teams: provider.teams,
-                              nextTeamId: chooserId,
-                              onPassPhone: () =>
-                                  _PickThreeFlow.open(context, chooserId!),
-                            ),
                         ],
                       ),
                     ),
@@ -205,15 +138,11 @@ class _TransitionScreenState extends State<TransitionScreen> {
                   const SizedBox(height: 16),
                   AppButton(
                     key: _nextKey,
-                    text: chooser != null
-                        ? 'En attente du choix : ${chooser.name}'
-                        : 'Manche $nextRound',
+                    text: 'Manche $nextRound',
                     variant: AppButtonVariant.primary,
                     size: AppButtonSize.large,
                     fullWidth: true,
-                    disabled: chooser != null,
-                    onPressed:
-                        chooser != null ? null : () => provider.nextRound(),
+                    onPressed: () => provider.nextRound(),
                   ),
                 ],
               ),
@@ -222,7 +151,7 @@ class _TransitionScreenState extends State<TransitionScreen> {
           HomeButton(key: _homeKey, alignRight: true),
           HelpButton(
             right: HelpButton.besideCornerButton,
-            onPressed: () => _showHelp(provider),
+            onPressed: _showHelp,
           ),
           // Back button pour revenir à l'écran de vérification
           if (provider.canGoBackToVerification)
@@ -342,100 +271,6 @@ class _TransitionScreenState extends State<TransitionScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// 1 parmi 3 d'UNE équipe : « Passe le téléphone » (rien des offres n'est
-/// visible), puis le choix. Route au-dessus de la transition, non persistée :
-/// une app tuée revient sur la transition, qui montre l'équipe suivante.
-class _PickThreeFlow extends StatefulWidget {
-  final String teamId;
-
-  const _PickThreeFlow({required this.teamId});
-
-  static Future<void> open(BuildContext context, String teamId) =>
-      Navigator.of(context).push(MaterialPageRoute<void>(
-        fullscreenDialog: true,
-        builder: (_) => _PickThreeFlow(teamId: teamId),
-      ));
-
-  @override
-  State<_PickThreeFlow> createState() => _PickThreeFlowState();
-}
-
-class _PickThreeFlowState extends State<_PickThreeFlow> {
-  bool _revealed = false;
-
-  /// Carte sélectionnée par rangée (index dans la rangée), pas encore validée.
-  final Map<int, int> _selected = {};
-
-  /// Les cartes sélectionnées dans les autres rangées que [row].
-  List<ModifierInstance> _others(List<List<ModifierInstance>> rows, int row) =>
-      [
-        for (final MapEntry(key: r, value: i) in _selected.entries)
-          if (r != row) rows[r][i],
-      ];
-
-  bool _usable(GameProvider provider, List<List<ModifierInstance>> rows,
-          int row, int index) =>
-      provider.canChooseOffer(widget.teamId, row, index,
-          alsoTaken: _others(rows, row));
-
-  void _select(GameProvider provider, List<List<ModifierInstance>> rows,
-      int row, int index) {
-    setState(() {
-      _selected[row] = index;
-      // Une sélection devenue sans effet (incompatible avec la nouvelle) est
-      // retirée : la rangée redevient à choisir.
-      _selected
-          .removeWhere((r, i) => r != row && !_usable(provider, rows, r, i));
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<GameProvider>();
-    final teamIndex = provider.teams.indexWhere((t) => t.id == widget.teamId);
-    if (!_revealed) {
-      return PassPhonePanel(
-        teamName: provider.getTeamById(widget.teamId)?.name ?? '',
-        teamColor: AppColors.getTeamColor(teamIndex < 0 ? 0 : teamIndex),
-        onReady: () => setState(() => _revealed = true),
-      );
-    }
-    final rows = provider.offersFor(widget.teamId);
-    // Prêt : chaque rangée a sa carte, ou n'en a plus aucune utile.
-    final ready = _selected.isNotEmpty &&
-        [
-          for (var r = 0; r < rows.length; r++)
-            _selected.containsKey(r) ||
-                !List.generate(rows[r].length, (i) => i)
-                    .any((i) => _usable(provider, rows, r, i)),
-        ].every((ok) => ok);
-    return Material(
-      color: AppColors.backgroundMain,
-      child: OfferChoiceBody(
-        round: provider.game.currentRound,
-        teams: provider.teams,
-        standings: provider.standings,
-        chooserId: widget.teamId,
-        rows: rows,
-        selected: _selected,
-        isUsable: (row, i) => _usable(provider, rows, row, i),
-        ready: ready,
-        onSelect: (row, i) => _select(provider, rows, row, i),
-        // Fermer AVANT de choisir : sinon la route qui se ferme se
-        // reconstruit avec les offres recalculées après ce choix.
-        onConfirm: () {
-          final picks = _selected.entries.toList()
-            ..sort((a, b) => a.key.compareTo(b.key));
-          Navigator.of(context).pop();
-          for (final MapEntry(key: row, value: i) in picks) {
-            provider.chooseOffer(widget.teamId, row, i);
-          }
-        },
       ),
     );
   }

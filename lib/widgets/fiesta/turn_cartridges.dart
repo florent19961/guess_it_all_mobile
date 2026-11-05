@@ -219,8 +219,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
   }
 
   /// Appui long : la feuille « nom + explication », sans action.
-  void _explain(String id, _Kind kind,
-      {String? from, String? blockedReason, bool noSender = false}) {
+  void _explain(String id, _Kind kind, {String? from, String? blockedReason}) {
     final def = modifierById(id)!;
     final color = kind == _Kind.rule ? Colors.white : modifierColor(def.nature);
     final hint = AppTextStyles.bodySmall.copyWith(color: AppColors.gray400);
@@ -241,10 +240,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
               Text('${modifierIcon(id)} ${def.name}',
                   textAlign: TextAlign.center,
                   style: AppTextStyles.subtitle(fontSize: 26)),
-              if (from != null)
-                Text('Reçu de l\'équipe $from', style: hint)
-              else if (noSender)
-                Text('Coup de pouce de l\'app', style: hint),
+              if (from != null) Text('Reçu de l\'équipe $from', style: hint),
               if (kind == _Kind.rule)
                 Text('Toute la manche, pour toutes les équipes', style: hint),
               if (blockedReason != null)
@@ -332,10 +328,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                         _Circle(
                             id: m.catalogId, kind: _Kind.received, size: size),
                         onLongPress: () => _explain(m.catalogId, _Kind.received,
-                            from: m.fromTeamId == null
-                                ? null
-                                : _p.getTeamById(m.fromTeamId!)?.name,
-                            noSender: m.fromTeamId == null)),
+                            from: _p.getTeamById(m.fromTeamId!)?.name)),
                   for (final id in armed)
                     _slot(
                       KeyedSubtree(

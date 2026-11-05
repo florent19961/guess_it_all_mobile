@@ -1,4 +1,5 @@
 import 'fiesta_rules.dart';
+import 'modifier_catalog.dart';
 import 'modifier_instance.dart';
 import 'turn_effects.dart';
 
@@ -17,50 +18,55 @@ class FiestaState {
   /// État propre au tour en cours ([FiestaTurnState]). Vidé à la fin du tour.
   final FiestaTurnState turn;
 
-  /// Rattrapage DÛ par équipe (id → secondes, négatives pour le malus du
-  /// leader), posé à l'entrée de la manche et consommé par l'équipe à son
-  /// premier tour non-continuation (story 2-6). Une équipe absente n'a rien.
-  final Map<String, int> catchUpDue;
-
-  /// Charges dépensées dans la partie (story 2-9), dans l'ordre. Sert au
-  /// décompte des charges de la manche en cours (une charge non dépensée est
-  /// perdue en fin de manche : rien à remettre à zéro) et au récap « Bonus
-  /// utilisés ». Clé omise tant que la liste est vide.
+  /// Cartouches dépensées dans la partie (story 2-9), dans l'ordre, toutes
+  /// manches : décompte du stock ([cartridgesLeft]) et récap « Cartouches
+  /// utilisées ». Clé omise tant que la liste est vide.
   final List<ChargeUse> chargesUsed;
 
-  /// Cartes « 1 parmi 3 » choisies dans la partie (story 2-10), dans l'ordre.
-  /// Celles de la transition en cours forment la file (déjà choisi = gardé
-  /// après un kill) ; `nextRound` les rend actives. Relues ensuite pour le
-  /// récap et pour savoir qui désigne le devineur bloqué. Clé omise si vide.
-  final List<OfferChoice> offerChoices;
+  /// Cartouches gagnées par le coup de pouce (Fiesta v3), dans l'ordre : stock
+  /// et récap. Clé omise tant que la liste est vide (`readOr` : absente = vide).
+  final List<EarnedCartridge> earned;
 
   FiestaState({
     required this.rules,
     List<ModifierInstance> active = const [],
     FiestaTurnState? turn,
-    Map<String, int> catchUpDue = const {},
     List<ChargeUse> chargesUsed = const [],
-    List<OfferChoice> offerChoices = const [],
+    List<EarnedCartridge> earned = const [],
   })  : active = List.unmodifiable(active),
         turn = turn ?? FiestaTurnState.empty,
-        catchUpDue = Map.unmodifiable(catchUpDue),
         chargesUsed = List.unmodifiable(chargesUsed),
-        offerChoices = List.unmodifiable(offerChoices);
+        earned = List.unmodifiable(earned);
+
+  /// Cartouches [catalogId] de [teamId] pour toute la partie : celles de
+  /// l'ensemble ([ModifierMode.cartridge]) plus celles gagnées.
+  int cartridgesOwned(String catalogId, String teamId) {
+    final setting = rules.activeSetting(catalogId);
+    return (setting?.mode == ModifierMode.cartridge ? setting!.charges : 0) +
+        earned
+            .where((e) => e.catalogId == catalogId && e.teamId == teamId)
+            .length;
+  }
+
+  /// Stock restant : possédées moins dépensées, toutes manches.
+  int cartridgesLeft(String catalogId, String teamId) =>
+      cartridgesOwned(catalogId, teamId) -
+      chargesUsed
+          .where((u) => u.catalogId == catalogId && u.teamId == teamId)
+          .length;
 
   FiestaState copyWith({
     List<ModifierInstance>? active,
     FiestaTurnState? turn,
-    Map<String, int>? catchUpDue,
     List<ChargeUse>? chargesUsed,
-    List<OfferChoice>? offerChoices,
+    List<EarnedCartridge>? earned,
   }) =>
       FiestaState(
         rules: rules,
         active: active ?? this.active,
         turn: turn ?? this.turn,
-        catchUpDue: catchUpDue ?? this.catchUpDue,
         chargesUsed: chargesUsed ?? this.chargesUsed,
-        offerChoices: offerChoices ?? this.offerChoices,
+        earned: earned ?? this.earned,
       );
 
   Map<String, dynamic> toJson() => {
@@ -68,11 +74,9 @@ class FiestaState {
         // Clés vides omises : l'absence se relit comme le défaut.
         if (active.isNotEmpty) 'active': active.map((e) => e.toJson()).toList(),
         if (!turn.isEmpty) 'turn': turn.toJson(),
-        if (catchUpDue.isNotEmpty) 'catchUpDue': catchUpDue,
         if (chargesUsed.isNotEmpty)
           'chargesUsed': chargesUsed.map((e) => e.toJson()).toList(),
-        if (offerChoices.isNotEmpty)
-          'offerChoices': offerChoices.map((e) => e.toJson()).toList(),
+        if (earned.isNotEmpty) 'earned': earned.map((e) => e.toJson()).toList(),
       };
 
   /// Variante tolérante : `null` (= Classique) si les règles sont illisibles.
@@ -96,22 +100,14 @@ class FiestaState {
         : <ModifierInstance>[];
 
     final rawTurn = json['turn'];
-    final rawDue = json['catchUpDue'];
     final rawUsed = json['chargesUsed'];
-    final rawChoices = json['offerChoices'];
+    final rawEarned = json['earned'];
     return FiestaState(
       rules: rules,
       active: active,
       turn: rawTurn is Map
           ? FiestaTurnState.fromJson(Map<String, dynamic>.from(rawTurn))
           : null,
-      catchUpDue: rawDue is Map
-          ? {
-              for (final e in rawDue.entries)
-                if (e.key is String && e.value is int)
-                  e.key as String: e.value as int,
-            }
-          : const {},
       chargesUsed: rawUsed is List
           ? rawUsed
               .whereType<Map>()
@@ -119,11 +115,12 @@ class FiestaState {
               .whereType<ChargeUse>()
               .toList()
           : const [],
-      offerChoices: rawChoices is List
-          ? rawChoices
+      earned: rawEarned is List
+          ? rawEarned
               .whereType<Map>()
-              .map((e) => OfferChoice.tryFromJson(Map<String, dynamic>.from(e)))
-              .whereType<OfferChoice>()
+              .map((e) =>
+                  EarnedCartridge.tryFromJson(Map<String, dynamic>.from(e)))
+              .whereType<EarnedCartridge>()
               .toList()
           : const [],
     );
@@ -131,8 +128,8 @@ class FiestaState {
 }
 
 /// Une cartouche dépensée : [teamId] a utilisé [catalogId] en manche
-/// [round] — un bonus pour elle, ou un malus infligé à [targetTeamId] (Fiesta
-/// v2, lane 2 ; clé `target` omise pour un bonus).
+/// [round] : un bonus pour elle, ou un malus infligé à [targetTeamId] (clé
+/// `target` omise pour un bonus).
 class ChargeUse {
   final String catalogId;
   final String teamId;
@@ -173,33 +170,36 @@ class ChargeUse {
   }
 }
 
-/// Une carte « 1 parmi 3 » : [chooserId] l'a prise dans sa rangée [row]
-/// (0 à `pick3Choices` − 1), [modifier] est l'instance de la manche suivante :
-/// une cartouche de [chooserId] (un malus entre dans sa réserve, à infliger).
-class OfferChoice {
-  final String chooserId;
-  final int row;
-  final ModifierInstance modifier;
+/// Une cartouche gagnée par le coup de pouce à l'équipe menée : [teamId] la
+/// détient dès la manche [round] et jusqu'à la fin de la partie. Écrite par
+/// `nextRound` seulement (`RoundTransitionPlan.apply`) : ni un retour arrière
+/// ni une app tuée sur la transition ne peuvent la doubler ou la perdre.
+class EarnedCartridge {
+  final String catalogId;
+  final String teamId;
+  final int round;
 
-  const OfferChoice({
-    required this.chooserId,
-    this.row = 0,
-    required this.modifier,
+  const EarnedCartridge({
+    required this.catalogId,
+    required this.teamId,
+    required this.round,
   });
 
   Map<String, dynamic> toJson() =>
-      {'chooserId': chooserId, 'row': row, 'modifier': modifier.toJson()};
+      {'catalogId': catalogId, 'teamId': teamId, 'round': round};
 
-  /// Variante tolérante : une entrée illisible est ignorée seule ; `row`
-  /// absent = 0.
-  static OfferChoice? tryFromJson(Map<String, dynamic> json) {
-    final chooserId = json['chooserId'];
-    final row = readOr(json, 'row', 0);
-    final raw = json['modifier'];
-    if (chooserId is! String || row == null || raw is! Map) return null;
-    final modifier =
-        ModifierInstance.tryFromJson(Map<String, dynamic>.from(raw));
-    if (modifier == null) return null;
-    return OfferChoice(chooserId: chooserId, row: row, modifier: modifier);
+  /// Variante tolérante : une entrée illisible (dont un id inconnu du
+  /// catalogue) est ignorée seule.
+  static EarnedCartridge? tryFromJson(Map<String, dynamic> json) {
+    final catalogId = json['catalogId'];
+    final teamId = json['teamId'];
+    final round = json['round'];
+    if (catalogId is! String ||
+        modifierById(catalogId) == null ||
+        teamId is! String ||
+        round is! int) {
+      return null;
+    }
+    return EarnedCartridge(catalogId: catalogId, teamId: teamId, round: round);
   }
 }

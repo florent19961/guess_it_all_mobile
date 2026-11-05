@@ -81,67 +81,80 @@ void main() {
   });
 
   test(
-      'Fiesta : rattrapage calculé en fin de manche, consommé au premier tour '
-      'non-continuation, jamais sur la continuation ; malus de 10 s ; même '
-      'temps après un kill et après un retour arrière', () async {
+      'Fiesta : le +10 s et le −10 s se composent, l\'aperçu et le chrono '
+      'd\'accord, plancher tenu ; une continuation garde ses secondes exactes, '
+      'même au tour où une règle de N+1 s\'applique ; même temps après un kill',
+      () async {
     final provider = await givenReadyProvider();
     await provider.startGame(
       fiesta: FiestaRules(
         mode: FiestaMode.custom,
-        catchUp: CatchUpRules.auto,
+        drawCount: 0,
         modifiers: {
-          // Un second malus, sans effet sur le temps : seul `minus_10s` compte.
+          for (final id in ['plus_10s', 'minus_10s'])
+            id: ModifierSetting(
+                active: true,
+                rounds: const {1, 2, 3},
+                mode: ModifierMode.cartridge,
+                charges: 2),
+          // Une règle de M2, sans effet sur le temps.
           'no_pass': ModifierSetting(
-              active: true, rounds: const {2}, mode: ModifierMode.always),
-          'minus_10s': ModifierSetting(
               active: true, rounds: const {2}, mode: ModifierMode.always),
         },
       ),
     );
+    final first = provider.getCurrentTeam()!.id;
+    final other = provider.teams.singleWhere((t) => t.id != first).id;
     expect(provider.turnTime.total, 30);
-    final leader = provider.getCurrentTeam()!.id;
-    final trailing = provider.teams.singleWhere((t) => t.id != leader).id;
 
-    finishRoundWithCarryOver(provider); // leader 2 – trailing 0
-    Map<String, int> preview() =>
-        {for (final e in provider.catchUpPreview) e.teamId: e.seconds};
-    expect(preview(), {leader: -2, trailing: 6});
+    // Allumé : l'aperçu l'annonce, éteint il repart, rien n'est dépensé.
+    provider.toggleBonus('plus_10s');
+    expect(provider.turnTime.total, 40);
+    provider.toggleBonus('plus_10s');
+    expect(provider.turnTime.total, 30);
+    expect(provider.game.fiesta!.chargesUsed, isEmpty);
+    provider.toggleBonus('plus_10s');
+    expect(provider.inflictMalus('minus_10s', other), isNull);
 
-    // Retour arrière depuis la transition, puis revalidation : identique.
-    provider.restorePreValidationState();
-    expect(provider.catchUpPreview, isEmpty);
+    // Une passe (40 → 35) puis les 2 mots : 35 s reportées.
+    provider.startTurn();
+    expect(provider.game.timeRemaining, 40);
+    provider.startTurnTimer();
+    expect(allotted(provider), 40);
+    expect(provider.game.turnAllottedSeconds, 40);
+    expect(
+        provider.game.fiesta!.chargesUsed
+            .where((u) => u.catalogId == 'plus_10s'),
+        hasLength(1));
+    provider.passWord();
+    provider.markWordAsGuessed();
+    provider.markWordAsGuessed();
     final guessed = List<String>.from(provider.game.wordsGuessedThisTurn);
     provider.savePreValidationState(guessed);
     provider.validateWords(guessed);
-    expect(preview(), {leader: -2, trailing: 6});
-
+    expect(provider.game.turnBonusTime, 35);
     provider.nextRound();
-    expect(provider.game.fiesta!.catchUpDue, {leader: -2, trailing: 6});
-    // Continuation = même tour que la fin de M1 : les fixés de M2 attendent
-    // le premier vrai tour.
-    expect(provider.currentTeamModifiers, isEmpty);
 
-    // Continuation du leader : 25 s reportées, ni malus du leader ni −10 s,
-    // et son dû n'est pas consommé.
-    expect(provider.turnTime.total, 25);
+    // Continuation : le +10 s déjà dépensé n'ajoute rien, seules les secondes
+    // reportées comptent ; la règle de M2 s'applique, elle.
+    expect(provider.isContinuation, isTrue);
+    expect(provider.passBlocked, isTrue);
+    expect(provider.turnTime.total, 35);
     provider.startTurn();
     provider.startTurnTimer();
-    expect(allotted(provider), 25);
-    expect(provider.game.fiesta!.catchUpDue, {leader: -2, trailing: 6});
+    expect(allotted(provider), 35);
     provider.endTurn();
     provider.savePreValidationState(const []);
     provider.validateWords(const []);
 
-    // Premier tour non-continuation de la menée : 30 + 6 − 10.
-    expect(provider.getCurrentTeam()!.id, trailing);
-    expect(provider.turnTime.total, 26);
-    expect(provider.turnTime.lines.map((l) => l.seconds), [30, 6, -10]);
+    // Le −10 s reçu tombe sur le premier tour de l'autre équipe : 30 − 10.
+    expect(provider.getCurrentTeam()!.id, other);
+    expect(provider.turnTime.total, 20);
+    expect(provider.turnTime.lines.map((l) => l.seconds), [30, -10]);
     provider.startTurn();
-    expect(provider.game.timeRemaining, 26);
+    expect(provider.game.timeRemaining, 20);
     provider.startTurnTimer();
-    expect(allotted(provider), 26);
-    expect(provider.game.turnAllottedSeconds, 26);
-    expect(provider.game.fiesta!.catchUpDue, {leader: -2});
+    expect(allotted(provider), 20);
 
     // App tuée en plein tour : reste gelé et durée allouée retrouvés.
     provider.pauseTurn();
@@ -150,30 +163,17 @@ void main() {
     final reloaded = GameProvider();
     await pumpEventQueue();
     expect(reloaded.turnClock.frozenRemainingMs, frozen);
-    expect(reloaded.game.turnAllottedSeconds, 26);
-    expect(reloaded.game.fiesta!.catchUpDue, {leader: -2});
+    expect(reloaded.game.turnAllottedSeconds, 20);
     reloaded.resumeTurn();
     reloaded.endTurn();
     reloaded.savePreValidationState(const []);
     reloaded.validateWords(const []);
-    expect(
-        reloaded.game.history.last.timeSpent, 26 - reloaded.game.timeRemaining);
 
-    // Leader, premier tour non-continuation : 30 − 2 − 10.
-    expect(reloaded.getCurrentTeam()!.id, leader);
-    expect(reloaded.turnTime.total, 18);
-
-    // Retour arrière depuis cet avant-tour : le tour de la menée a eu lieu,
-    // son rattrapage reste consommé après revalidation.
-    reloaded.restorePreValidationState();
-    reloaded.savePreValidationState(const []);
-    reloaded.validateWords(const []);
-    expect(reloaded.game.fiesta!.catchUpDue, {leader: -2});
-    expect(reloaded.turnTime.total, 18);
-
+    // Plus de −10 s : parti à la fin du tour visé. Le +10 s ne se rejoue pas
+    // tout seul.
+    expect(reloaded.getCurrentTeam()!.id, first);
+    expect(reloaded.turnTime.total, 30);
     playEmptyTurn(reloaded);
-    expect(reloaded.game.fiesta!.catchUpDue, isEmpty);
-    // Les tours suivants de la manche : base − 10 s seulement.
-    expect(reloaded.turnTime.total, 20);
+    expect(reloaded.turnTime.total, 30);
   });
 }

@@ -2,12 +2,10 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'fiesta_rules.dart';
-import 'fiesta_state.dart';
 import 'modifier_catalog.dart';
 import 'modifier_instance.dart';
 
-/// Règles de manche (`always` + tirage `draw`) et cartouches en stock d'une
-/// manche (Fiesta v2).
+/// Règles de manche (`always` + tirage `draw`).
 ///
 /// 🔴 Tout est DÉTERMINISTE par `(gameId, manche)` : le retour arrière depuis
 /// la transition rejoue la branche « fin de manche », et une app tuée relit la
@@ -35,14 +33,13 @@ Set<int> allowedRounds(ModifierDef def) => {
         if (isEligibleForRound(def, r)) r
     };
 
-/// Un modificateur qui vise un joueur (`block_guesser`, choisi par les
-/// adversaires) n'a pas de sens « pour toutes les équipes ».
-bool isForAllTeams(ModifierDef def) => def.defaultTarget == ModifierTarget.both;
-
 /// [def] peut-il être une règle de manche (`always` / `draw`) ? Non pour les
 /// exceptions « seulement en cartouche » ([kCartridgeOnlyIds]).
-bool canBeRoundRule(ModifierDef def) =>
-    isForAllTeams(def) && !kCartridgeOnlyIds.contains(def.id);
+bool canBeRoundRule(ModifierDef def) => !kCartridgeOnlyIds.contains(def.id);
+
+/// [def] peut-il être une cartouche ? Non pour « Une seule réponse », toujours
+/// une règle de toute une manche ([kRoundRuleOnlyIds]).
+bool canBeCartridge(ModifierDef def) => !kRoundRuleOnlyIds.contains(def.id);
 
 /// Auto : « Une seule réponse » vaut-elle pour la partie [gameId] ? Une
 /// chance sur 4, DÉTERMINISTE par partie (graine de la « manche 0 »,
@@ -54,11 +51,10 @@ bool drawsOneAnswer(String gameId) =>
 /// tout le catalogue pouvant être une règle de manche est « Au tirage » sur
 /// ses manches possibles (1 ou 2 tirés par manche, [drawForRound]) ; « Une
 /// seule réponse » est « Toujours » M1-M3 si [oneAnswer], hors tirage sinon.
-/// Aucune cartouche, sauf le coup de pouce de l'app.
-FiestaRules autoRules({required bool oneAnswer, bool autoCalibrate = true}) =>
-    FiestaRules(
+/// Aucune cartouche au départ, seulement celles du coup de pouce.
+FiestaRules autoRules({required bool oneAnswer}) => FiestaRules(
       mode: FiestaMode.auto,
-      autoCalibrate: autoCalibrate,
+      trailingBoost: true,
       modifiers: {
         for (final def in kModifierCatalog)
           if (def.id == 'one_answer')
@@ -161,50 +157,4 @@ List<ModifierInstance> roundModifiers(
       random: Random(drawSeed(gameId, round)),
     ),
   ];
-}
-
-/// Cartouches « En stock » reçues par chaque équipe de [teamIds] au début de
-/// la manche [round] : une instance par équipe et par modificateur, `charges`
-/// = N (« par manche ») ou N moins ce que l'équipe a déjà dépensé dans les
-/// manches d'avant (« pour la partie », [chargesUsed]).
-///
-/// Une cartouche = UN tour. Les BONUS s'activent avant le tour (mécanisme de
-/// charges, dépense au départ du chrono = un `ChargeUse`). Les MALUS sont
-/// posés en réserve ([ModifierInstance.reserve]) et s'infligent à une autre
-/// équipe depuis l'écran « Ce tour / Réserve » (un `ChargeUse` aussi).
-List<ModifierInstance> stockForRound(
-  FiestaRules rules, {
-  required int round,
-  required Iterable<String> teamIds,
-  List<ChargeUse> chargesUsed = const [],
-}) {
-  final stock = <ModifierInstance>[];
-  for (final def in kModifierCatalog) {
-    if (!_plays(rules, def, ModifierMode.stock, round)) continue;
-    final setting = rules.activeSetting(def.id)!;
-    final perGame = setting.perGame;
-    for (final teamId in teamIds) {
-      final spent = perGame
-          ? chargesUsed
-              .where((u) =>
-                  u.catalogId == def.id &&
-                  u.teamId == teamId &&
-                  u.round < round)
-              .length
-          : 0;
-      final charges = setting.charges - spent;
-      if (charges <= 0) continue;
-      stock.add(ModifierInstance(
-        catalogId: def.id,
-        scope: ModifierScope.round,
-        target: ModifierTarget.team,
-        teamId: teamId,
-        charges: charges,
-        nature: def.nature,
-        round: round,
-        reserve: def.nature == ModifierNature.malus,
-      ));
-    }
-  }
-  return stock;
 }

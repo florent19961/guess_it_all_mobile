@@ -54,7 +54,7 @@ Future<GameProvider> _givenLongTwoWordsTurn(WidgetTester tester) async {
             id: ModifierSetting(
               active: true,
               rounds: const {1},
-              mode: ModifierMode.stock,
+              mode: ModifierMode.cartridge,
             ),
         },
       ),

@@ -40,11 +40,20 @@ List<String> validateEnsemble(
     if (setting == null) continue;
     final name = def.name;
 
+    if (setting.mode == ModifierMode.cartridge) {
+      if (!canBeCartridge(def)) errors.add('$name : jamais en cartouche.');
+      if (setting.charges == 0 && !rules.trailingBoost) {
+        errors.add('$name : 0 cartouche sans coup de pouce, elle ne servirait '
+            'jamais. Mets-en au moins 1, ou allume le coup de pouce.');
+      }
+      continue;
+    }
+
     if (setting.rounds.isEmpty) {
       errors.add('$name : coche au moins une manche.');
       continue;
     }
-    if (isRoundRuleMode(setting.mode) && !canBeRoundRule(def)) {
+    if (!canBeRoundRule(def)) {
       errors.add('$name : seulement en cartouche.');
     }
     if (def.round3Only && !setting.rounds.every((r) => r == 3)) {
@@ -54,16 +63,18 @@ List<String> validateEnsemble(
       errors.add('$name n\'existe pas en manche 3 (mime) : manche 1 ou 2 '
           'seulement.');
     }
-    if (setting.mode == ModifierMode.offer &&
-        setting.rounds.every((r) => r == 1)) {
-      errors.add('$name : en « 1 parmi 3 », la carte se gagne entre deux '
-          'manches. Coche la manche 2 ou 3.');
-    }
     if (setting.mode == ModifierMode.always) {
       for (final r in setting.rounds) {
         (alwaysByRound[r] ??= []).add(def);
       }
     }
+  }
+
+  if (rules.trailingBoost &&
+      !rules.modifiers.values
+          .any((s) => s.active && s.mode == ModifierMode.cartridge)) {
+    errors.add('Le coup de pouce a besoin d\'au moins un modificateur en '
+        'Cartouche.');
   }
 
   // Deux « Toujours » incompatibles sur une même manche : l'un des deux ne

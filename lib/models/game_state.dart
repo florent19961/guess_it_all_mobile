@@ -94,7 +94,7 @@ class GameState {
   int? turnBonusTime;
 
   /// Durée de DÉPART du tour en cours, telle que composée au `startTurnTimer`
-  /// (continuation, rattrapage, malus). C'est elle qui mesure le temps passé
+  /// (continuation, bonus et malus de temps). C'est elle qui mesure le temps passé
   /// d'un tour, pas le réglage. Nul = partie reprise d'une version antérieure :
   /// on retombe sur le réglage, comme avant.
   int? turnAllottedSeconds;

@@ -20,16 +20,16 @@ Future<GameProvider> givenReadyProvider(List<String> names) async {
   return provider;
 }
 
-/// Personnalisé : « Mot compte double » en stock, 1 cartouche par équipe à
-/// chaque manche.
-final doubleEveryRound = FiestaRules(
+/// Personnalisé : « Mot compte double » en cartouche, 1 par équipe pour la
+/// partie.
+final doubleOnce = FiestaRules(
   mode: FiestaMode.custom,
   drawCount: 0,
   modifiers: {
     'double_points': ModifierSetting(
       active: true,
       rounds: const {1, 2, 3},
-      mode: ModifierMode.stock,
+      mode: ModifierMode.cartridge,
     ),
   },
 );
@@ -47,7 +47,7 @@ void main() {
       'seulement ; retour arrière = charge rendue et revalidation sans double '
       'comptage (AC2-AC5, AC7)', () async {
     var provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
-    await provider.startGame(fiesta: doubleEveryRound);
+    await provider.startGame(fiesta: doubleOnce);
     final teamId = provider.getCurrentTeam()!.id;
 
     // AC3 : allumer / éteindre ne dépense rien.
@@ -100,7 +100,7 @@ void main() {
       'la charge de la nouvelle manche ; récap « Cartouches utilisées » (AC6, AC8)',
       () async {
     final provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
-    await provider.startGame(fiesta: doubleEveryRound);
+    await provider.startGame(fiesta: doubleOnce);
     final teamId = provider.getCurrentTeam()!.id;
     provider.setDoublePoints(true);
     provider.startTurn();
@@ -142,7 +142,7 @@ void main() {
       'pas ; elle sert au premier vrai tour de M2 de l\'équipe (AC8, epic fix)',
       () async {
     final provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
-    await provider.startGame(fiesta: doubleEveryRound);
+    await provider.startGame(fiesta: doubleOnce);
     final teamId = provider.getCurrentTeam()!.id;
     void playOne(List<String> Function(List<String>) validate, {int n = 1}) {
       provider.startTurn();
@@ -184,7 +184,7 @@ void main() {
       'avec ×2 et continuation ; la clé n\'est écrite que si elle diffère '
       'du nombre de mots (epic fix B3)', () async {
     final provider = await givenReadyProvider(['A', 'B', 'C', 'D']);
-    await provider.startGame(fiesta: doubleEveryRound);
+    await provider.startGame(fiesta: doubleOnce);
     provider.setDoublePoints(true);
     provider.startTurn();
     provider.startTurnTimer();

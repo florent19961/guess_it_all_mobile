@@ -384,34 +384,15 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
 
                         // Fiesta : modificateurs du tour, sous le chrono.
                         if (provider.turnModifiers.isNotEmpty ||
-                            provider.isDoublePointsOn ||
-                            provider.isTwoWordsOn ||
-                            provider.isFreePassOn) ...[
+                            provider.spentBonuses.isNotEmpty) ...[
                           const SizedBox(height: 8),
                           ModifierBadges(
                             modifiers: provider.turnModifiers,
                             wrapExplain: (show) => _whilePaused(provider, show),
                             extra: [
-                              if (provider.isDoublePointsOn)
+                              for (final id in provider.spentBonuses)
                                 ModifierBadge.catalog(
-                                  'double_points',
-                                  nature: ModifierNature.bonus,
-                                  wrapExplain: (show) =>
-                                      _whilePaused(provider, show),
-                                ),
-                              // Règle de manche : déjà dans `turnModifiers`.
-                              if (provider.isTwoWordsOn &&
-                                  !provider.turnModifiers
-                                      .any((m) => m.catalogId == 'two_words'))
-                                ModifierBadge.catalog(
-                                  'two_words',
-                                  nature: ModifierNature.bonus,
-                                  wrapExplain: (show) =>
-                                      _whilePaused(provider, show),
-                                ),
-                              if (provider.isFreePassOn)
-                                ModifierBadge.catalog(
-                                  'free_pass',
+                                  id,
                                   nature: ModifierNature.bonus,
                                   wrapExplain: (show) =>
                                       _whilePaused(provider, show),

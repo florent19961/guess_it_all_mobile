@@ -15,6 +15,7 @@ import '../widgets/help/coach_marks.dart';
 import '../widgets/help/help_button.dart';
 import '../widgets/help/help_content.dart';
 import 'fiesta_ensemble_editor_screen.dart';
+import 'fiesta_ensemble_view_screen.dart';
 
 /// « Fiesta personnalisée » : juste après les Paramètres, avant les joueurs
 /// (Fiesta Personnalisé seulement). Les ensembles fournis par l'app puis les
@@ -158,6 +159,13 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
     await _reload(select: copy?.id);
   }
 
+  /// Page « Voir » : son bouton « Dupliquer » revient ici pour dupliquer.
+  Future<void> _view(FiestaEnsemble ensemble) async {
+    final duplicate = await FiestaEnsembleViewScreen.show(context,
+        ensemble: ensemble, canDuplicate: !_full);
+    if (duplicate && mounted) await _duplicate(ensemble);
+  }
+
   Future<void> _delete(FiestaEnsemble ensemble) async {
     final confirmed = await AppConfirmDialog.show(
       context,
@@ -270,6 +278,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
                   selected: ensemble.id == _selectedId,
                   canDuplicate: !_full,
                   onTap: () => setState(() => _selectedId = ensemble.id),
+                  onView: () => _view(ensemble),
                   onEdit: () => _openEditor(ensemble: ensemble),
                   onDuplicate: () => _duplicate(ensemble),
                   onDelete: () => _delete(ensemble),
@@ -321,6 +330,7 @@ class _EnsembleCard extends StatelessWidget {
   final bool selected;
   final bool canDuplicate;
   final VoidCallback onTap;
+  final VoidCallback onView;
   final VoidCallback onEdit;
   final VoidCallback onDuplicate;
   final VoidCallback onDelete;
@@ -330,6 +340,7 @@ class _EnsembleCard extends StatelessWidget {
     required this.selected,
     required this.canDuplicate,
     required this.onTap,
+    required this.onView,
     required this.onEdit,
     required this.onDuplicate,
     required this.onDelete,
@@ -395,6 +406,12 @@ class _EnsembleCard extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
+                  AppButton(
+                    text: 'Voir',
+                    size: AppButtonSize.small,
+                    variant: AppButtonVariant.ghost,
+                    onPressed: onView,
+                  ),
                   if (!provided)
                     AppButton(
                       text: 'Modifier',

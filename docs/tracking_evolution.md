@@ -950,3 +950,26 @@ badges.
 confirmation « Terminer » peuvent se croiser, et un second appel ajoutait un événement `expired`
 pour le même mot. Il remettait aussi à zéro le temps reporté d'une manche finie en avance. Les seuls
 appelants sont dans `TurnScreen`, monté uniquement sur `screenTurn`, reprise de partie comprise.
+
+## 2026-11-05 — Fiesta v3 : refonte des règles (retours device de Florent)
+
+**Ce qui change.** Plus de « 1 parmi 3 », de rattrapage, de force d'offre ni d'écran de révélation
+des malus. Modes `Toujours / Au tirage / Cartouche` (`FiestaRules.format = 3`). Une cartouche vaut
+pour TOUTE LA PARTIE, par équipe. Bonus, `minus_10s` et `block_guesser` seulement en cartouche ;
+`one_answer` seulement règle de manche. Nouveau bonus `plus_10s`. Coup de pouce à l'équipe menée :
+après M1 et M2, chaque équipe non en tête reçoit UNE cartouche au hasard. La continuation joue sous
+les règles de N+1. Transition réduite à la manche suivante et à qui commence. Page « Voir » d'un
+ensemble.
+
+**Pourquoi ces choix.**
+- *Stock = `charges + earned − chargesUsed`*, calculé (`FiestaState.cartridgesLeft`), plutôt que
+  des instances « cartouche » dans `active` : une seule source, et plus de décompte par manche.
+- *Gagné écrit à `nextRound` seulement* (`fiesta.earned`) : la transition reste un plan recalculé.
+  Le retour arrière restaure un état d'avant, l'app tuée recalcule, une correction de vérification
+  change le classement donc le cadeau, sans doublon ni perte possibles.
+- *Récap relu de `earned`* au lieu de rejouer le plan sur les scores cumulés : plus simple, et c'est
+  ce qui a été donné.
+- *Format 3 illisible pour une partie v2* : même politique que v1 → v2, Fiesta jamais publiée. Une
+  archive d'historique reste lisible : ses faits `catchUp` / `choice` sont ignorés seuls.
+- *Aucune cartouche ne se joue sur une continuation* (inchangé : c'est le même tour). Le +10 s y
+  serait de toute façon sans effet ; `_conflict` le garde pour la raison affichée.

@@ -1,16 +1,16 @@
 import 'modifier_catalog.dart';
-import 'modifier_instance.dart';
 
 /// Effets de tour (story 2-8) : règles pures sur les modificateurs qui pèsent
 /// sur l'équipe qui joue. Le provider ne fait que brancher.
 
-/// Bonus à charge activables avant le tour (stories 2-9, 2-11 ; Fiesta v2 :
-/// tous les bonus en cartouche, Passe gratuite comprise), par id de
-/// catalogue, avec leur clé JSON dans `fiesta.turn`. Une cartouche = UN tour.
+/// Bonus à charge activables avant le tour (stories 2-9, 2-11 ; Fiesta v3 :
+/// tous les bonus, seulement en cartouche), par id de catalogue, avec leur clé
+/// JSON dans `fiesta.turn`. Une cartouche = UN tour.
 const Map<String, String> kChargeBonusKeys = {
   'double_points': 'doublePoints',
   'two_words': 'twoWords',
   'free_pass': 'freePass',
+  'plus_10s': 'plus10s',
 };
 
 /// Une charge du tour : allumée à l'avant-tour ([armed]), puis dépensée au
@@ -108,13 +108,6 @@ class FiestaTurnState {
   }
 }
 
-/// Charges de [catalogId] posées par [modifiers] (passes gratuites,
-/// « Mot compte double », « Deux mots à la fois »).
-int chargeAllowance(List<ModifierInstance> modifiers, String catalogId) =>
-    modifiers
-        .where((m) => m.catalogId == catalogId)
-        .fold(0, (sum, m) => sum + m.charges);
-
 /// Remplaçant d'une carte « Deux mots » traitée : premier mot de [pool] (déjà
 /// privé du mot traité) autre que [other], la carte qui reste. Pool épuisé :
 /// les mots passés du tour (sauf [other]) y reviennent, comme le recyclage
@@ -137,7 +130,7 @@ int chargeAllowance(List<ModifierInstance> modifiers, String catalogId) =>
 bool canBlockGuesser(int teamSize) => teamSize > 2;
 
 /// Une cartouche de la réserve de l'équipe qui joue (écran « Ce tour /
-/// Réserve », Fiesta v2) : [left] restantes pour la manche (0 = épuisée),
+/// Réserve », Fiesta v3) : [left] restantes pour la partie (0 = épuisée),
 /// [blockedReason] (« incompatible avec … ») si elle ne peut pas servir ce
 /// tour. Calculée par le provider, jamais persistée.
 class Cartridge {

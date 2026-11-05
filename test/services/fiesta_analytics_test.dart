@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:guess_it_all_mobile/models/fiesta/modifier_recap.dart';
 import 'package:guess_it_all_mobile/models/game_result.dart';
 import 'package:guess_it_all_mobile/models/word_event.dart';
 import 'package:guess_it_all_mobile/models/word_stats.dart';
@@ -187,9 +188,9 @@ void main() {
         roundsPlayed: 3,
         mode: 'fiesta_custom',
         modifierRecap: const [
-          ModifierRecapItem(RecapKind.catchUp,
-              round: 2, teamId: 'bleue', seconds: 18),
-          ModifierRecapItem(RecapKind.choice,
+          ModifierRecapItem(RecapKind.boost,
+              round: 2, catalogId: 'plus_10s', teamId: 'bleue'),
+          ModifierRecapItem(RecapKind.bonusUsed,
               round: 3,
               catalogId: 'block_guesser',
               teamId: 'rouge',
@@ -199,9 +200,28 @@ void main() {
       final json = jsonEncode(result.toJson());
       final reread = GameResult.tryFromJson(jsonDecode(json))!;
       expect(reread.mode, 'fiesta_custom');
-      // Archivé en faits (ids, secondes), jamais en phrases (epic fix B5).
+      // Archivé en faits (ids), jamais en phrases (epic fix B5).
       expect(jsonEncode(reread.toJson()), json);
-      expect(json, isNot(contains('Rattrapage')));
+      expect(json, isNot(contains('Coup de pouce')));
+    });
+
+    test(
+        'une partie archivée avant Fiesta v3 se relit : faits de genres retirés '
+        '(`catchUp`, `choice`) ignorés seuls', () {
+      final reread = GameResult.tryFromJson(jsonDecode('{"gameId":"old",'
+          '"playedAt":"2026-11-03T20:00:00.000","teams":[],"totalWords":40,'
+          '"turnDuration":30,"roundsPlayed":3,"mode":"fiesta_custom",'
+          '"modifierRecap":[{"kind":"catchUp","round":2,"teamId":"b",'
+          '"seconds":18},{"kind":"choice","round":3,"catalogId":"block_guesser",'
+          '"teamId":"r","chooserId":"b"},{"kind":"draw","round":1,'
+          '"catalogId":"no_pass"},{"kind":"boost","round":2,'
+          '"catalogId":"free_pass","teamId":"b"}]}'))!;
+      expect(reread.modifierRecap!.map((i) => i.kind),
+          [RecapKind.draw, RecapKind.boost]);
+      expect(
+          formatModifierRecap(reread.modifierRecap!,
+              teamNames: const {'b': 'Bleue'}).map((l) => l.title),
+          contains('Coup de pouce à l\'équipe menée'));
     });
   });
 }

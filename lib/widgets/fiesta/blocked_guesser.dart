@@ -13,7 +13,7 @@ class BlockedGuesser {
 
   /// Sélecteur « Les adversaires choisissent ». Rend le joueur choisi, ou `null` si
   /// fermé sans choix : l'appelant reste alors sur l'écran d'avant-tour.
-  /// [chooserName] : l'équipe qui a choisi la carte (1 parmi 3, 2-10).
+  /// [chooserName] : l'équipe qui a infligé le blocage.
   static Future<Player?> pick(BuildContext context, List<Player> guessers,
       {String? chooserName}) {
     return AppModal.show<Player>(
