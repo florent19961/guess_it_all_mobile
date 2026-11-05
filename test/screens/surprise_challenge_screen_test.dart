@@ -46,6 +46,7 @@ class _Harness {
   ChallengeContender? winner;
   var finishedCalls = 0;
   var skippedCalls = 0;
+  var stopCalls = 0;
 
   Future<void> pump(
     WidgetTester tester, {
@@ -78,6 +79,7 @@ class _Harness {
           onSkipped: () => skippedCalls++,
           sound: sound ??
               (name, {double volume = 1}) => sounds.add('$name@$volume'),
+          stopSounds: () => stopCalls++,
         ),
       ),
     ));
@@ -205,6 +207,56 @@ void main() {
     await expectSkip(_reachPick);
   });
 
+  testWidgets('erreur d\'appui : « Passer » reste possible pendant la roulette',
+      (tester) async {
+    final h = _Harness();
+    await h.pump(tester);
+    await _reachPick(tester);
+    await tester.tap(find.text('Ana'));
+    await tester.pump();
+
+    await tester.tap(find.text('Passer ce défi'));
+    expect(h.skippedCalls, 1);
+    expect(h.finishedCalls, 0);
+  });
+
+  testWidgets('« Passer » reste possible sur « Continuer », sans gain',
+      (tester) async {
+    final h = _Harness();
+    await h.pump(tester);
+    await _reachPick(tester);
+    await tester.tap(find.text('Ana'));
+    await tester.pump(kRouletteDuration);
+    await tester.pump();
+
+    await tester.tap(find.text('Passer ce défi'));
+    await tester.tap(find.text('Continuer'));
+    expect(h.skippedCalls, 1);
+    expect(h.finishedCalls, 0, reason: 'déjà passé');
+  });
+
+  testWidgets('« Continuer » touché : plus de retour', (tester) async {
+    final h = _Harness();
+    await h.pump(tester);
+    await _reachPick(tester);
+    await tester.tap(find.text('Ana'));
+    await tester.pump(kRouletteDuration);
+    await tester.pump();
+
+    await tester.tap(find.text('Continuer'));
+    await tester.tap(find.text('Passer ce défi'));
+    expect(h.finishedCalls, 1);
+    expect(h.skippedCalls, 0);
+  });
+
+  testWidgets('sortie de l\'écran : les sons sont coupés', (tester) async {
+    final h = _Harness();
+    await h.pump(tester);
+    expect(h.stopCalls, 0);
+    await tester.pumpWidget(const SizedBox());
+    expect(h.stopCalls, 1);
+  });
+
   testWidgets('sons de chaque scène, comme la maquette', (tester) async {
     final h = _Harness();
     await h.pump(tester);
@@ -256,26 +308,26 @@ void main() {
     expect(h.finishedCalls, 1);
   });
 
-  testWidgets('taper dans ses mains : 10 vraies secondes, puis le choix',
+  testWidgets('taper dans ses mains : le choix arrive à 10 s pile',
       (tester) async {
     final h = _Harness();
     await h.pump(tester, challenge: SurpriseChallenge.clapping);
     await tester.pump(kVersusDuration);
     await tester.pump(const Duration(milliseconds: 500));
     await tester.tap(find.text('C\'est parti'));
-    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
 
     expect(find.text('10'), findsOneWidget);
     await tester.tapAt(const Offset(180, 400));
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('Qui a gagné ?'), findsNothing,
         reason: 'un toucher ne coupe pas les 10 secondes');
-    for (var i = 0; i < 9; i++) {
+    for (var i = 0; i < 8; i++) {
       await tester.pump(const Duration(seconds: 1));
     }
-    expect(find.text('0'), findsOneWidget);
+    expect(find.text('1'), findsOneWidget);
     await tester.pump(const Duration(seconds: 1));
-    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
     expect(find.text('Qui a gagné ?'), findsOneWidget);
   });
 
@@ -329,6 +381,8 @@ void main() {
 
     final h = _Harness();
     await h.pump(tester, sound: ChallengeSounds.play);
+    // Le lecteur réel, à la sortie aussi.
+    addTearDown(ChallengeSounds.stop);
     await _reachPick(tester);
     await tester.tap(find.text('Ana'));
     await tester.pump(kRouletteDuration);

@@ -144,6 +144,39 @@ void main() {
     expect(p.game.fiesta!.earned, isEmpty);
   });
 
+  testWidgets('gagnant choisi puis « Passer » : ni cartouche, ni rejeu',
+      (tester) async {
+    final p = await _pumpEndOfRound1(tester);
+    await _toChallenge(tester);
+    final plan = p.currentChallenge!;
+    await tester.pump(kVersusDuration);
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text('C\'est parti'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    if (plan.challenge == SurpriseChallenge.clapping) {
+      for (var n = 0; n < 11; n++) {
+        await tester.pump(const Duration(seconds: 1));
+      }
+    } else {
+      await tester.tapAt(const Offset(180, 620));
+    }
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester
+        .tap(find.text(p.getPlayerById(plan.first.playerId)!.name).last);
+    await tester.pump();
+
+    expect(p.game.fiesta!.earned, isEmpty, reason: 'pas avant « Continuer »');
+    await tester.tap(find.text('Passer ce défi'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.byType(GameScreen), findsOneWidget);
+    expect(p.game.fiesta!.earned, isEmpty);
+    expect(p.game.fiesta!.challenges.single.prize, isNull);
+  });
+
   testWidgets('éditeur : réglage replié derrière « pousser plus loin »',
       (tester) async {
     // Assez haut pour tout voir sans défiler.

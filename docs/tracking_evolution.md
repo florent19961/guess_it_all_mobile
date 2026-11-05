@@ -1110,6 +1110,8 @@ tirée dans le vivier du hasard ; passer le défi ne donne rien.
   cartouche reste acquise, même si la correction rouvre la manche. Il n'est donné qu'une fois, par manche
   de fin.
 - Un défi passé compte comme terminé, pour la même raison.
+- « Passer ce défi » reste possible jusqu'à « Continuer » (décision de Florent) : un appui erroné sur la
+  mauvaise équipe n'engage rien, car l'issue ne s'écrit qu'à « Continuer ». Après, plus de retour.
 - Pas de défi plutôt qu'un défi boiteux : vivier vide d'une des deux équipes, ou téléphone arabe sans mot
   deviné. Le défi n'est pas remplacé, la partie en a alors un de moins.
 

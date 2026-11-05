@@ -11,7 +11,7 @@
 | `user_service.dart` | `UserService` | userId persistant (UUID v4) + DeviceInfo (appVersion, platform, locale, deviceModel) |
 | `word_history_service.dart` | `WordHistoryService` | Historique mots joues (mot→seenCount). Priorise les mots jamais vus via `selectWordsByPriority()` |
 | `word_loader_service.dart` | `WordLoaderService` | Charge categories depuis JSON (assets/translations/). Cache en memoire. Methodes : `loadCategory()`, `getCategoriesMetadata()` |
-| `challenge_sounds.dart` | `ChallengeSounds` | Sons des défis surprises : un player par son (`lowLatency`, sans focus audio), un échec de lecture reste silencieux |
+| `challenge_sounds.dart` | `ChallengeSounds` | Sons des défis surprises : un player par son (`lowLatency`, sans focus audio), `stop` coupe ceux en cours et en préparation (sortie de l'écran), un échec de lecture reste silencieux |
 | `connectivity_service.dart` | `ConnectivityService` | Detection reseau (wifi/mobile/ethernet) via connectivity_plus |
 | `firebase_sync_service.dart` | `FirebaseSyncService` | Sync offline-first vers Firestore. Queue de games en attente, sync auto quand online |
 | `audio_service.dart` | `AudioService` | Sons : ding (mot devine), whoosh (mot passe), gong (fin de tour, `end_of_turn.wav`) via audioplayers. `ding.wav` et `end_of_turn.wav` sont générés par `scripts/render_sounds.py` |

@@ -70,10 +70,14 @@ class SurpriseChallengeScreen extends StatefulWidget {
   /// « Continuer » après la roulette, avec le gagnant. Appelé une seule fois.
   final ValueChanged<ChallengeContender> onFinished;
 
-  /// « Passer ce défi ». Appelé une seule fois.
+  /// « Passer ce défi », possible jusqu'à « Continuer » : un gagnant choisi par
+  /// erreur n'engage rien. Appelé une seule fois.
   final VoidCallback onSkipped;
 
   final ChallengeSound sound;
+
+  /// Coupe les sons en cours et en préparation, à toute sortie de l'écran.
+  final VoidCallback stopSounds;
 
   const SurpriseChallengeScreen({
     required this.challenge,
@@ -85,6 +89,7 @@ class SurpriseChallengeScreen extends StatefulWidget {
     required this.onSkipped,
     this.word,
     this.sound = ChallengeSounds.play,
+    this.stopSounds = ChallengeSounds.stop,
     super.key,
   }) : assert(challenge != SurpriseChallenge.mimeRelay || word != null);
 
@@ -120,6 +125,7 @@ class _SurpriseChallengeScreenState extends State<SurpriseChallengeScreen> {
   @override
   void dispose() {
     _cancelTimers();
+    widget.stopSounds();
     super.dispose();
   }
 
@@ -199,26 +205,25 @@ class _SurpriseChallengeScreenState extends State<SurpriseChallengeScreen> {
                 child: _buildScene(),
               ),
             ),
-            if (_scene != _Scene.result)
-              SafeArea(
-                child: Align(
-                  alignment: Alignment.topRight,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: TextButton(
-                      onPressed: () => _close(widget.onSkipped),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: const Color(0x66000000),
-                      ),
-                      child: const Text(
-                        'Passer ce défi',
-                        style: TextStyle(fontFamily: 'Poppins', fontSize: 13),
-                      ),
+            SafeArea(
+              child: Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: TextButton(
+                    onPressed: () => _close(widget.onSkipped),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: const Color(0x66000000),
+                    ),
+                    child: const Text(
+                      'Passer ce défi',
+                      style: TextStyle(fontFamily: 'Poppins', fontSize: 13),
                     ),
                   ),
                 ),
               ),
+            ),
           ],
         ),
       ),
@@ -950,11 +955,10 @@ class _CountdownState extends State<_Countdown> {
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() => _left--);
       if (_left == 0) {
         timer.cancel();
         widget.onDone();
-      } else {
-        setState(() => _left--);
       }
     });
   }
