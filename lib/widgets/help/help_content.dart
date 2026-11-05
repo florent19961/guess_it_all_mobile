@@ -23,6 +23,7 @@ List<CoachStep> homeHelp({
   required GlobalKey replay,
   required GlobalKey rules,
   required GlobalKey history,
+  required String playLabel,
 }) =>
     [
       CoachStep(
@@ -39,7 +40,7 @@ List<CoachStep> homeHelp({
       ),
       CoachStep(
         target: play,
-        title: 'Nouvelle partie',
+        title: playLabel,
         text: 'Lance une nouvelle partie : mode de jeu, réglages, joueurs, '
             'puis équipes.',
       ),
@@ -113,7 +114,8 @@ List<CoachStep> playersHelp({
         target: firstPlayer,
         title: 'Les joueurs',
         text: 'Écris le prénom de chaque joueur. Deux joueurs ne peuvent pas '
-            'porter le même nom.',
+            'porter le même nom. Les prénoms sont gardés d\'une partie à '
+            'l\'autre : efface-en un pour le retirer.',
       ),
       CoachStep(
         target: words,
@@ -168,9 +170,11 @@ List<CoachStep> fiestaEnsemblesHelp({
       CoachStep(
         target: ready,
         title: 'Prêts à jouer',
-        text: 'Les ensembles fournis par l\'app, puis les tiens. Touche-en un '
-            'pour le choisir, « Voir » pour savoir ce qu\'il fait. Ceux de '
-            'l\'app se dupliquent pour les modifier.',
+        text: 'Les ensembles fournis par l\'app, puis les tiens, marqués '
+            '« Perso ». Touche-en un pour le choisir. L\'œil montre ce qu\'il '
+            'fait, l\'icône de copie le duplique : c\'est ainsi qu\'on modifie '
+            'un ensemble de l\'app. Sur les tiens, le crayon le modifie et la '
+            'corbeille le supprime.',
       ),
       CoachStep(
         target: create,
@@ -204,7 +208,9 @@ List<CoachStep> fiestaEditorHelp({
         text:
             'Chaque menu ne montre que ce qui y est possible. Un modificateur '
             'en Toujours se verrouille dans les 2 autres menus, ses réglages y '
-            'sont gardés. Les bonus ne sont que des cartouches.',
+            'sont gardés. Les bonus, Malus de 10 s et les deux blocages ne sont '
+            'que des cartouches. Les défis surprises sont en bas du menu '
+            'Cartouches, sous « Si tu veux vraiment pousser plus loin ».',
       ),
       CoachStep(
         target: save,
@@ -249,8 +255,10 @@ List<CoachStep> preTurnHelp({
   required GlobalKey team,
   required GlobalKey roundRules,
   required GlobalKey previousTurn,
+  required GlobalKey bonusTime,
   required GlobalKey start,
   required String playerName,
+  List<CoachStep> fiesta = const [],
 }) =>
     [
       CoachStep(
@@ -272,10 +280,17 @@ List<CoachStep> preTurnHelp({
         text: 'Touche ici pour voir les mots trouvés au tour précédent. '
             'Retiens-les : ils reviennent aux manches suivantes.',
       ),
+      ...fiesta,
+      CoachStep(
+        target: bonusTime,
+        title: 'Temps bonus',
+        text: 'La manche d\'avant s\'est finie pendant ton tour : le temps '
+            'qu\'il te restait est reporté sur ce tour.',
+      ),
       CoachStep(
         target: start,
         title: 'Commencer le tour',
-        text: 'Le chrono démarre après un décompte de 3 secondes. Prends le '
+        text: 'Le chrono démarre après un court décompte. Prends le '
             'téléphone, cache l\'écran, et c\'est parti.',
       ),
     ];
@@ -361,14 +376,14 @@ List<CoachStep> transitionHelp({
         text: 'Revois les mots trouvés pendant le dernier tour.',
       ),
       CoachStep(
-        target: next,
-        title: 'Voir les résultats',
-        text: 'Termine la partie et affiche les scores.',
-      ),
-      CoachStep(
         target: back,
         title: 'Retour',
         text: 'Reviens à la vérification du dernier tour pour corriger un mot.',
+      ),
+      CoachStep(
+        target: next,
+        title: 'Voir les résultats',
+        text: 'Termine la partie et lance la révélation des scores.',
       ),
     ];
 
@@ -407,25 +422,66 @@ List<CoachStep> resultsHelp({
 
 // ========== FIESTA : AVANT LE TOUR ==========
 
-List<CoachStep> fiestaPreTurnHelp({
-  required GlobalKey thisTurn,
-  required GlobalKey reserve,
-}) =>
-    [
+/// Une clé par type d'élément de l'avant-tour Fiesta. `FiestaTurnZone` ne la
+/// pose que si l'élément est là : sans lui, l'étape n'existe pas.
+class FiestaPreTurnKeys {
+  final thisTurn = GlobalKey();
+  final firstRule = GlobalKey();
+  final firstReceived = GlobalKey();
+  final firstArmed = GlobalKey();
+  final reserveBonus = GlobalKey();
+  final reserveMalus = GlobalKey();
+  final sent = GlobalKey();
+  final reuseChoices = GlobalKey();
+}
+
+List<CoachStep> fiestaPreTurnHelp(FiestaPreTurnKeys keys) => [
       CoachStep(
-        target: thisTurn,
-        title: 'Actif pendant votre prochain tour',
-        text: 'Tout ce qui s\'applique à ton tour : les règles de la manche, '
-            'les malus reçus d\'une autre équipe et les bonus que tu as '
-            'activés. Appui long sur un cercle pour l\'explication.',
+        target: keys.reuseChoices,
+        title: 'Reprendre les choix',
+        text: 'Le joueur bloqué avait préparé son tour : touche ici pour '
+            'reprendre ses choix.',
       ),
       CoachStep(
-        target: reserve,
-        title: 'Votre réserve',
-        text:
-            'Tes cartouches pour toute la partie, un tour chacune. Touche un bonus pour '
-            'l\'activer ce tour ; touche un malus pour l\'infliger à une '
-            'autre équipe, pour son prochain tour (annulable tant que ton '
-            'tour n\'a pas commencé).',
+        target: keys.thisTurn,
+        title: 'Actif pendant votre prochain tour',
+        text: 'Tout ce qui s\'applique à ton tour. Appui long sur un cercle '
+            'pour l\'explication.',
+      ),
+      CoachStep(
+        target: keys.firstRule,
+        title: 'Règles de la manche',
+        text: 'Étiquette « manche » : cette règle vaut toute la manche, pour '
+            'toutes les équipes.',
+      ),
+      CoachStep(
+        target: keys.firstReceived,
+        title: 'Malus reçu',
+        text: 'Flèche vers le bas : une autre équipe te l\'a infligé, pour ce '
+            'tour.',
+      ),
+      CoachStep(
+        target: keys.firstArmed,
+        title: 'Bonus activé',
+        text: 'Coche : ce bonus jouera pendant ton tour. Touche-le pour le '
+            'remettre dans ta réserve.',
+      ),
+      CoachStep(
+        target: keys.reserveBonus,
+        title: 'Réserve : tes bonus',
+        text: 'Tes cartouches pour toute la partie, un tour chacune. Touche un '
+            'bonus pour l\'activer ce tour.',
+      ),
+      CoachStep(
+        target: keys.reserveMalus,
+        title: 'Réserve : tes malus',
+        text: 'Tes cartouches pour toute la partie, un tour chacune. Touche un '
+            'malus pour l\'infliger à une autre équipe, pour son prochain tour.',
+      ),
+      CoachStep(
+        target: keys.sent,
+        title: 'Malus envoyés',
+        text: 'Touche une puce pour annuler l\'envoi, tant que ton tour n\'a '
+            'pas commencé.',
       ),
     ];

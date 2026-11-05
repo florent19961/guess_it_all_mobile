@@ -20,12 +20,17 @@ class AppConstants {
 
   // Timer
   static const int countdownDuration = 3;
+
+  /// Le 3-2-1-GO, le même à chaque tour : un chiffre, et le « GO ! » à l'écran.
+  static const Duration countdownTick = Duration(milliseconds: 500);
+  static const Duration countdownGoHold = Duration(milliseconds: 400);
   static const int timerRefreshMs = 100;
 
   // Storage keys
   static const String settingsKey = 'guessItAll_settings';
   static const String gameSessionKey = 'guessItAll_gameSession';
   static const String gameStateKey = 'guessItAll_gameState';
+  static const String savedPlayerNamesKey = 'guessItAll_savedPlayerNames';
   static const String advancedSettingsSeenKey =
       'guessItAll_advancedSettingsSeen';
   static const String tutorialSeenKey = 'guessItAll_tutorialSeen';

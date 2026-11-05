@@ -46,18 +46,25 @@ class FiestaTutorialScreen extends StatelessWidget {
           symbol: '⇄',
           title: 'Comment ils arrivent',
           rows: [
-            TutorialRow('1', 'Tirés au sort pour tous',
+            TutorialRow(
+                '1', 'Toujours', 'Toute la partie, pour toutes les équipes.'),
+            TutorialRow('2', 'Tirés au sort pour tous',
                 'En début de manche, pour toutes les équipes.'),
             TutorialRow(
-                '2',
+                '3',
                 'Cartouches',
                 'Chaque équipe garde les siennes toute la partie : un bonus '
                     'pour son tour, ou un malus à infliger.'),
             TutorialRow(
-                '3',
+                '4',
                 'Cartouches au hasard',
                 'Selon l\'ensemble : à chaque manche, ou pour les équipes '
                     'menées après les manches 1 et 2.'),
+            TutorialRow(
+                '5',
+                'Défis surprises',
+                'Selon l\'ensemble : 1 ou 2 fois dans la partie, une cartouche '
+                    'à gagner.'),
           ],
         ),
         TutorialCard(

@@ -14,20 +14,15 @@ class CountdownScreen extends StatefulWidget {
 
 class _CountdownScreenState extends State<CountdownScreen>
     with SingleTickerProviderStateMixin {
-  int _countdown = 3;
+  int _countdown = AppConstants.countdownDuration;
   bool _showGo = false;
   Timer? _timer;
   late AnimationController _scaleController;
   late Animation<double> _scaleAnimation;
-  late bool _isFirstTurnOfRound;
 
   @override
   void initState() {
     super.initState();
-
-    // Vérifier si c'est le premier tour de la manche
-    final provider = context.read<GameProvider>();
-    _isFirstTurnOfRound = provider.game.currentTurnIndex == 0;
 
     _scaleController = AnimationController(
       duration: const Duration(milliseconds: 500),
@@ -43,12 +38,7 @@ class _CountdownScreenState extends State<CountdownScreen>
   void _startCountdown() {
     _scaleController.forward(from: 0);
 
-    // Durée entre chaque chiffre : 1s pour le premier tour, 500ms sinon
-    final tickDuration = _isFirstTurnOfRound
-        ? const Duration(seconds: 1)
-        : const Duration(milliseconds: 500);
-
-    _timer = Timer.periodic(tickDuration, (timer) {
+    _timer = Timer.periodic(AppConstants.countdownTick, (timer) {
       if (_countdown > 1) {
         setState(() {
           _countdown--;
@@ -61,11 +51,7 @@ class _CountdownScreenState extends State<CountdownScreen>
         });
         _scaleController.forward(from: 0);
 
-        // Attendre un peu puis démarrer le tour (800ms pour premier tour, 400ms sinon)
-        final goDelay = _isFirstTurnOfRound
-            ? const Duration(milliseconds: 800)
-            : const Duration(milliseconds: 400);
-        Future.delayed(goDelay, () {
+        Future.delayed(AppConstants.countdownGoHold, () {
           if (mounted) {
             context.read<GameProvider>().startTurnTimer();
           }

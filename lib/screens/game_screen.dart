@@ -26,9 +26,9 @@ class _GameScreenState extends State<GameScreen> {
   final _teamKey = GlobalKey();
   final _roundRulesKey = GlobalKey();
   final _previousTurnKey = GlobalKey();
+  final _bonusTimeKey = GlobalKey();
   final _startKey = GlobalKey();
-  final _thisTurnKey = GlobalKey();
-  final _reserveKey = GlobalKey();
+  final _fiestaKeys = FiestaPreTurnKeys();
 
   /// Vrai tant que l'aide automatique n'est pas tranchée : « Commencer le
   /// tour » est ignoré, sinon l'aide serait consommée sans être vue.
@@ -64,23 +64,26 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
-  List<CoachStep> _preTurnSteps(String playerName) => preTurnHelp(
+  List<CoachStep> _preTurnSteps(String playerName,
+          {List<CoachStep> fiesta = const []}) =>
+      preTurnHelp(
         team: _teamKey,
         roundRules: _roundRulesKey,
         previousTurn: _previousTurnKey,
+        bonusTime: _bonusTimeKey,
         start: _startKey,
         playerName: playerName,
+        fiesta: fiesta,
       );
 
   void _showHelp(GameProvider provider) {
-    CoachMarks.show(context, [
-      ..._preTurnSteps(provider.getCurrentPlayer()?.name ?? ''),
-      if (provider.isFiesta)
-        ...fiestaPreTurnHelp(
-          thisTurn: _thisTurnKey,
-          reserve: _reserveKey,
-        ),
-    ]);
+    CoachMarks.show(
+      context,
+      _preTurnSteps(
+        provider.getCurrentPlayer()?.name ?? '',
+        fiesta: provider.isFiesta ? fiestaPreTurnHelp(_fiestaKeys) : const [],
+      ),
+    );
   }
 
   @override
@@ -173,6 +176,7 @@ class _GameScreenState extends State<GameScreen> {
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: GestureDetector(
+                                  key: _fiestaKeys.reuseChoices,
                                   onTap: provider.reuseReplacedChoices,
                                   child: Padding(
                                     padding: const EdgeInsets.only(top: 6),
@@ -196,8 +200,7 @@ class _GameScreenState extends State<GameScreen> {
                             Expanded(
                               child: FiestaTurnZone(
                                 provider: provider,
-                                thisTurnKey: _thisTurnKey,
-                                reserveKey: _reserveKey,
+                                helpKeys: _fiestaKeys,
                               ),
                             ),
                             const SizedBox(height: 12),
@@ -216,6 +219,7 @@ class _GameScreenState extends State<GameScreen> {
                   // Temps reporté (continuation), Classique comme Fiesta
                   if (provider.game.turnBonusTime != null) ...[
                     Container(
+                      key: _bonusTimeKey,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(

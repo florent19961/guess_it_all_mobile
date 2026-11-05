@@ -1168,3 +1168,31 @@ Une entrée sans équipe lisible est ignorée à la lecture, comme les autres en
 « — gagne », faussait les tendances et occupait une place de rétention. Aucune partie ne peut s'archiver ainsi.
 `GameResult` reste constructible sans équipe : les gardes de `history_screen` restent.
 
+## 2026-11-05 — Retours de test Fiesta v4 : noms gardés, liste des ensembles, décompte, tutos à jour
+
+**Quoi.** Les noms des joueurs restent quels que soient les allers-retours. Un ensemble tient sur une ligne,
+icônes seules et badge « Perso ». Le décompte a un seul rythme. Les aides sont revues écran par écran, et
+l'avant-tour Fiesta n'explique que ce qu'il affiche.
+
+**Pourquoi ces choix.**
+
+- Noms : une clé à part, `guessItAll_savedPlayerNames`, plutôt que garder `_players` à la nouvelle partie.
+  Une nouvelle partie doit repartir de joueurs neufs (ids, mots, équipes, accueil sans « Rejouer »), et la
+  session ne connaît pas les noms retirés par le réglage du nombre de joueurs. Liste de chaînes sans
+  enveloppe : aucune forme existante ne change, `kCurrentSchemaVersion` reste. Clé absente : reprise des noms
+  de la session au démarrage (règle 7).
+- Seule une saisie retire un nom, y compris « Réinitialiser les paramètres ». Un joueur effacé laisse sa case
+  vide jusqu'à la nouvelle partie : la remplir à nouveau annulerait le geste.
+- `clearPlayersData` et `resetGame` n'ont plus aucun appelant : laissés tels quels, ils ne touchent pas la
+  liste des noms.
+- Décompte : `currentTurnIndex == 0` doublait le temps de chaque chiffre et du « GO ! » au premier tour de
+  chaque manche. Un seul couple de durées, dans `AppConstants`. L'aide promettait « 3 secondes » : elle dit
+  désormais « un court décompte ».
+- Liste : la sélection se lit au cadre, sans cercle à cocher, faute de place à 360 px avec 4 icônes et le
+  badge. Le nom d'un ensemble personnel y garde 8 à 10 caractères ; « Voir » le montre en entier.
+- Liste sans `ListView` : paresseuse, elle ne montait pas « Créer un ensemble » sous une longue liste, et
+  l'aide sautait cette étape.
+- Avant-tour : les clés ne sont posées que sur ce qui est affiché, `CoachMarks` saute déjà les autres. Pas de
+  condition dupliquée entre l'écran et l'aide. L'aide automatique de première partie reste sans étapes Fiesta
+  (décision de Florent, `WIRING.md`).
+

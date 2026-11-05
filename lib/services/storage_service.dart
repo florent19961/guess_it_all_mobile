@@ -77,6 +77,29 @@ class StorageService {
     }
   }
 
+  // ========== NOMS DES JOUEURS (permanent entre sessions) ==========
+
+  /// Noms à pré-remplir. `null` : clé jamais écrite (version d'avant), à
+  /// distinguer d'une liste vidée à la main.
+  Future<List<String>?> loadSavedPlayerNames() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getStringList(AppConstants.savedPlayerNamesKey);
+    } catch (e) {
+      debugPrint('[Storage] Noms illisibles: $e');
+      return null;
+    }
+  }
+
+  Future<void> saveSavedPlayerNames(List<String> names) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(AppConstants.savedPlayerNamesKey, names);
+    } catch (e) {
+      debugPrint('[Storage] Échec de sauvegarde des noms: $e');
+    }
+  }
+
   // ========== SETTINGS (permanent entre sessions) ==========
 
   Future<void> saveSettings(Map<String, dynamic> settings) =>

@@ -25,6 +25,7 @@
 | `guessItAll_settings` | Storage | JSON GameSettings |
 | `guessItAll_session` | Storage | JSON session (joueurs, equipes) |
 | `guessItAll_gameState` | Storage | JSON GameState complet |
+| `guessItAll_savedPlayerNames` | Storage | Liste de noms a pre-remplir (`setStringList`, sans enveloppe ; absent = version d'avant, repris de la session au demarrage) |
 | `guessItAll_userId` | User | UUID v4 |
 | `guessItAll_analytics_index` | Analytics | Liste gameIds |
 | `guessItAll_analytics_{gameId}` | Analytics | JSON GameAnalytics |

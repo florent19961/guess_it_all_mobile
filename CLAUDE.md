@@ -130,7 +130,7 @@ Hors cycle : bug / test rouge / comportement inattendu → `bmad-investigate` ; 
 1. **Configuration** (Paramètres, premier écran de toute partie) — **Classique ou Fiesta**
    (Classique à la première ouverture, puis le dernier choix), nombre d'équipes,
    joueurs, nombre total de mots (20-100, défaut 40), durée du tour, pénalité de passe.
-2. **Inscription joueurs** — saisie des noms.
+2. **Inscription joueurs** — saisie des noms, pré-remplis d'une partie à l'autre (`guessItAll_savedPlayerNames`) : les effacer à la main est le seul moyen de les retirer.
 3. **Formation des équipes** — manuelle ou aléatoire (composition mise en cache et persistée ; si
    le nombre de joueurs change, les nouveaux sont ajoutés aléatoirement).
 4. **Saisie des mots** — répartition dynamique selon `totalWords` ; les premiers joueurs ont 1 mot

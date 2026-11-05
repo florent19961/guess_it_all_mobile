@@ -37,7 +37,7 @@ class EnsembleDraftKept extends EnsembleEditorResult {
 }
 
 /// « Nouvel ensemble » / « Modifier » :
-/// écran poussé depuis « Fiesta personnalisée ».
+/// écran poussé depuis la liste des ensembles.
 ///
 /// - [initial] nul = création, sinon modification sur place (renommage
 ///   compris). [draft] : brouillon à reprendre (réglages en cours).

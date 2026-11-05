@@ -107,7 +107,7 @@ class _CoachOverlayState extends State<_CoachOverlay> {
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () {},
-              child: CustomPaint(painter: _VeilPainter(hole)),
+              child: CustomPaint(painter: CoachVeilPainter(hole)),
             ),
           ),
           if (hole != null) _bubble(context, hole, step, isLast),
@@ -220,10 +220,11 @@ class _CoachOverlayState extends State<_CoachOverlay> {
   }
 }
 
-class _VeilPainter extends CustomPainter {
+/// Public pour que les tests vérifient que la cible est bien dans l'écran.
+class CoachVeilPainter extends CustomPainter {
   final Rect? hole;
 
-  _VeilPainter(this.hole);
+  CoachVeilPainter(this.hole);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -257,5 +258,5 @@ class _VeilPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_VeilPainter old) => old.hole != hole;
+  bool shouldRepaint(CoachVeilPainter old) => old.hole != hole;
 }

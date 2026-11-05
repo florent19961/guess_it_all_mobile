@@ -28,17 +28,17 @@ résultats finaux en montrent.
 
 | Écran | Fonction | Clés à poser | Bouton « ? » |
 |---|---|---|---|
-| `home_screen` | `homeHelp` | `play` (« Jouer » **ou** « Nouvelle partie »), `resume` (« Reprendre »), `replay` (« Rejouer »), `rules`, `history` | `right: 16` |
+| `home_screen` | `homeHelp(playLabel: …)` (« Jouer » ou « Nouvelle partie », le libellé du bouton) | `play` (« Jouer » **ou** « Nouvelle partie »), `resume` (« Reprendre »), `replay` (« Rejouer »), `rules`, `history` | `right: 16` |
 | `settings_screen` | `settingsHelp(passPenalty: provider.settings.passPenalty)` | `counts` (cartes Joueurs + Équipes), `mode` (interrupteur Classique / Fiesta de la section « Mode de jeu »), `wordChoice`, `categories` (bouton Catégories & Difficultés), `advanced` (bouton Avancés ; « Réinitialiser les paramètres » vit en bas de cette fenêtre) | `HelpButton.inline` en tête de la `Row` « ? » / Avancés |
 | `players_screen` | `playersHelp` | `firstPlayer` (ligne du joueur 1), `words` (bouton Saisir/Voir mots du joueur 1), `next` | `right: 16` |
-| `fiesta_ensembles_screen` | `fiestaEnsemblesHelp` | `ready` (liste « Prêts à jouer »), `create` (« Créer un ensemble » / « Reprendre le brouillon », ou l'alerte de limite), `next` (« Suivant ») | `right: 16` |
-| `fiesta_ensemble_editor_screen` | `fiestaEditorHelp` | `rules` (« Règles de la partie »), `modifiers` (carte Malus), `save` (« Enregistrer ») | `right: 16` |
+| `fiesta_ensembles_screen` | `fiestaEnsemblesHelp` | `ready` (liste « Prêts à jouer » : une ligne par ensemble, icônes œil / crayon / copie / corbeille, badge « Perso »), `create` (« Créer un ensemble » / « Reprendre le brouillon », ou l'alerte de limite), `next` (« Suivant ») | `right: 16` |
+| `fiesta_ensemble_editor_screen` | `fiestaEditorHelp` | `tabs` (les 3 menus), `menu` (le menu ouvert), `save` (« Enregistrer ») | `right: 16` |
 | `teams_screen` | `teamsHelp` | `firstTeam` (carte de la 1re équipe), `shuffle`, `start` (« Commencer ») | `right: 16` |
-| `game_screen` (avant-tour) | `preTurnHelp(playerName: …)` | `team` (nom d'équipe + joueur), `roundRules` (icône info de la manche), `previousTurn` (« Tour précédent »), `start` | `right: besideCornerButton` |
-| `game_screen` Fiesta | `fiestaPreTurnHelp` | `thisTurn` (cadre « Actif pendant votre prochain tour »), `reserve` (« Votre réserve », absente sans cartouche : l'étape est sautée) | même bouton : concaténer `preTurnHelp(...) + fiestaPreTurnHelp(...)` en Fiesta |
+| `game_screen` (avant-tour) | `preTurnHelp(playerName: …)` | `team` (nom d'équipe + joueur), `roundRules` (icône info de la manche), `previousTurn` (« N mots », dès le 2e tour), `bonusTime` (« Temps bonus », seulement s'il y a du temps reporté), `start` | `right: besideCornerButton` |
+| `game_screen` Fiesta | `fiestaPreTurnHelp(FiestaPreTurnKeys)` | Une clé par type d'élément, posée seulement s'il est à l'écran (`FiestaTurnZone`, sauf `reuseChoices`) : pas d'élément, pas d'étape. `reuseChoices`, `thisTurn` (cadre « Actif », sans clé sur « Rien pour l'instant »), `firstRule`, `firstReceived`, `firstArmed`, `reserveBonus`, `reserveMalus`, `sent` | même bouton : `preTurnHelp(fiesta: fiestaPreTurnHelp(...))`, étapes insérées avant « Commencer le tour » |
 | `turn_screen` | `turnHelp(passPenalty: provider.currentPassPenalty)` — pas `settings.passPenalty` : la Passe gratuite Fiesta la met à 0. Malus « Interdit de passer » : ne pas poser la clé `pass` (bouton désactivé, le texte « Passe-le » serait faux) | `timer`, `word`, `guessed`, `pass`, `pause` | `right: besideCornerButton` (pause à droite). 🔴 `provider.pauseTurn()` **avant** `CoachMarks.show`, reprise **après** : le chrono ne doit jamais tourner sous l'aide |
 | `verification_screen` | `verificationHelp` | `wordList` (la liste défilante entière), `validate` | `right: 16` (HomeButton à gauche) |
-| `transition_screen` (écran fixe après M3 seulement) | `transitionHelp` | `previousTurn` (« Voir les N mots devinés »), `next` (« Voir les résultats »), `back` (`GameBackButton`) | coin haut droit |
+| `transition_screen` (écran fixe après M3 seulement) | `transitionHelp` | `previousTurn` (« Voir les N mots devinés »), `back` (`GameBackButton`), `next` (« Voir les résultats ») — dans cet ordre, l'action finale en dernier | coin haut droit |
 | `results_screen` | `resultsHelp` | `podium` (la rangée du podium), `details` (Détails par manche), `replay`, `stats` | `right: besideCornerButton` |
 
 ## Les seules aides automatiques
@@ -75,7 +75,7 @@ affichage d'un écran.
 `if (!await StorageService().hasSeenFiestaTutorial()) await FiestaTutorialScreen.show(context);`
 (`show` marque le flag).
 
-**Aides Fiesta avant-tour et fin de manche : derrière le « ? » seulement**, jamais
+**Aides Fiesta avant-tour : derrière le « ? » seulement**, jamais
 automatiques (décision Florent : plus aucune surimpression automatique hors premier tour de
 chaque joueur).
 
@@ -95,6 +95,12 @@ absent : `true` si `guessItAll_word_history` (présent dans la version en store)
 `guessItAll_game_results` est non vide, `false` sinon. Ensuite le flag est présent et n'est plus
 jamais recalculé : une première partie abandonnée (qui écrit aussi l'historique des mots) ne
 peut pas faire basculer une install neuve. Un `false` écrit (« Revoir les aides ») prime.
+
+## Test
+
+`test/widgets/help_walkthrough_test.dart` et `test/screens/preturn_help_test.dart` font défiler
+les aides à 360 × 640 (`test/helpers/coach_walk.dart`) : chaque étape doit percer le voile sur une
+cible dans l'écran. Un nouvel écran avec aide s'y ajoute.
 
 ## Limites connues
 
