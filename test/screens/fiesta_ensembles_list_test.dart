@@ -85,8 +85,8 @@ Future<void> select(WidgetTester tester, String name) async {
   await tester.pump(const Duration(milliseconds: 300));
 }
 
-/// La ligne doit tenir entre les boutons du haut et la barre « Suivant ». Plus
-/// haute que cet espace (règles extrêmes) : son haut d'abord.
+/// La ligne doit tenir dans la liste, entre la bande des boutons du haut et la
+/// barre « Suivant ». Plus haute (règles extrêmes) : son haut d'abord.
 void expectFullyVisible(WidgetTester tester, String name) {
   final row = tester.getRect(rowOf(name));
   final bar = tester.getTopLeft(find.text('Suivant')).dy;
@@ -339,6 +339,27 @@ void main() {
     expectFullyVisible(tester, 'Mien 9');
   });
 
+  testWidgets(
+      'la liste s\'arrête sous les boutons du haut, et le titre défile avec elle',
+      (tester) async {
+    await pumpList(tester, const Size(360, 640), mine: tenMine());
+    final title = find.text('Ensembles Fiesta');
+    expect(tester.getTopLeft(title).dy, 72, reason: 'ouverture inchangée');
+
+    await select(tester, 'Mien 9');
+    expect(title.hitTestable(), findsNothing, reason: 'le titre a défilé');
+    final top = tester.getTopLeft(find.byType(SingleChildScrollView)).dy;
+    expect(top, 72);
+    // Un point de la bande : aucune ligne n'y répond.
+    final band = tester.hitTestOnBinding(const Offset(180, 40));
+    final hit = band.path.map((e) => e.target).toSet();
+    final rows = find
+        .byWidgetPredicate((w) => w.runtimeType.toString() == '_EnsembleCard');
+    for (final row in rows.evaluate()) {
+      expect(hit.contains(row.findRenderObject()), isFalse);
+    }
+  });
+
   group('Pastilles', () {
     testWidgets('modificateur : ModifierBadge et sa fiche ; le reste, neutre',
         (tester) async {
@@ -358,8 +379,7 @@ void main() {
       expect(find.descendant(of: row, matching: find.byType(ModifierBadge)),
           findsNWidgets(2));
       expect(
-          find.descendant(
-              of: row, matching: find.textContaining('Mot compte double ×1')),
+          find.descendant(of: row, matching: find.text('Mot compte double ×1')),
           findsOneWidget);
       expect(
           find.descendant(of: row, matching: find.text('2 tirages par manche')),

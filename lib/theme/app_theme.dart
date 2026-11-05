@@ -22,6 +22,7 @@ class AppColors {
   static const Color warning = Color(0xFFFBBF24);
 
   // Grays
+  static const Color gray300 = Color(0xFFD1D5DB);
   static const Color gray400 = Color(0xFF9CA3AF);
   static const Color gray500 = Color(0xFF6B7280);
   static const Color gray600 = Color(0xFF4B5563);

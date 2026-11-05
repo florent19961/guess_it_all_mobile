@@ -80,8 +80,8 @@ class FiestaEnsemblesScreen extends StatefulWidget {
   State<FiestaEnsemblesScreen> createState() => _FiestaEnsemblesScreenState();
 }
 
-/// Hauteur de la bande des boutons retour et « ? », au-dessus de la liste.
-const double _topInset = 72;
+/// Bande des boutons retour et « ? » : la liste défile sous elle, jamais dessous.
+const double _buttonsBand = 72;
 
 class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
   final _service = FiestaEnsembleService();
@@ -140,8 +140,8 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
     _revealSelected();
   }
 
-  /// Après le dépliage, la ligne sélectionnée doit tenir entre les boutons du
-  /// haut et la barre « Suivant ». Plus haute que cet espace : son haut d'abord.
+  /// Après le dépliage, la ligne sélectionnée doit tenir dans la liste. Plus
+  /// haute que la liste : son haut d'abord.
   void _revealSelected() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final row = _selectedRowKey.currentContext?.findRenderObject();
@@ -149,7 +149,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
       final viewport = RenderAbstractViewport.of(row);
       final position = _scroll.position;
       final showBottom = viewport.getOffsetToReveal(row, 1).offset;
-      final showTop = viewport.getOffsetToReveal(row, 0).offset - _topInset;
+      final showTop = viewport.getOffsetToReveal(row, 0).offset;
       final target = math
           .min(math.max(position.pixels, showBottom), showTop)
           .clamp(position.minScrollExtent, position.maxScrollExtent);
@@ -283,6 +283,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
                       )
                     : Column(
                         children: [
+                          const SizedBox(height: _buttonsBand),
                           Expanded(child: _buildBody()),
                           _buildNextBar(),
                         ],
@@ -325,7 +326,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
     // une longue liste.
     return SingleChildScrollView(
       controller: _scroll,
-      padding: const EdgeInsets.fromLTRB(16, _topInset, 16, 24),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -497,7 +498,7 @@ class _EnsembleCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.bodySmall.copyWith(
-                        fontSize: 12, height: 1.3, color: AppColors.gray400),
+                        fontSize: 12, height: 1.3, color: AppColors.gray300),
                   ),
                 ],
               ),
@@ -599,7 +600,7 @@ class _InfoChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.gray400.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(99),
-          border: Border.all(color: AppColors.gray400.withValues(alpha: 0.4)),
+          border: Border.all(color: AppColors.gray300.withValues(alpha: 0.4)),
         ),
         child: Text(
           label,
@@ -607,7 +608,7 @@ class _InfoChip extends StatelessWidget {
             fontFamily: 'Poppins',
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: AppColors.gray400,
+            color: AppColors.gray300,
           ),
         ),
       );
@@ -621,7 +622,7 @@ class _Action extends StatelessWidget {
   final Color color;
 
   const _Action(this.icon, this.label, this.onPressed,
-      {this.color = AppColors.gray400});
+      {this.color = AppColors.gray300});
 
   @override
   Widget build(BuildContext context) => IconButton(

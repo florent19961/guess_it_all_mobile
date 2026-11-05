@@ -69,7 +69,8 @@ class ModifierBadge extends StatelessWidget {
           key: key);
 
   /// Badge d'un modificateur du catalogue, sans instance (×2, Deux mots…).
-  /// [count] : ses cartouches, dites dans le libellé.
+  /// [count] : ses cartouches, dites dans le libellé, sans pictogramme (le « ×2 »
+  /// de Mot compte double se lirait comme un nombre de cartouches).
   factory ModifierBadge.catalog(String id,
       {required ModifierNature nature,
       int? count,
@@ -79,13 +80,15 @@ class ModifierBadge extends StatelessWidget {
     final def = modifierById(id);
     return ModifierBadge(
       key: key,
-      icon: modifierIcon(id),
+      icon: count == null ? modifierIcon(id) : '',
       label: '${def?.name ?? id}${count == null ? '' : ' ×$count'}',
       nature: nature,
       description: def == null ? null : modifierDescription(id, playingWith),
       wrapExplain: wrapExplain,
     );
   }
+
+  String get _text => icon.isEmpty ? label : '$icon $label';
 
   Future<void> _explain(BuildContext context) {
     final color = modifierColor(nature);
@@ -103,7 +106,7 @@ class ModifierBadge extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '$icon $label',
+                _text,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.subtitle(fontSize: 26),
               ),
@@ -153,7 +156,7 @@ class ModifierBadge extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(
-        '$icon $label',
+        _text,
         style: TextStyle(
           fontFamily: 'Poppins',
           fontSize: 12,

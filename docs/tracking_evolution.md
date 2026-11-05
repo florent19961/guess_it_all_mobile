@@ -1243,9 +1243,14 @@ le compteur passe dans « Créer un ensemble » ou dans l'alerte de limite. Maqu
   dit le reste.
 - Pas de couronne dans Material Icons : la coupe (`emoji_events_outlined`) pour Pro Player et les perso sans tirage
   ni cartouche.
-- Pas de `#D1D5DB` dans `AppColors` : `gray400` pour la ligne courte, les pastilles neutres et les actions.
-- Défilement calculé d'un seul geste (`getOffsetToReveal`), pas deux `ensureVisible` : la ligne doit tenir sous les
-  boutons du haut, que le viewport ne connaît pas. Plus haute que l'écran, son haut d'abord.
+- `gray300` ajouté à `AppColors` : la maquette validée l'utilise pour la ligne courte, les pastilles neutres et les
+  actions, et `gray400` y était trop sombre.
+- La liste commence sous les boutons du haut, le titre défile avec elle. Avant, liste défilée, le « ? » tombait sur
+  le rond de sélection et le retour sur les tuiles.
+- Défilement calculé d'un seul geste (`getOffsetToReveal`), pas deux `ensureVisible`. Plus haute que la liste, une
+  ligne montre son haut d'abord.
+- Pastille de cartouche sans pictogramme : « ×2 Mot compte double ×1 » se lisait mal. Les autres badges ne changent
+  pas.
 - Dépliage sans animation de taille : une ligne se replie au-dessus au même moment, le calcul du défilement
   devrait attendre la fin de deux animations pour rien.
 
