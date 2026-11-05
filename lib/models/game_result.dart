@@ -194,7 +194,8 @@ class GameResult {
 
   bool get isTie => winners.length > 1;
 
-  /// Total de mots devinés, toutes équipes confondues.
+  /// Total des points, toutes équipes confondues (plus que de mots si un ×2 a
+  /// été joué : l'archive ne garde pas le nombre de mots).
   int get totalGuessed => teams.fold(0, (sum, t) => sum + t.score);
 
   int get playerCount => teams.fold(0, (sum, t) => sum + t.playerNames.length);
@@ -224,21 +225,34 @@ class GameResult {
     final playedAt = DateTime.tryParse(playedAtRaw);
     if (playedAt == null) return null;
 
+    // 🔴 Un champ au mauvais type (`as int?`) ne coûte que cette entrée. S'il
+    // sortait d'ici, `load()` rendrait une liste vide, et le `record()` suivant
+    // écraserait toutes les parties saines.
+    try {
+      return _fromJson(json, gameId, playedAt);
+    } on TypeError {
+      return null;
+    }
+  }
+
+  static GameResult? _fromJson(
+      Map<String, dynamic> json, String gameId, DateTime playedAt) {
+    // 🔴 Pas de cast dur : `as List<dynamic>?` LÈVE si `teams` est un objet.
+    // Sans équipe lisible, l'entrée est ignorée comme toute entrée illisible :
+    // la partie ne peut pas être archivée ainsi (`_archiveGameResult`), elle
+    // s'afficherait « — gagne » et occuperait une place de rétention.
+    final teams = json['teams'] is List
+        ? (json['teams'] as List<dynamic>)
+            .whereType<Map<String, dynamic>>()
+            .map(TeamResult.fromJson)
+            .toList()
+        : const <TeamResult>[];
+    if (teams.isEmpty) return null;
+
     return GameResult(
       gameId: gameId,
       playedAt: playedAt,
-      // 🔴 `as List<dynamic>?` LÈVE si `teams` est autre chose qu'un tableau —
-      // un objet, par exemple. L'exception remontait hors du `.map()` (évalué
-      // paresseusement par le `.toList()` de l'appelant), tombait dans le
-      // `catch` générique de `load()`, et l'historique repartait VIDE sans
-      // quarantaine : le `record()` suivant écrasait alors toutes les parties
-      // saines. Le commentaire de `load()` promettait exactement l'inverse.
-      teams: json['teams'] is List
-          ? (json['teams'] as List<dynamic>)
-              .whereType<Map<String, dynamic>>()
-              .map(TeamResult.fromJson)
-              .toList()
-          : const <TeamResult>[],
+      teams: teams,
       totalWords: json['totalWords'] as int? ?? 0,
       turnDuration: json['turnDuration'] as int? ?? 0,
       roundsPlayed: json['roundsPlayed'] as int? ?? 0,

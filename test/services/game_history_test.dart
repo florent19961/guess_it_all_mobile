@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/game_result.dart';
 import 'package:guess_it_all_mobile/services/game_history_service.dart';
+import 'package:guess_it_all_mobile/services/persisted_schema.dart';
 
 import '../helpers/test_prefs.dart';
 
@@ -126,6 +127,45 @@ void main() {
       // Et surtout : l'archivage suivant ne doit pas l'avoir effacée.
       await history.record(game(id: 'nouvelle'));
       expect((await history.load()).map((g) => g.gameId), contains('bon'));
+    });
+
+    test('une entrée sans équipe lisible est ignorée', () async {
+      Map<String, dynamic> avec(String id, Object? teams) =>
+          game(id: id).toJson()..['teams'] = teams;
+      await givenPrefs({
+        GameHistoryService.storageKey: jsonEncode(wrapWithSchema({
+          'entries': [
+            game(id: 'saine').toJson(),
+            avec('objet', <String, dynamic>{}),
+            avec('vide', <dynamic>[]),
+            avec('illisibles', [1, 'x']),
+            game(id: 'absente').toJson()..remove('teams'),
+          ],
+        })),
+      });
+
+      final loaded = await GameHistoryService().load();
+      expect(loaded.map((g) => g.gameId), ['saine']);
+    });
+
+    test('un champ au mauvais type ne coûte que son entrée', () async {
+      // `as int?` levait hors de `tryFromJson` : `load()` rendait alors une liste
+      // vide, et le `record()` suivant écrasait toutes les parties saines.
+      await givenPrefs({
+        GameHistoryService.storageKey: jsonEncode(wrapWithSchema({
+          'entries': [
+            game(id: 'saine').toJson(),
+            game(id: 'totalWords').toJson()..['totalWords'] = 'quarante',
+            game(id: 'score').toJson()
+              ..['teams'] = [
+                {'id': 'r', 'name': 'Rouge', 'score': 'dix'},
+              ],
+          ],
+        })),
+      });
+
+      final loaded = await GameHistoryService().load();
+      expect(loaded.map((g) => g.gameId), ['saine']);
     });
 
     test('un champ de liste au mauvais type ne lève pas au rendu', () async {

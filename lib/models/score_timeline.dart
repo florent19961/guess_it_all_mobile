@@ -109,21 +109,31 @@ ScoreTimeline buildScoreTimeline({
   return ScoreTimeline(series: series, rounds: rounds, events: events);
 }
 
+/// L'entrée d'historique du tour où la cartouche a été jouée, -1 sans numéro de
+/// tour (partie antérieure) ou tour introuvable. L'équipe compte : une
+/// continuation partage son numéro de tour avec le tour qui la suit.
+int entryOfCharge(ChargeUse use, List<HistoryEntry> history) => use.turn == null
+    ? -1
+    : history.indexWhere((h) =>
+        h.turn == use.turn && h.round == use.round && h.teamId == use.teamId);
+
 /// L'étape où la cartouche a été jouée : le début de son tour, sinon la fin de
-/// sa manche (partie antérieure, sans numéro de tour).
+/// sa manche.
 int _stepOf(ChargeUse use, List<HistoryEntry> history, List<RoundSpan> rounds) {
-  final entry =
-      history.indexWhere((h) => h.turn == use.turn && h.round == use.round);
-  if (use.turn != null && entry != -1) return entry;
+  final entry = entryOfCharge(use, history);
+  if (entry != -1) return entry;
   return rounds.where((r) => r.round == use.round).firstOrNull?.end ??
       history.length;
 }
 
 /// « Les Moulins gagnent ! », « Bob gagne ! ». Jamais d'égalité :
 /// [winnerName] vient du classement (`compareFinalRank`).
-String revealHeadline(String winnerName) {
+String revealHeadline(String winnerName) => '${winnerLine(winnerName)} !';
+
+/// « Les Moulins gagnent », « Bob gagne » : le verbe accordé au nom d'équipe.
+String winnerLine(String winnerName) {
   final plural =
       RegExp(r'^(les|des|nos|vos|mes|ces|ses|leurs)\s', caseSensitive: false)
           .hasMatch(winnerName.trim());
-  return '$winnerName ${plural ? 'gagnent' : 'gagne'} !';
+  return '$winnerName ${plural ? 'gagnent' : 'gagne'}';
 }

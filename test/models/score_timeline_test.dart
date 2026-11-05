@@ -60,6 +60,26 @@ void main() {
         [(1, 1), (2, 0), (3, 0)]);
   });
 
+  test('une cartouche tombe sur le tour de SON équipe, numéro partagé compris',
+      () {
+    // Une continuation ne fait pas avancer le numéro de tour : en M2, le tour 3
+    // est porté par la continuation de a ET par le tour de b qui suit.
+    final partage = [
+      entry(1, 3, 'a', 1),
+      entry(2, 3, 'a', 2, continuation: true),
+      entry(2, 3, 'b', 1),
+    ];
+    final t = buildScoreTimeline(
+      teamIds: ['a', 'b'],
+      history: partage,
+      chargesUsed: const [
+        ChargeUse(catalogId: 'plus_10s', teamId: 'b', round: 2, turn: 3),
+        ChargeUse(catalogId: 'plus_10s', teamId: 'a', round: 2, turn: 3),
+      ],
+    );
+    expect(t.events.map((e) => e.step), [2, 1]);
+  });
+
   test('sans numéro de tour (ou tour introuvable) : en fin de manche', () {
     final t = buildScoreTimeline(
         teamIds: ['a', 'b'],

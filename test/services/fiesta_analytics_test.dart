@@ -167,7 +167,9 @@ void main() {
       final legacy = GameResult.tryFromJson({
         'gameId': 'old',
         'playedAt': '2026-10-01T20:00:00.000',
-        'teams': [],
+        'teams': [
+          {'id': 'r', 'name': 'Rouge'},
+        ],
         'totalWords': 40,
         'turnDuration': 30,
         'roundsPlayed': 3,
@@ -182,7 +184,14 @@ void main() {
       final result = GameResult(
         gameId: 'f',
         playedAt: DateTime(2026, 11, 3),
-        teams: const [],
+        teams: const [
+          TeamResult(
+              id: 'r',
+              name: 'Rouge',
+              score: 0,
+              scoreByRound: [0, 0, 0],
+              playerNames: []),
+        ],
         totalWords: 40,
         turnDuration: 30,
         roundsPlayed: 3,
@@ -209,7 +218,7 @@ void main() {
         'une partie archivée avant Fiesta v3 se relit : faits de genres retirés '
         '(`catchUp`, `choice`) ignorés seuls', () {
       final reread = GameResult.tryFromJson(jsonDecode('{"gameId":"old",'
-          '"playedAt":"2026-11-03T20:00:00.000","teams":[],"totalWords":40,'
+          '"playedAt":"2026-11-03T20:00:00.000","teams":[{"id":"r","name":"Rouge"}],"totalWords":40,'
           '"turnDuration":30,"roundsPlayed":3,"mode":"fiesta_custom",'
           '"modifierRecap":[{"kind":"catchUp","round":2,"teamId":"b",'
           '"seconds":18},{"kind":"choice","round":3,"catalogId":"block_guesser",'
