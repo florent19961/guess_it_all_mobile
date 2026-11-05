@@ -171,7 +171,8 @@ List<CoachStep> fiestaEnsemblesHelp({
         target: ready,
         title: 'Prêts à jouer',
         text: 'Les ensembles fournis par l\'app, puis les tiens. Touche-en un '
-            'pour le choisir. Ceux de l\'app se dupliquent pour les modifier.',
+            'pour le choisir, « Voir » pour savoir ce qu\'il fait. Ceux de '
+            'l\'app se dupliquent pour les modifier.',
       ),
       CoachStep(
         target: create,

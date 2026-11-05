@@ -1,8 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
-import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
-import 'package:guess_it_all_mobile/services/storage_service.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
 
 import '../helpers/test_prefs.dart';
@@ -25,17 +23,16 @@ Future<GameProvider> givenProvider(List<String> names,
   return provider;
 }
 
-/// Personnalisé, sans tirage : [ids] « En stock », 2 cartouches par équipe et
-/// par manche, sur leurs manches possibles.
-FiestaRules stock(Map<String, Set<int>> ids) => FiestaRules(
+/// Personnalisé, sans tirage : [ids] en cartouche, 2 par équipe pour la partie.
+FiestaRules stock(List<String> ids) => FiestaRules(
       mode: FiestaMode.custom,
       drawCount: 0,
       modifiers: {
-        for (final e in ids.entries)
-          e.key: ModifierSetting(
+        for (final id in ids)
+          id: ModifierSetting(
               active: true,
-              rounds: e.value,
-              mode: ModifierMode.stock,
+              rounds: const {1, 2, 3},
+              mode: ModifierMode.cartridge,
               charges: 2),
       },
     );
@@ -73,11 +70,7 @@ void main() {
       'malus différent se cumule ; app tuée : envois et cartouches relus ; '
       'consommés à la fin du tour visé', () async {
     var p = await givenProvider(['Ana', 'Bob', 'Cid']);
-    await p.startGame(
-        fiesta: stock({
-      'minus_10s': {1},
-      'reversed': {1}
-    }));
+    await p.startGame(fiesta: stock(['minus_10s', 'reversed']));
     // Ordre de jeu : a, b, c.
     final a = playTurn(p);
     final b = playTurn(p);
@@ -130,11 +123,7 @@ void main() {
       'la Passe gratuite allumée est dépensée UNE fois (2 passes ce tour '
       'seulement) et l\'envoi n\'est plus annulable', () async {
     final p = await givenProvider(['Ana', 'Bob']);
-    await p.startGame(
-        fiesta: stock({
-      'free_pass': {1},
-      'minus_10s': {1}
-    }));
+    await p.startGame(fiesta: stock(['free_pass', 'minus_10s']));
     final a = p.getCurrentTeam()!.id;
     final b = p.teams.firstWhere((t) => t.id != a).id;
 
@@ -183,11 +172,7 @@ void main() {
       'mime est refusé sans consommer, un mime vers une autre équipe passe',
       () async {
     final p = await givenProvider(['Ana', 'Bob', 'Cid'], wordsEach: 1);
-    await p.startGame(
-        fiesta: stock({
-      'mime_no_arms': {3},
-      'mime_eyes_closed': {3}
-    }));
+    await p.startGame(fiesta: stock(['mime_no_arms', 'mime_eyes_closed']));
     for (var round = 1; round < 3; round++) {
       playTurn(p, 99);
       p.nextRound();
@@ -211,10 +196,7 @@ void main() {
       'envoyé en M2, cible qui rejoue en M3) : sans effet, il part à la fin '
       'de son tour', () async {
     final p = await givenProvider(['Ana', 'Bob', 'Cid'], wordsEach: 1);
-    await p.startGame(
-        fiesta: stock({
-      'other_language': {2}
-    }));
+    await p.startGame(fiesta: stock(['other_language']));
     playTurn(p, 99);
     p.nextRound();
     final victim = playTurn(p); // continuation M2
@@ -227,92 +209,5 @@ void main() {
     expect(p.receivedThisTurn, isEmpty);
     playTurn(p);
     expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null), isEmpty);
-  });
-
-  test(
-      'Malus envoyé en fin de M1, la cible rejoue en M2 sous une règle de '
-      'manche incompatible (« Passe gratuite » Toujours) : écarté sans effet, '
-      'puis retiré à la fin de son tour', () async {
-    /// [sent] envoyé par l'équipe qui ouvre la partie, qui finit M1 ; [rule]
-    /// « Toujours » en M2. Rend le provider au tour M2 de la cible.
-    Future<GameProvider> crossRound(String sent, String rule) async {
-      final p = await givenProvider(['Ana', 'Bob'], wordsEach: 1);
-      await p.startGame(
-        fiesta: FiestaRules(
-          mode: FiestaMode.custom,
-          drawCount: 0,
-          catchUp: kCatchUpOff,
-          modifiers: {
-            sent: ModifierSetting(
-                active: true, rounds: const {1}, mode: ModifierMode.stock),
-            rule: ModifierSetting(
-                active: true, rounds: const {2}, mode: ModifierMode.always),
-          },
-        ),
-      );
-      final a = p.getCurrentTeam()!.id;
-      final b = p.teams.firstWhere((t) => t.id != a).id;
-      expect(p.inflictMalus(sent, b), isNull);
-      playTurn(p, 99); // a finit M1
-      p.nextRound();
-      expect(playTurn(p), a); // continuation de a en M2
-      expect(p.getCurrentTeam()!.id, b);
-      return p;
-    }
-
-    final p = await crossRound('no_pass', 'free_pass');
-    expect(p.receivedThisTurn, isEmpty);
-    expect([p.passBlocked, p.freePasses], [false, 2]);
-    playTurn(p);
-    expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null), isEmpty);
-  });
-
-  test(
-      'Coup de pouce (Auto) : la Passe gratuite offerte est UNE cartouche — '
-      'allumée, 2 passes gratuites ce tour-là, puis plus rien', () async {
-    var p = await givenProvider(['Ana', 'Bob'], wordsEach: 2);
-    await p.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
-    // Graine fixée : un tirage de M2 qui laisse la Passe gratuite utile.
-    final rules = p.game.fiesta!.rules;
-    final gameId = [
-      for (var i = 0; i < 100; i++) 'g$i'
-    ].firstWhere((id) => roundModifiers(rules, gameId: id, round: 2)
-        .every((m) => m.catalogId != 'free_pass' && m.catalogId != 'no_pass'));
-    await pumpEventQueue();
-    final saved = (await StorageService().loadGameState())!;
-    saved['game']['gameId'] = gameId;
-    await StorageService().saveGameState(saved);
-    p = GameProvider();
-    await pumpEventQueue();
-
-    // M1 : 1 mot contre 3 → écart 2, coup de pouce « léger » pour la menée.
-    final trailing = playTurn(p, 1);
-    playTurn(p, 99);
-    expect(
-        p.appBoostPreview
-            .where((m) => m.teamId == trailing)
-            .map((m) => (m.catalogId, m.charges)),
-        [('free_pass', 1)]);
-    p.nextRound();
-    playTurn(p); // continuation du leader
-
-    expect(p.getCurrentTeam()!.id, trailing);
-    expect(left(p, 'free_pass'), 1);
-    expect(p.freePasses, 0, reason: 'pas toute la manche');
-    p.toggleBonus('free_pass');
-    p.startTurn();
-    p.startTurnTimer();
-    expect(p.freePasses, 2);
-    p.passWord();
-    expect([p.freePassesUsed, p.currentPassPenalty], [1, 0]);
-    p.passWord();
-    expect([p.freePassesUsed, p.currentPassPenalty], [2, 5]);
-    p.endTurn();
-    p.savePreValidationState(const []);
-    p.validateWords(const []);
-    playTurn(p);
-
-    expect(p.getCurrentTeam()!.id, trailing);
-    expect([p.freePasses, left(p, 'free_pass')], [0, 0]);
   });
 }

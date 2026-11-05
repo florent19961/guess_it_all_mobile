@@ -108,15 +108,15 @@ void main() {
     await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
     await pumpEventQueue();
     final saved = (await StorageService().loadGameState())!;
-    // Les règles telles que les écrivait la forme v1.
+    // Les règles telles que les écrivait la forme v2.
     saved['game']['fiesta']['rules'] = {
+      'format': 2,
       'mode': 'auto',
-      'symmetric': true,
       'autoCalibrate': true,
       'modifiers': {},
-      'oneOfThree': false,
       'drawCount': 1,
-      'oneAnswer': true,
+      'pick3Choices': 1,
+      'catchUp': {'b1': 3, 'b2': 5, 'cap': 30, 'mal': 1, 'malCap': 15},
     };
     await StorageService().saveGameState(saved);
 
@@ -131,7 +131,7 @@ void main() {
   });
 
   test(
-      'snapshot de retour arrière en forme v1 dans une partie v2 : retour '
+      'snapshot de retour arrière en forme v2 dans une partie v3 : retour '
       'arrière refusé sans rien muter, jamais restauré en Classique', () async {
     final provider = await givenReadyProvider();
     await provider.startGame(fiesta: FiestaRules(mode: FiestaMode.auto));
@@ -142,7 +142,7 @@ void main() {
     final snapshot = provider.game.preValidationSnapshot!;
     final rules =
         (snapshot['game'] as Map<String, dynamic>)['fiesta']['rules'] as Map;
-    rules.remove('format'); // forme v1 : illisible
+    rules['format'] = 2; // forme v2 : illisible
     final before = provider.game.toJson();
 
     expect(provider.canGoBackToVerification, isFalse);

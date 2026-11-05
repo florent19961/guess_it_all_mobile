@@ -1,35 +1,27 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
-import 'package:guess_it_all_mobile/models/fiesta/fiesta_state.dart';
 import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
 import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
 import 'package:guess_it_all_mobile/models/fiesta/round_transition.dart';
 import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
 
 ModifierSetting setting(ModifierMode mode,
-        {Set<int> rounds = const {1, 2, 3},
-        int charges = 1,
-        bool perGame = false}) =>
-    ModifierSetting(
-      active: true,
-      rounds: rounds,
-      mode: mode,
-      charges: charges,
-      perGame: perGame,
-    );
+        {Set<int> rounds = const {1, 2, 3}}) =>
+    ModifierSetting(active: true, rounds: rounds, mode: mode);
 
-/// Personnalisé : tout le catalogue « Au tirage » sur toutes les manches
-/// (les contraintes de manche du catalogue filtrent), sauf `no_pass`
-/// « Toujours » si [alwaysNoPass].
+/// Personnalisé : tout le catalogue « Au tirage » sur toutes les manches (les
+/// contraintes de manche du catalogue filtrent, le mode Cartouche seule exclut
+/// les cartouches seulement), sauf `no_pass` « Toujours » si [alwaysNoPass].
 FiestaRules customAllDraw({int drawCount = 2, bool alwaysNoPass = false}) =>
     FiestaRules(
       mode: FiestaMode.custom,
       drawCount: drawCount,
       modifiers: {
         for (final def in kModifierCatalog)
-          def.id: setting(def.id == 'no_pass' && alwaysNoPass
-              ? ModifierMode.always
-              : ModifierMode.draw),
+          if (canBeRoundRule(def))
+            def.id: setting(def.id == 'no_pass' && alwaysNoPass
+                ? ModifierMode.always
+                : ModifierMode.draw),
       },
     );
 
@@ -89,9 +81,10 @@ void main() {
         }
       }
     });
-    // Plus de plafond de 3 : un tirage de 5 en sort 5 (sinon le test ne
-    // prouve rien).
-    expect(seen['Personnalisé, tirage 5'], contains(5));
+    // Pas de plafond : un tirage de 5 sort tout ce qui peut l'être, 4 depuis que
+    // bonus et −10 s ne sont plus que des cartouches (sinon le test ne prouve
+    // rien).
+    expect(seen['Personnalisé, tirage 5'], contains(4));
     expect(seen['Auto'], {1, 2});
   });
 
@@ -101,7 +94,7 @@ void main() {
     expect(
       roundModifiers(customAllDraw(), gameId: 'game-0', round: 1)
           .map((m) => m.catalogId),
-      ['one_answer', 'minus_10s'],
+      ['other_language', 'no_pass'],
     );
   });
 
@@ -180,78 +173,40 @@ void main() {
       drawCount: 2,
       modifiers: {
         'reversed': setting(ModifierMode.draw, rounds: {2, 3}),
-        'minus_10s': setting(ModifierMode.draw),
-        'free_pass': setting(ModifierMode.offer),
+        'no_pass': setting(ModifierMode.draw),
+        'free_pass': setting(ModifierMode.cartridge),
       },
     );
     for (final gameId in gameIds) {
       expect(
         roundModifiers(rules, gameId: gameId, round: 1).map((m) => m.catalogId),
-        ['minus_10s'],
+        ['no_pass'],
       );
       expect(
         roundModifiers(rules, gameId: gameId, round: 2)
             .map((m) => m.catalogId)
             .toSet(),
-        {'minus_10s', 'reversed'},
+        {'no_pass', 'reversed'},
       );
     }
   });
 
   test(
-      'En stock : une instance par équipe sur les manches cochées, malus en '
-      'réserve (sans effet, lane 2) ; « pour la partie » = N moins ce qui '
-      'est déjà dépensé, Passe gratuite comprise (lane 2)', () {
-    final rules = FiestaRules(
-      mode: FiestaMode.custom,
-      modifiers: {
-        'double_points':
-            setting(ModifierMode.stock, rounds: {1, 3}, charges: 2),
-        'two_words': setting(ModifierMode.stock, charges: 2, perGame: true),
-        'minus_10s': setting(ModifierMode.stock, rounds: {1}, charges: 2),
-        'free_pass':
-            setting(ModifierMode.stock, rounds: {2}, charges: 3, perGame: true),
-      },
-    );
-    Map<String, int> stock(int round, [List<ChargeUse> used = const []]) => {
-          for (final m in stockForRound(rules,
-              round: round, teamIds: ['a', 'b'], chargesUsed: used))
-            if (m.catalogId != 'minus_10s' && m.catalogId != 'free_pass')
-              '${m.catalogId}/${m.teamId}': m.charges,
-        };
-
-    expect(stock(1), {
-      'double_points/a': 2,
-      'double_points/b': 2,
-      'two_words/a': 2,
-      'two_words/b': 2,
+      'Auto : le −10 s et les bonus (cartouches seulement) ne sont jamais '
+      'tirés, ni par un blob qui les mettrait « Au tirage »', () {
+    final forced =
+        FiestaRules(mode: FiestaMode.custom, drawCount: 5, modifiers: {
+      for (final id in kCartridgeOnlyIds) id: setting(ModifierMode.draw),
     });
-    // Malus en réserve : persistés pour chaque équipe, sans effet en jeu.
-    final malus = stockForRound(rules, round: 1, teamIds: ['a', 'b'])
-        .where((m) => m.catalogId == 'minus_10s')
-        .toList();
-    expect(malus.map((m) => (m.teamId, m.charges, m.reserve)),
-        [('a', 2, true), ('b', 2, true)]);
-    expect(modifiersForTurn(malus, teamId: 'a', logicalRound: 1), isEmpty);
-    // Passe gratuite « pour la partie » : 3 − 1 cartouche dépensée en M1.
-    expect(
-        stockForRound(rules, round: 2, teamIds: [
-          'a'
-        ], chargesUsed: [
-          const ChargeUse(catalogId: 'free_pass', teamId: 'a', round: 1),
-        ]).where((m) => m.catalogId == 'free_pass').single.charges,
-        2);
-    final used = [
-      const ChargeUse(catalogId: 'two_words', teamId: 'a', round: 1),
-      const ChargeUse(catalogId: 'two_words', teamId: 'a', round: 2),
-      const ChargeUse(catalogId: 'double_points', teamId: 'a', round: 1),
-    ];
-    // M2 : pas de ×2 (manche non cochée) ; Deux mots « pour la partie » :
-    // 2 − 1 dépensée en M1 pour a.
-    expect(stock(2, used), {'two_words/a': 1, 'two_words/b': 2});
-    // M3 : ×2 « par manche » revient à 2 ; Deux mots épuisé pour a.
-    expect(stock(3, used),
-        {'double_points/a': 2, 'double_points/b': 2, 'two_words/b': 2});
+    for (final gameId in gameIds) {
+      for (final round in [1, 2, 3]) {
+        final auto = roundModifiers(autoRules(oneAnswer: false),
+                gameId: gameId, round: round)
+            .map((m) => m.catalogId);
+        expect(auto.where(kCartridgeOnlyIds.contains), isEmpty);
+        expect(roundModifiers(forced, gameId: gameId, round: round), isEmpty);
+      }
+    }
   });
 
   test(
@@ -269,7 +224,7 @@ void main() {
           fromTeamId: from,
         );
     final rule = ModifierInstance(
-      catalogId: 'minus_10s',
+      catalogId: 'no_pass',
       scope: ModifierScope.round,
       target: ModifierTarget.both,
       charges: 0,
@@ -278,12 +233,12 @@ void main() {
     );
     final kept = modifiersForTurn([
       rule,
-      sent('minus_10s', 'a'), // doublon de la règle
+      sent('no_pass', 'a'), // doublon de la règle
       sent('mime_no_arms', 'a'),
       sent('draw', 'c'), // second mime : incompatible
       sent('reversed', 'c'),
-    ], teamId: 'b', logicalRound: 3);
+    ], teamId: 'b', round: 3);
     expect(kept.map((m) => '${m.catalogId}<${m.fromTeamId}'),
-        ['minus_10s<null', 'mime_no_arms<a', 'reversed<c']);
+        ['no_pass<null', 'mime_no_arms<a', 'reversed<c']);
   });
 }

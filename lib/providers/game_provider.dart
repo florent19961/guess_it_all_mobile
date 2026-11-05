@@ -1892,7 +1892,7 @@ class GameProvider extends ChangeNotifier {
     // Sans partie jouée (Rejouer de l'accueil, après `endGameAndGoHome`), la
     // config déjà en mémoire fait foi.
     if (_game.allWords.isNotEmpty) _pendingFiesta = _game.fiesta?.rules;
-    // Auto = tirage + auto-calibrage toujours allumés (plus d'écran pour les
+    // Auto = tirage + coup de pouce toujours allumés (plus d'écran pour les
     // couper), et « Une seule réponse » se retire à chaque partie : on ne
     // transmet pas les règles gelées de la partie jouée.
     if (_pendingFiesta?.mode == FiestaMode.auto) {

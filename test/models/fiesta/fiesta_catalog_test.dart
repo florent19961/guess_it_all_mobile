@@ -17,7 +17,7 @@ ModifierInstance _instance(String id,
 void main() {
   group('Catalogue Fiesta', () {
     test(
-        '16 ids uniques, et la table d\'incompatibilités ne cite que des ids '
+        '17 ids uniques, et la table d\'incompatibilités ne cite que des ids '
         'du catalogue', () {
       // 🔴 Ids FIGÉS : ils sont persistés dans les parties en cours et les
       // ensembles enregistrés. En renommer un rend ces données illisibles.
@@ -39,6 +39,7 @@ void main() {
         'other_language',
         'one_answer',
         'sounds_only',
+        'plus_10s',
       ]);
 
       for (final (a, b) in kModifierIncompatibilities) {

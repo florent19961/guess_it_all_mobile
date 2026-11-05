@@ -5,7 +5,6 @@ import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_state.dart';
 import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
 import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
-import 'package:guess_it_all_mobile/models/fiesta/round_transition.dart';
 import 'package:guess_it_all_mobile/models/game_state.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
 
@@ -134,9 +133,8 @@ void main() {
               'free_pass': ModifierSetting(
                 active: true,
                 rounds: const {2, 3},
-                mode: ModifierMode.stock,
+                mode: ModifierMode.cartridge,
                 charges: 3,
-                perGame: true,
               ),
               'draw': ModifierSetting(
                 active: true,
@@ -144,9 +142,7 @@ void main() {
                 mode: ModifierMode.always,
               ),
             },
-            pick3Choices: 2,
-            catchUp:
-                const CatchUpRules(b1: 2, b2: 4, cap: 20, mal: 1, malCap: 10),
+            trailingBoost: true,
             drawCount: 2,
           ),
           active: const [instance],
@@ -215,21 +211,20 @@ void main() {
       final json = GameState(gameId: 'abc', fiesta: fiestaState()).toJson();
       final rules = (json['fiesta'] as Map<String, dynamic>)['rules']
           as Map<String, dynamic>;
-      rules.remove('pick3Choices');
+      rules.remove('trailingBoost');
       rules['fromTheFuture'] = 42;
-      (rules['catchUp'] as Map<String, dynamic>).remove('malCap');
 
       final restored = GameState.fromJson(json);
 
       expect(restored.fiesta, isNotNull);
-      expect(restored.fiesta!.rules.pick3Choices, 1);
-      expect(restored.fiesta!.rules.catchUp.malCap, CatchUpRules.auto.malCap);
-      expect(restored.fiesta!.rules.catchUp.b1, 2,
+      expect(restored.fiesta!.rules.trailingBoost, isFalse);
+      expect(restored.fiesta!.rules.drawCount, 2,
           reason: 'les présents restent');
 
-      rules['pick3Choices'] = 'deux';
+      rules['trailingBoost'] = 'oui';
       expect(GameState.fromJson(json).fiesta, isNull);
-      rules['pick3Choices'] = 4;
+      rules['trailingBoost'] = true;
+      rules['drawCount'] = 9;
       expect(GameState.fromJson(json).fiesta, isNull, reason: 'hors bornes');
     });
 
@@ -245,59 +240,55 @@ void main() {
     });
 
     test(
-        '`offerChoices` (2-10) : clé omise vide, aller-retour, entrée '
-        'illisible ignorée seule, liste absente ou corrompue = vide', () {
+        '`earned` : clé omise vide, aller-retour, entrée illisible ignorée '
+        'seule, liste absente ou corrompue = vide', () {
       final empty = GameState(gameId: 'abc', fiesta: fiestaState()).toJson();
       final emptyFiesta = empty['fiesta'] as Map<String, dynamic>;
-      expect(emptyFiesta.containsKey('offerChoices'), isFalse);
+      expect(emptyFiesta.containsKey('earned'), isFalse);
 
-      const choice = OfferChoice(chooserId: 'a', modifier: instance);
+      const earned =
+          EarnedCartridge(catalogId: 'plus_10s', teamId: 'a', round: 2);
       final original = GameState(
           gameId: 'abc',
-          fiesta: fiestaState().copyWith(offerChoices: const [choice]));
-      final json = original.toJson();
+          fiesta: fiestaState().copyWith(earned: const [earned]));
+      final json = jsonDecode(jsonEncode(original.toJson()));
       expect(GameState.fromJson(json).toJson(), equals(json));
 
       final fiesta = json['fiesta'] as Map<String, dynamic>;
-      fiesta['offerChoices'] = [
-        choice.toJson(),
-        {'chooserId': 'b'},
-        {
-          'chooserId': 'c',
-          'modifier': {...instance.toJson(), 'catalogId': 'from_the_future'}
-        },
+      fiesta['earned'] = [
+        earned.toJson(),
+        {'teamId': 'b'},
+        {...earned.toJson(), 'catalogId': 'from_the_future'},
         'pas un objet',
       ];
       expect(
-          GameState.fromJson(json).fiesta!.offerChoices.map((c) => c.chooserId),
-          ['a']);
-      fiesta['offerChoices'] = 'oui';
-      expect(GameState.fromJson(json).fiesta!.offerChoices, isEmpty);
-      expect(FiestaState.tryFromJson(emptyFiesta)!.offerChoices, isEmpty);
+          GameState.fromJson(json).fiesta!.earned.map((e) => e.teamId), ['a']);
+      fiesta['earned'] = 'oui';
+      expect(GameState.fromJson(json).fiesta!.earned, isEmpty);
+      expect(FiestaState.tryFromJson(emptyFiesta)!.earned, isEmpty);
     });
 
-    test(
-        'malus « En stock » en réserve : conservé à l\'aller-retour JSON, '
-        'sans effet en jeu (règle 7)', () {
-      const reserved = ModifierInstance(
-        catalogId: 'minus_10s',
-        scope: ModifierScope.round,
-        target: ModifierTarget.team,
-        teamId: 'a',
-        charges: 2,
-        nature: ModifierNature.malus,
-        round: 1,
-        reserve: true,
+    test('stock : charges de l\'ensemble + gagnées − dépensées, toutes manches',
+        () {
+      final fiesta = fiestaState().copyWith(
+        earned: const [
+          EarnedCartridge(catalogId: 'free_pass', teamId: 'a', round: 2),
+          EarnedCartridge(catalogId: 'reversed', teamId: 'a', round: 3),
+        ],
+        chargesUsed: const [
+          ChargeUse(catalogId: 'free_pass', teamId: 'a', round: 1),
+          ChargeUse(catalogId: 'free_pass', teamId: 'a', round: 3),
+          ChargeUse(catalogId: 'free_pass', teamId: 'b', round: 1),
+        ],
       );
-      final original = GameState(
-          gameId: 'abc',
-          fiesta: fiestaState().copyWith(active: [instance, reserved]));
-      final json = jsonDecode(jsonEncode(original.toJson()));
-      final restored = GameState.fromJson(json).fiesta!;
-      expect(restored.active.map((m) => (m.catalogId, m.reserve)),
-          [('no_pass', false), ('minus_10s', true)]);
-      expect(modifiersForTurn(restored.active, teamId: 'a', logicalRound: 1),
-          isEmpty);
+      expect(fiesta.cartridgesOwned('free_pass', 'a'), 4);
+      expect(fiesta.cartridgesLeft('free_pass', 'a'), 2);
+      expect(fiesta.cartridgesLeft('free_pass', 'b'), 2);
+      // Gagnée seulement (pas réglée en Cartouche dans l'ensemble).
+      expect(fiesta.cartridgesLeft('reversed', 'a'), 1);
+      expect(fiesta.cartridgesLeft('reversed', 'b'), 0);
+      // « Dessiner » est réglé « Toujours » : pas une cartouche.
+      expect(fiesta.cartridgesOwned('draw', 'a'), 0);
     });
 
     test('une instance inconnue ou mal formée est ignorée, le reste se relit',
@@ -322,20 +313,10 @@ void main() {
         'rounds': [4],
         'mode': 'draw',
       };
-      // Un dû de rattrapage mal typé est ignoré seul, lui aussi.
-      fiesta['catchUpDue'] = {'a': 'x', 'b': 3};
 
       final restored = GameState.fromJson(json);
 
       expect(restored.gameId, 'abc');
-      expect(restored.fiesta!.catchUpDue, {'b': 3});
-      expect(
-          FiestaState.tryFromJson({
-            ...fiesta,
-            'catchUpDue': [1]
-          })!
-              .catchUpDue,
-          isEmpty);
       expect(restored.fiesta!.active.map((e) => e.catalogId), ['no_pass']);
       expect(restored.fiesta!.rules.modifiers.keys, ['free_pass', 'draw']);
     });
@@ -354,13 +335,29 @@ void main() {
           GameState.fromJson({
             ...base,
             'fiesta': {
-              'rules': {'format': 2, 'mode': 'party'},
+              'rules': {'format': 3, 'mode': 'party'},
               'active': [],
             },
           }).fiesta,
           isNull);
-      // Forme v1 (avant Fiesta v2, sans `format`) : illisible. Le provider
-      // abandonne alors la partie (`fiesta_v2_upgrade_test`).
+      // Forme v2 (avant Fiesta v3) : illisible, même politique que v1 → v2. Le
+      // provider abandonne alors la partie (`fiesta_freeze_test`).
+      expect(
+          GameState.fromJson({
+            ...base,
+            'fiesta': {
+              'rules': {
+                'format': 2,
+                'mode': 'custom',
+                'autoCalibrate': true,
+                'modifiers': {},
+                'drawCount': 1,
+                'pick3Choices': 1,
+              },
+            },
+          }).fiesta,
+          isNull);
+      // Forme v1 (sans `format`) : illisible aussi.
       expect(
           GameState.fromJson({
             ...base,

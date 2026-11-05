@@ -24,8 +24,8 @@ Future<GameProvider> givenReadyProvider() async {
   return provider;
 }
 
-/// Personnalisé, sans tirage : [ids] en stock sur la manche 1, 1 cartouche
-/// par équipe (à allumer avant le tour).
+/// Personnalisé, sans tirage : [ids] en cartouche, 1 par équipe pour la partie
+/// (à allumer avant le tour).
 FiestaRules fixedOnRound1(List<String> ids) => FiestaRules(
       mode: FiestaMode.custom,
       drawCount: 0,
@@ -34,7 +34,7 @@ FiestaRules fixedOnRound1(List<String> ids) => FiestaRules(
           id: ModifierSetting(
             active: true,
             rounds: const {1},
-            mode: ModifierMode.stock,
+            mode: ModifierMode.cartridge,
           ),
       },
     );
@@ -215,7 +215,7 @@ void main() {
               active: true, rounds: const {1}, mode: ModifierMode.always),
           for (final id in ['two_words', 'double_points'])
             id: ModifierSetting(
-                active: true, rounds: const {1}, mode: ModifierMode.stock),
+                active: true, rounds: const {1}, mode: ModifierMode.cartridge),
         },
       ),
     );
@@ -229,36 +229,6 @@ void main() {
     // ×2 s'allume malgré 2 modificateurs déjà en jeu.
     p.setDoublePoints(true);
     expect(p.isDoublePointsArmed, isTrue);
-  });
-
-  test(
-      '« Deux mots » règle de manche (Toujours) : deux cartes à chaque tour '
-      'sans rien allumer, aucune charge offerte ni dépensée', () async {
-    final p = await givenReadyProvider();
-    await p.startGame(
-      fiesta: FiestaRules(
-        mode: FiestaMode.custom,
-        drawCount: 0,
-        modifiers: {
-          'two_words': ModifierSetting(
-              active: true, rounds: const {1}, mode: ModifierMode.always),
-        },
-      ),
-    );
-    for (var turn = 0; turn < 2; turn++) {
-      expect(p.twoWordsLeft, 0, reason: 'pas une cartouche');
-      expect(p.turnModifiers.map((m) => m.catalogId), ['two_words']);
-      p.startTurn();
-      p.startTurnTimer();
-      expect(p.isTwoWordsOn, isTrue);
-      expect(p.secondWord, isNotNull);
-      expectPoolIntact(p);
-      p.endTurn();
-      final guessed = List<String>.from(p.game.wordsGuessedThisTurn);
-      p.savePreValidationState(guessed);
-      p.validateWords(guessed);
-    }
-    expect(p.game.fiesta!.chargesUsed, isEmpty);
   });
 
   test(

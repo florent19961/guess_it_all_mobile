@@ -30,7 +30,7 @@ void main() {
           ),
         },
         drawCount: 2,
-        pick3Choices: 2,
+        trailingBoost: true,
       ),
     );
 
@@ -80,7 +80,12 @@ void main() {
       {'settings': okSettings, 'fiesta': 'x'},
       {
         'settings': okSettings,
-        'fiesta': {'format': 2, 'mode': 'inconnu'},
+        'fiesta': {'format': 3, 'mode': 'inconnu'},
+      },
+      // Forme v2 (avant Fiesta v3) : illisible, pas de « Rejouer ».
+      {
+        'settings': okSettings,
+        'fiesta': {'format': 2, 'mode': 'custom'},
       },
       // Forme v1 (avant Fiesta v2) : illisible, pas de « Rejouer ».
       {
