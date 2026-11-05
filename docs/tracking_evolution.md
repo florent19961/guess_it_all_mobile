@@ -1200,3 +1200,27 @@ l'avant-tour Fiesta n'explique que ce qu'il affiche.
   absence de clé sous « Interdit de passer » laissait un bouton sans explication.
 - `results_screen` et `history_screen` ne sont pas modifiés (autre lane). Écart connu : récap Fiesta et bouton
   retour des Résultats sans étape.
+---
+
+## 2026-11-05 — Plus de tour à 0 s après une fin de manche
+
+**Quoi.** Une manche M1 ou M2 finie avec 0 s à reporter (dernier mot à l'écran quand le chrono tombe, puis
+validé) ne donne plus de continuation : plus d'avant-tour « Temps bonus : 0s », plus de chrono à 0, plus de
+point offert sur le mot affiché. L'équipe garde ses points, la manche suivante s'ouvre sur l'équipe suivante
+avec le joueur suivant. Décision de Florent. Un report d'au moins 1 s reste une continuation.
+
+**Pourquoi ces choix.**
+
+- Le seuil est la seconde affichée (`timeRemaining <= 0`). Il reste 1 s tant qu'il reste 1 ms.
+- C'est une vraie fin de tour : ×2, passes gratuites et malus reçus se terminent là (`_fiestaAfterTurn`). Une
+  cartouche non jouée reste en réserve, un +10 s n'a donc plus de tour à 0 s où se jouer.
+- `isContinuation` regarde maintenant si la manche a déjà une entrée, pas seulement l'équipe : sinon le
+  prochain vrai tour de l'équipe qui a fini la manche passait pour une continuation, et son piège d'Interdit
+  était ignoré.
+- `continuingTeamId` est nul sans report : un malus en attente sur l'équipe suivante, impossible dans la
+  nouvelle manche, est rendu à l'envoyeur comme pour toute autre équipe.
+- Graphique : une manche ouverte par un tour normal a sa barre au point d'avant ce tour.
+
+**Conséquence.** Une sauvegarde écrite par une version antérieure, déjà sur une fin de manche à 0 s, joue
+encore ce tour une dernière fois : rien n'est perdu, et aucun code de reprise n'est gardé pour ce cas.
+

@@ -1243,18 +1243,30 @@ class GameProvider extends ChangeNotifier {
 
     // Fin de la manche?
     if (newRemainingWords.isEmpty) {
+      // 🔴 Rien à reporter (dernier mot validé sur le chrono) : pas de tour de
+      // continuation à 0 s. C'est une vraie fin de tour, la manche suivante
+      // s'ouvre sur l'équipe suivante. Pas en M3 : la partie se termine.
+      final noCarryOver = _game.timeRemaining <= 0 && _game.currentRound < 3;
+
       // Préparer la fusion pour le bonus time si pas de mots invalidés
-      final shouldPrepareBonusFusion = allInvalidatedWords.isEmpty;
+      final shouldPrepareBonusFusion =
+          allInvalidatedWords.isEmpty && !noCarryOver;
 
       _game = _game.copyWith(
         history: newHistory,
         remainingWords: newRemainingWords,
+        currentTurn: noCarryOver ? nextTurn : null,
+        currentTurnIndex: noCarryOver ? nextPlayer['nextTurnIndex'] : null,
+        currentTeamIndex: noCarryOver ? nextPlayer['nextTeamIndex'] : null,
+        currentPlayerIndexInTeam:
+            noCarryOver ? nextPlayer['nextPlayerIndexInTeam'] : null,
         // Après M3 aussi : écran fixe, dernière chance de contester le dernier
         // tour. La partie s'archive à « Voir les résultats » (`nextRound`).
         currentScreen: AppConstants.screenTransition,
-        turnBonusTime: _game.timeRemaining,
+        turnBonusTime: noCarryOver ? null : _game.timeRemaining,
+        clearTurnBonusTime: noCarryOver,
         clearExpiredWord: true,
-        fiesta: _fiestaAtRoundEnd(),
+        fiesta: noCarryOver ? _fiestaAfterTurn() : _fiestaAtRoundEnd(),
         pendingBonusTurnId: shouldPrepareBonusFusion ? _game.currentTurn : null,
         clearPendingBonusTurnId: !shouldPrepareBonusFusion,
       );
@@ -1374,7 +1386,9 @@ class GameProvider extends ChangeNotifier {
       scores: {for (final t in _teams) t.id: t.score},
       totalWords: _game.allWords.length,
       blockableTeamIds: _blockableTeamIds,
-      continuingTeamId: getCurrentTeam()?.id,
+      // Sans report, l'équipe courante est déjà la suivante : elle ne poursuit rien.
+      continuingTeamId:
+          _game.pendingBonusTurnId != null ? getCurrentTeam()?.id : null,
     );
   }
 
@@ -1444,8 +1458,8 @@ class GameProvider extends ChangeNotifier {
           if (canBlockGuesser(t.playerIds.length)) t.id,
       };
 
-  /// Équipe qui ouvre la manche en cours par sa continuation : celle de la
-  /// dernière entrée de la manche précédente. Nulle en M1.
+  /// Équipe qui a fini la manche précédente, celle qui la poursuit s'il restait
+  /// du temps à reporter. Nulle en M1.
   String? get _continuingTeamId => _game.currentRound <= 1
       ? null
       : _game.history
@@ -1453,19 +1467,17 @@ class GameProvider extends ChangeNotifier {
           .lastOrNull
           ?.teamId;
 
-  int _entriesThisRound(String teamId) => _game.history
-      .where((h) => h.round == _game.currentRound && h.teamId == teamId)
-      .length;
-
   /// Le tour en cours est une continuation : l'équipe qui a fini la manche N
   /// poursuit CE tour en N+1 avec le temps reporté. Dérivé de l'historique,
   /// pas de `turnBonusTime` (effacé au départ du chrono) : il tient donc
   /// pendant le tour, sur la vérification, après un kill et un retour arrière.
+  /// 🔴 Elle seule peut ouvrir la manche : sans report (0 s), l'équipe suivante
+  /// l'ouvre, et le prochain tour de l'équipe qui a fini la manche est normal.
   bool get isContinuation {
     final teamId = getCurrentTeam()?.id;
     return teamId != null &&
         teamId == _continuingTeamId &&
-        _entriesThisRound(teamId) == 0;
+        !_game.history.any((h) => h.round == _game.currentRound);
   }
 
   /// Modificateurs qui pèsent sur l'équipe qui joue (badges) : les règles de la

@@ -349,8 +349,8 @@ class _StatsScreenState extends State<StatsScreen> {
       teamTurnCount[team.id] = 0;
     }
 
-    // Le début de chaque manche (pour les barres verticales) : son premier tour,
-    // qui est d'ordinaire une continuation.
+    // Le début de chaque manche (pour les barres verticales) : le point de sa
+    // continuation, ou celui d'avant son premier tour si rien n'était reporté.
     final Map<int, int> roundStartX = {}; // round -> X de la première entrée
 
     // Abscisse de chaque entrée, sur la courbe de son équipe.
@@ -384,7 +384,11 @@ class _StatsScreenState extends State<StatsScreen> {
           teamCumulativeScore[teamId]!.toDouble(),
         ));
       }
-      roundStartX.putIfAbsent(entry.round, () => teamTurnCount[teamId]!);
+      roundStartX.putIfAbsent(
+          entry.round,
+          () => entry.isBonusContinuation
+              ? teamTurnCount[teamId]!
+              : teamTurnCount[teamId]! - 1);
       entryX[index] = teamTurnCount[teamId]!;
     }
 

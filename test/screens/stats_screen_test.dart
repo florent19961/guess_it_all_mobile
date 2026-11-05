@@ -247,6 +247,22 @@ void main() {
       expect(barres(tester).map((l) => l.x), [0, 2]);
     });
 
+    testWidgets(
+        'une manche ouverte par un tour normal : barre au début du tour',
+        (tester) async {
+      // t1 finit M1 à 0 s reportée, t2 ouvre M2 : son 2e point est en M2, son
+      // 1er encore en M1.
+      await pumpStats(
+          tester,
+          _partieAvec([
+            _entree(1, 't2', 2, 30),
+            _entree(1, 't1', 3, 30),
+            _entree(2, 't2', 4, 30),
+          ]));
+
+      expect(barres(tester).map((l) => l.x), [0, 1]);
+    });
+
     testWidgets('l\'axe des scores ne double pas son dernier repère',
         (tester) async {
       // Maximum 47 : axe jusqu'à 51,7, repères tous les 12. Le dernier repère
