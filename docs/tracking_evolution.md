@@ -1254,3 +1254,14 @@ le compteur passe dans « Créer un ensemble » ou dans l'alerte de limite. Maqu
 - Dépliage sans animation de taille : une ligne se replie au-dessus au même moment, le calcul du défilement
   devrait attendre la fin de deux animations pour rien.
 
+
+## 2026-11-06 — Version 1.2.0+11 et envoi TestFlight
+
+**Quoi.** `pubspec.yaml` passe à `1.2.0+11` et le workflow Codemagic `release` envoie l'IPA vers
+TestFlight. Google Play reste coupé.
+
+**Pourquoi.** Florent veut tester le mode Fiesta sur iPhone, et un IPA `app_store` ne s'installe que
+par TestFlight. `+11` : le suivi du projet impose au moins ce numéro sur les deux stores.
+
+**Conséquence.** Le tag `v1.2.0+11` lance le build. Rien ne part au public sans une action manuelle
+dans App Store Connect. Si des corrections suivent, le prochain build prend `+12`.

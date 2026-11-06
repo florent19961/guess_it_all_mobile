@@ -92,13 +92,12 @@ Config : `codemagic.yaml` à la racine. Machine `mac_mini_m2` (builde Android ET
 | `dry-run` | **manuel** (UI Codemagic) | pub get → analyze → test → AAB signé → IPA signée → artefacts |
 | `release` | push d'un tag **`v*`** | garde « tag = `v` + version de `pubspec.yaml` », puis idem `dry-run` |
 
-### 🔴 Publication désactivée — volontairement
+### 🔴 Ce que `release` envoie
 
-Décision Florent : **une seule release, après le mode Fiesta**. Aucun workflow ne publie sur Play
-ni sur App Store Connect aujourd'hui. Le bloc `publishing` (Play track `internal` + TestFlight) est
-**présent mais commenté** dans `release` ; à la 1re release : le décommenter, ajouter le groupe
-`gia-google-play` à l'environnement, et seulement sur go explicite de Florent. D'ici là, les
-artefacts (AAB/IPA) se téléchargent depuis Codemagic et s'uploadent à la main si besoin.
+Décision Florent : le workflow `release` envoie l'IPA **vers TestFlight seulement**. La mise en
+production se fait à la main dans App Store Connect. Google Play reste coupé : le bloc `google_play`
+est commenté, l'AAB se télécharge depuis Codemagic. Pour l'activer (track `internal`) : le
+décommenter, ajouter le groupe `gia-google-play` à l'environnement, sur go explicite de Florent.
 
 ### Secrets à créer dans Codemagic (une fois — jamais dans le dépôt, il est PUBLIC)
 

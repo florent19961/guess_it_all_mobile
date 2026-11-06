@@ -1,9 +1,8 @@
 # Builds cloud Codemagic — Android AAB + iOS IPA depuis un clone propre, sans Mac branché.
 # Runbook (secrets à créer, comment couper une release) : docs/releases-stores.md §Codemagic.
 #
-# 🔴 AUCUNE PUBLICATION AUJOURD'HUI (décision Florent) : une seule release, après le mode Fiesta.
-# Les deux workflows BUILDENT et gardent les artefacts. Le bloc `publishing` de `release` est
-# présent mais commenté — à activer à la 1re release.
+# Les deux workflows BUILDENT et gardent les artefacts. Seul `release` envoie, et seulement vers
+# TestFlight (décision Florent). Google Play reste coupé, et rien ne part au public d'ici.
 #
 # Noms à créer côté Codemagic (placeholders, cf. runbook) :
 #   - keystore Android (Code signing identities) : gia-android-signing
@@ -97,7 +96,7 @@ workflows:
 
   # (b) Release — déclenchée par un tag `v*` (ex. v1.1.3+10).
   release:
-    name: Release (tag v*) — build seulement, publication désactivée
+    name: Release (tag v*) — build et envoi TestFlight
     instance_type: mac_mini_m2
     max_build_duration: 60
     integrations:
@@ -127,13 +126,12 @@ workflows:
       - *ios_signing
       - *build_ipa
     artifacts: *artifacts
-    # 🔴 PUBLICATION DÉSACTIVÉE — à activer à la 1re release (après le mode Fiesta), sur go Florent.
-    # Pour activer : décommenter, et ajouter `gia-google-play` aux groups de l'environnement.
-    # Rappel Google Play : le tout 1er upload d'une app se fait à la main (déjà le cas ici).
-    # publishing:
-    #   google_play:
-    #     credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
-    #     track: internal
-    #   app_store_connect:
-    #     auth: integration
-    #     submit_to_testflight: true
+    # TestFlight seulement (go Florent) : rien ne part au public. La mise en production reste manuelle.
+    # Google Play reste coupé : pour l'activer, décommenter et ajouter `gia-google-play` aux groups.
+    publishing:
+      # google_play:
+      #   credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
+      #   track: internal
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
