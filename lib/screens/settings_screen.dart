@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
-import '../models/fiesta/fiesta_rules.dart';
+import '../models/fiesta/fiesta_ensemble.dart';
 import '../providers/game_provider.dart';
 import '../services/storage_service.dart';
 import '../utils/constants.dart';
@@ -75,8 +75,8 @@ class _SettingsScreenState extends State<SettingsScreen>
   /// Garde contre le double tap : un seul tuto Fiesta.
   bool _tutorialBusy = false;
 
-  /// Classique / Fiesta. L'ensemble se choisit juste après cet écran ; la
-  /// première fois, le tuto Fiesta s'ouvre (clé
+  /// Classique / Fiesta. Fiesta reprend le dernier ensemble, qui se change dans
+  /// Avancés ; la première fois, le tuto Fiesta s'ouvre (clé
   /// `guessItAll_fiestaTutorialSeen`).
   Future<void> _setMode(GameProvider provider, String mode) async {
     if (mode == _classic) {
@@ -84,11 +84,14 @@ class _SettingsScreenState extends State<SettingsScreen>
       return;
     }
     if (provider.pendingFiesta != null) return;
-    provider.setPendingFiesta(FiestaRules());
+    await provider.chooseFiestaMode();
     if (_tutorialBusy) return;
     _tutorialBusy = true;
     try {
-      if (!await StorageService().hasSeenFiestaTutorial() && mounted) {
+      // Le tuto se marque vu en s'ouvrant : pas si on est revenu en Classique.
+      if (!await StorageService().hasSeenFiestaTutorial() &&
+          mounted &&
+          provider.pendingFiesta != null) {
         await FiestaTutorialScreen.show(context);
       }
     } finally {
@@ -96,12 +99,8 @@ class _SettingsScreenState extends State<SettingsScreen>
     }
   }
 
-  /// Fiesta : la liste des ensembles vient avant les joueurs.
-  void _goNext(GameProvider provider) => provider.goToScreen(
-        provider.pendingFiesta != null
-            ? AppConstants.screenFiestaEnsembles
-            : AppConstants.screenPlayers,
-      );
+  void _goNext(GameProvider provider) =>
+      provider.goToScreen(AppConstants.screenPlayers);
 
   @override
   Widget build(BuildContext context) {
@@ -184,6 +183,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                         onChange: (value) => _setMode(provider, value),
                       ),
                     ),
+                    if (provider.pendingFiesta?.ensembleName case final name?
+                        when name != classicEnsemble.name)
+                      _buildEnsembleLine(name),
                     const SizedBox(height: _sectionGap),
 
                     // Choix des mots
@@ -417,6 +419,101 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
+  /// Une seule ligne, quel que soit le nom : l'écran ne doit pas défiler.
+  Widget _buildEnsembleLine(String name) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Text.rich(
+        TextSpan(
+          children: [
+            const TextSpan(text: 'Ensemble : '),
+            TextSpan(
+              text: name,
+              style: const TextStyle(
+                color: AppColors.secondaryCyan,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontFamily: 'Poppins',
+          fontSize: 12,
+          color: AppColors.gray400,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEnsembleRow(
+    BuildContext context,
+    GameProvider provider,
+    String name,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).pop();
+        provider.goToScreen(AppConstants.screenFiestaEnsembles);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.gray600, width: 1.5),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Ensemble Fiesta',
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 12,
+                      color: AppColors.gray400,
+                    ),
+                  ),
+                  Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'Changer',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppColors.secondaryCyan,
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              color: AppColors.secondaryCyan,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   /// Espace entre deux sections (serré : l'écran tient sans défiler).
   static const double _sectionGap = 16;
 
@@ -568,6 +665,12 @@ class _SettingsScreenState extends State<SettingsScreen>
                     setState(() {});
                   },
                 ),
+
+                if (provider.pendingFiesta case final rules?) ...[
+                  const SizedBox(height: 16),
+                  _buildEnsembleRow(
+                      context, provider, rules.ensembleName ?? ''),
+                ],
 
                 // Réinitialiser (ancien bouton rond du coin haut droit) : ferme
                 // « Avancés », puis la même confirmation qu'avant. Un peu d'air

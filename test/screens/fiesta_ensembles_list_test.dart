@@ -56,7 +56,7 @@ Future<void> pumpList(
       })),
   });
   await tester.pumpWidget(MaterialApp(
-    home: FiestaEnsemblesScreen(onBack: () {}, onNext: (_) {}),
+    home: FiestaEnsemblesScreen(onBack: () {}, onValidate: (_) {}),
   ));
   await settle(tester);
 }
@@ -86,10 +86,10 @@ Future<void> select(WidgetTester tester, String name) async {
 }
 
 /// La ligne doit tenir dans la liste, entre la bande des boutons du haut et la
-/// barre « Suivant ». Plus haute (règles extrêmes) : son haut d'abord.
+/// barre « Valider ». Plus haute (règles extrêmes) : son haut d'abord.
 void expectFullyVisible(WidgetTester tester, String name) {
   final row = tester.getRect(rowOf(name));
-  final bar = tester.getTopLeft(find.text('Suivant')).dy;
+  final bar = tester.getTopLeft(find.text('Valider')).dy;
   expect(row.top, greaterThanOrEqualTo(72), reason: name);
   if (row.height <= bar - 72) {
     expect(row.bottom, lessThanOrEqualTo(bar), reason: name);
@@ -333,7 +333,7 @@ void main() {
     });
     await tester.pumpWidget(MaterialApp(
       home: FiestaEnsemblesScreen(
-          onBack: () {}, onNext: (_) {}, selected: mine.last),
+          onBack: () {}, onValidate: (_) {}, selected: mine.last),
     ));
     await settle(tester);
     expectFullyVisible(tester, 'Mien 9');

@@ -61,7 +61,7 @@ class GameProvider extends ChangeNotifier {
   GameState get game => _game;
   bool get isFiesta => _game.fiesta != null;
 
-  /// Choix Fiesta fait sur les Paramètres et l'ensemble choisi juste après, en
+  /// Choix Fiesta fait sur les Paramètres et son ensemble (changé dans Avancés), en
   /// attente de `startGame`. Nul = Classique. Les règles restent en mémoire ; le
   /// CHOIX survit à l'app tuée et à « Nouvelle partie »
   /// (`GameSettings.fiestaEnabled` et `replayFiesta`, `lastUsedId` des ensembles :
@@ -70,7 +70,12 @@ class GameProvider extends ChangeNotifier {
   FiestaRules? get pendingFiesta => _pendingFiesta;
   String? get currentEditingPlayerId => _currentEditingPlayerId;
 
+  /// Compte les `setPendingFiesta` : reposer le même objet (Fiesta classique
+  /// validé) est un choix, ce que `identical` seul ne verrait pas.
+  int _pendingChoices = 0;
+
   void setPendingFiesta(FiestaRules? rules) {
+    _pendingChoices++;
     _pendingFiesta = rules;
     _rememberFiestaChoice();
     notifyListeners();
@@ -95,11 +100,48 @@ class GameProvider extends ChangeNotifier {
   Future<FiestaRules?> _rememberedFiesta() async {
     if (!_settings.fiestaEnabled) return null;
     if (_settings.replayFiesta case final rules?) return rules;
+    return _lastUsedEnsembleRules();
+  }
+
+  Future<FiestaRules> _lastUsedEnsembleRules() async {
     final store = await FiestaEnsembleService().load();
     final ensembles = [...kProvidedEnsembles, ...store.ensembles];
     return (ensembles.where((e) => e.id == store.lastUsedId).firstOrNull ??
             classicEnsemble)
         .rules;
+  }
+
+  /// Passe en Fiesta depuis l'interrupteur : le dernier ensemble utilisé, sinon
+  /// Fiesta classique. Fiesta classique d'abord, le temps de relire : le mode
+  /// n'attend jamais sans règles.
+  Future<void> chooseFiestaMode() async {
+    setPendingFiesta(classicEnsemble.rules);
+    await _followLastUsedEnsemble();
+  }
+
+  /// Retour de la liste des ensembles sans valider : rien ne change, sauf si
+  /// l'ensemble en attente y a été modifié ou supprimé. Pas pour des règles
+  /// gelées : partie rejouée pas encore lancée, ou partie suspendue revenue
+  /// jusqu'ici (ses règles, sans lien avec le dernier utilisé).
+  Future<void> refreshPendingEnsemble() async {
+    if (_pendingFiesta?.ensembleName == null ||
+        _settings.replayFiesta != null ||
+        _game.allWords.isNotEmpty) {
+      return;
+    }
+    await _followLastUsedEnsemble();
+  }
+
+  /// Un autre choix fait pendant la relecture l'emporte : par
+  /// `setPendingFiesta` (le compteur) ou par une écriture directe de
+  /// `_pendingFiesta` (`identical`).
+  Future<void> _followLastUsedEnsemble() async {
+    final choices = _pendingChoices;
+    final expected = _pendingFiesta;
+    final rules = await _lastUsedEnsembleRules();
+    if (choices == _pendingChoices && identical(_pendingFiesta, expected)) {
+      setPendingFiesta(rules);
+    }
   }
 
   // Setter pour le joueur en cours d'édition
@@ -2157,11 +2199,13 @@ class GameProvider extends ChangeNotifier {
     await restartWithSamePlayers();
   }
 
-  // Réinitialise paramètres, joueurs, mots, équipes, état de jeu. Les noms
-  // restent à pré-remplir : seule une saisie les retire.
+  // Réinitialise paramètres, joueurs, mots, équipes, état de jeu, dernier
+  // ensemble utilisé. Les noms restent à pré-remplir : seule une saisie les
+  // retire. Les ensembles créés restent.
   Future<void> clearLocalStorage() async {
     await _storage.clearGameState();
     await _storage.clearGameSession();
+    await FiestaEnsembleService().forgetLastUsed();
     _settings = GameSettings.initial();
     await _saveSettings();
     _players = [];

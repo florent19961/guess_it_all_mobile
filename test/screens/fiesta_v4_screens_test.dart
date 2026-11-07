@@ -653,7 +653,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(
       home: FiestaEnsemblesScreen(
         onBack: () {},
-        onNext: (rules) => chosen = rules,
+        onValidate: (rules) => chosen = rules,
       ),
     ));
     await settle(tester);
@@ -674,7 +674,7 @@ void main() {
 
     await tester.tap(find.text('Pro Player'));
     await tester.pump();
-    await tester.tap(find.text('Suivant'));
+    await tester.tap(find.text('Valider'));
     await settle(tester);
     expect(chosen?.ensembleName, 'Pro Player');
   });
@@ -687,7 +687,7 @@ void main() {
     addTearDown(tester.view.reset);
     await givenPrefs();
     await tester.pumpWidget(MaterialApp(
-        home: FiestaEnsemblesScreen(onBack: () {}, onNext: (_) {})));
+        home: FiestaEnsemblesScreen(onBack: () {}, onValidate: (_) {})));
     await settle(tester);
 
     await tester.tap(find.text('Droit au but'));
