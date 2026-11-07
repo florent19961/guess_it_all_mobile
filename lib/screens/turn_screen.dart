@@ -28,8 +28,6 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
 
   final _timerKey = GlobalKey();
   final _modifiersKey = GlobalKey();
-  final _blockedGuesserKey = GlobalKey();
-  final _freePassesKey = GlobalKey();
   final _endTurnKey = GlobalKey();
   final _wordKey = GlobalKey();
   final _guessedKey = GlobalKey();
@@ -106,6 +104,14 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
     await show();
     if (wasRunning && !_wentBackground && mounted) provider.resumeTurn();
   }
+
+  /// Ce que dit la bulle du bouton Passer grisé.
+  String? _passBubble(PassState state) => switch (state) {
+        PassState.available => null,
+        PassState.blocked => 'Interdit de passer ce tour',
+        PassState.notEnoughTime => 'Plus assez de temps pour passer',
+        PassState.lastWord => 'Plus d\'autre mot à passer',
+      };
 
   void _togglePause(BuildContext context, GameProvider provider) {
     if (_isPausedOf(provider)) {
@@ -295,12 +301,26 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
     final hasFreePass = provider.hasFreePass;
     final hasWordsToPassTo = provider.effectiveRemainingWordsCount > 0;
     final canPass = provider.canPassWith(timeRemaining) && hasWordsToPassTo;
-    final passLabel = provider.passBlocked ? 'Passer (bloqué)' : 'Passer';
     final passDetail = hasFreePass
-        ? 'gratuit'
+        ? '(gratuit)'
         : passPenalty > 0
             ? '-${passPenalty}s'
             : null;
+    final passState = provider.passBlocked
+        ? PassState.blocked
+        : !hasWordsToPassTo
+            ? PassState.lastWord
+            : canPass
+                ? PassState.available
+                : PassState.notEnoughTime;
+    // Pastilles : un id sans mini-phrase n'en a pas (`block_giver`, `two_words`
+    // relu d'une ancienne partie), la Passe gratuite part une fois utilisée.
+    final modifierPills = provider.turnModifiers
+        .where((m) => modifierById(m.catalogId)?.turnLabel != null)
+        .toList();
+    final bonusPills = provider.spentBonuses
+        .where((id) => id != 'free_pass' || hasFreePass)
+        .toList();
 
     return Material(
       color: AppColors.backgroundMain,
@@ -377,16 +397,18 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                         ),
 
                         // Fiesta : modificateurs du tour, sous le chrono.
-                        if (provider.turnModifiers.isNotEmpty ||
-                            provider.spentBonuses.isNotEmpty) ...[
+                        if (modifierPills.isNotEmpty ||
+                            bonusPills.isNotEmpty) ...[
                           const SizedBox(height: 8),
                           ModifierBadges(
                             key: _modifiersKey,
-                            modifiers: provider.turnModifiers,
+                            modifiers: modifierPills,
+                            playerName: (id) =>
+                                provider.getPlayerById(id)?.name,
                             wrapExplain: (show) => _whilePaused(provider, show),
                             extra: [
-                              for (final id in provider.spentBonuses)
-                                ModifierBadge.catalog(
+                              for (final id in bonusPills)
+                                ModifierBadge.turn(
                                   id,
                                   nature: ModifierNature.bonus,
                                   wrapExplain: (show) =>
@@ -394,31 +416,6 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                                 ),
                             ],
                           ),
-                          if (provider.blockedGuesser case final blocked?) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              '${blocked.name} ne répond pas ce tour.',
-                              key: _blockedGuesserKey,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 13,
-                                color: AppColors.malus,
-                              ),
-                            ),
-                          ],
-                          if (provider.freePasses > 0) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              'Passes gratuites : ${provider.freePassesUsed} / ${provider.freePasses}',
-                              key: _freePassesKey,
-                              style: const TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 13,
-                                color: AppColors.secondaryCyan,
-                              ),
-                            ),
-                          ],
                           const SizedBox(height: 16),
                         ] else
                           const SizedBox(height: 32),
@@ -462,8 +459,8 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                   TurnActionButtons(
                     passKey: _passKey,
                     guessedKey: _guessedKey,
-                    passLabel: passLabel,
                     passDetail: passDetail,
+                    passBlockedReason: isPaused ? null : _passBubble(passState),
                     onPass: canPass && !isPaused
                         ? () {
                             HapticFeedback.mediumImpact();
@@ -538,16 +535,8 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                 turnHelp(
                   timer: _timerKey,
                   modifiers: _modifiersKey,
-                  blockedGuesser: _blockedGuesserKey,
-                  freePasses: _freePassesKey,
                   endTurn: _endTurnKey,
-                  passState: provider.passBlocked
-                      ? PassState.blocked
-                      : !hasWordsToPassTo
-                          ? PassState.lastWord
-                          : canPass
-                              ? PassState.available
-                              : PassState.notEnoughTime,
+                  passState: passState,
                   reversed: provider.isWordReversed,
                   word: _wordKey,
                   guessed: _guessedKey,

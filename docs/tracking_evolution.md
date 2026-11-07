@@ -1320,3 +1320,29 @@ la maquette validée : les séparer à chaque image les ferait sauter. `entryOfC
 - `resolveTurn(expiredWords:)` garde sa forme de liste, avec au plus un mot : pas de réécriture du scoring sans gain.
 - Réserve d'Explosif en manche 3 : 14 sortes de cartouches tiennent sans défiler à 360 × 640 (test). 15 sortes (moins
   de 1 % des parties, simulation) et 16 (quasi jamais) font défiler la zone.
+
+## 2026-11-07 — Écran de tour et icônes des modificateurs (retours Florent, lot 3)
+
+**Quoi.** `modifierIcon()` collé dans du texte laisse place à un composant unique `ModifierIcon(id, size)` : images
+`assets/icons/modifiers/`, émojis `🌍`, `🤐`, `💪` et `👀` (les deux derniers barrés par `slash.png`). Écran de tour :
+pastilles icône + `turnLabel`, compteur de passes gratuites et ligne « Bob ne répond pas » retirés (avec leurs étapes
+d'aide), bouton Passer grisé réduit à son libellé, bulle au toucher. Puce d'envoi : un toucher annule, sans fenêtre.
+
+**Pourquoi.**
+
+- Un composant plutôt qu'une String : un émoji collé dans du Poppins hérite des métriques de la ligne, d'où le « mal
+  centré dans le rond ». Le calage commun (`height: 1`, strut forcée, pas de police héritée) vaut pour toutes les tailles.
+- Cercles allumés et reçus de l'avant-tour : fond teinté, plus plein. Les images ne se recolorent pas, et le chrono vert
+  de `plus_10s` ou rouge de `minus_10s` disparaîtrait sur sa propre couleur.
+- La raison de la bulle se déduit de `PassState` dans `turn_screen.dart`, la même que pour l'aide : le provider ne bouge
+  pas, et la bulle ne peut ni agir sur le chrono ni contredire l'aide.
+- `AnimationController` plutôt que `Timer` pour la bulle : pas de minuterie à annuler, et les rebuilds du chrono ne la
+  relancent pas.
+
+**Conséquence.** `kModifierIcons` reste entier tant que `score_reveal_chart.dart` dessine ses bulles ; il se réduit à
+`two_words` une fois le lot `retours-reveal` mergé. Centrage des émojis à vérifier sur iPhone et Android : ni Apple Color
+Emoji ni Noto ne tournent dans les tests.
+
+Revue : la rangée des boutons est à 114 px fixes et Passer rétrécit (`FittedBox`), au lieu d'une hauteur intrinsèque
+qui étirait la rangée vers 170 % de taille de texte, et l'émoji ignore la taille de texte système, sinon il sort de sa
+boîte et de sa barre.

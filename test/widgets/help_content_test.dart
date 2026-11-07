@@ -19,8 +19,6 @@ void main() {
         turnHelp(
           timer: GlobalKey(),
           modifiers: GlobalKey(),
-          blockedGuesser: GlobalKey(),
-          freePasses: GlobalKey(),
           word: GlobalKey(),
           guessed: GlobalKey(),
           pass: GlobalKey(),

@@ -9,7 +9,6 @@ import '../../models/fiesta/turn_effects.dart';
 import '../../models/team.dart';
 import '../../providers/game_provider.dart';
 import '../../theme/app_theme.dart';
-import '../common/app_confirm_dialog.dart';
 import '../help/help_content.dart';
 import 'modifier_badge.dart';
 
@@ -278,10 +277,12 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                   style: AppTextStyles.subtitle(fontSize: 26)
                       .copyWith(shadows: const [])),
               const SizedBox(height: 4),
-              Text('${modifierIcon(id)} ${def.name}',
-                  textAlign: TextAlign.center,
+              ModifierHeading(
+                  id: id,
+                  text: def.name,
                   style: AppTextStyles.bodySmall
-                      .copyWith(color: AppColors.gray400)),
+                      .copyWith(color: AppColors.gray400),
+                  iconSize: 20),
               const SizedBox(height: 14),
               for (final team in targets) ...[
                 _TeamButton(
@@ -323,9 +324,11 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('${modifierIcon(id)} ${def.name}',
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.subtitle(fontSize: 26)),
+              ModifierHeading(
+                  id: id,
+                  text: def.name,
+                  style: AppTextStyles.subtitle(fontSize: 26),
+                  iconSize: 28),
               // À 2 équipes, on sait d'où ça vient.
               if (from != null && _p.teams.length > 2)
                 Text('Reçu de l\'équipe $from', style: hint),
@@ -555,7 +558,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
   }
 
   /// Puce d'un malus envoyé : le joueur nommé pour un blocage ; sinon l'équipe
-  /// visée, ou « Envoyé » à 2 équipes. Un appui propose de l'annuler.
+  /// visée, ou « Envoyé » à 2 équipes. Un appui l'annule.
   Widget _sentChip(ModifierInstance m) {
     final index = _p.teams.indexWhere((t) => t.id == m.teamId);
     final team = _p.getTeamById(m.teamId!)?.name ?? '';
@@ -565,17 +568,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
             ? 'Envoyé'
             : '→ ${team.length > 8 ? '${team.substring(0, 8)}…' : team}');
     return GestureDetector(
-      onTap: () async {
-        final cancel = await AppConfirmDialog.show(
-          context,
-          title: 'Annuler l\'envoi ?',
-          message: '${_name(m.catalogId)} → ${player?.name ?? team} : la '
-              'cartouche revient dans ta réserve.',
-          confirmText: 'Annuler l\'envoi',
-          cancelText: 'Garder',
-        );
-        if (cancel && mounted) _p.cancelSent(m);
-      },
+      onTap: () => _p.cancelSent(m),
       child: Container(
         width: _sentChipWidth,
         height: _sentChipHeight,
@@ -596,12 +589,8 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.malus, width: 1.5),
               ),
-              child: Text(modifierIcon(m.catalogId),
-                  style: const TextStyle(
-                      fontSize: 9,
-                      height: 1,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.malus)),
+              child:
+                  ModifierIcon(m.catalogId, size: 15, color: AppColors.malus),
             ),
             Expanded(
               child: Text(
@@ -756,7 +745,7 @@ class _ZoneTitle extends StatelessWidget {
 }
 
 /// Cercle d'icône (maquette `.circ`) : règle de manche (neutre, « manche »),
-/// malus reçu (rouge plein, ↓), bonus allumé (vert plein, ✓), cartouche en
+/// malus reçu (teinté rouge, ↓), bonus allumé (teinté vert, ✓), cartouche en
 /// réserve (sombre à liseré, pastille du nombre restant ; grisé si épuisé ou
 /// incompatible).
 class _Circle extends StatelessWidget {
@@ -781,7 +770,6 @@ class _Circle extends StatelessWidget {
     final c = cartridge;
     final dimmed = kind == _Kind.reserve && c != null && !c.usable;
     final ring = dimmed ? AppColors.gray600 : color;
-    final scale = size / _maxSize;
 
     final Widget? corner = switch (kind) {
       // L'étiquette déborde du cercle quand il rapetisse.
@@ -865,27 +853,17 @@ class _Circle extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
+                // Teinté, pas plein : les icônes ne se recolorent pas, et le
+                // chrono vert de « +10 s » disparaîtrait sur du vert.
                 color: filled
-                    ? color
+                    ? Color.alphaBlend(color.withValues(alpha: 0.3), _ink)
                     : rule
                         ? Colors.white.withValues(alpha: 0.08)
                         : _ink,
                 border: Border.all(color: ring, width: 2),
               ),
-              child: Text(
-                modifierIcon(id),
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 17 * scale,
-                  height: 1,
-                  fontWeight: FontWeight.w700,
-                  color: filled
-                      ? _ink
-                      : dimmed
-                          ? AppColors.gray500
-                          : color,
-                ),
-              ),
+              child: ModifierIcon(id,
+                  size: size * 0.78, color: filled ? Colors.white : color),
             ),
             if (corner != null) corner,
           ],

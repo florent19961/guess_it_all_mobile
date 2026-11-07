@@ -1,0 +1,1552 @@
+diff --git a/assets/icons/modifiers/block_giver.png b/assets/icons/modifiers/block_giver.png
+new file mode 100644
+index 0000000..621ee78
+Binary files /dev/null and b/assets/icons/modifiers/block_giver.png differ
+diff --git a/assets/icons/modifiers/double_points.png b/assets/icons/modifiers/double_points.png
+new file mode 100644
+index 0000000..00491c0
+Binary files /dev/null and b/assets/icons/modifiers/double_points.png differ
+diff --git a/assets/icons/modifiers/draw.png b/assets/icons/modifiers/draw.png
+new file mode 100644
+index 0000000..7f46fd7
+Binary files /dev/null and b/assets/icons/modifiers/draw.png differ
+diff --git a/assets/icons/modifiers/free_pass.png b/assets/icons/modifiers/free_pass.png
+new file mode 100644
+index 0000000..c2a5b62
+Binary files /dev/null and b/assets/icons/modifiers/free_pass.png differ
+diff --git a/assets/icons/modifiers/mime_back_turned.png b/assets/icons/modifiers/mime_back_turned.png
+new file mode 100644
+index 0000000..a5a6182
+Binary files /dev/null and b/assets/icons/modifiers/mime_back_turned.png differ
+diff --git a/assets/icons/modifiers/mime_no_fists.png b/assets/icons/modifiers/mime_no_fists.png
+new file mode 100644
+index 0000000..0965622
+Binary files /dev/null and b/assets/icons/modifiers/mime_no_fists.png differ
+diff --git a/assets/icons/modifiers/mime_under_sheet.png b/assets/icons/modifiers/mime_under_sheet.png
+new file mode 100644
+index 0000000..6960273
+Binary files /dev/null and b/assets/icons/modifiers/mime_under_sheet.png differ
+diff --git a/assets/icons/modifiers/minus_10s.png b/assets/icons/modifiers/minus_10s.png
+new file mode 100644
+index 0000000..519e485
+Binary files /dev/null and b/assets/icons/modifiers/minus_10s.png differ
+diff --git a/assets/icons/modifiers/no_pass.png b/assets/icons/modifiers/no_pass.png
+new file mode 100644
+index 0000000..0ad3612
+Binary files /dev/null and b/assets/icons/modifiers/no_pass.png differ
+diff --git a/assets/icons/modifiers/one_answer.png b/assets/icons/modifiers/one_answer.png
+new file mode 100644
+index 0000000..4e53bb5
+Binary files /dev/null and b/assets/icons/modifiers/one_answer.png differ
+diff --git a/assets/icons/modifiers/plus_10s.png b/assets/icons/modifiers/plus_10s.png
+new file mode 100644
+index 0000000..a7b8093
+Binary files /dev/null and b/assets/icons/modifiers/plus_10s.png differ
+diff --git a/assets/icons/modifiers/reversed.png b/assets/icons/modifiers/reversed.png
+new file mode 100644
+index 0000000..9ab0c84
+Binary files /dev/null and b/assets/icons/modifiers/reversed.png differ
+diff --git a/assets/icons/modifiers/slash.png b/assets/icons/modifiers/slash.png
+new file mode 100644
+index 0000000..8c93cde
+Binary files /dev/null and b/assets/icons/modifiers/slash.png differ
+diff --git a/assets/icons/modifiers/sounds_only.png b/assets/icons/modifiers/sounds_only.png
+new file mode 100644
+index 0000000..13fd908
+Binary files /dev/null and b/assets/icons/modifiers/sounds_only.png differ
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index f3eacd0..7d909f9 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -1302,3 +1302,25 @@ dans App Store Connect. Si des corrections suivent, le prochain build prend `+12
+ - `resolveTurn(expiredWords:)` garde sa forme de liste, avec au plus un mot : pas de réécriture du scoring sans gain.
+ - Réserve d'Explosif en manche 3 : 14 sortes de cartouches tiennent sans défiler à 360 × 640 (test). 15 sortes (moins
+   de 1 % des parties, simulation) et 16 (quasi jamais) font défiler la zone.
++
++## 2026-11-07 — Écran de tour et icônes des modificateurs (retours Florent, lot 3)
++
++**Quoi.** `modifierIcon()` collé dans du texte laisse place à un composant unique `ModifierIcon(id, size)` : images
++`assets/icons/modifiers/`, émojis `🌍`, `🤐`, `💪` et `👀` (les deux derniers barrés par `slash.png`). Écran de tour :
++pastilles icône + `turnLabel`, compteur de passes gratuites et ligne « Bob ne répond pas » retirés (avec leurs étapes
++d'aide), bouton Passer grisé réduit à son libellé, bulle au toucher. Puce d'envoi : un toucher annule, sans fenêtre.
++
++**Pourquoi.**
++
++- Un composant plutôt qu'une String : un émoji collé dans du Poppins hérite des métriques de la ligne, d'où le « mal
++  centré dans le rond ». Le calage commun (`height: 1`, strut forcée, pas de police héritée) vaut pour toutes les tailles.
++- Cercles allumés et reçus de l'avant-tour : fond teinté, plus plein. Les images ne se recolorent pas, et le chrono vert
++  de `plus_10s` ou rouge de `minus_10s` disparaîtrait sur sa propre couleur.
++- La raison de la bulle se déduit de `PassState` dans `turn_screen.dart`, la même que pour l'aide : le provider ne bouge
++  pas, et la bulle ne peut ni agir sur le chrono ni contredire l'aide.
++- `AnimationController` plutôt que `Timer` pour la bulle : pas de minuterie à annuler, et les rebuilds du chrono ne la
++  relancent pas.
++
++**Conséquence.** `kModifierIcons` reste entier tant que `score_reveal_chart.dart` dessine ses bulles ; il se réduit à
++`two_words` une fois le lot `retours-reveal` mergé. Centrage des émojis à vérifier sur iPhone et Android : ni Apple Color
++Emoji ni Noto ne tournent dans les tests.
+diff --git a/lib/screens/CLAUDE.md b/lib/screens/CLAUDE.md
+index 3f586d1..f31c8e8 100644
+--- a/lib/screens/CLAUDE.md
++++ b/lib/screens/CLAUDE.md
+@@ -23,9 +23,9 @@ HomeScreen → SettingsScreen (Classique / Fiesta)
+ | `players_screen.dart` | Saisie noms joueurs (pre-remplis par `GameProvider.nextSavedName` ; les effacer est le seul moyen de les retirer) + generation mots aleatoires avec cache metadata. Retour (bouton et systeme) → Parametres (Fiesta : → ensembles) |
+ | `words_screen.dart` | Saisie mots par joueur (mode personnalise). Bouton "Grosse flemme" pour auto-remplir. Retour (bouton et systeme) → joueurs, mots sauvegardes |
+ | `teams_screen.dart` | Composition equipes par drag-and-drop, noms editables, bouton aleatoire. Retour (bouton et systeme) → joueurs. « Commencer » lance la partie (avec `pendingFiesta`, l'ensemble deja choisi) |
+-| `game_screen.dart` | Pre-tour : manche, grande carte d'equipe (Classique et Fiesta : nom d'equipe en Bangers couleur, joueur dessous, « N mots restants » + « N mots »). Fiesta : `FiestaTurnZone`, sans defilement dans les cas realistes (Explosif) ; un cas extreme defile dans la zone, jamais sous le bouton : « ACTIF PENDANT VOTRE PROCHAIN TOUR » puis « VOTRE RESERVE ». Sur petit ecran dans les cas charges seulement (`FiestaTurnZone.fitsIn`), la carte se resserre. Lien discret « ↻ Reprendre les choix de X » apres le piege. A 2 equipes : ni « contre X » ni « bloque par X », pastille « ⇄ Envoye », « 🚫 Bob ». Le temps reporte s'affiche comme en Classique |
++| `game_screen.dart` | Pre-tour : manche, grande carte d'equipe (Classique et Fiesta : nom d'equipe en Bangers couleur, joueur dessous, « N mots restants » + « N mots »). Fiesta : `FiestaTurnZone`, sans defilement dans les cas realistes (Explosif) ; un cas extreme defile dans la zone, jamais sous le bouton : « ACTIF PENDANT VOTRE PROCHAIN TOUR » puis « VOTRE RESERVE ». Sur petit ecran dans les cas charges seulement (`FiestaTurnZone.fitsIn`), la carte se resserre. Lien discret « ↻ Reprendre les choix de X » apres le piege. A 2 equipes : ni « contre X » ni « bloque par X », pastille « ⇄ Envoye », icone de blocage + « Bob ». Le temps reporte s'affiche comme en Classique |
+ | `countdown_screen.dart` | Decompte 3-2-1-GO anime, le meme a chaque tour (`AppConstants.countdownTick` / `countdownGoHold`) |
+-| `turn_screen.dart` | Jeu actif : timer, mot courant (auto-size), boutons Passer/Valider (`TurnWordText`, `TurnActionButtons`), pause, sons, haptic. Chrono a zero : `endTurn` directement dans le callback du Timer, jamais dans un `addPostFrameCallback` (il ne demande pas de frame, le tour restait sur « 1s » jusqu'a un toucher). |
++| `turn_screen.dart` | Jeu actif : timer, mot courant (auto-size), boutons Passer/Valider (`TurnWordText`, `TurnActionButtons`), pause, sons, haptic. Fiesta : pastilles du tour (icone + `turnLabel`, « Bob ne répond pas » pour le joueur bloque, pas de pastille sans `turnLabel`, Passe gratuite retiree une fois utilisee). La raison de la bulle de Passer se deduit de `PassState`, comme l'aide. Chrono a zero : `endTurn` directement dans le callback du Timer, jamais dans un `addPostFrameCallback` (il ne demande pas de frame, le tour restait sur « 1s » jusqu'a un toucher). |
+ | `verification_screen.dart` | Validation post-tour : toggle valid/invalide par mot, sauvegarde snapshot |
+ | `transition_screen.dart` | Fin de manche, Classique et Fiesta, aucun score. Apres M1 et M2 : animation ~2,8 s (`_RoundStage`, sons `impact-bass-1` et `whoosh-short`, vibration, un toucher fait passer, animations reduites respectees) puis `nextRound`, directement vers l'avant-tour. Apres M3 : ecran fixe (retour, « Voir les N mots devines », « Voir les resultats ») |
+ | `giver_blocked_screen.dart` | Le piege d'« Interdit de faire deviner » : phrase, « Passe le telephone a X. », « Suivant » (`confirmGiverBlock`). Rien n'est consomme avant : une app tuee la remontre |
+diff --git a/lib/screens/challenge_route_screen.dart b/lib/screens/challenge_route_screen.dart
+index 0b1251d..65c94b0 100644
+--- a/lib/screens/challenge_route_screen.dart
++++ b/lib/screens/challenge_route_screen.dart
+@@ -5,7 +5,6 @@ import '../models/fiesta/challenge_plan.dart';
+ import '../models/fiesta/modifier_catalog.dart';
+ import '../providers/game_provider.dart';
+ import '../theme/app_theme.dart';
+-import '../widgets/fiesta/modifier_badge.dart';
+ import 'surprise_challenge_screen.dart';
+ 
+ /// Branche [SurpriseChallengeScreen], autonome, sur la partie : traduit le plan
+@@ -64,7 +63,7 @@ class ChallengeRouteScreen extends StatelessWidget {
+   ChallengeReward _reward(String id) {
+     final def = modifierById(id)!;
+     return ChallengeReward(
+-      icon: modifierIcon(id),
++      modifierId: id,
+       name: def.name,
+       isMalus: def.nature == ModifierNature.malus,
+     );
+diff --git a/lib/screens/fiesta_ensemble_editor_screen.dart b/lib/screens/fiesta_ensemble_editor_screen.dart
+index 51950a2..56f46b3 100644
+--- a/lib/screens/fiesta_ensemble_editor_screen.dart
++++ b/lib/screens/fiesta_ensemble_editor_screen.dart
+@@ -502,11 +502,7 @@ class _FiestaEnsembleEditorScreenState
+                 color: color.withValues(alpha: 0.14),
+                 border: Border.all(color: color, width: 1.5),
+               ),
+-              child: Text(
+-                modifierIcon(def.id),
+-                style: TextStyle(
+-                    fontSize: 13, fontWeight: FontWeight.w700, color: color),
+-              ),
++              child: ModifierIcon(def.id, size: 26, color: color),
+             ),
+             const SizedBox(width: 10),
+             Expanded(
+diff --git a/lib/screens/fiesta_ensemble_view_screen.dart b/lib/screens/fiesta_ensemble_view_screen.dart
+index 9eb8f22..21c3f74 100644
+--- a/lib/screens/fiesta_ensemble_view_screen.dart
++++ b/lib/screens/fiesta_ensemble_view_screen.dart
+@@ -206,10 +206,7 @@ class _Row extends StatelessWidget {
+               color: color.withValues(alpha: 0.18),
+               border: Border.all(color: color.withValues(alpha: 0.6)),
+             ),
+-            child: Text(
+-              modifierIcon(def.id),
+-              style: TextStyle(fontSize: 14, color: color),
+-            ),
++            child: ModifierIcon(def.id, size: 26, color: color),
+           ),
+           const SizedBox(width: 10),
+           Expanded(
+diff --git a/lib/screens/giver_blocked_screen.dart b/lib/screens/giver_blocked_screen.dart
+index 9af8d8d..e523d62 100644
+--- a/lib/screens/giver_blocked_screen.dart
++++ b/lib/screens/giver_blocked_screen.dart
+@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
+ import '../providers/game_provider.dart';
+ import '../theme/app_theme.dart';
+ import '../widgets/common/app_button.dart';
++import '../widgets/fiesta/modifier_badge.dart';
+ 
+ /// Le piège d'« Interdit de faire deviner » : après son décompte, le joueur
+ /// découvre qu'il ne joue pas ce tour. Rien n'est consommé avant « Suivant »
+@@ -29,7 +30,7 @@ class GiverBlockedScreen extends StatelessWidget {
+                     child: SingleChildScrollView(
+                       child: Column(
+                         children: [
+-                          const Text('🚫', style: TextStyle(fontSize: 52)),
++                          const ModifierIcon('block_giver', size: 64),
+                           const SizedBox(height: 14),
+                           Text(
+                             screen?.phrase ?? '',
+diff --git a/lib/screens/stats_screen.dart b/lib/screens/stats_screen.dart
+index 10f923a..d0b4b06 100644
+--- a/lib/screens/stats_screen.dart
++++ b/lib/screens/stats_screen.dart
+@@ -675,22 +675,13 @@ class _StatsScreenState extends State<StatsScreen> {
+         key: const ValueKey('chart-badge'),
+         width: size,
+         height: size,
+-        padding: const EdgeInsets.all(3),
++        alignment: Alignment.center,
+         decoration: BoxDecoration(
+           color: AppColors.backgroundMain,
+           shape: BoxShape.circle,
+           border: Border.all(color: color, width: 1.5),
+         ),
+-        child: FittedBox(
+-          child: Text(
+-            modifierIcon(catalogId),
+-            style: TextStyle(
+-              fontFamily: 'Poppins',
+-              fontWeight: FontWeight.w700,
+-              color: color,
+-            ),
+-          ),
+-        ),
++        child: ModifierIcon(catalogId, size: size * 0.78, color: color),
+       ),
+     );
+   }
+diff --git a/lib/screens/surprise_challenge_screen.dart b/lib/screens/surprise_challenge_screen.dart
+index 8bec8b7..79be3f7 100644
+--- a/lib/screens/surprise_challenge_screen.dart
++++ b/lib/screens/surprise_challenge_screen.dart
+@@ -7,6 +7,7 @@ import '../models/fiesta/surprise_challenge.dart';
+ import '../services/challenge_sounds.dart';
+ import '../theme/app_theme.dart';
+ import '../widgets/common/app_button.dart';
++import '../widgets/fiesta/modifier_badge.dart';
+ 
+ const kVersusDuration = Duration(milliseconds: 1900);
+ const kRouletteDuration =
+@@ -15,15 +16,14 @@ const kRouletteDuration =
+ const _rouletteTick = 110;
+ const _rouletteTicks = 14;
+ 
+-/// Ce qui défile dans la roulette : (icône, malus).
++/// Ce qui défile dans la roulette : (id du modificateur, malus).
+ const _rouletteItems = [
+-  ('×2', false),
+-  ('⇄', true),
+-  ('+10', false),
+-  ('−10', true),
+-  ('↷', false),
+-  ('🚫', true),
+-  ('⧉', false),
++  ('double_points', false),
++  ('reversed', true),
++  ('plus_10s', false),
++  ('minus_10s', true),
++  ('free_pass', false),
++  ('block_giver', true),
+ ];
+ 
+ /// Un joueur du défi et son équipe. [teammates] : ceux à qui il passe le mime,
+@@ -44,12 +44,12 @@ class ChallengeContender {
+ 
+ /// La cartouche gagnée, déjà tirée par l'appelant.
+ class ChallengeReward {
+-  final String icon;
++  final String modifierId;
+   final String name;
+   final bool isMalus;
+ 
+   const ChallengeReward({
+-    required this.icon,
++    required this.modifierId,
+     required this.name,
+     required this.isMalus,
+   });
+@@ -320,14 +320,12 @@ class _SurpriseChallengeScreenState extends State<SurpriseChallengeScreen> {
+             shape: BoxShape.circle,
+             border: Border.all(color: color, width: 4),
+           ),
+-          child: Text(
+-            _rouletteDone ? _reward.icon : _rouletteItems[_rouletteIndex].$1,
+-            style: TextStyle(
+-              fontFamily: 'Poppins',
+-              fontSize: 36,
+-              fontWeight: FontWeight.w700,
+-              color: color,
+-            ),
++          child: ModifierIcon(
++            _rouletteDone
++                ? _reward.modifierId
++                : _rouletteItems[_rouletteIndex].$1,
++            size: 80,
++            color: color,
+           ),
+         ),
+         Text(
+diff --git a/lib/screens/turn_screen.dart b/lib/screens/turn_screen.dart
+index 1868430..b653ce0 100644
+--- a/lib/screens/turn_screen.dart
++++ b/lib/screens/turn_screen.dart
+@@ -28,8 +28,6 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+ 
+   final _timerKey = GlobalKey();
+   final _modifiersKey = GlobalKey();
+-  final _blockedGuesserKey = GlobalKey();
+-  final _freePassesKey = GlobalKey();
+   final _endTurnKey = GlobalKey();
+   final _wordKey = GlobalKey();
+   final _guessedKey = GlobalKey();
+@@ -107,6 +105,14 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+     if (wasRunning && !_wentBackground && mounted) provider.resumeTurn();
+   }
+ 
++  /// Ce que dit la bulle du bouton Passer grisé.
++  String? _passBubble(PassState state) => switch (state) {
++        PassState.available => null,
++        PassState.blocked => 'Interdit de passer ce tour',
++        PassState.notEnoughTime => 'Plus assez de temps pour passer',
++        PassState.lastWord => 'Plus d\'autre mot à passer',
++      };
++
+   void _togglePause(BuildContext context, GameProvider provider) {
+     if (_isPausedOf(provider)) {
+       provider.resumeTurn();
+@@ -295,12 +301,26 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+     final hasFreePass = provider.hasFreePass;
+     final hasWordsToPassTo = provider.effectiveRemainingWordsCount > 0;
+     final canPass = provider.canPassWith(timeRemaining) && hasWordsToPassTo;
+-    final passLabel = provider.passBlocked ? 'Passer (bloqué)' : 'Passer';
+     final passDetail = hasFreePass
+-        ? 'gratuit'
++        ? '(gratuit)'
+         : passPenalty > 0
+             ? '-${passPenalty}s'
+             : null;
++    final passState = provider.passBlocked
++        ? PassState.blocked
++        : !hasWordsToPassTo
++            ? PassState.lastWord
++            : canPass
++                ? PassState.available
++                : PassState.notEnoughTime;
++    // Pastilles : un id sans mini-phrase n'en a pas (`block_giver`, `two_words`
++    // relu d'une ancienne partie), la Passe gratuite part une fois utilisée.
++    final modifierPills = provider.turnModifiers
++        .where((m) => modifierById(m.catalogId)?.turnLabel != null)
++        .toList();
++    final bonusPills = provider.spentBonuses
++        .where((id) => id != 'free_pass' || hasFreePass)
++        .toList();
+ 
+     return Material(
+       color: AppColors.backgroundMain,
+@@ -377,16 +397,18 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+                         ),
+ 
+                         // Fiesta : modificateurs du tour, sous le chrono.
+-                        if (provider.turnModifiers.isNotEmpty ||
+-                            provider.spentBonuses.isNotEmpty) ...[
++                        if (modifierPills.isNotEmpty ||
++                            bonusPills.isNotEmpty) ...[
+                           const SizedBox(height: 8),
+                           ModifierBadges(
+                             key: _modifiersKey,
+-                            modifiers: provider.turnModifiers,
++                            modifiers: modifierPills,
++                            playerName: (id) =>
++                                provider.getPlayerById(id)?.name,
+                             wrapExplain: (show) => _whilePaused(provider, show),
+                             extra: [
+-                              for (final id in provider.spentBonuses)
+-                                ModifierBadge.catalog(
++                              for (final id in bonusPills)
++                                ModifierBadge.turn(
+                                   id,
+                                   nature: ModifierNature.bonus,
+                                   wrapExplain: (show) =>
+@@ -394,31 +416,6 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+                                 ),
+                             ],
+                           ),
+-                          if (provider.blockedGuesser case final blocked?) ...[
+-                            const SizedBox(height: 6),
+-                            Text(
+-                              '${blocked.name} ne répond pas ce tour.',
+-                              key: _blockedGuesserKey,
+-                              textAlign: TextAlign.center,
+-                              style: const TextStyle(
+-                                fontFamily: 'Poppins',
+-                                fontSize: 13,
+-                                color: AppColors.malus,
+-                              ),
+-                            ),
+-                          ],
+-                          if (provider.freePasses > 0) ...[
+-                            const SizedBox(height: 8),
+-                            Text(
+-                              'Passes gratuites : ${provider.freePassesUsed} / ${provider.freePasses}',
+-                              key: _freePassesKey,
+-                              style: const TextStyle(
+-                                fontFamily: 'Poppins',
+-                                fontSize: 13,
+-                                color: AppColors.secondaryCyan,
+-                              ),
+-                            ),
+-                          ],
+                           const SizedBox(height: 16),
+                         ] else
+                           const SizedBox(height: 32),
+@@ -462,8 +459,8 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+                   TurnActionButtons(
+                     passKey: _passKey,
+                     guessedKey: _guessedKey,
+-                    passLabel: passLabel,
+                     passDetail: passDetail,
++                    passBlockedReason: isPaused ? null : _passBubble(passState),
+                     onPass: canPass && !isPaused
+                         ? () {
+                             HapticFeedback.mediumImpact();
+@@ -538,16 +535,8 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
+                 turnHelp(
+                   timer: _timerKey,
+                   modifiers: _modifiersKey,
+-                  blockedGuesser: _blockedGuesserKey,
+-                  freePasses: _freePassesKey,
+                   endTurn: _endTurnKey,
+-                  passState: provider.passBlocked
+-                      ? PassState.blocked
+-                      : !hasWordsToPassTo
+-                          ? PassState.lastWord
+-                          : canPass
+-                              ? PassState.available
+-                              : PassState.notEnoughTime,
++                  passState: passState,
+                   reversed: provider.isWordReversed,
+                   word: _wordKey,
+                   guessed: _guessedKey,
+diff --git a/lib/widgets/CLAUDE.md b/lib/widgets/CLAUDE.md
+index ccd7167..631a1c1 100644
+--- a/lib/widgets/CLAUDE.md
++++ b/lib/widgets/CLAUDE.md
+@@ -8,5 +8,5 @@ Widgets reutilisables organises en deux sous-repertoires.
+ |------------|------|
+ | `common/` | Composants UI reutilisables (boutons, inputs, modals, sliders, toggles) |
+ | `effects/` | Effets visuels et animations de fond |
+-| `fiesta/` | Annonces de partie (2-5) : `ModifierBadge(s)`, `FiestaTurnZone` (`turn_cartridges.dart`, avant-tour « Actif pendant votre prochain tour / Votre réserve », cercles ~50 px qui rapetissent jusqu'à 36 px (la réserve seule jusqu'à 32 px) pour tenir sans défiler (la zone active sur plusieurs rangées, colonne Bonus ajustée) ; un cas extrême défile dans la zone, appui long = explication, feuille « Contre quelle équipe ? », fenêtre des blocages (joueurs par équipe, nommés à l'envoi), puces « Envoyé » (équipe visée, joueur nommé, ou « Envoyé » à 2 équipes), un appui propose d'annuler ; couleurs : `modifierColor` = malus `AppColors.malus` (#F87171), bonus `AppColors.success` |
++| `fiesta/` | Annonces de partie (2-5) : `ModifierIcon(id, size)` (`modifier_badge.dart`), SEUL point d'affichage des icônes : `assets/icons/modifiers/<id>.png`, émojis calés d'un même centrage (`mime_no_arms`, `mime_eyes_closed` barrés par `slash.png`), repli texte pour `two_words` (historique) et un id inconnu, `ModifierBadge(s)` (`.turn` : mini-phrase `turnLabel`, `.catalog` : nom), `FiestaTurnZone` (`turn_cartridges.dart`, avant-tour « Actif pendant votre prochain tour / Votre réserve », cercles ~50 px qui rapetissent jusqu'à 36 px (la réserve seule jusqu'à 32 px) pour tenir sans défiler (la zone active sur plusieurs rangées, colonne Bonus ajustée) ; un cas extrême défile dans la zone, appui long = explication, feuille « Contre quelle équipe ? », fenêtre des blocages (joueurs par équipe, nommés à l'envoi), puces « Envoyé » (équipe visée, joueur nommé, ou « Envoyé » à 2 équipes), un appui annule, sans fenêtre ; couleurs : `modifierColor` = malus `AppColors.malus` (#F87171), bonus `AppColors.success` |
+ | `help/` | Aides de prise en main : `HelpButton` (« ? »), `CoachMarks` (voile + bulle, étapes `CoachStep` ciblées par `GlobalKey`), textes par écran (`help_content.dart`), `TutorialPager`, `FirstGamePrompt` (tuto des règles d'office au 1er « Jouer »), `FirstGameHelp` (aides auto de la 1re partie). Branchement écran par écran → `help/WIRING.md` |
+diff --git a/lib/widgets/common/CLAUDE.md b/lib/widgets/common/CLAUDE.md
+index f332961..f225341 100644
+--- a/lib/widgets/common/CLAUDE.md
++++ b/lib/widgets/common/CLAUDE.md
+@@ -17,7 +17,7 @@ Composants UI reutilisables du design system.
+ | `app_back_button.dart` | `AppBackButton` | Bouton retour circulaire rose (position absolue top-left) |
+ | `home_button.dart` | `HomeButton` | Bouton accueil circulaire cyan avec confirmation pendant partie active |
+ | `back_button.dart` | `GameBackButton` | Bouton retour custom avec etat disabled |
+-| `turn_play_widgets.dart` | `TurnWordText`, `TurnActionButtons` | Le mot (Bangers blanc, auto-size) et les boutons Passer / Trouve du tour |
++| `turn_play_widgets.dart` | `TurnWordText`, `TurnActionButtons` | Le mot (Bangers blanc, auto-size) et les boutons Passer / Trouve du tour, de meme hauteur. Passer grise : libelle seul, et un toucher ouvre une bulle (`passBlockedReason`) qui ne deplace rien et ne touche ni au chrono ni au tour |
+ 
+ ## Choisir entre `AppModal` et `AppConfirmDialog`
+ 
+diff --git a/lib/widgets/common/turn_play_widgets.dart b/lib/widgets/common/turn_play_widgets.dart
+index 5b69333..a3a1fa2 100644
+--- a/lib/widgets/common/turn_play_widgets.dart
++++ b/lib/widgets/common/turn_play_widgets.dart
+@@ -40,18 +40,20 @@ class TurnWordText extends StatelessWidget {
+       );
+ }
+ 
+-/// Les boutons Passer (rouge) et Trouvé (cyan) du tour.
+-class TurnActionButtons extends StatelessWidget {
+-  /// `null` = bouton désactivé (pause, `no_pass`, plus de mot à passer…).
++/// Les boutons Passer (rouge) et Trouvé (cyan) du tour, de même hauteur.
++class TurnActionButtons extends StatefulWidget {
++  /// `null` = bouton grisé (pause, `no_pass`, plus de mot à passer…).
+   final VoidCallback? onPass;
+ 
+   /// `null` = bouton désactivé (pause…).
+   final VoidCallback? onGuessed;
+-  final String passLabel;
+ 
+-  /// Sous le libellé : pénalité ou « gratuit », absent si `null`.
++  /// Sous le libellé : pénalité ou « (gratuit) », sur le bouton actif seulement.
+   final String? passDetail;
+ 
++  /// Bouton grisé : la bulle qu'ouvre son toucher. `null` = pas de bulle.
++  final String? passBlockedReason;
++
+   /// Cibles de l'aide du tour (coach marks).
+   final Key? passKey;
+   final Key? guessedKey;
+@@ -59,18 +61,43 @@ class TurnActionButtons extends StatelessWidget {
+   const TurnActionButtons({
+     required this.onPass,
+     required this.onGuessed,
+-    this.passLabel = 'Passer',
+     this.passDetail,
++    this.passBlockedReason,
+     this.passKey,
+     this.guessedKey,
+     super.key,
+   });
+ 
++  @override
++  State<TurnActionButtons> createState() => _TurnActionButtonsState();
++}
++
++class _TurnActionButtonsState extends State<TurnActionButtons>
++    with SingleTickerProviderStateMixin {
++  late final AnimationController _bubble = AnimationController(
++    vsync: this,
++    duration: const Duration(milliseconds: 1900),
++    animationBehavior: AnimationBehavior.preserve,
++  );
++
++  @override
++  void didUpdateWidget(TurnActionButtons oldWidget) {
++    super.didUpdateWidget(oldWidget);
++    if (widget.passBlockedReason == null) _bubble.reset();
++  }
++
++  @override
++  void dispose() {
++    _bubble.dispose();
++    super.dispose();
++  }
++
+   @override
+   Widget build(BuildContext context) {
+-    final canPass = onPass != null;
+-    final canGuess = onGuessed != null;
++    final canPass = widget.onPass != null;
++    final canGuess = widget.onGuessed != null;
+     final pass = Column(
++      mainAxisSize: MainAxisSize.min,
+       children: [
+         Icon(
+           Icons.skip_next,
+@@ -79,7 +106,8 @@ class TurnActionButtons extends StatelessWidget {
+         ),
+         const SizedBox(height: 4),
+         Text(
+-          passLabel,
++          'Passer',
++          textAlign: TextAlign.center,
+           style: TextStyle(
+             fontFamily: 'Poppins',
+             fontSize: 14,
+@@ -87,50 +115,84 @@ class TurnActionButtons extends StatelessWidget {
+             color: canPass ? Colors.white : AppColors.gray500,
+           ),
+         ),
+-        if (passDetail != null)
++        if (canPass && widget.passDetail != null)
+           Text(
+-            passDetail!,
++            widget.passDetail!,
++            textAlign: TextAlign.center,
+             style: TextStyle(
+               fontFamily: 'Poppins',
+               fontSize: 12,
+-              color:
+-                  canPass ? Colors.white.withOpacity(0.7) : AppColors.gray600,
++              color: Colors.white.withValues(alpha: 0.7),
+             ),
+           ),
+       ],
+     );
+-    return Row(
++    return Stack(
++      clipBehavior: Clip.none,
+       children: [
+-        Expanded(
+-          key: passKey,
+-          child: GestureDetector(
+-            onTap: onPass,
+-            child: Container(
+-              padding: const EdgeInsets.symmetric(vertical: 20),
+-              decoration: BoxDecoration(
+-                color: canPass ? AppColors.error : AppColors.gray700,
+-                borderRadius: BorderRadius.circular(20),
++        IntrinsicHeight(
++          child: Row(
++            crossAxisAlignment: CrossAxisAlignment.stretch,
++            children: [
++              Expanded(
++                key: widget.passKey,
++                child: GestureDetector(
++                  onTap: widget.onPass ??
++                      (widget.passBlockedReason == null
++                          ? null
++                          : () => _bubble.forward(from: 0)),
++                  child: Container(
++                    alignment: Alignment.center,
++                    padding: const EdgeInsets.symmetric(vertical: 8),
++                    decoration: BoxDecoration(
++                      color: canPass ? AppColors.error : AppColors.gray700,
++                      borderRadius: BorderRadius.circular(20),
++                    ),
++                    child: pass,
++                  ),
++                ),
+               ),
+-              child: pass,
+-            ),
++              const SizedBox(width: 16),
++              Expanded(
++                key: widget.guessedKey,
++                flex: 2,
++                child: GestureDetector(
++                  onTap: widget.onGuessed,
++                  child: Container(
++                    padding: const EdgeInsets.symmetric(vertical: 33),
++                    decoration: BoxDecoration(
++                      color: canGuess
++                          ? AppColors.secondaryCyan
++                          : AppColors.gray700,
++                      borderRadius: BorderRadius.circular(20),
++                    ),
++                    child: Icon(
++                      Icons.check,
++                      color: canGuess ? Colors.white : AppColors.gray500,
++                      size: 48,
++                    ),
++                  ),
++                ),
++              ),
++            ],
+           ),
+         ),
+-        const SizedBox(width: 16),
+-        Expanded(
+-          key: guessedKey,
+-          flex: 2,
+-          child: GestureDetector(
+-            onTap: onGuessed,
+-            child: Container(
+-              padding: const EdgeInsets.symmetric(vertical: 33),
+-              decoration: BoxDecoration(
+-                color: canGuess ? AppColors.secondaryCyan : AppColors.gray700,
+-                borderRadius: BorderRadius.circular(20),
+-              ),
+-              child: Icon(
+-                Icons.check,
+-                color: canGuess ? Colors.white : AppColors.gray500,
+-                size: 48,
++        // Hors de la mise en page : la bulle ne déplace rien.
++        Positioned(
++          left: 0,
++          right: 0,
++          top: -3,
++          child: IgnorePointer(
++            child: FractionalTranslation(
++              translation: const Offset(0, -1),
++              child: AnimatedBuilder(
++                animation: _bubble,
++                builder: (context, _) => _bubble.isAnimating
++                    ? _PassBubble(
++                        text: widget.passBlockedReason ?? '',
++                        progress: _bubble.value,
++                      )
++                    : const SizedBox.shrink(),
+               ),
+             ),
+           ),
+@@ -139,3 +201,82 @@ class TurnActionButtons extends StatelessWidget {
+     );
+   }
+ }
++
++/// La bulle du bouton Passer grisé : apparaît, reste, s'efface ([progress] de 0
++/// à 1). Animations réduites : elle reste simplement affichée.
++class _PassBubble extends StatelessWidget {
++  static const _inEnd = 0.12;
++  static const _outStart = 0.85;
++
++  final String text;
++  final double progress;
++
++  const _PassBubble({required this.text, required this.progress});
++
++  @override
++  Widget build(BuildContext context) {
++    final reduced = MediaQuery.disableAnimationsOf(context);
++    final enter = (progress / _inEnd).clamp(0.0, 1.0);
++    final exit = ((progress - _outStart) / (1 - _outStart)).clamp(0.0, 1.0);
++    final bubble = Align(
++      alignment: Alignment.topLeft,
++      child: Column(
++        mainAxisSize: MainAxisSize.min,
++        crossAxisAlignment: CrossAxisAlignment.start,
++        children: [
++          Container(
++            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
++            decoration: BoxDecoration(
++              color: Colors.white,
++              borderRadius: BorderRadius.circular(11),
++            ),
++            child: Text(
++              text,
++              style: const TextStyle(
++                fontFamily: 'Poppins',
++                fontSize: 12,
++                fontWeight: FontWeight.w600,
++                color: AppColors.backgroundMain,
++              ),
++            ),
++          ),
++          Padding(
++            padding: const EdgeInsets.only(left: 34),
++            child: CustomPaint(
++              size: const Size(12, 6),
++              painter: _BubbleTailPainter(),
++            ),
++          ),
++        ],
++      ),
++    );
++    if (reduced) return bubble;
++    return Opacity(
++      opacity: enter * (1 - exit),
++      child: Transform.translate(
++        offset: Offset(0, 7 * (1 - enter) - 4 * exit),
++        child: Transform.scale(
++          scale: 0.9 + 0.1 * enter,
++          alignment: Alignment.bottomLeft,
++          child: bubble,
++        ),
++      ),
++    );
++  }
++}
++
++class _BubbleTailPainter extends CustomPainter {
++  @override
++  void paint(Canvas canvas, Size size) {
++    canvas.drawPath(
++      Path()
++        ..lineTo(size.width, 0)
++        ..lineTo(size.width / 2, size.height)
++        ..close(),
++      Paint()..color = Colors.white,
++    );
++  }
++
++  @override
++  bool shouldRepaint(_BubbleTailPainter oldDelegate) => false;
++}
+diff --git a/lib/widgets/fiesta/modifier_badge.dart b/lib/widgets/fiesta/modifier_badge.dart
+index 30be16e..94eb67f 100644
+--- a/lib/widgets/fiesta/modifier_badge.dart
++++ b/lib/widgets/fiesta/modifier_badge.dart
+@@ -4,8 +4,11 @@ import '../../models/fiesta/modifier_catalog.dart';
+ import '../../models/fiesta/modifier_instance.dart';
+ import '../../theme/app_theme.dart';
+ 
+-/// Pictogramme court d'un modificateur (maquette `CAT[].ic`). Affichage
+-/// seulement : un id absent retombe sur « ✦ ».
++/// Pictogramme texte d'un modificateur : le repli de [ModifierIcon] pour
++/// `two_words` (retiré du jeu, reste dans l'historique) et les ids inconnus.
++/// Les autres entrées ne servent plus qu'au dessin de `score_reveal_chart.dart`,
++/// qui n'utilise plus d'icône une fois le lot `retours-reveal` mergé : la table se
++/// réduit alors à `two_words`.
+ const Map<String, String> kModifierIcons = {
+   'mime_no_arms': '✋',
+   'mime_no_fists': '🖐',
+@@ -29,6 +32,129 @@ const Map<String, String> kModifierIcons = {
+ 
+ String modifierIcon(String id) => kModifierIcons[id] ?? '✦';
+ 
++/// Icônes en image : `assets/icons/modifiers/<id>.png`.
++const Set<String> _imageIcons = {
++  'free_pass',
++  'double_points',
++  'plus_10s',
++  'minus_10s',
++  'no_pass',
++  'reversed',
++  'one_answer',
++  'block_giver',
++  'mime_no_fists',
++  'draw',
++  'mime_under_sheet',
++  'mime_back_turned',
++  'sounds_only',
++};
++
++const Map<String, String> _emojiIcons = {
++  'other_language': '🌍',
++  'block_guesser': '🤐',
++  'mime_no_arms': '💪',
++  'mime_eyes_closed': '👀',
++};
++
++/// Émojis barrés par `slash.png`.
++const Set<String> _slashedIcons = {'mime_no_arms', 'mime_eyes_closed'};
++
++/// L'icône d'un modificateur : boîte carrée de [size], contenu centré. Seul
++/// point d'affichage des icônes. Un émoji ne dépend ni de la police de l'app ni
++/// des métriques de sa ligne, d'où un centrage commun à toutes les tailles.
++/// [color] ne teinte que le repli texte ([kModifierIcons]).
++class ModifierIcon extends StatelessWidget {
++  final String id;
++  final double size;
++  final Color color;
++
++  const ModifierIcon(this.id,
++      {required this.size, this.color = Colors.white, super.key});
++
++  Widget _image(String name) => Image.asset(
++        'assets/icons/modifiers/$name.png',
++        width: size,
++        height: size,
++        fit: BoxFit.contain,
++        gaplessPlayback: true,
++        excludeFromSemantics: true,
++      );
++
++  Widget _glyph(String text) {
++    final fontSize = size * 0.72;
++    return Text(
++      text,
++      maxLines: 1,
++      softWrap: false,
++      overflow: TextOverflow.visible,
++      textAlign: TextAlign.center,
++      textHeightBehavior: const TextHeightBehavior(
++        applyHeightToFirstAscent: false,
++        applyHeightToLastDescent: false,
++      ),
++      strutStyle: StrutStyle(
++        fontSize: fontSize,
++        height: 1,
++        forceStrutHeight: true,
++      ),
++      style: TextStyle(
++        inherit: false,
++        fontSize: fontSize,
++        height: 1,
++        color: color,
++      ),
++    );
++  }
++
++  @override
++  Widget build(BuildContext context) => SizedBox.square(
++        dimension: size,
++        child: _imageIcons.contains(id)
++            ? _image(id)
++            : Stack(
++                alignment: Alignment.center,
++                children: [
++                  _glyph(_emojiIcons[id] ?? modifierIcon(id)),
++                  if (_slashedIcons.contains(id)) _image('slash'),
++                ],
++              ),
++      );
++}
++
++/// Titre de fiche, centré : icône (si [id]) puis [text], à la ligne au besoin.
++class ModifierHeading extends StatelessWidget {
++  final String? id;
++  final String text;
++  final TextStyle style;
++  final double iconSize;
++
++  const ModifierHeading({
++    required this.id,
++    required this.text,
++    required this.style,
++    required this.iconSize,
++    super.key,
++  });
++
++  @override
++  Widget build(BuildContext context) => Text.rich(
++        TextSpan(children: [
++          if (id != null)
++            WidgetSpan(
++              alignment: PlaceholderAlignment.middle,
++              child: Padding(
++                padding: const EdgeInsets.only(right: 6),
++                child: ModifierIcon(id!,
++                    size: iconSize, color: style.color ?? Colors.white),
++              ),
++            ),
++          TextSpan(text: text),
++        ]),
++        textAlign: TextAlign.center,
++        style: style,
++      );
++}
++
+ /// Couleur d'un modificateur (Fiesta v2) : vert pour un bonus, rouge pour un
+ /// malus.
+ Color modifierColor(ModifierNature nature) =>
+@@ -39,34 +165,55 @@ Color modifierColor(ModifierNature nature) =>
+ typedef BadgeExplainWrapper = Future<void> Function(
+     Future<void> Function() show);
+ 
+-/// Pastille « icône + nom » (maquette `.badge`).
++/// Pastille « icône + texte » (maquette `.badge`).
+ ///
+ /// Avec une [description], un tap ouvre une petite fiche qui l'explique.
+ class ModifierBadge extends StatelessWidget {
+-  final String icon;
++  /// Id de l'icône ; `null` = texte seul.
++  final String? iconId;
+   final String label;
++
++  /// Titre de la fiche ; `null` = [label].
++  final String? title;
+   final ModifierNature nature;
+   final String? description;
+   final BadgeExplainWrapper? wrapExplain;
+ 
+   const ModifierBadge({
+-    required this.icon,
++    required this.iconId,
+     required this.label,
+     required this.nature,
++    this.title,
+     this.description,
+     this.wrapExplain,
+     super.key,
+   });
+ 
+-  factory ModifierBadge.of(ModifierInstance instance,
+-          {Iterable<String> playingWith = const [],
+-          BadgeExplainWrapper? wrapExplain,
+-          Key? key}) =>
+-      ModifierBadge.catalog(instance.catalogId,
+-          nature: instance.nature,
+-          playingWith: playingWith,
+-          wrapExplain: wrapExplain,
+-          key: key);
++  /// Badge du tour : la mini-phrase du catalogue (« Une seule réponse par
++  /// mot »), texte seul pour le temps (« +10 secondes » se suffit). La fiche
++  /// garde le nom du modificateur. [playerName] : le joueur bloqué.
++  factory ModifierBadge.turn(String id,
++      {required ModifierNature nature,
++      String? playerName,
++      Iterable<String> playingWith = const [],
++      BadgeExplainWrapper? wrapExplain,
++      Key? key}) {
++    final def = modifierById(id);
++    final turnLabel = def?.turnLabel ?? def?.name ?? id;
++    return ModifierBadge(
++      key: key,
++      iconId: id == 'plus_10s' || id == 'minus_10s' ? null : id,
++      label: id != 'block_guesser'
++          ? turnLabel
++          : playerName == null
++              ? def?.name ?? id
++              : '$playerName $turnLabel',
++      title: def?.name,
++      nature: nature,
++      description: def == null ? null : modifierDescription(id, playingWith),
++      wrapExplain: wrapExplain,
++    );
++  }
+ 
+   /// Badge d'un modificateur du catalogue, sans instance (×2, +10 s…).
+   /// [count] : ses cartouches, dites dans le libellé, sans pictogramme (le « ×2 »
+@@ -80,7 +227,7 @@ class ModifierBadge extends StatelessWidget {
+     final def = modifierById(id);
+     return ModifierBadge(
+       key: key,
+-      icon: count == null ? modifierIcon(id) : '',
++      iconId: count == null ? id : null,
+       label: '${def?.name ?? id}${count == null ? '' : ' ×$count'}',
+       nature: nature,
+       description: def == null ? null : modifierDescription(id, playingWith),
+@@ -88,8 +235,6 @@ class ModifierBadge extends StatelessWidget {
+     );
+   }
+ 
+-  String get _text => icon.isEmpty ? label : '$icon $label';
+-
+   Future<void> _explain(BuildContext context) {
+     final color = modifierColor(nature);
+     return showModalBottomSheet<void>(
+@@ -105,10 +250,11 @@ class ModifierBadge extends StatelessWidget {
+           child: Column(
+             mainAxisSize: MainAxisSize.min,
+             children: [
+-              Text(
+-                _text,
+-                textAlign: TextAlign.center,
++              ModifierHeading(
++                id: iconId,
++                text: title ?? label,
+                 style: AppTextStyles.subtitle(fontSize: 26),
++                iconSize: 28,
+               ),
+               const SizedBox(height: 10),
+               Text(
+@@ -155,31 +301,44 @@ class ModifierBadge extends StatelessWidget {
+         borderRadius: BorderRadius.circular(99),
+         border: Border.all(color: color.withValues(alpha: 0.4)),
+       ),
+-      child: Text(
+-        _text,
+-        style: TextStyle(
+-          fontFamily: 'Poppins',
+-          fontSize: 12,
+-          fontWeight: FontWeight.w600,
+-          color: color,
+-        ),
++      child: Row(
++        mainAxisSize: MainAxisSize.min,
++        children: [
++          if (iconId != null) ...[
++            ModifierIcon(iconId!, size: 16, color: color),
++            const SizedBox(width: 5),
++          ],
++          Flexible(
++            child: Text(
++              label,
++              style: TextStyle(
++                fontFamily: 'Poppins',
++                fontSize: 12,
++                fontWeight: FontWeight.w600,
++                color: color,
++              ),
++            ),
++          ),
++        ],
+       ),
+     );
+   }
+ }
+ 
+-/// Les badges des [modifiers], centrés et repliés sur plusieurs lignes.
++/// Les badges du tour, centrés et repliés sur plusieurs lignes.
+ ///
+ /// Le texte d'un modificateur dépend de ceux qui jouent avec lui
+-/// ([modifierDescription]).
++/// ([modifierDescription]). [playerName] nomme le joueur d'un blocage.
+ class ModifierBadges extends StatelessWidget {
+   final List<ModifierInstance> modifiers;
++  final String? Function(String playerId) playerName;
+   final List<Widget> extra;
+   final WrapAlignment alignment;
+   final BadgeExplainWrapper? wrapExplain;
+ 
+   const ModifierBadges({
+     required this.modifiers,
++    required this.playerName,
+     this.extra = const [],
+     this.alignment = WrapAlignment.center,
+     this.wrapExplain,
+@@ -193,7 +352,9 @@ class ModifierBadges extends StatelessWidget {
+         runSpacing: 6,
+         children: [
+           for (final m in modifiers)
+-            ModifierBadge.of(m,
++            ModifierBadge.turn(m.catalogId,
++                nature: m.nature,
++                playerName: m.playerId == null ? null : playerName(m.playerId!),
+                 playingWith: modifiers.map((other) => other.catalogId),
+                 wrapExplain: wrapExplain),
+           ...extra,
+diff --git a/lib/widgets/fiesta/turn_cartridges.dart b/lib/widgets/fiesta/turn_cartridges.dart
+index 8e43be4..8e6cde7 100644
+--- a/lib/widgets/fiesta/turn_cartridges.dart
++++ b/lib/widgets/fiesta/turn_cartridges.dart
+@@ -9,7 +9,6 @@ import '../../models/fiesta/turn_effects.dart';
+ import '../../models/team.dart';
+ import '../../providers/game_provider.dart';
+ import '../../theme/app_theme.dart';
+-import '../common/app_confirm_dialog.dart';
+ import '../help/help_content.dart';
+ import 'modifier_badge.dart';
+ 
+@@ -278,10 +277,12 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+                   style: AppTextStyles.subtitle(fontSize: 26)
+                       .copyWith(shadows: const [])),
+               const SizedBox(height: 4),
+-              Text('${modifierIcon(id)} ${def.name}',
+-                  textAlign: TextAlign.center,
++              ModifierHeading(
++                  id: id,
++                  text: def.name,
+                   style: AppTextStyles.bodySmall
+-                      .copyWith(color: AppColors.gray400)),
++                      .copyWith(color: AppColors.gray400),
++                  iconSize: 20),
+               const SizedBox(height: 14),
+               for (final team in targets) ...[
+                 _TeamButton(
+@@ -323,9 +324,11 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+           child: Column(
+             mainAxisSize: MainAxisSize.min,
+             children: [
+-              Text('${modifierIcon(id)} ${def.name}',
+-                  textAlign: TextAlign.center,
+-                  style: AppTextStyles.subtitle(fontSize: 26)),
++              ModifierHeading(
++                  id: id,
++                  text: def.name,
++                  style: AppTextStyles.subtitle(fontSize: 26),
++                  iconSize: 28),
+               // À 2 équipes, on sait d'où ça vient.
+               if (from != null && _p.teams.length > 2)
+                 Text('Reçu de l\'équipe $from', style: hint),
+@@ -555,7 +558,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+   }
+ 
+   /// Puce d'un malus envoyé : le joueur nommé pour un blocage ; sinon l'équipe
+-  /// visée, ou « Envoyé » à 2 équipes. Un appui propose de l'annuler.
++  /// visée, ou « Envoyé » à 2 équipes. Un appui l'annule.
+   Widget _sentChip(ModifierInstance m) {
+     final index = _p.teams.indexWhere((t) => t.id == m.teamId);
+     final team = _p.getTeamById(m.teamId!)?.name ?? '';
+@@ -565,17 +568,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+             ? 'Envoyé'
+             : '→ ${team.length > 8 ? '${team.substring(0, 8)}…' : team}');
+     return GestureDetector(
+-      onTap: () async {
+-        final cancel = await AppConfirmDialog.show(
+-          context,
+-          title: 'Annuler l\'envoi ?',
+-          message: '${_name(m.catalogId)} → ${player?.name ?? team} : la '
+-              'cartouche revient dans ta réserve.',
+-          confirmText: 'Annuler l\'envoi',
+-          cancelText: 'Garder',
+-        );
+-        if (cancel && mounted) _p.cancelSent(m);
+-      },
++      onTap: () => _p.cancelSent(m),
+       child: Container(
+         width: _sentChipWidth,
+         height: _sentChipHeight,
+@@ -596,12 +589,8 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+                 shape: BoxShape.circle,
+                 border: Border.all(color: AppColors.malus, width: 1.5),
+               ),
+-              child: Text(modifierIcon(m.catalogId),
+-                  style: const TextStyle(
+-                      fontSize: 9,
+-                      height: 1,
+-                      fontWeight: FontWeight.w700,
+-                      color: AppColors.malus)),
++              child:
++                  ModifierIcon(m.catalogId, size: 15, color: AppColors.malus),
+             ),
+             Expanded(
+               child: Text(
+@@ -756,7 +745,7 @@ class _ZoneTitle extends StatelessWidget {
+ }
+ 
+ /// Cercle d'icône (maquette `.circ`) : règle de manche (neutre, « manche »),
+-/// malus reçu (rouge plein, ↓), bonus allumé (vert plein, ✓), cartouche en
++/// malus reçu (teinté rouge, ↓), bonus allumé (teinté vert, ✓), cartouche en
+ /// réserve (sombre à liseré, pastille du nombre restant ; grisé si épuisé ou
+ /// incompatible).
+ class _Circle extends StatelessWidget {
+@@ -781,7 +770,6 @@ class _Circle extends StatelessWidget {
+     final c = cartridge;
+     final dimmed = kind == _Kind.reserve && c != null && !c.usable;
+     final ring = dimmed ? AppColors.gray600 : color;
+-    final scale = size / _maxSize;
+ 
+     final Widget? corner = switch (kind) {
+       // L'étiquette déborde du cercle quand il rapetisse.
+@@ -865,27 +853,17 @@ class _Circle extends StatelessWidget {
+               alignment: Alignment.center,
+               decoration: BoxDecoration(
+                 shape: BoxShape.circle,
++                // Teinté, pas plein : les icônes ne se recolorent pas, et le
++                // chrono vert de « +10 s » disparaîtrait sur du vert.
+                 color: filled
+-                    ? color
++                    ? Color.alphaBlend(color.withValues(alpha: 0.3), _ink)
+                     : rule
+                         ? Colors.white.withValues(alpha: 0.08)
+                         : _ink,
+                 border: Border.all(color: ring, width: 2),
+               ),
+-              child: Text(
+-                modifierIcon(id),
+-                style: TextStyle(
+-                  fontFamily: 'Poppins',
+-                  fontSize: 17 * scale,
+-                  height: 1,
+-                  fontWeight: FontWeight.w700,
+-                  color: filled
+-                      ? _ink
+-                      : dimmed
+-                          ? AppColors.gray500
+-                          : color,
+-                ),
+-              ),
++              child: ModifierIcon(id,
++                  size: size * 0.78, color: filled ? Colors.white : color),
+             ),
+             if (corner != null) corner,
+           ],
+diff --git a/lib/widgets/help/WIRING.md b/lib/widgets/help/WIRING.md
+index 99f2462..034ece7 100644
+--- a/lib/widgets/help/WIRING.md
++++ b/lib/widgets/help/WIRING.md
+@@ -37,7 +37,7 @@ résultats finaux en montrent.
+ | `teams_screen` | `teamsHelp` | `firstTeam` (carte de la 1re équipe), `shuffle`, `incomplete` (message, si une équipe a moins de 2 joueurs), `start` (« Commencer ») | `right: 16` |
+ | `game_screen` (avant-tour) | `preTurnHelp(playerName: …, firstTurnOfGame: …)` | `team` (nom d'équipe + joueur), `roundRules` (icône info de la manche), `previousTurn` (« N mots », dès le 2e tour), `bonusTime` (« Temps bonus », seulement s'il y a du temps reporté), `back` (retour, s'il est affiché ; le titre dit où il mène), `start` | `right: besideCornerButton` |
+ | `game_screen` Fiesta | `fiestaPreTurnHelp(FiestaPreTurnKeys)` | Une clé par type d'élément, posée seulement s'il est à l'écran (`FiestaTurnZone`, sauf `reuseChoices`) : pas d'élément, pas d'étape. `reuseChoices`, `thisTurn` (cadre « Actif », sans clé sur « Rien pour l'instant »), `firstRule`, `firstReceived`, `firstArmed`, `blockedGuesser`, `reserveBonus`, `reserveMalus`, `firstUnusable` (1re cartouche grisée), `sent` | même bouton : `preTurnHelp(fiesta: fiestaPreTurnHelp(...))`, étapes insérées avant « Commencer le tour » |
+-| `turn_screen` | `turnHelp(passPenalty: provider.currentPassPenalty, passState, reversed)` — pas `settings.passPenalty` : la Passe gratuite Fiesta la met à 0. `passState` donne le titre et le texte de « Passer » (disponible, bloqué, dernier mot, pas assez de temps) | `timer`, `modifiers` (badges du tour), `blockedGuesser`, `freePasses`, `word`, `guessed`, `pass`, `pause`, `endTurn` | `right: besideCornerButton` (pause à droite). 🔴 `provider.pauseTurn()` **avant** `CoachMarks.show`, reprise **après** : le chrono ne doit jamais tourner sous l'aide |
++| `turn_screen` | `turnHelp(passPenalty: provider.currentPassPenalty, passState, reversed)` — pas `settings.passPenalty` : la Passe gratuite Fiesta la met à 0. `passState` donne le titre et le texte de « Passer » (disponible, bloqué, dernier mot, pas assez de temps) | `timer`, `modifiers` (badges du tour), `word`, `guessed`, `pass`, `pause`, `endTurn` | `right: besideCornerButton` (pause à droite). 🔴 `provider.pauseTurn()` **avant** `CoachMarks.show`, reprise **après** : le chrono ne doit jamais tourner sous l'aide |
+ | `verification_screen` | `verificationHelp` | `doubled` (ligne « Mot compte double »), `wordList` (la liste défilante entière), `expired` (section « Mot en cours »), `passed` (section « Mots passés »), `validate` | `right: 16` (HomeButton à gauche) |
+ | `transition_screen` (écran fixe après M3 seulement) | `transitionHelp` | `previousTurn` (« Voir les N mots devinés »), `back` (`GameBackButton`), `next` (« Voir les résultats ») — dans cet ordre, l'action finale en dernier | coin haut droit |
+ | `history_screen` | `historyHelp(stats, hasPlayers, hasSetup)` : texte des tendances selon les lignes affichées, et de « Rejouer » selon que l'archive a ses réglages | `trends`, `firstGame`, `replay` (1re carte) ; pas de « ? » sans partie | coin haut droit |
+diff --git a/lib/widgets/help/help_content.dart b/lib/widgets/help/help_content.dart
+index f1abed4..1b8f845 100644
+--- a/lib/widgets/help/help_content.dart
++++ b/lib/widgets/help/help_content.dart
+@@ -446,8 +446,6 @@ String _passSentence(PassState state, int passPenalty) => switch (state) {
+ List<CoachStep> turnHelp({
+   required GlobalKey timer,
+   required GlobalKey modifiers,
+-  required GlobalKey blockedGuesser,
+-  required GlobalKey freePasses,
+   required GlobalKey word,
+   required GlobalKey guessed,
+   required GlobalKey pass,
+@@ -471,18 +469,6 @@ List<CoachStep> turnHelp({
+       text: 'Ce qui s\'applique à ce tour : règles de la manche, malus reçus, '
+           'bonus activés. Touche un badge pour son explication.',
+     ),
+-    CoachStep(
+-      target: blockedGuesser,
+-      title: 'Joueur bloqué',
+-      text: 'Une autre équipe l\'a bloqué : il ne doit pas répondre pendant ce '
+-          'tour.',
+-    ),
+-    CoachStep(
+-      target: freePasses,
+-      title: 'Passes gratuites',
+-      text: 'Passer ne coûte rien tant qu\'il en reste. Ensuite, la pénalité '
+-          'habituelle revient.',
+-    ),
+     CoachStep(
+       target: word,
+       title: 'Le mot',
+diff --git a/pubspec.yaml b/pubspec.yaml
+index 92a0107..c11e75a 100644
+--- a/pubspec.yaml
++++ b/pubspec.yaml
+@@ -61,6 +61,7 @@ flutter:
+ 
+   assets:
+     - assets/fonts/
++    - assets/icons/modifiers/
+     - assets/sounds/
+     - assets/translations/
+     - assets/translations/words/fr/
+diff --git a/test/screens/fiesta_ensembles_list_test.dart b/test/screens/fiesta_ensembles_list_test.dart
+index 74d4bd7..702bffe 100644
+--- a/test/screens/fiesta_ensembles_list_test.dart
++++ b/test/screens/fiesta_ensembles_list_test.dart
+@@ -388,7 +388,7 @@ void main() {
+           reason: 'pas la liste du pool de tirage');
+ 
+       await tester.tap(
+-          find.descendant(of: row, matching: find.text('☝ Une seule réponse')));
++          find.descendant(of: row, matching: find.text('Une seule réponse')));
+       await tester.pump();
+       await tester.pump(const Duration(milliseconds: 400));
+       expect(find.text('Compris'), findsOneWidget);
+diff --git a/test/screens/fiesta_v4_screens_test.dart b/test/screens/fiesta_v4_screens_test.dart
+index 476645b..8e4ccb8 100644
+--- a/test/screens/fiesta_v4_screens_test.dart
++++ b/test/screens/fiesta_v4_screens_test.dart
+@@ -60,6 +60,9 @@ Future<GameProvider> pumpGame(WidgetTester tester, FiestaRules? fiesta) async {
+   return provider;
+ }
+ 
++Finder iconOf(String id) =>
++    find.byWidgetPredicate((w) => w is ModifierIcon && w.id == id);
++
+ void finishRound(GameProvider provider) {
+   provider.startTurn();
+   provider.startTurnTimer();
+@@ -228,8 +231,7 @@ void main() {
+           'block_giver': const ModifierSetting(charges: 1),
+         }));
+     await tester.tap(find.descendant(
+-        of: find.byType(FiestaTurnZone),
+-        matching: find.text(modifierIcon('block_giver'))));
++        of: find.byType(FiestaTurnZone), matching: iconOf('block_giver')));
+     await tester.pump(const Duration(milliseconds: 400));
+     await tester.pump(const Duration(milliseconds: 400));
+     expect(find.text('Qui ne fera pas deviner ?'), findsOneWidget);
+@@ -266,7 +268,7 @@ void main() {
+     provider.startTurn();
+     provider.startTurnTimer();
+     await settle(tester);
+-    expect(find.text('🚫'), findsOneWidget);
++    expect(iconOf('block_giver'), findsOneWidget);
+     expect(find.textContaining('Passe le téléphone à'), findsOneWidget);
+     await tester.tap(find.text('Suivant'));
+     await settle(tester);
+@@ -353,11 +355,17 @@ void main() {
+         lessThanOrEqualTo(tester.getBottomLeft(zone).dy));
+     expect(tester.getBottomLeft(start).dy, lessThanOrEqualTo(640));
+ 
++    // Un toucher annule, sans fenêtre : la cartouche revient dans la réserve.
++    final sent = provider.sentThisTurn.last;
++    int left() =>
++        provider.reserve.firstWhere((c) => c.catalogId == sent.catalogId).left;
++    final leftBefore = left();
+     await tester.tap(last);
+     await tester.pump(const Duration(milliseconds: 400));
+-    await tester.tap(find.text('Annuler l\'envoi').last);
+-    await tester.pump(const Duration(milliseconds: 400));
+     expect(provider.sentThisTurn, hasLength(6));
++    expect(provider.sentThisTurn, isNot(contains(sent)));
++    expect(left(), leftBefore + 1);
++    expect(find.byType(Dialog), findsNothing);
+     await tester.pumpWidget(const SizedBox());
+     await tester.pump(const Duration(seconds: 6));
+   });
+@@ -444,8 +452,7 @@ void main() {
+       expect(provider.isDoublePointsOn, isTrue);
+ 
+       final circles = find.descendant(
+-          of: find.byType(FiestaTurnZone),
+-          matching: find.text(modifierIcon('double_points')));
++          of: find.byType(FiestaTurnZone), matching: iconOf('double_points'));
+       await tester.tap(circles.first);
+       await settle(tester);
+       expect(provider.isDoublePointsOn, isTrue);
+@@ -474,14 +481,57 @@ void main() {
+     expect(provider.game.turnAllottedSeconds, 40);
+     final badge = find.byType(ModifierBadge);
+     expect(badge, findsOneWidget);
+-    expect(tester.widget<ModifierBadge>(badge).label, 'Bonus de 10 s');
+-    expect(tester.widget<ModifierBadge>(badge).icon, '+10');
++    expect(tester.widget<ModifierBadge>(badge).label, '+10 secondes');
++    expect(tester.widget<ModifierBadge>(badge).iconId, isNull);
+     expect(tester.getTopLeft(badge).dy,
+         greaterThan(tester.getBottomLeft(find.text('40s')).dy));
+     await tester.pumpWidget(const SizedBox());
+     await tester.pump(const Duration(seconds: 1));
+   });
+ 
++  testWidgets(
++      'bulle du bouton Passer grisé : ni le chrono ni le tour ne bougent, rien '
++      'ne se déplace ; en pause, pas de bulle', (tester) async {
++    final provider = await pumpGame(
++        tester,
++        FiestaRules(drawCount: 0, modifiers: {
++          'no_pass': const ModifierSetting(always: true),
++        }));
++    provider.startTurn();
++    provider.startTurnTimer();
++    await tester.pump();
++    await tester.pump(const Duration(milliseconds: 100));
++
++    const reason = 'Interdit de passer ce tour';
++    final pass = find.text('Passer');
++    final word = provider.game.currentWord;
++    final remaining = List<String>.from(provider.game.remainingWords);
++    final clock = provider.turnClock;
++    final top = tester.getTopLeft(pass);
++    expect(find.text('-5s'), findsNothing);
++
++    await tester.tap(pass);
++    await tester.pump();
++    await tester.pump(const Duration(milliseconds: 500));
++    expect(find.text(reason), findsOneWidget);
++    expect(provider.turnClock, clock);
++    expect(provider.game.currentWord, word);
++    expect(provider.game.remainingWords, remaining);
++    expect(tester.getTopLeft(pass), top);
++
++    await tester.pump(const Duration(seconds: 2));
++    expect(find.text(reason), findsNothing);
++
++    provider.pauseTurn();
++    await tester.pump();
++    await tester.tap(pass);
++    await tester.pump();
++    await tester.pump(const Duration(milliseconds: 500));
++    expect(find.text(reason), findsNothing);
++    await tester.pumpWidget(const SizedBox());
++    await tester.pump(const Duration(seconds: 1));
++  });
++
+   group('Éditeur', () {
+     Finder inside(Finder of, Finder what) =>
+         find.descendant(of: of, matching: what);
+diff --git a/test/screens/stats_screen_test.dart b/test/screens/stats_screen_test.dart
+index 782d512..e9c8fd6 100644
+--- a/test/screens/stats_screen_test.dart
++++ b/test/screens/stats_screen_test.dart
+@@ -9,6 +9,7 @@ import 'package:guess_it_all_mobile/providers/game_provider.dart';
+ import 'package:guess_it_all_mobile/screens/stats_screen.dart';
+ import 'package:guess_it_all_mobile/services/persisted_schema.dart';
+ import 'package:guess_it_all_mobile/utils/constants.dart';
++import 'package:guess_it_all_mobile/widgets/fiesta/modifier_badge.dart';
+ import 'package:provider/provider.dart';
+ 
+ import '../helpers/test_prefs.dart';
+@@ -380,9 +381,11 @@ void main() {
+ 
+       expect(tester.widget<Switch>(filtre).value, isTrue);
+       expect(badge, findsNWidgets(3));
+-      expect(find.text('+10'), findsOneWidget);
+-      expect(find.text('×2'), findsOneWidget);
+-      expect(find.text('−10'), findsOneWidget);
++      Finder icone(String id) =>
++          find.byWidgetPredicate((w) => w is ModifierIcon && w.id == id);
++      expect(icone('plus_10s'), findsOneWidget);
++      expect(icone('double_points'), findsOneWidget);
++      expect(icone('minus_10s'), findsOneWidget);
+ 
+       // Chaque badge est au-dessus du point de fin de SON tour : x = tour de son
+       // équipe, y = score de son équipe, axe de 0 à 10 × 1,1 et de 0 à 2 tours.
+@@ -391,9 +394,9 @@ void main() {
+             chart.left + 30 + tour / 2 * (chart.width - 30),
+             chart.top + (1 - score / 11) * (chart.height - 24),
+           );
+-      void estAuDessus(String texte, Offset cible, {int rang = 0}) {
+-        final centre = tester
+-            .getCenter(find.ancestor(of: find.text(texte), matching: badge));
++      void estAuDessus(String id, Offset cible, {int rang = 0}) {
++        final centre =
++            tester.getCenter(find.ancestor(of: icone(id), matching: badge));
+         expect(
+             centre.dx,
+             moreOrLessEquals(cible.dx.clamp(chart.left + 12, chart.right - 12),
+@@ -402,9 +405,9 @@ void main() {
+             moreOrLessEquals(cible.dy - 16 - rang * 24, epsilon: 0.5));
+       }
+ 
+-      estAuDessus('+10', point(1, 3));
+-      estAuDessus('×2', point(2, 6));
+-      estAuDessus('−10', point(2, 6), rang: 1);
++      estAuDessus('plus_10s', point(1, 3));
++      estAuDessus('double_points', point(2, 6));
++      estAuDessus('minus_10s', point(2, 6), rang: 1);
+ 
+       await tester.tap(filtre);
+       await tester.pump();
+diff --git a/test/screens/surprise_challenge_screen_test.dart b/test/screens/surprise_challenge_screen_test.dart
+index 1f4ad19..ed23de4 100644
+--- a/test/screens/surprise_challenge_screen_test.dart
++++ b/test/screens/surprise_challenge_screen_test.dart
+@@ -5,6 +5,7 @@ import 'package:guess_it_all_mobile/models/fiesta/surprise_challenge.dart';
+ import 'package:guess_it_all_mobile/screens/surprise_challenge_screen.dart';
+ import 'package:guess_it_all_mobile/services/challenge_sounds.dart';
+ import 'package:guess_it_all_mobile/theme/app_theme.dart';
++import 'package:guess_it_all_mobile/widgets/fiesta/modifier_badge.dart';
+ 
+ const _ana = ChallengeContender(
+   playerName: 'Ana',
+@@ -19,16 +20,19 @@ const _bob = ChallengeContender(
+   teammates: ['Alice', 'Frank'],
+ );
+ const _doublePoints = ChallengeReward(
+-  icon: '×2',
++  modifierId: 'double_points',
+   name: 'Mot compte double',
+   isMalus: false,
+ );
+ const _reversed = ChallengeReward(
+-  icon: '⇄',
++  modifierId: 'reversed',
+   name: 'Mots à l\'envers',
+   isMalus: true,
+ );
+ 
++Finder _icon(String id) =>
++    find.byWidgetPredicate((w) => w is ModifierIcon && w.id == id);
++
+ Future<void> _loadFonts() async {
+   TestWidgetsFlutterBinding.ensureInitialized();
+   await (FontLoader('Bangers')
+@@ -132,7 +136,7 @@ void main() {
+ 
+     await tester.pump(kRouletteDuration);
+     await tester.pump();
+-    expect(find.text('×2'), findsOneWidget);
++    expect(_icon('double_points'), findsOneWidget);
+     expect(
+       find.text('Mot compte double, dans la réserve de l\'équipe.'),
+       findsOneWidget,
+@@ -155,7 +159,7 @@ void main() {
+     await tester.pump();
+ 
+     expect(find.text('Les Génies gagnent !'), findsOneWidget);
+-    expect(find.text('⇄'), findsOneWidget);
++    expect(_icon('reversed'), findsOneWidget);
+     expect(
+       find.text('Mots à l\'envers, dans la réserve de l\'équipe.'),
+       findsOneWidget,
+@@ -301,7 +305,7 @@ void main() {
+     h.sounds.clear();
+     await tester.tap(find.text('Ana'));
+     await tester.pump();
+-    expect(find.text('×2'), findsOneWidget);
++    expect(_icon('double_points'), findsOneWidget);
+     expect(h.sounds, ['chime@1.0', 'sparkle@0.6']);
+ 
+     await tester.tap(find.text('Continuer'));
+diff --git a/test/widgets/help_conditional_test.dart b/test/widgets/help_conditional_test.dart
+index 2451ceb..37ac8a6 100644
+--- a/test/widgets/help_conditional_test.dart
++++ b/test/widgets/help_conditional_test.dart
+@@ -128,21 +128,6 @@ void main() {
+           ]);
+     });
+ 
+-    testWidgets('Passe gratuite : son compteur a une étape', (tester) async {
+-      expect(
+-          await turnSteps(tester, charges(['free_pass']), armed: ['free_pass']),
+-          [
+-            'Le chrono',
+-            'Actif pendant ce tour',
+-            'Passes gratuites',
+-            'Le mot',
+-            'Trouvé',
+-            'Passer',
+-            'Pause',
+-            'Terminer le tour',
+-          ]);
+-    });
+-
+     testWidgets('Mot compte double : le badge du tour a une étape',
+         (tester) async {
+       expect(
+@@ -152,7 +137,7 @@ void main() {
+     });
+ 
+     testWidgets(
+-        '« Bob ne répond pas ce tour » : étape avant le tour et pendant',
++        'Joueur bloqué : étape avant le tour ; pendant, sa pastille le nomme',
+         (tester) async {
+       final provider = await pumpApp(tester, AppConstants.screenHome,
+           names: ['Ana', 'Bob', 'Cid', 'Dan', 'Eve', 'Fay']);
+@@ -187,13 +172,14 @@ void main() {
+       for (var i = 0; i < 30; i++) {
+         await tester.pump(const Duration(milliseconds: 100));
+       }
+-      expect(reloaded.blockedGuesser, isNotNull);
++      final blocked = reloaded.blockedGuesser!;
+       expect(await walkHelp(tester), contains('Joueur bloqué'));
+ 
+       reloaded.startTurn();
+       reloaded.startTurnTimer();
+       await pumps(tester);
+-      expect(await walkHelp(tester), contains('Joueur bloqué'));
++      expect(find.text('${blocked.name} ne répond pas'), findsOneWidget);
++      expect(await walkHelp(tester), contains('Actif pendant ce tour'));
+       await leave(tester);
+     });
+   });
+diff --git a/test/widgets/help_content_test.dart b/test/widgets/help_content_test.dart
+index f1c25cc..3058f14 100644
+--- a/test/widgets/help_content_test.dart
++++ b/test/widgets/help_content_test.dart
+@@ -19,8 +19,6 @@ void main() {
+         turnHelp(
+           timer: GlobalKey(),
+           modifiers: GlobalKey(),
+-          blockedGuesser: GlobalKey(),
+-          freePasses: GlobalKey(),
+           word: GlobalKey(),
+           guessed: GlobalKey(),
+           pass: GlobalKey(),

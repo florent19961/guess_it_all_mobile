@@ -502,11 +502,7 @@ class _FiestaEnsembleEditorScreenState
                 color: color.withValues(alpha: 0.14),
                 border: Border.all(color: color, width: 1.5),
               ),
-              child: Text(
-                modifierIcon(def.id),
-                style: TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w700, color: color),
-              ),
+              child: ModifierIcon(def.id, size: 26, color: color),
             ),
             const SizedBox(width: 10),
             Expanded(

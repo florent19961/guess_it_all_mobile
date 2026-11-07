@@ -7,6 +7,7 @@ import '../models/fiesta/surprise_challenge.dart';
 import '../services/challenge_sounds.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common/app_button.dart';
+import '../widgets/fiesta/modifier_badge.dart';
 
 const kVersusDuration = Duration(milliseconds: 1900);
 const kRouletteDuration =
@@ -15,15 +16,14 @@ const kRouletteDuration =
 const _rouletteTick = 110;
 const _rouletteTicks = 14;
 
-/// Ce qui défile dans la roulette : (icône, malus).
+/// Ce qui défile dans la roulette : (id du modificateur, malus).
 const _rouletteItems = [
-  ('×2', false),
-  ('⇄', true),
-  ('+10', false),
-  ('−10', true),
-  ('↷', false),
-  ('🚫', true),
-  ('⧉', false),
+  ('double_points', false),
+  ('reversed', true),
+  ('plus_10s', false),
+  ('minus_10s', true),
+  ('free_pass', false),
+  ('block_giver', true),
 ];
 
 /// Un joueur du défi et son équipe. [teammates] : ceux à qui il passe le mime,
@@ -44,12 +44,12 @@ class ChallengeContender {
 
 /// La cartouche gagnée, déjà tirée par l'appelant.
 class ChallengeReward {
-  final String icon;
+  final String modifierId;
   final String name;
   final bool isMalus;
 
   const ChallengeReward({
-    required this.icon,
+    required this.modifierId,
     required this.name,
     required this.isMalus,
   });
@@ -320,14 +320,12 @@ class _SurpriseChallengeScreenState extends State<SurpriseChallengeScreen> {
             shape: BoxShape.circle,
             border: Border.all(color: color, width: 4),
           ),
-          child: Text(
-            _rouletteDone ? _reward.icon : _rouletteItems[_rouletteIndex].$1,
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 36,
-              fontWeight: FontWeight.w700,
-              color: color,
-            ),
+          child: ModifierIcon(
+            _rouletteDone
+                ? _reward.modifierId
+                : _rouletteItems[_rouletteIndex].$1,
+            size: 80,
+            color: color,
           ),
         ),
         Text(

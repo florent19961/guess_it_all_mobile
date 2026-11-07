@@ -206,10 +206,7 @@ class _Row extends StatelessWidget {
               color: color.withValues(alpha: 0.18),
               border: Border.all(color: color.withValues(alpha: 0.6)),
             ),
-            child: Text(
-              modifierIcon(def.id),
-              style: TextStyle(fontSize: 14, color: color),
-            ),
+            child: ModifierIcon(def.id, size: 26, color: color),
           ),
           const SizedBox(width: 10),
           Expanded(

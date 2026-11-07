@@ -128,21 +128,6 @@ void main() {
           ]);
     });
 
-    testWidgets('Passe gratuite : son compteur a une étape', (tester) async {
-      expect(
-          await turnSteps(tester, charges(['free_pass']), armed: ['free_pass']),
-          [
-            'Le chrono',
-            'Actif pendant ce tour',
-            'Passes gratuites',
-            'Le mot',
-            'Trouvé',
-            'Passer',
-            'Pause',
-            'Terminer le tour',
-          ]);
-    });
-
     testWidgets('Mot compte double : le badge du tour a une étape',
         (tester) async {
       expect(
@@ -152,7 +137,7 @@ void main() {
     });
 
     testWidgets(
-        '« Bob ne répond pas ce tour » : étape avant le tour et pendant',
+        'Joueur bloqué : étape avant le tour ; pendant, sa pastille le nomme',
         (tester) async {
       final provider = await pumpApp(tester, AppConstants.screenHome,
           names: ['Ana', 'Bob', 'Cid', 'Dan', 'Eve', 'Fay']);
@@ -187,13 +172,14 @@ void main() {
       for (var i = 0; i < 30; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
-      expect(reloaded.blockedGuesser, isNotNull);
+      final blocked = reloaded.blockedGuesser!;
       expect(await walkHelp(tester), contains('Joueur bloqué'));
 
       reloaded.startTurn();
       reloaded.startTurnTimer();
       await pumps(tester);
-      expect(await walkHelp(tester), contains('Joueur bloqué'));
+      expect(find.text('${blocked.name} ne répond pas'), findsOneWidget);
+      expect(await walkHelp(tester), contains('Actif pendant ce tour'));
       await leave(tester);
     });
   });

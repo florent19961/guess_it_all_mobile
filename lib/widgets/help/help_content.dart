@@ -446,8 +446,6 @@ String _passSentence(PassState state, int passPenalty) => switch (state) {
 List<CoachStep> turnHelp({
   required GlobalKey timer,
   required GlobalKey modifiers,
-  required GlobalKey blockedGuesser,
-  required GlobalKey freePasses,
   required GlobalKey word,
   required GlobalKey guessed,
   required GlobalKey pass,
@@ -470,18 +468,6 @@ List<CoachStep> turnHelp({
       title: 'Actif pendant ce tour',
       text: 'Ce qui s\'applique à ce tour : règles de la manche, malus reçus, '
           'bonus activés. Touche un badge pour son explication.',
-    ),
-    CoachStep(
-      target: blockedGuesser,
-      title: 'Joueur bloqué',
-      text: 'Une autre équipe l\'a bloqué : il ne doit pas répondre pendant ce '
-          'tour.',
-    ),
-    CoachStep(
-      target: freePasses,
-      title: 'Passes gratuites',
-      text: 'Passer ne coûte rien tant qu\'il en reste. Ensuite, la pénalité '
-          'habituelle revient.',
     ),
     CoachStep(
       target: word,

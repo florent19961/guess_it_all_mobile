@@ -17,7 +17,7 @@ Composants UI reutilisables du design system.
 | `app_back_button.dart` | `AppBackButton` | Bouton retour circulaire rose (position absolue top-left) |
 | `home_button.dart` | `HomeButton` | Bouton accueil circulaire cyan avec confirmation pendant partie active |
 | `back_button.dart` | `GameBackButton` | Bouton retour custom avec etat disabled |
-| `turn_play_widgets.dart` | `TurnWordText`, `TurnActionButtons` | Le mot (Bangers blanc, auto-size) et les boutons Passer / Trouve du tour |
+| `turn_play_widgets.dart` | `TurnWordText`, `TurnActionButtons` | Le mot (Bangers blanc, auto-size) et les boutons Passer / Trouve du tour, de meme hauteur. Passer grise : libelle seul, et un toucher ouvre une bulle (`passBlockedReason`) qui ne deplace rien et ne touche ni au chrono ni au tour |
 
 ## Choisir entre `AppModal` et `AppConfirmDialog`
 

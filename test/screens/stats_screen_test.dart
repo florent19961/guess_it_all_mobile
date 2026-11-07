@@ -9,6 +9,7 @@ import 'package:guess_it_all_mobile/providers/game_provider.dart';
 import 'package:guess_it_all_mobile/screens/stats_screen.dart';
 import 'package:guess_it_all_mobile/services/persisted_schema.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
+import 'package:guess_it_all_mobile/widgets/fiesta/modifier_badge.dart';
 import 'package:provider/provider.dart';
 
 import '../helpers/test_prefs.dart';
@@ -380,9 +381,11 @@ void main() {
 
       expect(tester.widget<Switch>(filtre).value, isTrue);
       expect(badge, findsNWidgets(3));
-      expect(find.text('+10'), findsOneWidget);
-      expect(find.text('×2'), findsOneWidget);
-      expect(find.text('−10'), findsOneWidget);
+      Finder icone(String id) =>
+          find.byWidgetPredicate((w) => w is ModifierIcon && w.id == id);
+      expect(icone('plus_10s'), findsOneWidget);
+      expect(icone('double_points'), findsOneWidget);
+      expect(icone('minus_10s'), findsOneWidget);
 
       // Chaque badge est au-dessus du point de fin de SON tour : x = tour de son
       // équipe, y = score de son équipe, axe de 0 à 10 × 1,1 et de 0 à 2 tours.
@@ -391,9 +394,9 @@ void main() {
             chart.left + 30 + tour / 2 * (chart.width - 30),
             chart.top + (1 - score / 11) * (chart.height - 24),
           );
-      void estAuDessus(String texte, Offset cible, {int rang = 0}) {
-        final centre = tester
-            .getCenter(find.ancestor(of: find.text(texte), matching: badge));
+      void estAuDessus(String id, Offset cible, {int rang = 0}) {
+        final centre =
+            tester.getCenter(find.ancestor(of: icone(id), matching: badge));
         expect(
             centre.dx,
             moreOrLessEquals(cible.dx.clamp(chart.left + 12, chart.right - 12),
@@ -402,9 +405,9 @@ void main() {
             moreOrLessEquals(cible.dy - 16 - rang * 24, epsilon: 0.5));
       }
 
-      estAuDessus('+10', point(1, 3));
-      estAuDessus('×2', point(2, 6));
-      estAuDessus('−10', point(2, 6), rang: 1);
+      estAuDessus('plus_10s', point(1, 3));
+      estAuDessus('double_points', point(2, 6));
+      estAuDessus('minus_10s', point(2, 6), rang: 1);
 
       await tester.tap(filtre);
       await tester.pump();
