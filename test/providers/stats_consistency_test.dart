@@ -168,15 +168,12 @@ void main() {
         '$j2=1.2s $j1=2.7s');
 
     // Révélation : les courbes finissent sur les totaux ; les cartouches jouées
-    // tombent au 1er tour de A.
-    final timeline = buildScoreTimeline(
-      teamIds: [a, b],
-      history: history,
-      chargesUsed: p.game.fiesta!.chargesUsed,
-    );
+    // sont datées du 1er tour de A.
+    final timeline = buildScoreTimeline(teamIds: [a, b], history: history);
     expect(timeline.series[0], [0, 4, 4, 9, 12, 12, 12]);
     expect(timeline.series[1], [0, 0, 1, 1, 1, 6, 14]);
-    expect(timeline.events.map((e) => e.step), [0, 0]);
+    expect(p.game.fiesta!.chargesUsed.map((u) => entryOfCharge(u, history)),
+        [0, 0]);
 
     // Récap : les deux cartouches, une seule fois chacune.
     expect(p.modifierRecap.map((l) => l.title), ['Cartouches utilisées']);

@@ -1,10 +1,8 @@
 import 'dart:async';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/models/score_timeline.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
 import 'package:guess_it_all_mobile/screens/results_screen.dart';
@@ -34,16 +32,10 @@ class FakeSound implements RevealSound {
   void fadeOutMusic() => calls.add('fade');
   @override
   void stopMusic() => calls.add('stop');
-  @override
-  void stopEffects() => calls.add('stopEffects');
-  @override
-  void playCartridge({required bool bonus}) =>
-      calls.add(bonus ? 'bonus' : 'malus');
 }
 
 /// 2 équipes de 2 joueurs, 1 mot par joueur.
-Future<GameProvider> givenProvider(WidgetTester tester,
-    {FiestaRules? fiesta, int teams = 2}) async {
+Future<GameProvider> givenProvider(WidgetTester tester, {int teams = 2}) async {
   await givenPrefs();
   givenFakePlatformPlugins();
   final provider = GameProvider();
@@ -58,7 +50,7 @@ Future<GameProvider> givenProvider(WidgetTester tester,
     provider.randomizeTeams();
     provider.updateTeamName(provider.teams[0].id, 'Les A');
     provider.updateTeamName(provider.teams[1].id, 'Bob');
-    await provider.startGame(fiesta: fiesta);
+    await provider.startGame();
   });
   return provider;
 }
@@ -178,7 +170,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  test('le piège ne fausse pas les courbes, cartouche rendue hors du graphique',
+  test('le piège ne fausse pas les courbes, cartouche rendue datée de son tour',
       () async {
     final p = await lot1
         .givenGame(lot1.stock({'block_giver': 1, 'reversed': 1}), a: 3, b: 3);
@@ -220,13 +212,13 @@ void main() {
     final timeline = buildScoreTimeline(
       teamIds: [for (final t in p.teams) t.id],
       history: history,
-      chargesUsed: p.game.fiesta!.chargesUsed,
     );
     expect(timeline.steps, history.length);
     expect([for (final s in timeline.series) s.last],
         [for (final t in p.teams) t.score]);
     expect([
-      for (final e in timeline.events) (e.catalogId, e.step)
+      for (final u in p.game.fiesta!.chargesUsed)
+        (u.catalogId, entryOfCharge(u, history))
     ], [
       ('block_giver', history.indexWhere((h) => h.turn == 3)),
       ('reversed', history.indexWhere((h) => h.turn == trapped)),
@@ -242,18 +234,17 @@ void main() {
 
     expect(find.byType(ScoreRevealScreen), findsOneWidget);
     expect(find.text('Qui a mené la danse ?'), findsOneWidget);
-    expect(find.text('Voir les résultats'), findsNothing);
+    expect(find.text('Suivant'), findsNothing);
     expect(sound.calls, ['music']);
 
     await tester.pump(); // La musique a démarré : le tracé part.
     await tester.pump(const Duration(milliseconds: 4400));
-    expect(find.text('Voir les résultats'), findsNothing,
-        reason: 'environ 4,5 s');
+    expect(find.text('Suivant'), findsNothing, reason: 'environ 4,5 s');
     await tester.pump(const Duration(milliseconds: 200));
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('Finale'), findsOneWidget);
-    expect(find.text('Voir les résultats'), findsOneWidget);
+    expect(find.text('Suivant'), findsOneWidget);
     expect(sound.calls, ['music'],
         reason: 'la queue du gong sonne jusqu\'au bout');
     final winner = provider.getTeamsSortedByScore().first;
@@ -262,7 +253,7 @@ void main() {
     expect(
         find.textContaining('${winner.name} ${winner.score}'), findsOneWidget);
 
-    await tester.tap(find.text('Voir les résultats'));
+    await tester.tap(find.text('Suivant'));
     await tester.pump();
     expect(sound.calls, isNot(contains('fade')),
         reason: 'pas de fondu sur le gong');
@@ -297,42 +288,8 @@ void main() {
     await tester.pump();
 
     expect(find.text('Finale'), findsOneWidget);
-    expect(find.text('Voir les résultats'), findsOneWidget);
+    expect(find.text('Suivant'), findsOneWidget);
     expect(sound.calls, isEmpty);
-    await tester.pumpWidget(const SizedBox());
-  });
-
-  FiestaRules doublePoints() => FiestaRules(
-        modifiers: {'double_points': const ModifierSetting(charges: 1)},
-      );
-
-  testWidgets('animations réduites avec une cartouche : aucun son',
-      (tester) async {
-    final provider = await givenProvider(tester, fiesta: doublePoints());
-    provider.setDoublePoints(true);
-    playToTheEnd(provider);
-    final sound = FakeSound();
-    await tester.pumpWidget(app(provider, sound, reduced: true));
-    await tester.pump();
-
-    expect(find.text('Finale'), findsOneWidget);
-    expect(sound.calls, isEmpty);
-    await tester.pumpWidget(const SizedBox());
-  });
-
-  testWidgets('quitter la révélation coupe les effets, jamais la queue du gong',
-      (tester) async {
-    final provider = await givenProvider(tester);
-    playToTheEnd(provider);
-    final sound = FakeSound();
-    await tester.pumpWidget(app(provider, sound));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 4600));
-    await tester.pump(const Duration(milliseconds: 500));
-    await tester.tap(find.text('Voir les résultats'));
-    await tester.pump();
-
-    expect(sound.calls, ['music', 'stopEffects']);
     await tester.pumpWidget(const SizedBox());
   });
 
@@ -354,10 +311,10 @@ void main() {
       await tester.pump();
 
       expect(tester.takeException(), isNull);
-      final button = tester.getRect(find.text('Voir les résultats'));
+      final button = tester.getRect(find.text('Suivant'));
       expect(button.bottom, lessThanOrEqualTo(size.height));
       expect(button.top, greaterThanOrEqualTo(0));
-      await tester.tap(find.text('Voir les résultats'));
+      await tester.tap(find.text('Suivant'));
       expect(provider.game.scoreRevealSeen, isTrue);
       await tester.pumpWidget(const SizedBox());
     });
@@ -378,23 +335,6 @@ void main() {
     expect(find.textContaining('Égalité'), findsNothing);
     expect(find.text(winner.name == 'Bob' ? 'Bob gagne !' : 'Les A gagnent !'),
         findsOneWidget);
-    await tester.pumpWidget(const SizedBox());
-  });
-
-  testWidgets('Fiesta : une cartouche jouée fait son petit son',
-      (tester) async {
-    final provider = await givenProvider(tester, fiesta: doublePoints());
-    provider.setDoublePoints(true);
-    playToTheEnd(provider);
-    final use = provider.game.fiesta!.chargesUsed.single;
-    expect(use.turn, 1, reason: 'numéro du tour où elle a été jouée');
-
-    final sound = FakeSound();
-    await tester.pumpWidget(app(provider, sound));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 16));
-    expect(sound.calls, contains('bonus'));
-    expect(sound.calls.where((c) => c == 'bonus'), hasLength(1));
     await tester.pumpWidget(const SizedBox());
   });
 
@@ -451,63 +391,8 @@ void main() {
 
     final sound = RevealSound(); // Aucun plugin audio dans les tests.
     await sound.startMusic();
-    sound.playCartridge(bonus: true);
     sound.fadeOutMusic();
     sound.stopMusic();
-  });
-
-  group('RevealSound : effets à la sortie', () {
-    late List<String> calls;
-    late Completer<void> gate;
-    late Completer<void> playGate;
-
-    setUp(() {
-      calls = [];
-      gate = Completer<void>()..complete();
-      playGate = Completer<void>()..complete();
-      RevealSound.resetForTest();
-      RevealSound.newPlayer =
-          () => _FakePlayer(calls, () => gate.future, () => playGate.future);
-    });
-    tearDown(() {
-      RevealSound.newPlayer = AudioPlayer.new;
-      RevealSound.resetForTest();
-    });
-
-    test('effet en attente de préparation : il ne part jamais', () async {
-      gate = Completer<void>();
-      final sound = RevealSound()..playCartridge(bonus: true);
-      sound.stopEffects();
-      gate.complete();
-      await pumpEventQueue();
-      expect(calls, isNot(contains('play')));
-    });
-
-    test('effet coupé pendant son démarrage : arrêté dès qu\'il a démarré',
-        () async {
-      playGate = Completer<void>();
-      final sound = RevealSound()..playCartridge(bonus: true);
-      await pumpEventQueue();
-      expect(calls.last, 'play');
-      calls.clear();
-      sound.stopEffects();
-      playGate.complete();
-      await pumpEventQueue();
-      expect(calls, ['stop', 'stop']);
-    });
-
-    test('une cartouche suivante ne coupe pas la précédente après coup',
-        () async {
-      playGate = Completer<void>();
-      final sound = RevealSound()..playCartridge(bonus: true);
-      await pumpEventQueue();
-      sound.playCartridge(bonus: false);
-      await pumpEventQueue();
-      calls.clear();
-      playGate.complete();
-      await pumpEventQueue();
-      expect(calls, isEmpty, reason: 'la suivante joue, rien ne l\'arrête');
-    });
   });
 
   test('l\'archive garde l\'ordre de jeu et départage comme Résultats',
@@ -534,33 +419,4 @@ void main() {
     expect(archived.ranking.map((t) => t.id),
         provider.getTeamsSortedByScore().map((t) => t.id));
   });
-}
-
-class _FakePlayer extends Fake implements AudioPlayer {
-  final List<String> calls;
-  final Future<void> Function() wait;
-  final Future<void> Function() waitPlay;
-
-  _FakePlayer(this.calls, this.wait, this.waitPlay);
-
-  @override
-  Future<void> setAudioContext(AudioContext ctx) => wait();
-  @override
-  Future<void> setVolume(double volume) async {}
-  @override
-  Future<void> stop() async {
-    calls.add('stop');
-    await wait();
-  }
-
-  @override
-  Future<void> play(Source source,
-      {double? volume,
-      double? balance,
-      AudioContext? ctx,
-      Duration? position,
-      PlayerMode? mode}) async {
-    calls.add('play');
-    await waitPlay();
-  }
 }

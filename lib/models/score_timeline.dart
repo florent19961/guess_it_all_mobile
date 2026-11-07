@@ -13,34 +13,16 @@ class RoundSpan {
       {required this.round, required this.start, required this.end});
 }
 
-/// Une cartouche jouée, posée à l'étape [step] sur la courbe de [teamIndex].
-/// [stack] = rang parmi les cartouches de la même équipe à la même étape.
-class TimelineEvent {
-  final int step;
-  final int teamIndex;
-  final String catalogId;
-  final int stack;
-
-  const TimelineEvent({
-    required this.step,
-    required this.teamIndex,
-    required this.catalogId,
-    required this.stack,
-  });
-}
-
 /// La partie vue par la révélation des scores. Une étape = une entrée
 /// d'historique : une continuation en bonus a la sienne, dans sa manche.
 class ScoreTimeline {
   /// Par équipe : score cumulé à chaque étape, de 0 à [steps].
   final List<List<int>> series;
   final List<RoundSpan> rounds;
-  final List<TimelineEvent> events;
 
   const ScoreTimeline({
     required this.series,
     required this.rounds,
-    required this.events,
   });
 
   int get steps => series.isEmpty ? 0 : series.first.length - 1;
@@ -71,7 +53,6 @@ class ScoreTimeline {
 ScoreTimeline buildScoreTimeline({
   required List<String> teamIds,
   required List<HistoryEntry> history,
-  List<ChargeUse> chargesUsed = const [],
 }) {
   final series = [
     for (final _ in teamIds) <int>[0],
@@ -91,23 +72,18 @@ ScoreTimeline buildScoreTimeline({
           RoundSpan(round: entry.round, start: rounds.last.start, end: i + 1);
     }
   }
-
-  final events = <TimelineEvent>[];
-  for (final use in chargesUsed) {
-    final teamIndex = teamIds.indexOf(use.teamId);
-    if (teamIndex == -1) continue;
-    final step = _stepOf(use, history, rounds);
-    events.add(TimelineEvent(
-      step: step,
-      teamIndex: teamIndex,
-      catalogId: use.catalogId,
-      stack: events
-          .where((e) => e.step == step && e.teamIndex == teamIndex)
-          .length,
-    ));
-  }
-  return ScoreTimeline(series: series, rounds: rounds, events: events);
+  return ScoreTimeline(series: series, rounds: rounds);
 }
+
+/// L'étiquette de chaque équipe sur le graphique : ses prénoms, ou les noms
+/// d'équipes pour toutes dès qu'une équipe dépasse 5 joueurs.
+List<String> revealLabels({
+  required List<String> teamNames,
+  required List<List<String>> players,
+}) =>
+    players.any((p) => p.length > 5)
+        ? teamNames
+        : [for (final p in players) p.join(', ')];
 
 /// L'entrée d'historique du tour où la cartouche a été jouée, -1 sans numéro de
 /// tour (partie antérieure) ou tour introuvable. L'équipe compte : une
@@ -116,15 +92,6 @@ int entryOfCharge(ChargeUse use, List<HistoryEntry> history) => use.turn == null
     ? -1
     : history.indexWhere((h) =>
         h.turn == use.turn && h.round == use.round && h.teamId == use.teamId);
-
-/// L'étape où la cartouche a été jouée : le début de son tour, sinon la fin de
-/// sa manche.
-int _stepOf(ChargeUse use, List<HistoryEntry> history, List<RoundSpan> rounds) {
-  final entry = entryOfCharge(use, history);
-  if (entry != -1) return entry;
-  return rounds.where((r) => r.round == use.round).firstOrNull?.end ??
-      history.length;
-}
 
 /// « Les Moulins gagnent ! », « Bob gagne ! ». Jamais d'égalité :
 /// [winnerName] vient du classement (`compareFinalRank`).

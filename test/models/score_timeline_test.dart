@@ -46,21 +46,7 @@ void main() {
         [(1, 0, 3), (2, 3, 5), (3, 5, 6)]);
   });
 
-  test('une cartouche tombe au début de son tour, dans sa manche', () {
-    final t = buildScoreTimeline(
-        teamIds: ['a', 'b'],
-        history: history,
-        chargesUsed: const [
-          ChargeUse(catalogId: 'double_points', teamId: 'b', round: 1, turn: 2),
-          // Tour 3 : la manche départage la 1re partie de la continuation.
-          ChargeUse(catalogId: 'plus_10s', teamId: 'a', round: 1, turn: 3),
-          ChargeUse(catalogId: 'double_points', teamId: 'a', round: 2, turn: 3),
-        ]);
-    expect([for (final e in t.events) (e.step, e.teamIndex)],
-        [(1, 1), (2, 0), (3, 0)]);
-  });
-
-  test('une cartouche tombe sur le tour de SON équipe, numéro partagé compris',
+  test('une cartouche va sur le tour de SON équipe, numéro partagé compris',
       () {
     // Une continuation ne fait pas avancer le numéro de tour : en M2, le tour 3
     // est porté par la continuation de a ET par le tour de b qui suit.
@@ -69,42 +55,13 @@ void main() {
       entry(2, 3, 'a', 2, continuation: true),
       entry(2, 3, 'b', 1),
     ];
-    final t = buildScoreTimeline(
-      teamIds: ['a', 'b'],
-      history: partage,
-      chargesUsed: const [
-        ChargeUse(catalogId: 'plus_10s', teamId: 'b', round: 2, turn: 3),
-        ChargeUse(catalogId: 'plus_10s', teamId: 'a', round: 2, turn: 3),
-      ],
-    );
-    expect(t.events.map((e) => e.step), [2, 1]);
-  });
-
-  test('sans numéro de tour (ou tour introuvable) : en fin de manche', () {
-    final t = buildScoreTimeline(
-        teamIds: ['a', 'b'],
-        history: history,
-        chargesUsed: const [
-          ChargeUse(catalogId: 'reversed', teamId: 'b', round: 1),
-          ChargeUse(catalogId: 'reversed', teamId: 'b', round: 2, turn: 99),
-          ChargeUse(catalogId: 'reversed', teamId: 'a', round: 3),
-        ]);
-    expect([for (final e in t.events) e.step], [3, 5, 6]);
-  });
-
-  test(
-      'plusieurs cartouches au même endroit s\'empilent, équipe inconnue ignorée',
-      () {
-    final t = buildScoreTimeline(
-        teamIds: ['a', 'b'],
-        history: history,
-        chargesUsed: const [
-          ChargeUse(catalogId: 'double_points', teamId: 'a', round: 1, turn: 1),
-          ChargeUse(catalogId: 'plus_10s', teamId: 'a', round: 1, turn: 1),
-          ChargeUse(catalogId: 'plus_10s', teamId: 'b', round: 1, turn: 1),
-          ChargeUse(catalogId: 'plus_10s', teamId: 'zzz', round: 1, turn: 1),
-        ]);
-    expect([for (final e in t.events) e.stack], [0, 1, 0]);
+    int at(String team, {int? turn}) => entryOfCharge(
+        ChargeUse(catalogId: 'plus_10s', teamId: team, round: 2, turn: turn),
+        partage);
+    expect(at('b', turn: 3), 2);
+    expect(at('a', turn: 3), 1);
+    expect(at('a'), -1, reason: 'sans numéro de tour : partie antérieure');
+    expect(at('a', turn: 99), -1);
   });
 
   test('la courbe passe par chaque score sans dépasser ni reculer', () {
