@@ -3,7 +3,8 @@ import 'package:guess_it_all_mobile/models/score_timeline.dart';
 import 'package:guess_it_all_mobile/widgets/effects/score_reveal_chart.dart';
 
 void main() {
-  test('étiquettes : jamais à gauche de la tête, jamais l\'une sur l\'autre',
+  test(
+      'étiquettes : à droite des têtes, sans chevauchement, règle des 5 joueurs',
       () {
     const top = 8.0;
     const bottom = 300.0;
@@ -65,9 +66,8 @@ void main() {
     ], 1);
     expect(spread[1].dy + heights[1] / 2, closeTo(yAt(8), 1e-9),
         reason: 'sans voisine, l\'étiquette revient sur sa tête à la fin');
-  });
 
-  test('plus de 5 joueurs dans une équipe : noms d\'équipes pour toutes', () {
+    // Plus de 5 joueurs dans une équipe : noms d'équipes pour toutes.
     const names = ['Les A', 'Les B'];
     List<String> five(String p) => [for (var i = 0; i < 5; i++) '$p$i'];
 
