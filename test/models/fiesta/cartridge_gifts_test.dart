@@ -157,6 +157,12 @@ void main() {
       expect(anyTwice, isTrue);
     });
 
+    test('poids : valeurs décidées (D2), à ne changer qu\'en le recalibrant',
+        () {
+      expect(kGiftWeights.byDefault, 3);
+      expect(kGiftWeights.overrides, {'double_points': 1});
+    });
+
     test('poids : Mot compte double sort 3 fois moins qu\'une autre', () {
       final counts = <String, int>{};
       for (var i = 0; i < 3000; i++) {
@@ -190,6 +196,23 @@ void main() {
       expect(
           gifts(rules, scores: const {'b': 0}).map((e) => e.catalogId).toList(),
           teamB('g', 1));
+    });
+
+    test('la manche et l\'équipe changent chacune le tirage', () {
+      // Scores égaux : même nombre de cartouches, même vivier en M1 et en M2.
+      String of(String team, int finished, String gameId) =>
+          gifts(FiestaRules(allCount: 3),
+                  gameId: gameId,
+                  finishedRound: finished,
+                  scores: const {'a': 0, 'b': 0})
+              .where((e) => e.teamId == team)
+              .map((e) => e.catalogId)
+              .join();
+      final games = List.generate(12, (i) => 'g$i');
+      expect(games.any((g) => of('a', 1, g) != of('b', 1, g)), isTrue,
+          reason: 'même graine pour toutes les équipes');
+      expect(games.any((g) => of('a', 0, g) != of('a', 1, g)), isTrue,
+          reason: 'même graine à toutes les manches');
     });
 
     test('vivier d\'une seule cartouche : elle revient ; vide : rien', () {

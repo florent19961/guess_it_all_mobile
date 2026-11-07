@@ -17,7 +17,7 @@ ModifierInstance _instance(String id,
 void main() {
   group('Catalogue Fiesta', () {
     test(
-        '18 ids uniques, et la table d\'incompatibilités ne cite que des ids '
+        '17 ids uniques, et la table d\'incompatibilités ne cite que des ids '
         'du catalogue', () {
       // 🔴 Ids FIGÉS : ils sont persistés dans les parties en cours et les
       // ensembles enregistrés. En renommer un rend ces données illisibles.
