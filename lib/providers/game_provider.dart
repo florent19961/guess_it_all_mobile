@@ -70,7 +70,12 @@ class GameProvider extends ChangeNotifier {
   FiestaRules? get pendingFiesta => _pendingFiesta;
   String? get currentEditingPlayerId => _currentEditingPlayerId;
 
+  /// Compte les `setPendingFiesta` : reposer le même objet (Fiesta classique
+  /// validé) est un choix, ce que `identical` seul ne verrait pas.
+  int _pendingChoices = 0;
+
   void setPendingFiesta(FiestaRules? rules) {
+    _pendingChoices++;
     _pendingFiesta = rules;
     _rememberFiestaChoice();
     notifyListeners();
@@ -110,9 +115,8 @@ class GameProvider extends ChangeNotifier {
   /// Fiesta classique. Fiesta classique d'abord, le temps de relire : le mode
   /// n'attend jamais sans règles.
   Future<void> chooseFiestaMode() async {
-    final classic = classicEnsemble.rules;
-    setPendingFiesta(classic);
-    await _followLastUsedEnsemble(classic);
+    setPendingFiesta(classicEnsemble.rules);
+    await _followLastUsedEnsemble();
   }
 
   /// Retour de la liste des ensembles sans valider : rien ne change, sauf si
@@ -120,19 +124,24 @@ class GameProvider extends ChangeNotifier {
   /// gelées : partie rejouée pas encore lancée, ou partie suspendue revenue
   /// jusqu'ici (ses règles, sans lien avec le dernier utilisé).
   Future<void> refreshPendingEnsemble() async {
-    final pending = _pendingFiesta;
-    if (pending?.ensembleName == null ||
+    if (_pendingFiesta?.ensembleName == null ||
         _settings.replayFiesta != null ||
         _game.allWords.isNotEmpty) {
       return;
     }
-    await _followLastUsedEnsemble(pending!);
+    await _followLastUsedEnsemble();
   }
 
-  /// [expected] : un autre choix fait pendant la relecture l'emporte.
-  Future<void> _followLastUsedEnsemble(FiestaRules expected) async {
+  /// Un autre choix fait pendant la relecture l'emporte : par
+  /// `setPendingFiesta` (le compteur) ou par une écriture directe de
+  /// `_pendingFiesta` (`identical`).
+  Future<void> _followLastUsedEnsemble() async {
+    final choices = _pendingChoices;
+    final expected = _pendingFiesta;
     final rules = await _lastUsedEnsembleRules();
-    if (identical(_pendingFiesta, expected)) setPendingFiesta(rules);
+    if (choices == _pendingChoices && identical(_pendingFiesta, expected)) {
+      setPendingFiesta(rules);
+    }
   }
 
   // Setter pour le joueur en cours d'édition

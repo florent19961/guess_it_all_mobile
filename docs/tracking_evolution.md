@@ -1358,11 +1358,11 @@ Ligne « Ensemble : <nom> » hors Fiesta classique. Clavier ouvert sur Joueurs, 
 
 - `chooseFiestaMode` pose Fiesta classique tout de suite, puis le dernier ensemble relu : l'interrupteur reste
   synchrone, et le mode n'attend jamais sans règles, ce qui était un risque nouveau une fois l'écran des ensembles
-  devenu facultatif. Un choix fait pendant la relecture l'emporte (`identical`).
+  devenu facultatif. Un choix fait pendant la relecture l'emporte : un compteur de `setPendingFiesta`, car valider
+  Fiesta classique repose le même objet, et `identical` pour les écritures directes de `_pendingFiesta`.
 - Une partie rejouée passait par la liste, qui remplaçait des règles gelées sans ensemble correspondant. Elle n'y passe
-  plus : les règles gelées sont maintenant jouées telles quelles. D'où la comparaison en JSON et non par le nom pour
-  la ligne Ensemble : d'anciennes règles nommées « Fiesta classique » s'affichent « Fiesta classique (ancienne
-  version) », sinon rien ne les signalerait.
+  plus : les règles gelées sont maintenant jouées telles quelles. La ligne Ensemble ne compare que le nom (D8) : d'anciennes
+  règles nommées « Fiesta classique » n'affichent pas de ligne (arbitrage du lot, revue r1).
 - Retour de la liste sans valider : l'attente relit le dernier utilisé (`refreshPendingEnsemble`). Sans ça, un ensemble
   modifié ou supprimé dans la liste serait joué dans son ancienne version. Hors règles gelées, l'attente est toujours
   le dernier utilisé, donc pas de comparaison à faire.

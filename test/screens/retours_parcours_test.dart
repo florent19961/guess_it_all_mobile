@@ -5,10 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/providers/game_provider.dart';
+import 'package:guess_it_all_mobile/screens/fiesta_tutorial_screen.dart';
 import 'package:guess_it_all_mobile/screens/players_screen.dart';
 import 'package:guess_it_all_mobile/screens/settings_screen.dart';
 import 'package:guess_it_all_mobile/services/fiesta_ensemble_service.dart';
 import 'package:guess_it_all_mobile/utils/constants.dart';
+import 'package:guess_it_all_mobile/widgets/common/app_toggle.dart';
 import 'package:provider/provider.dart';
 
 import '../helpers/test_prefs.dart';
@@ -62,6 +64,62 @@ void main() {
       provider.setPendingFiesta(null);
       await choosing;
       expect(provider.pendingFiesta, isNull);
+    });
+
+    test(
+        'Fiesta classique validé pendant la relecture : reste Fiesta classique',
+        () async {
+      final provider = await givenProvider();
+      final mine = await givenMine('Soirée');
+      await FiestaEnsembleService().markUsed(mine.id);
+
+      final choosing = provider.chooseFiestaMode();
+      provider.setPendingFiesta(classicEnsemble.rules);
+      await choosing;
+      expect(json(provider.pendingFiesta), _classic,
+          reason: 'même objet que celui posé d\'abord par chooseFiestaMode');
+    });
+
+    test(
+        'attente effacée hors de setPendingFiesta pendant la relecture : '
+        'reste effacée', () async {
+      final provider = await givenProvider();
+      final mine = await givenMine('Soirée');
+      await FiestaEnsembleService().markUsed(mine.id);
+
+      final choosing = provider.chooseFiestaMode();
+      provider.resetGame();
+      await choosing;
+      expect(provider.pendingFiesta, isNull);
+    });
+
+    testWidgets(
+        'Fiesta puis Classique pendant la relecture : ni tuto, ni tuto marqué vu',
+        (tester) async {
+      tester.view.physicalSize = const Size(700, 1300);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final prefs = await givenPrefs();
+      final provider = GameProvider();
+      await tester.runAsync(() => pumpEventQueue());
+      await tester.pumpWidget(ChangeNotifierProvider<GameProvider>.value(
+        value: provider,
+        child: const MaterialApp(home: SettingsScreen()),
+      ));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      final mode = tester.widget<AppToggle>(find.byType(AppToggle).first);
+      mode.onChange!('Fiesta');
+      mode.onChange!('Classique');
+      await tester.runAsync(() => pumpEventQueue());
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(provider.pendingFiesta, isNull);
+      expect(find.byType(FiestaTutorialScreen), findsNothing);
+      expect(prefs.getBool(AppConstants.fiestaTutorialSeenKey), isNot(isTrue));
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 1));
     });
   });
 
@@ -150,21 +208,6 @@ void main() {
           kProvidedEnsembles.firstWhere((e) => e.name == 'Pro Player').rules);
       expect(line(), findsOneWidget);
       expect(find.textContaining('Pro Player', findRichText: true),
-          findsOneWidget);
-    });
-
-    testWidgets(
-        'une partie rejouée aux anciennes règles de « Fiesta classique » se '
-        'signale', (tester) async {
-      await pump(
-          tester,
-          FiestaRules(
-            ensembleName: classicEnsemble.name,
-            allCount: 2,
-          ));
-      expect(
-          find.textContaining('Fiesta classique (ancienne version)',
-              findRichText: true),
           findsOneWidget);
     });
   });

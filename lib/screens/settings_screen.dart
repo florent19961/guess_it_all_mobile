@@ -1,10 +1,7 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../models/fiesta/fiesta_ensemble.dart';
-import '../models/fiesta/fiesta_rules.dart';
 import '../providers/game_provider.dart';
 import '../services/storage_service.dart';
 import '../utils/constants.dart';
@@ -91,7 +88,10 @@ class _SettingsScreenState extends State<SettingsScreen>
     if (_tutorialBusy) return;
     _tutorialBusy = true;
     try {
-      if (!await StorageService().hasSeenFiestaTutorial() && mounted) {
+      // Le tuto se marque vu en s'ouvrant : pas si on est revenu en Classique.
+      if (!await StorageService().hasSeenFiestaTutorial() &&
+          mounted &&
+          provider.pendingFiesta != null) {
         await FiestaTutorialScreen.show(context);
       }
     } finally {
@@ -101,18 +101,6 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   void _goNext(GameProvider provider) =>
       provider.goToScreen(AppConstants.screenPlayers);
-
-  /// Les règles sont-elles celles de Fiesta classique AUJOURD'HUI ? Le nom ne
-  /// suffit pas : une partie rejouée garde les règles gelées de son époque.
-  static bool _isCurrentClassic(FiestaRules rules) =>
-      jsonEncode(rules.toJson()) == jsonEncode(classicEnsemble.rules.toJson());
-
-  static String _ensembleName(FiestaRules rules) {
-    final name = rules.ensembleName ?? 'Sans nom';
-    return name == classicEnsemble.name && !_isCurrentClassic(rules)
-        ? '$name (ancienne version)'
-        : name;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -195,9 +183,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                         onChange: (value) => _setMode(provider, value),
                       ),
                     ),
-                    if (provider.pendingFiesta case final rules?
-                        when !_isCurrentClassic(rules))
-                      _buildEnsembleLine(rules),
+                    if (provider.pendingFiesta?.ensembleName case final name?
+                        when name != classicEnsemble.name)
+                      _buildEnsembleLine(name),
                     const SizedBox(height: _sectionGap),
 
                     // Choix des mots
@@ -432,7 +420,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   /// Une seule ligne, quel que soit le nom : l'écran ne doit pas défiler.
-  Widget _buildEnsembleLine(FiestaRules rules) {
+  Widget _buildEnsembleLine(String name) {
     return Padding(
       padding: const EdgeInsets.only(top: 6),
       child: Text.rich(
@@ -440,7 +428,7 @@ class _SettingsScreenState extends State<SettingsScreen>
           children: [
             const TextSpan(text: 'Ensemble : '),
             TextSpan(
-              text: _ensembleName(rules),
+              text: name,
               style: const TextStyle(
                 color: AppColors.secondaryCyan,
                 fontWeight: FontWeight.w600,
@@ -463,7 +451,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   Widget _buildEnsembleRow(
     BuildContext context,
     GameProvider provider,
-    FiestaRules rules,
+    String name,
   ) {
     return GestureDetector(
       onTap: () {
@@ -492,7 +480,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     ),
                   ),
                   Text(
-                    _ensembleName(rules),
+                    name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -680,7 +668,8 @@ class _SettingsScreenState extends State<SettingsScreen>
 
                 if (provider.pendingFiesta case final rules?) ...[
                   const SizedBox(height: 16),
-                  _buildEnsembleRow(context, provider, rules),
+                  _buildEnsembleRow(
+                      context, provider, rules.ensembleName ?? ''),
                 ],
 
                 // Réinitialiser (ancien bouton rond du coin haut droit) : ferme
