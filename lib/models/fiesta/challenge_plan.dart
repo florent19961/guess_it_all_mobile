@@ -45,8 +45,9 @@ class ChallengePlan {
 /// coupé, pas au programme, déjà terminé (même passé), vivier d'une des deux
 /// équipes vide, ou téléphone arabe sans mot deviné.
 ///
-/// [scores] et [rosters] : dans l'ordre des équipes. Le vivier est celui des
-/// cartouches au hasard ([giftPool]) ; la graine est propre au défi.
+/// [scores] et [rosters] : dans l'ordre des équipes. Le vivier et les poids sont
+/// ceux des cartouches au hasard ([giftPool], [drawWeightedGift]) ; la graine est
+/// propre au défi.
 ChallengePlan? planChallenge({
   required FiestaState fiesta,
   required String gameId,
@@ -87,11 +88,13 @@ ChallengePlan? planChallenge({
       blockableTeamIds: blockableTeamIds,
     );
     if (pool.isEmpty) return null;
-    pool.shuffle(Random(giftSeed('$gameId#challenge', finishedRound, teamId)));
     return ChallengeSide(
       teamId: teamId,
       playerId: slowestPlayer(roster: rosters[teamId]!, turns: turns),
-      prizeId: pool.first.id,
+      prizeId: drawWeightedGift(
+        pool,
+        Random(giftSeed('$gameId#challenge', finishedRound, teamId)),
+      ).id,
     );
   }
 
