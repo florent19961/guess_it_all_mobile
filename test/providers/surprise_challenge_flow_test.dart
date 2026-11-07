@@ -335,6 +335,21 @@ void main() {
       expect(modifierById(p.second.prizeId), isNotNull);
     });
 
+    test('récompense : Mot compte double sort 3 fois moins qu\'une autre', () {
+      final counts = <String, int>{};
+      for (var i = 0; i < 6000; i++) {
+        final id = 'g$i';
+        if (!drawChallengeSchedule(id).containsKey(1)) continue;
+        final p = plan(FiestaState(rules: FiestaRules(challenges: true)),
+            gameId: id)!;
+        counts.update(p.second.prizeId, (n) => n + 1, ifAbsent: () => 1);
+      }
+      final others = counts.entries.where((e) => e.key != 'double_points');
+      final mean = others.fold<int>(0, (n, e) => n + e.value) / others.length;
+      // Attendu : 1/3. Graines fixes, donc résultat stable.
+      expect(counts['double_points']! / mean, inInclusiveRange(0.2, 0.5));
+    });
+
     test('vivier vide : pas de défi', () {
       final id = gameIdWhere((s) => s.containsKey(1));
       expect(plan(FiestaState(rules: everythingAlways()), gameId: id), isNull);

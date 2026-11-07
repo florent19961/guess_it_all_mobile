@@ -122,6 +122,16 @@ List<EarnedCartridge> roundGifts({
   ];
 }
 
+/// Une cartouche de [pool] (non vide), selon son poids ([kGiftWeights]).
+ModifierDef drawWeightedGift(List<ModifierDef> pool, Random random) {
+  final total = pool.fold<int>(0, (sum, def) => sum + _giftWeight(def));
+  var roll = random.nextInt(total);
+  return pool.firstWhere((def) {
+    roll -= _giftWeight(def);
+    return roll < 0;
+  });
+}
+
 Iterable<EarnedCartridge> _giftsOf({
   required String teamId,
   required int round,
@@ -130,13 +140,8 @@ Iterable<EarnedCartridge> _giftsOf({
   required Random random,
 }) sync* {
   if (pool.isEmpty) return;
-  final total = pool.fold<int>(0, (sum, def) => sum + _giftWeight(def));
   for (var i = 0; i < count; i++) {
-    var roll = random.nextInt(total);
-    final drawn = pool.firstWhere((def) {
-      roll -= _giftWeight(def);
-      return roll < 0;
-    });
+    final drawn = drawWeightedGift(pool, random);
     yield EarnedCartridge(catalogId: drawn.id, teamId: teamId, round: round);
   }
 }
