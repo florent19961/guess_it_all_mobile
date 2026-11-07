@@ -1,0 +1,1225 @@
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index e0bb416..311cd5c 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -1265,3 +1265,22 @@ par TestFlight. `+11` : le suivi du projet impose au moins ce numéro sur les de
+ 
+ **Conséquence.** Le tag `v1.2.0+11` lance le build. Rien ne part au public sans une action manuelle
+ dans App Store Connect. Si des corrections suivent, le prochain build prend `+12`.
++
++
++## 2026-11-07 — Révélation des scores : prénoms à droite des têtes, plus de cartouches
++
++**Quoi.** Le graphique de fin réserve une colonne à droite pour des étiquettes multi-lignes (prénoms de
++l'équipe, ou noms d'équipes pour toutes si une équipe dépasse 5 joueurs). Bulles et sons de cartouche
++retirés, avec `ScoreTimeline.events` et les effets de `RevealSound`. Légende réduite aux noms d'équipes.
++Bouton de la carte de fin : « Suivant ».
++
++**Pourquoi.** Retours de Florent : les noms touchaient les courbes et les bulles chargeaient le graphique.
++Position lissée par moyenne sur une fenêtre de progrès plutôt que par un état par image : le painter
++reste une fonction pure et rejoue pareil à toute valeur de `progress`. La fenêtre vaut une part fixe du
++tracé (≈ 0,2 s), pas un nombre de tours comme dans la maquette : une longue partie aurait sinon perdu le
++lissage. Elle se resserre en fin de tracé, car le contrôleur s'arrête à 1 alors que la maquette débordait
++au-delà : les étiquettes doivent rejoindre leurs têtes, animations réduites comprises.
++
++**Conséquence.** Quand deux courbes échangent leur place, leurs étiquettes se croisent ≈ 0,2 s, comme dans
++la maquette validée : les séparer à chaque image les ferait sauter. `entryOfCharge` reste, pour les badges de
++`stats_screen`.
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index eb99dfd..265b828 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -9,7 +9,7 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `player.dart` | `Player` | Joueur (id, name, words). Factory `Player.create()` |
+ | `team.dart` | `Team` | Equipe (id, name, playerIds, score, scoreByRound[3]) |
+ | `game_settings.dart` | `GameSettings` | Config partie : nb equipes/joueurs, wordChoice, totalWords, turnDuration, passPenalty, categories, difficultes, `fiestaEnabled` (dernier choix Classique / Fiesta ; cle absente ou mal typee = Classique), `replayFiesta` (regles gelees d'une partie rejouee, en attente de lancement ; cle omise si nulle, illisible = nulle) |
+-| `score_timeline.dart` | `ScoreTimeline`, `buildScoreTimeline`, `revealHeadline` | Données pures de la révélation des scores : score cumulé par équipe à chaque entrée d'historique (continuations comprises), manches, cartouches jouées placées par (tour, manche, équipe : une continuation partage son numéro de tour avec le tour suivant), sinon en fin de manche ; `entryOfCharge` : entrée du tour d'une cartouche, aussi pour les badges de `stats_screen` ; annonce du vainqueur (`winnerLine`, verbe accordé, aussi dans l'historique) |
++| `score_timeline.dart` | `ScoreTimeline`, `buildScoreTimeline`, `revealLabels`, `revealHeadline` | Données pures de la révélation des scores : score cumulé par équipe à chaque entrée d'historique (continuations comprises), manches ; `revealLabels` : prénoms de chaque équipe, ou noms d'équipes pour toutes si une équipe dépasse 5 joueurs ; `entryOfCharge` : entrée du tour d'une cartouche par (tour, manche, équipe : une continuation partage son numéro de tour avec le tour suivant), pour les badges de `stats_screen` ; annonce du vainqueur (`winnerLine`, verbe accordé, aussi dans l'historique) |
+ | `game_state.dart` | `GameState`, `HistoryEntry` | `GameState.hasUnreadableFiesta(json)` : clé `fiesta` présente mais illisible (autre format que v4) — reprise abandonnée, retour arrière refusé, jamais relue en Classique. Etat complet de la partie en cours : ecran, round, tour, pools de mots, scores, timestamps, snapshots de validation. `turnAllottedSeconds` = durée de **départ** réelle du tour (continuation, bonus et malus de temps), base de `HistoryEntry.timeSpent` ; nul = partie d'une version antérieure → `turnDuration`. `HistoryEntry.pointsScored` (optionnel) : écrit seulement s'il diffère du nombre de mots (×2) ; absent = un point par mot ; `points` est la seule source de « Évolution des scores » |
+ | `game_analytics.dart` | `GameAnalytics`, `DeviceInfo` | Analytics completes d'une partie pour Firebase (gameId, events, wordMetadata, wordStats). Fiesta : `gameMode`, `fiestaRules` (clés absentes en Classique ; recopiés par `copyWith`, sinon perdus au 1er event) |
+ | `word_event.dart` | `WordEvent`, `WordEventType`, `PassEvent` | Evenement atomique : shown/guessed/passed/expired/invalidated avec contexte (round, turn, team, player). Fiesta : `modifiers` (clé absente en Classique) |
+diff --git a/lib/models/score_timeline.dart b/lib/models/score_timeline.dart
+index baf78f5..980ca6f 100644
+--- a/lib/models/score_timeline.dart
++++ b/lib/models/score_timeline.dart
+@@ -13,34 +13,16 @@ class RoundSpan {
+       {required this.round, required this.start, required this.end});
+ }
+ 
+-/// Une cartouche jouée, posée à l'étape [step] sur la courbe de [teamIndex].
+-/// [stack] = rang parmi les cartouches de la même équipe à la même étape.
+-class TimelineEvent {
+-  final int step;
+-  final int teamIndex;
+-  final String catalogId;
+-  final int stack;
+-
+-  const TimelineEvent({
+-    required this.step,
+-    required this.teamIndex,
+-    required this.catalogId,
+-    required this.stack,
+-  });
+-}
+-
+ /// La partie vue par la révélation des scores. Une étape = une entrée
+ /// d'historique : une continuation en bonus a la sienne, dans sa manche.
+ class ScoreTimeline {
+   /// Par équipe : score cumulé à chaque étape, de 0 à [steps].
+   final List<List<int>> series;
+   final List<RoundSpan> rounds;
+-  final List<TimelineEvent> events;
+ 
+   const ScoreTimeline({
+     required this.series,
+     required this.rounds,
+-    required this.events,
+   });
+ 
+   int get steps => series.isEmpty ? 0 : series.first.length - 1;
+@@ -71,7 +53,6 @@ class ScoreTimeline {
+ ScoreTimeline buildScoreTimeline({
+   required List<String> teamIds,
+   required List<HistoryEntry> history,
+-  List<ChargeUse> chargesUsed = const [],
+ }) {
+   final series = [
+     for (final _ in teamIds) <int>[0],
+@@ -91,24 +72,19 @@ ScoreTimeline buildScoreTimeline({
+           RoundSpan(round: entry.round, start: rounds.last.start, end: i + 1);
+     }
+   }
+-
+-  final events = <TimelineEvent>[];
+-  for (final use in chargesUsed) {
+-    final teamIndex = teamIds.indexOf(use.teamId);
+-    if (teamIndex == -1) continue;
+-    final step = _stepOf(use, history, rounds);
+-    events.add(TimelineEvent(
+-      step: step,
+-      teamIndex: teamIndex,
+-      catalogId: use.catalogId,
+-      stack: events
+-          .where((e) => e.step == step && e.teamIndex == teamIndex)
+-          .length,
+-    ));
+-  }
+-  return ScoreTimeline(series: series, rounds: rounds, events: events);
++  return ScoreTimeline(series: series, rounds: rounds);
+ }
+ 
++/// L'étiquette de chaque équipe sur le graphique : ses prénoms, ou les noms
++/// d'équipes pour toutes dès qu'une équipe dépasse 5 joueurs.
++List<String> revealLabels({
++  required List<String> teamNames,
++  required List<List<String>> players,
++}) =>
++    players.any((p) => p.length > 5)
++        ? teamNames
++        : [for (final p in players) p.join(', ')];
++
+ /// L'entrée d'historique du tour où la cartouche a été jouée, -1 sans numéro de
+ /// tour (partie antérieure) ou tour introuvable. L'équipe compte : une
+ /// continuation partage son numéro de tour avec le tour qui la suit.
+@@ -117,15 +93,6 @@ int entryOfCharge(ChargeUse use, List<HistoryEntry> history) => use.turn == null
+     : history.indexWhere((h) =>
+         h.turn == use.turn && h.round == use.round && h.teamId == use.teamId);
+ 
+-/// L'étape où la cartouche a été jouée : le début de son tour, sinon la fin de
+-/// sa manche.
+-int _stepOf(ChargeUse use, List<HistoryEntry> history, List<RoundSpan> rounds) {
+-  final entry = entryOfCharge(use, history);
+-  if (entry != -1) return entry;
+-  return rounds.where((r) => r.round == use.round).firstOrNull?.end ??
+-      history.length;
+-}
+-
+ /// « Les Moulins gagnent ! », « Bob gagne ! ». Jamais d'égalité :
+ /// [winnerName] vient du classement (`compareFinalRank`).
+ String revealHeadline(String winnerName) => '${winnerLine(winnerName)} !';
+diff --git a/lib/screens/CLAUDE.md b/lib/screens/CLAUDE.md
+index 08c5912..cca142e 100644
+--- a/lib/screens/CLAUDE.md
++++ b/lib/screens/CLAUDE.md
+@@ -29,7 +29,7 @@ HomeScreen → SettingsScreen (Classique / Fiesta)
+ | `verification_screen.dart` | Validation post-tour : toggle valid/invalide par mot, sauvegarde snapshot |
+ | `transition_screen.dart` | Fin de manche, Classique et Fiesta, aucun score. Apres M1 et M2 : animation ~2,8 s (`_RoundStage`, sons `impact-bass-1` et `whoosh-short`, vibration, un toucher fait passer, animations reduites respectees) puis `nextRound`, directement vers l'avant-tour. Apres M3 : ecran fixe (retour, « Voir les N mots devines », « Voir les resultats ») |
+ | `giver_blocked_screen.dart` | Le piege d'« Interdit de faire deviner » : phrase, « Passe le telephone a X. », « Suivant » (`confirmGiverBlock`). Rien n'est consomme avant : une app tuee la remontre |
+-| `score_reveal_screen.dart` | `EndOfGameScreen`, ce que montre `screenResults` : `ScoreRevealScreen` tant que `GameState.scoreRevealSeen` est faux, sinon `ResultsScreen`. Aucun écran ni chemin de plus : tout ce qui mène aux résultats passe par cet aiguillage, l'historique n'y passe jamais. `ScoreRevealScreen` (maquette `curve(2)`) : graphique fixe tracé en 4,5 s sans chiffres (`ScoreRevealPainter`), légende dans l'ordre des équipes pour ne rien dévoiler, cartouches jouées qui tombent ; fin : vainqueur (jamais d'égalité, `getTeamsSortedByScore`), scores, « Voir les résultats ». Un toucher ou le retour système va aux résultats. L'animation attend le départ de la musique (0,8 s au plus) pour que son gong tombe à la fin du tracé. Animations réduites : la fin directement, sans aucun son. Le graphique passe avant le titre et la légende quand la place manque, le bouton reste toujours visible. Une app tuée pendant la révélation rouvre sur les résultats |
++| `score_reveal_screen.dart` | `EndOfGameScreen`, ce que montre `screenResults` : `ScoreRevealScreen` tant que `GameState.scoreRevealSeen` est faux, sinon `ResultsScreen`. Aucun écran ni chemin de plus : tout ce qui mène aux résultats passe par cet aiguillage, l'historique n'y passe jamais. `ScoreRevealScreen` (maquette `curve(2)`) : graphique fixe tracé en 4,5 s sans chiffres (`ScoreRevealPainter`), légende des noms d'équipes dans l'ordre des équipes pour ne rien dévoiler, prénoms à droite des têtes (noms d'équipes pour toutes si une équipe dépasse 5 joueurs) ; fin : vainqueur (jamais d'égalité, `getTeamsSortedByScore`), scores, « Suivant ». Un toucher ou le retour système va aux résultats. L'animation attend le départ de la musique (0,8 s au plus) pour que son gong tombe à la fin du tracé. Animations réduites : la fin directement, sans aucun son. Le graphique passe avant le titre et la légende quand la place manque, le bouton reste toujours visible. Une app tuée pendant la révélation rouvre sur les résultats |
+ | `surprise_challenge_screen.dart` | Défi surprise, autonome et piloté par ses paramètres : VS coupé, règle, action, « Qui a gagné ? », roulette, « Les Moulins gagnent ! » en couleur d'équipe sans ombre. « Passer ce défi » jusqu'à « Continuer » (rien n'est donné avant), retour système bloqué, sons coupés à la sortie, animations réduites respectées |
+ | `challenge_route_screen.dart` | Branche `SurpriseChallengeScreen` sur le provider : `currentChallenge` traduit en noms et couleurs, issue rendue à `finishChallenge` |
+ | `results_screen.dart` | Podium anime, tableau scores par manche, boutons Rejouer/Stats |
+diff --git a/lib/screens/score_reveal_screen.dart b/lib/screens/score_reveal_screen.dart
+index 1ff0e49..8943013 100644
+--- a/lib/screens/score_reveal_screen.dart
++++ b/lib/screens/score_reveal_screen.dart
+@@ -3,7 +3,6 @@ import 'dart:math';
+ import 'package:flutter/material.dart';
+ import 'package:provider/provider.dart';
+ 
+-import '../models/fiesta/modifier_catalog.dart';
+ import '../models/score_timeline.dart';
+ import '../providers/game_provider.dart';
+ import '../services/reveal_sound.dart';
+@@ -49,8 +48,8 @@ class _ScoreRevealScreenState extends State<ScoreRevealScreen>
+   /// Réservé sous le graphique pour que la carte de fin ne le déplace pas.
+   static const _endCardHeight = 170.0;
+ 
+-  /// En dessous, le graphique passe avant le titre et la légende, qui répète
+-  /// les noms déjà portés par les courbes (très grande police).
++  /// En dessous, le graphique passe avant le titre et la légende (très grande
++  /// police).
+   static const _minChartHeight = 100.0;
+ 
+   late final RevealSound _sound = widget.sound ?? RevealSound();
+@@ -58,14 +57,13 @@ class _ScoreRevealScreenState extends State<ScoreRevealScreen>
+       AnimationController(vsync: this, duration: _duration);
+   late final ScoreTimeline _timeline;
+   late final List<String> _names;
+-  late final List<String> _playerLines;
++  late final List<String> _labels;
+   late final List<Color> _colors;
+   late final String _headline;
+   late final String _scores;
+ 
+   bool _started = false;
+   bool _finished = false;
+-  final Set<TimelineEvent> _fallen = {};
+ 
+   @override
+   void initState() {
+@@ -73,23 +71,24 @@ class _ScoreRevealScreenState extends State<ScoreRevealScreen>
+     WidgetsBinding.instance.addObserver(this);
+     final provider = context.read<GameProvider>();
+     final teams = provider.teams;
+-    final events = provider.game.fiesta?.chargesUsed ?? const [];
+     _timeline = buildScoreTimeline(
+       teamIds: [for (final t in teams) t.id],
+       history: provider.game.history,
+-      chargesUsed: events,
+     );
+     _names = [for (final t in teams) t.name];
+     _colors = [
+       for (var i = 0; i < teams.length; i++) AppColors.getTeamColor(i)
+     ];
+-    _playerLines = [
+-      for (final t in teams)
+-        t.playerIds
+-            .map((id) => provider.getPlayerById(id)?.name)
+-            .whereType<String>()
+-            .join(', ')
+-    ];
++    _labels = revealLabels(
++      teamNames: _names,
++      players: [
++        for (final t in teams)
++          t.playerIds
++              .map((id) => provider.getPlayerById(id)?.name)
++              .whereType<String>()
++              .toList()
++      ],
++    );
+     final ranked = provider.getTeamsSortedByScore();
+     _headline = revealHeadline(ranked.first.name);
+     _scores = ranked.map((t) => '${t.name} ${t.score}').join(' · ');
+@@ -109,7 +108,6 @@ class _ScoreRevealScreenState extends State<ScoreRevealScreen>
+       _finished = true;
+       _controller.value = 1;
+     } else {
+-      _controller.addListener(_dropCartridges);
+       _startWithMusic();
+     }
+   }
+@@ -125,17 +123,6 @@ class _ScoreRevealScreenState extends State<ScoreRevealScreen>
+     if (mounted) _controller.forward();
+   }
+ 
+-  /// Un petit son par image au plus, même si plusieurs cartouches tombent.
+-  void _dropCartridges() {
+-    final now = _controller.value * _timeline.steps;
+-    final falling =
+-        _timeline.events.where((e) => e.step <= now && _fallen.add(e)).toList();
+-    if (falling.isEmpty) return;
+-    _sound.playCartridge(
+-        bonus: modifierById(falling.first.catalogId)?.nature ==
+-            ModifierNature.bonus);
+-  }
+-
+   void _goToResults() {
+     context.read<GameProvider>().markScoreRevealSeen();
+   }
+@@ -151,7 +138,6 @@ class _ScoreRevealScreenState extends State<ScoreRevealScreen>
+     _controller.dispose();
+     // Passé pendant le tracé : fondu. Après le gong, sa queue sonne jusqu'au bout.
+     if (!_finished) _sound.fadeOutMusic();
+-    _sound.stopEffects();
+     super.dispose();
+   }
+ 
+@@ -209,8 +195,9 @@ class _ScoreRevealScreenState extends State<ScoreRevealScreen>
+             painter: ScoreRevealPainter(
+               timeline: _timeline,
+               progress: _controller,
+-              teamNames: _names,
++              labels: _labels,
+               teamColors: _colors,
++              textScaler: MediaQuery.textScalerOf(context),
+             ),
+           ),
+         ),
+@@ -234,25 +221,13 @@ class _ScoreRevealScreenState extends State<ScoreRevealScreen>
+             ),
+             const SizedBox(width: 7),
+             Flexible(
+-              child: Text.rich(
+-                TextSpan(
+-                  text: _names[i],
+-                  style: TextStyle(
+-                    fontFamily: 'Poppins',
+-                    fontSize: 12.5,
+-                    fontWeight: FontWeight.w600,
+-                    color: _colors[i],
+-                  ),
+-                  children: [
+-                    TextSpan(
+-                      text: '  ${_playerLines[i]}',
+-                      style: const TextStyle(
+-                        fontSize: 11.5,
+-                        fontWeight: FontWeight.w400,
+-                        color: Color(0xFFCBD5E1),
+-                      ),
+-                    ),
+-                  ],
++              child: Text(
++                _names[i],
++                style: TextStyle(
++                  fontFamily: 'Poppins',
++                  fontSize: 12.5,
++                  fontWeight: FontWeight.w600,
++                  color: _colors[i],
+                 ),
+                 maxLines: 1,
+                 overflow: TextOverflow.ellipsis,
+@@ -304,7 +279,7 @@ class _ScoreRevealScreenState extends State<ScoreRevealScreen>
+           ),
+           const SizedBox(height: 10),
+           AppButton(
+-            text: 'Voir les résultats',
++            text: 'Suivant',
+             variant: AppButtonVariant.primary,
+             fullWidth: true,
+             onPressed: _goToResults,
+diff --git a/lib/services/CLAUDE.md b/lib/services/CLAUDE.md
+index 9673f2d..6f3823b 100644
+--- a/lib/services/CLAUDE.md
++++ b/lib/services/CLAUDE.md
+@@ -15,7 +15,7 @@
+ | `connectivity_service.dart` | `ConnectivityService` | Detection reseau (wifi/mobile/ethernet) via connectivity_plus |
+ | `firebase_sync_service.dart` | `FirebaseSyncService` | Sync offline-first vers Firestore. Queue de games en attente, sync auto quand online |
+ | `audio_service.dart` | `AudioService` | Sons : ding (mot devine), whoosh (mot passe), gong (fin de tour, `end_of_turn.wav`) via audioplayers. `ding.wav` et `end_of_turn.wav` sont générés par `scripts/render_sounds.py` |
+-| `reveal_sound.dart` | `RevealSound` | Sons de la révélation des scores, players dédiés : musique `assets/sounds/reveal_music.mp3` (composition originale, `scripts/render_reveal_music.py`, gong à 4,5 s), fondu seulement si on passe pendant le tracé, jamais sur le gong ; petit son des cartouches (sans focus audio, sinon Android met la musique en pause). Les effets s'arrêtent à la sortie (`stopEffects`). Échec de lecture silencieux. Crédits : `assets/sounds/CREDITS.md` |
++| `reveal_sound.dart` | `RevealSound` | Musique de la révélation des scores, player dédié : `assets/sounds/reveal_music.mp3` (composition originale, `scripts/render_reveal_music.py`, gong à 4,5 s), fondu seulement si on passe pendant le tracé, jamais sur le gong. Échec de lecture silencieux. Crédits : `assets/sounds/CREDITS.md` |
+ | `fiesta_ensemble_service.dart` | `FiestaEnsembleService` | Ensembles Fiesta : `load` / `create` / `update` (sur place) / `duplicate(ensemble)` (« Nom (2) », premier numéro libre parmi fournis + miens ; copie d'un fourni en fin de liste) / `delete` / `markUsed` (l'id peut être celui d'un ensemble fourni). Les ensembles **fournis** (`kProvidedEnsembles`) ne sont jamais écrits. Forme v1 (avant Fiesta v2) = illisible, ignorée et réécrite telle quelle. **Borne 10 tenue par le service**, modifications serialisees (file interne), quarantaine du blob illisible ou venu du futur, ensemble illisible ignore seul a la lecture et **reecrit tel quel** a chaque modification (jamais detruit) ; ces entrees illisibles **ne comptent pas** dans la borne de 10 (le blob peut en porter 10 + k) |
+ 
+ ## Cles SharedPreferences
+diff --git a/lib/services/reveal_sound.dart b/lib/services/reveal_sound.dart
+index 455d17c..91cee57 100644
+--- a/lib/services/reveal_sound.dart
++++ b/lib/services/reveal_sound.dart
+@@ -1,33 +1,18 @@
+ import 'dart:async';
+ 
+ import 'package:audioplayers/audioplayers.dart';
+-import 'package:flutter/foundation.dart';
+ 
+-/// Sons de la révélation des scores. Un échec de lecture reste silencieux : le
+-/// son ne bloque jamais la révélation.
++/// Musique de la révélation des scores. Un échec de lecture reste silencieux :
++/// le son ne bloque jamais la révélation.
+ ///
+-/// Players dédiés : `AudioService` n'en a qu'un, qu'il coupe à chaque son.
++/// Player dédié : `AudioService` n'en a qu'un, qu'il coupe à chaque son.
+ class RevealSound {
+   static const musicAsset = 'sounds/reveal_music.mp3';
+   static const _fadeStep = Duration(milliseconds: 70);
+   static const _fadeDelta = 0.06;
+ 
+-  @visibleForTesting
+-  static AudioPlayer Function() newPlayer = AudioPlayer.new;
+-
+-  @visibleForTesting
+-  static void resetForTest() {
+-    _fade?.cancel();
+-    _fade = null;
+-    _music = null;
+-    _effects = null;
+-  }
+-
+   static AudioPlayer? _music;
+-  static AudioPlayer? _effects;
+   static int _musicRun = 0;
+-  static int _effectRun = 0;
+-  static bool _effectsStopped = false;
+   static Timer? _fade;
+ 
+   /// La musique (`scripts/render_reveal_music.py`) : son gong tombe 4,5 s après
+@@ -35,7 +20,7 @@ class RevealSound {
+   Future<void> startMusic() async {
+     final run = ++_musicRun;
+     try {
+-      final player = _music ??= newPlayer();
++      final player = _music ??= AudioPlayer();
+       await player.setVolume(1);
+       if (run != _musicRun) return;
+       await player.play(AssetSource(musicAsset));
+@@ -73,40 +58,6 @@ class RevealSound {
+     if (player != null) _quietly(player.stop);
+   }
+ 
+-  /// Sortie de la révélation : aucun effet ne continue ni ne part après.
+-  void stopEffects() {
+-    _effectRun++;
+-    _effectsStopped = true;
+-    final player = _effects;
+-    if (player != null) _quietly(player.stop);
+-  }
+-
+-  /// Petit son d'une cartouche qui tombe.
+-  void playCartridge({required bool bonus}) =>
+-      _playEffect(bonus ? 'sounds/chime.mp3' : 'sounds/click-soft.mp3');
+-
+-  void _playEffect(String asset) {
+-    final run = ++_effectRun;
+-    _effectsStopped = false;
+-    _quietly(() async {
+-      var player = _effects;
+-      if (player == null) {
+-        player = _effects = newPlayer();
+-        // Sans ça, sur Android, le focus audio de cet effet met la musique en
+-        // pause (`WrappedPlayer.onLoss`).
+-        await player.setAudioContext(AudioContext(
+-          android:
+-              const AudioContextAndroid(audioFocus: AndroidAudioFocus.none),
+-        ));
+-      }
+-      if (run != _effectRun) return;
+-      await player.stop();
+-      if (run != _effectRun) return;
+-      await player.play(AssetSource(asset));
+-      if (_effectsStopped) await player.stop();
+-    });
+-  }
+-
+   static void _quietly(Future<void> Function() action) {
+     unawaited(action().catchError((_) {}));
+   }
+diff --git a/lib/widgets/effects/CLAUDE.md b/lib/widgets/effects/CLAUDE.md
+index db9ea8f..cb23637 100644
+--- a/lib/widgets/effects/CLAUDE.md
++++ b/lib/widgets/effects/CLAUDE.md
+@@ -16,4 +16,4 @@ Utilise sur tous les ecrans comme fond d'ecran.
+ 
+ ## `score_reveal_chart.dart`
+ 
+-`ScoreRevealPainter` : le graphique de la révélation des scores, dessiné depuis une `ScoreTimeline` et une animation de 0 à 1. Aucun chiffre. Pas de logique de jeu.
++`ScoreRevealPainter` : le graphique de la révélation des scores, dessiné depuis une `ScoreTimeline` et une animation de 0 à 1. Aucun chiffre. Pas de logique de jeu. Étiquettes toujours à droite des têtes, dans une colonne réservée : rien n'est tracé à droite de la tête, donc aucun nom ne touche une courbe. `placeRevealLabels` reste une fonction pure du progrès (position moyennée sur une fenêtre, jamais d'état par image). Grandes polices : l'étiquette réduit jusqu'à tenir dans la hauteur, puis se coupe.
+diff --git a/lib/widgets/effects/score_reveal_chart.dart b/lib/widgets/effects/score_reveal_chart.dart
+index 20627f0..2c99320 100644
+--- a/lib/widgets/effects/score_reveal_chart.dart
++++ b/lib/widgets/effects/score_reveal_chart.dart
+@@ -2,43 +2,124 @@ import 'dart:math';
+ 
+ import 'package:flutter/material.dart';
+ 
+-import '../../models/fiesta/modifier_catalog.dart';
+ import '../../models/score_timeline.dart';
+ import '../../theme/app_theme.dart';
+-import '../fiesta/modifier_badge.dart';
+ 
+-/// Graphique de la révélation (maquette `curve(2)`) : cadre fixe, un trait par
+-/// équipe, sans aucun chiffre. [progress] va de 0 à 1 sur toute la partie.
++const _labelGap = 7.0;
++
++/// Écart entre la tête et son étiquette : rien n'est tracé à droite de la tête,
++/// donc aucun nom ne touche une courbe.
++const _labelOffset = 15.0;
++
++/// Position lissée sur une fenêtre (≈ 0,2 s) : sans état par image, l'étiquette
++/// glisse quand l'ordre des courbes change au lieu de sauter.
++const _smoothSamples = 7;
++const _smoothWindow = 0.045;
++
++/// Où poser l'étiquette de chaque équipe, fonction pure du progrès. La fenêtre
++/// se resserre en fin de tracé : à 1, chaque étiquette a rejoint sa tête.
++List<Offset> placeRevealLabels({
++  required ScoreTimeline timeline,
++  required double progress,
++  required double headX,
++  required double Function(double value) yAt,
++  required List<double> heights,
++  required double top,
++  required double bottom,
++}) {
++  final window = min(_smoothWindow, 1 - progress);
++  final tops = List.filled(heights.length, 0.0);
++  for (var s = 0; s < _smoothSamples; s++) {
++    final t =
++        max(0.0, progress - window * s / (_smoothSamples - 1)) * timeline.steps;
++    final sample = _stackLabels(
++        [for (var i = 0; i < heights.length; i++) yAt(timeline.valueAt(i, t))],
++        heights,
++        top,
++        bottom);
++    for (var i = 0; i < tops.length; i++) {
++      tops[i] += sample[i] / _smoothSamples;
++    }
++  }
++  return [for (final y in tops) Offset(headX + _labelOffset, y)];
++}
++
++/// Le haut de chaque étiquette, centrée sur sa tête puis poussée pour ne pas
++/// chevaucher ses voisines ni sortir de [top]..[bottom].
++List<double> _stackLabels(
++    List<double> ys, List<double> heights, double top, double bottom) {
++  final count = ys.length;
++  final order = [for (var i = 0; i < count; i++) i]..sort((a, b) {
++      final byY = ys[a].compareTo(ys[b]);
++      return byY != 0 ? byY : a - b;
++    });
++  final tops = [for (final i in order) ys[i] - heights[i] / 2];
++  for (var pass = 0; pass < 14; pass++) {
++    for (var i = 0; i < count - 1; i++) {
++      final over = tops[i] + heights[order[i]] + _labelGap - tops[i + 1];
++      if (over > 0) {
++        tops[i] -= over / 2;
++        tops[i + 1] += over / 2;
++      }
++    }
++  }
++  for (var i = 0; i < count; i++) {
++    final floor =
++        i == 0 ? top : tops[i - 1] + heights[order[i - 1]] + _labelGap;
++    if (tops[i] < floor) tops[i] = floor;
++  }
++  for (var i = count - 1; i >= 0; i--) {
++    final ceiling =
++        (i == count - 1 ? bottom : tops[i + 1] - _labelGap) - heights[order[i]];
++    if (tops[i] > ceiling) tops[i] = ceiling;
++  }
++  final result = List.filled(count, 0.0);
++  for (var i = 0; i < count; i++) {
++    result[order[i]] = tops[i];
++  }
++  return result;
++}
++
++/// Graphique de la révélation : cadre fixe, un trait par équipe, sans aucun
++/// chiffre, les étiquettes dans une colonne réservée à droite. [progress] va de
++/// 0 à 1 sur toute la partie.
+ class ScoreRevealPainter extends CustomPainter {
+   final ScoreTimeline timeline;
+   final Animation<double> progress;
+-  final List<String> teamNames;
++  final List<String> labels;
+   final List<Color> teamColors;
++  final TextScaler textScaler;
+ 
+   ScoreRevealPainter({
+     required this.timeline,
+     required this.progress,
+-    required this.teamNames,
++    required this.labels,
+     required this.teamColors,
++    required this.textScaler,
+   }) : super(repaint: progress);
+ 
+-  static const _left = 14.0;
+-  static const _right = 16.0;
+-  static const _top = 14.0;
++  static const _left = 8.0;
++  static const _top = 8.0;
+   static const _bottom = 26.0;
+-  static const _bubbleRadius = 14.0;
++  static const _columnWidth = 124.0;
++  static const _columnMargin = 22.0;
++  static const _labelFont = 12.0;
++  static const _minLabelFont = 9.0;
++  static const _labelLineHeight = 1.25;
+ 
+-  /// Durée de chute d'une cartouche, en part de l'animation (≈ 0,16 s).
+-  static const _fallShare = 0.035;
+-  static const _fallHeight = 170.0;
++  /// Au-delà, un trait fin relie l'étiquette à sa tête.
++  static const _linkFrom = 9.0;
++
++  Size? _fittedFor;
++  List<TextPainter> _fitted = const [];
+ 
+   @override
+   void paint(Canvas canvas, Size size) {
+     final steps = timeline.steps;
+     if (steps == 0) return;
+-    final p = progress.value;
+-    final t = p * steps;
+-    final plotW = size.width - _left - _right;
++    final t = progress.value * steps;
++    final column = min(_columnWidth * textScaler.scale(1), size.width / 2);
++    final plotW = size.width - _left - column;
+     final plotBottom = size.height - _bottom;
+     final yMax = max(1, timeline.maxScore) * 1.1;
+     double xAt(double step) => _left + step / steps * plotW;
+@@ -55,44 +136,48 @@ class ScoreRevealPainter extends CustomPainter {
+       for (var x = dx; x < t; x += dx) {
+         path.lineTo(xAt(x), yAt(timeline.valueAt(team, x)));
+       }
+-      final head = Offset(xAt(t), yAt(timeline.valueAt(team, t)));
+-      path.lineTo(head.dx, head.dy);
++      path.lineTo(xAt(t), yAt(timeline.valueAt(team, t)));
+       canvas.drawPath(
+         path,
+         Paint()
+           ..color = teamColors[team]
+           ..style = PaintingStyle.stroke
+-          ..strokeWidth = 4
++          ..strokeWidth = 3.5
+           ..strokeCap = StrokeCap.round
+           ..strokeJoin = StrokeJoin.round,
+       );
+-      canvas.drawCircle(head, 6, Paint()..color = teamColors[team]);
+     }
+ 
+-    _paintHeadNames(canvas, size, xAt(t), plotBottom, [
+-      for (var i = 0; i < teamNames.length; i++) yAt(timeline.valueAt(i, t))
+-    ]);
+-
+-    for (final event in timeline.events) {
+-      final fall = p >= 1 ? 1.0 : (p - event.step / steps) / _fallShare;
+-      if (fall < 0) continue;
+-      final q = min(1.0, fall);
+-      final eased = 1 - (1 - q) * (1 - q);
+-      final rest = max(
+-          _top + _bubbleRadius,
+-          yAt(timeline.series[event.teamIndex][event.step].toDouble()) -
+-              22 -
+-              event.stack * 30);
+-      _paintBubble(
+-        canvas,
+-        Offset(
+-          xAt(event.step.toDouble())
+-              .clamp(_bubbleRadius + 1, size.width - _bubbleRadius - 1),
+-          rest - (1 - eased) * _fallHeight,
+-        ),
+-        event.catalogId,
+-        q,
+-      );
++    if (_fittedFor != size) {
++      _fittedFor = size;
++      _fitted = _fitLabels(column - _columnMargin, plotBottom - _top);
++    }
++    final headX = xAt(t);
++    final placed = placeRevealLabels(
++      timeline: timeline,
++      progress: progress.value,
++      headX: headX,
++      yAt: yAt,
++      heights: [for (final label in _fitted) label.height],
++      top: _top,
++      bottom: plotBottom,
++    );
++    for (var team = 0; team < _fitted.length; team++) {
++      final color = teamColors[team];
++      final head = Offset(headX, yAt(timeline.valueAt(team, t)));
++      final at = placed[team];
++      final labelY = at.dy + _fitted[team].height / 2;
++      if ((labelY - head.dy).abs() > _linkFrom) {
++        canvas.drawLine(
++          head + const Offset(6, 0),
++          Offset(at.dx - 3, labelY),
++          Paint()
++            ..color = color.withValues(alpha: .5)
++            ..strokeWidth = 1,
++        );
++      }
++      canvas.drawCircle(head, 5.5, Paint()..color = color);
++      _fitted[team].paint(canvas, at);
+     }
+   }
+ 
+@@ -124,67 +209,60 @@ class ScoreRevealPainter extends CustomPainter {
+     }
+   }
+ 
+-  void _paintHeadNames(Canvas canvas, Size size, double headX,
+-      double plotBottom, List<double> headYs) {
+-    const gap = 15.0;
+-    final toLeft = headX > size.width * .55;
+-    final maxWidth = toLeft ? headX - 12 - _left : size.width - headX - 12 - 2;
+-    final order = [for (var i = 0; i < headYs.length; i++) i]
+-      ..sort((a, b) => headYs[a].compareTo(headYs[b]));
+-    final tops = [for (final i in order) headYs[i] - 23];
+-    for (var i = 1; i < tops.length; i++) {
+-      tops[i] = max(tops[i], tops[i - 1] + gap);
+-    }
+-    // Tous à zéro au départ : on remonte plutôt que de mordre les manches.
+-    var floor = plotBottom - 16;
+-    for (var i = tops.length - 1; i >= 0; i--) {
+-      tops[i] = min(tops[i], floor);
+-      floor = tops[i] - gap;
++  /// Les étiquettes à la plus grande taille qui tient dans la hauteur du
++  /// graphique ; à la plus petite, elles se coupent plutôt que de se chevaucher.
++  List<TextPainter> _fitLabels(double width, double room) {
++    final free = room - (labels.length - 1) * _labelGap;
++    for (var font = textScaler.scale(_labelFont);
++        font > _minLabelFont;
++        font--) {
++      final fitted = [
++        for (var i = 0; i < labels.length; i++) _label(i, font, width)
++      ];
++      if (fitted.fold(0.0, (sum, l) => sum + l.height) <= free) return fitted;
+     }
+-    for (var i = 0; i < order.length; i++) {
+-      final label = _text(teamNames[order[i]], 11, teamColors[order[i]],
+-          weight: FontWeight.w600, maxWidth: maxWidth);
+-      label.paint(canvas,
+-          Offset(toLeft ? headX - 12 - label.width : headX + 12, tops[i]));
+-    }
+-  }
+-
+-  void _paintBubble(Canvas canvas, Offset at, String catalogId, double alpha) {
+-    final color =
+-        modifierColor(modifierById(catalogId)?.nature ?? ModifierNature.malus)
+-            .withValues(alpha: alpha);
+-    canvas.drawCircle(at, _bubbleRadius,
+-        Paint()..color = AppColors.backgroundMain.withValues(alpha: alpha));
+-    canvas.drawCircle(
+-        at,
+-        _bubbleRadius,
+-        Paint()
+-          ..color = color
+-          ..style = PaintingStyle.stroke
+-          ..strokeWidth = 2);
+-    final icon =
+-        _text(modifierIcon(catalogId), 11, color, weight: FontWeight.w700);
+-    icon.paint(canvas, at - Offset(icon.width / 2, icon.height / 2));
++    final lines =
++        max(1, free / labels.length ~/ (_minLabelFont * _labelLineHeight));
++    return [
++      for (var i = 0; i < labels.length; i++)
++        _label(i, _minLabelFont, width, maxLines: lines)
++    ];
+   }
+ 
+-  TextPainter _text(String text, double size, Color color,
+-          {FontWeight? weight, double maxWidth = double.infinity}) =>
++  TextPainter _label(int i, double font, double width, {int? maxLines}) =>
+       TextPainter(
++        text: TextSpan(
++          text: labels[i],
++          style: TextStyle(
++            fontFamily: 'Poppins',
++            fontSize: font,
++            height: _labelLineHeight,
++            fontWeight: FontWeight.w600,
++            color: teamColors[i],
++          ),
++        ),
++        textDirection: TextDirection.ltr,
++        maxLines: maxLines,
++        ellipsis: maxLines == null ? null : '…',
++      )..layout(maxWidth: width);
++
++  TextPainter _text(String text, double size, Color color) => TextPainter(
+         text: TextSpan(
+           text: text,
+           style: TextStyle(
+             fontFamily: 'Poppins',
+             fontSize: size,
+-            fontWeight: weight,
+             color: color,
+           ),
+         ),
+         textDirection: TextDirection.ltr,
+         maxLines: 1,
+         ellipsis: '…',
+-      )..layout(maxWidth: maxWidth);
++      )..layout();
+ 
+   @override
+   bool shouldRepaint(ScoreRevealPainter old) =>
+-      old.timeline != timeline || old.progress != progress;
++      old.timeline != timeline ||
++      old.progress != progress ||
++      old.textScaler != textScaler;
+ }
+diff --git a/test/models/score_timeline_test.dart b/test/models/score_timeline_test.dart
+index bfd500c..e8a1510 100644
+--- a/test/models/score_timeline_test.dart
++++ b/test/models/score_timeline_test.dart
+@@ -46,21 +46,7 @@ void main() {
+         [(1, 0, 3), (2, 3, 5), (3, 5, 6)]);
+   });
+ 
+-  test('une cartouche tombe au début de son tour, dans sa manche', () {
+-    final t = buildScoreTimeline(
+-        teamIds: ['a', 'b'],
+-        history: history,
+-        chargesUsed: const [
+-          ChargeUse(catalogId: 'double_points', teamId: 'b', round: 1, turn: 2),
+-          // Tour 3 : la manche départage la 1re partie de la continuation.
+-          ChargeUse(catalogId: 'plus_10s', teamId: 'a', round: 1, turn: 3),
+-          ChargeUse(catalogId: 'double_points', teamId: 'a', round: 2, turn: 3),
+-        ]);
+-    expect([for (final e in t.events) (e.step, e.teamIndex)],
+-        [(1, 1), (2, 0), (3, 0)]);
+-  });
+-
+-  test('une cartouche tombe sur le tour de SON équipe, numéro partagé compris',
++  test('une cartouche va sur le tour de SON équipe, numéro partagé compris',
+       () {
+     // Une continuation ne fait pas avancer le numéro de tour : en M2, le tour 3
+     // est porté par la continuation de a ET par le tour de b qui suit.
+@@ -69,42 +55,13 @@ void main() {
+       entry(2, 3, 'a', 2, continuation: true),
+       entry(2, 3, 'b', 1),
+     ];
+-    final t = buildScoreTimeline(
+-      teamIds: ['a', 'b'],
+-      history: partage,
+-      chargesUsed: const [
+-        ChargeUse(catalogId: 'plus_10s', teamId: 'b', round: 2, turn: 3),
+-        ChargeUse(catalogId: 'plus_10s', teamId: 'a', round: 2, turn: 3),
+-      ],
+-    );
+-    expect(t.events.map((e) => e.step), [2, 1]);
+-  });
+-
+-  test('sans numéro de tour (ou tour introuvable) : en fin de manche', () {
+-    final t = buildScoreTimeline(
+-        teamIds: ['a', 'b'],
+-        history: history,
+-        chargesUsed: const [
+-          ChargeUse(catalogId: 'reversed', teamId: 'b', round: 1),
+-          ChargeUse(catalogId: 'reversed', teamId: 'b', round: 2, turn: 99),
+-          ChargeUse(catalogId: 'reversed', teamId: 'a', round: 3),
+-        ]);
+-    expect([for (final e in t.events) e.step], [3, 5, 6]);
+-  });
+-
+-  test(
+-      'plusieurs cartouches au même endroit s\'empilent, équipe inconnue ignorée',
+-      () {
+-    final t = buildScoreTimeline(
+-        teamIds: ['a', 'b'],
+-        history: history,
+-        chargesUsed: const [
+-          ChargeUse(catalogId: 'double_points', teamId: 'a', round: 1, turn: 1),
+-          ChargeUse(catalogId: 'plus_10s', teamId: 'a', round: 1, turn: 1),
+-          ChargeUse(catalogId: 'plus_10s', teamId: 'b', round: 1, turn: 1),
+-          ChargeUse(catalogId: 'plus_10s', teamId: 'zzz', round: 1, turn: 1),
+-        ]);
+-    expect([for (final e in t.events) e.stack], [0, 1, 0]);
++    int at(String team, {int? turn}) => entryOfCharge(
++        ChargeUse(catalogId: 'plus_10s', teamId: team, round: 2, turn: turn),
++        partage);
++    expect(at('b', turn: 3), 2);
++    expect(at('a', turn: 3), 1);
++    expect(at('a'), -1, reason: 'sans numéro de tour : partie antérieure');
++    expect(at('a', turn: 99), -1);
+   });
+ 
+   test('la courbe passe par chaque score sans dépasser ni reculer', () {
+diff --git a/test/providers/stats_consistency_test.dart b/test/providers/stats_consistency_test.dart
+index fdf96e5..fde4f43 100644
+--- a/test/providers/stats_consistency_test.dart
++++ b/test/providers/stats_consistency_test.dart
+@@ -168,15 +168,12 @@ void main() {
+         '$j2=1.2s $j1=2.7s');
+ 
+     // Révélation : les courbes finissent sur les totaux ; les cartouches jouées
+-    // tombent au 1er tour de A.
+-    final timeline = buildScoreTimeline(
+-      teamIds: [a, b],
+-      history: history,
+-      chargesUsed: p.game.fiesta!.chargesUsed,
+-    );
++    // sont datées du 1er tour de A.
++    final timeline = buildScoreTimeline(teamIds: [a, b], history: history);
+     expect(timeline.series[0], [0, 4, 4, 9, 12, 12, 12]);
+     expect(timeline.series[1], [0, 0, 1, 1, 1, 6, 14]);
+-    expect(timeline.events.map((e) => e.step), [0, 0]);
++    expect(p.game.fiesta!.chargesUsed.map((u) => entryOfCharge(u, history)),
++        [0, 0]);
+ 
+     // Récap : les deux cartouches, une seule fois chacune.
+     expect(p.modifierRecap.map((l) => l.title), ['Cartouches utilisées']);
+diff --git a/test/screens/score_reveal_screen_test.dart b/test/screens/score_reveal_screen_test.dart
+index b6d7379..596183c 100644
+--- a/test/screens/score_reveal_screen_test.dart
++++ b/test/screens/score_reveal_screen_test.dart
+@@ -1,10 +1,8 @@
+ import 'dart:async';
+ 
+-import 'package:audioplayers/audioplayers.dart';
+ import 'package:flutter/material.dart';
+ import 'package:flutter/services.dart';
+ import 'package:flutter_test/flutter_test.dart';
+-import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+ import 'package:guess_it_all_mobile/models/score_timeline.dart';
+ import 'package:guess_it_all_mobile/providers/game_provider.dart';
+ import 'package:guess_it_all_mobile/screens/results_screen.dart';
+@@ -34,16 +32,10 @@ class FakeSound implements RevealSound {
+   void fadeOutMusic() => calls.add('fade');
+   @override
+   void stopMusic() => calls.add('stop');
+-  @override
+-  void stopEffects() => calls.add('stopEffects');
+-  @override
+-  void playCartridge({required bool bonus}) =>
+-      calls.add(bonus ? 'bonus' : 'malus');
+ }
+ 
+ /// 2 équipes de 2 joueurs, 1 mot par joueur.
+-Future<GameProvider> givenProvider(WidgetTester tester,
+-    {FiestaRules? fiesta, int teams = 2}) async {
++Future<GameProvider> givenProvider(WidgetTester tester, {int teams = 2}) async {
+   await givenPrefs();
+   givenFakePlatformPlugins();
+   final provider = GameProvider();
+@@ -58,7 +50,7 @@ Future<GameProvider> givenProvider(WidgetTester tester,
+     provider.randomizeTeams();
+     provider.updateTeamName(provider.teams[0].id, 'Les A');
+     provider.updateTeamName(provider.teams[1].id, 'Bob');
+-    await provider.startGame(fiesta: fiesta);
++    await provider.startGame();
+   });
+   return provider;
+ }
+@@ -178,7 +170,7 @@ void main() {
+     await tester.pumpWidget(const SizedBox());
+   });
+ 
+-  test('le piège ne fausse pas les courbes, cartouche rendue hors du graphique',
++  test('le piège ne fausse pas les courbes, cartouche rendue datée de son tour',
+       () async {
+     final p = await lot1
+         .givenGame(lot1.stock({'block_giver': 1, 'reversed': 1}), a: 3, b: 3);
+@@ -220,13 +212,13 @@ void main() {
+     final timeline = buildScoreTimeline(
+       teamIds: [for (final t in p.teams) t.id],
+       history: history,
+-      chargesUsed: p.game.fiesta!.chargesUsed,
+     );
+     expect(timeline.steps, history.length);
+     expect([for (final s in timeline.series) s.last],
+         [for (final t in p.teams) t.score]);
+     expect([
+-      for (final e in timeline.events) (e.catalogId, e.step)
++      for (final u in p.game.fiesta!.chargesUsed)
++        (u.catalogId, entryOfCharge(u, history))
+     ], [
+       ('block_giver', history.indexWhere((h) => h.turn == 3)),
+       ('reversed', history.indexWhere((h) => h.turn == trapped)),
+@@ -242,18 +234,17 @@ void main() {
+ 
+     expect(find.byType(ScoreRevealScreen), findsOneWidget);
+     expect(find.text('Qui a mené la danse ?'), findsOneWidget);
+-    expect(find.text('Voir les résultats'), findsNothing);
++    expect(find.text('Suivant'), findsNothing);
+     expect(sound.calls, ['music']);
+ 
+     await tester.pump(); // La musique a démarré : le tracé part.
+     await tester.pump(const Duration(milliseconds: 4400));
+-    expect(find.text('Voir les résultats'), findsNothing,
+-        reason: 'environ 4,5 s');
++    expect(find.text('Suivant'), findsNothing, reason: 'environ 4,5 s');
+     await tester.pump(const Duration(milliseconds: 200));
+     await tester.pump(const Duration(milliseconds: 500));
+ 
+     expect(find.text('Finale'), findsOneWidget);
+-    expect(find.text('Voir les résultats'), findsOneWidget);
++    expect(find.text('Suivant'), findsOneWidget);
+     expect(sound.calls, ['music'],
+         reason: 'la queue du gong sonne jusqu\'au bout');
+     final winner = provider.getTeamsSortedByScore().first;
+@@ -262,7 +253,7 @@ void main() {
+     expect(
+         find.textContaining('${winner.name} ${winner.score}'), findsOneWidget);
+ 
+-    await tester.tap(find.text('Voir les résultats'));
++    await tester.tap(find.text('Suivant'));
+     await tester.pump();
+     expect(sound.calls, isNot(contains('fade')),
+         reason: 'pas de fondu sur le gong');
+@@ -297,45 +288,11 @@ void main() {
+     await tester.pump();
+ 
+     expect(find.text('Finale'), findsOneWidget);
+-    expect(find.text('Voir les résultats'), findsOneWidget);
++    expect(find.text('Suivant'), findsOneWidget);
+     expect(sound.calls, isEmpty);
+     await tester.pumpWidget(const SizedBox());
+   });
+ 
+-  FiestaRules doublePoints() => FiestaRules(
+-        modifiers: {'double_points': const ModifierSetting(charges: 1)},
+-      );
+-
+-  testWidgets('animations réduites avec une cartouche : aucun son',
+-      (tester) async {
+-    final provider = await givenProvider(tester, fiesta: doublePoints());
+-    provider.setDoublePoints(true);
+-    playToTheEnd(provider);
+-    final sound = FakeSound();
+-    await tester.pumpWidget(app(provider, sound, reduced: true));
+-    await tester.pump();
+-
+-    expect(find.text('Finale'), findsOneWidget);
+-    expect(sound.calls, isEmpty);
+-    await tester.pumpWidget(const SizedBox());
+-  });
+-
+-  testWidgets('quitter la révélation coupe les effets, jamais la queue du gong',
+-      (tester) async {
+-    final provider = await givenProvider(tester);
+-    playToTheEnd(provider);
+-    final sound = FakeSound();
+-    await tester.pumpWidget(app(provider, sound));
+-    await tester.pump();
+-    await tester.pump(const Duration(milliseconds: 4600));
+-    await tester.pump(const Duration(milliseconds: 500));
+-    await tester.tap(find.text('Voir les résultats'));
+-    await tester.pump();
+-
+-    expect(sound.calls, ['music', 'stopEffects']);
+-    await tester.pumpWidget(const SizedBox());
+-  });
+-
+   for (final (label, size, scale) in [
+     ('360×640, texte × 1,3', const Size(360, 640), 1.3),
+     ('360×640, texte × 2', const Size(360, 640), 2.0),
+@@ -354,10 +311,10 @@ void main() {
+       await tester.pump();
+ 
+       expect(tester.takeException(), isNull);
+-      final button = tester.getRect(find.text('Voir les résultats'));
++      final button = tester.getRect(find.text('Suivant'));
+       expect(button.bottom, lessThanOrEqualTo(size.height));
+       expect(button.top, greaterThanOrEqualTo(0));
+-      await tester.tap(find.text('Voir les résultats'));
++      await tester.tap(find.text('Suivant'));
+       expect(provider.game.scoreRevealSeen, isTrue);
+       await tester.pumpWidget(const SizedBox());
+     });
+@@ -381,23 +338,6 @@ void main() {
+     await tester.pumpWidget(const SizedBox());
+   });
+ 
+-  testWidgets('Fiesta : une cartouche jouée fait son petit son',
+-      (tester) async {
+-    final provider = await givenProvider(tester, fiesta: doublePoints());
+-    provider.setDoublePoints(true);
+-    playToTheEnd(provider);
+-    final use = provider.game.fiesta!.chargesUsed.single;
+-    expect(use.turn, 1, reason: 'numéro du tour où elle a été jouée');
+-
+-    final sound = FakeSound();
+-    await tester.pumpWidget(app(provider, sound));
+-    await tester.pump();
+-    await tester.pump(const Duration(milliseconds: 16));
+-    expect(sound.calls, contains('bonus'));
+-    expect(sound.calls.where((c) => c == 'bonus'), hasLength(1));
+-    await tester.pumpWidget(const SizedBox());
+-  });
+-
+   test('une fois seulement : correction du dernier tour, partie suivante',
+       () async {
+     await givenPrefs();
+@@ -451,65 +391,10 @@ void main() {
+ 
+     final sound = RevealSound(); // Aucun plugin audio dans les tests.
+     await sound.startMusic();
+-    sound.playCartridge(bonus: true);
+     sound.fadeOutMusic();
+     sound.stopMusic();
+   });
+ 
+-  group('RevealSound : effets à la sortie', () {
+-    late List<String> calls;
+-    late Completer<void> gate;
+-    late Completer<void> playGate;
+-
+-    setUp(() {
+-      calls = [];
+-      gate = Completer<void>()..complete();
+-      playGate = Completer<void>()..complete();
+-      RevealSound.resetForTest();
+-      RevealSound.newPlayer =
+-          () => _FakePlayer(calls, () => gate.future, () => playGate.future);
+-    });
+-    tearDown(() {
+-      RevealSound.newPlayer = AudioPlayer.new;
+-      RevealSound.resetForTest();
+-    });
+-
+-    test('effet en attente de préparation : il ne part jamais', () async {
+-      gate = Completer<void>();
+-      final sound = RevealSound()..playCartridge(bonus: true);
+-      sound.stopEffects();
+-      gate.complete();
+-      await pumpEventQueue();
+-      expect(calls, isNot(contains('play')));
+-    });
+-
+-    test('effet coupé pendant son démarrage : arrêté dès qu\'il a démarré',
+-        () async {
+-      playGate = Completer<void>();
+-      final sound = RevealSound()..playCartridge(bonus: true);
+-      await pumpEventQueue();
+-      expect(calls.last, 'play');
+-      calls.clear();
+-      sound.stopEffects();
+-      playGate.complete();
+-      await pumpEventQueue();
+-      expect(calls, ['stop', 'stop']);
+-    });
+-
+-    test('une cartouche suivante ne coupe pas la précédente après coup',
+-        () async {
+-      playGate = Completer<void>();
+-      final sound = RevealSound()..playCartridge(bonus: true);
+-      await pumpEventQueue();
+-      sound.playCartridge(bonus: false);
+-      await pumpEventQueue();
+-      calls.clear();
+-      playGate.complete();
+-      await pumpEventQueue();
+-      expect(calls, isEmpty, reason: 'la suivante joue, rien ne l\'arrête');
+-    });
+-  });
+-
+   test('l\'archive garde l\'ordre de jeu et départage comme Résultats',
+       () async {
+     await givenPrefs();
+@@ -535,32 +420,3 @@ void main() {
+         provider.getTeamsSortedByScore().map((t) => t.id));
+   });
+ }
+-
+-class _FakePlayer extends Fake implements AudioPlayer {
+-  final List<String> calls;
+-  final Future<void> Function() wait;
+-  final Future<void> Function() waitPlay;
+-
+-  _FakePlayer(this.calls, this.wait, this.waitPlay);
+-
+-  @override
+-  Future<void> setAudioContext(AudioContext ctx) => wait();
+-  @override
+-  Future<void> setVolume(double volume) async {}
+-  @override
+-  Future<void> stop() async {
+-    calls.add('stop');
+-    await wait();
+-  }
+-
+-  @override
+-  Future<void> play(Source source,
+-      {double? volume,
+-      double? balance,
+-      AudioContext? ctx,
+-      Duration? position,
+-      PlayerMode? mode}) async {
+-    calls.add('play');
+-    await waitPlay();
+-  }
+-}
+diff --git a/test/widgets/score_reveal_labels_test.dart b/test/widgets/score_reveal_labels_test.dart
+new file mode 100644
+index 0000000..0d65f40
+--- /dev/null
++++ b/test/widgets/score_reveal_labels_test.dart
+@@ -0,0 +1,83 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/score_timeline.dart';
++import 'package:guess_it_all_mobile/widgets/effects/score_reveal_chart.dart';
++
++void main() {
++  test(
++      'étiquettes : à droite des têtes, sans chevauchement, règle des 5 joueurs',
++      () {
++    const top = 8.0;
++    const bottom = 300.0;
++    const heights = [45.0, 15.0, 30.0, 45.0];
++    double yAt(double value) => bottom - value / 12 * (bottom - top);
++
++    List<Offset> placed(List<List<int>> series, double progress) =>
++        placeRevealLabels(
++          timeline: ScoreTimeline(series: series, rounds: const []),
++          progress: progress,
++          headX: 100,
++          yAt: yAt,
++          heights: heights,
++          top: top,
++          bottom: bottom,
++        );
++
++    void expectStacked(List<Offset> labels) {
++      final order = [0, 1, 2, 3]
++        ..sort((a, b) => labels[a].dy.compareTo(labels[b].dy));
++      // La moyenne du lissage laisse un arrondi flottant.
++      expect(labels[order.first].dy, greaterThanOrEqualTo(top - 1e-9));
++      expect(labels[order.last].dy + heights[order.last],
++          lessThanOrEqualTo(bottom + 1e-9));
++      for (var i = 1; i < order.length; i++) {
++        expect(labels[order[i]].dy,
++            greaterThan(labels[order[i - 1]].dy + heights[order[i - 1]]));
++      }
++    }
++
++    // Courbes serrées qui ne se croisent pas : poussées à chaque image.
++    const parallel = [
++      [0, 4, 6, 8],
++      [0, 3, 5, 7],
++      [0, 2, 4, 6],
++      [0, 1, 3, 5],
++    ];
++    for (var p = 0.0; p <= 1; p += .05) {
++      final labels = placed(parallel, p);
++      expectStacked(labels);
++      expect(labels.every((l) => l.dx > 100), isTrue);
++    }
++
++    // Courbes qui se croisent : à la fin, plus rien du lissage ne traîne.
++    const crossing = [
++      [0, 9, 9, 9],
++      [0, 0, 8, 12],
++      [0, 0, 0, 0],
++      [0, 5, 5, 6],
++    ];
++    expectStacked(placed(crossing, 1));
++    expect(placed(crossing, .63), placed(crossing, .63),
++        reason: 'fonction pure du progrès');
++    final spread = placed(const [
++      [0, 12],
++      [0, 8],
++      [0, 4],
++      [0, 0],
++    ], 1);
++    expect(spread[1].dy + heights[1] / 2, closeTo(yAt(8), 1e-9),
++        reason: 'sans voisine, l\'étiquette revient sur sa tête à la fin');
++
++    // Plus de 5 joueurs dans une équipe : noms d'équipes pour toutes.
++    const names = ['Les A', 'Les B'];
++    List<String> five(String p) => [for (var i = 0; i < 5; i++) '$p$i'];
++
++    expect(revealLabels(teamNames: names, players: [five('a'), five('b')]),
++        ['a0, a1, a2, a3, a4', 'b0, b1, b2, b3, b4']);
++    expect(
++        revealLabels(teamNames: names, players: [
++          five('a'),
++          [...five('b'), 'b5']
++        ]),
++        names);
++  });
++}

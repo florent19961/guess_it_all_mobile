@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/fiesta/modifier_catalog.dart';
 import '../models/score_timeline.dart';
 import '../providers/game_provider.dart';
 import '../services/reveal_sound.dart';
@@ -49,8 +48,8 @@ class _ScoreRevealScreenState extends State<ScoreRevealScreen>
   /// Réservé sous le graphique pour que la carte de fin ne le déplace pas.
   static const _endCardHeight = 170.0;
 
-  /// En dessous, le graphique passe avant le titre et la légende, qui répète
-  /// les noms déjà portés par les courbes (très grande police).
+  /// En dessous, le graphique passe avant le titre et la légende (très grande
+  /// police).
   static const _minChartHeight = 100.0;
 
   late final RevealSound _sound = widget.sound ?? RevealSound();
@@ -58,14 +57,13 @@ class _ScoreRevealScreenState extends State<ScoreRevealScreen>
       AnimationController(vsync: this, duration: _duration);
   late final ScoreTimeline _timeline;
   late final List<String> _names;
-  late final List<String> _playerLines;
+  late final List<String> _labels;
   late final List<Color> _colors;
   late final String _headline;
   late final String _scores;
 
   bool _started = false;
   bool _finished = false;
-  final Set<TimelineEvent> _fallen = {};
 
   @override
   void initState() {
@@ -73,23 +71,24 @@ class _ScoreRevealScreenState extends State<ScoreRevealScreen>
     WidgetsBinding.instance.addObserver(this);
     final provider = context.read<GameProvider>();
     final teams = provider.teams;
-    final events = provider.game.fiesta?.chargesUsed ?? const [];
     _timeline = buildScoreTimeline(
       teamIds: [for (final t in teams) t.id],
       history: provider.game.history,
-      chargesUsed: events,
     );
     _names = [for (final t in teams) t.name];
     _colors = [
       for (var i = 0; i < teams.length; i++) AppColors.getTeamColor(i)
     ];
-    _playerLines = [
-      for (final t in teams)
-        t.playerIds
-            .map((id) => provider.getPlayerById(id)?.name)
-            .whereType<String>()
-            .join(', ')
-    ];
+    _labels = revealLabels(
+      teamNames: _names,
+      players: [
+        for (final t in teams)
+          t.playerIds
+              .map((id) => provider.getPlayerById(id)?.name)
+              .whereType<String>()
+              .toList()
+      ],
+    );
     final ranked = provider.getTeamsSortedByScore();
     _headline = revealHeadline(ranked.first.name);
     _scores = ranked.map((t) => '${t.name} ${t.score}').join(' · ');
@@ -109,7 +108,6 @@ class _ScoreRevealScreenState extends State<ScoreRevealScreen>
       _finished = true;
       _controller.value = 1;
     } else {
-      _controller.addListener(_dropCartridges);
       _startWithMusic();
     }
   }
@@ -123,17 +121,6 @@ class _ScoreRevealScreenState extends State<ScoreRevealScreen>
       // Sans musique, ou en retard sur elle : la révélation part quand même.
     }
     if (mounted) _controller.forward();
-  }
-
-  /// Un petit son par image au plus, même si plusieurs cartouches tombent.
-  void _dropCartridges() {
-    final now = _controller.value * _timeline.steps;
-    final falling =
-        _timeline.events.where((e) => e.step <= now && _fallen.add(e)).toList();
-    if (falling.isEmpty) return;
-    _sound.playCartridge(
-        bonus: modifierById(falling.first.catalogId)?.nature ==
-            ModifierNature.bonus);
   }
 
   void _goToResults() {
@@ -151,7 +138,6 @@ class _ScoreRevealScreenState extends State<ScoreRevealScreen>
     _controller.dispose();
     // Passé pendant le tracé : fondu. Après le gong, sa queue sonne jusqu'au bout.
     if (!_finished) _sound.fadeOutMusic();
-    _sound.stopEffects();
     super.dispose();
   }
 
@@ -209,8 +195,9 @@ class _ScoreRevealScreenState extends State<ScoreRevealScreen>
             painter: ScoreRevealPainter(
               timeline: _timeline,
               progress: _controller,
-              teamNames: _names,
+              labels: _labels,
               teamColors: _colors,
+              textScaler: MediaQuery.textScalerOf(context),
             ),
           ),
         ),
@@ -234,25 +221,13 @@ class _ScoreRevealScreenState extends State<ScoreRevealScreen>
             ),
             const SizedBox(width: 7),
             Flexible(
-              child: Text.rich(
-                TextSpan(
-                  text: _names[i],
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: _colors[i],
-                  ),
-                  children: [
-                    TextSpan(
-                      text: '  ${_playerLines[i]}',
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFFCBD5E1),
-                      ),
-                    ),
-                  ],
+              child: Text(
+                _names[i],
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: _colors[i],
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -304,7 +279,7 @@ class _ScoreRevealScreenState extends State<ScoreRevealScreen>
           ),
           const SizedBox(height: 10),
           AppButton(
-            text: 'Voir les résultats',
+            text: 'Suivant',
             variant: AppButtonVariant.primary,
             fullWidth: true,
             onPressed: _goToResults,

@@ -1265,3 +1265,22 @@ par TestFlight. `+11` : le suivi du projet impose au moins ce numéro sur les de
 
 **Conséquence.** Le tag `v1.2.0+11` lance le build. Rien ne part au public sans une action manuelle
 dans App Store Connect. Si des corrections suivent, le prochain build prend `+12`.
+
+
+## 2026-11-07 — Révélation des scores : prénoms à droite des têtes, plus de cartouches
+
+**Quoi.** Le graphique de fin réserve une colonne à droite pour des étiquettes multi-lignes (prénoms de
+l'équipe, ou noms d'équipes pour toutes si une équipe dépasse 5 joueurs). Bulles et sons de cartouche
+retirés, avec `ScoreTimeline.events` et les effets de `RevealSound`. Légende réduite aux noms d'équipes.
+Bouton de la carte de fin : « Suivant ».
+
+**Pourquoi.** Retours de Florent : les noms touchaient les courbes et les bulles chargeaient le graphique.
+Position lissée par moyenne sur une fenêtre de progrès plutôt que par un état par image : le painter
+reste une fonction pure et rejoue pareil à toute valeur de `progress`. La fenêtre vaut une part fixe du
+tracé (≈ 0,2 s), pas un nombre de tours comme dans la maquette : une longue partie aurait sinon perdu le
+lissage. Elle se resserre en fin de tracé, car le contrôleur s'arrête à 1 alors que la maquette débordait
+au-delà : les étiquettes doivent rejoindre leurs têtes, animations réduites comprises.
+
+**Conséquence.** Quand deux courbes échangent leur place, leurs étiquettes se croisent ≈ 0,2 s, comme dans
+la maquette validée : les séparer à chaque image les ferait sauter. `entryOfCharge` reste, pour les badges de
+`stats_screen`.

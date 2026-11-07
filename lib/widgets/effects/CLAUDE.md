@@ -16,4 +16,4 @@ Utilise sur tous les ecrans comme fond d'ecran.
 
 ## `score_reveal_chart.dart`
 
-`ScoreRevealPainter` : le graphique de la révélation des scores, dessiné depuis une `ScoreTimeline` et une animation de 0 à 1. Aucun chiffre. Pas de logique de jeu.
+`ScoreRevealPainter` : le graphique de la révélation des scores, dessiné depuis une `ScoreTimeline` et une animation de 0 à 1. Aucun chiffre. Pas de logique de jeu. Étiquettes toujours à droite des têtes, dans une colonne réservée : rien n'est tracé à droite de la tête, donc aucun nom ne touche une courbe. `placeRevealLabels` reste une fonction pure du progrès (position moyennée sur une fenêtre, jamais d'état par image). Grandes polices : l'étiquette réduit jusqu'à tenir dans la hauteur, puis se coupe.
