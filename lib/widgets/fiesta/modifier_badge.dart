@@ -4,8 +4,11 @@ import '../../models/fiesta/modifier_catalog.dart';
 import '../../models/fiesta/modifier_instance.dart';
 import '../../theme/app_theme.dart';
 
-/// Pictogramme court d'un modificateur (maquette `CAT[].ic`). Affichage
-/// seulement : un id absent retombe sur « ✦ ».
+/// Pictogramme texte d'un modificateur : le repli de [ModifierIcon] pour
+/// `two_words` (retiré du jeu, reste dans l'historique) et les ids inconnus.
+/// Les autres entrées ne servent plus qu'au dessin de `score_reveal_chart.dart`,
+/// qui n'utilise plus d'icône une fois le lot `retours-reveal` mergé : la table se
+/// réduit alors à `two_words`.
 const Map<String, String> kModifierIcons = {
   'mime_no_arms': '✋',
   'mime_no_fists': '🖐',
@@ -29,6 +32,129 @@ const Map<String, String> kModifierIcons = {
 
 String modifierIcon(String id) => kModifierIcons[id] ?? '✦';
 
+/// Icônes en image : `assets/icons/modifiers/<id>.png`.
+const Set<String> _imageIcons = {
+  'free_pass',
+  'double_points',
+  'plus_10s',
+  'minus_10s',
+  'no_pass',
+  'reversed',
+  'one_answer',
+  'block_giver',
+  'mime_no_fists',
+  'draw',
+  'mime_under_sheet',
+  'mime_back_turned',
+  'sounds_only',
+};
+
+const Map<String, String> _emojiIcons = {
+  'other_language': '🌍',
+  'block_guesser': '🤐',
+  'mime_no_arms': '💪',
+  'mime_eyes_closed': '👀',
+};
+
+/// Émojis barrés par `slash.png`.
+const Set<String> _slashedIcons = {'mime_no_arms', 'mime_eyes_closed'};
+
+/// L'icône d'un modificateur : boîte carrée de [size], contenu centré. Seul
+/// point d'affichage des icônes. Un émoji ne dépend ni de la police de l'app ni
+/// des métriques de sa ligne, d'où un centrage commun à toutes les tailles.
+/// [color] ne teinte que le repli texte ([kModifierIcons]).
+class ModifierIcon extends StatelessWidget {
+  final String id;
+  final double size;
+  final Color color;
+
+  const ModifierIcon(this.id,
+      {required this.size, this.color = Colors.white, super.key});
+
+  Widget _image(String name) => Image.asset(
+        'assets/icons/modifiers/$name.png',
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        gaplessPlayback: true,
+        excludeFromSemantics: true,
+      );
+
+  Widget _glyph(String text) {
+    final fontSize = size * 0.72;
+    return Text(
+      text,
+      maxLines: 1,
+      softWrap: false,
+      overflow: TextOverflow.visible,
+      textAlign: TextAlign.center,
+      textHeightBehavior: const TextHeightBehavior(
+        applyHeightToFirstAscent: false,
+        applyHeightToLastDescent: false,
+      ),
+      strutStyle: StrutStyle(
+        fontSize: fontSize,
+        height: 1,
+        forceStrutHeight: true,
+      ),
+      style: TextStyle(
+        inherit: false,
+        fontSize: fontSize,
+        height: 1,
+        color: color,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox.square(
+        dimension: size,
+        child: _imageIcons.contains(id)
+            ? _image(id)
+            : Stack(
+                alignment: Alignment.center,
+                children: [
+                  _glyph(_emojiIcons[id] ?? modifierIcon(id)),
+                  if (_slashedIcons.contains(id)) _image('slash'),
+                ],
+              ),
+      );
+}
+
+/// Titre de fiche, centré : icône (si [id]) puis [text], à la ligne au besoin.
+class ModifierHeading extends StatelessWidget {
+  final String? id;
+  final String text;
+  final TextStyle style;
+  final double iconSize;
+
+  const ModifierHeading({
+    required this.id,
+    required this.text,
+    required this.style,
+    required this.iconSize,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) => Text.rich(
+        TextSpan(children: [
+          if (id != null)
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: ModifierIcon(id!,
+                    size: iconSize, color: style.color ?? Colors.white),
+              ),
+            ),
+          TextSpan(text: text),
+        ]),
+        textAlign: TextAlign.center,
+        style: style,
+      );
+}
+
 /// Couleur d'un modificateur (Fiesta v2) : vert pour un bonus, rouge pour un
 /// malus.
 Color modifierColor(ModifierNature nature) =>
@@ -39,34 +165,55 @@ Color modifierColor(ModifierNature nature) =>
 typedef BadgeExplainWrapper = Future<void> Function(
     Future<void> Function() show);
 
-/// Pastille « icône + nom » (maquette `.badge`).
+/// Pastille « icône + texte » (maquette `.badge`).
 ///
 /// Avec une [description], un tap ouvre une petite fiche qui l'explique.
 class ModifierBadge extends StatelessWidget {
-  final String icon;
+  /// Id de l'icône ; `null` = texte seul.
+  final String? iconId;
   final String label;
+
+  /// Titre de la fiche ; `null` = [label].
+  final String? title;
   final ModifierNature nature;
   final String? description;
   final BadgeExplainWrapper? wrapExplain;
 
   const ModifierBadge({
-    required this.icon,
+    required this.iconId,
     required this.label,
     required this.nature,
+    this.title,
     this.description,
     this.wrapExplain,
     super.key,
   });
 
-  factory ModifierBadge.of(ModifierInstance instance,
-          {Iterable<String> playingWith = const [],
-          BadgeExplainWrapper? wrapExplain,
-          Key? key}) =>
-      ModifierBadge.catalog(instance.catalogId,
-          nature: instance.nature,
-          playingWith: playingWith,
-          wrapExplain: wrapExplain,
-          key: key);
+  /// Badge du tour : la mini-phrase du catalogue (« Une seule réponse par
+  /// mot »), texte seul pour le temps (« +10 secondes » se suffit). La fiche
+  /// garde le nom du modificateur. [playerName] : le joueur bloqué.
+  factory ModifierBadge.turn(String id,
+      {required ModifierNature nature,
+      String? playerName,
+      Iterable<String> playingWith = const [],
+      BadgeExplainWrapper? wrapExplain,
+      Key? key}) {
+    final def = modifierById(id);
+    final turnLabel = def?.turnLabel ?? def?.name ?? id;
+    return ModifierBadge(
+      key: key,
+      iconId: id == 'plus_10s' || id == 'minus_10s' ? null : id,
+      label: id != 'block_guesser'
+          ? turnLabel
+          : playerName == null
+              ? def?.name ?? id
+              : '$playerName $turnLabel',
+      title: def?.name,
+      nature: nature,
+      description: def == null ? null : modifierDescription(id, playingWith),
+      wrapExplain: wrapExplain,
+    );
+  }
 
   /// Badge d'un modificateur du catalogue, sans instance (×2, +10 s…).
   /// [count] : ses cartouches, dites dans le libellé, sans pictogramme (le « ×2 »
@@ -80,15 +227,13 @@ class ModifierBadge extends StatelessWidget {
     final def = modifierById(id);
     return ModifierBadge(
       key: key,
-      icon: count == null ? modifierIcon(id) : '',
+      iconId: count == null ? id : null,
       label: '${def?.name ?? id}${count == null ? '' : ' ×$count'}',
       nature: nature,
       description: def == null ? null : modifierDescription(id, playingWith),
       wrapExplain: wrapExplain,
     );
   }
-
-  String get _text => icon.isEmpty ? label : '$icon $label';
 
   Future<void> _explain(BuildContext context) {
     final color = modifierColor(nature);
@@ -105,10 +250,11 @@ class ModifierBadge extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                _text,
-                textAlign: TextAlign.center,
+              ModifierHeading(
+                id: iconId,
+                text: title ?? label,
                 style: AppTextStyles.subtitle(fontSize: 26),
+                iconSize: 28,
               ),
               const SizedBox(height: 10),
               Text(
@@ -155,31 +301,44 @@ class ModifierBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(99),
         border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
-      child: Text(
-        _text,
-        style: TextStyle(
-          fontFamily: 'Poppins',
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (iconId != null) ...[
+            ModifierIcon(iconId!, size: 16, color: color),
+            const SizedBox(width: 5),
+          ],
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-/// Les badges des [modifiers], centrés et repliés sur plusieurs lignes.
+/// Les badges du tour, centrés et repliés sur plusieurs lignes.
 ///
 /// Le texte d'un modificateur dépend de ceux qui jouent avec lui
-/// ([modifierDescription]).
+/// ([modifierDescription]). [playerName] nomme le joueur d'un blocage.
 class ModifierBadges extends StatelessWidget {
   final List<ModifierInstance> modifiers;
+  final String? Function(String playerId) playerName;
   final List<Widget> extra;
   final WrapAlignment alignment;
   final BadgeExplainWrapper? wrapExplain;
 
   const ModifierBadges({
     required this.modifiers,
+    required this.playerName,
     this.extra = const [],
     this.alignment = WrapAlignment.center,
     this.wrapExplain,
@@ -193,7 +352,9 @@ class ModifierBadges extends StatelessWidget {
         runSpacing: 6,
         children: [
           for (final m in modifiers)
-            ModifierBadge.of(m,
+            ModifierBadge.turn(m.catalogId,
+                nature: m.nature,
+                playerName: m.playerId == null ? null : playerName(m.playerId!),
                 playingWith: modifiers.map((other) => other.catalogId),
                 wrapExplain: wrapExplain),
           ...extra,

@@ -5,7 +5,6 @@ import '../models/fiesta/challenge_plan.dart';
 import '../models/fiesta/modifier_catalog.dart';
 import '../providers/game_provider.dart';
 import '../theme/app_theme.dart';
-import '../widgets/fiesta/modifier_badge.dart';
 import 'surprise_challenge_screen.dart';
 
 /// Branche [SurpriseChallengeScreen], autonome, sur la partie : traduit le plan
@@ -64,7 +63,7 @@ class ChallengeRouteScreen extends StatelessWidget {
   ChallengeReward _reward(String id) {
     final def = modifierById(id)!;
     return ChallengeReward(
-      icon: modifierIcon(id),
+      modifierId: id,
       name: def.name,
       isMalus: def.nature == ModifierNature.malus,
     );

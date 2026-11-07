@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common/app_button.dart';
+import '../widgets/fiesta/modifier_badge.dart';
 
 /// Le piège d'« Interdit de faire deviner » : après son décompte, le joueur
 /// découvre qu'il ne joue pas ce tour. Rien n'est consommé avant « Suivant »
@@ -29,7 +30,7 @@ class GiverBlockedScreen extends StatelessWidget {
                     child: SingleChildScrollView(
                       child: Column(
                         children: [
-                          const Text('🚫', style: TextStyle(fontSize: 52)),
+                          const ModifierIcon('block_giver', size: 64),
                           const SizedBox(height: 14),
                           Text(
                             screen?.phrase ?? '',

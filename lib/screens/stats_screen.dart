@@ -675,22 +675,13 @@ class _StatsScreenState extends State<StatsScreen> {
         key: const ValueKey('chart-badge'),
         width: size,
         height: size,
-        padding: const EdgeInsets.all(3),
+        alignment: Alignment.center,
         decoration: BoxDecoration(
           color: AppColors.backgroundMain,
           shape: BoxShape.circle,
           border: Border.all(color: color, width: 1.5),
         ),
-        child: FittedBox(
-          child: Text(
-            modifierIcon(catalogId),
-            style: TextStyle(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.w700,
-              color: color,
-            ),
-          ),
-        ),
+        child: ModifierIcon(catalogId, size: size * 0.78, color: color),
       ),
     );
   }

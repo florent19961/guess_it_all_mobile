@@ -60,6 +60,9 @@ Future<GameProvider> pumpGame(WidgetTester tester, FiestaRules? fiesta) async {
   return provider;
 }
 
+Finder iconOf(String id) =>
+    find.byWidgetPredicate((w) => w is ModifierIcon && w.id == id);
+
 void finishRound(GameProvider provider) {
   provider.startTurn();
   provider.startTurnTimer();
@@ -228,8 +231,7 @@ void main() {
           'block_giver': const ModifierSetting(charges: 1),
         }));
     await tester.tap(find.descendant(
-        of: find.byType(FiestaTurnZone),
-        matching: find.text(modifierIcon('block_giver'))));
+        of: find.byType(FiestaTurnZone), matching: iconOf('block_giver')));
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.text('Qui ne fera pas deviner ?'), findsOneWidget);
@@ -266,7 +268,7 @@ void main() {
     provider.startTurn();
     provider.startTurnTimer();
     await settle(tester);
-    expect(find.text('🚫'), findsOneWidget);
+    expect(iconOf('block_giver'), findsOneWidget);
     expect(find.textContaining('Passe le téléphone à'), findsOneWidget);
     await tester.tap(find.text('Suivant'));
     await settle(tester);
@@ -353,11 +355,17 @@ void main() {
         lessThanOrEqualTo(tester.getBottomLeft(zone).dy));
     expect(tester.getBottomLeft(start).dy, lessThanOrEqualTo(640));
 
+    // Un toucher annule, sans fenêtre : la cartouche revient dans la réserve.
+    final sent = provider.sentThisTurn.last;
+    int left() =>
+        provider.reserve.firstWhere((c) => c.catalogId == sent.catalogId).left;
+    final leftBefore = left();
     await tester.tap(last);
     await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(find.text('Annuler l\'envoi').last);
-    await tester.pump(const Duration(milliseconds: 400));
     expect(provider.sentThisTurn, hasLength(6));
+    expect(provider.sentThisTurn, isNot(contains(sent)));
+    expect(left(), leftBefore + 1);
+    expect(find.byType(Dialog), findsNothing);
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 6));
   });
@@ -444,8 +452,7 @@ void main() {
       expect(provider.isDoublePointsOn, isTrue);
 
       final circles = find.descendant(
-          of: find.byType(FiestaTurnZone),
-          matching: find.text(modifierIcon('double_points')));
+          of: find.byType(FiestaTurnZone), matching: iconOf('double_points'));
       await tester.tap(circles.first);
       await settle(tester);
       expect(provider.isDoublePointsOn, isTrue);
@@ -474,10 +481,53 @@ void main() {
     expect(provider.game.turnAllottedSeconds, 40);
     final badge = find.byType(ModifierBadge);
     expect(badge, findsOneWidget);
-    expect(tester.widget<ModifierBadge>(badge).label, 'Bonus de 10 s');
-    expect(tester.widget<ModifierBadge>(badge).icon, '+10');
+    expect(tester.widget<ModifierBadge>(badge).label, '+10 secondes');
+    expect(tester.widget<ModifierBadge>(badge).iconId, isNull);
     expect(tester.getTopLeft(badge).dy,
         greaterThan(tester.getBottomLeft(find.text('40s')).dy));
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets(
+      'bulle du bouton Passer grisé : ni le chrono ni le tour ne bougent, rien '
+      'ne se déplace ; en pause, pas de bulle', (tester) async {
+    final provider = await pumpGame(
+        tester,
+        FiestaRules(drawCount: 0, modifiers: {
+          'no_pass': const ModifierSetting(always: true),
+        }));
+    provider.startTurn();
+    provider.startTurnTimer();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    const reason = 'Interdit de passer ce tour';
+    final pass = find.text('Passer');
+    final word = provider.game.currentWord;
+    final remaining = List<String>.from(provider.game.remainingWords);
+    final clock = provider.turnClock;
+    final top = tester.getTopLeft(pass);
+    expect(find.text('-5s'), findsNothing);
+
+    await tester.tap(pass);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text(reason), findsOneWidget);
+    expect(provider.turnClock, clock);
+    expect(provider.game.currentWord, word);
+    expect(provider.game.remainingWords, remaining);
+    expect(tester.getTopLeft(pass), top);
+
+    await tester.pump(const Duration(seconds: 2));
+    expect(find.text(reason), findsNothing);
+
+    provider.pauseTurn();
+    await tester.pump();
+    await tester.tap(pass);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text(reason), findsNothing);
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 1));
   });

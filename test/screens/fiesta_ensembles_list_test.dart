@@ -388,7 +388,7 @@ void main() {
           reason: 'pas la liste du pool de tirage');
 
       await tester.tap(
-          find.descendant(of: row, matching: find.text('☝ Une seule réponse')));
+          find.descendant(of: row, matching: find.text('Une seule réponse')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.text('Compris'), findsOneWidget);

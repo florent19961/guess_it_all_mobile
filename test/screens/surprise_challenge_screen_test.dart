@@ -5,6 +5,7 @@ import 'package:guess_it_all_mobile/models/fiesta/surprise_challenge.dart';
 import 'package:guess_it_all_mobile/screens/surprise_challenge_screen.dart';
 import 'package:guess_it_all_mobile/services/challenge_sounds.dart';
 import 'package:guess_it_all_mobile/theme/app_theme.dart';
+import 'package:guess_it_all_mobile/widgets/fiesta/modifier_badge.dart';
 
 const _ana = ChallengeContender(
   playerName: 'Ana',
@@ -19,15 +20,18 @@ const _bob = ChallengeContender(
   teammates: ['Alice', 'Frank'],
 );
 const _doublePoints = ChallengeReward(
-  icon: '×2',
+  modifierId: 'double_points',
   name: 'Mot compte double',
   isMalus: false,
 );
 const _reversed = ChallengeReward(
-  icon: '⇄',
+  modifierId: 'reversed',
   name: 'Mots à l\'envers',
   isMalus: true,
 );
+
+Finder _icon(String id) =>
+    find.byWidgetPredicate((w) => w is ModifierIcon && w.id == id);
 
 Future<void> _loadFonts() async {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -132,7 +136,7 @@ void main() {
 
     await tester.pump(kRouletteDuration);
     await tester.pump();
-    expect(find.text('×2'), findsOneWidget);
+    expect(_icon('double_points'), findsOneWidget);
     expect(
       find.text('Mot compte double, dans la réserve de l\'équipe.'),
       findsOneWidget,
@@ -155,7 +159,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Les Génies gagnent !'), findsOneWidget);
-    expect(find.text('⇄'), findsOneWidget);
+    expect(_icon('reversed'), findsOneWidget);
     expect(
       find.text('Mots à l\'envers, dans la réserve de l\'équipe.'),
       findsOneWidget,
@@ -301,7 +305,7 @@ void main() {
     h.sounds.clear();
     await tester.tap(find.text('Ana'));
     await tester.pump();
-    expect(find.text('×2'), findsOneWidget);
+    expect(_icon('double_points'), findsOneWidget);
     expect(h.sounds, ['chime@1.0', 'sparkle@0.6']);
 
     await tester.tap(find.text('Continuer'));
