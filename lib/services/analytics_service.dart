@@ -42,11 +42,8 @@ class AnalyticsService {
   // État du tracking
   GameAnalytics? _currentGame;
 
-  // Mots à l'écran → horodatage de leur `shown`. Une entrée vit le temps de
-  // son mot : retirée par `_recordEventWithDuration`. Par mot et non « le
-  // dernier affiché » : avec « Deux mots à la fois » (2-11), deux mots sont à
-  // l'écran et chacun a sa propre durée. En Classique, un seul à la fois.
-  // Mémoire seulement : perdue par un kill, d'où la durée inconnue ensuite.
+  // Mot à l'écran → horodatage de son `shown`. Une entrée vit le temps de son
+  // mot : retirée par `_recordEventWithDuration`. Mémoire seulement : perdue par un kill, d'où la durée inconnue ensuite.
   final Map<String, int> _shownAt = {};
 
   /// Vérifie si une partie est en cours de tracking

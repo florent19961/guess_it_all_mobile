@@ -762,6 +762,7 @@ class _FiestaEnsembleEditorScreenState
                 'À tous, à chaque manche',
                 _Stepper(
                   value: _rules.allCount,
+                  max: kMaxAllCount,
                   onChanged: (v) =>
                       setState(() => _rules = _rules.copyWith(allCount: v)),
                 ),
@@ -1080,15 +1081,17 @@ class _Hint extends StatelessWidget {
       );
 }
 
-/// Compteur compact −/+ de 0 à [kMaxCount].
+/// Compteur compact −/+ de 0 à [max].
 class _Stepper extends StatelessWidget {
   final int value;
+  final int max;
   final bool enabled;
   final ValueChanged<int> onChanged;
 
   const _Stepper({
     required this.value,
     required this.onChanged,
+    this.max = kMaxCount,
     this.enabled = true,
   });
 
@@ -1122,7 +1125,7 @@ class _Stepper extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
         ),
-        button(Icons.add, value + 1, value < kMaxCount, 'Plus'),
+        button(Icons.add, value + 1, value < max, 'Plus'),
       ],
     );
   }

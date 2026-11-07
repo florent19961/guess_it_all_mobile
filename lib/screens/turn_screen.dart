@@ -8,7 +8,6 @@ import '../services/audio_service.dart';
 import '../widgets/common/app_confirm_dialog.dart';
 import '../widgets/common/turn_play_widgets.dart';
 import '../models/fiesta/modifier_catalog.dart';
-import '../widgets/fiesta/fiesta_turn_widgets.dart';
 import '../widgets/fiesta/modifier_badge.dart';
 import '../widgets/help/coach_marks.dart';
 import '../widgets/help/help_button.dart';
@@ -296,30 +295,12 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
     final hasFreePass = provider.hasFreePass;
     final hasWordsToPassTo = provider.effectiveRemainingWordsCount > 0;
     final canPass = provider.canPassWith(timeRemaining) && hasWordsToPassTo;
-    // Fiesta 2-11 : deux cartes, chacune avec ses boutons (une seule au
-    // dernier mot). Le mot visé est passé au provider : un tap sur une carte
-    // déjà remplacée est ignoré.
-    final twoWords = provider.isTwoWordsOn && currentWord != null;
     final passLabel = provider.passBlocked ? 'Passer (bloqué)' : 'Passer';
     final passDetail = hasFreePass
         ? 'gratuit'
         : passPenalty > 0
             ? '-${passPenalty}s'
             : null;
-    VoidCallback? guess(String word) => isPaused
-        ? null
-        : () {
-            HapticFeedback.lightImpact();
-            AudioService.playDing();
-            provider.markWordAsGuessed(word);
-          };
-    VoidCallback? pass(String word) => canPass && !isPaused
-        ? () {
-            HapticFeedback.mediumImpact();
-            AudioService.playWhoosh();
-            provider.passWord(word);
-          }
-        : null;
 
     return Material(
       color: AppColors.backgroundMain,
@@ -366,8 +347,7 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                     ),
                   ),
 
-                  // Deux mots : même écran, espacements resserrés pour tenir.
-                  SizedBox(height: twoWords ? 12 : 32),
+                  const SizedBox(height: 32),
 
                   // Zone centrale flexible
                   Expanded(
@@ -439,44 +419,23 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                               ),
                             ),
                           ],
-                          SizedBox(height: twoWords ? 8 : 16),
+                          const SizedBox(height: 16),
                         ] else
-                          SizedBox(height: twoWords ? 16 : 32),
+                          const SizedBox(height: 32),
 
-                        if (twoWords)
-                          Expanded(
-                            key: _wordKey,
-                            child: TwoWordsLayout(
-                              firstWord: currentWord,
-                              secondWord: provider.secondWord,
+                        // Current word
+                        Flexible(
+                          key: _wordKey,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: TurnWordText(
+                              word: currentWord ?? '',
                               reversed: provider.isWordReversed,
-                              passLabel: passLabel,
-                              passDetail: passDetail,
-                              onGuessedFirst: guess(currentWord),
-                              onPassFirst: pass(currentWord),
-                              onGuessedSecond: provider.secondWord == null
-                                  ? null
-                                  : guess(provider.secondWord!),
-                              onPassSecond: provider.secondWord == null
-                                  ? null
-                                  : pass(provider.secondWord!),
-                            ),
-                          )
-                        else
-                          // Current word
-                          Flexible(
-                            key: _wordKey,
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              child: TurnWordText(
-                                word: currentWord ?? '',
-                                reversed: provider.isWordReversed,
-                              ),
                             ),
                           ),
+                        ),
 
-                        SizedBox(height: twoWords ? 8 : 16),
+                        const SizedBox(height: 16),
 
                         // Words remaining (incluant passés recyclables, sans le mot actuel)
                         Builder(
@@ -498,33 +457,31 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                     ),
                   ),
 
-                  // Action buttons (fixes en bas). Deux mots : sous chaque mot.
-                  if (!twoWords) ...[
-                    const SizedBox(height: 32),
-                    TurnActionButtons(
-                      passKey: _passKey,
-                      guessedKey: _guessedKey,
-                      passLabel: passLabel,
-                      passDetail: passDetail,
-                      onPass: canPass && !isPaused
-                          ? () {
-                              HapticFeedback.mediumImpact();
-                              AudioService.playWhoosh();
-                              provider.passWord();
-                            }
-                          : null,
-                      onGuessed: isPaused
-                          ? null
-                          : () {
-                              HapticFeedback.lightImpact();
-                              AudioService.playDing();
-                              provider.markWordAsGuessed();
-                            },
-                    ),
-                  ],
+                  // Action buttons (fixes en bas).
+                  const SizedBox(height: 32),
+                  TurnActionButtons(
+                    passKey: _passKey,
+                    guessedKey: _guessedKey,
+                    passLabel: passLabel,
+                    passDetail: passDetail,
+                    onPass: canPass && !isPaused
+                        ? () {
+                            HapticFeedback.mediumImpact();
+                            AudioService.playWhoosh();
+                            provider.passWord();
+                          }
+                        : null,
+                    onGuessed: isPaused
+                        ? null
+                        : () {
+                            HapticFeedback.lightImpact();
+                            AudioService.playDing();
+                            provider.markWordAsGuessed();
+                          },
+                  ),
 
                   // Sous cette marge, le bouton « terminer le tour » (bas à droite).
-                  SizedBox(height: twoWords ? 52 : 72),
+                  const SizedBox(height: 72),
                 ],
               ),
             ),
@@ -592,8 +549,6 @@ class _TurnScreenState extends State<TurnScreen> with WidgetsBindingObserver {
                               ? PassState.available
                               : PassState.notEnoughTime,
                   reversed: provider.isWordReversed,
-                  buttonsUnderWord: twoWords,
-                  secondWordShown: provider.secondWord != null,
                   word: _wordKey,
                   guessed: _guessedKey,
                   pass: _passKey,

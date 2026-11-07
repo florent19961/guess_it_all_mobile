@@ -114,16 +114,14 @@ void main() {
     });
 
     test(
-        'Interdit de passer en Toujours : Passe gratuite et Deux mots en '
-        'Cartouches seulement', () {
+        'Interdit de passer en Toujours : Passe gratuite en Cartouches '
+        'seulement', () {
       final rules = FiestaRules(modifiers: const {
         'no_pass': ModifierSetting(always: true),
         'free_pass': ModifierSetting(charges: 3),
-        'two_words': ModifierSetting(charges: 1),
         'plus_10s': ModifierSetting(charges: 1),
       });
       expect(rules.chargesOf('free_pass'), 0);
-      expect(rules.chargesOf('two_words'), 0);
       expect(rules.chargesOf('plus_10s'), 1);
     });
   });
@@ -150,18 +148,18 @@ void main() {
       }
     });
 
-    test('Fiesta classique : aléatoire sur tout ce qui est possible', () {
+    test('Fiesta classique : 5 cartouches par manche et équilibrage, rien '
+        'd\'autre', () {
       final rules = of('provided_classic');
-      expect(rules.drawCount, 1);
+      expect(rules.allCount, 5);
       expect(rules.balance, isTrue);
-      for (final def in kModifierCatalog) {
-        expect(rules.drawsFrom(def.id), canBeRoundRule(def), reason: def.id);
-      }
+      expect(rules.drawCount, 0);
+      expect(rules.modifiers, isEmpty);
     });
 
     test('les autres', () {
-      expect(of('provided_last').trailingCount, 4);
-      expect(of('provided_explosive').allCount, 5);
+      expect(of('provided_last').trailingCount, 5);
+      expect(of('provided_explosive').allCount, 10);
       expect(of('provided_explosive').modifiers.values.any((s) => s.always),
           isFalse);
       Set<String> always(String id) =>

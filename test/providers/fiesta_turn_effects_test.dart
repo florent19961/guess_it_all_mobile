@@ -71,7 +71,7 @@ int allotted(GameProvider p) =>
 
 void main() {
   test(
-      'free_pass ×2 : 0, 0, puis 5 s ; compteur relu après un kill, remis à '
+      'free_pass : 0, puis 5 s ; compteur relu après un kill, remis à '
       '0 au tour suivant, rendu par le retour arrière (AC2, AC3, AC4, AC8)',
       () async {
     var provider = await givenReadyProvider();
@@ -83,20 +83,19 @@ void main() {
     expect(provider.canPassWith(2), isTrue);
 
     provider.passWord();
-    provider.passWord();
     expect(allotted(provider), 30);
-    expect(provider.freePassesUsed, 2);
+    expect(provider.freePassesUsed, 1);
     expect(provider.canPassWith(2), isFalse);
 
     // App tuée puis rouverte : le compteur est relu de l'état persisté.
     await pumpEventQueue();
     provider = GameProvider();
     await pumpEventQueue();
-    expect(provider.freePassesUsed, 2);
+    expect(provider.freePassesUsed, 1);
 
     provider.passWord();
     expect(allotted(provider), 25);
-    expect(provider.freePassesUsed, 2);
+    expect(provider.freePassesUsed, 1);
 
     provider.endTurn();
     provider.savePreValidationState(const []);
@@ -104,7 +103,7 @@ void main() {
     expect(provider.freePassesUsed, 0);
 
     provider.restorePreValidationState();
-    expect(provider.freePassesUsed, 2);
+    expect(provider.freePassesUsed, 1);
   });
 
   test(

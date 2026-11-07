@@ -151,19 +151,6 @@ void main() {
           contains('Actif pendant ce tour'));
     });
 
-    testWidgets('Deux mots : une étape sur les deux cartes et leurs boutons',
-        (tester) async {
-      expect(
-          await turnSteps(tester, charges(['two_words']), armed: ['two_words']),
-          [
-            'Le chrono',
-            'Actif pendant ce tour',
-            'Les deux mots',
-            'Pause',
-            'Terminer le tour',
-          ]);
-    });
-
     testWidgets(
         '« Bob ne répond pas ce tour » : étape avant le tour et pendant',
         (tester) async {

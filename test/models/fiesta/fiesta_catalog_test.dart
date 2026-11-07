@@ -31,7 +31,6 @@ void main() {
         'free_pass',
         'minus_10s',
         'double_points',
-        'two_words',
         'reversed',
         'block_guesser',
         'mime_under_sheet',
@@ -57,8 +56,8 @@ void main() {
           expect(areCompatible(a, b), areCompatible(b, a), reason: '$a / $b');
         }
       }
-      expect(areCompatible('no_pass', 'two_words'), isFalse);
-      expect(areCompatible('two_words', 'no_pass'), isFalse);
+      expect(areCompatible('no_pass', 'free_pass'), isFalse);
+      expect(areCompatible('free_pass', 'no_pass'), isFalse);
       // Famille « Mime » (« Dessiner » compris) : deux membres s'excluent
       // toujours ; hors famille, les mimes ne gênent personne.
       final family = kModifierCatalog.where((d) => d.mimeFamily).toList();
@@ -100,7 +99,7 @@ void main() {
       expect(
           canAdd(
               [_instance('reversed', target: ModifierTarget.team, teamId: 'A')],
-              _instance('two_words', target: ModifierTarget.team, teamId: 'B')),
+              _instance('free_pass', target: ModifierTarget.team, teamId: 'B')),
           isTrue);
     });
 
@@ -110,7 +109,7 @@ void main() {
       final active = [_instance('no_pass')];
       expect(
           canAdd(active,
-              _instance('two_words', target: ModifierTarget.team, teamId: 'B')),
+              _instance('free_pass', target: ModifierTarget.team, teamId: 'B')),
           isFalse);
       expect(
           canAdd(active,
@@ -119,8 +118,8 @@ void main() {
     });
 
     test('refuse une instance incompatible avec une instance active', () {
-      expect(canAdd([_instance('no_pass')], _instance('two_words')), isFalse);
-      expect(canAdd([_instance('two_words')], _instance('no_pass')), isFalse);
+      expect(canAdd([_instance('no_pass')], _instance('free_pass')), isFalse);
+      expect(canAdd([_instance('free_pass')], _instance('no_pass')), isFalse);
       expect(canAdd([_instance('no_pass')], _instance('reversed')), isTrue);
     });
   });

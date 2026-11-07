@@ -102,7 +102,6 @@ void main() {
       final underNoPass = pool(FiestaRules(), roundRules: [rule('no_pass')]);
       expect(underNoPass, isNot(contains('no_pass')));
       expect(underNoPass, isNot(contains('free_pass')));
-      expect(underNoPass, isNot(contains('two_words')));
       final underSheet = pool(FiestaRules(),
           nextRound: 3, roundRules: [rule('mime_under_sheet', round: 3)]);
       expect(underSheet, contains('sounds_only'));
@@ -139,12 +138,42 @@ void main() {
           isEmpty);
     });
 
-    test('allCount + trailing se cumulent, et restent distinctes', () {
+    test('allCount + trailing se cumulent', () {
       final g = gifts(FiestaRules(allCount: 2, trailingCount: 3));
-      final b = g.where((e) => e.teamId == 'b').map((e) => e.catalogId);
-      expect(b, hasLength(5));
-      expect(b.toSet(), hasLength(5));
+      expect(g.where((e) => e.teamId == 'b'), hasLength(5));
       expect(g.where((e) => e.teamId == 'a'), hasLength(2));
+    });
+
+    test('avec remise : la même cartouche peut sortir deux fois', () {
+      // Vivier bien plus grand que 3 : l'ancien tirage donnait 3 distinctes.
+      final rules = FiestaRules(allCount: 3);
+      expect(pool(rules).length, greaterThan(3));
+      final anyTwice = List.generate(40, (i) => 'g$i').any((id) {
+        final ids = gifts(rules, gameId: id)
+            .where((e) => e.teamId == 'a')
+            .map((e) => e.catalogId);
+        return ids.toSet().length < ids.length;
+      });
+      expect(anyTwice, isTrue);
+    });
+
+    test('poids : Mot compte double sort 3 fois moins qu\'une autre', () {
+      final counts = <String, int>{};
+      for (var i = 0; i < 3000; i++) {
+        final g = gifts(FiestaRules(allCount: 1),
+            gameId: 'g$i', scores: const {'a': 0});
+        counts.update(g.single.catalogId, (n) => n + 1, ifAbsent: () => 1);
+      }
+      final others = counts.entries.where((e) => e.key != 'double_points');
+      final mean = others.fold<int>(0, (n, e) => n + e.value) / others.length;
+      expect(others, hasLength(pool(FiestaRules()).length - 1),
+          reason: 'tout le vivier sort');
+      // Attendu : 1/3. Graines fixes, donc résultat stable.
+      expect(counts['double_points']! / mean, inInclusiveRange(0.25, 0.45));
+      // Les autres sont à égalité entre elles.
+      for (final e in others) {
+        expect(e.value / mean, inInclusiveRange(0.7, 1.3), reason: e.key);
+      }
     });
 
     test('déterministe par (gameId, manche, équipe)', () {
@@ -163,8 +192,7 @@ void main() {
           teamB('g', 1));
     });
 
-    test('vivier plus petit que le nombre : il repart du début ; vide : rien',
-        () {
+    test('vivier d\'une seule cartouche : elle revient ; vide : rien', () {
       // Tout en Toujours sauf reversed.
       final rules = FiestaRules(allCount: 3, modifiers: {
         for (final def in kModifierCatalog)

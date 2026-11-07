@@ -213,7 +213,7 @@ void main() {
 
       rules['allCount'] = 'oui';
       expect(GameState.fromJson(json).fiesta, isNull);
-      rules['allCount'] = 6;
+      rules['allCount'] = kMaxAllCount + 1;
       expect(GameState.fromJson(json).fiesta, isNull, reason: 'hors bornes');
       rules.remove('allCount');
       rules['drawCount'] = 9;
@@ -331,6 +331,16 @@ void main() {
       expect(rules.modifiers.keys, ['free_pass', 'plus_10s', 'minus_10s']);
       expect(rules.modifiers['free_pass']!.charges, kMaxCount);
       expect(rules.modifiers['plus_10s']!.charges, 3);
+    });
+
+    test('allCount borné à 10, les autres compteurs restent à 5', () {
+      FiestaRules? read(Map<String, dynamic> counts) =>
+          FiestaRules.tryFromJson({'format': FiestaRules.format, ...counts});
+      expect(read({'allCount': kMaxAllCount})?.allCount, 10);
+      expect(read({'allCount': kMaxAllCount + 1}), isNull);
+      expect(read({'trailingCount': kMaxCount})?.trailingCount, 5);
+      expect(read({'trailingCount': kMaxCount + 1}), isNull);
+      expect(read({'drawCount': kMaxCount + 1}), isNull);
     });
 
     test(

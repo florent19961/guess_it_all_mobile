@@ -37,10 +37,9 @@ class FiestaTutorialScreen extends StatelessWidget {
           symbol: '✦',
           title: 'Bonus et malus',
           text: 'Fiesta, ce sont les 3 manches habituelles avec des '
-              'modificateurs : des bonus (Mot compte double, Deux mots à la '
-              'fois, Passe gratuite, Bonus de 10 s) et des malus (Interdit de '
-              'passer, Mot à l\'envers, Une seule réponse, mimes sans les '
-              'bras…).',
+              'modificateurs : des bonus (Mot compte double, Passe gratuite, '
+              'Bonus de 10 s) et des malus (Interdit de passer, Mot à '
+              'l\'envers, Une seule réponse, mimes sans les bras…).',
         ),
         TutorialCard(
           symbol: '⇄',

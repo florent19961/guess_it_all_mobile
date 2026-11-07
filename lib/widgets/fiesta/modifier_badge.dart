@@ -15,7 +15,7 @@ const Map<String, String> kModifierIcons = {
   'free_pass': '↷',
   'minus_10s': '−10',
   'double_points': '×2',
-  'two_words': '⧉',
+  'two_words': '⧉', // Retiré du jeu : reste pour l'historique.
   'reversed': '⇄',
   'block_guesser': '🔇',
   'mime_under_sheet': '⛺',
@@ -68,7 +68,7 @@ class ModifierBadge extends StatelessWidget {
           wrapExplain: wrapExplain,
           key: key);
 
-  /// Badge d'un modificateur du catalogue, sans instance (×2, Deux mots…).
+  /// Badge d'un modificateur du catalogue, sans instance (×2, +10 s…).
   /// [count] : ses cartouches, dites dans le libellé, sans pictogramme (le « ×2 »
   /// de Mot compte double se lirait comme un nombre de cartouches).
   factory ModifierBadge.catalog(String id,

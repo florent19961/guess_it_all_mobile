@@ -15,8 +15,6 @@ void main() {
     List<CoachStep> steps({
       PassState pass = PassState.available,
       bool reversed = false,
-      bool underWord = false,
-      bool second = false,
     }) =>
         turnHelp(
           timer: GlobalKey(),
@@ -31,8 +29,6 @@ void main() {
           passPenalty: 5,
           passState: pass,
           reversed: reversed,
-          buttonsUnderWord: underWord,
-          secondWordShown: second,
         );
     CoachStep titled(List<CoachStep> all, Pattern title) =>
         all.firstWhere((s) => s.title.startsWith(title));
@@ -51,14 +47,6 @@ void main() {
     test('mot à l\'envers : dit seulement quand il l\'est', () {
       expect(titled(steps(), 'Le mot').text, isNot(contains('envers')));
       expect(titled(steps(reversed: true), 'Le mot').text, contains('envers'));
-    });
-
-    test('Deux mots, puis dernière carte seule : les boutons sont expliqués',
-        () {
-      expect(titled(steps(underWord: true, second: true), 'Les deux mots').text,
-          contains('Chacun a ses boutons'));
-      expect(
-          titled(steps(underWord: true), 'Le mot').text, contains('dessous'));
     });
   });
 

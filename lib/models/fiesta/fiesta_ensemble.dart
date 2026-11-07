@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'fiesta_rules.dart';
 import 'modifier_catalog.dart';
-import 'symmetric_draw.dart';
 
 /// Un ensemble Fiesta : des `FiestaRules` nommées. Les miens
 /// sont enregistrés sur le téléphone (`FiestaEnsembleService`) ; ceux fournis
@@ -80,8 +79,6 @@ FiestaEnsemble _provided(
   String key,
   String name, {
   Set<String> always = const {},
-  Set<String> draw = const {},
-  int drawCount = 0,
   int allCount = 0,
   int trailingCount = 0,
   bool balance = false,
@@ -91,13 +88,8 @@ FiestaEnsemble _provided(
       rules: FiestaRules(
         ensembleName: name,
         modifiers: {
-          for (final id in {...always, ...draw})
-            id: ModifierSetting(
-              always: always.contains(id),
-              draw: draw.contains(id),
-            ),
+          for (final id in always) id: const ModifierSetting(always: true),
         },
-        drawCount: drawCount,
         allCount: allCount,
         trailingCount: trailingCount,
         balance: balance,
@@ -105,22 +97,13 @@ FiestaEnsemble _provided(
     );
 
 final List<FiestaEnsemble> kProvidedEnsembles = [
-  _provided(
-    'classic',
-    'Fiesta classique',
-    draw: {
-      for (final def in kModifierCatalog)
-        if (canBeRoundRule(def)) def.id,
-    },
-    drawCount: 1,
-    balance: true,
-  ),
-  _provided('last', 'Les derniers seront les premiers', trailingCount: 4),
+  _provided('classic', 'Fiesta classique', allCount: 5, balance: true),
+  _provided('last', 'Les derniers seront les premiers', trailingCount: 5),
   _provided('pro', 'Pro Player', always: {'no_pass', 'reversed', 'one_answer'}),
   _provided('straight', 'Droit au but', always: {'one_answer'}),
   _provided('pictionary', 'Pictionnary', always: {'draw'}),
   _provided('bilingual', 'Bilingue', always: {'other_language'}),
-  _provided('explosive', 'Explosif', allCount: 5),
+  _provided('explosive', 'Explosif', allCount: 10),
   _provided(
     'expert',
     'Mimeur expert',

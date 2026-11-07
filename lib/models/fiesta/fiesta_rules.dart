@@ -63,9 +63,13 @@ T? readOr<T extends Object>(Map<String, dynamic> json, String key, T fallback) {
   return raw is T ? raw : null;
 }
 
-/// Borne de tous les compteurs des règles (éditeur et relecture) : cartouches
-/// d'un modificateur, tirés par manche, au hasard par équipe.
+/// Borne des compteurs des règles (éditeur et relecture) : cartouches d'un
+/// modificateur, tirés par manche, aux équipes menées.
 const int kMaxCount = 5;
+
+/// Borne de « À tous, à chaque manche » (éditeur et relecture) : Explosif en
+/// donne 10.
+const int kMaxAllCount = 10;
 
 /// La configuration Fiesta d'une partie, GELÉE dans `GameState` au lancement.
 ///
@@ -88,7 +92,7 @@ class FiestaRules {
   final int drawCount;
 
   /// « À tous, à chaque manche » : cartouches au hasard pour chaque équipe au
-  /// début de chaque manche, M1 comprise.
+  /// début de chaque manche, M1 comprise, de 0 à [kMaxAllCount].
   final int allCount;
 
   /// « Aux équipes menées » : cartouches au hasard pour chaque équipe non en
@@ -141,8 +145,8 @@ class FiestaRules {
   /// - en « Toujours », un modificateur l'est dans les 2 autres menus ;
   /// - un mime en « Toujours » y verrouille les autres mimes, partout, sauf la
   ///   paire Bruitages / drap ;
-  /// - « Interdit de passer » en « Toujours » verrouille Passe gratuite et Deux
-  ///   mots en cartouche, qui ne serviraient jamais.
+  /// - « Interdit de passer » en « Toujours » verrouille Passe gratuite en
+  ///   cartouche, qui ne servirait jamais.
   String? lockReason(String id, EnsembleMenu menu) {
     if (menu != EnsembleMenu.always && isAlways(id)) return 'Actif en Toujours';
     final def = modifierById(id);
@@ -195,7 +199,7 @@ class FiestaRules {
     final ensembleName = json['ensembleName'];
     final rawModifiers = readOr<Map>(json, 'modifiers', const {});
     final drawCount = _readCount(json, 'drawCount');
-    final allCount = _readCount(json, 'allCount');
+    final allCount = _readCount(json, 'allCount', max: kMaxAllCount);
     final trailingCount = _readCount(json, 'trailingCount');
     final balance = readOr(json, 'balance', false);
     final challenges = readOr(json, 'challenges', false);
@@ -230,8 +234,9 @@ class FiestaRules {
     );
   }
 
-  static int? _readCount(Map<String, dynamic> json, String key) {
+  static int? _readCount(Map<String, dynamic> json, String key,
+      {int max = kMaxCount}) {
     final count = readOr(json, key, 0);
-    return count == null || count < 0 || count > kMaxCount ? null : count;
+    return count == null || count < 0 || count > max ? null : count;
   }
 }

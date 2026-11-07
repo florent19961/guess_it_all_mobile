@@ -7,9 +7,12 @@ import 'modifier_instance.dart';
 /// Bonus à charge activables avant le tour (stories 2-9, 2-11 ; Fiesta v3 :
 /// tous les bonus, seulement en cartouche), par id de catalogue, avec leur clé
 /// JSON dans `fiesta.turn`. Une cartouche = UN tour.
+///
+/// 🔴 Règle 7 : un `fiesta.turn` écrit avant le retrait de « Deux mots à la
+/// fois » porte encore `twoWords`, `secondWord`, `secondExpiredWord` : ces clés
+/// sont ignorées à la relecture (la carte B reste dans `remainingWords`).
 const Map<String, String> kChargeBonusKeys = {
   'double_points': 'doublePoints',
-  'two_words': 'twoWords',
   'free_pass': 'freePass',
   'plus_10s': 'plus10s',
 };
@@ -20,8 +23,8 @@ enum ChargeState { armed, spent }
 
 /// État propre au tour en cours (`FiestaState.turn`), immuable et typé.
 ///
-/// 🔴 C'est LUI qui dit ce qui survit : [afterRoundEnd] (la continuation en
-/// N+1 est le même tour) et [FiestaTurnState.empty] à la vraie fin du tour.
+/// 🔴 Une fin de manche le garde tel quel (la continuation en N+1 est le même
+/// tour) ; [FiestaTurnState.empty] à la vraie fin du tour.
 /// JSON : clés omises quand elles valent la valeur initiale, lecture
 /// tolérante clé par clé (une valeur mal typée = valeur initiale).
 class FiestaTurnState {
@@ -31,12 +34,6 @@ class FiestaTurnState {
   /// Charges du tour par id de catalogue ([kChargeBonusKeys]).
   final Map<String, ChargeState> charges;
 
-  /// Carte B de « Deux mots à la fois » (la carte A est `currentWord`).
-  final String? secondWord;
-
-  /// Carte B encore à l'écran quand le chrono est tombé, à vérifier.
-  final String? secondExpiredWord;
-
   /// Ce qu'avait préparé le joueur qui vient de sauter son tour, à reprendre en
   /// un toucher par son remplaçant.
   final ReplacedChoices? replaced;
@@ -44,8 +41,6 @@ class FiestaTurnState {
   FiestaTurnState({
     this.freePassesUsed = 0,
     Map<String, ChargeState> charges = const {},
-    this.secondWord,
-    this.secondExpiredWord,
     this.replaced,
   }) : charges = Map.unmodifiable(charges);
 
@@ -56,20 +51,12 @@ class FiestaTurnState {
   FiestaTurnState copyWith({
     int? freePassesUsed,
     Map<String, ChargeState>? charges,
-    String? secondWord,
-    bool clearSecondWord = false,
-    String? secondExpiredWord,
-    bool clearSecondExpiredWord = false,
     ReplacedChoices? replaced,
     bool clearReplaced = false,
   }) =>
       FiestaTurnState(
         freePassesUsed: freePassesUsed ?? this.freePassesUsed,
         charges: charges ?? this.charges,
-        secondWord: clearSecondWord ? null : secondWord ?? this.secondWord,
-        secondExpiredWord: clearSecondExpiredWord
-            ? null
-            : secondExpiredWord ?? this.secondExpiredWord,
         replaced: clearReplaced ? null : replaced ?? this.replaced,
       );
 
@@ -81,21 +68,14 @@ class FiestaTurnState {
         if (state != null) catalogId: state,
       });
 
-  /// Fin de manche : le tour continue en N+1 (continuation), tout survit sauf
-  /// la carte B expirée, déjà dépouillée par la vérification.
-  FiestaTurnState afterRoundEnd() => copyWith(clearSecondExpiredWord: true);
-
   Map<String, dynamic> toJson() => {
         if (freePassesUsed > 0) 'freePassesUsed': freePassesUsed,
         for (final MapEntry(key: id, value: key) in kChargeBonusKeys.entries)
           if (charges[id] != null) key: charges[id]!.name,
-        if (secondWord != null) 'secondWord': secondWord,
-        if (secondExpiredWord != null) 'secondExpiredWord': secondExpiredWord,
         if (replaced != null) 'replaced': replaced!.toJson(),
       };
 
   factory FiestaTurnState.fromJson(Map<String, dynamic> json) {
-    String? string(String key) => json[key] is String ? json[key] : null;
     final used = json['freePassesUsed'];
     final replaced = json['replaced'];
     return FiestaTurnState(
@@ -105,8 +85,6 @@ class FiestaTurnState {
           if (enumFromJson(ChargeState.values, json[key]) case final state?)
             id: state,
       },
-      secondWord: string('secondWord'),
-      secondExpiredWord: string('secondExpiredWord'),
       replaced: replaced is Map
           ? ReplacedChoices.tryFromJson(Map<String, dynamic>.from(replaced))
           : null,
@@ -133,42 +111,30 @@ class ReplacedChoices {
         if (sent.isNotEmpty) 'sent': sent.map((m) => m.toJson()).toList(),
       };
 
+  /// `null` si illisible, ou s'il ne reste rien à reprendre. Un bonus retiré du
+  /// jeu (« Deux mots ») est ignoré : il ne doit pas se rallumer.
   static ReplacedChoices? tryFromJson(Map<String, dynamic> json) {
     final playerId = json['playerId'];
-    final bonuses = json['bonuses'];
-    final sent = json['sent'];
+    final rawBonuses = json['bonuses'];
+    final rawSent = json['sent'];
     if (playerId is! String) return null;
-    return ReplacedChoices(
-      playerId: playerId,
-      bonuses:
-          bonuses is List ? bonuses.whereType<String>().toList() : const [],
-      sent: sent is List
-          ? sent
-              .whereType<Map>()
-              .map((e) =>
-                  ModifierInstance.tryFromJson(Map<String, dynamic>.from(e)))
-              .whereType<ModifierInstance>()
-              .toList()
-          : const [],
-    );
+    final bonuses = rawBonuses is List
+        ? rawBonuses
+            .whereType<String>()
+            .where(kChargeBonusKeys.containsKey)
+            .toList()
+        : const <String>[];
+    final sent = rawSent is List
+        ? rawSent
+            .whereType<Map>()
+            .map((e) =>
+                ModifierInstance.tryFromJson(Map<String, dynamic>.from(e)))
+            .whereType<ModifierInstance>()
+            .toList()
+        : const <ModifierInstance>[];
+    if (bonuses.isEmpty && sent.isEmpty) return null;
+    return ReplacedChoices(playerId: playerId, bonuses: bonuses, sent: sent);
   }
-}
-
-/// Remplaçant d'une carte « Deux mots » traitée : premier mot de [pool] (déjà
-/// privé du mot traité) autre que [other], la carte qui reste. Pool épuisé :
-/// les mots passés du tour (sauf [other]) y reviennent, comme le recyclage
-/// d'un mot seul. `word` nul = plus aucun autre mot, une seule carte reste.
-({String? word, List<String> pool}) drawOtherCard({
-  required List<String> pool,
-  required List<String> passed,
-  required String other,
-}) {
-  for (final w in pool) {
-    if (w != other) return (word: w, pool: pool);
-  }
-  final recycled = passed.where((w) => w != other).toList()..shuffle();
-  if (recycled.isEmpty) return (word: null, pool: pool);
-  return (word: recycled.first, pool: [...pool, ...recycled]);
 }
 
 /// `block_guesser` n'a d'effet que si l'équipe a au moins 3 joueurs : il faut
