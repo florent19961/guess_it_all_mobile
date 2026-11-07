@@ -2,8 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:guess_it_all_mobile/models/fiesta/ensemble_validation.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
-import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
-import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
 
 FiestaRules named(
   Map<String, ModifierSetting> modifiers, {
@@ -148,7 +146,8 @@ void main() {
       }
     });
 
-    test('Fiesta classique : 5 cartouches par manche et équilibrage, rien '
+    test(
+        'Fiesta classique : 5 cartouches par manche et équilibrage, rien '
         'd\'autre', () {
       final rules = of('provided_classic');
       expect(rules.allCount, 5);

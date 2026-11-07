@@ -1284,3 +1284,39 @@ au-delà : les étiquettes doivent rejoindre leurs têtes, animations réduites 
 **Conséquence.** Quand deux courbes échangent leur place, leurs étiquettes se croisent ≈ 0,2 s, comme dans
 la maquette validée : les séparer à chaque image les ferait sauter. `entryOfCharge` reste, pour les badges de
 `stats_screen`.
+
+## 2026-11-07 — Retours de Florent : règles Fiesta et retrait de « Deux mots à la fois »
+
+**Quoi.** Spec : `_bmad-output/specs/fiesta/retours-2026-11-07.md`, décisions D1 à D5.
+
+- Ensembles fournis : Fiesta classique = 5 cartouches par manche + équilibrage, sans tirage ; Explosif = 10 ; Les
+  derniers = 5. `kMaxAllCount` = 10 borne la relecture et le compteur « À tous » ; les autres compteurs restent à 5.
+- Cartouches au hasard : tirage avec remise, pondéré (`kGiftWeights` : 3, `double_points` 1).
+- `free_pass.defaultCharges` = 1. `turnLabel` et nouveaux textes au catalogue. Le branchement de l'UI suit (lot 3).
+- « Deux mots à la fois » sort du catalogue et du code de jeu : carte B, `TwoWordsLayout`, aide, tuto. `FiestaWordCard` et
+  le mode `compact` de `TurnActionButtons` partent avec, ils n'avaient pas d'autre usage.
+
+**Pourquoi.**
+
+- `kMaxCount` bornait la relecture : à 10, `FiestaRules.tryFromJson` aurait refusé les règles d'Explosif, et la partie
+  serait retombée en Classique. Pas de changement de `format` : la clé est la même, seule la borne s'élargit.
+- `modifierById` répond encore pour `two_words` via une liste privée en lecture seule (règle 7) : l'historique doit
+  afficher « Deux mots à la fois », et `tryFromJson` jetterait sinon les entrées de `earned`, `chargesUsed` et
+  `active`. Rester hors de `kModifierCatalog` suffit à le sortir de la réserve, du vivier, de l'éditeur et du tirage.
+- Partie en cours avec Deux mots : les clés `twoWords`, `secondWord`, `secondExpiredWord` sont simplement ignorées à
+  la relecture. La carte B n'a jamais quitté `remainingWords`, elle revient donc seule, sans migration ni perte. Prix
+  assumé, seulement pour un tour en cours pile à la mise à jour : la carte B expirée n'est pas proposée à la
+  vérification, elle n'est pas comptée mais reste à faire deviner.
+- `ReplacedChoices.bonuses` filtre les bonus retirés : `reuseReplacedChoices` aurait rallumé `two_words` dans la zone
+  active de l'avant-tour, sans qu'aucune charge ne se dépense jamais.
+
+**Conséquence.**
+
+- Le retrait de `two_words` ne change pas le tirage des règles de manche d'une partie suspendue : il était réservé aux
+  cartouches, donc absent des candidats mélangés. Le plan de cadeaux d'une transition suspendue, recalculé et jamais
+  persisté avant `nextRound`, change une fois après la mise à jour (vivier et algorithme). Rien n'est doublé ni perdu.
+- Une passe gratuite déjà en cours à la mise à jour ne donne plus que 1 passe : `freePassesUsed` à 2 reste relu sans
+  erreur.
+- `resolveTurn(expiredWords:)` garde sa forme de liste, avec au plus un mot : pas de réécriture du scoring sans gain.
+- Réserve d'Explosif en manche 3 : 14 sortes de cartouches tiennent sans défiler à 360 × 640 (test). 15 sortes (moins
+  de 1 % des parties, simulation) et 16 (quasi jamais) font défiler la zone.

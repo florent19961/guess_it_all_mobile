@@ -8,24 +8,5 @@ Widgets reutilisables organises en deux sous-repertoires.
 |------------|------|
 | `common/` | Composants UI reutilisables (boutons, inputs, modals, sliders, toggles) |
 | `effects/` | Effets visuels et animations de fond |
-| `fiesta/` | Kit visuel du tour Fiesta (`fiesta_turn_widgets.dart`) ; annonces de partie (2-5) : `ModifierBadge(s)`, `FiestaTurnZone` (`turn_cartridges.dart`, avant-tour « Actif pendant votre prochain tour / Votre réserve », cercles ~50 px qui rapetissent jusqu'à 36 px (la réserve seule jusqu'à 32 px) pour tenir sans défiler (la zone active sur plusieurs rangées, colonne Bonus ajustée) ; un cas extrême défile dans la zone, appui long = explication, feuille « Contre quelle équipe ? », fenêtre des blocages (joueurs par équipe, nommés à l'envoi), puces « Envoyé » (équipe visée, joueur nommé, ou « Envoyé » à 2 équipes), un appui propose d'annuler ; couleurs : `modifierColor` = malus `AppColors.malus` (#F87171), bonus `AppColors.success` |
+| `fiesta/` | Annonces de partie (2-5) : `ModifierBadge(s)`, `FiestaTurnZone` (`turn_cartridges.dart`, avant-tour « Actif pendant votre prochain tour / Votre réserve », cercles ~50 px qui rapetissent jusqu'à 36 px (la réserve seule jusqu'à 32 px) pour tenir sans défiler (la zone active sur plusieurs rangées, colonne Bonus ajustée) ; un cas extrême défile dans la zone, appui long = explication, feuille « Contre quelle équipe ? », fenêtre des blocages (joueurs par équipe, nommés à l'envoi), puces « Envoyé » (équipe visée, joueur nommé, ou « Envoyé » à 2 équipes), un appui propose d'annuler ; couleurs : `modifierColor` = malus `AppColors.malus` (#F87171), bonus `AppColors.success` |
 | `help/` | Aides de prise en main : `HelpButton` (« ? »), `CoachMarks` (voile + bulle, étapes `CoachStep` ciblées par `GlobalKey`), textes par écran (`help_content.dart`), `TutorialPager`, `FirstGamePrompt` (tuto des règles d'office au 1er « Jouer »), `FirstGameHelp` (aides auto de la 1re partie). Branchement écran par écran → `help/WIRING.md` |
-
-## Kit visuel du tour Fiesta (`fiesta/fiesta_turn_widgets.dart`)
-
-Purement presentationnel : aucune logique de jeu, tout passe par des callbacks (`null` = bouton
-desactive). Rendu = celui du tour a un mot (`common/turn_play_widgets.dart`), sans carte ni etiquette.
-
-| Widget | Constructeur | Branche par |
-|--------|--------------|-------------|
-| `FiestaWordCard` | `({required String word, bool reversed = false, VoidCallback? onGuessed, VoidCallback? onPass, String passLabel = 'Passer', String? passDetail})` | 2-11 |
-| `TwoWordsLayout` | `({required String firstWord, String? secondWord, bool reversed = false, onGuessedFirst, onPassFirst, onGuessedSecond, onPassSecond, String passLabel = 'Passer', String? passDetail})` | 2-11 |
-
-- `FiestaWordCard` anime chaque nouveau mot et **ignore les taps pendant `kWordCardLock`
-  (300 ms)** (2-11 critere 9). Etat de widget seulement : rien de persiste, chrono intact.
-- `TwoWordsLayout` : hauteur a borner, partagee entre les mots, jamais de defilement. Une seule
-  carte, sans place vide, quand `secondWord == null`. Cartes cles par leur mot : la carte B qui
-  passe seule en tete garde son etat (pas de re-verrou).
-- 2-8 ne branche **aucun** de ces widgets : le tour a un mot garde son rendu, 2-8 n'utilise que
-  `reversedWordDisplay`.
-- Inversion de l'affichage : `utils/reversed_word.dart` (`reversedWordDisplay`).
