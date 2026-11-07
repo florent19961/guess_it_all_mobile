@@ -69,9 +69,10 @@ class FiestaTutorialScreen extends StatelessWidget {
         TutorialCard(
           symbol: '★',
           title: 'Les ensembles',
-          text: 'Juste après les Paramètres, choisis un ensemble de règles : '
-              'Fiesta classique, un de ceux fournis par l\'app, ou le tien, '
-              'enregistré sous un nom pour le réutiliser.',
+          text: 'Tu joues en Fiesta classique, puis avec ton dernier ensemble '
+              'de règles. Pour en changer : la roue crantée des Paramètres, '
+              'puis « Changer ». Prends un de ceux fournis par l\'app, ou le '
+              'tien, enregistré sous un nom pour le réutiliser.',
         ),
       ],
     );

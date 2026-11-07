@@ -348,7 +348,7 @@ void main() {
           })),
       });
       await tester.pumpWidget(MaterialApp(
-          home: FiestaEnsemblesScreen(onBack: () {}, onNext: (_) {})));
+          home: FiestaEnsemblesScreen(onBack: () {}, onValidate: (_) {})));
       await settle(tester);
     }
 
@@ -360,19 +360,19 @@ void main() {
       expect(find.textContaining('Perso'), findsNothing);
       expect(find.textContaining('corbeille'), findsNothing);
       expect(await walkOpenHelp(tester),
-          ['Les ensembles', 'Créer un ensemble', 'Suivant']);
+          ['Les ensembles', 'Créer un ensemble', 'Valider']);
     });
 
     testWidgets('avec un ensemble personnel : son étape', (tester) async {
       await pumpList(tester, 1);
       expect(await walkHelp(tester),
-          ['Les ensembles', 'Tes ensembles', 'Créer un ensemble', 'Suivant']);
+          ['Les ensembles', 'Tes ensembles', 'Créer un ensemble', 'Valider']);
     });
 
     testWidgets('liste pleine : l\'étape parle de la limite', (tester) async {
       await pumpList(tester, FiestaEnsembleService.maxEnsembles);
       expect(await walkHelp(tester),
-          ['Les ensembles', 'Tes ensembles', 'Limite atteinte', 'Suivant']);
+          ['Les ensembles', 'Tes ensembles', 'Limite atteinte', 'Valider']);
     });
 
     testWidgets(
@@ -387,7 +387,7 @@ void main() {
           reason: 'Fiesta classique : pastilles neutres, sans explication');
       await walkOpenHelp(tester);
 
-      // L'aide a défilé jusqu'à « Suivant » : on remonte à la ligne.
+      // L'aide a défilé jusqu'à « Valider » : on remonte à la ligne.
       await tester.ensureVisible(find.text('Pro Player'));
       await pumps(tester);
       await tester.tap(find.text('Pro Player'));

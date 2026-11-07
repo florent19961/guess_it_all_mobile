@@ -96,17 +96,20 @@ class GuessItAllApp extends StatelessWidget {
         return const CategoriesScreen();
       case AppConstants.screenHistory:
         return const HistoryScreen();
-      // Fiesta : entre les Paramètres et les joueurs, l'ensemble
-      // choisi attend dans `pendingFiesta` jusqu'à « Commencer » (équipes).
+      // Fiesta : ouvert depuis Avancés (Paramètres), l'ensemble choisi attend
+      // dans `pendingFiesta` jusqu'à « Commencer » (équipes).
       case AppConstants.screenFiestaEnsembles:
         return Builder(builder: (context) {
           final provider = context.read<GameProvider>();
           return FiestaEnsemblesScreen(
             selected: provider.pendingFiesta,
-            onBack: () => provider.goToScreen(AppConstants.screenSettings),
-            onNext: (rules) {
+            onBack: () {
+              provider.goToScreen(AppConstants.screenSettings);
+              provider.refreshPendingEnsemble();
+            },
+            onValidate: (rules) {
               provider.setPendingFiesta(rules);
-              provider.goToScreen(AppConstants.screenPlayers);
+              provider.goToScreen(AppConstants.screenSettings);
             },
           );
         });

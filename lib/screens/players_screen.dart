@@ -20,6 +20,9 @@ class PlayersScreen extends StatefulWidget {
   State<PlayersScreen> createState() => _PlayersScreenState();
 }
 
+/// 20 lignes au plus ([AppConstants.maxPlayers]), moins de 100 px chacune.
+const double _allRowsCacheExtent = 2000;
+
 class _PlayersScreenState extends State<PlayersScreen> {
   final _firstPlayerKey = GlobalKey();
   final _wordsKey = GlobalKey();
@@ -305,6 +308,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<GameProvider>();
     final canProceed = _canProceed(provider);
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
 
     // Retour système (Android) = bouton retour, pas la sortie de l'app.
     void back() {
@@ -315,12 +319,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
           provider.updatePlayer(player.id, name: name);
         }
       }
-      // Fiesta : retour à la liste des ensembles.
-      provider.goToScreen(
-        provider.pendingFiesta != null
-            ? AppConstants.screenFiestaEnsembles
-            : AppConstants.screenSettings,
-      );
+      provider.goToScreen(AppConstants.screenSettings);
     }
 
     return PopScope(
@@ -343,12 +342,14 @@ class _PlayersScreenState extends State<PlayersScreen> {
                   Expanded(
                     child: _isInitialized
                         ? ListView.builder(
-                            padding: EdgeInsets.only(
+                            padding: const EdgeInsets.only(
                               left: 24,
                               right: 24,
-                              bottom: MediaQuery.of(context).viewInsets.bottom +
-                                  100,
+                              bottom: 16,
                             ),
+                            // Toutes les lignes attachées : « suivant » au
+                            // clavier donne le focus même à une ligne éloignée.
+                            cacheExtent: _allRowsCacheExtent,
                             itemCount: provider.players.length,
                             itemBuilder: (context, index) {
                               final player = provider.players[index];
@@ -490,19 +491,27 @@ class _PlayersScreenState extends State<PlayersScreen> {
                                 color: AppColors.secondaryCyan),
                           ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: AppButton(
-                      key: _nextKey,
-                      text: 'Suivant',
-                      variant: AppButtonVariant.primary,
-                      size: AppButtonSize.large,
-                      fullWidth: true,
-                      disabled: !canProceed,
-                      onPressed:
-                          canProceed ? () => _saveAndContinue(provider) : null,
+                  // Clavier ouvert (il cachait déjà ce bouton) : la liste
+                  // s'arrête au clavier, et le champ y remonte de lui-même
+                  // (`EditableText` le garde visible dans sa liste). L'écran
+                  // n'a pas de Scaffold pour le faire.
+                  if (keyboard > 0)
+                    SizedBox(height: keyboard)
+                  else
+                    Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: AppButton(
+                        key: _nextKey,
+                        text: 'Suivant',
+                        variant: AppButtonVariant.primary,
+                        size: AppButtonSize.large,
+                        fullWidth: true,
+                        disabled: !canProceed,
+                        onPressed: canProceed
+                            ? () => _saveAndContinue(provider)
+                            : null,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),

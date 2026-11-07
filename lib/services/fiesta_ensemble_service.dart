@@ -111,6 +111,10 @@ class FiestaEnsembleService {
   Future<void> markUsed(String id) =>
       _mutate((store) => (EnsembleStore(store.ensembles, id), null));
 
+  /// « Réinitialiser les paramètres » : les ensembles restent.
+  Future<void> forgetLastUsed() =>
+      _mutate((store) => (EnsembleStore(store.ensembles, null), null));
+
   /// Nom d'une copie : « <nom> (2) », ou le premier numéro libre parmi
   /// [taken] (noms uniques, sans compter la casse ni les espaces autour).
   /// C'est le nom de BASE qu'on raccourcit, pas le suffixe : coupe en

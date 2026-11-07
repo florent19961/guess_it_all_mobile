@@ -45,23 +45,23 @@ const Map<String, IconData> _providedIcons = {
   '${kProvidedIdPrefix}expert': Icons.volume_up_outlined,
 };
 
-/// La liste des ensembles : juste après les Paramètres, avant les joueurs
-/// (Fiesta seulement). Les ensembles fournis par l'app puis les
+/// La liste des ensembles : ouverte depuis Avancés sur les Paramètres (Fiesta
+/// seulement). Les ensembles fournis par l'app puis les
 /// miens (un tap sélectionne et déplie), « Créer un ensemble » qui POUSSE l'éditeur
-/// (`FiestaEnsembleEditorScreen`), en bas « Suivant ».
+/// (`FiestaEnsembleEditorScreen`), en bas « Valider ».
 ///
-/// L'écran ne connaît ni le provider ni la navigation de l'app : [onNext]
+/// L'écran ne connaît ni le provider ni la navigation de l'app : [onValidate]
 /// reçoit les règles de l'ensemble choisi (`ensembleName` = nom), prêtes à attendre dans `pendingFiesta`. [selected] (l'attente
 /// courante, ex. après « Rejouer ») présélectionne l'ensemble aux mêmes
 /// règles ; sinon le dernier utilisé, sinon « Fiesta classique ».
 class FiestaEnsemblesScreen extends StatefulWidget {
   final FiestaRules? selected;
   final VoidCallback onBack;
-  final ValueChanged<FiestaRules> onNext;
+  final ValueChanged<FiestaRules> onValidate;
 
   const FiestaEnsemblesScreen({
     required this.onBack,
-    required this.onNext,
+    required this.onValidate,
     this.selected,
     super.key,
   });
@@ -88,7 +88,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
   final _readyKey = GlobalKey();
   final _firstMineKey = GlobalKey();
   final _createKey = GlobalKey();
-  final _nextKey = GlobalKey();
+  final _validateKey = GlobalKey();
   final _selectedRowKey = GlobalKey();
   final _scroll = ScrollController();
 
@@ -205,7 +205,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
         case EnsembleDraftKept(:final rules):
           setState(() => drafts[key] = rules);
           if (mounted) {
-            // Flottant au-dessus de « Suivant », qu'il ne doit pas masquer.
+            // Flottant au-dessus de « Valider », qu'il ne doit pas masquer.
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               content: Text('Brouillon gardé'),
               behavior: SnackBarBehavior.floating,
@@ -248,13 +248,13 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
     await _reload();
   }
 
-  Future<void> _next() async {
+  Future<void> _validate() async {
     final chosen = _ready.where((e) => e.id == _selectedId).firstOrNull;
     if (chosen == null || _busy) return;
     _busy = true;
     try {
       await _service.markUsed(chosen.id);
-      if (mounted) widget.onNext(chosen.rules);
+      if (mounted) widget.onValidate(chosen.rules);
     } finally {
       _busy = false;
     }
@@ -285,7 +285,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
                         children: [
                           const SizedBox(height: _buttonsBand),
                           Expanded(child: _buildBody()),
-                          _buildNextBar(),
+                          _buildValidateBar(),
                         ],
                       ),
               ),
@@ -297,7 +297,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
                     ready: _readyKey,
                     firstMine: _firstMineKey,
                     create: _createKey,
-                    next: _nextKey,
+                    validate: _validateKey,
                     hasMine: _mine.isNotEmpty,
                     full: _full,
                     selectedHasModifiers: _ready
@@ -376,18 +376,18 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
     );
   }
 
-  Widget _buildNextBar() {
+  Widget _buildValidateBar() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
       color: AppColors.backgroundMain,
       child: AppButton(
-        key: _nextKey,
-        text: 'Suivant',
+        key: _validateKey,
+        text: 'Valider',
         variant: AppButtonVariant.primary,
         size: AppButtonSize.large,
         fullWidth: true,
         disabled: _selectedId == null,
-        onPressed: _selectedId == null ? null : _next,
+        onPressed: _selectedId == null ? null : _validate,
       ),
     );
   }

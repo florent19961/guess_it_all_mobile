@@ -78,9 +78,11 @@ void main() {
   testWidgets(
       'éditeur : « Donne un nom » seulement après Enregistrer avec un nom '
       'vide, effacé dès la saisie ; enregistré, l\'ensemble est sélectionné '
-      'et « Suivant » mène aux joueurs avec lui', (tester) async {
-    final provider =
-        await pumpCustomFiesta(tester, AppConstants.screenFiestaEnsembles);
+      'et « Valider » ramène aux Paramètres avec lui', (tester) async {
+    // Surface large : on finit sur Paramètres, qui déborde avec la police de test.
+    final provider = await pumpCustomFiesta(
+        tester, AppConstants.screenFiestaEnsembles,
+        size: const Size(700, 1300));
     const nameError = 'Donne un nom à l\'ensemble.';
     Finder error() => find.text(nameError, skipOffstage: false);
 
@@ -110,8 +112,8 @@ void main() {
     final stored = await tester.runAsync(() => FiestaEnsembleService().load());
     expect(stored!.ensembles.map((e) => e.name), ['Soirée chez Max']);
 
-    await tapText(tester, 'Suivant');
-    expect(provider.game.currentScreen, AppConstants.screenPlayers);
+    await tapText(tester, 'Valider');
+    expect(provider.game.currentScreen, AppConstants.screenSettings);
     expect(provider.pendingFiesta?.ensembleName, 'Soirée chez Max',
         reason: 'l\'ensemble enregistré est celui sélectionné');
   });
@@ -176,8 +178,8 @@ void main() {
   });
 
   testWidgets(
-      'Personnalisé : « Suivant » des Paramètres mène à l\'écran des '
-      'ensembles, avant les joueurs', (tester) async {
+      'Fiesta : « Suivant » des Paramètres mène aux joueurs, leur retour aux '
+      'Paramètres', (tester) async {
     // Surface large : Paramètres déborde avec la police de test.
     final provider = await pumpCustomFiesta(tester, AppConstants.screenSettings,
         size: const Size(700, 1300));
@@ -187,6 +189,10 @@ void main() {
     await settle(tester);
 
     await tapText(tester, 'Suivant');
-    expect(provider.game.currentScreen, AppConstants.screenFiestaEnsembles);
+    expect(provider.game.currentScreen, AppConstants.screenPlayers);
+
+    await tester.tap(find.byType(AppBackButton).last);
+    await settle(tester);
+    expect(provider.game.currentScreen, AppConstants.screenSettings);
   });
 }

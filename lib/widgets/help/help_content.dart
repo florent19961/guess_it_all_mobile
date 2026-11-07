@@ -88,7 +88,7 @@ List<CoachStep> settingsHelp({
         title: 'Classique ou Fiesta',
         text: 'Classique : les 3 manches habituelles. Fiesta : les mêmes '
             'manches, pimentées de bonus et de malus : l\'ensemble de règles '
-            'se choisit juste après cet écran.',
+            'se change dans Avancés, la roue crantée.',
       ),
       CoachStep(
         target: wordChoice,
@@ -112,8 +112,8 @@ List<CoachStep> settingsHelp({
         title: 'Avancés',
         text: 'Le nombre de mots, la durée d\'un tour et la pénalité quand on '
             'passe un mot. Avec tes réglages : '
-            '${passPenaltySentence(passPenalty).toLowerCase()} Tout en bas : '
-            'réinitialiser les paramètres.',
+            '${passPenaltySentence(passPenalty).toLowerCase()} En Fiesta : '
+            'changer d\'ensemble. Tout en bas : réinitialiser les paramètres.',
       ),
     ];
 
@@ -198,7 +198,7 @@ List<CoachStep> fiestaEnsemblesHelp({
   required GlobalKey ready,
   required GlobalKey firstMine,
   required GlobalKey create,
-  required GlobalKey next,
+  required GlobalKey validate,
   required bool hasMine,
   required bool full,
   required bool hasDraft,
@@ -248,9 +248,9 @@ List<CoachStep> fiestaEnsemblesHelp({
               '${FiestaEnsembleService.maxEnsembles} au plus.',
         ),
       CoachStep(
-        target: next,
-        title: 'Suivant',
-        text: 'Passe aux joueurs avec l\'ensemble choisi.',
+        target: validate,
+        title: 'Valider',
+        text: 'Revient aux Paramètres avec l\'ensemble choisi.',
       ),
     ];
 
