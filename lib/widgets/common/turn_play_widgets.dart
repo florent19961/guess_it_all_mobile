@@ -40,7 +40,10 @@ class TurnWordText extends StatelessWidget {
       );
 }
 
-/// Les boutons Passer (rouge) et Trouvé (cyan) du tour, de même hauteur.
+/// Hauteur des boutons du tour : celle de Trouvé (padding 33 + icône 48).
+const _buttonsHeight = 114.0;
+
+/// Les boutons Passer (rouge) et Trouvé (cyan) du tour, de même hauteur fixe.
 class TurnActionButtons extends StatefulWidget {
   /// `null` = bouton grisé (pause, `no_pass`, plus de mot à passer…).
   final VoidCallback? onPass;
@@ -130,7 +133,8 @@ class _TurnActionButtonsState extends State<TurnActionButtons>
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        IntrinsicHeight(
+        SizedBox(
+          height: _buttonsHeight,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -148,7 +152,8 @@ class _TurnActionButtonsState extends State<TurnActionButtons>
                       color: canPass ? AppColors.error : AppColors.gray700,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: pass,
+                    // Grande police : Passer rétrécit, la rangée ne bouge pas.
+                    child: FittedBox(fit: BoxFit.scaleDown, child: pass),
                   ),
                 ),
               ),

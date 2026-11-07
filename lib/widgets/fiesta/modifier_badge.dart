@@ -60,8 +60,9 @@ const Map<String, String> _emojiIcons = {
 const Set<String> _slashedIcons = {'mime_no_arms', 'mime_eyes_closed'};
 
 /// L'icône d'un modificateur : boîte carrée de [size], contenu centré. Seul
-/// point d'affichage des icônes. Un émoji ne dépend ni de la police de l'app ni
-/// des métriques de sa ligne, d'où un centrage commun à toutes les tailles.
+/// point d'affichage des icônes. Un émoji ne dépend ni de la police de l'app, ni
+/// des métriques de sa ligne, ni de la taille de texte système : même centrage à
+/// toutes les tailles, et `slash.png` le barre toujours.
 /// [color] ne teinte que le repli texte ([kModifierIcons]).
 class ModifierIcon extends StatelessWidget {
   final String id;
@@ -84,6 +85,7 @@ class ModifierIcon extends StatelessWidget {
     final fontSize = size * 0.72;
     return Text(
       text,
+      textScaler: TextScaler.noScaling,
       maxLines: 1,
       softWrap: false,
       overflow: TextOverflow.visible,

@@ -1342,3 +1342,7 @@ d'aide), bouton Passer grisé réduit à son libellé, bulle au toucher. Puce d'
 **Conséquence.** `kModifierIcons` reste entier tant que `score_reveal_chart.dart` dessine ses bulles ; il se réduit à
 `two_words` une fois le lot `retours-reveal` mergé. Centrage des émojis à vérifier sur iPhone et Android : ni Apple Color
 Emoji ni Noto ne tournent dans les tests.
+
+Revue : la rangée des boutons est à 114 px fixes et Passer rétrécit (`FittedBox`), au lieu d'une hauteur intrinsèque
+qui étirait la rangée vers 170 % de taille de texte, et l'émoji ignore la taille de texte système, sinon il sort de sa
+boîte et de sa barre.
