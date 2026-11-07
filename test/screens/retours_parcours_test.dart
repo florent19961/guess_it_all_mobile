@@ -96,8 +96,8 @@ void main() {
       expect(json(provider.pendingFiesta), json(mine.rules),
           reason: 'rien n\'a changé dans la liste : rien ne change');
 
-      final edited = FiestaEnsemble(
-          id: mine.id, rules: mine.rules.copyWith(allCount: 4));
+      final edited =
+          FiestaEnsemble(id: mine.id, rules: mine.rules.copyWith(allCount: 4));
       await FiestaEnsembleService().update(edited);
       await provider.refreshPendingEnsemble();
       expect(json(provider.pendingFiesta), json(edited.rules));
@@ -202,8 +202,8 @@ void main() {
         find.byKey(ValueKey('input_${provider.players[index].id}'),
             skipOffstage: false);
 
-    await tester.showKeyboard(find.descendant(
-        of: field(0), matching: find.byType(EditableText)));
+    await tester.showKeyboard(
+        find.descendant(of: field(0), matching: find.byType(EditableText)));
     tester.view.viewInsets = const FakeViewPadding(bottom: keyboard);
     addTearDown(tester.view.resetViewInsets);
     await settle();
@@ -222,6 +222,29 @@ void main() {
           lessThanOrEqualTo(screen.height - keyboard),
           reason: 'champ $i caché par le clavier');
     }
+
+    // Liste remontée loin du champ actif : la ligne suivante, hors de vue,
+    // reçoit quand même le focus.
+    await tester.drag(find.byType(ListView), const Offset(0, 3000));
+    await settle();
+    await tester.tap(find
+        .descendant(of: field(0), matching: find.byType(EditableText))
+        .hitTestable());
+    await settle();
+    await tester.drag(find.byType(ListView), const Offset(0, -3000));
+    await settle();
+    await tester.testTextInput.receiveAction(TextInputAction.next);
+    await settle();
+    expect(
+        tester
+            .widget<EditableText>(find.descendant(
+                of: field(1),
+                matching: find.byType(EditableText, skipOffstage: false)))
+            .focusNode
+            .hasFocus,
+        isTrue,
+        reason: 'ligne non construite : requestFocus ne ferait rien');
+
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 1));
   });

@@ -138,9 +138,9 @@ Hors cycle : bug / test rouge / comportement inattendu → `bmad-investigate` ; 
 5. **Partie** — 3 manches, tous les mots remis dans le pool à chaque manche.
 6. **Résultats** — scores par équipe et par manche.
 
-> **Mode Fiesta** (modificateurs de jeu) : la liste des ensembles s'insère juste après les
-> Paramètres, avant les joueurs, Fiesta classique présélectionné. Détail →
-> `lib/screens/CLAUDE.md`.
+> **Mode Fiesta** (modificateurs de jeu) : l'interrupteur des Paramètres reprend le dernier ensemble
+> utilisé, sinon Fiesta classique. La liste des ensembles s'ouvre depuis Avancés et ramène aux
+> Paramètres ; « Suivant » va toujours aux joueurs. Détail → `lib/screens/CLAUDE.md`.
 
 ## Conventions de code
 

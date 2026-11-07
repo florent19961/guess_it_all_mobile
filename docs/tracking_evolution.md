@@ -1346,3 +1346,32 @@ Emoji ni Noto ne tournent dans les tests.
 Revue : la rangée des boutons est à 114 px fixes et Passer rétrécit (`FittedBox`), au lieu d'une hauteur intrinsèque
 qui étirait la rangée vers 170 % de taille de texte, et l'émoji ignore la taille de texte système, sinon il sort de sa
 boîte et de sa barre.
+
+## 2026-11-07 — Retours de Florent : parcours Paramètres et ensembles, autoscroll Joueurs
+
+**Quoi.** Spec : `_bmad-output/specs/fiesta/retours-2026-11-07.md`, décision D8. « Suivant » des Paramètres va
+toujours aux joueurs ; la liste des ensembles s'ouvre depuis Avancés (« Changer ») et son bouton « Valider » ramène
+aux Paramètres. Passer en Fiesta pose le dernier ensemble, sinon Fiesta classique. Réinitialiser oublie `lastUsedId`.
+Ligne « Ensemble : <nom> » hors Fiesta classique. Clavier ouvert sur Joueurs, le champ actif remonte au-dessus.
+
+**Pourquoi ces choix.**
+
+- `chooseFiestaMode` pose Fiesta classique tout de suite, puis le dernier ensemble relu : l'interrupteur reste
+  synchrone, et le mode n'attend jamais sans règles, ce qui était un risque nouveau une fois l'écran des ensembles
+  devenu facultatif. Un choix fait pendant la relecture l'emporte (`identical`).
+- Une partie rejouée passait par la liste, qui remplaçait des règles gelées sans ensemble correspondant. Elle n'y passe
+  plus : les règles gelées sont maintenant jouées telles quelles. D'où la comparaison en JSON et non par le nom pour
+  la ligne Ensemble : d'anciennes règles nommées « Fiesta classique » s'affichent « Fiesta classique (ancienne
+  version) », sinon rien ne les signalerait.
+- Retour de la liste sans valider : l'attente relit le dernier utilisé (`refreshPendingEnsemble`). Sans ça, un ensemble
+  modifié ou supprimé dans la liste serait joué dans son ancienne version. Hors règles gelées, l'attente est toujours
+  le dernier utilisé, donc pas de comparaison à faire.
+- Autoscroll : la liste s'arrête au clavier et le bouton « Suivant » s'efface (il était déjà caché dessous), comme le
+  ferait un Scaffold. `EditableText` garde alors seul le champ visible, à la prise de focus et à l'ouverture du
+  clavier : aucun calcul de défilement à nous. `AppInput` et `Scrollable.ensureVisible` restent intacts.
+  `cacheExtent` garde toutes les lignes construites (20 au plus) : sinon « suivant » ne donnerait pas le focus à une
+  ligne éloignée de la zone visible.
+
+**Conséquence.** Aucune forme persistée ne change : `lastUsedId` était déjà facultatif, il disparaît simplement du blob.
+Paramètres, mesuré avec les vraies polices (Poppins, Bangers) dans un test temporaire : 732 px au plus (ligne Ensemble
+et avertissement « partie longue »), soit 8 px de marge sur 360 × 740 et 31 px sur 390 × 763.
