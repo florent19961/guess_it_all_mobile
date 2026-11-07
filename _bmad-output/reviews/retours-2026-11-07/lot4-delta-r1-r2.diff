@@ -1,0 +1,300 @@
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index 8af3cee..c480622 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -1314,11 +1314,11 @@ Ligne « Ensemble : <nom> » hors Fiesta classique. Clavier ouvert sur Joueurs,
+ 
+ - `chooseFiestaMode` pose Fiesta classique tout de suite, puis le dernier ensemble relu : l'interrupteur reste
+   synchrone, et le mode n'attend jamais sans règles, ce qui était un risque nouveau une fois l'écran des ensembles
+-  devenu facultatif. Un choix fait pendant la relecture l'emporte (`identical`).
++  devenu facultatif. Un choix fait pendant la relecture l'emporte : un compteur de `setPendingFiesta`, car valider
++  Fiesta classique repose le même objet, et `identical` pour les écritures directes de `_pendingFiesta`.
+ - Une partie rejouée passait par la liste, qui remplaçait des règles gelées sans ensemble correspondant. Elle n'y passe
+-  plus : les règles gelées sont maintenant jouées telles quelles. D'où la comparaison en JSON et non par le nom pour
+-  la ligne Ensemble : d'anciennes règles nommées « Fiesta classique » s'affichent « Fiesta classique (ancienne
+-  version) », sinon rien ne les signalerait.
++  plus : les règles gelées sont maintenant jouées telles quelles. La ligne Ensemble ne compare que le nom (D8) : d'anciennes
++  règles nommées « Fiesta classique » n'affichent pas de ligne (arbitrage du lot, revue r1).
+ - Retour de la liste sans valider : l'attente relit le dernier utilisé (`refreshPendingEnsemble`). Sans ça, un ensemble
+   modifié ou supprimé dans la liste serait joué dans son ancienne version. Hors règles gelées, l'attente est toujours
+   le dernier utilisé, donc pas de comparaison à faire.
+diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
+index de677ad..34ecc44 100644
+--- a/lib/providers/game_provider.dart
++++ b/lib/providers/game_provider.dart
+@@ -70,7 +70,12 @@ class GameProvider extends ChangeNotifier {
+   FiestaRules? get pendingFiesta => _pendingFiesta;
+   String? get currentEditingPlayerId => _currentEditingPlayerId;
+ 
++  /// Compte les `setPendingFiesta` : reposer le même objet (Fiesta classique
++  /// validé) est un choix, ce que `identical` seul ne verrait pas.
++  int _pendingChoices = 0;
++
+   void setPendingFiesta(FiestaRules? rules) {
++    _pendingChoices++;
+     _pendingFiesta = rules;
+     _rememberFiestaChoice();
+     notifyListeners();
+@@ -110,9 +115,8 @@ class GameProvider extends ChangeNotifier {
+   /// Fiesta classique. Fiesta classique d'abord, le temps de relire : le mode
+   /// n'attend jamais sans règles.
+   Future<void> chooseFiestaMode() async {
+-    final classic = classicEnsemble.rules;
+-    setPendingFiesta(classic);
+-    await _followLastUsedEnsemble(classic);
++    setPendingFiesta(classicEnsemble.rules);
++    await _followLastUsedEnsemble();
+   }
+ 
+   /// Retour de la liste des ensembles sans valider : rien ne change, sauf si
+@@ -120,19 +124,24 @@ class GameProvider extends ChangeNotifier {
+   /// gelées : partie rejouée pas encore lancée, ou partie suspendue revenue
+   /// jusqu'ici (ses règles, sans lien avec le dernier utilisé).
+   Future<void> refreshPendingEnsemble() async {
+-    final pending = _pendingFiesta;
+-    if (pending?.ensembleName == null ||
++    if (_pendingFiesta?.ensembleName == null ||
+         _settings.replayFiesta != null ||
+         _game.allWords.isNotEmpty) {
+       return;
+     }
+-    await _followLastUsedEnsemble(pending!);
++    await _followLastUsedEnsemble();
+   }
+ 
+-  /// [expected] : un autre choix fait pendant la relecture l'emporte.
+-  Future<void> _followLastUsedEnsemble(FiestaRules expected) async {
++  /// Un autre choix fait pendant la relecture l'emporte : par
++  /// `setPendingFiesta` (le compteur) ou par une écriture directe de
++  /// `_pendingFiesta` (`identical`).
++  Future<void> _followLastUsedEnsemble() async {
++    final choices = _pendingChoices;
++    final expected = _pendingFiesta;
+     final rules = await _lastUsedEnsembleRules();
+-    if (identical(_pendingFiesta, expected)) setPendingFiesta(rules);
++    if (choices == _pendingChoices && identical(_pendingFiesta, expected)) {
++      setPendingFiesta(rules);
++    }
+   }
+ 
+   // Setter pour le joueur en cours d'édition
+diff --git a/lib/screens/CLAUDE.md b/lib/screens/CLAUDE.md
+index 21a9e43..14c5e8a 100644
+--- a/lib/screens/CLAUDE.md
++++ b/lib/screens/CLAUDE.md
+@@ -18,7 +18,7 @@ HomeScreen → SettingsScreen (Classique / Fiesta)
+ | Ecran | Role |
+ |-------|------|
+ | `home_screen.dart` | Accueil : 3 etats (partie suspendue, session existante, nouveau jeu) |
+-| `settings_screen.dart` | Premier ecran de toute partie, **sans defilement** (390 × 763 et 360 × 740 utiles) : sections Joueurs, Equipes, « Mode de jeu » (interrupteur Classique / Fiesta ; Classique a la premiere ouverture, puis le dernier choix relu ; 1er choix actif de Fiesta → tuto Fiesta une fois, jamais a une restauration), Choix des mots, puis categories, ligne non cliquable « Ensemble : <nom> » sous l'interrupteur, seulement si les regles ne sont pas celles de Fiesta classique aujourd'hui (comparees en JSON : une partie rejouee aux anciennes regles se lit « Fiesta classique (ancienne version) »), parametres avances (modal sans defilement, curseurs `compact` ; Fiesta : ligne « Ensemble Fiesta / <nom> / Changer › » ; en bas, « Reinitialiser les parametres » avec confirmation). « Suivant » → joueurs, toujours. En haut a droite : « ? » et roue crantee seulement. Retour (bouton et retour systeme) → accueil |
++| `settings_screen.dart` | Premier ecran de toute partie, **sans defilement** (390 × 763 et 360 × 740 utiles) : sections Joueurs, Equipes, « Mode de jeu » (interrupteur Classique / Fiesta ; Classique a la premiere ouverture, puis le dernier choix relu ; 1er choix actif de Fiesta → tuto Fiesta une fois, jamais a une restauration), Choix des mots, puis categories, ligne non cliquable « Ensemble : <nom> » sous l'interrupteur, seulement si le nom n'est pas « Fiesta classique » (une partie rejouee aux anciennes regles de ce nom n'en a donc pas), parametres avances (modal sans defilement, curseurs `compact` ; Fiesta : ligne « Ensemble Fiesta / <nom> / Changer › » ; en bas, « Reinitialiser les parametres » avec confirmation). « Suivant » → joueurs, toujours. En haut a droite : « ? » et roue crantee seulement. Retour (bouton et retour systeme) → accueil |
+ | `categories_screen.dart` | Selection categories et niveaux de difficulte (1-4) |
+ | `players_screen.dart` | Saisie noms joueurs (pre-remplis par `GameProvider.nextSavedName` ; les effacer est le seul moyen de les retirer) + generation mots aleatoires avec cache metadata. Retour (bouton et systeme) → Parametres. Clavier ouvert : la liste s'arrete au clavier (l'ecran n'a pas de Scaffold) et `EditableText` y garde le champ visible ; toutes les lignes restent construites (`cacheExtent`), sinon « suivant » au clavier ne donnerait pas le focus a une ligne eloignee |
+ | `words_screen.dart` | Saisie mots par joueur (mode personnalise). Bouton "Grosse flemme" pour auto-remplir. Retour (bouton et systeme) → joueurs, mots sauvegardes |
+diff --git a/lib/screens/settings_screen.dart b/lib/screens/settings_screen.dart
+index 2ff780e..f71873b 100644
+--- a/lib/screens/settings_screen.dart
++++ b/lib/screens/settings_screen.dart
+@@ -1,10 +1,7 @@
+-import 'dart:convert';
+-
+ import 'package:flutter/material.dart';
+ import 'package:provider/provider.dart';
+ import '../theme/app_theme.dart';
+ import '../models/fiesta/fiesta_ensemble.dart';
+-import '../models/fiesta/fiesta_rules.dart';
+ import '../providers/game_provider.dart';
+ import '../services/storage_service.dart';
+ import '../utils/constants.dart';
+@@ -91,7 +88,10 @@ class _SettingsScreenState extends State<SettingsScreen>
+     if (_tutorialBusy) return;
+     _tutorialBusy = true;
+     try {
+-      if (!await StorageService().hasSeenFiestaTutorial() && mounted) {
++      // Le tuto se marque vu en s'ouvrant : pas si on est revenu en Classique.
++      if (!await StorageService().hasSeenFiestaTutorial() &&
++          mounted &&
++          provider.pendingFiesta != null) {
+         await FiestaTutorialScreen.show(context);
+       }
+     } finally {
+@@ -102,18 +102,6 @@ class _SettingsScreenState extends State<SettingsScreen>
+   void _goNext(GameProvider provider) =>
+       provider.goToScreen(AppConstants.screenPlayers);
+ 
+-  /// Les règles sont-elles celles de Fiesta classique AUJOURD'HUI ? Le nom ne
+-  /// suffit pas : une partie rejouée garde les règles gelées de son époque.
+-  static bool _isCurrentClassic(FiestaRules rules) =>
+-      jsonEncode(rules.toJson()) == jsonEncode(classicEnsemble.rules.toJson());
+-
+-  static String _ensembleName(FiestaRules rules) {
+-    final name = rules.ensembleName ?? 'Sans nom';
+-    return name == classicEnsemble.name && !_isCurrentClassic(rules)
+-        ? '$name (ancienne version)'
+-        : name;
+-  }
+-
+   @override
+   Widget build(BuildContext context) {
+     final provider = context.watch<GameProvider>();
+@@ -195,9 +183,9 @@ class _SettingsScreenState extends State<SettingsScreen>
+                         onChange: (value) => _setMode(provider, value),
+                       ),
+                     ),
+-                    if (provider.pendingFiesta case final rules?
+-                        when !_isCurrentClassic(rules))
+-                      _buildEnsembleLine(rules),
++                    if (provider.pendingFiesta?.ensembleName case final name?
++                        when name != classicEnsemble.name)
++                      _buildEnsembleLine(name),
+                     const SizedBox(height: _sectionGap),
+ 
+                     // Choix des mots
+@@ -432,7 +420,7 @@ class _SettingsScreenState extends State<SettingsScreen>
+   }
+ 
+   /// Une seule ligne, quel que soit le nom : l'écran ne doit pas défiler.
+-  Widget _buildEnsembleLine(FiestaRules rules) {
++  Widget _buildEnsembleLine(String name) {
+     return Padding(
+       padding: const EdgeInsets.only(top: 6),
+       child: Text.rich(
+@@ -440,7 +428,7 @@ class _SettingsScreenState extends State<SettingsScreen>
+           children: [
+             const TextSpan(text: 'Ensemble : '),
+             TextSpan(
+-              text: _ensembleName(rules),
++              text: name,
+               style: const TextStyle(
+                 color: AppColors.secondaryCyan,
+                 fontWeight: FontWeight.w600,
+@@ -463,7 +451,7 @@ class _SettingsScreenState extends State<SettingsScreen>
+   Widget _buildEnsembleRow(
+     BuildContext context,
+     GameProvider provider,
+-    FiestaRules rules,
++    String name,
+   ) {
+     return GestureDetector(
+       onTap: () {
+@@ -492,7 +480,7 @@ class _SettingsScreenState extends State<SettingsScreen>
+                     ),
+                   ),
+                   Text(
+-                    _ensembleName(rules),
++                    name,
+                     maxLines: 1,
+                     overflow: TextOverflow.ellipsis,
+                     style: const TextStyle(
+@@ -680,7 +668,8 @@ class _SettingsScreenState extends State<SettingsScreen>
+ 
+                 if (provider.pendingFiesta case final rules?) ...[
+                   const SizedBox(height: 16),
+-                  _buildEnsembleRow(context, provider, rules),
++                  _buildEnsembleRow(
++                      context, provider, rules.ensembleName ?? ''),
+                 ],
+ 
+                 // Réinitialiser (ancien bouton rond du coin haut droit) : ferme
+diff --git a/test/screens/retours_parcours_test.dart b/test/screens/retours_parcours_test.dart
+index ccbaf99..9c6e5cd 100644
+--- a/test/screens/retours_parcours_test.dart
++++ b/test/screens/retours_parcours_test.dart
+@@ -5,10 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
+ import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
+ import 'package:guess_it_all_mobile/providers/game_provider.dart';
++import 'package:guess_it_all_mobile/screens/fiesta_tutorial_screen.dart';
+ import 'package:guess_it_all_mobile/screens/players_screen.dart';
+ import 'package:guess_it_all_mobile/screens/settings_screen.dart';
+ import 'package:guess_it_all_mobile/services/fiesta_ensemble_service.dart';
+ import 'package:guess_it_all_mobile/utils/constants.dart';
++import 'package:guess_it_all_mobile/widgets/common/app_toggle.dart';
+ import 'package:provider/provider.dart';
+ 
+ import '../helpers/test_prefs.dart';
+@@ -63,6 +65,62 @@ void main() {
+       await choosing;
+       expect(provider.pendingFiesta, isNull);
+     });
++
++    test(
++        'Fiesta classique validé pendant la relecture : reste Fiesta classique',
++        () async {
++      final provider = await givenProvider();
++      final mine = await givenMine('Soirée');
++      await FiestaEnsembleService().markUsed(mine.id);
++
++      final choosing = provider.chooseFiestaMode();
++      provider.setPendingFiesta(classicEnsemble.rules);
++      await choosing;
++      expect(json(provider.pendingFiesta), _classic,
++          reason: 'même objet que celui posé d\'abord par chooseFiestaMode');
++    });
++
++    test(
++        'attente effacée hors de setPendingFiesta pendant la relecture : '
++        'reste effacée', () async {
++      final provider = await givenProvider();
++      final mine = await givenMine('Soirée');
++      await FiestaEnsembleService().markUsed(mine.id);
++
++      final choosing = provider.chooseFiestaMode();
++      provider.resetGame();
++      await choosing;
++      expect(provider.pendingFiesta, isNull);
++    });
++
++    testWidgets(
++        'Fiesta puis Classique pendant la relecture : ni tuto, ni tuto marqué vu',
++        (tester) async {
++      tester.view.physicalSize = const Size(700, 1300);
++      tester.view.devicePixelRatio = 1;
++      addTearDown(tester.view.reset);
++      final prefs = await givenPrefs();
++      final provider = GameProvider();
++      await tester.runAsync(() => pumpEventQueue());
++      await tester.pumpWidget(ChangeNotifierProvider<GameProvider>.value(
++        value: provider,
++        child: const MaterialApp(home: SettingsScreen()),
++      ));
++      await tester.pump(const Duration(milliseconds: 100));
++
++      final mode = tester.widget<AppToggle>(find.byType(AppToggle).first);
++      mode.onChange!('Fiesta');
++      mode.onChange!('Classique');
++      await tester.runAsync(() => pumpEventQueue());
++      await tester.pump();
++      await tester.pump(const Duration(milliseconds: 400));
++
++      expect(provider.pendingFiesta, isNull);
++      expect(find.byType(FiestaTutorialScreen), findsNothing);
++      expect(prefs.getBool(AppConstants.fiestaTutorialSeenKey), isNot(isTrue));
++      await tester.pumpWidget(const SizedBox());
++      await tester.pump(const Duration(seconds: 1));
++    });
+   });
+ 
+   test(
+@@ -152,21 +210,6 @@ void main() {
+       expect(find.textContaining('Pro Player', findRichText: true),
+           findsOneWidget);
+     });
+-
+-    testWidgets(
+-        'une partie rejouée aux anciennes règles de « Fiesta classique » se '
+-        'signale', (tester) async {
+-      await pump(
+-          tester,
+-          FiestaRules(
+-            ensembleName: classicEnsemble.name,
+-            allCount: 2,
+-          ));
+-      expect(
+-          find.textContaining('Fiesta classique (ancienne version)',
+-              findRichText: true),
+-          findsOneWidget);
+-    });
+   });
+ 
+   testWidgets(
