@@ -1,0 +1,1160 @@
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 9aaa801..ba3df3a 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -138,9 +138,9 @@ Hors cycle : bug / test rouge / comportement inattendu → `bmad-investigate` ;
+ 5. **Partie** — 3 manches, tous les mots remis dans le pool à chaque manche.
+ 6. **Résultats** — scores par équipe et par manche.
+ 
+-> **Mode Fiesta** (modificateurs de jeu) : la liste des ensembles s'insère juste après les
+-> Paramètres, avant les joueurs, Fiesta classique présélectionné. Détail →
+-> `lib/screens/CLAUDE.md`.
++> **Mode Fiesta** (modificateurs de jeu) : l'interrupteur des Paramètres reprend le dernier ensemble
++> utilisé, sinon Fiesta classique. La liste des ensembles s'ouvre depuis Avancés et ramène aux
++> Paramètres ; « Suivant » va toujours aux joueurs. Détail → `lib/screens/CLAUDE.md`.
+ 
+ ## Conventions de code
+ 
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index f3eacd0..8af3cee 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -1302,3 +1302,32 @@ dans App Store Connect. Si des corrections suivent, le prochain build prend `+12
+ - `resolveTurn(expiredWords:)` garde sa forme de liste, avec au plus un mot : pas de réécriture du scoring sans gain.
+ - Réserve d'Explosif en manche 3 : 14 sortes de cartouches tiennent sans défiler à 360 × 640 (test). 15 sortes (moins
+   de 1 % des parties, simulation) et 16 (quasi jamais) font défiler la zone.
++
++## 2026-11-07 — Retours de Florent : parcours Paramètres et ensembles, autoscroll Joueurs
++
++**Quoi.** Spec : `_bmad-output/specs/fiesta/retours-2026-11-07.md`, décision D8. « Suivant » des Paramètres va
++toujours aux joueurs ; la liste des ensembles s'ouvre depuis Avancés (« Changer ») et son bouton « Valider » ramène
++aux Paramètres. Passer en Fiesta pose le dernier ensemble, sinon Fiesta classique. Réinitialiser oublie `lastUsedId`.
++Ligne « Ensemble : <nom> » hors Fiesta classique. Clavier ouvert sur Joueurs, le champ actif remonte au-dessus.
++
++**Pourquoi ces choix.**
++
++- `chooseFiestaMode` pose Fiesta classique tout de suite, puis le dernier ensemble relu : l'interrupteur reste
++  synchrone, et le mode n'attend jamais sans règles, ce qui était un risque nouveau une fois l'écran des ensembles
++  devenu facultatif. Un choix fait pendant la relecture l'emporte (`identical`).
++- Une partie rejouée passait par la liste, qui remplaçait des règles gelées sans ensemble correspondant. Elle n'y passe
++  plus : les règles gelées sont maintenant jouées telles quelles. D'où la comparaison en JSON et non par le nom pour
++  la ligne Ensemble : d'anciennes règles nommées « Fiesta classique » s'affichent « Fiesta classique (ancienne
++  version) », sinon rien ne les signalerait.
++- Retour de la liste sans valider : l'attente relit le dernier utilisé (`refreshPendingEnsemble`). Sans ça, un ensemble
++  modifié ou supprimé dans la liste serait joué dans son ancienne version. Hors règles gelées, l'attente est toujours
++  le dernier utilisé, donc pas de comparaison à faire.
++- Autoscroll : la liste s'arrête au clavier et le bouton « Suivant » s'efface (il était déjà caché dessous), comme le
++  ferait un Scaffold. `EditableText` garde alors seul le champ visible, à la prise de focus et à l'ouverture du
++  clavier : aucun calcul de défilement à nous. `AppInput` et `Scrollable.ensureVisible` restent intacts.
++  `cacheExtent` garde toutes les lignes construites (20 au plus) : sinon « suivant » ne donnerait pas le focus à une
++  ligne éloignée de la zone visible.
++
++**Conséquence.** Aucune forme persistée ne change : `lastUsedId` était déjà facultatif, il disparaît simplement du blob.
++Paramètres, mesuré avec les vraies polices (Poppins, Bangers) dans un test temporaire : 732 px au plus (ligne Ensemble
++et avertissement « partie longue »), soit 8 px de marge sur 360 × 740 et 31 px sur 390 × 763.
+diff --git a/lib/app.dart b/lib/app.dart
+index bee969c..1ba9a12 100644
+--- a/lib/app.dart
++++ b/lib/app.dart
+@@ -96,17 +96,20 @@ class GuessItAllApp extends StatelessWidget {
+         return const CategoriesScreen();
+       case AppConstants.screenHistory:
+         return const HistoryScreen();
+-      // Fiesta : entre les Paramètres et les joueurs, l'ensemble
+-      // choisi attend dans `pendingFiesta` jusqu'à « Commencer » (équipes).
++      // Fiesta : ouvert depuis Avancés (Paramètres), l'ensemble choisi attend
++      // dans `pendingFiesta` jusqu'à « Commencer » (équipes).
+       case AppConstants.screenFiestaEnsembles:
+         return Builder(builder: (context) {
+           final provider = context.read<GameProvider>();
+           return FiestaEnsemblesScreen(
+             selected: provider.pendingFiesta,
+-            onBack: () => provider.goToScreen(AppConstants.screenSettings),
+-            onNext: (rules) {
++            onBack: () {
++              provider.goToScreen(AppConstants.screenSettings);
++              provider.refreshPendingEnsemble();
++            },
++            onValidate: (rules) {
+               provider.setPendingFiesta(rules);
+-              provider.goToScreen(AppConstants.screenPlayers);
++              provider.goToScreen(AppConstants.screenSettings);
+             },
+           );
+         });
+diff --git a/lib/providers/CLAUDE.md b/lib/providers/CLAUDE.md
+index 3044acf..3ea9691 100644
+--- a/lib/providers/CLAUDE.md
++++ b/lib/providers/CLAUDE.md
+@@ -38,7 +38,7 @@ Les ~400 lignes de getters Fiesta (modèle de lecture) restent ici pour l'instan
+ - **Deux mots à la fois** : retiré du jeu (2026-11-07). 🔴 Une partie relue avec ce bonus allumé ou dépensé continue à un mot : la cartouche ne joue plus, la carte B reste dans `remainingWords` et sort quand elle est trouvée ; `chargesUsed` et `earned` gardent leur `two_words` pour le récap (`test/providers/fiesta_two_words_legacy_test.dart`).
+ - **Ce tour / Réserve** : une cartouche = UN tour d'UNE équipe, stock pour toute la partie. `reserve` (`Cartridge` : restantes, raison du grisé) = les modificateurs où l'équipe a du stock, possibles dans la manche (un mime reste caché avant M3), continuation comprise ; `roundRulesThisTurn` / `receivedThisTurn` / `bonusesThisTurn` = la zone « Ce tour ». Bonus : `toggleBonus` → `armed`, dépensé dans `startTurnTimer`. Malus : `inflictMalus(id, cible)` pose une instance `fromTeamId` (portée tour) + un `ChargeUse` avec `target`, tout de suite ; 🔴 même malus déjà infligé à la cible (ou un malus qui ne s'y cumule pas : un seul mime) → message de refus, **rien consommé**. `sentThisTurn` / `cancelSent` : annulable seulement dans l'avant-tour de l'envoyeuse où il a été envoyé. `_fiestaAfterTurn` retire les malus infligés à l'équipe à la vraie fin de son tour, sauf les blocages qui attendent.
+ 
+-- **Dernier choix (Fiesta v3.1)** : `setPendingFiesta` et `restartWithSamePlayers` écrivent le choix dans `GameSettings` (`fiestaEnabled`, `_rememberFiestaChoice`). `_rememberedFiesta` le relit au démarrage et dans `startNewGame` : Classique = nul, une partie rejouée pas encore lancée (`replayFiesta`, écrit par `restartWithSamePlayers`, effacé par `startGame` et par tout `setPendingFiesta`), ou le dernier ensemble (`lastUsedId` ; supprimé ou illisible → Fiesta classique). Partie reprise : `pendingFiesta` = `fiesta?.rules`, sans toucher au dernier choix. Le tuto Fiesta n'est ouvert que par `_setMode`, donc jamais par une restauration.
++- **Dernier choix (Fiesta v3.1)** : `setPendingFiesta` et `restartWithSamePlayers` écrivent le choix dans `GameSettings` (`fiestaEnabled`, `_rememberFiestaChoice`). `_rememberedFiesta` le relit au démarrage et dans `startNewGame` : Classique = nul, une partie rejouée pas encore lancée (`replayFiesta`, écrit par `restartWithSamePlayers`, effacé par `startGame` et par tout `setPendingFiesta`), ou le dernier ensemble (`lastUsedId` ; supprimé ou illisible → Fiesta classique). Partie reprise : `pendingFiesta` = `fiesta?.rules`, sans toucher au dernier choix. Le tuto Fiesta n'est ouvert que par `_setMode`, donc jamais par une restauration. Passer en Fiesta : `chooseFiestaMode` (Fiesta classique tout de suite, puis le dernier ensemble relu ; un autre choix fait entre-temps l'emporte). Retour de la liste sans valider : `refreshPendingEnsemble` suit l'ensemble modifié ou supprimé, jamais des règles gelées. `clearLocalStorage` oublie aussi `lastUsedId`.
+ 
+ ### Dependances
+ 
+diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
+index dea9015..de677ad 100644
+--- a/lib/providers/game_provider.dart
++++ b/lib/providers/game_provider.dart
+@@ -61,7 +61,7 @@ class GameProvider extends ChangeNotifier {
+   GameState get game => _game;
+   bool get isFiesta => _game.fiesta != null;
+ 
+-  /// Choix Fiesta fait sur les Paramètres et l'ensemble choisi juste après, en
++  /// Choix Fiesta fait sur les Paramètres et son ensemble (changé dans Avancés), en
+   /// attente de `startGame`. Nul = Classique. Les règles restent en mémoire ; le
+   /// CHOIX survit à l'app tuée et à « Nouvelle partie »
+   /// (`GameSettings.fiestaEnabled` et `replayFiesta`, `lastUsedId` des ensembles :
+@@ -95,6 +95,10 @@ class GameProvider extends ChangeNotifier {
+   Future<FiestaRules?> _rememberedFiesta() async {
+     if (!_settings.fiestaEnabled) return null;
+     if (_settings.replayFiesta case final rules?) return rules;
++    return _lastUsedEnsembleRules();
++  }
++
++  Future<FiestaRules> _lastUsedEnsembleRules() async {
+     final store = await FiestaEnsembleService().load();
+     final ensembles = [...kProvidedEnsembles, ...store.ensembles];
+     return (ensembles.where((e) => e.id == store.lastUsedId).firstOrNull ??
+@@ -102,6 +106,35 @@ class GameProvider extends ChangeNotifier {
+         .rules;
+   }
+ 
++  /// Passe en Fiesta depuis l'interrupteur : le dernier ensemble utilisé, sinon
++  /// Fiesta classique. Fiesta classique d'abord, le temps de relire : le mode
++  /// n'attend jamais sans règles.
++  Future<void> chooseFiestaMode() async {
++    final classic = classicEnsemble.rules;
++    setPendingFiesta(classic);
++    await _followLastUsedEnsemble(classic);
++  }
++
++  /// Retour de la liste des ensembles sans valider : rien ne change, sauf si
++  /// l'ensemble en attente y a été modifié ou supprimé. Pas pour des règles
++  /// gelées : partie rejouée pas encore lancée, ou partie suspendue revenue
++  /// jusqu'ici (ses règles, sans lien avec le dernier utilisé).
++  Future<void> refreshPendingEnsemble() async {
++    final pending = _pendingFiesta;
++    if (pending?.ensembleName == null ||
++        _settings.replayFiesta != null ||
++        _game.allWords.isNotEmpty) {
++      return;
++    }
++    await _followLastUsedEnsemble(pending!);
++  }
++
++  /// [expected] : un autre choix fait pendant la relecture l'emporte.
++  Future<void> _followLastUsedEnsemble(FiestaRules expected) async {
++    final rules = await _lastUsedEnsembleRules();
++    if (identical(_pendingFiesta, expected)) setPendingFiesta(rules);
++  }
++
+   // Setter pour le joueur en cours d'édition
+   void setCurrentEditingPlayer(String? playerId) {
+     _currentEditingPlayerId = playerId;
+@@ -2157,11 +2190,13 @@ class GameProvider extends ChangeNotifier {
+     await restartWithSamePlayers();
+   }
+ 
+-  // Réinitialise paramètres, joueurs, mots, équipes, état de jeu. Les noms
+-  // restent à pré-remplir : seule une saisie les retire.
++  // Réinitialise paramètres, joueurs, mots, équipes, état de jeu, dernier
++  // ensemble utilisé. Les noms restent à pré-remplir : seule une saisie les
++  // retire. Les ensembles créés restent.
+   Future<void> clearLocalStorage() async {
+     await _storage.clearGameState();
+     await _storage.clearGameSession();
++    await FiestaEnsembleService().forgetLastUsed();
+     _settings = GameSettings.initial();
+     await _saveSettings();
+     _players = [];
+diff --git a/lib/screens/CLAUDE.md b/lib/screens/CLAUDE.md
+index 3f586d1..21a9e43 100644
+--- a/lib/screens/CLAUDE.md
++++ b/lib/screens/CLAUDE.md
+@@ -7,7 +7,7 @@ Les ecrans du jeu. Tous sont des StatefulWidget/StatelessWidget qui lisent le `G
+ ```
+ HomeScreen → SettingsScreen (Classique / Fiesta)
+   → (CategoriesScreen)
+-  → [Fiesta seulement : FiestaEnsemblesScreen, « Suivant » → joueurs]
++  → [Fiesta seulement, depuis Avancés : FiestaEnsemblesScreen, « Valider » → Parametres]
+   → PlayersScreen → (WordsScreen) → TeamsScreen (« Commencer » lance la partie)
+   → GameScreen → CountdownScreen → [GiverBlockedScreen, le piège] → TurnScreen → VerificationScreen
+   → TransitionScreen (animation après M1 et M2, écran fixe après M3) [Défi surprise : ChallengeRouteScreen, 1 ou 2 fois, après l'animation de M1 ou M2] → [ScoreRevealScreen, une fois] → ResultsScreen → StatsScreen
+@@ -18,9 +18,9 @@ HomeScreen → SettingsScreen (Classique / Fiesta)
+ | Ecran | Role |
+ |-------|------|
+ | `home_screen.dart` | Accueil : 3 etats (partie suspendue, session existante, nouveau jeu) |
+-| `settings_screen.dart` | Premier ecran de toute partie, **sans defilement** (390 × 763 et 360 × 740 utiles) : sections Joueurs, Equipes, « Mode de jeu » (interrupteur Classique / Fiesta ; Classique a la premiere ouverture, puis le dernier choix relu ; 1er choix actif de Fiesta → tuto Fiesta une fois, jamais a une restauration), Choix des mots, puis categories, parametres avances (modal sans defilement, curseurs `compact` ; en bas, « Reinitialiser les parametres » avec confirmation). En haut a droite : « ? » et roue crantee seulement. Retour (bouton et retour systeme) → accueil |
++| `settings_screen.dart` | Premier ecran de toute partie, **sans defilement** (390 × 763 et 360 × 740 utiles) : sections Joueurs, Equipes, « Mode de jeu » (interrupteur Classique / Fiesta ; Classique a la premiere ouverture, puis le dernier choix relu ; 1er choix actif de Fiesta → tuto Fiesta une fois, jamais a une restauration), Choix des mots, puis categories, ligne non cliquable « Ensemble : <nom> » sous l'interrupteur, seulement si les regles ne sont pas celles de Fiesta classique aujourd'hui (comparees en JSON : une partie rejouee aux anciennes regles se lit « Fiesta classique (ancienne version) »), parametres avances (modal sans defilement, curseurs `compact` ; Fiesta : ligne « Ensemble Fiesta / <nom> / Changer › » ; en bas, « Reinitialiser les parametres » avec confirmation). « Suivant » → joueurs, toujours. En haut a droite : « ? » et roue crantee seulement. Retour (bouton et retour systeme) → accueil |
+ | `categories_screen.dart` | Selection categories et niveaux de difficulte (1-4) |
+-| `players_screen.dart` | Saisie noms joueurs (pre-remplis par `GameProvider.nextSavedName` ; les effacer est le seul moyen de les retirer) + generation mots aleatoires avec cache metadata. Retour (bouton et systeme) → Parametres (Fiesta : → ensembles) |
++| `players_screen.dart` | Saisie noms joueurs (pre-remplis par `GameProvider.nextSavedName` ; les effacer est le seul moyen de les retirer) + generation mots aleatoires avec cache metadata. Retour (bouton et systeme) → Parametres. Clavier ouvert : la liste s'arrete au clavier (l'ecran n'a pas de Scaffold) et `EditableText` y garde le champ visible ; toutes les lignes restent construites (`cacheExtent`), sinon « suivant » au clavier ne donnerait pas le focus a une ligne eloignee |
+ | `words_screen.dart` | Saisie mots par joueur (mode personnalise). Bouton "Grosse flemme" pour auto-remplir. Retour (bouton et systeme) → joueurs, mots sauvegardes |
+ | `teams_screen.dart` | Composition equipes par drag-and-drop, noms editables, bouton aleatoire. Retour (bouton et systeme) → joueurs. « Commencer » lance la partie (avec `pendingFiesta`, l'ensemble deja choisi) |
+ | `game_screen.dart` | Pre-tour : manche, grande carte d'equipe (Classique et Fiesta : nom d'equipe en Bangers couleur, joueur dessous, « N mots restants » + « N mots »). Fiesta : `FiestaTurnZone`, sans defilement dans les cas realistes (Explosif) ; un cas extreme defile dans la zone, jamais sous le bouton : « ACTIF PENDANT VOTRE PROCHAIN TOUR » puis « VOTRE RESERVE ». Sur petit ecran dans les cas charges seulement (`FiestaTurnZone.fitsIn`), la carte se resserre. Lien discret « ↻ Reprendre les choix de X » apres le piege. A 2 equipes : ni « contre X » ni « bloque par X », pastille « ⇄ Envoye », « 🚫 Bob ». Le temps reporte s'affiche comme en Classique |
+@@ -37,26 +37,26 @@ HomeScreen → SettingsScreen (Classique / Fiesta)
+ | `rules_screen.dart` | Regles completes du jeu (3 manches) + Revoir le tuto / le tuto Fiesta / les aides |
+ | `rules_tutorial_screen.dart` | Tuto des regles, 4 cartes (`Navigator.push` via `show`), pénalité de passe lue dans les reglages |
+ | `fiesta_tutorial_screen.dart` | Tuto Fiesta, 3 cartes (`Navigator.push` via `show`) |
+-| `fiesta_ensembles_screen.dart` | La liste des ensembles (Fiesta, juste apres Parametres, avant les joueurs ; retour bouton et systeme → Parametres). Une ligne par ensemble (tuile et icone `ensembleIcon`, nom sur 2 lignes, ligne courte, rond de selection) : les 8 **fournis** (`kProvidedEnsembles`) puis les miens, badge « Perso ». Un tap selectionne et deplie : explication et pastilles (`ensembleSummary`), actions en icones (`tooltip`, 44 px, Voir / Dupliquer ; miens : Voir / Modifier / Dupliquer / Supprimer avec confirmation), absentes des autres lignes ; la ligne depliee reste visible (`_revealSelected`). Compteur n / 10 dans le bouton de creation ou l'alerte de limite ; « Fiesta classique » preselectionne a defaut d'attente ou de dernier utilise. « Creer un ensemble » (« Reprendre le brouillon » s'il y en a un) et « Modifier » POUSSENT `FiestaEnsembleEditorScreen` ; enregistre → selectionne. Brouillon = `FiestaEnsemblesScreen.draft` (statique, en memoire tant que l'app est ouverte, jamais persiste). « Suivant » → joueurs |
++| `fiesta_ensembles_screen.dart` | La liste des ensembles (Fiesta, ouverte par « Changer » dans Avances ; retour bouton et systeme → Parametres sans rien changer, sauf si l'ensemble en attente y a ete modifie ou supprime). Une ligne par ensemble (tuile et icone `ensembleIcon`, nom sur 2 lignes, ligne courte, rond de selection) : les 8 **fournis** (`kProvidedEnsembles`) puis les miens, badge « Perso ». Un tap selectionne et deplie : explication et pastilles (`ensembleSummary`), actions en icones (`tooltip`, 44 px, Voir / Dupliquer ; miens : Voir / Modifier / Dupliquer / Supprimer avec confirmation), absentes des autres lignes ; la ligne depliee reste visible (`_revealSelected`). Compteur n / 10 dans le bouton de creation ou l'alerte de limite ; « Fiesta classique » preselectionne a defaut d'attente ou de dernier utilise. « Creer un ensemble » (« Reprendre le brouillon » s'il y en a un) et « Modifier » POUSSENT `FiestaEnsembleEditorScreen` ; enregistre → selectionne. Brouillon = `FiestaEnsemblesScreen.draft` (statique, en memoire tant que l'app est ouverte, jamais persiste). « Valider » → Parametres |
+ | `fiesta_ensemble_view_screen.dart` | Page « Voir » d'un ensemble (fourni ou mien), en lecture seule : 3 blocs « Toujours », « Aleatoire par manche », « Cartouches » (au hasard, puis pour tout le monde), bouton « Dupliquer » Défis surprises : une ligne dans le bloc Cartouches |
+ | `fiesta_ensemble_editor_screen.dart` | « Nouvel ensemble » / « Modifier l'ensemble » : nom, puis 3 onglets avec compteur (Toujours / Aleatoire par manche / Cartouches), cadres verts. Chaque menu n'affiche que ce qui y est possible ; le verrouille (`FiestaRules.lockReason`) dit pourquoi, garde ses reglages, et « Tout » / « Tous » ne le touchent jamais. Le premier interrupteur aleatoire fait passer « Combien par manche » de 0 a 1. Brouillon, popup et validation (`validateEnsemble`) : erreurs seulement apres un premier appui En bas de Cartouches, derrière « Si tu veux vraiment pousser plus loin » : interrupteur « Défis surprises » (déplié s'il est actif) La page défile sous la bande des boutons retour et « ? » : les onglets épinglés ne passent jamais dessous |
+ 
+ Invariant Fiesta : le choix du mode vit dans `GameProvider.pendingFiesta` (regles en memoire,
+ dernier choix relu de `GameSettings` et du `lastUsedId` au demarrage et a « Nouvelle partie ») :
+-nul = Classique, sinon l'ensemble choisi juste apres Parametres.
++nul = Classique, sinon les regles de l'ensemble, jamais vides (`chooseFiestaMode` pose le dernier
++utilise, sinon Fiesta classique).
+ `TeamsScreen` le passe a
+ `startGame`. « Nouvelle partie » retrouve le dernier
+-choix ; « Rejouer » le garde et revient aux Parametres. Le chemin « Reprendre » de l'accueil
++choix ; « Rejouer » le garde (regles gelees, jouees telles quelles) et revient aux Parametres. Le chemin « Reprendre » de l'accueil
+ ne traverse jamais ces ecrans. Les anciens ecrans « Mode de jeu », « Auto ou Personnalise »,
+ « Mode Auto » et « Recap » sont supprimes (2026-11-04) : un `currentScreen` relu a leur nom
+ tombe sur l'accueil.
+ 
+ ## Point d'entree des ensembles
+ 
+-`FiestaEnsemblesScreen({FiestaRules? selected, required VoidCallback onBack, required ValueChanged<FiestaRules> onNext})`.
++`FiestaEnsemblesScreen({FiestaRules? selected, required VoidCallback onBack, required ValueChanged<FiestaRules> onValidate})`.
+ L'ecran ne connait ni le provider ni la navigation. `selected` = `pendingFiesta` : l'ensemble
+ aux memes regles (JSON egal) est preselectionne, sinon le `lastUsedId` du stockage, sinon
+-« Fiesta classique » (« Rejouer »
+-repasse par Parametres puis cet ecran, l'ensemble precedent selectionne). `onNext` recoit les
+-regles choisies (`ensembleName` = nom), apres `markUsed`. Branchement (`app.dart`) : `onBack` → `screenSettings` ; `onNext` →
+-`setPendingFiesta(rules)` puis `screenPlayers`.
++« Fiesta classique ». `onValidate` recoit les
++regles choisies (`ensembleName` = nom), apres `markUsed`. Branchement (`app.dart`) : `onBack` → `screenSettings` et `refreshPendingEnsemble` ; `onValidate` →
++`setPendingFiesta(rules)` puis `screenSettings`.
+diff --git a/lib/screens/fiesta_ensembles_screen.dart b/lib/screens/fiesta_ensembles_screen.dart
+index e9f95e7..c75f285 100644
+--- a/lib/screens/fiesta_ensembles_screen.dart
++++ b/lib/screens/fiesta_ensembles_screen.dart
+@@ -45,23 +45,23 @@ const Map<String, IconData> _providedIcons = {
+   '${kProvidedIdPrefix}expert': Icons.volume_up_outlined,
+ };
+ 
+-/// La liste des ensembles : juste après les Paramètres, avant les joueurs
+-/// (Fiesta seulement). Les ensembles fournis par l'app puis les
++/// La liste des ensembles : ouverte depuis Avancés sur les Paramètres (Fiesta
++/// seulement). Les ensembles fournis par l'app puis les
+ /// miens (un tap sélectionne et déplie), « Créer un ensemble » qui POUSSE l'éditeur
+-/// (`FiestaEnsembleEditorScreen`), en bas « Suivant ».
++/// (`FiestaEnsembleEditorScreen`), en bas « Valider ».
+ ///
+-/// L'écran ne connaît ni le provider ni la navigation de l'app : [onNext]
++/// L'écran ne connaît ni le provider ni la navigation de l'app : [onValidate]
+ /// reçoit les règles de l'ensemble choisi (`ensembleName` = nom), prêtes à attendre dans `pendingFiesta`. [selected] (l'attente
+ /// courante, ex. après « Rejouer ») présélectionne l'ensemble aux mêmes
+ /// règles ; sinon le dernier utilisé, sinon « Fiesta classique ».
+ class FiestaEnsemblesScreen extends StatefulWidget {
+   final FiestaRules? selected;
+   final VoidCallback onBack;
+-  final ValueChanged<FiestaRules> onNext;
++  final ValueChanged<FiestaRules> onValidate;
+ 
+   const FiestaEnsemblesScreen({
+     required this.onBack,
+-    required this.onNext,
++    required this.onValidate,
+     this.selected,
+     super.key,
+   });
+@@ -88,7 +88,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
+   final _readyKey = GlobalKey();
+   final _firstMineKey = GlobalKey();
+   final _createKey = GlobalKey();
+-  final _nextKey = GlobalKey();
++  final _validateKey = GlobalKey();
+   final _selectedRowKey = GlobalKey();
+   final _scroll = ScrollController();
+ 
+@@ -205,7 +205,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
+         case EnsembleDraftKept(:final rules):
+           setState(() => drafts[key] = rules);
+           if (mounted) {
+-            // Flottant au-dessus de « Suivant », qu'il ne doit pas masquer.
++            // Flottant au-dessus de « Valider », qu'il ne doit pas masquer.
+             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+               content: Text('Brouillon gardé'),
+               behavior: SnackBarBehavior.floating,
+@@ -248,13 +248,13 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
+     await _reload();
+   }
+ 
+-  Future<void> _next() async {
++  Future<void> _validate() async {
+     final chosen = _ready.where((e) => e.id == _selectedId).firstOrNull;
+     if (chosen == null || _busy) return;
+     _busy = true;
+     try {
+       await _service.markUsed(chosen.id);
+-      if (mounted) widget.onNext(chosen.rules);
++      if (mounted) widget.onValidate(chosen.rules);
+     } finally {
+       _busy = false;
+     }
+@@ -285,7 +285,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
+                         children: [
+                           const SizedBox(height: _buttonsBand),
+                           Expanded(child: _buildBody()),
+-                          _buildNextBar(),
++                          _buildValidateBar(),
+                         ],
+                       ),
+               ),
+@@ -297,7 +297,7 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
+                     ready: _readyKey,
+                     firstMine: _firstMineKey,
+                     create: _createKey,
+-                    next: _nextKey,
++                    validate: _validateKey,
+                     hasMine: _mine.isNotEmpty,
+                     full: _full,
+                     selectedHasModifiers: _ready
+@@ -376,18 +376,18 @@ class _FiestaEnsemblesScreenState extends State<FiestaEnsemblesScreen> {
+     );
+   }
+ 
+-  Widget _buildNextBar() {
++  Widget _buildValidateBar() {
+     return Container(
+       padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+       color: AppColors.backgroundMain,
+       child: AppButton(
+-        key: _nextKey,
+-        text: 'Suivant',
++        key: _validateKey,
++        text: 'Valider',
+         variant: AppButtonVariant.primary,
+         size: AppButtonSize.large,
+         fullWidth: true,
+         disabled: _selectedId == null,
+-        onPressed: _selectedId == null ? null : _next,
++        onPressed: _selectedId == null ? null : _validate,
+       ),
+     );
+   }
+diff --git a/lib/screens/fiesta_tutorial_screen.dart b/lib/screens/fiesta_tutorial_screen.dart
+index dab3260..8969458 100644
+--- a/lib/screens/fiesta_tutorial_screen.dart
++++ b/lib/screens/fiesta_tutorial_screen.dart
+@@ -69,9 +69,10 @@ class FiestaTutorialScreen extends StatelessWidget {
+         TutorialCard(
+           symbol: '★',
+           title: 'Les ensembles',
+-          text: 'Juste après les Paramètres, choisis un ensemble de règles : '
+-              'Fiesta classique, un de ceux fournis par l\'app, ou le tien, '
+-              'enregistré sous un nom pour le réutiliser.',
++          text: 'Tu joues en Fiesta classique, puis avec ton dernier ensemble '
++              'de règles. Pour en changer : la roue crantée des Paramètres, '
++              'puis « Changer ». Prends un de ceux fournis par l\'app, ou le '
++              'tien, enregistré sous un nom pour le réutiliser.',
+         ),
+       ],
+     );
+diff --git a/lib/screens/players_screen.dart b/lib/screens/players_screen.dart
+index 911d0f2..df64034 100644
+--- a/lib/screens/players_screen.dart
++++ b/lib/screens/players_screen.dart
+@@ -20,6 +20,9 @@ class PlayersScreen extends StatefulWidget {
+   State<PlayersScreen> createState() => _PlayersScreenState();
+ }
+ 
++/// 20 lignes au plus ([AppConstants.maxPlayers]), moins de 100 px chacune.
++const double _allRowsCacheExtent = 2000;
++
+ class _PlayersScreenState extends State<PlayersScreen> {
+   final _firstPlayerKey = GlobalKey();
+   final _wordsKey = GlobalKey();
+@@ -305,6 +308,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
+   Widget build(BuildContext context) {
+     final provider = context.watch<GameProvider>();
+     final canProceed = _canProceed(provider);
++    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+ 
+     // Retour système (Android) = bouton retour, pas la sortie de l'app.
+     void back() {
+@@ -315,12 +319,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
+           provider.updatePlayer(player.id, name: name);
+         }
+       }
+-      // Fiesta : retour à la liste des ensembles.
+-      provider.goToScreen(
+-        provider.pendingFiesta != null
+-            ? AppConstants.screenFiestaEnsembles
+-            : AppConstants.screenSettings,
+-      );
++      provider.goToScreen(AppConstants.screenSettings);
+     }
+ 
+     return PopScope(
+@@ -343,12 +342,14 @@ class _PlayersScreenState extends State<PlayersScreen> {
+                   Expanded(
+                     child: _isInitialized
+                         ? ListView.builder(
+-                            padding: EdgeInsets.only(
++                            padding: const EdgeInsets.only(
+                               left: 24,
+                               right: 24,
+-                              bottom: MediaQuery.of(context).viewInsets.bottom +
+-                                  100,
++                              bottom: 16,
+                             ),
++                            // Toutes les lignes attachées : « suivant » au
++                            // clavier donne le focus même à une ligne éloignée.
++                            cacheExtent: _allRowsCacheExtent,
+                             itemCount: provider.players.length,
+                             itemBuilder: (context, index) {
+                               final player = provider.players[index];
+@@ -490,19 +491,27 @@ class _PlayersScreenState extends State<PlayersScreen> {
+                                 color: AppColors.secondaryCyan),
+                           ),
+                   ),
+-                  Padding(
+-                    padding: const EdgeInsets.all(24),
+-                    child: AppButton(
+-                      key: _nextKey,
+-                      text: 'Suivant',
+-                      variant: AppButtonVariant.primary,
+-                      size: AppButtonSize.large,
+-                      fullWidth: true,
+-                      disabled: !canProceed,
+-                      onPressed:
+-                          canProceed ? () => _saveAndContinue(provider) : null,
++                  // Clavier ouvert (il cachait déjà ce bouton) : la liste
++                  // s'arrête au clavier, et le champ y remonte de lui-même
++                  // (`EditableText` le garde visible dans sa liste). L'écran
++                  // n'a pas de Scaffold pour le faire.
++                  if (keyboard > 0)
++                    SizedBox(height: keyboard)
++                  else
++                    Padding(
++                      padding: const EdgeInsets.all(24),
++                      child: AppButton(
++                        key: _nextKey,
++                        text: 'Suivant',
++                        variant: AppButtonVariant.primary,
++                        size: AppButtonSize.large,
++                        fullWidth: true,
++                        disabled: !canProceed,
++                        onPressed: canProceed
++                            ? () => _saveAndContinue(provider)
++                            : null,
++                      ),
+                     ),
+-                  ),
+                 ],
+               ),
+             ),
+diff --git a/lib/screens/settings_screen.dart b/lib/screens/settings_screen.dart
+index f3c0f73..2ff780e 100644
+--- a/lib/screens/settings_screen.dart
++++ b/lib/screens/settings_screen.dart
+@@ -1,6 +1,9 @@
++import 'dart:convert';
++
+ import 'package:flutter/material.dart';
+ import 'package:provider/provider.dart';
+ import '../theme/app_theme.dart';
++import '../models/fiesta/fiesta_ensemble.dart';
+ import '../models/fiesta/fiesta_rules.dart';
+ import '../providers/game_provider.dart';
+ import '../services/storage_service.dart';
+@@ -75,8 +78,8 @@ class _SettingsScreenState extends State<SettingsScreen>
+   /// Garde contre le double tap : un seul tuto Fiesta.
+   bool _tutorialBusy = false;
+ 
+-  /// Classique / Fiesta. L'ensemble se choisit juste après cet écran ; la
+-  /// première fois, le tuto Fiesta s'ouvre (clé
++  /// Classique / Fiesta. Fiesta reprend le dernier ensemble, qui se change dans
++  /// Avancés ; la première fois, le tuto Fiesta s'ouvre (clé
+   /// `guessItAll_fiestaTutorialSeen`).
+   Future<void> _setMode(GameProvider provider, String mode) async {
+     if (mode == _classic) {
+@@ -84,7 +87,7 @@ class _SettingsScreenState extends State<SettingsScreen>
+       return;
+     }
+     if (provider.pendingFiesta != null) return;
+-    provider.setPendingFiesta(FiestaRules());
++    await provider.chooseFiestaMode();
+     if (_tutorialBusy) return;
+     _tutorialBusy = true;
+     try {
+@@ -96,12 +99,20 @@ class _SettingsScreenState extends State<SettingsScreen>
+     }
+   }
+ 
+-  /// Fiesta : la liste des ensembles vient avant les joueurs.
+-  void _goNext(GameProvider provider) => provider.goToScreen(
+-        provider.pendingFiesta != null
+-            ? AppConstants.screenFiestaEnsembles
+-            : AppConstants.screenPlayers,
+-      );
++  void _goNext(GameProvider provider) =>
++      provider.goToScreen(AppConstants.screenPlayers);
++
++  /// Les règles sont-elles celles de Fiesta classique AUJOURD'HUI ? Le nom ne
++  /// suffit pas : une partie rejouée garde les règles gelées de son époque.
++  static bool _isCurrentClassic(FiestaRules rules) =>
++      jsonEncode(rules.toJson()) == jsonEncode(classicEnsemble.rules.toJson());
++
++  static String _ensembleName(FiestaRules rules) {
++    final name = rules.ensembleName ?? 'Sans nom';
++    return name == classicEnsemble.name && !_isCurrentClassic(rules)
++        ? '$name (ancienne version)'
++        : name;
++  }
+ 
+   @override
+   Widget build(BuildContext context) {
+@@ -184,6 +195,9 @@ class _SettingsScreenState extends State<SettingsScreen>
+                         onChange: (value) => _setMode(provider, value),
+                       ),
+                     ),
++                    if (provider.pendingFiesta case final rules?
++                        when !_isCurrentClassic(rules))
++                      _buildEnsembleLine(rules),
+                     const SizedBox(height: _sectionGap),
+ 
+                     // Choix des mots
+@@ -417,6 +431,101 @@ class _SettingsScreenState extends State<SettingsScreen>
+     );
+   }
+ 
++  /// Une seule ligne, quel que soit le nom : l'écran ne doit pas défiler.
++  Widget _buildEnsembleLine(FiestaRules rules) {
++    return Padding(
++      padding: const EdgeInsets.only(top: 6),
++      child: Text.rich(
++        TextSpan(
++          children: [
++            const TextSpan(text: 'Ensemble : '),
++            TextSpan(
++              text: _ensembleName(rules),
++              style: const TextStyle(
++                color: AppColors.secondaryCyan,
++                fontWeight: FontWeight.w600,
++              ),
++            ),
++          ],
++        ),
++        maxLines: 1,
++        overflow: TextOverflow.ellipsis,
++        textAlign: TextAlign.center,
++        style: const TextStyle(
++          fontFamily: 'Poppins',
++          fontSize: 12,
++          color: AppColors.gray400,
++        ),
++      ),
++    );
++  }
++
++  Widget _buildEnsembleRow(
++    BuildContext context,
++    GameProvider provider,
++    FiestaRules rules,
++  ) {
++    return GestureDetector(
++      onTap: () {
++        Navigator.of(context).pop();
++        provider.goToScreen(AppConstants.screenFiestaEnsembles);
++      },
++      child: Container(
++        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
++        decoration: BoxDecoration(
++          color: AppColors.backgroundCard,
++          borderRadius: BorderRadius.circular(12),
++          border: Border.all(color: AppColors.gray600, width: 1.5),
++        ),
++        child: Row(
++          children: [
++            Expanded(
++              child: Column(
++                crossAxisAlignment: CrossAxisAlignment.start,
++                children: [
++                  const Text(
++                    'Ensemble Fiesta',
++                    style: TextStyle(
++                      fontFamily: 'Poppins',
++                      fontSize: 12,
++                      color: AppColors.gray400,
++                    ),
++                  ),
++                  Text(
++                    _ensembleName(rules),
++                    maxLines: 1,
++                    overflow: TextOverflow.ellipsis,
++                    style: const TextStyle(
++                      fontFamily: 'Poppins',
++                      fontSize: 14,
++                      fontWeight: FontWeight.w600,
++                      color: Colors.white,
++                    ),
++                  ),
++                ],
++              ),
++            ),
++            const SizedBox(width: 8),
++            const Text(
++              'Changer',
++              style: TextStyle(
++                fontFamily: 'Poppins',
++                fontSize: 14,
++                fontWeight: FontWeight.w500,
++                color: AppColors.secondaryCyan,
++              ),
++            ),
++            const Icon(
++              Icons.chevron_right,
++              color: AppColors.secondaryCyan,
++              size: 20,
++            ),
++          ],
++        ),
++      ),
++    );
++  }
++
+   /// Espace entre deux sections (serré : l'écran tient sans défiler).
+   static const double _sectionGap = 16;
+ 
+@@ -569,6 +678,11 @@ class _SettingsScreenState extends State<SettingsScreen>
+                   },
+                 ),
+ 
++                if (provider.pendingFiesta case final rules?) ...[
++                  const SizedBox(height: 16),
++                  _buildEnsembleRow(context, provider, rules),
++                ],
++
+                 // Réinitialiser (ancien bouton rond du coin haut droit) : ferme
+                 // « Avancés », puis la même confirmation qu'avant. Un peu d'air
+                 // pour le séparer des réglages.
+diff --git a/lib/services/CLAUDE.md b/lib/services/CLAUDE.md
+index 9673f2d..b5caed4 100644
+--- a/lib/services/CLAUDE.md
++++ b/lib/services/CLAUDE.md
+@@ -16,7 +16,7 @@
+ | `firebase_sync_service.dart` | `FirebaseSyncService` | Sync offline-first vers Firestore. Queue de games en attente, sync auto quand online |
+ | `audio_service.dart` | `AudioService` | Sons : ding (mot devine), whoosh (mot passe), gong (fin de tour, `end_of_turn.wav`) via audioplayers. `ding.wav` et `end_of_turn.wav` sont générés par `scripts/render_sounds.py` |
+ | `reveal_sound.dart` | `RevealSound` | Sons de la révélation des scores, players dédiés : musique `assets/sounds/reveal_music.mp3` (composition originale, `scripts/render_reveal_music.py`, gong à 4,5 s), fondu seulement si on passe pendant le tracé, jamais sur le gong ; petit son des cartouches (sans focus audio, sinon Android met la musique en pause). Les effets s'arrêtent à la sortie (`stopEffects`). Échec de lecture silencieux. Crédits : `assets/sounds/CREDITS.md` |
+-| `fiesta_ensemble_service.dart` | `FiestaEnsembleService` | Ensembles Fiesta : `load` / `create` / `update` (sur place) / `duplicate(ensemble)` (« Nom (2) », premier numéro libre parmi fournis + miens ; copie d'un fourni en fin de liste) / `delete` / `markUsed` (l'id peut être celui d'un ensemble fourni). Les ensembles **fournis** (`kProvidedEnsembles`) ne sont jamais écrits. Forme v1 (avant Fiesta v2) = illisible, ignorée et réécrite telle quelle. **Borne 10 tenue par le service**, modifications serialisees (file interne), quarantaine du blob illisible ou venu du futur, ensemble illisible ignore seul a la lecture et **reecrit tel quel** a chaque modification (jamais detruit) ; ces entrees illisibles **ne comptent pas** dans la borne de 10 (le blob peut en porter 10 + k) |
++| `fiesta_ensemble_service.dart` | `FiestaEnsembleService` | Ensembles Fiesta : `load` / `forgetLastUsed` (Réinitialiser) / `create` / `update` (sur place) / `duplicate(ensemble)` (« Nom (2) », premier numéro libre parmi fournis + miens ; copie d'un fourni en fin de liste) / `delete` / `markUsed` (l'id peut être celui d'un ensemble fourni). Les ensembles **fournis** (`kProvidedEnsembles`) ne sont jamais écrits. Forme v1 (avant Fiesta v2) = illisible, ignorée et réécrite telle quelle. **Borne 10 tenue par le service**, modifications serialisees (file interne), quarantaine du blob illisible ou venu du futur, ensemble illisible ignore seul a la lecture et **reecrit tel quel** a chaque modification (jamais detruit) ; ces entrees illisibles **ne comptent pas** dans la borne de 10 (le blob peut en porter 10 + k) |
+ 
+ ## Cles SharedPreferences
+ 
+diff --git a/lib/services/fiesta_ensemble_service.dart b/lib/services/fiesta_ensemble_service.dart
+index dede869..c579402 100644
+--- a/lib/services/fiesta_ensemble_service.dart
++++ b/lib/services/fiesta_ensemble_service.dart
+@@ -111,6 +111,10 @@ class FiestaEnsembleService {
+   Future<void> markUsed(String id) =>
+       _mutate((store) => (EnsembleStore(store.ensembles, id), null));
+ 
++  /// « Réinitialiser les paramètres » : les ensembles restent.
++  Future<void> forgetLastUsed() =>
++      _mutate((store) => (EnsembleStore(store.ensembles, null), null));
++
+   /// Nom d'une copie : « <nom> (2) », ou le premier numéro libre parmi
+   /// [taken] (noms uniques, sans compter la casse ni les espaces autour).
+   /// C'est le nom de BASE qu'on raccourcit, pas le suffixe : coupe en
+diff --git a/lib/widgets/help/WIRING.md b/lib/widgets/help/WIRING.md
+index 99f2462..0ed7666 100644
+--- a/lib/widgets/help/WIRING.md
++++ b/lib/widgets/help/WIRING.md
+@@ -32,7 +32,7 @@ résultats finaux en montrent.
+ | `home_screen` | `homeHelp(playLabel: …)` (« Jouer » ou « Nouvelle partie », le libellé du bouton) | `play` (« Jouer » **ou** « Nouvelle partie »), `resume` (« Reprendre »), `replay` (« Rejouer »), `rules`, `history` | `right: 16` |
+ | `settings_screen` | `settingsHelp(passPenalty: provider.settings.passPenalty)` | `counts` (cartes Joueurs + Équipes), `mode` (interrupteur Classique / Fiesta de la section « Mode de jeu »), `wordChoice`, `categories` (bouton Catégories & Difficultés), `longGame` (avertissement « partie longue », au-delà de 50 mots), `advanced` (bouton Avancés ; « Réinitialiser les paramètres » vit en bas de cette fenêtre) | `HelpButton.inline` en tête de la `Row` « ? » / Avancés |
+ | `players_screen` | `playersHelp(randomWords: …)` (texte du bouton de mots selon le mode) | `firstPlayer` (ligne du joueur 1), `words` (bouton Saisir/Voir mots du joueur 1), `next` | `right: 16` |
+-| `fiesta_ensembles_screen` | `fiestaEnsemblesHelp(hasMine, full, hasDraft, selectedHasModifiers)` | `ready` (toute la liste ; la phrase sur les pastilles rouges et vertes seulement si la ligne dépliée en a), `firstMine` (1re ligne personnelle, toujours montée, absente sans ensemble personnel ; le crayon et la corbeille n'apparaissent qu'une fois un perso sélectionné, le texte le dit), `create` (titre selon l'état : créer, reprendre le brouillon, limite atteinte), `next` (« Suivant ») | `right: 16` |
++| `fiesta_ensembles_screen` | `fiestaEnsemblesHelp(hasMine, full, hasDraft, selectedHasModifiers)` | `ready` (toute la liste ; la phrase sur les pastilles rouges et vertes seulement si la ligne dépliée en a), `firstMine` (1re ligne personnelle, toujours montée, absente sans ensemble personnel ; le crayon et la corbeille n'apparaissent qu'une fois un perso sélectionné, le texte le dit), `create` (titre selon l'état : créer, reprendre le brouillon, limite atteinte), `validate` (« Valider ») | `right: 16` |
+ | `fiesta_ensemble_editor_screen` | `fiestaEditorHelp(tab, hasCounts)` : seul le menu ouvert est expliqué | `tabs`, `menu` (le menu ouvert), `noDraw` (« Rien à tirer »), `locked` (1re ligne verrouillée du menu ouvert), `challenges` (cadre Défis surprises, ouvert), `save` (« Enregistrer ») | `right: 16` |
+ | `teams_screen` | `teamsHelp` | `firstTeam` (carte de la 1re équipe), `shuffle`, `incomplete` (message, si une équipe a moins de 2 joueurs), `start` (« Commencer ») | `right: 16` |
+ | `game_screen` (avant-tour) | `preTurnHelp(playerName: …, firstTurnOfGame: …)` | `team` (nom d'équipe + joueur), `roundRules` (icône info de la manche), `previousTurn` (« N mots », dès le 2e tour), `bonusTime` (« Temps bonus », seulement s'il y a du temps reporté), `back` (retour, s'il est affiché ; le titre dit où il mène), `start` | `right: besideCornerButton` |
+diff --git a/lib/widgets/help/help_content.dart b/lib/widgets/help/help_content.dart
+index f1abed4..89d7f20 100644
+--- a/lib/widgets/help/help_content.dart
++++ b/lib/widgets/help/help_content.dart
+@@ -88,7 +88,7 @@ List<CoachStep> settingsHelp({
+         title: 'Classique ou Fiesta',
+         text: 'Classique : les 3 manches habituelles. Fiesta : les mêmes '
+             'manches, pimentées de bonus et de malus : l\'ensemble de règles '
+-            'se choisit juste après cet écran.',
++            'se change dans Avancés, la roue crantée.',
+       ),
+       CoachStep(
+         target: wordChoice,
+@@ -112,8 +112,8 @@ List<CoachStep> settingsHelp({
+         title: 'Avancés',
+         text: 'Le nombre de mots, la durée d\'un tour et la pénalité quand on '
+             'passe un mot. Avec tes réglages : '
+-            '${passPenaltySentence(passPenalty).toLowerCase()} Tout en bas : '
+-            'réinitialiser les paramètres.',
++            '${passPenaltySentence(passPenalty).toLowerCase()} En Fiesta : '
++            'changer d\'ensemble. Tout en bas : réinitialiser les paramètres.',
+       ),
+     ];
+ 
+@@ -198,7 +198,7 @@ List<CoachStep> fiestaEnsemblesHelp({
+   required GlobalKey ready,
+   required GlobalKey firstMine,
+   required GlobalKey create,
+-  required GlobalKey next,
++  required GlobalKey validate,
+   required bool hasMine,
+   required bool full,
+   required bool hasDraft,
+@@ -248,9 +248,9 @@ List<CoachStep> fiestaEnsemblesHelp({
+               '${FiestaEnsembleService.maxEnsembles} au plus.',
+         ),
+       CoachStep(
+-        target: next,
+-        title: 'Suivant',
+-        text: 'Passe aux joueurs avec l\'ensemble choisi.',
++        target: validate,
++        title: 'Valider',
++        text: 'Revient aux Paramètres avec l\'ensemble choisi.',
+       ),
+     ];
+ 
+diff --git a/test/screens/fiesta_ensembles_flow_test.dart b/test/screens/fiesta_ensembles_flow_test.dart
+index bcd1c14..d68b45d 100644
+--- a/test/screens/fiesta_ensembles_flow_test.dart
++++ b/test/screens/fiesta_ensembles_flow_test.dart
+@@ -78,9 +78,11 @@ void main() {
+   testWidgets(
+       'éditeur : « Donne un nom » seulement après Enregistrer avec un nom '
+       'vide, effacé dès la saisie ; enregistré, l\'ensemble est sélectionné '
+-      'et « Suivant » mène aux joueurs avec lui', (tester) async {
+-    final provider =
+-        await pumpCustomFiesta(tester, AppConstants.screenFiestaEnsembles);
++      'et « Valider » ramène aux Paramètres avec lui', (tester) async {
++    // Surface large : on finit sur Paramètres, qui déborde avec la police de test.
++    final provider = await pumpCustomFiesta(
++        tester, AppConstants.screenFiestaEnsembles,
++        size: const Size(700, 1300));
+     const nameError = 'Donne un nom à l\'ensemble.';
+     Finder error() => find.text(nameError, skipOffstage: false);
+ 
+@@ -110,8 +112,8 @@ void main() {
+     final stored = await tester.runAsync(() => FiestaEnsembleService().load());
+     expect(stored!.ensembles.map((e) => e.name), ['Soirée chez Max']);
+ 
+-    await tapText(tester, 'Suivant');
+-    expect(provider.game.currentScreen, AppConstants.screenPlayers);
++    await tapText(tester, 'Valider');
++    expect(provider.game.currentScreen, AppConstants.screenSettings);
+     expect(provider.pendingFiesta?.ensembleName, 'Soirée chez Max',
+         reason: 'l\'ensemble enregistré est celui sélectionné');
+   });
+@@ -176,8 +178,8 @@ void main() {
+   });
+ 
+   testWidgets(
+-      'Personnalisé : « Suivant » des Paramètres mène à l\'écran des '
+-      'ensembles, avant les joueurs', (tester) async {
++      'Fiesta : « Suivant » des Paramètres mène aux joueurs, leur retour aux '
++      'Paramètres', (tester) async {
+     // Surface large : Paramètres déborde avec la police de test.
+     final provider = await pumpCustomFiesta(tester, AppConstants.screenSettings,
+         size: const Size(700, 1300));
+@@ -187,6 +189,10 @@ void main() {
+     await settle(tester);
+ 
+     await tapText(tester, 'Suivant');
+-    expect(provider.game.currentScreen, AppConstants.screenFiestaEnsembles);
++    expect(provider.game.currentScreen, AppConstants.screenPlayers);
++
++    await tester.tap(find.byType(AppBackButton).last);
++    await settle(tester);
++    expect(provider.game.currentScreen, AppConstants.screenSettings);
+   });
+ }
+diff --git a/test/screens/fiesta_ensembles_list_test.dart b/test/screens/fiesta_ensembles_list_test.dart
+index 74d4bd7..a1da90d 100644
+--- a/test/screens/fiesta_ensembles_list_test.dart
++++ b/test/screens/fiesta_ensembles_list_test.dart
+@@ -56,7 +56,7 @@ Future<void> pumpList(
+       })),
+   });
+   await tester.pumpWidget(MaterialApp(
+-    home: FiestaEnsemblesScreen(onBack: () {}, onNext: (_) {}),
++    home: FiestaEnsemblesScreen(onBack: () {}, onValidate: (_) {}),
+   ));
+   await settle(tester);
+ }
+@@ -86,10 +86,10 @@ Future<void> select(WidgetTester tester, String name) async {
+ }
+ 
+ /// La ligne doit tenir dans la liste, entre la bande des boutons du haut et la
+-/// barre « Suivant ». Plus haute (règles extrêmes) : son haut d'abord.
++/// barre « Valider ». Plus haute (règles extrêmes) : son haut d'abord.
+ void expectFullyVisible(WidgetTester tester, String name) {
+   final row = tester.getRect(rowOf(name));
+-  final bar = tester.getTopLeft(find.text('Suivant')).dy;
++  final bar = tester.getTopLeft(find.text('Valider')).dy;
+   expect(row.top, greaterThanOrEqualTo(72), reason: name);
+   if (row.height <= bar - 72) {
+     expect(row.bottom, lessThanOrEqualTo(bar), reason: name);
+@@ -333,7 +333,7 @@ void main() {
+     });
+     await tester.pumpWidget(MaterialApp(
+       home: FiestaEnsemblesScreen(
+-          onBack: () {}, onNext: (_) {}, selected: mine.last),
++          onBack: () {}, onValidate: (_) {}, selected: mine.last),
+     ));
+     await settle(tester);
+     expectFullyVisible(tester, 'Mien 9');
+diff --git a/test/screens/fiesta_v4_screens_test.dart b/test/screens/fiesta_v4_screens_test.dart
+index 476645b..05791e6 100644
+--- a/test/screens/fiesta_v4_screens_test.dart
++++ b/test/screens/fiesta_v4_screens_test.dart
+@@ -603,7 +603,7 @@ void main() {
+     await tester.pumpWidget(MaterialApp(
+       home: FiestaEnsemblesScreen(
+         onBack: () {},
+-        onNext: (rules) => chosen = rules,
++        onValidate: (rules) => chosen = rules,
+       ),
+     ));
+     await settle(tester);
+@@ -624,7 +624,7 @@ void main() {
+ 
+     await tester.tap(find.text('Pro Player'));
+     await tester.pump();
+-    await tester.tap(find.text('Suivant'));
++    await tester.tap(find.text('Valider'));
+     await settle(tester);
+     expect(chosen?.ensembleName, 'Pro Player');
+   });
+@@ -637,7 +637,7 @@ void main() {
+     addTearDown(tester.view.reset);
+     await givenPrefs();
+     await tester.pumpWidget(MaterialApp(
+-        home: FiestaEnsemblesScreen(onBack: () {}, onNext: (_) {})));
++        home: FiestaEnsemblesScreen(onBack: () {}, onValidate: (_) {})));
+     await settle(tester);
+ 
+     await tester.tap(find.text('Droit au but'));
+diff --git a/test/screens/retours_parcours_test.dart b/test/screens/retours_parcours_test.dart
+new file mode 100644
+index 0000000..ccbaf99
+--- /dev/null
++++ b/test/screens/retours_parcours_test.dart
+@@ -0,0 +1,251 @@
++import 'dart:convert';
++
++import 'package:flutter/material.dart';
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/providers/game_provider.dart';
++import 'package:guess_it_all_mobile/screens/players_screen.dart';
++import 'package:guess_it_all_mobile/screens/settings_screen.dart';
++import 'package:guess_it_all_mobile/services/fiesta_ensemble_service.dart';
++import 'package:guess_it_all_mobile/utils/constants.dart';
++import 'package:provider/provider.dart';
++
++import '../helpers/test_prefs.dart';
++
++String json(FiestaRules? rules) => jsonEncode(rules?.toJson());
++
++final _classic = json(classicEnsemble.rules);
++
++Future<GameProvider> givenProvider() async {
++  await givenPrefs();
++  final provider = GameProvider();
++  await pumpEventQueue();
++  return provider;
++}
++
++Future<FiestaEnsemble> givenMine(String name) async =>
++    (await FiestaEnsembleService().create(FiestaRules(
++      ensembleName: name,
++      allCount: 3,
++    )))!;
++
++void main() {
++  group('passer en Fiesta', () {
++    test(
++        'pose le dernier ensemble utilisé, sinon Fiesta classique ; supprimé : '
++        'Fiesta classique ; jamais des règles vides', () async {
++      final provider = await givenProvider();
++      await provider.chooseFiestaMode();
++      expect(json(provider.pendingFiesta), _classic);
++
++      provider.setPendingFiesta(null);
++      final mine = await givenMine('Soirée');
++      await FiestaEnsembleService().markUsed(mine.id);
++      await provider.chooseFiestaMode();
++      expect(json(provider.pendingFiesta), json(mine.rules));
++
++      provider.setPendingFiesta(null);
++      await FiestaEnsembleService().delete(mine.id);
++      await provider.chooseFiestaMode();
++      expect(json(provider.pendingFiesta), _classic);
++    });
++
++    test('Classique touché pendant la relecture : reste Classique', () async {
++      final provider = await givenProvider();
++      final mine = await givenMine('Soirée');
++      await FiestaEnsembleService().markUsed(mine.id);
++
++      final choosing = provider.chooseFiestaMode();
++      expect(provider.pendingFiesta, isNotNull,
++          reason: 'aucun instant sans règles en Fiesta');
++      provider.setPendingFiesta(null);
++      await choosing;
++      expect(provider.pendingFiesta, isNull);
++    });
++  });
++
++  test(
++      'Réinitialiser oublie le dernier ensemble, garde les ensembles créés ; '
++      'repasser en Fiesta donne Fiesta classique', () async {
++    final provider = await givenProvider();
++    final mine = await givenMine('Soirée');
++    await FiestaEnsembleService().markUsed(mine.id);
++    provider.setPendingFiesta(mine.rules);
++
++    await provider.clearLocalStorage();
++
++    final store = await FiestaEnsembleService().load();
++    expect(store.lastUsedId, isNull);
++    expect(store.ensembles.map((e) => e.id), [mine.id]);
++    expect(provider.pendingFiesta, isNull);
++
++    await provider.chooseFiestaMode();
++    expect(json(provider.pendingFiesta), _classic);
++  });
++
++  group('retour de la liste sans valider', () {
++    test('l\'ensemble en attente modifié ou supprimé dans la liste est suivi',
++        () async {
++      final provider = await givenProvider();
++      final mine = await givenMine('Soirée');
++      await FiestaEnsembleService().markUsed(mine.id);
++      await provider.chooseFiestaMode();
++
++      await provider.refreshPendingEnsemble();
++      expect(json(provider.pendingFiesta), json(mine.rules),
++          reason: 'rien n\'a changé dans la liste : rien ne change');
++
++      final edited =
++          FiestaEnsemble(id: mine.id, rules: mine.rules.copyWith(allCount: 4));
++      await FiestaEnsembleService().update(edited);
++      await provider.refreshPendingEnsemble();
++      expect(json(provider.pendingFiesta), json(edited.rules));
++
++      await FiestaEnsembleService().delete(mine.id);
++      await provider.refreshPendingEnsemble();
++      expect(json(provider.pendingFiesta), _classic);
++    });
++
++    test('une partie rejouée pas encore lancée garde ses règles gelées',
++        () async {
++      final provider = await givenProvider();
++      final frozen = FiestaRules(ensembleName: 'Ancienne', allCount: 2);
++      provider.setPendingFiesta(frozen);
++      await provider.restartWithSamePlayers();
++
++      await provider.refreshPendingEnsemble();
++      expect(json(provider.pendingFiesta), json(frozen));
++    });
++  });
++
++  group('ligne Ensemble des Paramètres', () {
++    Future<GameProvider> pump(WidgetTester tester, FiestaRules? rules) async {
++      tester.view.physicalSize = const Size(700, 1300);
++      tester.view.devicePixelRatio = 1;
++      addTearDown(tester.view.reset);
++      await givenPrefs({AppConstants.fiestaTutorialSeenKey: true});
++      final provider = GameProvider();
++      await tester.runAsync(() => pumpEventQueue());
++      provider.setPendingFiesta(rules);
++      await tester.pumpWidget(ChangeNotifierProvider<GameProvider>.value(
++        value: provider,
++        child: const MaterialApp(home: SettingsScreen()),
++      ));
++      await tester.pump(const Duration(milliseconds: 100));
++      return provider;
++    }
++
++    Finder line() => find.textContaining('Ensemble :');
++
++    testWidgets('Classique et Fiesta classique : aucune ligne', (tester) async {
++      await pump(tester, null);
++      expect(line(), findsNothing);
++      await pump(tester, classicEnsemble.rules);
++      expect(line(), findsNothing);
++    });
++
++    testWidgets('un autre ensemble : son nom', (tester) async {
++      await pump(tester,
++          kProvidedEnsembles.firstWhere((e) => e.name == 'Pro Player').rules);
++      expect(line(), findsOneWidget);
++      expect(find.textContaining('Pro Player', findRichText: true),
++          findsOneWidget);
++    });
++
++    testWidgets(
++        'une partie rejouée aux anciennes règles de « Fiesta classique » se '
++        'signale', (tester) async {
++      await pump(
++          tester,
++          FiestaRules(
++            ensembleName: classicEnsemble.name,
++            allCount: 2,
++          ));
++      expect(
++          find.textContaining('Fiesta classique (ancienne version)',
++              findRichText: true),
++          findsOneWidget);
++    });
++  });
++
++  testWidgets(
++      'Joueurs : « suivant » au clavier amène chaque champ au-dessus du clavier, '
++      'y compris le 20e', (tester) async {
++    const screen = Size(360, 740);
++    const keyboard = 300.0;
++    tester.view.physicalSize = screen;
++    tester.view.devicePixelRatio = 1;
++    addTearDown(tester.view.reset);
++    await givenPrefs();
++    final provider = GameProvider();
++    await tester.runAsync(() => pumpEventQueue());
++    provider.updateSettings(
++      numberOfPlayers: AppConstants.maxPlayers,
++      wordChoice: AppConstants.wordChoiceCustom,
++    );
++    await tester.pumpWidget(ChangeNotifierProvider<GameProvider>.value(
++      value: provider,
++      child: const MaterialApp(home: PlayersScreen()),
++    ));
++    await tester.pump();
++    await tester.runAsync(() => pumpEventQueue());
++    await tester.pump();
++
++    Future<void> settle() async {
++      for (var i = 0; i < 5; i++) {
++        await tester.pump(const Duration(milliseconds: 100));
++      }
++    }
++
++    Finder field(int index) =>
++        find.byKey(ValueKey('input_${provider.players[index].id}'),
++            skipOffstage: false);
++
++    await tester.showKeyboard(
++        find.descendant(of: field(0), matching: find.byType(EditableText)));
++    tester.view.viewInsets = const FakeViewPadding(bottom: keyboard);
++    addTearDown(tester.view.resetViewInsets);
++    await settle();
++
++    for (var i = 1; i < AppConstants.maxPlayers; i++) {
++      await tester.testTextInput.receiveAction(TextInputAction.next);
++      await settle();
++      final focused = tester
++          .widget<EditableText>(find.descendant(
++              of: field(i),
++              matching: find.byType(EditableText, skipOffstage: false)))
++          .focusNode
++          .hasFocus;
++      expect(focused, isTrue, reason: 'champ $i : le focus doit y arriver');
++      expect(tester.getRect(field(i)).bottom,
++          lessThanOrEqualTo(screen.height - keyboard),
++          reason: 'champ $i caché par le clavier');
++    }
++
++    // Liste remontée loin du champ actif : la ligne suivante, hors de vue,
++    // reçoit quand même le focus.
++    await tester.drag(find.byType(ListView), const Offset(0, 3000));
++    await settle();
++    await tester.tap(find
++        .descendant(of: field(0), matching: find.byType(EditableText))
++        .hitTestable());
++    await settle();
++    await tester.drag(find.byType(ListView), const Offset(0, -3000));
++    await settle();
++    await tester.testTextInput.receiveAction(TextInputAction.next);
++    await settle();
++    expect(
++        tester
++            .widget<EditableText>(find.descendant(
++                of: field(1),
++                matching: find.byType(EditableText, skipOffstage: false)))
++            .focusNode
++            .hasFocus,
++        isTrue,
++        reason: 'ligne non construite : requestFocus ne ferait rien');
++
++    await tester.pumpWidget(const SizedBox());
++    await tester.pump(const Duration(seconds: 1));
++  });
++}
+diff --git a/test/widgets/help_conditional_test.dart b/test/widgets/help_conditional_test.dart
+index 2451ceb..aaf6ad0 100644
+--- a/test/widgets/help_conditional_test.dart
++++ b/test/widgets/help_conditional_test.dart
+@@ -362,7 +362,7 @@ void main() {
+           })),
+       });
+       await tester.pumpWidget(MaterialApp(
+-          home: FiestaEnsemblesScreen(onBack: () {}, onNext: (_) {})));
++          home: FiestaEnsemblesScreen(onBack: () {}, onValidate: (_) {})));
+       await settle(tester);
+     }
+ 
+@@ -374,19 +374,19 @@ void main() {
+       expect(find.textContaining('Perso'), findsNothing);
+       expect(find.textContaining('corbeille'), findsNothing);
+       expect(await walkOpenHelp(tester),
+-          ['Les ensembles', 'Créer un ensemble', 'Suivant']);
++          ['Les ensembles', 'Créer un ensemble', 'Valider']);
+     });
+ 
+     testWidgets('avec un ensemble personnel : son étape', (tester) async {
+       await pumpList(tester, 1);
+       expect(await walkHelp(tester),
+-          ['Les ensembles', 'Tes ensembles', 'Créer un ensemble', 'Suivant']);
++          ['Les ensembles', 'Tes ensembles', 'Créer un ensemble', 'Valider']);
+     });
+ 
+     testWidgets('liste pleine : l\'étape parle de la limite', (tester) async {
+       await pumpList(tester, FiestaEnsembleService.maxEnsembles);
+       expect(await walkHelp(tester),
+-          ['Les ensembles', 'Tes ensembles', 'Limite atteinte', 'Suivant']);
++          ['Les ensembles', 'Tes ensembles', 'Limite atteinte', 'Valider']);
+     });
+ 
+     testWidgets(
+@@ -401,7 +401,7 @@ void main() {
+           reason: 'Fiesta classique : pastilles neutres, sans explication');
+       await walkOpenHelp(tester);
+ 
+-      // L'aide a défilé jusqu'à « Suivant » : on remonte à la ligne.
++      // L'aide a défilé jusqu'à « Valider » : on remonte à la ligne.
+       await tester.ensureVisible(find.text('Pro Player'));
+       await pumps(tester);
+       await tester.tap(find.text('Pro Player'));
+diff --git a/test/widgets/help_walkthrough_test.dart b/test/widgets/help_walkthrough_test.dart
+index bbb51c4..2c005f9 100644
+--- a/test/widgets/help_walkthrough_test.dart
++++ b/test/widgets/help_walkthrough_test.dart
+@@ -108,7 +108,7 @@ void main() {
+   testWidgets('Liste des ensembles', (tester) async {
+     await pumpScreen(tester, AppConstants.screenFiestaEnsembles);
+     expect(await walkHelp(tester),
+-        ['Les ensembles', 'Créer un ensemble', 'Suivant']);
++        ['Les ensembles', 'Créer un ensemble', 'Valider']);
+   });
+ 
+   testWidgets('Éditeur d\'ensemble', (tester) async {
