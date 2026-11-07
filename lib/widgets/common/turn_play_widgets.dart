@@ -4,24 +4,16 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/reversed_word.dart';
 
-/// Hauteur des boutons en version [TurnActionButtons.compact].
-const double kCompactTurnButtonsHeight = 64;
-
-/// Le mot à faire deviner : le même rendu pour le tour à un mot et pour
-/// « Deux mots à la fois », seule la place disponible change.
+/// Le mot à faire deviner.
 class TurnWordText extends StatelessWidget {
   final String word;
 
   /// À l'envers : affichage du tour SEULEMENT, le mot du jeu reste en clair.
   final bool reversed;
-  final int maxLines;
-  final double minFontSize;
 
   const TurnWordText({
     required this.word,
     this.reversed = false,
-    this.maxLines = 3,
-    this.minFontSize = 36,
     super.key,
   });
 
@@ -41,15 +33,14 @@ class TurnWordText extends StatelessWidget {
           ],
         ),
         textAlign: TextAlign.center,
-        maxLines: maxLines,
-        minFontSize: minFontSize,
+        maxLines: 3,
+        minFontSize: 36,
         wrapWords: false,
         overflow: TextOverflow.ellipsis,
       );
 }
 
-/// Les boutons Passer (rouge) et Trouvé (cyan) du tour. [compact] : même style,
-/// moins haut, pour en superposer deux paires (« Deux mots à la fois »).
+/// Les boutons Passer (rouge) et Trouvé (cyan) du tour.
 class TurnActionButtons extends StatelessWidget {
   /// `null` = bouton désactivé (pause, `no_pass`, plus de mot à passer…).
   final VoidCallback? onPass;
@@ -60,7 +51,6 @@ class TurnActionButtons extends StatelessWidget {
 
   /// Sous le libellé : pénalité ou « gratuit », absent si `null`.
   final String? passDetail;
-  final bool compact;
 
   /// Cibles de l'aide du tour (coach marks).
   final Key? passKey;
@@ -71,7 +61,6 @@ class TurnActionButtons extends StatelessWidget {
     required this.onGuessed,
     this.passLabel = 'Passer',
     this.passDetail,
-    this.compact = false,
     this.passKey,
     this.guessedKey,
     super.key,
@@ -86,14 +75,14 @@ class TurnActionButtons extends StatelessWidget {
         Icon(
           Icons.skip_next,
           color: canPass ? Colors.white : AppColors.gray500,
-          size: compact ? 22 : 32,
+          size: 32,
         ),
-        if (!compact) const SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
           passLabel,
           style: TextStyle(
             fontFamily: 'Poppins',
-            fontSize: compact ? 12 : 14,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
             color: canPass ? Colors.white : AppColors.gray500,
           ),
@@ -103,32 +92,26 @@ class TurnActionButtons extends StatelessWidget {
             passDetail!,
             style: TextStyle(
               fontFamily: 'Poppins',
-              fontSize: compact ? 10 : 12,
+              fontSize: 12,
               color:
                   canPass ? Colors.white.withOpacity(0.7) : AppColors.gray600,
             ),
           ),
       ],
     );
-    final row = Row(
-      crossAxisAlignment:
-          compact ? CrossAxisAlignment.stretch : CrossAxisAlignment.center,
+    return Row(
       children: [
         Expanded(
           key: passKey,
           child: GestureDetector(
             onTap: onPass,
             child: Container(
-              padding: EdgeInsets.symmetric(vertical: compact ? 4 : 20),
+              padding: const EdgeInsets.symmetric(vertical: 20),
               decoration: BoxDecoration(
                 color: canPass ? AppColors.error : AppColors.gray700,
                 borderRadius: BorderRadius.circular(20),
               ),
-              // Compact : hauteur fixe, le texte agrandi par le système réduit
-              // au lieu de déborder.
-              child: compact
-                  ? FittedBox(fit: BoxFit.scaleDown, child: pass)
-                  : pass,
+              child: pass,
             ),
           ),
         ),
@@ -139,7 +122,7 @@ class TurnActionButtons extends StatelessWidget {
           child: GestureDetector(
             onTap: onGuessed,
             child: Container(
-              padding: EdgeInsets.symmetric(vertical: compact ? 0 : 33),
+              padding: const EdgeInsets.symmetric(vertical: 33),
               decoration: BoxDecoration(
                 color: canGuess ? AppColors.secondaryCyan : AppColors.gray700,
                 borderRadius: BorderRadius.circular(20),
@@ -147,15 +130,12 @@ class TurnActionButtons extends StatelessWidget {
               child: Icon(
                 Icons.check,
                 color: canGuess ? Colors.white : AppColors.gray500,
-                size: compact ? 32 : 48,
+                size: 48,
               ),
             ),
           ),
         ),
       ],
     );
-    return compact
-        ? SizedBox(height: kCompactTurnButtonsHeight, child: row)
-        : row;
   }
 }

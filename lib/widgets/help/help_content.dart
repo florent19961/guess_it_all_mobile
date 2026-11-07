@@ -443,8 +443,6 @@ String _passSentence(PassState state, int passPenalty) => switch (state) {
           'impossible de passer.',
     };
 
-/// Deux mots : les boutons vivent sous chaque carte, sans clé `guessed` ni
-/// `pass` : l'étape du mot les explique ([buttonsUnderWord], [secondWordShown]).
 List<CoachStep> turnHelp({
   required GlobalKey timer,
   required GlobalKey modifiers,
@@ -458,8 +456,6 @@ List<CoachStep> turnHelp({
   required int passPenalty,
   required PassState passState,
   required bool reversed,
-  required bool buttonsUnderWord,
-  required bool secondWordShown,
 }) {
   final reversedNote =
       reversed ? ' À l\'écran, il est à l\'envers : à toi de le remettre.' : '';
@@ -487,25 +483,12 @@ List<CoachStep> turnHelp({
       text: 'Passer ne coûte rien tant qu\'il en reste. Ensuite, la pénalité '
           'habituelle revient.',
     ),
-    if (buttonsUnderWord)
-      CoachStep(
-        target: word,
-        title: secondWordShown ? 'Les deux mots' : 'Le mot',
-        text: secondWordShown
-            ? 'Deux mots à faire deviner en même temps, sans les montrer. '
-                'Chacun a ses boutons : Trouvé, et Passer.$reversedNote '
-                '${_passSentence(passState, passPenalty)}'
-            : 'Fais-le deviner sans le montrer, puis touche Trouvé ou Passer, '
-                'juste dessous.$reversedNote '
-                '${_passSentence(passState, passPenalty)}',
-      )
-    else
-      CoachStep(
-        target: word,
-        title: 'Le mot',
-        text: 'Fais-le deviner en suivant la règle de la manche, sans le '
-            'montrer.$reversedNote',
-      ),
+    CoachStep(
+      target: word,
+      title: 'Le mot',
+      text: 'Fais-le deviner en suivant la règle de la manche, sans le '
+          'montrer.$reversedNote',
+    ),
     CoachStep(
       target: guessed,
       title: 'Trouvé',

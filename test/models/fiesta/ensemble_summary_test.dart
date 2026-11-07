@@ -39,7 +39,8 @@ void main() {
 
     test('leur copie, un ensemble perso, passe au texte généré', () {
       final copy = FiestaEnsemble(id: 'copy', rules: classicEnsemble.rules);
-      expect(ensembleSummary(copy).short, '1 tirée par manche · Équilibrage');
+      expect(
+          ensembleSummary(copy).short, 'Équilibrage · 5 cartouches par manche');
     });
   });
 

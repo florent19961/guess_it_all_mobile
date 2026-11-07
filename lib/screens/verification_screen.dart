@@ -97,11 +97,10 @@ class _VerificationScreenState extends State<VerificationScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<GameProvider>();
     final guessedWords = provider.game.wordsGuessedThisTurn;
-    // Mots à l'écran quand le chrono est tombé : un, ou deux avec « Deux mots
-    // à la fois » (2-11). Chacun a sa carte, hors de la liste des passés.
+    // Mot à l'écran quand le chrono est tombé : il a sa carte, hors de la liste
+    // des passés.
     final expiredWords = [
       if (provider.game.expiredWord != null) provider.game.expiredWord!,
-      if (provider.secondExpiredWord != null) provider.secondExpiredWord!,
     ];
     final passedWords = provider.game.passedWordsThisTurn
         .where((w) => !expiredWords.contains(w))
@@ -200,9 +199,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
                             key: _expiredKey,
                             children: [
                               Text(
-                                expiredWords.length > 1
-                                    ? 'Mots en cours'
-                                    : 'Mot en cours',
+                                'Mot en cours',
                                 style: TextStyle(
                                   fontFamily: 'Poppins',
                                   fontSize: 16,

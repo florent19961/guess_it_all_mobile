@@ -29,6 +29,16 @@ int balanceGiftCount({required int gap, required int totalWords}) {
   return share <= kBalanceLargeGap ? 2 : 3;
 }
 
+/// Poids du tirage des cartouches au hasard (le ×2 est rare, il pèse lourd au
+/// score). À recalibrer après des parties réelles.
+const ({int byDefault, Map<String, int> overrides}) kGiftWeights = (
+  byDefault: 3,
+  overrides: {'double_points': 1},
+);
+
+int _giftWeight(ModifierDef def) =>
+    kGiftWeights.overrides[def.id] ?? kGiftWeights.byDefault;
+
 /// Graine d'une équipe : `(gameId, manche, équipe)`. Réutilise le FNV-1a de
 /// [drawSeed] (chaîne `gameId#teamId#round`, distincte de celle du tirage).
 int giftSeed(String gameId, int round, String teamId) =>
@@ -76,10 +86,10 @@ int giftCount(
 }
 
 /// Cartouches gagnées au début de la manche `finishedRound + 1`, équipe par
-/// équipe dans l'ordre de [scores]. Le vivier est mélangé par la graine de
-/// l'équipe puis pris dans l'ordre : DISTINCTES tant que le vivier le permet,
-/// puis il repart du début. Vivier vide : rien. Le tirage d'une équipe ne dépend
-/// pas des autres ni, à nombre égal, du score.
+/// équipe dans l'ordre de [scores]. Chacune est tirée dans le vivier AVEC remise,
+/// selon son poids ([kGiftWeights]), à partir de la graine de l'équipe : la même
+/// cartouche peut sortir plusieurs fois. Vivier vide : rien. Le tirage d'une
+/// équipe ne dépend pas des autres ni, à nombre égal, du score.
 List<EarnedCartridge> roundGifts({
   required FiestaRules rules,
   required String gameId,
@@ -106,7 +116,8 @@ List<EarnedCartridge> roundGifts({
           roundRules: roundRules,
           teamId: teamId,
           blockableTeamIds: blockableTeamIds,
-        )..shuffle(Random(giftSeed(gameId, finishedRound, teamId))),
+        ),
+        random: Random(giftSeed(gameId, finishedRound, teamId)),
       ),
   ];
 }
@@ -116,13 +127,16 @@ Iterable<EarnedCartridge> _giftsOf({
   required int round,
   required int count,
   required List<ModifierDef> pool,
+  required Random random,
 }) sync* {
   if (pool.isEmpty) return;
+  final total = pool.fold<int>(0, (sum, def) => sum + _giftWeight(def));
   for (var i = 0; i < count; i++) {
-    yield EarnedCartridge(
-      catalogId: pool[i % pool.length].id,
-      teamId: teamId,
-      round: round,
-    );
+    var roll = random.nextInt(total);
+    final drawn = pool.firstWhere((def) {
+      roll -= _giftWeight(def);
+      return roll < 0;
+    });
+    yield EarnedCartridge(catalogId: drawn.id, teamId: teamId, round: round);
   }
 }

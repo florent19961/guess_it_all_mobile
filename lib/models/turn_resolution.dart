@@ -28,8 +28,7 @@ class TurnResolution {
   /// Mots passés pendant le tour mais finalement validés comme devinés.
   final List<String> validatedPassed;
 
-  /// Mots affichés à l'expiration du chrono (un, ou deux avec « Deux mots à
-  /// la fois »), validés / refusés à la vérification.
+  /// Mot affiché à l'expiration du chrono, validé ou refusé à la vérification.
   final List<String> expiredValidated;
   final List<String> expiredInvalidated;
 
@@ -66,8 +65,7 @@ class TurnResolution {
 ///
 /// - [validatedWords] : ce que l'équipe a coché à la vérification.
 /// - [guessedThisTurn] / [passedThisTurn] : ce qui s'est passé pendant le tour.
-/// - [expiredWords] : les mots affichés quand le chrono est tombé (aucun, un,
-///   ou deux avec « Deux mots à la fois », story 2-11).
+/// - [expiredWords] : le mot affiché quand le chrono est tombé (aucun ou un).
 /// - [currentPool] : les mots encore à faire deviner avant dépouillement.
 /// - [pointsMultiplier] : ×2 pour « Mot compte double » (Fiesta 2-9). Vaut
 ///   pour les POINTS seulement : [TurnResolution.validated] reste la liste

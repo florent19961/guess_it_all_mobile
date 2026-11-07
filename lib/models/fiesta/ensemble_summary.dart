@@ -166,17 +166,17 @@ String _shortLine(List<String> parts) {
 /// Par id d'ensemble fourni. Les pastilles disent les mêmes règles que
 /// `kProvidedEnsembles`, dans l'ordre choisi ici (test).
 final Map<String, EnsembleSummary> kProvidedSummaries = {
-  kClassicEnsembleId: const EnsembleSummary(
-    short: 'Une règle tirée à chaque manche',
-    long: 'Une règle tirée au sort à chaque manche. Plus une équipe est '
-        'distancée, plus elle reçoit de cartouches.',
-    chips: [InfoChip('1 tirage par manche'), InfoChip(kBalanceLabel)],
+  kClassicEnsembleId: EnsembleSummary(
+    short: '5 cartouches à chaque manche',
+    long: 'Chaque équipe reçoit 5 cartouches au hasard au début de chaque '
+        'manche. Plus une équipe est distancée, plus elle en reçoit en plus.',
+    chips: [InfoChip(_allLabel(5)), const InfoChip(kBalanceLabel)],
   ),
   '${kProvidedIdPrefix}last': EnsembleSummary(
-    short: '4 cartouches aux équipes menées',
-    long: 'Après les manches 1 et 2, chaque équipe menée reçoit 4 cartouches '
+    short: '5 cartouches aux équipes menées',
+    long: 'Après les manches 1 et 2, chaque équipe menée reçoit 5 cartouches '
         'au hasard.',
-    chips: [InfoChip(_trailingLabel(4))],
+    chips: [InfoChip(_trailingLabel(5))],
   ),
   '${kProvidedIdPrefix}pro': const EnsembleSummary(
     short: '3 règles dures, toute la partie',
@@ -203,10 +203,10 @@ final Map<String, EnsembleSummary> kProvidedSummaries = {
     chips: [ModifierChip('other_language')],
   ),
   '${kProvidedIdPrefix}explosive': EnsembleSummary(
-    short: '5 cartouches à chaque manche',
-    long: 'Chaque équipe reçoit 5 cartouches au hasard au début de chaque '
+    short: '10 cartouches à chaque manche',
+    long: 'Chaque équipe reçoit 10 cartouches au hasard au début de chaque '
         'manche.',
-    chips: [InfoChip(_allLabel(5))],
+    chips: [InfoChip(_allLabel(10))],
   ),
   '${kProvidedIdPrefix}expert': const EnsembleSummary(
     short: 'Manche 3 sous un drap, en bruitages',

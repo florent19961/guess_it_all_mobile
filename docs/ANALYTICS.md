@@ -55,19 +55,19 @@ evenements portent la vraie manche, la vraie equipe et les vrais tags. Sur la ve
 tour verifie est encore le tour courant (le contexte est lu avant la mutation de `validateWords`).
 
 - **Continuation** (temps reporte en debut de manche) : meme tour que la fin de la manche N, elle
-  est etiquetee avec les effets de N (et ×2 / deux mots s'ils etaient depenses), jamais ceux de
+  est etiquetee avec les effets de N (et le ×2 s'il etait depense), jamais ceux de
   N+1, qui commencent au premier vrai tour. Les events de la continuation portent `round` N+1.
 - **Evenements anterieurs a ce correctif** : une verification faite juste apres un kill a pu
   ecrire `invalidated` / `guessed` sans `modifiers`, avec `round` 1 et `teamId` ''. Le mode de la
   partie se lit sur `GameAnalytics.gameMode`, jamais sur l'evenement.
 
-**Duree par mot** (`AnalyticsService._recordEventWithDuration`, story 2-11) : chaque mot a
-l'ecran garde en memoire l'horodatage de son `shown` ; `guessed` / `passed` / `expired` mesurent
-leur duree depuis le `shown` de CE mot. Avec « Deux mots a la fois », les deux cartes ont donc
-chacune leur paire d'evenements, et le tour porte `two_words` dans `modifiers`.
+**Duree par mot** (`AnalyticsService._recordEventWithDuration`, story 2-11) : le mot a l'ecran
+garde en memoire l'horodatage de son `shown` ; `guessed` / `passed` / `expired` mesurent leur duree
+depuis le `shown` de CE mot. « Deux mots a la fois » est retire du jeu (2026-11-07) : des archives
+portent encore `two_words` dans `modifiers`, avec deux cartes a l'ecran sur un meme tour.
 
 **Mot affiche avant un kill** : l'horodatage du `shown` est perdu avec la memoire. L'evenement
-terminal (`guessed` / `passed` / `expired`, une ou deux cartes) est **quand meme enregistre**, avec
+terminal (`guessed` / `passed` / `expired`) est **quand meme enregistre**, avec
 `durationMs` **nul** (duree inconnue) : jamais de duree inventee, jamais d'evenement perdu. Le
 `shown` lui-meme peut manquer (les evenements ne sont sauvegardes qu'en fin de tour et a la mise
 en arriere-plan). Agregats : `WordRoundStats` compte une duree nulle comme 0 ms, comme deja pour

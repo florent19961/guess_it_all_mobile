@@ -725,7 +725,7 @@ class GameProvider extends ChangeNotifier {
     }
     // Lu seulement en Fiesta : en Classique, rien n'exige une équipe ici.
     final teamId = fiesta == null ? '' : _teams[_game.currentTeamIndex].id;
-    // Bonus à charge (×2, deux mots, passe gratuite, +10 s) : la charge se dépense ICI, pas à
+    // Bonus à charge (×2, passe gratuite, +10 s) : la charge se dépense ICI, pas à
     // l'interrupteur. Éteindre avant le départ ou revenir en arrière n'a donc
     // rien à rendre.
     for (final id in kChargeBonusKeys.keys) {
@@ -744,25 +744,6 @@ class GameProvider extends ChangeNotifier {
         ],
       );
     }
-    // Carte B tirée au départ (et au départ de la continuation de fin de
-    // manche, même tour). Déjà là = partie reprise : on la garde. Les deux
-    // cartes restent dans `remainingWords` jusqu'à être trouvées.
-    final currentWord = _game.currentWord;
-    String? drawnSecond;
-    if (fiesta != null &&
-        fiesta.turn.charges['two_words'] == ChargeState.spent &&
-        fiesta.turn.secondWord == null &&
-        currentWord != null) {
-      drawnSecond = drawOtherCard(
-        pool: _game.remainingWords,
-        passed: const [],
-        other: currentWord,
-      ).word;
-      if (drawnSecond != null) {
-        fiesta = _withSecondWord(fiesta, drawnSecond);
-      }
-    }
-
     _game = _game.copyWith(
       currentScreen: AppConstants.screenTurn,
       turnStartTimestamp: now,
@@ -776,18 +757,16 @@ class GameProvider extends ChangeNotifier {
       fiesta: fiesta,
     );
 
-    // Tracker l'affichage du premier mot (et de la carte B)
+    // Tracker l'affichage du premier mot
     _trackWordShown();
-    if (drawnSecond != null) _trackWordShown(drawnSecond);
 
     notifyListeners();
     _saveGameState();
   }
 
-  /// Notifie le service analytics qu'un nouveau mot est affiché : [word], ou
-  /// le mot courant (carte A) par défaut.
-  void _trackWordShown([String? word]) {
-    final currentWord = word ?? _game.currentWord;
+  /// Notifie le service analytics qu'un nouveau mot est affiché.
+  void _trackWordShown() {
+    final currentWord = _game.currentWord;
     if (currentWord == null || !_analytics.isTracking) return;
 
     _analytics.onWordShown(currentWord, _eventContext);
@@ -811,13 +790,9 @@ class GameProvider extends ChangeNotifier {
             : null,
       );
 
-  /// [word] : la carte visée (« Deux mots à la fois »), la carte A par
-  /// défaut. Un mot qui n'est plus à l'écran (tap périmé) est ignoré.
-  void markWordAsGuessed([String? word]) {
-    final currentWord = word ?? _game.currentWord;
+  void markWordAsGuessed() {
+    final currentWord = _game.currentWord;
     if (currentWord == null) return;
-    final second = secondWord;
-    if (currentWord != _game.currentWord && currentWord != second) return;
 
     // Tracker le mot deviné AVANT de changer l'état
     _analytics.onWordGuessed(currentWord, _eventContext);
@@ -836,20 +811,7 @@ class GameProvider extends ChangeNotifier {
     // Mélanger les mots restants
     newRemainingWords.shuffle(Random());
 
-    if (second != null) {
-      // Deux cartes : seule la carte trouvée change, la manche continue
-      // (l'autre carte est encore dans le pool).
-      final cards = _cardsAfter(currentWord,
-          pool: newRemainingWords, passed: newPassedWords);
-      _game = _game.copyWith(
-        currentWord: cards.first,
-        remainingWords: cards.pool,
-        wordsGuessedThisTurn: newGuessedWords,
-        passedWordsThisTurn: newPassedWords,
-        fiesta: _withSecondWord(_game.fiesta!, cards.second),
-      );
-      if (cards.drawn != null) _trackWordShown(cards.drawn);
-    } else if (newRemainingWords.isEmpty) {
+    if (newRemainingWords.isEmpty) {
       // Fin de la manche si plus de mots
       // Vérifier s'il reste des mots passés à recycler
       if (newPassedWords.isNotEmpty) {
@@ -911,14 +873,11 @@ class GameProvider extends ChangeNotifier {
     _saveGameState();
   }
 
-  /// [word] : la carte visée, comme pour [markWordAsGuessed].
-  void passWord([String? word]) {
-    final currentWord = word ?? _game.currentWord;
+  void passWord() {
+    final currentWord = _game.currentWord;
     final clock = turnClock;
 
     if (currentWord == null || !clock.isRunning) return;
-    final second = secondWord;
-    if (currentWord != _game.currentWord && currentWord != second) return;
 
     final now = DateTime.now().millisecondsSinceEpoch;
 
@@ -949,33 +908,19 @@ class GameProvider extends ChangeNotifier {
     var newRemainingWords = List<String>.from(_game.remainingWords)
       ..remove(currentWord);
 
-    var newFiesta = usesFreePass
+    final newFiesta = usesFreePass
         ? fiesta.copyWith(
             turn: fiesta.turn.copyWith(freePassesUsed: freePassesUsed + 1))
         : fiesta;
-    String? newCurrentWord;
-    String? drawn;
-    if (second != null) {
-      // Deux cartes : seule la carte passée change. Le recyclage se fait dans
-      // `_cardsAfter`, hors de l'autre carte.
-      newRemainingWords.shuffle(Random());
-      final cards = _cardsAfter(currentWord,
-          pool: newRemainingWords, passed: newPassedWords);
-      newRemainingWords = cards.pool;
-      newCurrentWord = cards.first;
-      drawn = cards.drawn;
-      newFiesta = _withSecondWord(newFiesta!, cards.second);
-    } else {
-      // Si plus de mots restants, recycler les mots passés
-      if (newRemainingWords.isEmpty && newPassedWords.isNotEmpty) {
-        newRemainingWords = List<String>.from(newPassedWords);
-      }
 
-      newRemainingWords.shuffle(Random());
-      newCurrentWord =
-          newRemainingWords.isNotEmpty ? newRemainingWords[0] : null;
-      drawn = newCurrentWord;
+    // Si plus de mots restants, recycler les mots passés
+    if (newRemainingWords.isEmpty && newPassedWords.isNotEmpty) {
+      newRemainingWords = List<String>.from(newPassedWords);
     }
+
+    newRemainingWords.shuffle(Random());
+    final newCurrentWord =
+        newRemainingWords.isNotEmpty ? newRemainingWords[0] : null;
 
     _game = _withClock(
       _game.copyWith(
@@ -990,9 +935,7 @@ class GameProvider extends ChangeNotifier {
     );
 
     // Tracker le nouveau mot affiché
-    if (drawn != null) {
-      _trackWordShown(drawn);
-    }
+    _trackWordShown();
 
     notifyListeners();
     _saveGameState();
@@ -1012,23 +955,9 @@ class GameProvider extends ChangeNotifier {
     final isRoundFinished = _game.remainingWords.isEmpty;
     final expiredWord = isRoundFinished ? null : _game.currentWord;
 
-    // Deux mots : la carte B part aussi à la vérification, sous sa propre clé.
-    final second = secondWord;
-    var fiesta = _game.fiesta;
-    if (second != null) {
-      fiesta = _withSecondWord(fiesta!, null);
-      if (!isRoundFinished) {
-        fiesta = fiesta.copyWith(
-            turn: fiesta.turn.copyWith(secondExpiredWord: second));
-      }
-    }
-
     // Tracker le mot expiré si applicable
     if (expiredWord != null) {
       _analytics.onWordExpired(expiredWord, _eventContext);
-    }
-    if (second != null && !isRoundFinished) {
-      _analytics.onWordExpired(second, _eventContext);
     }
 
     _game = _game.copyWith(
@@ -1037,7 +966,6 @@ class GameProvider extends ChangeNotifier {
       turnBonusTime: isRoundFinished ? timeRemaining : null,
       expiredWord: expiredWord,
       clearExpiredWord: isRoundFinished,
-      fiesta: fiesta,
       clearTurnStartTimestamp: true,
       clearTurnEndTimestamp: true,
       // Purger AUSSI le gel : sinon l'horloge reste « en pause » après la fin du
@@ -1152,7 +1080,6 @@ class GameProvider extends ChangeNotifier {
       passedThisTurn: passedWordsThisTurn,
       expiredWords: [
         if (_game.expiredWord != null) _game.expiredWord!,
-        if (secondExpiredWord != null) secondExpiredWord!,
       ],
       currentPool: _game.remainingWords,
       pointsMultiplier: isDoublePointsOn ? 2 : 1,
@@ -1504,7 +1431,8 @@ class GameProvider extends ChangeNotifier {
   bool get passBlocked => _has('no_pass');
 
   /// Passes gratuites du tour, et celles déjà utilisées : celles de la
-  /// cartouche dépensée au départ du tour (une cartouche = un tour de N passes).
+  /// cartouche dépensée au départ du tour. Une partie relue après le passage de
+  /// 2 passes à 1 peut en avoir déjà utilisé 2 : [hasFreePass] reste faux.
   int get freePasses => _charge('free_pass') == ChargeState.spent
       ? modifierById('free_pass')!.defaultCharges
       : 0;
@@ -1657,7 +1585,7 @@ class GameProvider extends ChangeNotifier {
     _saveGameState();
   }
 
-  // ========== BONUS À CHARGE : ×2 (2-9), DEUX MOTS (2-11), +10 S ==========
+  // ========== BONUS À CHARGE : ×2 (2-9), PASSE GRATUITE, +10 S ==========
   // Une table (`kChargeBonusKeys`), une implémentation : chaque getter public
   // n'est qu'un id de catalogue.
 
@@ -1734,49 +1662,6 @@ class GameProvider extends ChangeNotifier {
   bool get doublePointsBlocked => _blocked('double_points');
   void setDoublePoints(bool on) => _setCharge('double_points', on);
 
-  /// Deux mots à l'écran pendant CE tour (continuation comprise).
-  bool get isTwoWordsArmed => _charge('two_words') != null;
-
-  /// Deux cartes à l'écran : cartouche dépensée.
-  bool get isTwoWordsOn => _charge('two_words') == ChargeState.spent;
-  int get twoWordsLeft => _chargesLeft('two_words');
-  bool get twoWordsBlocked => _blocked('two_words');
-  void setTwoWords(bool on) => _setCharge('two_words', on);
-
-  /// Carte B (la carte A est `game.currentWord`). Nulle = une seule carte.
-  String? get secondWord => _turn.secondWord;
-
-  /// Carte B encore à l'écran quand le chrono est tombé, à vérifier.
-  String? get secondExpiredWord => _turn.secondExpiredWord;
-
-  /// Cartes après le traitement (trouvé ou passé) de [target], l'une des deux
-  /// cartes : elle seule est remplacée, par un mot ≠ l'autre carte
-  /// ([drawOtherCard]). Plus aucun autre mot : l'autre carte reste seule, en
-  /// tête. [pool] est déjà privé de [target].
-  ({String? first, String? second, String? drawn, List<String> pool})
-      _cardsAfter(String target,
-          {required List<String> pool, required List<String> passed}) {
-    final a = _game.currentWord!;
-    final b = secondWord!;
-    final isA = target == a;
-    final other = isA ? b : a;
-    final next = drawOtherCard(pool: pool, passed: passed, other: other);
-    final drawn = next.word;
-    if (drawn == null) {
-      return (first: other, second: null, drawn: null, pool: next.pool);
-    }
-    return isA
-        ? (first: drawn, second: b, drawn: drawn, pool: next.pool)
-        : (first: a, second: drawn, drawn: drawn, pool: next.pool);
-  }
-
-  /// [fiesta] avec la carte B [word] (nulle = plus de carte B).
-  FiestaState _withSecondWord(FiestaState fiesta, String? word) =>
-      fiesta.copyWith(
-          turn: word == null
-              ? fiesta.turn.copyWith(clearSecondWord: true)
-              : fiesta.turn.copyWith(secondWord: word));
-
   /// Fiesta à la VRAIE fin d'un tour : état du tour vidé, malus infligés à
   /// l'équipe consommés, sauf les blocages qui attendent. 🔴 Une fin de manche n'en est pas une : la continuation
   /// en N+1 est le même tour. Nul en Classique.
@@ -1799,8 +1684,7 @@ class GameProvider extends ChangeNotifier {
   }
 
   /// Fiesta à une fin de manche. D'ordinaire, la même équipe poursuit CE tour
-  /// en N+1 (continuation) : l'état du tour vit jusqu'à sa vraie fin
-  /// ([FiestaTurnState.afterRoundEnd]). Mais si ce tour était DÉJÀ une
+  /// en N+1 (continuation) : l'état du tour vit jusqu'à sa vraie fin. Mais si ce tour était DÉJÀ une
   /// continuation (elle a vidé le pool de N+1 à elle seule), son tour logique
   /// N se termine ici, comme à une vraie fin de tour : la continuation
   /// suivante ne porte alors que le contexte de N+1, jamais celui de N.
@@ -1808,7 +1692,7 @@ class GameProvider extends ChangeNotifier {
     final fiesta = _game.fiesta;
     if (fiesta == null) return null;
     if (isContinuation) return _fiestaAfterTurn();
-    return fiesta.copyWith(turn: fiesta.turn.afterRoundEnd());
+    return fiesta;
   }
 
   // ========== ACTIF CE TOUR / RÉSERVE ==========
@@ -2366,10 +2250,8 @@ class GameProvider extends ChangeNotifier {
         .where((w) => !remainingSet.contains(w))
         .length;
 
-    // Total = remainingWords + passés non recyclés - mot(s) à l'écran
-    // (deux avec « Deux mots à la fois »)
-    final onScreen = secondWord != null ? 2 : 1;
-    return _game.remainingWords.length + passedNotInRemaining - onScreen;
+    // Total = remainingWords + passés non recyclés - mot à l'écran
+    return _game.remainingWords.length + passedNotInRemaining - 1;
   }
 
   /// Retourne la distribution des mots par joueur

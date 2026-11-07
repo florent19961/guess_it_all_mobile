@@ -313,7 +313,7 @@ void main() {
     for (var i = 0; i < 30; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
-    expect(provider.reserve, hasLength(11));
+    expect(provider.reserve, hasLength(10));
 
     final other =
         provider.teams.firstWhere((t) => t.id != provider.getCurrentTeam()!.id);
@@ -369,7 +369,7 @@ void main() {
       final bonus = provider.reserve
           .where((c) => c.nature == ModifierNature.bonus)
           .length;
-      expect((provider.reserve.length - bonus, bonus), (11, 4));
+      expect((provider.reserve.length - bonus, bonus), (11, 3));
       final zone = find.byType(FiestaTurnZone);
       // Cas réaliste : tout tient, il n'y a rien à faire défiler.
       expect(
@@ -389,7 +389,9 @@ void main() {
     testWidgets('la réserve tient, continuation et vrai tour', (tester) async {
       // Barre d'état et barre de navigation d'un vrai téléphone.
       tester.view.padding = const FakeViewPadding(top: 24, bottom: 48);
-      // Le pire cas d'Explosif en M3, fixé : ses 15 cartouches, toutes différentes.
+      // Un cas haut d'Explosif en M3, fixé : 14 sortes de cartouches. Les 16
+      // sortes de M3 restent possibles, mais rares (les mimes n'arrivent qu'avec
+      // les 10 cartouches de M3) : la zone défile alors.
       final provider = await pumpGame(
           tester,
           FiestaRules(modifiers: {
@@ -609,8 +611,8 @@ void main() {
     await tester.tap(find.byTooltip('Voir').first); // Fiesta classique
     await settle(tester);
     expect(find.text('Fiesta classique'), findsOneWidget);
-    expect(find.text('TOUJOURS'), findsNothing, reason: 'tout en aléatoire');
-    expect(find.text('ALÉATOIRE PAR MANCHE (1 PAR MANCHE)'), findsOneWidget);
+    expect(find.text('TOUJOURS'), findsNothing);
+    expect(find.textContaining('ALÉATOIRE'), findsNothing);
     expect(find.text('CARTOUCHES'), findsOneWidget);
     expect(find.textContaining('Équilibrer la partie'), findsOneWidget);
     expect(find.text('Modifier'), findsNothing);

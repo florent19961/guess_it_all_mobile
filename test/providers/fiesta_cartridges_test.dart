@@ -114,7 +114,7 @@ void main() {
 
   test(
       'Annulation avant le tour : la cartouche revient ; au départ du tour, '
-      'la Passe gratuite allumée est dépensée UNE fois (2 passes ce tour '
+      'la Passe gratuite allumée est dépensée UNE fois (1 passe ce tour '
       'seulement) et l\'envoi n\'est plus annulable', () async {
     final p = await givenProvider(['Ana', 'Bob']);
     await p.startGame(fiesta: stock(['free_pass', 'minus_10s']));
@@ -142,8 +142,7 @@ void main() {
     expect(p.sentThisTurn, isEmpty, reason: 'tour commencé');
     expect(p.game.fiesta!.chargesUsed.map((u) => (u.catalogId, u.targetTeamId)),
         [('minus_10s', b), ('free_pass', null)]);
-    expect(p.freePasses, 2);
-    p.passWord();
+    expect(p.freePasses, 1);
     p.passWord();
     expect(p.currentPassPenalty, 5);
     p.endTurn();

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:guess_it_all_mobile/models/fiesta/fiesta_ensemble.dart';
+import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
 import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
 import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
 import 'package:guess_it_all_mobile/models/fiesta/symmetric_draw.dart';
@@ -57,7 +57,11 @@ void main() {
       'après une app tuée sur la transition, et remplace celui de M1 dès le '
       '« Manche suivante », continuation comprise', () async {
     final provider = await givenReadyProvider();
-    await provider.startGame(fiesta: classicEnsemble.rules);
+    await provider.startGame(
+        fiesta: FiestaRules(drawCount: 1, modifiers: {
+      for (final def in kModifierCatalog)
+        if (canBeRoundRule(def)) def.id: const ModifierSetting(draw: true),
+    }));
     expect(provider.game.fiesta!.active, isNotEmpty);
     expect(provider.game.fiesta!.active.every((m) => m.round == 1), isTrue);
 
