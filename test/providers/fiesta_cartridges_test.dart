@@ -298,6 +298,9 @@ void main() {
     playTurn(p);
     expect(p.reserve.single.usable, isTrue);
     expect(p.targetRefusal('minus_10s', p.getTeamById(c)!), 'déjà infligé');
+    expect(p.inflictMalus('minus_10s', c), startsWith('Impossible'),
+        reason: 'grisé = refusé');
+    expect(left(p, 'minus_10s'), 2, reason: 'rien consommé');
     expect(p.targetRefusal('minus_10s', p.getTeamById(a)!), isNull);
   });
 }

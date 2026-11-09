@@ -912,7 +912,11 @@ class _TeamPlayers extends StatelessWidget {
                       color: AppColors.gray400),
                 ),
             ]),
-            style: TextStyle(fontFamily: 'Bangers', fontSize: 18, color: color),
+            // Grisée comme ses joueurs ; la raison reste lisible.
+            style: TextStyle(
+                fontFamily: 'Bangers',
+                fontSize: 18,
+                color: enabled ? color : color.withValues(alpha: 0.35)),
           ),
           const SizedBox(height: 6),
           Wrap(
