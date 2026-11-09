@@ -144,17 +144,25 @@ void main() {
       expect(g.where((e) => e.teamId == 'a'), hasLength(2));
     });
 
-    test('avec remise : la même cartouche peut sortir deux fois', () {
-      // Vivier bien plus grand que 3 : l'ancien tirage donnait 3 distinctes.
+    test('sans remise dans la manche : jamais deux fois la même pour une '
+        'équipe, le vivier remis en entier une fois épuisé', () {
       final rules = FiestaRules(allCount: 3);
-      expect(pool(rules).length, greaterThan(3));
-      final anyTwice = List.generate(40, (i) => 'g$i').any((id) {
-        final ids = gifts(rules, gameId: id)
+      final size = pool(rules).length;
+      expect(size, greaterThan(3));
+      for (var i = 0; i < 40; i++) {
+        final ids = gifts(rules, gameId: 'g$i')
             .where((e) => e.teamId == 'a')
             .map((e) => e.catalogId);
-        return ids.toSet().length < ids.length;
-      });
-      expect(anyTwice, isTrue);
+        expect(ids.toSet(), hasLength(3), reason: 'g$i');
+      }
+      // Plus de cartouches que le vivier : chaque cartouche une fois, puis
+      // le vivier repart.
+      final many = gifts(FiestaRules(allCount: size + 2))
+          .where((e) => e.teamId == 'a')
+          .map((e) => e.catalogId)
+          .toList();
+      expect(many.take(size).toSet(), hasLength(size));
+      expect(many.skip(size).toSet(), hasLength(2));
     });
 
     test('poids : valeurs décidées (D2), à ne changer qu\'en le recalibrant',

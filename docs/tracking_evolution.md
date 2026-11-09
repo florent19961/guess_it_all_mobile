@@ -1375,3 +1375,19 @@ Ligne « Ensemble : <nom> » hors Fiesta classique. Clavier ouvert sur Joueurs, 
 **Conséquence.** Aucune forme persistée ne change : `lastUsedId` était déjà facultatif, il disparaît simplement du blob.
 Paramètres, mesuré avec les vraies polices (Poppins, Bangers) dans un test temporaire : 732 px au plus (ligne Ensemble
 et avertissement « partie longue »), soit 8 px de marge sur 360 × 740 et 31 px sur 390 × 763.
+
+## 2026-11-09 — Cartouches au hasard : tirage sans remise dans la manche
+
+**Quoi.** `roundGifts` (`lib/models/fiesta/cartridge_gifts.dart`) tire les cartouches d'une équipe SANS remise
+au sein d'une manche : une équipe ne reçoit plus deux fois la même cartouche lors d'une même distribution. Chaque
+manche repart du vivier complet. Les poids (`kGiftWeights`, le ×2 trois fois plus rare) et la graine
+`(gameId, manche, équipe)` ne changent pas. Le prix du défi surprise (un seul tirage) n'est pas concerné.
+
+**Pourquoi.** Retour de Florent du 2026-11-07 au soir : recevoir deux fois la même cartouche dans la même manche
+appauvrissait le choix. Si une équipe doit recevoir plus de cartouches que le vivier n'en compte (petit vivier en
+M3), le vivier est remis en entier : les doublons n'apparaissent que dans ce cas, et le nombre de cartouches reçues
+ne change jamais.
+
+**Conséquence.** Aucune forme persistée ne change : les cartouches gagnées sont écrites dans `fiesta.earned`.
+Seul effet d'une mise à jour pendant une partie : un passage de manche rejoué après la mise à jour (retour arrière,
+correction) tire avec le nouvel algorithme et peut donner d'autres cartouches. C'est rare et sans crash.

@@ -86,9 +86,11 @@ int giftCount(
 }
 
 /// Cartouches gagnées au début de la manche `finishedRound + 1`, équipe par
-/// équipe dans l'ordre de [scores]. Chacune est tirée dans le vivier AVEC remise,
-/// selon son poids ([kGiftWeights]), à partir de la graine de l'équipe : la même
-/// cartouche peut sortir plusieurs fois. Vivier vide : rien. Le tirage d'une
+/// équipe dans l'ordre de [scores]. Chacune est tirée dans le vivier SANS remise,
+/// selon son poids ([kGiftWeights]), à partir de la graine de l'équipe : une
+/// équipe ne reçoit pas deux fois la même cartouche dans une manche, sauf si
+/// elle en reçoit plus que le vivier n'en compte (il est alors remis en entier).
+/// Chaque manche repart du vivier complet. Vivier vide : rien. Le tirage d'une
 /// équipe ne dépend pas des autres ni, à nombre égal, du score.
 List<EarnedCartridge> roundGifts({
   required FiestaRules rules,
@@ -140,8 +142,11 @@ Iterable<EarnedCartridge> _giftsOf({
   required Random random,
 }) sync* {
   if (pool.isEmpty) return;
+  var left = <ModifierDef>[];
   for (var i = 0; i < count; i++) {
-    final drawn = drawWeightedGift(pool, random);
+    if (left.isEmpty) left = List.of(pool);
+    final drawn = drawWeightedGift(left, random);
+    left.remove(drawn);
     yield EarnedCartridge(catalogId: drawn.id, teamId: teamId, round: round);
   }
 }
