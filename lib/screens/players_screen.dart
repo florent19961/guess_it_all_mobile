@@ -363,7 +363,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                                   _controllers[player.id]?.text.trim() ?? '';
                               final hasName = playerName.isNotEmpty;
                               // Mode aléatoire : les mots tirés restent cachés,
-                              // la carte affiche un badge non cliquable.
+                              // pas de bouton de mots.
                               final isRandom = provider.settings.wordChoice ==
                                   AppConstants.wordChoiceRandom;
 
@@ -406,67 +406,65 @@ class _PlayersScreenState extends State<PlayersScreen> {
                                         },
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
-                                    GestureDetector(
-                                      key: index == 0 ? _wordsKey : null,
-                                      onTap: hasName && !isRandom
-                                          ? () {
-                                              provider.setCurrentEditingPlayer(
-                                                  player.id);
-                                              provider.goToScreen(
-                                                  AppConstants.screenWords);
-                                            }
-                                          : null,
-                                      child: Opacity(
-                                        opacity:
-                                            hasName || isRandom ? 1.0 : 0.4,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 12, vertical: 10),
-                                          decoration: BoxDecoration(
-                                            color: isWordsFilled
-                                                ? AppColors.success
-                                                    .withOpacity(0.2)
-                                                : AppColors.error
-                                                    .withOpacity(0.2),
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                            border: Border.all(
+                                    if (!isRandom) ...[
+                                      const SizedBox(width: 12),
+                                      GestureDetector(
+                                        key: index == 0 ? _wordsKey : null,
+                                        onTap: hasName
+                                            ? () {
+                                                provider
+                                                    .setCurrentEditingPlayer(
+                                                        player.id);
+                                                provider.goToScreen(
+                                                    AppConstants.screenWords);
+                                              }
+                                            : null,
+                                        child: Opacity(
+                                          opacity: hasName ? 1.0 : 0.4,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 12, vertical: 10),
+                                            decoration: BoxDecoration(
                                               color: isWordsFilled
                                                   ? AppColors.success
-                                                  : AppColors.error,
-                                              width: 2,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(
-                                                isWordsFilled
-                                                    ? Icons.check_circle
-                                                    : Icons.edit_note,
-                                                size: 18,
+                                                      .withOpacity(0.2)
+                                                  : AppColors.error
+                                                      .withOpacity(0.2),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
                                                 color: isWordsFilled
                                                     ? AppColors.success
                                                     : AppColors.error,
+                                                width: 2,
                                               ),
-                                              const SizedBox(width: 6),
-                                              Text(
-                                                isRandom
-                                                    ? '$wordsCount mots prêts'
-                                                    : isWordsFilled
-                                                        ? 'Voir mots'
-                                                        : 'Saisir mots',
-                                                style: TextStyle(
-                                                  fontFamily: 'Poppins',
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w600,
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  isWordsFilled
+                                                      ? Icons.check_circle
+                                                      : Icons.edit_note,
+                                                  size: 18,
                                                   color: isWordsFilled
                                                       ? AppColors.success
                                                       : AppColors.error,
                                                 ),
-                                              ),
-                                              if (!isRandom) ...[
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  isWordsFilled
+                                                      ? 'Voir mots'
+                                                      : 'Saisir mots',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Poppins',
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: isWordsFilled
+                                                        ? AppColors.success
+                                                        : AppColors.error,
+                                                  ),
+                                                ),
                                                 const SizedBox(width: 4),
                                                 Icon(
                                                   Icons.chevron_right,
@@ -476,11 +474,11 @@ class _PlayersScreenState extends State<PlayersScreen> {
                                                       : AppColors.error,
                                                 ),
                                               ],
-                                            ],
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
+                                    ],
                                   ],
                                 ),
                               );

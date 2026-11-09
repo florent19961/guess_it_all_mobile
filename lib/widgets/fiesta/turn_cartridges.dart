@@ -100,20 +100,35 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
   void _showSnack(String text) {
     _snackTimer?.cancel();
     _snack?.remove();
-    final entry = OverlayEntry(
+    late final OverlayEntry entry;
+    void close() {
+      if (_snack != entry) return;
+      _snackTimer?.cancel();
+      entry.remove();
+      _snack = null;
+    }
+
+    // Glisser vers le bas ferme le message.
+    entry = OverlayEntry(
       builder: (context) => Positioned(
         left: 0,
         right: 0,
         bottom: 0,
-        child: Material(
-          color: AppColors.gray700,
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              child: Text(text,
-                  style: AppTextStyles.bodySmall
-                      .copyWith(fontSize: 14, color: Colors.white)),
+        child: Dismissible(
+          key: ObjectKey(entry),
+          direction: DismissDirection.down,
+          onDismissed: (_) => close(),
+          child: Material(
+            color: AppColors.gray700,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Text(text,
+                    style: AppTextStyles.bodySmall
+                        .copyWith(fontSize: 14, color: Colors.white)),
+              ),
             ),
           ),
         ),
@@ -121,10 +136,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
     );
     _snack = entry;
     Overlay.of(context).insert(entry);
-    _snackTimer = Timer(const Duration(seconds: 5), () {
-      entry.remove();
-      if (_snack == entry) _snack = null;
-    });
+    _snackTimer = Timer(const Duration(seconds: 3), close);
   }
 
   String _name(String id) => modifierById(id)?.name ?? id;
@@ -162,18 +174,15 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
   }
 
   /// La fenêtre des deux blocages : joueurs listés par équipe, le joueur se
-  /// choisit À L'ENVOI. Équipe de 2 joueurs grisée pour « Bloquer un devineur ».
+  /// choisit À L'ENVOI. Équipe qui ne peut pas le recevoir grisée, avec la
+  /// raison ([GameProvider.targetRefusal]).
   Future<({String team, String player})?> _pickPlayer(String id) {
     final me = _p.getCurrentTeam()?.id;
-    final possible = _p.targetsFor(id);
     return showModalBottomSheet<({String team, String player})>(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.backgroundMain,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        side: BorderSide(color: AppColors.malus, width: 2),
-      ),
+      shape: const SheetTopBorder(AppColors.malus),
       builder: (sheet) => SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 18, 16, 20),
@@ -193,7 +202,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                   _TeamPlayers(
                     team: team,
                     color: AppColors.getTeamColor(_p.teams.indexOf(team)),
-                    enabled: possible.contains(team),
+                    refusal: _p.targetRefusal(id, team),
                     nameOf: (playerId) =>
                         _p.getPlayerById(playerId)?.name ?? '',
                     onPick: (playerId) => Navigator.of(sheet)
@@ -261,10 +270,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
     return showModalBottomSheet<Team>(
       context: context,
       backgroundColor: AppColors.backgroundMain,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        side: BorderSide(color: AppColors.malus, width: 2),
-      ),
+      shape: const SheetTopBorder(AppColors.malus),
       builder: (sheet) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
@@ -288,6 +294,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                 _TeamButton(
                   team: team,
                   color: AppColors.getTeamColor(_p.teams.indexOf(team)),
+                  refusal: _p.targetRefusal(id, team),
                   onTap: () => Navigator.of(sheet).pop(team),
                 ),
                 const SizedBox(height: 10),
@@ -314,10 +321,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: AppColors.backgroundMain,
-      shape: RoundedRectangleBorder(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        side: BorderSide(color: color, width: 2),
-      ),
+      shape: SheetTopBorder(color),
       builder: (sheet) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
@@ -873,22 +877,24 @@ class _Circle extends StatelessWidget {
   }
 }
 
-/// Une équipe et ses joueurs dans la fenêtre des blocages. [enabled] faux : 2
-/// joueurs, impossible.
+/// Une équipe et ses joueurs dans la fenêtre des blocages. [refusal] : pourquoi
+/// elle ne peut pas le recevoir, grisée.
 class _TeamPlayers extends StatelessWidget {
   final Team team;
   final Color color;
-  final bool enabled;
+  final String? refusal;
   final String Function(String playerId) nameOf;
   final ValueChanged<String> onPick;
 
   const _TeamPlayers({
     required this.team,
     required this.color,
-    required this.enabled,
+    required this.refusal,
     required this.nameOf,
     required this.onPick,
   });
+
+  bool get enabled => refusal == null;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -898,9 +904,9 @@ class _TeamPlayers extends StatelessWidget {
           Text.rich(
             TextSpan(text: team.name, children: [
               if (!enabled)
-                const TextSpan(
-                  text: '  2 joueurs, impossible',
-                  style: TextStyle(
+                TextSpan(
+                  text: '  $refusal',
+                  style: const TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 11,
                       color: AppColors.gray400),
@@ -947,28 +953,48 @@ class _TeamPlayers extends StatelessWidget {
 
 /// Carte d'équipe de la feuille « Contre quelle équipe ? » (style habituel
 /// des cartes d'équipe : fond teinté, bordure, nom lisible sans ombre).
+/// [refusal] : pourquoi elle ne peut pas le recevoir, grisée et inactive.
 class _TeamButton extends StatelessWidget {
   final Team team;
   final Color color;
+  final String? refusal;
   final VoidCallback onTap;
 
   const _TeamButton(
-      {required this.team, required this.color, required this.onTap});
+      {required this.team,
+      required this.color,
+      required this.refusal,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: color, width: 2),
-          ),
-          child: Text(
-            team.name,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontFamily: 'Bangers', fontSize: 24, color: color),
+        onTap: refusal == null ? onTap : null,
+        child: Opacity(
+          opacity: refusal == null ? 1 : 0.35,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: color, width: 2),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  team.name,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontFamily: 'Bangers', fontSize: 24, color: color),
+                ),
+                if (refusal != null)
+                  Text(
+                    refusal!,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.bodySmall
+                        .copyWith(fontSize: 12, color: Colors.white),
+                  ),
+              ],
+            ),
           ),
         ),
       );

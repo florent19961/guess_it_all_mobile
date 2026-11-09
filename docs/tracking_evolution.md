@@ -1391,3 +1391,23 @@ ne change jamais.
 **Conséquence.** Aucune forme persistée ne change : les cartouches gagnées sont écrites dans `fiesta.earned`.
 Seul effet d'une mise à jour pendant une partie : un passage de manche rejoué après la mise à jour (retour arrière,
 correction) tire avec le nouvel algorithme et peut donner d'autres cartouches. C'est rare et sans crash.
+
+## 2026-11-09 — Retours de Florent du 2026-11-07 au soir : malus grisés à l'avance, messages et feuilles
+
+**Quoi.**
+- Un malus est grisé dans la réserve dès qu'aucune équipe adverse ne peut le recevoir : trop petite pour « Bloquer un
+  devineur » (déjà le cas), ou déjà visée par ce malus ou par un malus qui ne s'y cumule pas (nouveau). Dans « Contre
+  quelle équipe ? » et dans la fenêtre des blocages, l'équipe qui le refuserait est grisée, inactive, avec sa raison.
+  `GameProvider.targetRefusal` porte la règle ; `inflictMalus` garde son refus détaillé (même helper `_clashOn`).
+- Le message d'erreur en bas de l'avant-tour reste 3 s au lieu de 5, et glisser vers le bas le ferme.
+- Les 4 feuilles du bas (explication d'une cartouche ou d'un badge, choix d'équipe, blocages) n'ont plus de liseré
+  qu'en haut (`SheetTopBorder`).
+- Mode aléatoire : le badge « N mots prêts » disparaît de l'écran Joueurs, avec son étape d'aide.
+- Formation des équipes : un nom d'équipe long passe sur 2 lignes (18 caractères au plus, inchangé).
+
+**Pourquoi.** Le refus arrivait après le choix d'équipe, avec un long message qu'on ne pouvait pas fermer : griser à
+l'avance évite l'essai pour rien. Le refus de `inflictMalus` reste comme garde-fou, il n'est plus atteint depuis l'UI
+à 2 équipes.
+
+**Conséquence.** Aucune forme persistée ne change. Recette device (Android + iOS) : grisé et raison, glissement du
+message, liseré des feuilles, noms d'équipes sur 2 lignes avec 3 et 4 équipes.

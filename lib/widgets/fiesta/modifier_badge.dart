@@ -242,10 +242,7 @@ class ModifierBadge extends StatelessWidget {
     return showModalBottomSheet<void>(
       context: context,
       backgroundColor: AppColors.backgroundMain,
-      shape: RoundedRectangleBorder(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        side: BorderSide(color: color, width: 2),
-      ),
+      shape: SheetTopBorder(color),
       builder: (sheetContext) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
@@ -362,4 +359,42 @@ class ModifierBadges extends StatelessWidget {
           ...extra,
         ],
       );
+}
+
+/// Forme des feuilles du bas (explication d'un badge, choix d'une équipe) :
+/// coins du haut arrondis, liseré [color] sur le seul bord supérieur.
+class SheetTopBorder extends RoundedRectangleBorder {
+  final Color color;
+
+  static const _radius = 20.0;
+  static const _width = 2.0;
+
+  const SheetTopBorder(this.color)
+      : super(
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(_radius)));
+
+  @override
+  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
+    const h = _width / 2;
+    const arc = Radius.circular(_radius - h);
+    final path = Path()
+      ..moveTo(rect.left + h, rect.top + _radius)
+      ..arcToPoint(Offset(rect.left + _radius, rect.top + h), radius: arc)
+      ..lineTo(rect.right - _radius, rect.top + h)
+      ..arcToPoint(Offset(rect.right - h, rect.top + _radius), radius: arc);
+    canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = _width
+          ..color = color);
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is SheetTopBorder && other.color == color;
+
+  @override
+  int get hashCode => color.hashCode;
 }

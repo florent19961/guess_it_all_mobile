@@ -290,10 +290,14 @@ void main() {
           p.inflictMalus('block_giver', target.id,
               playerId: target.playerIds[0]),
           isNull);
+      // 2 équipes : la seule cible est déjà visée, la cartouche est grisée
+      // d'avance et un second envoi est ignoré.
+      final grey = p.reserve.firstWhere((c) => c.catalogId == 'block_giver');
+      expect(grey.blockedReason, startsWith('déjà infligé'));
       expect(
           p.inflictMalus('block_giver', target.id,
               playerId: target.playerIds[1]),
-          startsWith('Impossible'));
+          isNull);
       expect(left(p, 'block_giver'), 1, reason: 'rien consommé');
     });
 

@@ -306,11 +306,11 @@ void main() {
       expect(await walkHelp(tester), contains('Partie longue'));
     });
 
-    testWidgets('Aléatoire : l\'étape parle des mots prêts, pas de la saisie',
+    testWidgets('Aléatoire : pas d\'étape sur les mots, ni saisie ni badge',
         (tester) async {
       await pumpApp(tester, AppConstants.screenPlayers, random: true);
       await settle(tester);
-      expect(await walkHelp(tester), ['Les joueurs', 'Mots prêts', 'Suivant']);
+      expect(await walkHelp(tester), ['Les joueurs', 'Suivant']);
     });
   });
 

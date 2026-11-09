@@ -337,6 +337,11 @@ class _TeamCardState extends State<_TeamCard> {
                         controller: _nameController,
                         focusNode: _nameFocusNode,
                         maxLength: 18,
+                        // Un nom long passe sur 2 lignes ; Entrée valide.
+                        minLines: 1,
+                        maxLines: 2,
+                        keyboardType: TextInputType.text,
+                        textInputAction: TextInputAction.done,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontFamily: 'Bangers',
