@@ -144,7 +144,8 @@ void main() {
       expect(g.where((e) => e.teamId == 'a'), hasLength(2));
     });
 
-    test('sans remise dans la manche : jamais deux fois la même pour une '
+    test(
+        'sans remise dans la manche : jamais deux fois la même pour une '
         'équipe, le vivier remis en entier une fois épuisé', () {
       final rules = FiestaRules(allCount: 3);
       final size = pool(rules).length;
