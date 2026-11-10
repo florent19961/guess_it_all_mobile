@@ -1,0 +1,693 @@
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index f1f3f4c..5619769 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -1375,3 +1375,23 @@ Ligne « Ensemble : <nom> » hors Fiesta classique. Clavier ouvert sur Joueurs,
+ **Conséquence.** Aucune forme persistée ne change : `lastUsedId` était déjà facultatif, il disparaît simplement du blob.
+ Paramètres, mesuré avec les vraies polices (Poppins, Bangers) dans un test temporaire : 732 px au plus (ligne Ensemble
+ et avertissement « partie longue »), soit 8 px de marge sur 360 × 740 et 31 px sur 390 × 763.
++
++## 2026-11-09 — Retours de Florent du 2026-11-07 au soir : malus grisés à l'avance, messages et feuilles
++
++**Quoi.**
++- Un malus est grisé dans la réserve dès qu'aucune équipe adverse ne peut le recevoir : trop petite pour « Bloquer un
++  devineur » (déjà le cas), ou déjà visée par ce malus ou par un malus qui ne s'y cumule pas (nouveau). Dans « Contre
++  quelle équipe ? » et dans la fenêtre des blocages, l'équipe qui le refuserait est grisée, inactive, avec sa raison.
++  `GameProvider.targetRefusal` porte la règle ; `inflictMalus` garde son refus détaillé (même helper `_clashOn`).
++- Le message d'erreur en bas de l'avant-tour reste 3 s au lieu de 5, et glisser vers le bas le ferme.
++- Les 4 feuilles du bas (explication d'une cartouche ou d'un badge, choix d'équipe, blocages) n'ont plus de liseré
++  qu'en haut (`SheetTopBorder`).
++- Mode aléatoire : le badge « N mots prêts » disparaît de l'écran Joueurs, avec son étape d'aide.
++- Formation des équipes : un nom d'équipe long passe sur 2 lignes (18 caractères au plus, inchangé).
++
++**Pourquoi.** Le refus arrivait après le choix d'équipe, avec un long message qu'on ne pouvait pas fermer : griser à
++l'avance évite l'essai pour rien. Le refus de `inflictMalus` reste comme garde-fou, il n'est plus atteint depuis l'UI
++à 2 équipes.
++
++**Conséquence.** Aucune forme persistée ne change. Recette device (Android + iOS) : grisé et raison, glissement du
++message, liseré des feuilles, noms d'équipes sur 2 lignes avec 3 et 4 équipes.
+diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
+index 34ecc44..1efe4e4 100644
+--- a/lib/providers/game_provider.dart
++++ b/lib/providers/game_provider.dart
+@@ -1794,12 +1794,46 @@ class GameProvider extends ChangeNotifier {
+             'cette manche';
+       }
+     }
+-    if (targetsFor(def.id).isEmpty) {
++    final targets = targetsFor(def.id);
++    if (targets.isEmpty) {
+       return 'aucune équipe adverse n\'a 3 joueurs';
+     }
++    if (targets.every((t) => targetRefusal(def.id, t) != null)) {
++      return targets.length == 1
++          ? '${targetRefusal(def.id, targets.single)} à l\'équipe '
++              '${targets.single.name}'
++          : 'aucune équipe adverse ne peut le recevoir';
++    }
+     return null;
+   }
+ 
++  /// Malus déjà infligé à [targetTeamId] pour son prochain tour qui empêche de
++  /// lui infliger [catalogId] : le même, ou un malus qui ne s'y cumule pas.
++  ModifierInstance? _clashOn(String catalogId, String targetTeamId) => _game
++      .fiesta?.active
++      .where((m) =>
++          m.fromTeamId != null &&
++          m.teamId == targetTeamId &&
++          (m.catalogId == catalogId || !areCompatible(m.catalogId, catalogId)))
++      .firstOrNull;
++
++  /// Pourquoi [team] ne peut pas recevoir le malus [catalogId] de l'équipe qui
++  /// joue (`null` = elle peut) : trop petite pour « Bloquer un devineur », ou
++  /// déjà visée par ce malus ou par un malus qui ne s'y cumule pas. Sert à
++  /// griser avant le choix, plutôt que refuser après.
++  String? targetRefusal(String catalogId, Team team) {
++    if (catalogId == 'block_guesser' &&
++        !canBlockGuesser(team.playerIds.length)) {
++      return '2 joueurs, impossible';
++    }
++    final clash = _clashOn(catalogId, team.id);
++    if (clash == null) return null;
++    return clash.catalogId == catalogId
++        ? 'déjà infligé'
++        : 'ne se cumule pas avec ${modifierById(clash.catalogId)!.name}, '
++            'déjà infligé';
++  }
++
+   /// Allume / éteint le bonus [id] de la réserve pour ce tour.
+   void toggleBonus(String id) => _setCharge(id, _charge(id) == null);
+ 
+@@ -1845,24 +1879,22 @@ class GameProvider extends ChangeNotifier {
+       return null;
+     }
+     final target = getTeamById(targetTeamId)!.name;
+-    for (final m in fiesta!.active) {
+-      if (m.fromTeamId == null || m.teamId != targetTeamId) continue;
+-      final by = getTeamById(m.fromTeamId!)?.name ?? '?';
+-      if (m.catalogId == catalogId) {
++    final clash = _clashOn(catalogId, targetTeamId);
++    if (clash != null) {
++      final by = getTeamById(clash.fromTeamId!)?.name ?? '?';
++      if (clash.catalogId == catalogId) {
+         return 'Impossible : ${def.name} est déjà infligé à l\'équipe $target '
+             'par l\'équipe $by pour son prochain tour. Choisis un autre malus '
+             'ou attends.';
+       }
+-      if (!areCompatible(m.catalogId, catalogId)) {
+-        return 'Impossible : ${def.name} ne se cumule pas avec '
+-            '${modifierById(m.catalogId)!.name}, déjà infligé à l\'équipe '
+-            '$target par l\'équipe $by pour son prochain tour. Choisis un '
+-            'autre malus ou attends.';
+-      }
++      return 'Impossible : ${def.name} ne se cumule pas avec '
++          '${modifierById(clash.catalogId)!.name}, déjà infligé à l\'équipe '
++          '$target par l\'équipe $by pour son prochain tour. Choisis un '
++          'autre malus ou attends.';
+     }
+     final round = _game.currentRound;
+     _game = _game.copyWith(
+-      fiesta: fiesta.copyWith(
++      fiesta: fiesta!.copyWith(
+         active: [
+           ...fiesta.active,
+           ModifierInstance(
+@@ -1994,7 +2026,7 @@ class GameProvider extends ChangeNotifier {
+   // ========== ACTIONS - NAVIGATION ==========
+ 
+   void goToScreen(String screenName) {
+-    // En Aléatoire, les mots tirés ne se montrent jamais (badge « mots prêts »).
++    // En Aléatoire, les mots tirés ne se montrent jamais (pas de bouton de mots).
+     if (screenName == AppConstants.screenWords &&
+         _settings.wordChoice == AppConstants.wordChoiceRandom) {
+       return;
+diff --git a/lib/screens/players_screen.dart b/lib/screens/players_screen.dart
+index df64034..1d776a5 100644
+--- a/lib/screens/players_screen.dart
++++ b/lib/screens/players_screen.dart
+@@ -363,7 +363,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
+                                   _controllers[player.id]?.text.trim() ?? '';
+                               final hasName = playerName.isNotEmpty;
+                               // Mode aléatoire : les mots tirés restent cachés,
+-                              // la carte affiche un badge non cliquable.
++                              // pas de bouton de mots.
+                               final isRandom = provider.settings.wordChoice ==
+                                   AppConstants.wordChoiceRandom;
+ 
+@@ -406,67 +406,65 @@ class _PlayersScreenState extends State<PlayersScreen> {
+                                         },
+                                       ),
+                                     ),
+-                                    const SizedBox(width: 12),
+-                                    GestureDetector(
+-                                      key: index == 0 ? _wordsKey : null,
+-                                      onTap: hasName && !isRandom
+-                                          ? () {
+-                                              provider.setCurrentEditingPlayer(
+-                                                  player.id);
+-                                              provider.goToScreen(
+-                                                  AppConstants.screenWords);
+-                                            }
+-                                          : null,
+-                                      child: Opacity(
+-                                        opacity:
+-                                            hasName || isRandom ? 1.0 : 0.4,
+-                                        child: Container(
+-                                          padding: const EdgeInsets.symmetric(
+-                                              horizontal: 12, vertical: 10),
+-                                          decoration: BoxDecoration(
+-                                            color: isWordsFilled
+-                                                ? AppColors.success
+-                                                    .withOpacity(0.2)
+-                                                : AppColors.error
+-                                                    .withOpacity(0.2),
+-                                            borderRadius:
+-                                                BorderRadius.circular(12),
+-                                            border: Border.all(
++                                    if (!isRandom) ...[
++                                      const SizedBox(width: 12),
++                                      GestureDetector(
++                                        key: index == 0 ? _wordsKey : null,
++                                        onTap: hasName
++                                            ? () {
++                                                provider
++                                                    .setCurrentEditingPlayer(
++                                                        player.id);
++                                                provider.goToScreen(
++                                                    AppConstants.screenWords);
++                                              }
++                                            : null,
++                                        child: Opacity(
++                                          opacity: hasName ? 1.0 : 0.4,
++                                          child: Container(
++                                            padding: const EdgeInsets.symmetric(
++                                                horizontal: 12, vertical: 10),
++                                            decoration: BoxDecoration(
+                                               color: isWordsFilled
+                                                   ? AppColors.success
+-                                                  : AppColors.error,
+-                                              width: 2,
+-                                            ),
+-                                          ),
+-                                          child: Row(
+-                                            mainAxisSize: MainAxisSize.min,
+-                                            children: [
+-                                              Icon(
+-                                                isWordsFilled
+-                                                    ? Icons.check_circle
+-                                                    : Icons.edit_note,
+-                                                size: 18,
++                                                      .withOpacity(0.2)
++                                                  : AppColors.error
++                                                      .withOpacity(0.2),
++                                              borderRadius:
++                                                  BorderRadius.circular(12),
++                                              border: Border.all(
+                                                 color: isWordsFilled
+                                                     ? AppColors.success
+                                                     : AppColors.error,
++                                                width: 2,
+                                               ),
+-                                              const SizedBox(width: 6),
+-                                              Text(
+-                                                isRandom
+-                                                    ? '$wordsCount mots prêts'
+-                                                    : isWordsFilled
+-                                                        ? 'Voir mots'
+-                                                        : 'Saisir mots',
+-                                                style: TextStyle(
+-                                                  fontFamily: 'Poppins',
+-                                                  fontSize: 12,
+-                                                  fontWeight: FontWeight.w600,
++                                            ),
++                                            child: Row(
++                                              mainAxisSize: MainAxisSize.min,
++                                              children: [
++                                                Icon(
++                                                  isWordsFilled
++                                                      ? Icons.check_circle
++                                                      : Icons.edit_note,
++                                                  size: 18,
+                                                   color: isWordsFilled
+                                                       ? AppColors.success
+                                                       : AppColors.error,
+                                                 ),
+-                                              ),
+-                                              if (!isRandom) ...[
++                                                const SizedBox(width: 6),
++                                                Text(
++                                                  isWordsFilled
++                                                      ? 'Voir mots'
++                                                      : 'Saisir mots',
++                                                  style: TextStyle(
++                                                    fontFamily: 'Poppins',
++                                                    fontSize: 12,
++                                                    fontWeight: FontWeight.w600,
++                                                    color: isWordsFilled
++                                                        ? AppColors.success
++                                                        : AppColors.error,
++                                                  ),
++                                                ),
+                                                 const SizedBox(width: 4),
+                                                 Icon(
+                                                   Icons.chevron_right,
+@@ -476,11 +474,11 @@ class _PlayersScreenState extends State<PlayersScreen> {
+                                                       : AppColors.error,
+                                                 ),
+                                               ],
+-                                            ],
++                                            ),
+                                           ),
+                                         ),
+                                       ),
+-                                    ),
++                                    ],
+                                   ],
+                                 ),
+                               );
+diff --git a/lib/screens/teams_screen.dart b/lib/screens/teams_screen.dart
+index 0aca9a9..5963b57 100644
+--- a/lib/screens/teams_screen.dart
++++ b/lib/screens/teams_screen.dart
+@@ -337,6 +337,11 @@ class _TeamCardState extends State<_TeamCard> {
+                         controller: _nameController,
+                         focusNode: _nameFocusNode,
+                         maxLength: 18,
++                        // Un nom long passe sur 2 lignes ; Entrée valide.
++                        minLines: 1,
++                        maxLines: 2,
++                        keyboardType: TextInputType.text,
++                        textInputAction: TextInputAction.done,
+                         textAlign: TextAlign.center,
+                         style: TextStyle(
+                           fontFamily: 'Bangers',
+diff --git a/lib/widgets/CLAUDE.md b/lib/widgets/CLAUDE.md
+index 631a1c1..e993693 100644
+--- a/lib/widgets/CLAUDE.md
++++ b/lib/widgets/CLAUDE.md
+@@ -8,5 +8,5 @@ Widgets reutilisables organises en deux sous-repertoires.
+ |------------|------|
+ | `common/` | Composants UI reutilisables (boutons, inputs, modals, sliders, toggles) |
+ | `effects/` | Effets visuels et animations de fond |
+-| `fiesta/` | Annonces de partie (2-5) : `ModifierIcon(id, size)` (`modifier_badge.dart`), SEUL point d'affichage des icônes : `assets/icons/modifiers/<id>.png`, émojis calés d'un même centrage (`mime_no_arms`, `mime_eyes_closed` barrés par `slash.png`), repli texte pour `two_words` (historique) et un id inconnu, `ModifierBadge(s)` (`.turn` : mini-phrase `turnLabel`, `.catalog` : nom), `FiestaTurnZone` (`turn_cartridges.dart`, avant-tour « Actif pendant votre prochain tour / Votre réserve », cercles ~50 px qui rapetissent jusqu'à 36 px (la réserve seule jusqu'à 32 px) pour tenir sans défiler (la zone active sur plusieurs rangées, colonne Bonus ajustée) ; un cas extrême défile dans la zone, appui long = explication, feuille « Contre quelle équipe ? », fenêtre des blocages (joueurs par équipe, nommés à l'envoi), puces « Envoyé » (équipe visée, joueur nommé, ou « Envoyé » à 2 équipes), un appui annule, sans fenêtre ; couleurs : `modifierColor` = malus `AppColors.malus` (#F87171), bonus `AppColors.success` |
++| `fiesta/` | Annonces de partie (2-5) : `ModifierIcon(id, size)` (`modifier_badge.dart`), SEUL point d'affichage des icônes : `assets/icons/modifiers/<id>.png`, émojis calés d'un même centrage (`mime_no_arms`, `mime_eyes_closed` barrés par `slash.png`), repli texte pour `two_words` (historique) et un id inconnu, `ModifierBadge(s)` (`.turn` : mini-phrase `turnLabel`, `.catalog` : nom), `FiestaTurnZone` (`turn_cartridges.dart`, avant-tour « Actif pendant votre prochain tour / Votre réserve », cercles ~50 px qui rapetissent jusqu'à 36 px (la réserve seule jusqu'à 32 px) pour tenir sans défiler (la zone active sur plusieurs rangées, colonne Bonus ajustée) ; un cas extrême défile dans la zone, appui long = explication, feuille « Contre quelle équipe ? », fenêtre des blocages (joueurs par équipe, nommés à l'envoi) ; une équipe qui ne peut pas recevoir le malus y est grisée avec sa raison (`GameProvider.targetRefusal`), et un malus que personne ne peut recevoir est grisé dans la réserve ; message d'erreur en bas : 3 s, glisser vers le bas le ferme ; feuilles du bas en `SheetTopBorder` (`modifier_badge.dart`, liseré sur le seul bord supérieur), puces « Envoyé » (équipe visée, joueur nommé, ou « Envoyé » à 2 équipes), un appui annule, sans fenêtre ; couleurs : `modifierColor` = malus `AppColors.malus` (#F87171), bonus `AppColors.success` |
+ | `help/` | Aides de prise en main : `HelpButton` (« ? »), `CoachMarks` (voile + bulle, étapes `CoachStep` ciblées par `GlobalKey`), textes par écran (`help_content.dart`), `TutorialPager`, `FirstGamePrompt` (tuto des règles d'office au 1er « Jouer »), `FirstGameHelp` (aides auto de la 1re partie). Branchement écran par écran → `help/WIRING.md` |
+diff --git a/lib/widgets/fiesta/modifier_badge.dart b/lib/widgets/fiesta/modifier_badge.dart
+index f48ef53..23fabf1 100644
+--- a/lib/widgets/fiesta/modifier_badge.dart
++++ b/lib/widgets/fiesta/modifier_badge.dart
+@@ -242,10 +242,7 @@ class ModifierBadge extends StatelessWidget {
+     return showModalBottomSheet<void>(
+       context: context,
+       backgroundColor: AppColors.backgroundMain,
+-      shape: RoundedRectangleBorder(
+-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+-        side: BorderSide(color: color, width: 2),
+-      ),
++      shape: SheetTopBorder(color),
+       builder: (sheetContext) => SafeArea(
+         child: Padding(
+           padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+@@ -363,3 +360,41 @@ class ModifierBadges extends StatelessWidget {
+         ],
+       );
+ }
++
++/// Forme des feuilles du bas (explication d'un badge, choix d'une équipe) :
++/// coins du haut arrondis, liseré [color] sur le seul bord supérieur.
++class SheetTopBorder extends RoundedRectangleBorder {
++  final Color color;
++
++  static const _radius = 20.0;
++  static const _width = 2.0;
++
++  const SheetTopBorder(this.color)
++      : super(
++            borderRadius:
++                const BorderRadius.vertical(top: Radius.circular(_radius)));
++
++  @override
++  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
++    const h = _width / 2;
++    const arc = Radius.circular(_radius - h);
++    final path = Path()
++      ..moveTo(rect.left + h, rect.top + _radius)
++      ..arcToPoint(Offset(rect.left + _radius, rect.top + h), radius: arc)
++      ..lineTo(rect.right - _radius, rect.top + h)
++      ..arcToPoint(Offset(rect.right - h, rect.top + _radius), radius: arc);
++    canvas.drawPath(
++        path,
++        Paint()
++          ..style = PaintingStyle.stroke
++          ..strokeWidth = _width
++          ..color = color);
++  }
++
++  @override
++  bool operator ==(Object other) =>
++      other is SheetTopBorder && other.color == color;
++
++  @override
++  int get hashCode => color.hashCode;
++}
+diff --git a/lib/widgets/fiesta/turn_cartridges.dart b/lib/widgets/fiesta/turn_cartridges.dart
+index 8e6cde7..305b61a 100644
+--- a/lib/widgets/fiesta/turn_cartridges.dart
++++ b/lib/widgets/fiesta/turn_cartridges.dart
+@@ -100,20 +100,35 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+   void _showSnack(String text) {
+     _snackTimer?.cancel();
+     _snack?.remove();
+-    final entry = OverlayEntry(
++    late final OverlayEntry entry;
++    void close() {
++      if (_snack != entry) return;
++      _snackTimer?.cancel();
++      entry.remove();
++      _snack = null;
++    }
++
++    // Glisser vers le bas ferme le message.
++    entry = OverlayEntry(
+       builder: (context) => Positioned(
+         left: 0,
+         right: 0,
+         bottom: 0,
+-        child: Material(
+-          color: AppColors.gray700,
+-          child: SafeArea(
+-            top: false,
+-            child: Padding(
+-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+-              child: Text(text,
+-                  style: AppTextStyles.bodySmall
+-                      .copyWith(fontSize: 14, color: Colors.white)),
++        child: Dismissible(
++          key: ObjectKey(entry),
++          direction: DismissDirection.down,
++          onDismissed: (_) => close(),
++          child: Material(
++            color: AppColors.gray700,
++            child: SafeArea(
++              top: false,
++              child: Padding(
++                padding:
++                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
++                child: Text(text,
++                    style: AppTextStyles.bodySmall
++                        .copyWith(fontSize: 14, color: Colors.white)),
++              ),
+             ),
+           ),
+         ),
+@@ -121,10 +136,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+     );
+     _snack = entry;
+     Overlay.of(context).insert(entry);
+-    _snackTimer = Timer(const Duration(seconds: 5), () {
+-      entry.remove();
+-      if (_snack == entry) _snack = null;
+-    });
++    _snackTimer = Timer(const Duration(seconds: 3), close);
+   }
+ 
+   String _name(String id) => modifierById(id)?.name ?? id;
+@@ -162,18 +174,15 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+   }
+ 
+   /// La fenêtre des deux blocages : joueurs listés par équipe, le joueur se
+-  /// choisit À L'ENVOI. Équipe de 2 joueurs grisée pour « Bloquer un devineur ».
++  /// choisit À L'ENVOI. Équipe qui ne peut pas le recevoir grisée, avec la
++  /// raison ([GameProvider.targetRefusal]).
+   Future<({String team, String player})?> _pickPlayer(String id) {
+     final me = _p.getCurrentTeam()?.id;
+-    final possible = _p.targetsFor(id);
+     return showModalBottomSheet<({String team, String player})>(
+       context: context,
+       isScrollControlled: true,
+       backgroundColor: AppColors.backgroundMain,
+-      shape: const RoundedRectangleBorder(
+-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+-        side: BorderSide(color: AppColors.malus, width: 2),
+-      ),
++      shape: const SheetTopBorder(AppColors.malus),
+       builder: (sheet) => SafeArea(
+         child: SingleChildScrollView(
+           padding: const EdgeInsets.fromLTRB(16, 18, 16, 20),
+@@ -193,7 +202,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+                   _TeamPlayers(
+                     team: team,
+                     color: AppColors.getTeamColor(_p.teams.indexOf(team)),
+-                    enabled: possible.contains(team),
++                    refusal: _p.targetRefusal(id, team),
+                     nameOf: (playerId) =>
+                         _p.getPlayerById(playerId)?.name ?? '',
+                     onPick: (playerId) => Navigator.of(sheet)
+@@ -261,10 +270,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+     return showModalBottomSheet<Team>(
+       context: context,
+       backgroundColor: AppColors.backgroundMain,
+-      shape: const RoundedRectangleBorder(
+-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+-        side: BorderSide(color: AppColors.malus, width: 2),
+-      ),
++      shape: const SheetTopBorder(AppColors.malus),
+       builder: (sheet) => SafeArea(
+         child: Padding(
+           padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+@@ -288,6 +294,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+                 _TeamButton(
+                   team: team,
+                   color: AppColors.getTeamColor(_p.teams.indexOf(team)),
++                  refusal: _p.targetRefusal(id, team),
+                   onTap: () => Navigator.of(sheet).pop(team),
+                 ),
+                 const SizedBox(height: 10),
+@@ -314,10 +321,7 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+     showModalBottomSheet<void>(
+       context: context,
+       backgroundColor: AppColors.backgroundMain,
+-      shape: RoundedRectangleBorder(
+-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+-        side: BorderSide(color: color, width: 2),
+-      ),
++      shape: SheetTopBorder(color),
+       builder: (sheet) => SafeArea(
+         child: Padding(
+           padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+@@ -873,23 +877,25 @@ class _Circle extends StatelessWidget {
+   }
+ }
+ 
+-/// Une équipe et ses joueurs dans la fenêtre des blocages. [enabled] faux : 2
+-/// joueurs, impossible.
++/// Une équipe et ses joueurs dans la fenêtre des blocages. [refusal] : pourquoi
++/// elle ne peut pas le recevoir, grisée.
+ class _TeamPlayers extends StatelessWidget {
+   final Team team;
+   final Color color;
+-  final bool enabled;
++  final String? refusal;
+   final String Function(String playerId) nameOf;
+   final ValueChanged<String> onPick;
+ 
+   const _TeamPlayers({
+     required this.team,
+     required this.color,
+-    required this.enabled,
++    required this.refusal,
+     required this.nameOf,
+     required this.onPick,
+   });
+ 
++  bool get enabled => refusal == null;
++
+   @override
+   Widget build(BuildContext context) => Column(
+         crossAxisAlignment: CrossAxisAlignment.start,
+@@ -898,9 +904,9 @@ class _TeamPlayers extends StatelessWidget {
+           Text.rich(
+             TextSpan(text: team.name, children: [
+               if (!enabled)
+-                const TextSpan(
+-                  text: '  2 joueurs, impossible',
+-                  style: TextStyle(
++                TextSpan(
++                  text: '  $refusal',
++                  style: const TextStyle(
+                       fontFamily: 'Poppins',
+                       fontSize: 11,
+                       color: AppColors.gray400),
+@@ -947,28 +953,48 @@ class _TeamPlayers extends StatelessWidget {
+ 
+ /// Carte d'équipe de la feuille « Contre quelle équipe ? » (style habituel
+ /// des cartes d'équipe : fond teinté, bordure, nom lisible sans ombre).
++/// [refusal] : pourquoi elle ne peut pas le recevoir, grisée et inactive.
+ class _TeamButton extends StatelessWidget {
+   final Team team;
+   final Color color;
++  final String? refusal;
+   final VoidCallback onTap;
+ 
+   const _TeamButton(
+-      {required this.team, required this.color, required this.onTap});
++      {required this.team,
++      required this.color,
++      required this.refusal,
++      required this.onTap});
+ 
+   @override
+   Widget build(BuildContext context) => GestureDetector(
+-        onTap: onTap,
+-        child: Container(
+-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+-          decoration: BoxDecoration(
+-            color: color.withValues(alpha: 0.15),
+-            borderRadius: BorderRadius.circular(20),
+-            border: Border.all(color: color, width: 2),
+-          ),
+-          child: Text(
+-            team.name,
+-            textAlign: TextAlign.center,
+-            style: TextStyle(fontFamily: 'Bangers', fontSize: 24, color: color),
++        onTap: refusal == null ? onTap : null,
++        child: Opacity(
++          opacity: refusal == null ? 1 : 0.35,
++          child: Container(
++            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
++            decoration: BoxDecoration(
++              color: color.withValues(alpha: 0.15),
++              borderRadius: BorderRadius.circular(20),
++              border: Border.all(color: color, width: 2),
++            ),
++            child: Column(
++              children: [
++                Text(
++                  team.name,
++                  textAlign: TextAlign.center,
++                  style: TextStyle(
++                      fontFamily: 'Bangers', fontSize: 24, color: color),
++                ),
++                if (refusal != null)
++                  Text(
++                    refusal!,
++                    textAlign: TextAlign.center,
++                    style: AppTextStyles.bodySmall
++                        .copyWith(fontSize: 12, color: Colors.white),
++                  ),
++              ],
++            ),
+           ),
+         ),
+       );
+diff --git a/lib/widgets/help/WIRING.md b/lib/widgets/help/WIRING.md
+index e28642a..f89f712 100644
+--- a/lib/widgets/help/WIRING.md
++++ b/lib/widgets/help/WIRING.md
+@@ -31,7 +31,7 @@ résultats finaux en montrent.
+ |---|---|---|---|
+ | `home_screen` | `homeHelp(playLabel: …)` (« Jouer » ou « Nouvelle partie », le libellé du bouton) | `play` (« Jouer » **ou** « Nouvelle partie »), `resume` (« Reprendre »), `replay` (« Rejouer »), `rules`, `history` | `right: 16` |
+ | `settings_screen` | `settingsHelp(passPenalty: provider.settings.passPenalty)` | `counts` (cartes Joueurs + Équipes), `mode` (interrupteur Classique / Fiesta de la section « Mode de jeu »), `wordChoice`, `categories` (bouton Catégories & Difficultés), `longGame` (avertissement « partie longue », au-delà de 50 mots), `advanced` (bouton Avancés ; « Réinitialiser les paramètres » vit en bas de cette fenêtre) | `HelpButton.inline` en tête de la `Row` « ? » / Avancés |
+-| `players_screen` | `playersHelp(randomWords: …)` (texte du bouton de mots selon le mode) | `firstPlayer` (ligne du joueur 1), `words` (bouton Saisir/Voir mots du joueur 1), `next` | `right: 16` |
++| `players_screen` | `playersHelp(randomWords: …)` (en Aléatoire, pas de bouton de mots donc pas d'étape) | `firstPlayer` (ligne du joueur 1), `words` (bouton Saisir/Voir mots du joueur 1, absent en Aléatoire), `next` | `right: 16` |
+ | `fiesta_ensembles_screen` | `fiestaEnsemblesHelp(hasMine, full, hasDraft, selectedHasModifiers)` | `ready` (toute la liste ; la phrase sur les pastilles rouges et vertes seulement si la ligne dépliée en a), `firstMine` (1re ligne personnelle, toujours montée, absente sans ensemble personnel ; le crayon et la corbeille n'apparaissent qu'une fois un perso sélectionné, le texte le dit), `create` (titre selon l'état : créer, reprendre le brouillon, limite atteinte), `validate` (« Valider ») | `right: 16` |
+ | `fiesta_ensemble_editor_screen` | `fiestaEditorHelp(tab, hasCounts)` : seul le menu ouvert est expliqué | `tabs`, `menu` (le menu ouvert), `noDraw` (« Rien à tirer »), `locked` (1re ligne verrouillée du menu ouvert), `challenges` (cadre Défis surprises, ouvert), `save` (« Enregistrer ») | `right: 16` |
+ | `teams_screen` | `teamsHelp` | `firstTeam` (carte de la 1re équipe), `shuffle`, `incomplete` (message, si une équipe a moins de 2 joueurs), `start` (« Commencer ») | `right: 16` |
+diff --git a/lib/widgets/help/help_content.dart b/lib/widgets/help/help_content.dart
+index 25d9a66..c718a81 100644
+--- a/lib/widgets/help/help_content.dart
++++ b/lib/widgets/help/help_content.dart
+@@ -133,14 +133,8 @@ List<CoachStep> playersHelp({
+             'porter le même nom. Les prénoms sont gardés d\'une partie à '
+             'l\'autre : efface-en un pour le retirer.',
+       ),
+-      if (randomWords)
+-        CoachStep(
+-          target: words,
+-          title: 'Mots prêts',
+-          text: 'L\'app a tiré les mots de chaque joueur. Ils restent cachés '
+-              'jusqu\'au jeu.',
+-        )
+-      else
++      // Aléatoire : pas de bouton de mots, les mots tirés restent cachés.
++      if (!randomWords)
+         CoachStep(
+           target: words,
+           title: 'Les mots du joueur',
+diff --git a/test/providers/fiesta_cartridges_test.dart b/test/providers/fiesta_cartridges_test.dart
+index f021b65..328888e 100644
+--- a/test/providers/fiesta_cartridges_test.dart
++++ b/test/providers/fiesta_cartridges_test.dart
+@@ -270,4 +270,34 @@ void main() {
+     playTurn(p);
+     expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null), isEmpty);
+   });
++
++  test(
++      'Malus que personne ne peut recevoir : grisé AVANT le choix d\'équipe '
++      '(retours 2026-11-07) ; à 3 équipes, seule la cible déjà visée est '
++      'refusée', () async {
++    // 2 équipes : la seule cible a déjà ce malus, la cartouche restante est
++    // grisée avec la raison.
++    var p = await givenProvider(['Ana', 'Bob']);
++    await p.startGame(fiesta: stock(['minus_10s', 'reversed']));
++    final b = p.teams.firstWhere((t) => t.id != p.getCurrentTeam()!.id);
++    expect(p.inflictMalus('minus_10s', b.id), isNull);
++    final grey = p.reserve.firstWhere((c) => c.catalogId == 'minus_10s');
++    expect([grey.left, grey.usable], [1, isFalse]);
++    expect(grey.blockedReason, 'déjà infligé à l\'équipe ${b.name}');
++    expect(
++        p.reserve.firstWhere((c) => c.catalogId == 'reversed').usable, isTrue);
++
++    // 3 équipes : a vise c ; au tour de b, c est refusée, a reste possible.
++    p = await givenProvider(['Ana', 'Bob', 'Cid']);
++    await p.startGame(fiesta: stock(['minus_10s']));
++    final a = playTurn(p);
++    playTurn(p);
++    final c = playTurn(p);
++    expect(p.getCurrentTeam()!.id, a);
++    expect(p.inflictMalus('minus_10s', c), isNull);
++    playTurn(p);
++    expect(p.reserve.single.usable, isTrue);
++    expect(p.targetRefusal('minus_10s', p.getTeamById(c)!), 'déjà infligé');
++    expect(p.targetRefusal('minus_10s', p.getTeamById(a)!), isNull);
++  });
+ }
+diff --git a/test/providers/fiesta_v4_test.dart b/test/providers/fiesta_v4_test.dart
+index 4fa2561..2627166 100644
+--- a/test/providers/fiesta_v4_test.dart
++++ b/test/providers/fiesta_v4_test.dart
+@@ -290,10 +290,14 @@ void main() {
+           p.inflictMalus('block_giver', target.id,
+               playerId: target.playerIds[0]),
+           isNull);
++      // 2 équipes : la seule cible est déjà visée, la cartouche est grisée
++      // d'avance et un second envoi est ignoré.
++      final grey = p.reserve.firstWhere((c) => c.catalogId == 'block_giver');
++      expect(grey.blockedReason, startsWith('déjà infligé'));
+       expect(
+           p.inflictMalus('block_giver', target.id,
+               playerId: target.playerIds[1]),
+-          startsWith('Impossible'));
++          isNull);
+       expect(left(p, 'block_giver'), 1, reason: 'rien consommé');
+     });
+ 
+diff --git a/test/widgets/help_conditional_test.dart b/test/widgets/help_conditional_test.dart
+index d5e55ee..1cd5b25 100644
+--- a/test/widgets/help_conditional_test.dart
++++ b/test/widgets/help_conditional_test.dart
+@@ -306,11 +306,11 @@ void main() {
+       expect(await walkHelp(tester), contains('Partie longue'));
+     });
+ 
+-    testWidgets('Aléatoire : l\'étape parle des mots prêts, pas de la saisie',
++    testWidgets('Aléatoire : pas d\'étape sur les mots, ni saisie ni badge',
+         (tester) async {
+       await pumpApp(tester, AppConstants.screenPlayers, random: true);
+       await settle(tester);
+-      expect(await walkHelp(tester), ['Les joueurs', 'Mots prêts', 'Suivant']);
++      expect(await walkHelp(tester), ['Les joueurs', 'Suivant']);
+     });
+   });
+ 

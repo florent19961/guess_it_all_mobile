@@ -133,14 +133,8 @@ List<CoachStep> playersHelp({
             'porter le même nom. Les prénoms sont gardés d\'une partie à '
             'l\'autre : efface-en un pour le retirer.',
       ),
-      if (randomWords)
-        CoachStep(
-          target: words,
-          title: 'Mots prêts',
-          text: 'L\'app a tiré les mots de chaque joueur. Ils restent cachés '
-              'jusqu\'au jeu.',
-        )
-      else
+      // Aléatoire : pas de bouton de mots, les mots tirés restent cachés.
+      if (!randomWords)
         CoachStep(
           target: words,
           title: 'Les mots du joueur',

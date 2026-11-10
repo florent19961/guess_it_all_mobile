@@ -270,4 +270,37 @@ void main() {
     playTurn(p);
     expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null), isEmpty);
   });
+
+  test(
+      'Malus que personne ne peut recevoir : grisé AVANT le choix d\'équipe '
+      '(retours 2026-11-07) ; à 3 équipes, seule la cible déjà visée est '
+      'refusée', () async {
+    // 2 équipes : la seule cible a déjà ce malus, la cartouche restante est
+    // grisée avec la raison.
+    var p = await givenProvider(['Ana', 'Bob']);
+    await p.startGame(fiesta: stock(['minus_10s', 'reversed']));
+    final b = p.teams.firstWhere((t) => t.id != p.getCurrentTeam()!.id);
+    expect(p.inflictMalus('minus_10s', b.id), isNull);
+    final grey = p.reserve.firstWhere((c) => c.catalogId == 'minus_10s');
+    expect([grey.left, grey.usable], [1, isFalse]);
+    expect(grey.blockedReason, 'déjà infligé à l\'équipe ${b.name}');
+    expect(
+        p.reserve.firstWhere((c) => c.catalogId == 'reversed').usable, isTrue);
+
+    // 3 équipes : a vise c ; au tour de b, c est refusée, a reste possible.
+    p = await givenProvider(['Ana', 'Bob', 'Cid']);
+    await p.startGame(fiesta: stock(['minus_10s']));
+    final a = playTurn(p);
+    playTurn(p);
+    final c = playTurn(p);
+    expect(p.getCurrentTeam()!.id, a);
+    expect(p.inflictMalus('minus_10s', c), isNull);
+    playTurn(p);
+    expect(p.reserve.single.usable, isTrue);
+    expect(p.targetRefusal('minus_10s', p.getTeamById(c)!), 'déjà infligé');
+    expect(p.inflictMalus('minus_10s', c), startsWith('Impossible'),
+        reason: 'grisé = refusé');
+    expect(left(p, 'minus_10s'), 2, reason: 'rien consommé');
+    expect(p.targetRefusal('minus_10s', p.getTeamById(a)!), isNull);
+  });
 }

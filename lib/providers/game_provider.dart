@@ -1794,10 +1794,44 @@ class GameProvider extends ChangeNotifier {
             'cette manche';
       }
     }
-    if (targetsFor(def.id).isEmpty) {
+    final targets = targetsFor(def.id);
+    if (targets.isEmpty) {
       return 'aucune équipe adverse n\'a 3 joueurs';
     }
+    if (targets.every((t) => targetRefusal(def.id, t) != null)) {
+      return targets.length == 1
+          ? '${targetRefusal(def.id, targets.single)} à l\'équipe '
+              '${targets.single.name}'
+          : 'aucune équipe adverse ne peut le recevoir';
+    }
     return null;
+  }
+
+  /// Malus déjà infligé à [targetTeamId] pour son prochain tour qui empêche de
+  /// lui infliger [catalogId] : le même, ou un malus qui ne s'y cumule pas.
+  ModifierInstance? _clashOn(String catalogId, String targetTeamId) => _game
+      .fiesta?.active
+      .where((m) =>
+          m.fromTeamId != null &&
+          m.teamId == targetTeamId &&
+          (m.catalogId == catalogId || !areCompatible(m.catalogId, catalogId)))
+      .firstOrNull;
+
+  /// Pourquoi [team] ne peut pas recevoir le malus [catalogId] de l'équipe qui
+  /// joue (`null` = elle peut) : trop petite pour « Bloquer un devineur », ou
+  /// déjà visée par ce malus ou par un malus qui ne s'y cumule pas. Sert à
+  /// griser avant le choix, plutôt que refuser après.
+  String? targetRefusal(String catalogId, Team team) {
+    if (catalogId == 'block_guesser' &&
+        !canBlockGuesser(team.playerIds.length)) {
+      return '2 joueurs, impossible';
+    }
+    final clash = _clashOn(catalogId, team.id);
+    if (clash == null) return null;
+    return clash.catalogId == catalogId
+        ? 'déjà infligé'
+        : 'ne se cumule pas avec ${modifierById(clash.catalogId)!.name}, '
+            'déjà infligé';
   }
 
   /// Allume / éteint le bonus [id] de la réserve pour ce tour.
@@ -1845,24 +1879,22 @@ class GameProvider extends ChangeNotifier {
       return null;
     }
     final target = getTeamById(targetTeamId)!.name;
-    for (final m in fiesta!.active) {
-      if (m.fromTeamId == null || m.teamId != targetTeamId) continue;
-      final by = getTeamById(m.fromTeamId!)?.name ?? '?';
-      if (m.catalogId == catalogId) {
+    final clash = _clashOn(catalogId, targetTeamId);
+    if (clash != null) {
+      final by = getTeamById(clash.fromTeamId!)?.name ?? '?';
+      if (clash.catalogId == catalogId) {
         return 'Impossible : ${def.name} est déjà infligé à l\'équipe $target '
             'par l\'équipe $by pour son prochain tour. Choisis un autre malus '
             'ou attends.';
       }
-      if (!areCompatible(m.catalogId, catalogId)) {
-        return 'Impossible : ${def.name} ne se cumule pas avec '
-            '${modifierById(m.catalogId)!.name}, déjà infligé à l\'équipe '
-            '$target par l\'équipe $by pour son prochain tour. Choisis un '
-            'autre malus ou attends.';
-      }
+      return 'Impossible : ${def.name} ne se cumule pas avec '
+          '${modifierById(clash.catalogId)!.name}, déjà infligé à l\'équipe '
+          '$target par l\'équipe $by pour son prochain tour. Choisis un '
+          'autre malus ou attends.';
     }
     final round = _game.currentRound;
     _game = _game.copyWith(
-      fiesta: fiesta.copyWith(
+      fiesta: fiesta!.copyWith(
         active: [
           ...fiesta.active,
           ModifierInstance(
@@ -1994,7 +2026,7 @@ class GameProvider extends ChangeNotifier {
   // ========== ACTIONS - NAVIGATION ==========
 
   void goToScreen(String screenName) {
-    // En Aléatoire, les mots tirés ne se montrent jamais (badge « mots prêts »).
+    // En Aléatoire, les mots tirés ne se montrent jamais (pas de bouton de mots).
     if (screenName == AppConstants.screenWords &&
         _settings.wordChoice == AppConstants.wordChoiceRandom) {
       return;
