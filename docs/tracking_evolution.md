@@ -1411,3 +1411,15 @@ l'avance évite l'essai pour rien. Le refus de `inflictMalus` reste comme garde-
 
 **Conséquence.** Aucune forme persistée ne change. Recette device (Android + iOS) : grisé et raison, glissement du
 message, liseré des feuilles, noms d'équipes sur 2 lignes avec 3 et 4 équipes.
+
+## 2026-11-10 — Version 1.4.0+13
+
+**Quoi.** `pubspec.yaml` passe à `1.4.0+13`. Le tag `v1.4.0+13` lance le workflow Codemagic `release`.
+La version embarque les PR #58 (malus grisés d'avance, message d'erreur plus court et fermable, liseré des feuilles du
+bas, plus de badge « mots prêts » en Aléatoire, noms d'équipes sur 2 lignes) et #59 (cartouches au hasard sans remise
+dans la manche).
+
+**Pourquoi.** Florent veut tester ces retours sur device. 1.4.0 : un lot de fonctionnalités = une version mineure,
+comme pour 1.2.0 puis 1.3.0. `+13` : le build number doit strictement augmenter après `+12`.
+
+**Conséquence.** Rien ne part au public sans une action manuelle dans les stores.
