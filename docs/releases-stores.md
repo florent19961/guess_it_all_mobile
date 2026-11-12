@@ -169,19 +169,37 @@ par Florent sur le tag `vX.Y.Z+N`, fait sortir le build `X.Y.Z (N)`. Il apparaî
 une fois traité par Apple (`VALID`, compter 10 à 30 min après la fin du workflow). S'il est absent, le
 workflow tourne encore, n'a pas été lancé ou a échoué : seul Florent le voit dans Codemagic.
 
-**Soumettre une version (procédure cible, PAS ENCORE EXERCÉE)** — chaque écriture sur go explicite
-de Florent :
+**Soumettre une version — procédure exercée le 2026-11-12 (1.4.0+13)**, chaque écriture sur go
+explicite de Florent. JWT identique à la lecture, requêtes JSON:API sur `https://api.appstoreconnect.apple.com` :
 
-1. Le build `X.Y.Z (N)` est `VALID` (`asc.py builds`).
-2. La version `X.Y.Z` existe côté App Store (`asc.py versions`), sinon la créer.
-3. Rattacher le build à la version, remplir « Nouveautés » (localisation `fr-FR`).
-4. Soumettre à la revue, avec une sortie **manuelle** : Florent clique « Publier » après validation
-   (`upgrader` force la mise à jour de tout le parc).
+1. **Build prêt** : `asc.py builds` → `X.Y.Z+N` en `VALID`.
+2. **Chiffrement** : un build arrive avec `usesNonExemptEncryption: null` (la clé `ITSAppUsesNonExemptEncryption`
+   manque dans `ios/Runner/Info.plist`). Tous les builds ont été déclarés `false` (HTTPS standard seulement) :
+   `PATCH /v1/builds/{id}` `{"usesNonExemptEncryption": false}`.
+3. **Rattacher** : `PATCH /v1/appStoreVersions/{version}/relationships/build` `{"data": {"type": "builds", "id": …}}` (204).
+4. **Textes** : `PATCH /v1/appStoreVersionLocalizations/{loc}` `{"whatsNew": …, "promotionalText": …}` (fiche
+   `fr-FR` seulement). Localisations : `GET /v1/appStoreVersions/{version}/appStoreVersionLocalizations`.
+5. **Sortie** : `PATCH /v1/appStoreVersions/{version}` `{"releaseType": "AFTER_APPROVAL" | "MANUAL"}`. Décision Florent
+   du 2026-11-12 : **publier dès l'acceptation** (`AFTER_APPROVAL`).
+6. **Captures** (si besoin) : séries par appareil via
+   `GET /v1/appStoreVersionLocalizations/{loc}/appScreenshotSets?include=appScreenshots`. iPhone = `APP_IPHONE_65`,
+   **1284 × 2778**, JPEG RGB (redimensionner à 1284 de large sans déformer, rogner le reste) ; iPad =
+   `APP_IPAD_PRO_3GEN_129`, 2048 × 2732. Envoi : `POST /v1/appScreenshots` (`fileName`, `fileSize`, relation
+   `appScreenshotSet`) → exécuter chaque `uploadOperations` tel que renvoyé (méthode, URL, en-têtes, morceau) →
+   `PATCH /v1/appScreenshots/{id}` `{"uploaded": true, "sourceFileChecksum": <md5>}` → attendre
+   `assetDeliveryState.state = COMPLETE`. Ordre : `PATCH /v1/appScreenshotSets/{set}/relationships/appScreenshots`
+   avec la liste ordonnée. Retrait : `DELETE /v1/appScreenshots/{id}`. Sauvegarder l'ancienne d'abord (`imageAsset.templateUrl`).
+7. **Soumettre** (API *Review Submissions*) : `POST /v1/reviewSubmissions` (`platform: IOS`, relation `app`) →
+   `POST /v1/reviewSubmissionItems` (relations `reviewSubmission` + `appStoreVersion`) →
+   `PATCH /v1/reviewSubmissions/{id}` `{"submitted": true}` → la version passe `WAITING_FOR_REVIEW`.
 
-`asc.py` ne fait que des lectures. Les écritures (étapes 2 à 4) s'ajoutent au premier usage réel,
-après lecture de la doc Apple à jour : l'ancien endpoint de soumission de version est déprécié au
-profit des *Review Submissions*. Un 200 en lecture ne prouve pas que le rôle peut écrire. Les captures
-d'écran restent manuelles.
+Piège rencontré : un 409 `STATE_ERROR.ENTITY_STATE_INVALID` à l'étape 7 liste dans `meta.associatedErrors` ce qui
+manque. Le 2026-11-12, c'était une nouvelle question de la classification par âge (`socialMedia`), à laquelle on a
+répondu `false` : `PATCH /v1/ageRatingDeclarations/{id}` (l'id est celui de l'`appInfo` en `PREPARE_FOR_SUBMISSION`,
+via `GET /v1/apps/{app}/appInfos?include=ageRatingDeclaration`). Apple ajoute des questions de temps en temps : relire
+l'erreur et y répondre comme les précédentes (tout à « non »/« aucun » pour ce jeu), en le signalant à Florent.
+
+`asc.py` reste en lecture ; les écritures se font avec un petit script ponctuel qui réutilise la même signature JWT.
 
 ## Google Play depuis WSL (compte de service)
 
@@ -201,7 +219,16 @@ Vérifié le 2026-11-12 : un brouillon d'édition ouvert, ses pistes lues, puis 
 Pistes à cette date : production `1.1.3` (versionCode 8), alpha `1.1.2` (7), internal `1.0.0` (2). Le
 prochain AAB doit avoir un versionCode > 8 (le `+N` de `pubspec.yaml`, actuellement 13).
 
-Pas encore exercé : l'envoi d'un AAB et la mise à jour des notes de version. L'AAB vient de Codemagic
-(artefact téléchargé par Florent, le bloc `google_play` de `codemagic.yaml` restant coupé). Toute écriture
-se fait sur go explicite de Florent.
+**Publier un AAB — procédure exercée le 2026-11-12 (1.4.0, versionCode 13)**, sur go explicite de Florent.
+L'AAB vient des artefacts du run Codemagic, téléchargé par Florent dans `C:\Users\flore\Downloads\`. Vérifier
+d'abord `versionName` : `unzip -p <aab> base/manifest/AndroidManifest.xml | strings | grep -A1 versionName`.
 
+1. `POST …/edits` → id d'édition (brouillon, rien de public tant qu'il n'est pas validé).
+2. `POST https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/<package>/edits/<id>/bundles?uploadType=media`,
+   corps = l'AAB (`application/octet-stream`) → renvoie le `versionCode` (doit dépasser celui de la production).
+3. `PUT …/edits/<id>/tracks/production` : `releases: [{name, versionCodes: ["N"], status: "completed",
+   releaseNotes: [{language: "fr-FR", text}]}]`. 🔴 Notes limitées à **500 caractères** par langue (fiche `fr-FR` seule).
+4. `POST …/edits/<id>:validate`, puis `POST …/edits/<id>:commit`. Google passe la version en revue et la publie
+   seul ensuite (pas de publication gérée). En cas d'erreur avant le commit : `DELETE …/edits/<id>`.
+
+Contrôle : relire les pistes (étape 1, puis `GET …/edits/<id>/tracks`, puis supprimer le brouillon).
