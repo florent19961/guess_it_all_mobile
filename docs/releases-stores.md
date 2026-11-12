@@ -219,7 +219,16 @@ Vérifié le 2026-11-12 : un brouillon d'édition ouvert, ses pistes lues, puis 
 Pistes à cette date : production `1.1.3` (versionCode 8), alpha `1.1.2` (7), internal `1.0.0` (2). Le
 prochain AAB doit avoir un versionCode > 8 (le `+N` de `pubspec.yaml`, actuellement 13).
 
-Pas encore exercé : l'envoi d'un AAB et la mise à jour des notes de version. L'AAB vient de Codemagic
-(artefact téléchargé par Florent, le bloc `google_play` de `codemagic.yaml` restant coupé). Toute écriture
-se fait sur go explicite de Florent.
+**Publier un AAB — procédure exercée le 2026-11-12 (1.4.0, versionCode 13)**, sur go explicite de Florent.
+L'AAB vient des artefacts du run Codemagic, téléchargé par Florent dans `C:\Users\flore\Downloads\`. Vérifier
+d'abord `versionName` : `unzip -p <aab> base/manifest/AndroidManifest.xml | strings | grep -A1 versionName`.
 
+1. `POST …/edits` → id d'édition (brouillon, rien de public tant qu'il n'est pas validé).
+2. `POST https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/<package>/edits/<id>/bundles?uploadType=media`,
+   corps = l'AAB (`application/octet-stream`) → renvoie le `versionCode` (doit dépasser celui de la production).
+3. `PUT …/edits/<id>/tracks/production` : `releases: [{name, versionCodes: ["N"], status: "completed",
+   releaseNotes: [{language: "fr-FR", text}]}]`. 🔴 Notes limitées à **500 caractères** par langue (fiche `fr-FR` seule).
+4. `POST …/edits/<id>:validate`, puis `POST …/edits/<id>:commit`. Google passe la version en revue et la publie
+   seul ensuite (pas de publication gérée). En cas d'erreur avant le commit : `DELETE …/edits/<id>`.
+
+Contrôle : relire les pistes (étape 1, puis `GET …/edits/<id>/tracks`, puis supprimer le brouillon).

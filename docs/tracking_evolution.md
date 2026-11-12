@@ -1452,5 +1452,6 @@ Paramètres remplacée (fiche iPhone, 7ᵉ position), sortie automatique dès ac
 données en son nom, alignées sur l'existant : chiffrement non exempté = `false` (comme tous les builds) et nouvelle
 question d'âge « réseaux sociaux » = `false`.
 
-**Conséquence.** La 1.4.0 sortira seule après la revue Apple, et `upgrader` la poussera à tout le parc. Google Play
-attend l'AAB du run Codemagic. Fiche iPad non mise à jour (anciens écrans accueil et Paramètres).
+**Conséquence.** La 1.4.0 sortira seule après la revue Apple, et `upgrader` la poussera à tout le parc. Google Play : AAB `1.4.0` (versionCode 13)
+envoyé en production le même jour par l'API, avec des notes condensées (500 caractères au plus), publié par Google
+après sa revue. Fiche iPad non mise à jour (anciens écrans accueil et Paramètres).
