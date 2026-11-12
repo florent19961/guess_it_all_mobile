@@ -172,4 +172,5 @@ symlinks **relatifs** de `.claude/skills/`, mais **sélectif** : le contenu suit
 scripts/run-full-suite.sh          # plancher déterministe (format + analyze + test)
 scripts/with-test-slot.sh <cmd>    # sémaphore RAM machine-global (obligatoire)
 scripts/sync-agent-memory.sh       # backup de l'auto-memory vers docs/agent-memory/
+python3 -I scripts/asc.py builds   # App Store Connect en lecture (clé d'équipe, docs/releases-stores.md)
 ```

@@ -115,10 +115,14 @@ Pas de branche « prod » : ce qui est publié est un **build soumis**, matéria
 2. Bump `pubspec.yaml` → `version: X.Y.Z+N` — **`+N` strictement croissant** (derniers builds en
    store : board, `epic-6-release-cloud`).
 3. Commit `chore(release): vX.Y.Z+N`, `git tag -a vX.Y.Z+N`, `git push --follow-tags`.
-4. Le tag lance le workflow Codemagic **`release`** (`codemagic.yaml`) : garde tag = version
+4. 🔴 Florent lance à la main le workflow Codemagic **`release`** sur ce tag ; un agent ne peut ni le
+   lancer ni le suivre (pas de token d'API Codemagic, `docs/releases-stores.md`). Le workflow (`codemagic.yaml`) : garde tag = version
    pubspec, puis AAB + IPA. 🔴 **Publication désactivée** jusqu'à la 1re release post-Fiesta (go
    Florent). Secrets, `dry-run`, activation : `docs/releases-stores.md` §Codemagic.
-5. Entrée datée dans `docs/tracking_evolution.md`.
+5. Vérifier depuis WSL que le build est arrivé chez Apple : `python3 -I scripts/asc.py builds`
+   (`X.Y.Z+N` en `VALID`). La soumission à la revue se pilote avec la clé d'équipe locale, sur go
+   Florent : `docs/releases-stores.md` §App Store Connect depuis WSL.
+6. Entrée datée dans `docs/tracking_evolution.md`.
 
 ⚠️ `upgrader` force la mise à jour : une release atteint tout le parc. Un bug de persistance
 embarqué est irrattrapable côté données déjà écrites.

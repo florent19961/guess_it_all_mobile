@@ -124,9 +124,84 @@ via l'intégration `Guess It All (flow data)` — d'où l'absence de `DEVELOPMEN
 
 ### Couper une release (quand la publication sera ouverte)
 
-Runbook : skill `guessitall-workflow` §Release. Côté Codemagic, c'est le **push du tag**
-`vX.Y.Z+N` qui lance `release` ; un tag qui ne correspond pas à `pubspec.yaml` échoue en première
+Runbook : skill `guessitall-workflow` §Release. Côté Codemagic, le **push du tag**
+`vX.Y.Z+N` devrait lancer `release`, mais en pratique ce n'est pas le cas : 🔴 **Florent lance le build
+à la main dans Codemagic** (constat du 2026-11-12, le déclencheur sur tag ne part pas). Un agent ne
+peut ni lancer ni suivre un build : aucun token d'API Codemagic n'est configuré, et Florent ne
+souhaite pas en créer. Après un tag, l'agent dit donc « lance `release` dans Codemagic », jamais
+« le tag lance le build ». Le build se contrôle ensuite à son arrivée chez Apple (`asc.py builds`).
+Rappel : la garde du workflow exige un tag égal à la version de `pubspec.yaml` ; un tag qui ne correspond pas à `pubspec.yaml` échoue en première
 étape, avant tout build. `flutter: 3.44.8` est épinglé dans `codemagic.yaml` : le bumper en même
 temps que le SDK de dev.
 
 Une entrée datée dans `docs/tracking_evolution.md` clôt toute release.
+
+## App Store Connect depuis WSL (clé API d'équipe)
+
+Codemagic **builde** l'IPA et l'**envoie** dans App Store Connect avec sa propre clé (intégration
+`Guess It All (flow data)`, inchangée). Tout ce qui vient **après** le build se pilote depuis WSL
+avec une clé d'équipe locale : état des builds, rattachement à la version, textes, soumission.
+
+| Élément | Valeur |
+|---|---|
+| Fichier de la clé | `/mnt/c/Users/flore/.stores/AuthKey_3HXC7Q7999.p8` (Windows : `C:\Users\flore\.stores\`) |
+| Key ID | `3HXC7Q7999` |
+| Issuer ID | `87c6e544-ee5c-4964-93ac-4d4fef23acb7` |
+| Rôle | Gestionnaire d'app (App Manager) ; clé d'équipe, valable pour toutes les apps du compte |
+| Apple ID de l'app | `6756429415` (bundle `com.guessitall.guessItAllMobile`) |
+
+Key ID et Issuer ID ne sont pas secrets (décision Florent). 🔴 Le `.p8` l'est : ne jamais afficher son
+contenu, ni le copier dans le dépôt (PUBLIC) ou dans un dossier synchronisé. Si un outil exige une
+copie : fichier temporaire en `chmod 600`, supprimé après usage. Clé compromise : la révoquer dans
+App Store Connect → Utilisateurs et accès → Intégrations.
+
+Authentification : JWT ES256, en-tête `kid` = Key ID, claims `iss` = Issuer ID,
+`aud` = `appstoreconnect-v1`, `exp` ≤ 20 min. Le script `scripts/asc.py` (PyJWT) le fait :
+
+```bash
+python3 -I scripts/asc.py builds     # le build du tag est-il arrivé ? processingState VALID ?
+python3 -I scripts/asc.py versions   # versions App Store, état, build rattaché
+python3 -I scripts/asc.py get /v1/apps/6756429415   # vérification de la clé : doit sortir les infos de l'app
+```
+
+**Lien build ↔ version** : c'est le numéro de `pubspec.yaml`. Le workflow `release`, lancé à la main
+par Florent sur le tag `vX.Y.Z+N`, fait sortir le build `X.Y.Z (N)`. Il apparaît dans `asc.py builds`
+une fois traité par Apple (`VALID`, compter 10 à 30 min après la fin du workflow). S'il est absent, le
+workflow tourne encore, n'a pas été lancé ou a échoué : seul Florent le voit dans Codemagic.
+
+**Soumettre une version (procédure cible, PAS ENCORE EXERCÉE)** — chaque écriture sur go explicite
+de Florent :
+
+1. Le build `X.Y.Z (N)` est `VALID` (`asc.py builds`).
+2. La version `X.Y.Z` existe côté App Store (`asc.py versions`), sinon la créer.
+3. Rattacher le build à la version, remplir « Nouveautés » (localisation `fr-FR`).
+4. Soumettre à la revue, avec une sortie **manuelle** : Florent clique « Publier » après validation
+   (`upgrader` force la mise à jour de tout le parc).
+
+`asc.py` ne fait que des lectures. Les écritures (étapes 2 à 4) s'ajoutent au premier usage réel,
+après lecture de la doc Apple à jour : l'ancien endpoint de soumission de version est déprécié au
+profit des *Review Submissions*. Un 200 en lecture ne prouve pas que le rôle peut écrire. Les captures
+d'écran restent manuelles.
+
+## Google Play depuis WSL (compte de service)
+
+Le compte de service `firebase-adminsdk-fbsvc@wasreal.iam.gserviceaccount.com` (projet Google Cloud de
+WasReal) est invité dans la Play Console du compte perso de Florent, avec les droits de publication.
+Sa clé est `/mnt/c/Users/flore/.stores/wasreal-42d9f844ce8f.json`. 🔴 Secret : ne jamais afficher la
+`private_key`. ⚠️ Le fichier `google-services (1).json` du même dossier est la **config Firebase** de l'app,
+pas une clé : il ne sert pas à publier.
+
+| Élément | Valeur |
+|---|---|
+| Package | `com.guessitall.guess_it_all_mobile` (≠ bundle iOS) |
+| API | Google Play Android Developer API v3, scope `https://www.googleapis.com/auth/androidpublisher` |
+| Authentification | JWT RS256 signé avec la clé du compte de service → jeton OAuth (`token_uri` du JSON) |
+
+Vérifié le 2026-11-12 : un brouillon d'édition ouvert, ses pistes lues, puis supprimé (rien de publié).
+Pistes à cette date : production `1.1.3` (versionCode 8), alpha `1.1.2` (7), internal `1.0.0` (2). Le
+prochain AAB doit avoir un versionCode > 8 (le `+N` de `pubspec.yaml`, actuellement 13).
+
+Pas encore exercé : l'envoi d'un AAB et la mise à jour des notes de version. L'AAB vient de Codemagic
+(artefact téléchargé par Florent, le bloc `google_play` de `codemagic.yaml` restant coupé). Toute écriture
+se fait sur go explicite de Florent.
+
