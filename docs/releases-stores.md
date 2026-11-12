@@ -130,3 +130,51 @@ Runbook : skill `guessitall-workflow` §Release. Côté Codemagic, c'est le **pu
 temps que le SDK de dev.
 
 Une entrée datée dans `docs/tracking_evolution.md` clôt toute release.
+
+## App Store Connect depuis WSL (clé API d'équipe)
+
+Codemagic **builde** l'IPA et l'**envoie** dans App Store Connect avec sa propre clé (intégration
+`Guess It All (flow data)`, inchangée). Tout ce qui vient **après** le build se pilote depuis WSL
+avec une clé d'équipe locale : état des builds, rattachement à la version, textes, soumission.
+
+| Élément | Valeur |
+|---|---|
+| Fichier de la clé | `/mnt/c/Users/flore/.stores/AuthKey_3HXC7Q7999.p8` (Windows : `C:\Users\flore\.stores\`) |
+| Key ID | `3HXC7Q7999` |
+| Issuer ID | `87c6e544-ee5c-4964-93ac-4d4fef23acb7` |
+| Rôle | Gestionnaire d'app (App Manager) ; clé d'équipe, valable pour toutes les apps du compte |
+| Apple ID de l'app | `6756429415` (bundle `com.guessitall.guessItAllMobile`) |
+
+Key ID et Issuer ID ne sont pas secrets (décision Florent). 🔴 Le `.p8` l'est : ne jamais afficher son
+contenu, ni le copier dans le dépôt (PUBLIC) ou dans un dossier synchronisé. Si un outil exige une
+copie : fichier temporaire en `chmod 600`, supprimé après usage. Clé compromise : la révoquer dans
+App Store Connect → Utilisateurs et accès → Intégrations.
+
+Authentification : JWT ES256, en-tête `kid` = Key ID, claims `iss` = Issuer ID,
+`aud` = `appstoreconnect-v1`, `exp` ≤ 20 min. Le script `scripts/asc.py` (PyJWT) le fait :
+
+```bash
+python3 -I scripts/asc.py builds     # le build du tag est-il arrivé ? processingState VALID ?
+python3 -I scripts/asc.py versions   # versions App Store, état, build rattaché
+python3 -I scripts/asc.py get /v1/apps/6756429415   # vérification de la clé : doit sortir les infos de l'app
+```
+
+**Lien build ↔ version** : c'est le numéro de `pubspec.yaml`. Le tag `vX.Y.Z+N` fait sortir de
+Codemagic le build `X.Y.Z (N)` ; il apparaît dans `asc.py builds` une fois traité par Apple
+(`VALID`, compter 10 à 30 min après la fin du workflow). Absent : le workflow Codemagic n'a pas
+tourné ou a échoué, c'est à vérifier dans Codemagic.
+
+**Soumettre une version (procédure cible, PAS ENCORE EXERCÉE)** — chaque écriture sur go explicite
+de Florent :
+
+1. Le build `X.Y.Z (N)` est `VALID` (`asc.py builds`).
+2. La version `X.Y.Z` existe côté App Store (`asc.py versions`), sinon la créer.
+3. Rattacher le build à la version, remplir « Nouveautés » (localisation `fr-FR`).
+4. Soumettre à la revue, avec une sortie **manuelle** : Florent clique « Publier » après validation
+   (`upgrader` force la mise à jour de tout le parc).
+
+`asc.py` ne fait que des lectures. Les écritures (étapes 2 à 4) s'ajoutent au premier usage réel,
+après lecture de la doc Apple à jour : l'ancien endpoint de soumission de version est déprécié au
+profit des *Review Submissions*. Un 200 en lecture ne prouve pas que le rôle peut écrire. Les captures
+d'écran restent manuelles.
+

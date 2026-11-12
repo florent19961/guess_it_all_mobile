@@ -1423,3 +1423,18 @@ dans la manche).
 comme pour 1.2.0 puis 1.3.0. `+13` : le build number doit strictement augmenter après `+12`.
 
 **Conséquence.** Rien ne part au public sans une action manuelle dans les stores.
+
+## 2026-11-12 — Clé API App Store Connect d'équipe, pilotage depuis WSL
+
+**Quoi.** Florent a créé une clé API App Store Connect d'équipe (Key ID `3HXC7Q7999`, rôle Gestionnaire d'app),
+déposée hors du dépôt dans `C:\Users\flore\.stores\`. `scripts/asc.py` lit l'API avec elle (builds reçus, versions
+et build rattaché). Le runbook est dans `docs/releases-stores.md` §App Store Connect depuis WSL.
+
+**Pourquoi.** Codemagic reste le constructeur et l'expéditeur vers TestFlight, avec sa propre clé. Il n'y a pas de Mac
+sous WSL, et ni EAS ni fastlane ne servent ici. La clé locale couvre l'après-build sans passer par la console :
+vérifier qu'un tag a bien produit un build, puis rattacher, renseigner et soumettre. Le script ne fait que des lectures ;
+les écritures s'ajouteront au premier usage, sur go de Florent, après lecture de la doc Apple à jour.
+
+**Conséquence.** Vérification du 2026-11-12 : la clé répond (200). Le tag `v1.4.0+13` n'a produit **aucun build**
+chez Apple, le dernier reçu étant `1.3.0+12`. La version 1.4.0 existe côté App Store, sans build rattaché. La version
+en vente est 1.1.3 : la 1.4.0 serait la première release publique depuis Fiesta.
