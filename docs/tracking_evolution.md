@@ -1441,3 +1441,16 @@ main et il tournait encore. Un agent ne peut ni lancer ni suivre un build Codema
 Florent). Google Play : le compte de service `firebase-adminsdk-fbsvc@wasreal` est invité dans la Play Console et
 l'accès est vérifié (lecture des pistes). La version 1.4.0 existe côté App Store, sans build rattaché. La version
 en vente est 1.1.3 : la 1.4.0 serait la première release publique depuis Fiesta.
+
+## 2026-11-12 — Version 1.4.0+13 soumise à Apple par l'API
+
+**Quoi.** Build `1.4.0 (13)` rattaché à la version 1.4.0, « Nouveautés » et texte promotionnel écrits, capture
+Paramètres remplacée (fiche iPhone, 7ᵉ position), sortie automatique dès acceptation, puis soumission : la version est
+`WAITING_FOR_REVIEW`. Tout passe par la clé d'équipe depuis WSL ; procédure dans `docs/releases-stores.md`.
+
+**Pourquoi.** Florent a délégué la publication (« publie dès que c'est accepté », Apple et Google). Deux réponses
+données en son nom, alignées sur l'existant : chiffrement non exempté = `false` (comme tous les builds) et nouvelle
+question d'âge « réseaux sociaux » = `false`.
+
+**Conséquence.** La 1.4.0 sortira seule après la revue Apple, et `upgrader` la poussera à tout le parc. Google Play
+attend l'AAB du run Codemagic. Fiche iPad non mise à jour (anciens écrans accueil et Paramètres).
