@@ -1435,6 +1435,9 @@ sous WSL, et ni EAS ni fastlane ne servent ici. La clé locale couvre l'après-b
 vérifier qu'un tag a bien produit un build, puis rattacher, renseigner et soumettre. Le script ne fait que des lectures ;
 les écritures s'ajouteront au premier usage, sur go de Florent, après lecture de la doc Apple à jour.
 
-**Conséquence.** Vérification du 2026-11-12 : la clé répond (200). Le tag `v1.4.0+13` n'a produit **aucun build**
-chez Apple, le dernier reçu étant `1.3.0+12`. La version 1.4.0 existe côté App Store, sans build rattaché. La version
+**Conséquence.** Vérification du 2026-11-12 : la clé répond (200). Aucun build `1.4.0` n'est encore arrivé
+chez Apple, le dernier reçu étant `1.3.0+12` : le workflow `release` ne part pas sur le tag, Florent l'a lancé à la
+main et il tournait encore. Un agent ne peut ni lancer ni suivre un build Codemagic (pas de token d'API, choix de
+Florent). Google Play : le compte de service `firebase-adminsdk-fbsvc@wasreal` est invité dans la Play Console et
+l'accès est vérifié (lecture des pistes). La version 1.4.0 existe côté App Store, sans build rattaché. La version
 en vente est 1.1.3 : la 1.4.0 serait la première release publique depuis Fiesta.
