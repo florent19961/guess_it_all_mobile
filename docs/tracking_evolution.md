@@ -1555,3 +1555,21 @@ compteurs (hors bornes = illisible), et l'ordre des crans est figé.
 **Conséquence.** Tant que le branchement n'est pas mergé, un ensemble réglé hors Jamais n'a aucun
 effet en partie. Les ensembles et parties écrits par la 1.4.0 se relisent à Jamais ; aucun ensemble
 fourni ne change.
+
+## 2026-11-15 — Suite complète plus rapide : `-j 4`, dépendances résolues une fois, SDK Linux d'office
+
+**Quoi.** `scripts/run-full-suite.sh` lance `flutter test --no-pub -j 4` (surcharge : `GIA_TEST_CONCURRENCY`),
+résout les dépendances une seule fois au début (hors ligne d'abord) puis passe `--no-pub` à analyze et test, et met le
+SDK Linux `~/development/flutter/bin` en tête du `PATH` s'il existe.
+
+**Pourquoi.** Mesures du 2026-11-15, machine chargée par les lanes : 198 s avec les 8 processus de test par défaut
+(nproc/2), 112 s avec `-j 4`. Le goulot est la compilation (un fichier de test à la fois) et la saturation de la machine,
+pas l'exécution. Même principe que WasReal (`maxForks: 4`) : le sémaphore borne le nombre de runs, `-j` leur taille.
+Le double `pub get` implicite disparaît, avec l'appel réseau qui faisait échouer un run hors ligne. Le SDK Linux évitait
+aux lanes de corriger le `PATH` à la main (le Flutter Windows du `PATH` réécrit `pubspec.lock`).
+`--experimental-faster-testing` (une seule compilation) a été essayé : il génère du Dart invalide quand le chemin
+contient des tirets, ce qui est le cas de tous les worktrees `guess-it-all-*`. Écarté.
+
+**Conséquence.** Suite complète : 606 tests en 151 s (format, analyze et tests compris), machine chargée par une autre
+lane. Aucun test touché.
+
