@@ -1513,8 +1513,8 @@ class GameProvider extends ChangeNotifier {
   }
 
   /// Modificateurs qui pèsent sur l'équipe qui joue (badges) : les règles de la
-  /// manche COURANTE, continuation comprise, et ses malus reçus
-  /// ([modifiersForTurn]).
+  /// manche COURANTE, continuation comprise, ses malus reçus
+  /// ([modifiersForTurn]) et le malus tombé du ciel ([droppedMalus]).
   ///
   /// 🔴 Malus reçus CACHÉS sur l'avant-tour, jusqu'à « Commencer le tour »
   /// ([_receivedHidden]) : tout ce que l'avant-tour lit passe par ici (aperçu
@@ -1566,7 +1566,7 @@ class GameProvider extends ChangeNotifier {
       _game.currentScreen == AppConstants.screenGame && !isContinuation;
 
   /// « Commencer le tour » mène à « Ce qui t'attend » : un malus reçu joue à
-  /// ce tour. Jamais pour le joueur piégé (il ne joue pas : ses malus restent
+  /// ce tour, ou une cartouche est tombée. Jamais pour le joueur piégé (il ne joue pas : ses malus restent
   /// cachés et attendent), ni sur une continuation (déjà révélée).
   bool get _hasTurnReveal =>
       _pendingGiverBlock == null &&
@@ -1761,8 +1761,8 @@ class GameProvider extends ChangeNotifier {
   // n'est qu'un id de catalogue.
 
   /// Modificateurs EN JEU pendant le tour (badges du tour, tags analytics) :
-  /// règles de manche et malus reçus. Un bonus activé a son badge à part
-  /// ([spentBonuses]).
+  /// règles de manche, malus reçus et malus tombé. Un bonus activé ou tombé a
+  /// son badge à part ([spentBonuses]).
   List<ModifierInstance> get turnModifiers => currentTeamModifiers;
 
   /// Bonus dépensés pour CE tour (badges du tour), dans l'ordre de la table.

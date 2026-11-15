@@ -105,24 +105,41 @@ void main() {
   });
 
   test(
-      'un ×2 tombé double les points du tour, sans rien prendre au stock ; '
-      'l\'analytics le porte une fois', () async {
+      'un ×2 tombé double les points du tour, continuation comprise, sans '
+      'rien prendre au stock ni retirer sur la continuation ; l\'analytics le '
+      'porte une fois', () async {
     final p = await givenDrop('double_points', rivalScore: 20);
     final team = p.teams[0];
+    final words = p.game.allWords.length;
     p.startTurn();
     p.leaveTurnReveal();
     p.startTurnTimer();
-    p.markWordAsGuessed();
     p.markWordAsGuessed();
     final guessed = AnalyticsService()
         .currentGame!
         .events
         .lastWhere((e) => e.eventType == WordEventType.guessed);
     expect(guessed.modifiers, ['double_points']);
+    // Toute la manche avant le chrono : la même équipe poursuit en M2.
+    while (p.game.currentScreen == AppConstants.screenTurn) {
+      p.markWordAsGuessed();
+    }
+    validate(p, List<String>.from(p.game.wordsGuessedThisTurn));
+    expect(p.teams[0].score, 2 * words);
+    p.nextRound();
+    expect(p.isContinuation, isTrue);
+
+    // Devant au score, l'équipe n'aurait plus droit au ×2 : un nouveau tirage
+    // le perdrait. Rien ne tombe sur une continuation, celle du tour reste.
+    p.startTurn();
+    expect(p.game.currentScreen, AppConstants.screenCountdown);
+    expect(p.game.fiesta!.turn.drop?.catalogId, 'double_points');
+    p.startTurnTimer();
+    p.markWordAsGuessed();
     p.endTurn();
     validate(p, List<String>.from(p.game.wordsGuessedThisTurn));
 
-    expect(p.teams[0].score, 4);
+    expect(p.teams[0].score, 2 * words + 2);
     expect(p.game.fiesta!.chargesUsed, isEmpty);
     expect(p.game.fiesta!.cartridgesLeft('double_points', team.id), 0);
   });

@@ -8,8 +8,8 @@ import '../widgets/common/app_button.dart';
 import '../widgets/fiesta/modifier_badge.dart';
 
 /// « Ce qui t'attend » : entre « Commencer le tour » et le décompte, ce que le
-/// joueur découvre (malus reçus qui jouent à ce tour) puis ce qu'il connaissait
-/// déjà (règles de la manche, ses bonus). Pas de retour : l'avant-tour
+/// joueur découvre (cartouche tombée, malus reçus qui jouent à ce tour) puis
+/// ce qu'il connaissait déjà (règles de la manche, ses bonus). Pas de retour : l'avant-tour
 /// permettrait de réarmer en connaissant les malus. Une app tuée y revient.
 class TurnRevealScreen extends StatelessWidget {
   const TurnRevealScreen({super.key});
