@@ -17,6 +17,12 @@ class TurnRevealScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<GameProvider>();
+    final drop = provider.droppedThisTurn;
+    // « Bloquer un devineur » : qui ne répond pas.
+    String? title(String id) => id == 'block_guesser'
+        ? '${provider.blockedGuesser?.name ?? ''} '
+            '${modifierById(id)!.turnLabel}'
+        : null;
     final known = [
       for (final m in provider.roundRulesThisTurn)
         _Line(m.catalogId, 'Règle de la manche', Colors.white, filled: false),
@@ -46,14 +52,20 @@ class TurnRevealScreen extends StatelessWidget {
                       children: [
                         const _Section('ON VIENT DE T\'INFLIGER',
                             color: AppColors.malus),
+                        // Cartouche tombée du ciel (D4) : en tête, même un
+                        // bonus.
+                        if (drop != null)
+                          _Line(
+                              drop.catalogId,
+                              'Tombée du ciel',
+                              modifierColor(
+                                  modifierById(drop.catalogId)!.nature),
+                              originColor: AppColors.warning,
+                              title: title(drop.catalogId)),
                         for (final m in provider.receivedThisTurn)
                           _Line(m.catalogId, provider.malusSender(m),
                               AppColors.malus,
-                              // « Bloquer un devineur » : qui ne répond pas.
-                              title: m.catalogId == 'block_guesser'
-                                  ? '${provider.blockedGuesser?.name ?? ''} '
-                                      '${modifierById(m.catalogId)!.turnLabel}'
-                                  : null),
+                              title: title(m.catalogId)),
                         if (known.isNotEmpty) ...[
                           const SizedBox(height: 20),
                           const _Section('DÉJÀ ACTIVÉ',
@@ -110,9 +122,10 @@ class _Line extends StatelessWidget {
   final Color color;
   final bool filled;
   final String? title;
+  final Color originColor;
 
   const _Line(this.id, this.origin, this.color,
-      {this.filled = true, this.title});
+      {this.filled = true, this.title, this.originColor = AppColors.gray400});
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -146,10 +159,10 @@ class _Line extends StatelessWidget {
                   ),
                   Text(
                     origin,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 12,
-                      color: AppColors.gray400,
+                      color: originColor,
                     ),
                   ),
                 ],

@@ -23,6 +23,58 @@ class CartridgeDrop {
   final String? blockedPlayerId;
 
   const CartridgeDrop(this.catalogId, {this.blockedPlayerId});
+
+  /// Forme persistée dans `FiestaTurnState` (clé `drop`) : `{catalogId,
+  /// blockedPlayer?}`.
+  Map<String, dynamic> toJson() => {
+        'catalogId': catalogId,
+        if (blockedPlayerId != null) 'blockedPlayer': blockedPlayerId,
+      };
+
+  /// `null` si illisible ou d'id inconnu : la cartouche est perdue seule, le
+  /// tour se relit.
+  static CartridgeDrop? tryFromJson(Map<String, dynamic> json) {
+    final id = json['catalogId'];
+    final blocked = json['blockedPlayer'];
+    if (id is! String || modifierById(id) == null || blocked is! String?) {
+      return null;
+    }
+    return CartridgeDrop(id, blockedPlayerId: blocked);
+  }
+}
+
+/// Le malus tombé [drop] tel qu'il pèse sur le tour de [giverId] (équipe
+/// [teamId]) en manche [round], ou `null` : un bonus (il joue comme une charge
+/// dépensée), « Interdit de faire deviner » (le piège, il ne pèse sur aucun
+/// tour) ou un malus perdu comme le serait un malus reçu (`modifiersForTurn`) :
+/// impossible dans la manche, identique ou incompatible avec ce qui pèse déjà
+/// ([weighing]). Ne peut arriver que sur la continuation en N+1 : au tirage, le
+/// vivier ([dropPool]) a déjà tout écarté.
+ModifierInstance? droppedMalus(
+  CartridgeDrop drop, {
+  required String teamId,
+  required String? giverId,
+  required int round,
+  required List<ModifierInstance> weighing,
+}) {
+  final def = modifierById(drop.catalogId)!;
+  if (def.nature != ModifierNature.malus ||
+      def.id == 'block_giver' ||
+      !isEligibleForRound(def, round) ||
+      weighing.any((w) => w.catalogId == def.id) ||
+      !weighing.every((w) => areCompatible(w.catalogId, def.id))) {
+    return null;
+  }
+  return ModifierInstance(
+    catalogId: def.id,
+    scope: ModifierScope.turn,
+    target: ModifierTarget.player,
+    teamId: teamId,
+    playerId: drop.blockedPlayerId ?? giverId,
+    charges: 1,
+    nature: ModifierNature.malus,
+    round: round,
+  );
 }
 
 /// Graine d'un tour : chaîne `gameId#drop#giverId#skips#turnIndex`, distincte
