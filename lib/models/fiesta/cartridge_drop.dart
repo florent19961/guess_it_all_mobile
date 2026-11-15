@@ -10,9 +10,10 @@ import 'symmetric_draw.dart';
 /// au début d'un tour joué, selon `FiestaRules.dropFrequency`, une cartouche au
 /// hasard tombe sur l'équipe qui joue, pour ce tour seulement, sans choix.
 ///
-/// Tout est pur et DÉTERMINISTE par `(gameId, tour, joueur qui fait deviner)` :
-/// un retour arrière ou une app tuée retrouvent la même cartouche, et le
-/// remplaçant d'un joueur qui saute son tour a son propre tirage.
+/// Tout est pur et DÉTERMINISTE par `(gameId, tour, joueur qui fait deviner,
+/// tours sautés de son équipe)` : un retour arrière ou une app tuée retrouvent
+/// la même cartouche, et le remplaçant d'un joueur qui saute son tour a son
+/// propre tirage.
 
 /// La cartouche tombée sur un tour.
 class CartridgeDrop {
@@ -24,10 +25,15 @@ class CartridgeDrop {
   const CartridgeDrop(this.catalogId, {this.blockedPlayerId});
 }
 
-/// Graine d'un tour : chaîne `gameId#drop#giverId#turnIndex`, distincte de
-/// celles du tirage de manche et des cartouches au hasard ([drawSeed]).
-int dropSeed(String gameId, int turnIndex, String giverId) =>
-    drawSeed('$gameId#drop#$giverId', turnIndex);
+/// Graine d'un tour : chaîne `gameId#drop#giverId#skips#turnIndex`, distincte
+/// de celles du tirage de manche et des cartouches au hasard ([drawSeed]).
+///
+/// [skips] (`FiestaState.skips` de l'équipe qui joue) : un saut ne fait pas
+/// avancer `currentTurnIndex`. Sans lui, dans une équipe de 2, A saute, B
+/// saute, A revient avec la même graine, retombe sur « Interdit de faire
+/// deviner », et ainsi de suite sans fin.
+int dropSeed(String gameId, int turnIndex, String giverId, int skips) =>
+    drawSeed('$gameId#drop#$giverId#$skips', turnIndex);
 
 /// Vivier d'une cartouche qui tombe, dans l'ordre du catalogue : celui des
 /// cartouches au hasard ([giftPool] : hors Toujours, possible en manche
@@ -62,12 +68,15 @@ List<ModifierDef> dropPool({
           def,
     ];
 
-/// La cartouche qui tombe sur le tour [turnIndex] de [giverId], ou `null` :
+/// La cartouche qui tombe sur le tour [turnIndex] (`GameState.currentTurnIndex`)
+/// de [giverId], ou `null` :
 /// réglage à Jamais, tour de continuation ([continuation] : temps reporté de fin
 /// de manche), tirage manqué ou vivier vide ([dropPool]). Une seule graine
 /// ([dropSeed]) : d'abord la chance du réglage, puis la cartouche (toutes avec
 /// la même chance, [drawGift]), puis pour `block_guesser` le devineur bloqué
 /// parmi [guesserIds] (dans l'ordre de l'équipe : le tirage en dépend).
+/// [roundRules] : TOUTES les règles de la manche (`roundModifiers`, Toujours
+/// compris) ; c'est d'elles que vient l'incompatibilité avec un Toujours.
 ///
 /// 🔴 Mêmes entrées, même sortie : l'appelant l'appelle à un moment fixe du
 /// tour (après les bonus armés et les malus résolus), ou stocke le résultat.
@@ -76,6 +85,7 @@ CartridgeDrop? dropForTurn({
   required String gameId,
   required int turnIndex,
   required String giverId,
+  required int skips,
   required int round,
   required List<ModifierInstance> roundRules,
   required Iterable<String> received,
@@ -86,7 +96,7 @@ CartridgeDrop? dropForTurn({
 }) {
   final chance = rules.dropFrequency.chance;
   if (chance <= 0 || continuation) return null;
-  final random = Random(dropSeed(gameId, turnIndex, giverId));
+  final random = Random(dropSeed(gameId, turnIndex, giverId, skips));
   if (random.nextDouble() >= chance) return null;
   final pool = dropPool(
     rules: rules,

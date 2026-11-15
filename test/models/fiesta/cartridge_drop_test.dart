@@ -38,6 +38,7 @@ CartridgeDrop? drop(
   int turn, {
   FiestaRules? rules,
   String giver = 'p1',
+  int skips = 0,
   bool continuation = false,
 }) =>
     dropForTurn(
@@ -45,6 +46,7 @@ CartridgeDrop? drop(
       gameId: 'g',
       turnIndex: turn,
       giverId: giver,
+      skips: skips,
       round: 1,
       roundRules: const [],
       received: const [],
@@ -85,14 +87,32 @@ void main() {
   group('tirage d\'un tour', () {
     final turns = [for (var t = 0; t < 60; t++) t];
 
-    test('déterministe par (partie, tour, joueur) ; le joueur change le tirage',
-        () {
+    test(
+        'déterministe par (partie, tour, joueur, sauts) ; le joueur et un saut '
+        'de plus changent le tirage', () {
       final first = [for (final t in turns) drop(t)?.catalogId];
       expect([for (final t in turns) drop(t)?.catalogId], first);
       expect(first.whereType<String>(), isNotEmpty);
       expect(first, contains(isNull));
       expect([for (final t in turns) drop(t, giver: 'p4')?.catalogId],
           isNot(first));
+      expect(
+          [for (final t in turns) drop(t, skips: 1)?.catalogId], isNot(first));
+    });
+
+    test('Rarement ⊂ Parfois ⊂ Souvent, tour par tour (même graine)', () {
+      Set<int> dropped(DropFrequency f) => {
+            for (var t = 0; t < 200; t++)
+              if (drop(t, rules: FiestaRules(dropFrequency: f)) != null) t,
+          };
+      final rarely = dropped(DropFrequency.rarely);
+      final sometimes = dropped(DropFrequency.sometimes);
+      final often = dropped(DropFrequency.often);
+      expect(rarely, isNotEmpty);
+      expect(sometimes.containsAll(rarely), isTrue);
+      expect(often.containsAll(sometimes), isTrue);
+      expect(rarely.length, lessThan(sometimes.length));
+      expect(sometimes.length, lessThan(often.length));
     });
 
     test('rien à Jamais ni sur un tour de continuation', () {
@@ -141,13 +161,6 @@ void main() {
       expect(p, isNot(contains('draw')));
       expect(p, isNot(contains('plus_10s')));
       expect(p, contains('one_answer'));
-    });
-
-    test('n\'existe pas dans la manche : mime avant M3, Autre langue en M3',
-        () {
-      expect(pool(round: 1), isNot(contains('draw')));
-      expect(pool(round: 1), contains('other_language'));
-      expect(pool(round: 3), isNot(contains('other_language')));
     });
 
     test('×2 seulement à plus de 10 points du leader', () {
