@@ -301,12 +301,13 @@ void main() {
       required String gameId,
       List<String> words = const ['Lion'],
       int finishedRound = 1,
+      Map<String, int> scores = const {'a': 9, 'b': 3, 'c': 5},
     }) =>
         planChallenge(
           fiesta: fiesta,
           gameId: gameId,
           finishedRound: finishedRound,
-          scores: const {'a': 9, 'b': 3, 'c': 5},
+          scores: scores,
           rosters: const {
             'a': ['a1', 'a2'],
             'b': ['b1', 'b2', 'b3'],
@@ -335,19 +336,25 @@ void main() {
       expect(modifierById(p.second.prizeId), isNotNull);
     });
 
-    test('récompense : Mot compte double sort 3 fois moins qu\'une autre', () {
-      final counts = <String, int>{};
-      for (var i = 0; i < 6000; i++) {
+    test('récompense : Mot compte double seulement à plus de 10 du leader', () {
+      // Vivier réduit au ×2 et à +10 s ; b est mené de 11, c de 10.
+      final fiesta = FiestaState(
+          rules: FiestaRules(challenges: true, modifiers: {
+        for (final def in kModifierCatalog)
+          if (def.id != 'double_points' && def.id != 'plus_10s')
+            def.id: const ModifierSetting(always: true),
+      }));
+      final prizes = {'b': <String>{}, 'c': <String>{}};
+      for (var i = 0; i < 200; i++) {
         final id = 'g$i';
         if (!drawChallengeSchedule(id).containsKey(1)) continue;
-        final p = plan(FiestaState(rules: FiestaRules(challenges: true)),
-            gameId: id)!;
-        counts.update(p.second.prizeId, (n) => n + 1, ifAbsent: () => 1);
+        final p = plan(fiesta,
+            gameId: id, scores: const {'a': 21, 'b': 10, 'c': 11})!;
+        prizes[p.first.teamId]!.add(p.first.prizeId);
+        prizes[p.second.teamId]!.add(p.second.prizeId);
       }
-      final others = counts.entries.where((e) => e.key != 'double_points');
-      final mean = others.fold<int>(0, (n, e) => n + e.value) / others.length;
-      // Attendu : 1/3. Graines fixes, donc résultat stable.
-      expect(counts['double_points']! / mean, inInclusiveRange(0.2, 0.5));
+      expect(prizes['b'], {'double_points', 'plus_10s'});
+      expect(prizes['c'], {'plus_10s'});
     });
 
     test('vivier vide : pas de défi', () {

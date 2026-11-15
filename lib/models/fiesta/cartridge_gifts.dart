@@ -29,15 +29,16 @@ int balanceGiftCount({required int gap, required int totalWords}) {
   return share <= kBalanceLargeGap ? 2 : 3;
 }
 
-/// Poids du tirage des cartouches au hasard (le ×2 est rare, il pèse lourd au
-/// score). À recalibrer après des parties réelles.
-const ({int byDefault, Map<String, int> overrides}) kGiftWeights = (
-  byDefault: 3,
-  overrides: {'double_points': 1},
-);
+/// « Mot compte double » n'entre dans le vivier du hasard que d'une équipe
+/// menée par le leader de PLUS de ce nombre de points (strictement), quelle
+/// que soit la taille de la partie. Jamais pour le leader, donc jamais au
+/// lancement.
+const int kDoublePointsMinGap = 10;
 
-int _giftWeight(ModifierDef def) =>
-    kGiftWeights.overrides[def.id] ?? kGiftWeights.byDefault;
+/// Écart de [teamId] avec le leader de [scores] (0 pour le leader). Le leader
+/// est le meilleur score réel, même négatif.
+int leaderGap(Map<String, int> scores, String teamId) =>
+    scores.values.reduce(max) - scores[teamId]!;
 
 /// Graine d'une équipe : `(gameId, manche, équipe)`. Réutilise le FNV-1a de
 /// [drawSeed] (chaîne `gameId#teamId#round`, distincte de celle du tirage).
@@ -48,13 +49,16 @@ int giftSeed(String gameId, int round, String teamId) =>
 /// partir de la même liste) : tout ce qui peut être cartouche, hors « Toujours »
 /// ; les compteurs n'interviennent pas. Filtres : possible en manche [nextRound],
 /// ni déjà en jeu ni incompatible avec les règles de cette manche ([roundRules]),
-/// et « Bloquer un devineur » seulement si une AUTRE équipe peut le recevoir
-/// ([blockableTeamIds] : au moins 3 joueurs).
+/// « Bloquer un devineur » seulement si une AUTRE équipe peut le recevoir
+/// ([blockableTeamIds] : au moins 3 joueurs), et « Mot compte double » seulement
+/// si [gap], l'écart de l'équipe avec le leader ([leaderGap]), dépasse
+/// [kDoublePointsMinGap].
 List<ModifierDef> giftPool({
   required FiestaRules rules,
   required int nextRound,
   required List<ModifierInstance> roundRules,
   required String teamId,
+  required int gap,
   required Set<String> blockableTeamIds,
 }) =>
     [
@@ -64,7 +68,8 @@ List<ModifierDef> giftPool({
             roundRules.every((r) =>
                 r.catalogId != def.id && areCompatible(r.catalogId, def.id)) &&
             (def.id != 'block_guesser' ||
-                blockableTeamIds.any((id) => id != teamId)))
+                blockableTeamIds.any((id) => id != teamId)) &&
+            (def.id != 'double_points' || gap > kDoublePointsMinGap))
           def,
     ];
 
@@ -87,11 +92,12 @@ int giftCount(
 
 /// Cartouches gagnées au début de la manche `finishedRound + 1`, équipe par
 /// équipe dans l'ordre de [scores]. Chacune est tirée dans le vivier SANS remise,
-/// selon son poids ([kGiftWeights]), à partir de la graine de l'équipe : une
-/// équipe ne reçoit pas deux fois la même cartouche dans une manche, sauf si
+/// toutes avec la même chance ([drawGift]), à partir de la graine de l'équipe :
+/// une équipe ne reçoit pas deux fois la même cartouche dans une manche, sauf si
 /// elle en reçoit plus que le vivier n'en compte (il est alors remis en entier).
 /// Chaque manche repart du vivier complet. Vivier vide : rien. Le tirage d'une
-/// équipe ne dépend pas des autres ni, à nombre égal, du score.
+/// équipe ne dépend pas des autres ni, à nombre égal et du même côté du seuil
+/// du ×2 ([kDoublePointsMinGap]), du score.
 List<EarnedCartridge> roundGifts({
   required FiestaRules rules,
   required String gameId,
@@ -117,6 +123,7 @@ List<EarnedCartridge> roundGifts({
           nextRound: next,
           roundRules: roundRules,
           teamId: teamId,
+          gap: leaderGap(scores, teamId),
           blockableTeamIds: blockableTeamIds,
         ),
         random: Random(giftSeed(gameId, finishedRound, teamId)),
@@ -124,15 +131,9 @@ List<EarnedCartridge> roundGifts({
   ];
 }
 
-/// Une cartouche de [pool] (non vide), selon son poids ([kGiftWeights]).
-ModifierDef drawWeightedGift(List<ModifierDef> pool, Random random) {
-  final total = pool.fold<int>(0, (sum, def) => sum + _giftWeight(def));
-  var roll = random.nextInt(total);
-  return pool.firstWhere((def) {
-    roll -= _giftWeight(def);
-    return roll < 0;
-  });
-}
+/// Une cartouche de [pool] (non vide), toutes avec la même chance.
+ModifierDef drawGift(List<ModifierDef> pool, Random random) =>
+    pool[random.nextInt(pool.length)];
 
 Iterable<EarnedCartridge> _giftsOf({
   required String teamId,
@@ -145,7 +146,7 @@ Iterable<EarnedCartridge> _giftsOf({
   var left = <ModifierDef>[];
   for (var i = 0; i < count; i++) {
     if (left.isEmpty) left = List.of(pool);
-    final drawn = drawWeightedGift(left, random);
+    final drawn = drawGift(left, random);
     left.remove(drawn);
     yield EarnedCartridge(catalogId: drawn.id, teamId: teamId, round: round);
   }
