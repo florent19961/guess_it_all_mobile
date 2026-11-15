@@ -59,7 +59,8 @@ cartouche au lancement du tour, la stocker dans le tour, lui donner ses effets, 
 6. Persistance (règle 7) : clé additive ; une partie 1.4.0 se relit ; une valeur mal typée ne casse que la clé.
 7. Docs : `lib/models/CLAUDE.md`, `lib/providers/CLAUDE.md`, `lib/screens/CLAUDE.md`, `docs/tracking_evolution.md`,
    `docs/ANALYTICS.md`, tutoriel Fiesta.
-8. Tests (4, `test/providers/fiesta_cartridge_drop_test.dart`) : valeur, redondance, survivant M18.
+8. Tests (4 dans `test/providers/fiesta_cartridge_drop_test.dart`, 1 pur de `droppedMalus` dans
+   `test/models/fiesta/cartridge_drop_test.dart`) : valeur, redondance ; plus aucun mutant survivant.
 9. `_isRoundRule` rend `scope` porteur de sens : vérifié sur la 1.4.0 (`v1.4.0+13`), les seules instances sans
    envoyeur sont les règles de manche (`scope: round`, `symmetric_draw.dart`) ; `inflictMalus` écrit `scope: turn`
    avec `from`. À confirmer.

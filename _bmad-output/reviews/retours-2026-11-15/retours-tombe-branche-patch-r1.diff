@@ -1,9 +1,9 @@
 diff --git a/_bmad-output/reviews/retours-2026-11-15/retours-tombe-branche-mutations-r1.md b/_bmad-output/reviews/retours-2026-11-15/retours-tombe-branche-mutations-r1.md
 new file mode 100644
-index 0000000..0b9d649
+index 0000000..2150646
 --- /dev/null
 +++ b/_bmad-output/reviews/retours-2026-11-15/retours-tombe-branche-mutations-r1.md
-@@ -0,0 +1,37 @@
+@@ -0,0 +1,38 @@
 +# Mutation testing r1 — L-TOMBE-BRANCHEMENT (`feat/retours-tombe-branche`)
 +
 +Fait par l'implémenteur (la revue Codex est statique). Un mutant à la fois, appliqué par remplacement exact de
@@ -29,24 +29,25 @@ index 0000000..0b9d649
 +| M14 | `gap: 0` au lieu de `leaderGap` (provider) | tué | (b) |
 +| M15 | `roundRulesThisTurn` = tout ce qui n'a pas d'envoyeur (provider) | tué | (a) |
 +| M17 | phrase du piège toujours avec envoyeur (provider) | tué | (c) |
-+| M18 | `droppedMalus` ne perd plus un malus impossible dans la manche (cartridge_drop) | **survit** | — |
++| M18 | `droppedMalus` ne perd plus un malus impossible dans la manche (cartridge_drop) | tué | (e) test pur `droppedMalus` (`test/models/fiesta/cartridge_drop_test.dart`) |
++| M18b | `droppedMalus` ne perd plus un malus identique à une règle (cartridge_drop) | tué | (e) |
++| M18c | `droppedMalus` ne perd plus un malus incompatible (un seul mime) (cartridge_drop) | tué | (e) |
 +| M19 | bonus tombé dépensé comme une charge (`ChargeUse`) au départ du chrono (provider) | tué | (b) stock |
 +
 +M16 (garde « déjà tiré » dans `_drawDrop`) : mutant équivalent (un second `startTurn` relit les mêmes entrées :
 +le malus tombé n'a pas d'envoyeur, il n'entre pas dans `received`) ; la garde a été retirée du code.
 +
-+## Survivants assumés
++## Survivants
 +
-+- **M18** (malus tombé perdu en N+1 s'il n'a plus de sens, ex. « Autre langue » tombé au dernier tour de M2 et
-+  poursuivi en M3) : le filtre est celui de `modifiersForTurn` pour un malus reçu, recopié dans `droppedMalus`
-+  (pur). Le tuer demande un 5ᵉ test (une fin de manche avec report, ou deux lignes de test pur de
-+  `droppedMalus`), hors des (a)-(d) autorisés : question posée à l'orchestrateur.
++Aucun. M18 survivait en première passe ; l'orchestrateur a autorisé un 5ᵉ test, pur, de `droppedMalus`
++(« Autre langue » perdue en M3, malus identique à une règle, second mime), qui tue M18, M18b et M18c (mutants
++lancés contre `test/models/fiesta/cartridge_drop_test.dart`).
 diff --git a/_bmad-output/reviews/retours-2026-11-15/retours-tombe-branche-prompt-r1.md b/_bmad-output/reviews/retours-2026-11-15/retours-tombe-branche-prompt-r1.md
 new file mode 100644
-index 0000000..e515e33
+index 0000000..b9f0abd
 --- /dev/null
 +++ b/_bmad-output/reviews/retours-2026-11-15/retours-tombe-branche-prompt-r1.md
-@@ -0,0 +1,70 @@
+@@ -0,0 +1,71 @@
 +# Revue r1 — L-TOMBE-BRANCHEMENT (`feat/retours-tombe-branche`) — tier RISQUÉ
 +
 +Tu es reviewer, en LECTURE SEULE. Lis le patch `retours-tombe-branche-patch-r1.diff` (même dossier), puis le code
@@ -108,7 +109,8 @@ index 0000000..e515e33
 +6. Persistance (règle 7) : clé additive ; une partie 1.4.0 se relit ; une valeur mal typée ne casse que la clé.
 +7. Docs : `lib/models/CLAUDE.md`, `lib/providers/CLAUDE.md`, `lib/screens/CLAUDE.md`, `docs/tracking_evolution.md`,
 +   `docs/ANALYTICS.md`, tutoriel Fiesta.
-+8. Tests (4, `test/providers/fiesta_cartridge_drop_test.dart`) : valeur, redondance, survivant M18.
++8. Tests (4 dans `test/providers/fiesta_cartridge_drop_test.dart`, 1 pur de `droppedMalus` dans
++   `test/models/fiesta/cartridge_drop_test.dart`) : valeur, redondance ; plus aucun mutant survivant.
 +9. `_isRoundRule` rend `scope` porteur de sens : vérifié sur la 1.4.0 (`v1.4.0+13`), les seules instances sans
 +   envoyeur sont les règles de manche (`scope: round`, `symmetric_draw.dart`) ; `inflictMalus` écrit `scope: turn`
 +   avec `from`. À confirmer.
@@ -746,6 +748,29 @@ index 020bed5..6cae5e1 100644
                    for (final id in armed)
                      _slot(
                        key: id == armed.first ? keys.firstArmed : null,
+diff --git a/test/models/fiesta/cartridge_drop_test.dart b/test/models/fiesta/cartridge_drop_test.dart
+index c3b059b..84a86c8 100644
+--- a/test/models/fiesta/cartridge_drop_test.dart
++++ b/test/models/fiesta/cartridge_drop_test.dart
+@@ -181,4 +181,18 @@ void main() {
+       expect(pool(guessers: ['p2', 'p3']), contains('block_guesser'));
+     });
+   });
++
++  test(
++      'malus tombé poursuivi en N+1 (continuation) : perdu comme un malus reçu '
++      's\'il n\'existe plus dans la manche ou double une règle', () {
++    ModifierInstance? weighs(String id, int round,
++            [List<ModifierInstance> weighing = const []]) =>
++        droppedMalus(CartridgeDrop(id),
++            teamId: 't1', giverId: 'p1', round: round, weighing: weighing);
++
++    expect(weighs('other_language', 2)?.playerId, 'p1');
++    expect(weighs('other_language', 3), isNull);
++    expect(weighs('reversed', 2, [rule('reversed', 2)]), isNull);
++    expect(weighs('mime_no_arms', 3, [rule('mime_back_turned', 3)]), isNull);
++  });
+ }
 diff --git a/test/providers/fiesta_cartridge_drop_test.dart b/test/providers/fiesta_cartridge_drop_test.dart
 new file mode 100644
 index 0000000..e52a0e9

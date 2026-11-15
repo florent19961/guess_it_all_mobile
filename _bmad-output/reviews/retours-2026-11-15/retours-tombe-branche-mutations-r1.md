@@ -23,15 +23,16 @@ texte, contre `test/providers/fiesta_cartridge_drop_test.dart` seul
 | M14 | `gap: 0` au lieu de `leaderGap` (provider) | tué | (b) |
 | M15 | `roundRulesThisTurn` = tout ce qui n'a pas d'envoyeur (provider) | tué | (a) |
 | M17 | phrase du piège toujours avec envoyeur (provider) | tué | (c) |
-| M18 | `droppedMalus` ne perd plus un malus impossible dans la manche (cartridge_drop) | **survit** | — |
+| M18 | `droppedMalus` ne perd plus un malus impossible dans la manche (cartridge_drop) | tué | (e) test pur `droppedMalus` (`test/models/fiesta/cartridge_drop_test.dart`) |
+| M18b | `droppedMalus` ne perd plus un malus identique à une règle (cartridge_drop) | tué | (e) |
+| M18c | `droppedMalus` ne perd plus un malus incompatible (un seul mime) (cartridge_drop) | tué | (e) |
 | M19 | bonus tombé dépensé comme une charge (`ChargeUse`) au départ du chrono (provider) | tué | (b) stock |
 
 M16 (garde « déjà tiré » dans `_drawDrop`) : mutant équivalent (un second `startTurn` relit les mêmes entrées :
 le malus tombé n'a pas d'envoyeur, il n'entre pas dans `received`) ; la garde a été retirée du code.
 
-## Survivants assumés
+## Survivants
 
-- **M18** (malus tombé perdu en N+1 s'il n'a plus de sens, ex. « Autre langue » tombé au dernier tour de M2 et
-  poursuivi en M3) : le filtre est celui de `modifiersForTurn` pour un malus reçu, recopié dans `droppedMalus`
-  (pur). Le tuer demande un 5ᵉ test (une fin de manche avec report, ou deux lignes de test pur de
-  `droppedMalus`), hors des (a)-(d) autorisés : question posée à l'orchestrateur.
+Aucun. M18 survivait en première passe ; l'orchestrateur a autorisé un 5ᵉ test, pur, de `droppedMalus`
+(« Autre langue » perdue en M3, malus identique à une règle, second mime), qui tue M18, M18b et M18c (mutants
+lancés contre `test/models/fiesta/cartridge_drop_test.dart`).
