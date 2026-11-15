@@ -1595,3 +1595,18 @@ et la cartouche n'est pas gardée après son tour (il faudrait persister une lis
 **Conséquence.** Une cartouche tombée ne laisse aucune trace après son tour, hors analytics (`modifiers` des
 événements) et points ×2 de l'historique : pas de badge dans « Évolution des scores ». Champ additif, lu par
 `readOr` implicite (absent = rien de tombé) : une partie 1.4.0 se relit telle quelle.
+
+## 2026-11-15 — Version 1.5.0+14
+
+**Quoi.** `pubspec.yaml` passe à `1.5.0+14`, tag `v1.5.0+14`. Florent lance à la main le workflow Codemagic `release`
+sur ce tag. La version embarque le lot des retours de recette du 15/11 (PR #62 à #68) : ancien logo sans animation de
+démarrage, ×2 seulement au-delà de 10 points d'écart, malus visés sur une personne, malus cachés jusqu'à « Ce qui
+t'attend », passe gratuite sous Interdit de passer, cartouches qui tombent ; plus l'outillage de la suite (#67).
+
+**Pourquoi.** Florent veut un build pour la recette sur téléphone. 1.5.0 : un lot de fonctionnalités = une version
+mineure. `+14` : strictement après `+13`.
+
+**Conséquence.** Rien ne part au public sans soumission dans les stores, sur go de Florent après sa recette. Au moment du
+bump, l'API App Store Connect répond « A required agreement is missing or has expired » : un accord est à signer dans App
+Store Connect (Business) avant toute soumission, et peut-être avant la distribution TestFlight.
+
