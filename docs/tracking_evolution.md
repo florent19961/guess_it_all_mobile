@@ -1455,3 +1455,23 @@ question d'âge « réseaux sociaux » = `false`.
 **Conséquence.** La 1.4.0 sortira seule après la revue Apple, et `upgrader` la poussera à tout le parc. Google Play : AAB `1.4.0` (versionCode 13)
 envoyé en production le même jour par l'API, avec des notes condensées (500 caractères au plus), publié par Google
 après sa revue. Fiche iPad non mise à jour (anciens écrans accueil et Paramètres).
+
+## 2026-11-15 — Retour à l'ancien logo, sans animation de démarrage
+
+**Quoi.** Icône de l'app (iOS, Android, adaptive) et splash natif reviennent à `visuals/icone_guess_it_all.png`
+sur fond `#1a2744`, restauré tel quel depuis `713e88a^`, avec la config `flutter_launcher_icons` /
+`flutter_native_splash` d'avant 713e88a. L'animation de démarrage `StartupIntro` est retirée (fichier et
+`MaterialApp.builder` de `app.dart`), ainsi que ce qu'elle laissait orphelin : `scripts/render_logo.py` et les
+visuels « Bulle chrono » (`logo_bulle_chrono*.png`, `splash_vide.png`). Les couleurs d'équipe pastel du même
+commit restent. Ressources natives régénérées par les deux outils sous WSL : les images sortent identiques à
+l'octet à celles de `713e88a^`. Seule différence, `flutter_native_splash` réécrit dans `values-v31` et
+`values-night-v31` le splash Android 12+ avec icône animée : ces deux fichiers sont repris de `713e88a^`.
+
+**Pourquoi.** Retour de recette de Florent du 15/11 (spec `retours-2026-11-15.md`, D5) : l'ancien logo, et
+l'écran de lancement d'avant, sans animation. Les styles Android 12+ : le commit 033db71 (janvier) avait
+volontairement remplacé l'icône animée par `windowBackground`, parce que le masque circulaire d'Android 12 tronquait
+l'icône ; l'outil l'ignore à chaque régénération.
+
+**Conséquence.** Après chaque `dart run flutter_native_splash:create`, revenir sur `values-v31/styles.xml` et
+`values-night-v31/styles.xml` (retirer `windowSplashScreenBackground` et `windowSplashScreenAnimatedIcon`). L'icône
+512 de la fiche Play est hors dépôt (Florent).
