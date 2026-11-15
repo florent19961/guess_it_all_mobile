@@ -280,6 +280,33 @@ void main() {
       expect(p.game.fiesta!.skips, isEmpty);
     });
 
+    test(
+        'deux joueurs de la même équipe bloqués : deux pièges de suite, puis '
+        'la rotation reprend', () async {
+      final p = await blocked(more: {'block_giver': 2});
+      final [j3, j4, _] = p.teams[1].playerIds;
+      expect(p.inflictMalus('block_giver', j3), isNull);
+      expect(p.inflictMalus('block_giver', j4), isNull);
+      playEmptyTurn(p); // J0
+      for (final skipped in ['J3', 'J4']) {
+        expect(player(p), skipped);
+        p.startTurn();
+        p.startTurnTimer();
+        expect(p.game.currentScreen, AppConstants.screenGiverBlocked);
+        p.confirmGiverBlock();
+      }
+      expect(player(p), 'J5');
+      expect(p.game.fiesta!.skips[p.teams[1].id], 2);
+      expect(p.game.fiesta!.active, isEmpty);
+      final seq = <String>[];
+      for (var i = 0; i < 3; i++) {
+        seq.add(player(p)!);
+        playEmptyTurn(p); // équipe 1
+        playEmptyTurn(p); // équipe 0
+      }
+      expect(seq, ['J5', 'J3', 'J4']);
+    });
+
     test('un malus exige un joueur adverse', () async {
       final p = await blocked();
       p.inflictMalus('block_giver', p.teams[1].id);
