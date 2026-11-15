@@ -288,8 +288,12 @@ void main() {
     testWidgets('cartouche épuisée : son étape', (tester) async {
       final provider = await pumpGame(tester, charges(['no_pass']));
       expect(await walkHelp(tester), isNot(contains('Cartouche indisponible')));
-      provider.inflictMalus('no_pass',
-          provider.teams.firstWhere((t) => t != provider.getCurrentTeam()).id);
+      provider.inflictMalus(
+          'no_pass',
+          provider.teams
+              .firstWhere((t) => t != provider.getCurrentTeam())
+              .playerIds
+              .first);
       await settle(tester);
       expect(await walkHelp(tester), contains('Cartouche indisponible'));
     });

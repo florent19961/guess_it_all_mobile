@@ -47,6 +47,10 @@ String playTurn(GameProvider p, [int n = 0]) {
   return teamId;
 }
 
+/// Le seul joueur de l'équipe [teamId].
+String one(GameProvider p, String teamId) =>
+    p.getTeamById(teamId)!.playerIds.single;
+
 int left(GameProvider p, String id) =>
     p.reserve.firstWhere((c) => c.catalogId == id).left;
 
@@ -154,7 +158,7 @@ void main() {
     final p = await givenProvider();
     await p.startGame(fiesta: stock(['minus_10s', 'plus_10s']));
     final b = p.teams.singleWhere((t) => t.id != p.getCurrentTeam()!.id).id;
-    expect(p.inflictMalus('minus_10s', b), isNull);
+    expect(p.inflictMalus('minus_10s', one(p, b)), isNull);
     playTurn(p);
     expect(p.getCurrentTeam()!.id, b);
     expect(p.turnTime.total, 20);
@@ -177,7 +181,7 @@ void main() {
     await p.startGame(fiesta: stock(['reversed', 'no_pass']));
     final a = p.getCurrentTeam()!.id;
     final b = p.teams.singleWhere((t) => t.id != a).id;
-    expect(p.inflictMalus('reversed', b), isNull);
+    expect(p.inflictMalus('reversed', one(p, b)), isNull);
     playTurn(p, 99);
     p.nextRound();
 
@@ -185,13 +189,13 @@ void main() {
     expect(p.sentThisTurn, isEmpty, reason: 'envoyé avant ce départ');
     expect(left(p, 'reversed'), 1);
 
-    expect(p.inflictMalus('no_pass', b), isNull);
+    expect(p.inflictMalus('no_pass', one(p, b)), isNull);
     expect(left(p, 'no_pass'), 1);
     expect(p.sentThisTurn.map((m) => m.catalogId), ['no_pass']);
     p.cancelSent(p.sentThisTurn.single);
     expect(left(p, 'no_pass'), 2);
     expect(p.game.fiesta!.chargesUsed.map((u) => u.catalogId), ['reversed']);
-    expect(p.inflictMalus('no_pass', b), isNull);
+    expect(p.inflictMalus('no_pass', one(p, b)), isNull);
 
     playTurn(p);
     expect(p.getCurrentTeam()!.id, b);

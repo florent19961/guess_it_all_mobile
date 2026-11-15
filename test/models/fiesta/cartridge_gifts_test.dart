@@ -264,45 +264,32 @@ void main() {
           ],
         );
 
-    FiestaState cross(FiestaState f, {String? continuing, int finished = 1}) =>
-        planRoundTransition(
+    FiestaState cross(FiestaState f, {int finished = 1}) => planRoundTransition(
           fiesta: f,
           gameId: 'g',
           finishedRound: finished,
           scores: const {'a': 0, 'b': 0},
           totalWords: 40,
           blockableTeamIds: const {},
-          continuingTeamId: continuing,
         )!
             .apply(f);
 
-    test('croise la règle tirée : RENDU à l\'envoyeur', () {
-      final f = cross(withSent(sent('reversed', to: 'b')));
-      expect(f.active.where((m) => m.fromTeamId != null), isEmpty);
-      expect(f.chargesUsed, isEmpty);
-    });
-
-    test('impossible quand la cible rejoue : Autre langue en M3, RENDU', () {
-      final f = cross(withSent(sent('other_language', to: 'b', round: 2)),
-          finished: 2);
-      expect(f.active.where((m) => m.fromTeamId != null), isEmpty);
-      expect(f.chargesUsed, isEmpty);
-    });
-
-    test('déjà en cours sur le tour qui continue : tombe sans rien rendre', () {
-      final f = cross(withSent(sent('other_language', to: 'b', round: 2)),
-          finished: 2, continuing: 'b');
-      expect(f.chargesUsed, hasLength(1));
-      expect(
-          modifiersForTurn(f.active, teamId: 'b', playerId: 'p', round: 3)
-              .where((m) => m.fromTeamId != null),
-          isEmpty);
-    });
-
-    test('sans conflit : il attend, rien de rendu', () {
-      final f = cross(withSent(sent('no_pass', to: 'b')));
-      expect(f.active.where((m) => m.fromTeamId != null), hasLength(1));
-      expect(f.chargesUsed, hasLength(1));
+    test(
+        'devenu impossible (règle tirée identique, Autre langue en M3) : '
+        'gardé, RIEN n\'est rendu ; perdu au tour de la cible', () {
+      for (final (malus, finished) in [
+        (sent('reversed', to: 'b'), 1),
+        (sent('other_language', to: 'b', round: 2), 2),
+      ]) {
+        final f = cross(withSent(malus), finished: finished);
+        expect(f.active.where((m) => m.fromTeamId != null), [malus]);
+        expect(f.chargesUsed, hasLength(1));
+        expect(
+            modifiersForTurn(f.active,
+                    teamId: 'b', playerId: 'p', round: finished + 1)
+                .where((m) => m.fromTeamId != null),
+            isEmpty);
+      }
     });
   });
 }

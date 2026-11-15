@@ -108,7 +108,10 @@ void main() {
     expect(provider.turnTime.total, 30);
     expect(provider.game.fiesta!.chargesUsed, isEmpty);
     provider.toggleBonus('plus_10s');
-    expect(provider.inflictMalus('minus_10s', other), isNull);
+    expect(
+        provider.inflictMalus(
+            'minus_10s', provider.getTeamById(other)!.playerIds.single),
+        isNull);
 
     // Une passe (40 → 35) puis les 2 mots : 35 s reportées.
     provider.startTurn();

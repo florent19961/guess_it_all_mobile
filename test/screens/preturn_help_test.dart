@@ -108,8 +108,12 @@ void main() {
           'no_pass': const ModifierSetting(charges: 1),
         }));
     provider.toggleBonus('plus_10s');
-    provider.inflictMalus('no_pass',
-        provider.teams.firstWhere((t) => t != provider.getCurrentTeam()).id);
+    provider.inflictMalus(
+        'no_pass',
+        provider.teams
+            .firstWhere((t) => t != provider.getCurrentTeam())
+            .playerIds
+            .first);
     await settle(tester);
     expect(await fiestaSteps(tester),
         [_thisTurn, _armed, _bonus, _malus, _dimmed, _sent]);

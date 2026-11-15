@@ -1494,3 +1494,24 @@ score, il doit servir à revenir, pas à creuser l'écart. `leaderGap` et le par
 manche replanifié) d'une partie en cours au moment de la mise à jour peuvent donner d'autres
 cartouches, sans crash. Le nombre de cartouches d'« Aux équipes menées » / « Équilibrer » garde son
 calcul d'écart (base 0) : inchangé.
+
+## 2026-11-15 — Fiesta : chaque malus se vise sur une personne (L-PERSONNE)
+
+**Quoi.** Toucher un malus de la réserve ouvre la feuille « Sur qui ? » (pour chaque équipe adverse, son nom puis
+ses prénoms), qui remplace « Contre quelle équipe ? » et la fenêtre des blocages, à 2 équipes aussi. Le malus pèse
+sur le prochain tour où cette personne fait deviner, quelle que soit l'équipe qui joue entre-temps et la manche
+(`ModifierInstance.resolvesAt`, partagé par `modifiersForTurn` et `_fiestaAfterTurn`). Un prénom est grisé quand la
+personne a déjà ce malus en attente ou un malus qui ne s'y cumule pas, tous envoyeurs confondus ; un toucher montre
+la raison dans une bulle (`Tooltip`). « Bloquer un devineur » et « Interdit de faire deviner » gardent leur
+résolution ; les autres malus d'un joueur qui saute son tour attendent son prochain vrai tour. Un malus impossible à
+son tour (interdit dans la manche, identique ou incompatible) est perdu, sans affichage ni remboursement : la
+transition de manche ne rend plus rien (`crossesRules` et `continuingTeamId` retirés).
+
+**Pourquoi.** Retours de recette de Florent du 2026-11-15 (spec `_bmad-output/specs/fiesta/retours-2026-11-15.md`
+§D1). Une seule règle de résolution, celle du tour joué, remplace la règle de remboursement à la transition.
+
+**Conséquence.** Forme persistée : `playerId` (clé existante) est désormais écrit pour tous les malus envoyés, ajout
+additif. 🔴 Un malus en attente écrit par la 1.4.0 sans `playerId` (hors blocages) garde l'ancien comportement, le
+prochain tour de l'équipe (test de relecture dans `test/providers/fiesta_v4_test.dart`) ; il grise tous les prénoms
+de son équipe. Arbitrage : « Bloquer un devineur » reste un par équipe en attente, sinon le second tomberait le même
+tour et serait perdu en silence.

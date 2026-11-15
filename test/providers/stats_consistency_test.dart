@@ -77,7 +77,7 @@ void main() {
 
     // M1 — A/J0 : ×2, envoie « Interdit » à J2 ; 2 mots en 10 s, 4 points.
     p.toggleBonus('double_points');
-    p.inflictMalus('block_giver', b, playerId: j2);
+    p.inflictMalus('block_giver', j2);
     p.startTurn();
     p.startTurnTimer();
     elapse(p, 10);

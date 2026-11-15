@@ -223,7 +223,7 @@ void main() {
     await tester.pump(const Duration(seconds: 5));
   });
 
-  testWidgets('Interdit de faire deviner : le joueur se choisit à l\'envoi',
+  testWidgets('feuille « Sur qui ? » : le joueur se choisit à l\'envoi',
       (tester) async {
     final provider = await pumpGame(
         tester,
@@ -234,8 +234,7 @@ void main() {
         of: find.byType(FiestaTurnZone), matching: iconOf('block_giver')));
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Qui ne fera pas deviner ?'), findsOneWidget);
-    expect(find.text('Il saute son prochain tour.'), findsOneWidget);
+    expect(find.text('Sur qui ?'), findsOneWidget);
     final target =
         provider.teams.firstWhere((t) => t.id != provider.getCurrentTeam()!.id);
     final name = provider.getPlayerById(target.playerIds.first)!.name;
@@ -257,8 +256,7 @@ void main() {
         }));
     final other =
         provider.teams.firstWhere((t) => t.id != provider.getCurrentTeam()!.id);
-    provider.inflictMalus('block_giver', other.id,
-        playerId: other.playerIds[0]);
+    provider.inflictMalus('block_giver', other.playerIds[0]);
     provider.startTurn();
     provider.startTurnTimer();
     provider.endTurn();
@@ -320,8 +318,7 @@ void main() {
     final other =
         provider.teams.firstWhere((t) => t.id != provider.getCurrentTeam()!.id);
     for (final (i, id) in ['block_giver', 'block_guesser'].indexed) {
-      expect(provider.inflictMalus(id, other.id, playerId: other.playerIds[i]),
-          isNull);
+      expect(provider.inflictMalus(id, other.playerIds[i]), isNull);
     }
     for (final id in [
       'no_pass',
@@ -330,7 +327,7 @@ void main() {
       'one_answer',
       'minus_10s',
     ]) {
-      expect(provider.inflictMalus(id, other.id), isNull);
+      expect(provider.inflictMalus(id, other.playerIds[0]), isNull);
     }
     await settle(tester);
     expect(provider.sentThisTurn, hasLength(7));
