@@ -1,11 +1,11 @@
 diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
-index 341256b..a223dc1 100644
+index c86f6ad..ad0cc17 100644
 --- a/docs/tracking_evolution.md
 +++ b/docs/tracking_evolution.md
-@@ -1494,3 +1494,22 @@ score, il doit servir à revenir, pas à creuser l'écart. `leaderGap` et le par
- manche replanifié) d'une partie en cours au moment de la mise à jour peuvent donner d'autres
- cartouches, sans crash. Le nombre de cartouches d'« Aux équipes menées » / « Équilibrer » garde son
- calcul d'écart (base 0) : inchangé.
+@@ -1536,3 +1536,22 @@ continuation de fin de manche a déjà été lancée : ses malus reçus restent
+ révélation. Une app tuée sur « Ce qui t'attend » y revient (valeur d'écran ajoutée, additive). Le vivier des
+ cartouches au hasard et les défis n'excluent plus Passe gratuite sous « Interdit de passer » : tirages recalculés des
+ parties suspendues sous cette règle différents (rien de persisté n'est re-dérivé).
 +
 +## 2026-11-15 — Cartouches qui tombent pendant les tours : réglage et tirage pur
 +
@@ -26,15 +26,15 @@ index 341256b..a223dc1 100644
 +effet en partie. Les ensembles et parties écrits par la 1.4.0 se relisent à Jamais ; aucun ensemble
 +fourni ne change.
 diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
-index 603686b..c7254a5 100644
+index dbea555..ca1416a 100644
 --- a/lib/models/CLAUDE.md
 +++ b/lib/models/CLAUDE.md
 @@ -19,7 +19,7 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
  | `category_metadata.dart` | `CategoryMetadata` | Metadonnees categorie multilingue (id, icon, noms, locales) |
- | `fiesta/modifier_catalog.dart` | `ModifierDef`, `kModifierCatalog`, `kModifierIncompatibilities`, `kCartridgeOnlyIds`, enums `ModifierNature/Scope/Target` | Catalogue Fiesta (17 ids **figés**, du code, jamais persisté ; un ajout se fait **en fin de liste** : `one_answer`, `sounds_only`, `plus_10s`, puis `block_giver`), `modifierById` (répond aussi pour les retirés, liste privée `_kRetiredModifiers`, lecture seule : 🔴 `two_words` reste lisible et nommé dans l'historique, `earned`, `chargesUsed`, les règles gelées et les ensembles enregistrés, mais hors catalogue il n'est ni proposé, ni tiré, ni joué), `turnLabel` (mini-phrase de la pastille du tour ; `block_guesser` : à faire précéder du prénom ; `block_giver` : aucune), `areCompatible` (paires + règle de famille : deux membres `mimeFamily` s'excluent, sauf la paire `sounds_only` / `mime_under_sheet`, compatible dans toutes les combinaisons), `modifierDescription` (texte commun de cette paire quand les deux jouent). `round3Only` = manche 3 seulement (mime) ; `notInRound3` = jamais en manche 3 (« Faire deviner dans une autre langue »), lus par `isEligibleForRound` / `allowedRounds`. `kCartridgeOnlyIds` (tous les bonus, `minus_10s`, `block_guesser`, `block_giver`) : jamais règle de manche ; tout le reste existe dans les 3 menus, `one_answer` compris. 🔴 Tout ajout au catalogue change les tirages et cadeaux des parties suspendues (candidats mélangés par graine) : persister les tirages ou versionner le catalogue avant d'ajouter un modificateur une fois la Fiesta publiée |
- | `fiesta/modifier_instance.dart` | `ModifierInstance` | Modificateur actif dans une partie : une règle de manche (cible `both`) ou un malus infligé. `tryFromJson` tolérant (id inconnu → `null`, jamais de défaut inventé). `canAdd(active, candidate)` : compatibilité seulement (plus de plafond). `fromTeamId` (clé `from`, omise si nul) : malus **infligé** par `fromTeamId` à `teamId`, portée tour : il pèse sur le PROCHAIN tour de la cible quelle que soit la manche, puis part à la vraie fin de ce tour. `playerId` : joueur nommé d'un blocage. `fromPlayerId` (`fromPlayer`) : joueur qui l'a envoyé (phrase du piège). `sentTurnIndex` (`sentTurn`) : tour d'envoi, seul cet avant-tour peut l'annuler. `waitsFor(giver)` : blocage sans effet sur ce tour (`block_giver` toujours, `block_guesser` si son joueur fait deviner). Les cartouches détenues ne sont PAS des instances : voir `FiestaState.cartridgesLeft` |
--| `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, enum `EnsembleMenu` | Configuration Fiesta **immuable**, forme **v4** (`format: 4`). `ModifierSetting` = trois réglages INDÉPENDANTS `{always, draw, charges 0-5}`. `FiestaRules` = `{ensembleName?, modifiers, drawCount, trailingCount (0-5, `kMaxCount`), allCount (0-10, `kMaxAllCount`), balance}`. 🔴 `lockReason(id, menu)` : verrouillé = réglages gardés mais sans effet (Toujours sur les 2 autres menus ; mime en Toujours sur les autres mimes partout, sauf la paire ; `no_pass` en Toujours sur `free_pass` en cartouche). Le moteur lit `isAlways`, `drawsFrom`, `chargesOf`, qui l'appliquent ; jamais `settingOf` directement. `tryFromJson` : autre `format` ou compteur hors bornes → `null` ; réglage illisible, hors bornes ou d'id inconnu ignoré seul |
-+| `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, enums `EnsembleMenu`, `DropFrequency` | Configuration Fiesta **immuable**, forme **v4** (`format: 4`). `ModifierSetting` = trois réglages INDÉPENDANTS `{always, draw, charges 0-5}`. `FiestaRules` = `{ensembleName?, modifiers, drawCount, trailingCount (0-5, `kMaxCount`), allCount (0-10, `kMaxAllCount`), balance, challenges?, dropFrequency?}`. `dropFrequency` (« Qui tombent pendant les tours », D4 du 2026-11-15) : enum `DropFrequency` Jamais / Rarement / Parfois / Souvent (chances `kDropChanceRarely` 1/6, `kDropChanceSometimes` 1/4, `kDropChanceOften` 1/2), persisté par son **index** (ordre FIGÉ) sous la clé `dropFrequency`, **omise à Jamais**, absente = Jamais (`readOr`) ; hors 0-3 ou mal typé → règles illisibles. `format` reste 4. 🔴 `lockReason(id, menu)` : verrouillé = réglages gardés mais sans effet (Toujours sur les 2 autres menus ; mime en Toujours sur les autres mimes partout, sauf la paire ; `no_pass` en Toujours sur `free_pass` en cartouche). Le moteur lit `isAlways`, `drawsFrom`, `chargesOf`, qui l'appliquent ; jamais `settingOf` directement. `tryFromJson` : autre `format` ou compteur hors bornes → `null` ; réglage illisible, hors bornes ou d'id inconnu ignoré seul |
+ | `fiesta/modifier_catalog.dart` | `ModifierDef`, `kModifierCatalog`, `kCartridgeOnlyIds`, enums `ModifierNature/Scope/Target` | Catalogue Fiesta (17 ids **figés**, du code, jamais persisté ; un ajout se fait **en fin de liste** : `one_answer`, `sounds_only`, `plus_10s`, puis `block_giver`), `modifierById` (répond aussi pour les retirés, liste privée `_kRetiredModifiers`, lecture seule : 🔴 `two_words` reste lisible et nommé dans l'historique, `earned`, `chargesUsed`, les règles gelées et les ensembles enregistrés, mais hors catalogue il n'est ni proposé, ni tiré, ni joué), `turnLabel` (mini-phrase de la pastille du tour ; `block_guesser` : à faire précéder du prénom ; `block_giver` : aucune), `areCompatible` (seule règle : deux membres `mimeFamily` s'excluent, sauf la paire `sounds_only` / `mime_under_sheet`, compatible dans toutes les combinaisons ; « Interdit de passer » + « Passe gratuite » se cumulent depuis le 2026-11-15), `modifierDescription` (texte commun de cette paire quand les deux jouent). `round3Only` = manche 3 seulement (mime) ; `notInRound3` = jamais en manche 3 (« Faire deviner dans une autre langue »), lus par `isEligibleForRound` / `allowedRounds`. `kCartridgeOnlyIds` (tous les bonus, `minus_10s`, `block_guesser`, `block_giver`) : jamais règle de manche ; tout le reste existe dans les 3 menus, `one_answer` compris. 🔴 Tout ajout au catalogue change les tirages et cadeaux des parties suspendues (candidats mélangés par graine) : persister les tirages ou versionner le catalogue avant d'ajouter un modificateur une fois la Fiesta publiée |
+ | `fiesta/modifier_instance.dart` | `ModifierInstance` | Modificateur actif dans une partie : une règle de manche (cible `both`) ou un malus infligé. `tryFromJson` tolérant (id inconnu → `null`, jamais de défaut inventé). `canAdd(active, candidate)` : compatibilité seulement (plus de plafond). `fromTeamId` (clé `from`, omise si nul) : malus **infligé** par `fromTeamId` au joueur `playerId` de `teamId`, portée tour. `resolvesAt(teamId, giver)` : il se résout au prochain tour où ce joueur fait deviner, quelle que soit la manche (il y pèse, ou y est perdu s'il n'a plus de sens), puis part à la vraie fin de ce tour ; 🔴 écrit par la 1.4.0 sans `playerId` (hors blocages) : prochain tour de l'équipe, comme alors. `playerId` : joueur visé (tous les malus envoyés depuis le 2026-11-15 ; `block_guesser` : le devineur, qui se résout au tour de son équipe). `fromPlayerId` (`fromPlayer`) : joueur qui l'a envoyé (phrase du piège). `sentTurnIndex` (`sentTurn`) : tour d'envoi, seul cet avant-tour peut l'annuler. `waitsFor(giver)` : blocage sans effet sur ce tour (`block_giver` toujours, `block_guesser` si son joueur fait deviner). Les cartouches détenues ne sont PAS des instances : voir `FiestaState.cartridgesLeft` |
+-| `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, enum `EnsembleMenu` | Configuration Fiesta **immuable**, forme **v4** (`format: 4`). `ModifierSetting` = trois réglages INDÉPENDANTS `{always, draw, charges 0-5}`. `FiestaRules` = `{ensembleName?, modifiers, drawCount, trailingCount (0-5, `kMaxCount`), allCount (0-10, `kMaxAllCount`), balance}`. 🔴 `lockReason(id, menu)` : verrouillé = réglages gardés mais sans effet (Toujours sur les 2 autres menus ; mime en Toujours sur les autres mimes partout, sauf la paire). Le moteur lit `isAlways`, `drawsFrom`, `chargesOf`, qui l'appliquent ; jamais `settingOf` directement. `tryFromJson` : autre `format` ou compteur hors bornes → `null` ; réglage illisible, hors bornes ou d'id inconnu ignoré seul |
++| `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, enums `EnsembleMenu`, `DropFrequency` | Configuration Fiesta **immuable**, forme **v4** (`format: 4`). `ModifierSetting` = trois réglages INDÉPENDANTS `{always, draw, charges 0-5}`. `FiestaRules` = `{ensembleName?, modifiers, drawCount, trailingCount (0-5, `kMaxCount`), allCount (0-10, `kMaxAllCount`), balance, challenges?, dropFrequency?}`. `dropFrequency` (« Qui tombent pendant les tours », D4 du 2026-11-15) : enum `DropFrequency` Jamais / Rarement / Parfois / Souvent (chances `kDropChanceRarely` 1/6, `kDropChanceSometimes` 1/4, `kDropChanceOften` 1/2), persisté par son **index** (ordre FIGÉ) sous la clé `dropFrequency`, **omise à Jamais**, absente = Jamais (`readOr`) ; hors 0-3 ou mal typé → règles illisibles. `format` reste 4. 🔴 `lockReason(id, menu)` : verrouillé = réglages gardés mais sans effet (Toujours sur les 2 autres menus ; mime en Toujours sur les autres mimes partout, sauf la paire). Le moteur lit `isAlways`, `drawsFrom`, `chargesOf`, qui l'appliquent ; jamais `settingOf` directement. `tryFromJson` : autre `format` ou compteur hors bornes → `null` ; réglage illisible, hors bornes ou d'id inconnu ignoré seul |
  | `fiesta/symmetric_draw.dart` | fonctions pures | Règles de manche : `alwaysForRound` (toutes les manches où il existe) puis `drawForRound` (`drawsFrom`, `drawCount` ; incompatibles sautés, **pas de plafond** ; frais d'abord, `spent` en complément), réunis par `roundModifiers(rules, gameId:, round:)`. 🔴 Sans remise sur la partie, sans état : `roundModifiers` recalcule les manches 1 à N-1 pour savoir ce qui est sorti ; un mime n'est pas consommé avant M3, un « Toujours » jamais ; quand un complément ressort un déjà sorti, le vivier est rempli et seul ce complément reste sorti. Graine `drawSeed(gameId, round)` (FNV-1a, stable, une par manche). `allowedRounds`, `canBeRoundRule` |
  | `fiesta/fiesta_state.dart` | `FiestaState`, `ChargeUse`, `EarnedCartridge` | `GameState.fiesta` : `{rules, active, turn, chargesUsed, earned, skips}`. `turn` : `FiestaTurnState` typé (`turn_effects.dart`), vidé à la vraie fin du tour (continuation de fin de manche comprise dans le tour). `chargesUsed` (clé omise si vide) : cartouches dépensées `{catalogId, teamId, round, target?}`, toutes manches. `earned` (clé omise si vide) : cartouches au hasard `{catalogId, teamId, round}`, écrites par `startGame` (M1) et `nextRound` seulement. `skips` (clé omise si vide) : tours sautés par équipe, décalage de sa rotation. `withoutSent` : retire un malus et rend sa cartouche. 🔴 Stock d'une équipe = `cartridgesLeft` : charges de l'ensemble + gagnées − dépensées ; une seule source pour la réserve |
  | `fiesta/modifier_recap.dart` | fonctions pures | `kFiestaModeId` (`fiesta_custom` ; les archives `fiesta_auto` restent lisibles), `buildModifierRecap` : récap « Modificateurs de la partie » en faits : tirage recalculé par la graine, cartouches au hasard (`earned`) et cartouches utilisées (`chargesUsed`) relues de l'état ; `formatModifierRecap` forme les lignes depuis les faits (`ModifierRecapLine`, jamais persistée) ; aucun écran ne les affiche depuis le retrait de la carte des Résultats, les faits restent archivés |
@@ -257,7 +257,7 @@ index b868e06..a94b3ca 100644
        for (final def in kModifierCatalog)
          if (rules.isAlways(def.id) ||
 diff --git a/lib/models/fiesta/fiesta_rules.dart b/lib/models/fiesta/fiesta_rules.dart
-index 7ff89fb..70b5d69 100644
+index efe04bb..64b589c 100644
 --- a/lib/models/fiesta/fiesta_rules.dart
 +++ b/lib/models/fiesta/fiesta_rules.dart
 @@ -71,6 +71,30 @@ const int kMaxCount = 5;
@@ -326,7 +326,7 @@ index 7ff89fb..70b5d69 100644
        );
  
    ModifierSetting settingOf(String id) =>
-@@ -188,6 +219,8 @@ class FiestaRules {
+@@ -181,6 +212,8 @@ class FiestaRules {
          'trailingCount': trailingCount,
          'balance': balance,
          if (challenges) 'challenges': true,
@@ -335,7 +335,7 @@ index 7ff89fb..70b5d69 100644
        };
  
    /// Variante tolérante : `null` si la structure est illisible (autre format,
-@@ -203,13 +236,16 @@ class FiestaRules {
+@@ -196,13 +229,16 @@ class FiestaRules {
      final trailingCount = _readCount(json, 'trailingCount');
      final balance = readOr(json, 'balance', false);
      final challenges = readOr(json, 'challenges', false);
@@ -353,7 +353,7 @@ index 7ff89fb..70b5d69 100644
        return null;
      }
  
-@@ -231,6 +267,7 @@ class FiestaRules {
+@@ -224,6 +260,7 @@ class FiestaRules {
        trailingCount: trailingCount,
        balance: balance,
        challenges: challenges,
@@ -362,10 +362,10 @@ index 7ff89fb..70b5d69 100644
    }
  
 diff --git a/lib/screens/CLAUDE.md b/lib/screens/CLAUDE.md
-index ba2c7d5..eb639e9 100644
+index 6ada203..b5d60d7 100644
 --- a/lib/screens/CLAUDE.md
 +++ b/lib/screens/CLAUDE.md
-@@ -39,7 +39,7 @@ HomeScreen → SettingsScreen (Classique / Fiesta)
+@@ -40,7 +40,7 @@ HomeScreen → SettingsScreen (Classique / Fiesta)
  | `fiesta_tutorial_screen.dart` | Tuto Fiesta, 3 cartes (`Navigator.push` via `show`) |
  | `fiesta_ensembles_screen.dart` | La liste des ensembles (Fiesta, ouverte par « Changer » dans Avances ; retour bouton et systeme → Parametres sans rien changer, sauf si l'ensemble en attente y a ete modifie ou supprime). Une ligne par ensemble (tuile et icone `ensembleIcon`, nom sur 2 lignes, ligne courte, rond de selection) : les 8 **fournis** (`kProvidedEnsembles`) puis les miens, badge « Perso ». Un tap selectionne et deplie : explication et pastilles (`ensembleSummary`), actions en icones (`tooltip`, 44 px, Voir / Dupliquer ; miens : Voir / Modifier / Dupliquer / Supprimer avec confirmation), absentes des autres lignes ; la ligne depliee reste visible (`_revealSelected`). Compteur n / 10 dans le bouton de creation ou l'alerte de limite ; « Fiesta classique » preselectionne a defaut d'attente ou de dernier utilise. « Creer un ensemble » (« Reprendre le brouillon » s'il y en a un) et « Modifier » POUSSENT `FiestaEnsembleEditorScreen` ; enregistre → selectionne. Brouillon = `FiestaEnsemblesScreen.draft` (statique, en memoire tant que l'app est ouverte, jamais persiste). « Valider » → Parametres |
  | `fiesta_ensemble_view_screen.dart` | Page « Voir » d'un ensemble (fourni ou mien), en lecture seule : 3 blocs « Toujours », « Aleatoire par manche », « Cartouches » (au hasard, puis pour tout le monde), bouton « Dupliquer » Défis surprises : une ligne dans le bloc Cartouches |
@@ -483,7 +483,7 @@ index 56f46b3..1bb737b 100644
  class _Stepper extends StatelessWidget {
    final int value;
 diff --git a/lib/widgets/help/help_content.dart b/lib/widgets/help/help_content.dart
-index c718a81..496bfe5 100644
+index e6473e4..75fd95a 100644
 --- a/lib/widgets/help/help_content.dart
 +++ b/lib/widgets/help/help_content.dart
 @@ -290,7 +290,8 @@ List<CoachStep> fiestaEditorHelp({
