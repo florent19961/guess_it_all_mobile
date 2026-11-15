@@ -339,8 +339,10 @@ void main() {
         lessThanOrEqualTo(tester.getTopLeft(start).dy));
     expect(tester.getBottomLeft(start).dy, lessThanOrEqualTo(640));
 
-    // La dernière pastille : on y arrive en faisant défiler la zone.
-    final last = find.text(' Envoyé').last;
+    // La dernière pastille (au prénom visé) : on y arrive en faisant défiler
+    // la zone.
+    final last =
+        find.text(' ${provider.getPlayerById(other.playerIds[0])!.name}').last;
     expect(tester.getBottomLeft(last).dy,
         greaterThan(tester.getBottomLeft(zone).dy),
         reason: 'le contenu dépasse vraiment de la zone');
