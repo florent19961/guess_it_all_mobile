@@ -1,0 +1,891 @@
+diff --git a/_bmad-output/reviews/retours-2026-11-15/retours-tombe-branche-mutations-r1.md b/_bmad-output/reviews/retours-2026-11-15/retours-tombe-branche-mutations-r1.md
+new file mode 100644
+index 0000000..289e717
+--- /dev/null
++++ b/_bmad-output/reviews/retours-2026-11-15/retours-tombe-branche-mutations-r1.md
+@@ -0,0 +1,39 @@
++# Mutation testing r1 — L-TOMBE-BRANCHEMENT (`feat/retours-tombe-branche`)
++
++Fait par l'implémenteur (la revue Codex est statique). Un mutant à la fois, appliqué par remplacement exact de
++texte, contre `test/providers/fiesta_cartridge_drop_test.dart` seul
++(`scripts/with-test-slot.sh flutter test …`), fichier restauré après chaque run. Script :
++`/tmp/claude-1000/-home-florent19961-guess-it-all-audit/565d58c7-0639-4f50-b64e-014941061f77/scratchpad/mut/run.py`.
++
++| # | Mutant (fichier) | Résultat | Test qui le tue |
++|---|---|---|---|
++| M1 | `startTurn` n'appelle plus `_drawDrop` (provider) | tué | les 4 |
++| M2 | `FiestaTurnState.toJson` n'écrit plus `drop` (turn_effects) | tué | (a) app tuée |
++| M3 | `fromJson` ignore `drop` (turn_effects) | tué | compilation / (a) |
++| M4 | `_charge` sans repli sur le bonus tombé (provider) | tué | (b) ×2 |
++| M5 | `_modifiersThisTurn` n'ajoute pas le malus tombé (provider) | tué | (a) chrono, (d) analytics |
++| M6 | `_hasTurnReveal` ignore la cartouche tombée (provider) | tué | (a) |
++| M7 | graine avec `skips: 0` (provider) | tué | (c) |
++| M8 | `_fiestaAfterTurn` garde `drop` (provider) | tué | (a) vraie fin du tour |
++| M9 | `_pendingGiverBlock` ignore le `block_giver` tombé (provider) | tué | (c) |
++| M10 | `confirmGiverBlock` reporte `drop` au remplaçant (provider) | tué | (c) |
++| M11 | `continuation: false` passé à `dropForTurn` (provider) | **survit** | — |
++| M12 | bonus tombé vu `armed` au lieu de `spent` (provider) | tué | (b) |
++| M13 | malus reçus lus sur la liste cachée (`currentTeamModifiers`) (provider) | tué | (d) |
++| M14 | `gap: 0` au lieu de `leaderGap` (provider) | tué | (b) |
++| M15 | `roundRulesThisTurn` = tout ce qui n'a pas d'envoyeur (provider) | tué | (a) |
++| M17 | phrase du piège toujours avec envoyeur (provider) | tué | (c) |
++| M18 | `droppedMalus` ne perd plus un malus impossible dans la manche (cartridge_drop) | **survit** | — |
++| M19 | bonus tombé dépensé comme une charge (`ChargeUse`) au départ du chrono (provider) | tué | (b) stock |
++
++M16 (garde « déjà tiré » dans `_drawDrop`) : mutant équivalent (un second `startTurn` relit les mêmes entrées :
++le malus tombé n'a pas d'envoyeur, il n'entre pas dans `received`) ; la garde a été retirée du code.
++
++## Survivants assumés
++
++- **M11** (rien ne tombe sur une continuation) : la règle vit dans le contrat de `dropForTurn`
++  (`continuation` → `null`), testé par `test/models/fiesta/cartridge_drop_test.dart` ; seul le passage du drapeau
++  `isContinuation` par le provider n'est pas couvert. Le tuer demande une fin de manche avec report, soit un 5ᵉ
++  test hors des (a)-(d) autorisés par la consigne.
++- **M18** (malus tombé perdu en N+1 s'il n'a plus de sens) : même raison (continuation de fin de manche). Le
++  filtre est celui de `modifiersForTurn` pour un malus reçu, recopié dans `droppedMalus`.
+diff --git a/_bmad-output/reviews/retours-2026-11-15/retours-tombe-branche-prompt-r1.md b/_bmad-output/reviews/retours-2026-11-15/retours-tombe-branche-prompt-r1.md
+new file mode 100644
+index 0000000..4d0021e
+--- /dev/null
++++ b/_bmad-output/reviews/retours-2026-11-15/retours-tombe-branche-prompt-r1.md
+@@ -0,0 +1,67 @@
++# Revue r1 — L-TOMBE-BRANCHEMENT (`feat/retours-tombe-branche`) — tier RISQUÉ
++
++Tu es reviewer, en LECTURE SEULE. Lis le patch `retours-tombe-branche-patch-r1.diff` (même dossier), puis le code
++qu'il touche dans le worktree `/home/florent19961/guess-it-all-retours-tombe-branche`. Ne lance pas `git diff`
++toi-même. Revue statique : le mutation testing est fait (`retours-tombe-branche-mutations-r1.md`), juge-le.
++
++## Objectif
++
++Spec `_bmad-output/specs/fiesta/retours-2026-11-15.md` §D4 (branchement) et §D2 (écran « Ce qui t'attend ») ; lis
++l'en-tête (règle 7 : la 1.4.0 est en store). Le modèle (`dropForTurn`, `dropSeed`, `dropPool`, `DropFrequency`) est
++déjà mergé ; son contrat est dans `lib/models/CLAUDE.md` (ligne `cartridge_drop.dart`). Cette lane : tirer la
++cartouche au lancement du tour, la stocker dans le tour, lui donner ses effets, l'afficher.
++
++## Décisions de la spec (ne pas re-trancher)
++
++- Une chance par tour joué, sur l'équipe qui joue, ce tour seulement ; rien en continuation ; rien à Jamais.
++- Tirage à graine ; app tuée et retour arrière retrouvent la même ; le remplaçant d'un joueur qui saute a son tirage.
++- Bonus tombé appliqué comme armé ; malus comme reçu ; `block_guesser` : devineur tiré ; `block_giver` : cycle actuel
++  du piège sans « Ce qui t'attend ». Pas de remboursement, stock (`cartridgesLeft`) inchangé.
++- « Ce qui t'attend » s'affiche aussi pour une cartouche tombée seule : ligne en tête de « On vient de t'infliger »,
++  provenance « Tombée du ciel » (jaune), même pour un bonus.
++- Effets du tour, dont `WordEvent.modifiers`, incluent la cartouche tombée.
++
++## Mécanisme choisi
++
++- `startTurn` → `_drawDrop` (avant `_hasTurnReveal` et `turnTime`) → `FiestaTurnState.drop` (clé `drop`, omise si
++  nulle, illisible = perdue seule). Pas de tirage si un `block_giver` reçu attend ce joueur.
++- Bonus tombé : `_charge(id)` le rend `spent` (jamais écrit dans `charges`) → `turnTime`, `freePasses`,
++  `isDoublePointsOn`, `spentBonuses`, `_eventContext`, `_conflict`, `_setCharge`, `reserve`. Aucun `ChargeUse`.
++- Malus tombé : `droppedMalus` (pur) → instance `scope: turn` sans `fromTeamId`, ajoutée en fin de
++  `_modifiersThisTurn`. `_isRoundRule` (sans envoyeur ET `scope: round`) remplace `fromTeamId == null` dans le
++  masquage de l'avant-tour et `roundRulesThisTurn`. `droppedThisTurn` pour l'UI.
++- `block_giver` tombé : `_pendingGiverBlock` synthétise une instance sans envoyeur ; `giverBlockScreen` prend
++  `droppedGiverBlockPhrase`.
++
++## Arbitrages de l'implémenteur (à challenger)
++
++1. Phrase du piège tombé : « Une cartouche est tombée du ciel, X : tu ne joues pas ce tour. » (les 8 phrases
++   existantes nomment un envoyeur).
++2. Zone « Actif » de l'avant-tour d'une continuation : la cartouche tombée y apparaît (cercle bonus « armé » ou
++   malus « reçu »), comme les malus reçus déjà révélés.
++3. Pas de genre de fait « tombé » dans le récap archivé (`GameResult`) : aucun écran ne l'affiche, la cartouche
++   n'est pas gardée après son tour ; pas de badge dans « Évolution des scores ».
++4. Pas d'animation de chute (optionnelle).
++5. Joueur piégé par un `block_giver` reçu : aucun tirage (son remplaçant tire avec `skips` + 1).
++
++## Points précis à vérifier
++
++1. Intégrité analytics : `_eventContext` sur tous les écrans du tour (tour, vérification, après kill, après
++   `restorePreValidationState`) ; jamais deux fois le même id ; rien sur l'avant-tour d'un tour non lancé.
++2. Stock : aucun chemin n'ajoute un `ChargeUse` pour une cartouche tombée ; `reserve`, `_chargesLeft` inchangés.
++3. Continuation de fin de manche : `drop` survit (`_fiestaAtRoundEnd`), aucun nouveau tirage, `turnTime` ne
++   rajoute pas un +10 s tombé (il est `spent`), un malus tombé devenu impossible en N+1 est perdu.
++4. Entrées du tirage : `received` lu sur `_modifiersThisTurn` (pas la liste cachée), `armed`, `guesserIds` dans
++   l'ordre de l'équipe, `leaderGap` sur `Team.score`, `skips` de l'équipe, `turnIndex` = `currentTurnIndex`.
++5. Lecteurs de `fromTeamId == null` / `!= null` : `malusSender`, `_explain(from:)` de `turn_cartridges.dart`
++   (`fromTeamId!`), `_malusBlock`, `targetRefusal`, `round_transition.dart` — l'instance tombée n'existe que dans
++   `_modifiersThisTurn`, jamais dans `fiesta.active` : le confirmer.
++6. Persistance (règle 7) : clé additive ; une partie 1.4.0 se relit ; une valeur mal typée ne casse que la clé.
++7. Docs : `lib/models/CLAUDE.md`, `lib/providers/CLAUDE.md`, `lib/screens/CLAUDE.md`, `docs/tracking_evolution.md`,
++   `docs/ANALYTICS.md`, tutoriel Fiesta.
++8. Tests (4, `test/providers/fiesta_cartridge_drop_test.dart`) : valeur, redondance, survivants M11 et M18.
++
++## Format attendu
++
++Rapport dans `retours-tombe-branche-review-r1.md` (même dossier) : verdict **READY** / **NOT READY**, puis findings
++**BLOCKER / MAJOR / MINOR**, chacun avec `fichier:ligne`, le scénario concret et la correction proposée.
+diff --git a/docs/ANALYTICS.md b/docs/ANALYTICS.md
+index 851ccee..57115c7 100644
+--- a/docs/ANALYTICS.md
++++ b/docs/ANALYTICS.md
+@@ -44,7 +44,8 @@ class WordEvent {
+ **`modifiers` (Fiesta, story 2-7)** : ids du catalogue (`minus_10s`, `no_pass`...) actifs pour
+ l'equipe qui joue quand l'evenement a lieu. Cle **absente** (pas `null`) en Classique et sur les
+ evenements ecrits avant 2-7 ; `[]` = Fiesta sans modificateur ce tour. Un id peut apparaitre deux
+-fois (deux instances cumulees). Rien n'est exclu des stats : `computeStats` et la difficulte
++fois (deux instances cumulees). Une cartouche tombee du ciel (D4, 2026-11-15) y figure comme
++un bonus depense ou un malus du tour, une seule fois. Rien n'est exclu des stats : `computeStats` et la difficulte
+ initiale du mot sont inchanges.
+ 
+ **Contexte de l'evenement** (`round`, `turn`, `teamId`, `playerId`, `modifiers`) : le provider le
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index 6f256f1..4fed408 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -1555,3 +1555,26 @@ compteurs (hors bornes = illisible), et l'ordre des crans est figé.
+ **Conséquence.** Tant que le branchement n'est pas mergé, un ensemble réglé hors Jamais n'a aucun
+ effet en partie. Les ensembles et parties écrits par la 1.4.0 se relisent à Jamais ; aucun ensemble
+ fourni ne change.
++
++## 2026-11-15 — Cartouches qui tombent : branchement en partie (L-TOMBE)
++
++**Quoi.** `startTurn` tire la cartouche du tour (`_drawDrop` → `dropForTurn`, entrées réelles : malus reçus qui
++jouent lus avant le masquage de l'avant-tour, bonus armés, écart au leader, `skips` de l'équipe) AVANT de choisir
++entre « Ce qui t'attend » et le décompte, et la garde dans `FiestaTurnState.drop` (clé `drop: {catalogId,
++blockedPlayer?}`, omise si nulle, illisible = perdue seule). Elle part à la vraie fin du tour avec le reste de
++`turn` ; une continuation la garde et n'en tire pas. Effets : un bonus tombé joue comme une charge dépensée
++(`_charge`, donc ×2, passe gratuite, +10 s, badges, `WordEvent.modifiers`) SANS `ChargeUse` ; un malus tombé
++s'ajoute aux effets du tour après les malus reçus (`droppedMalus`, perdu comme eux s'il n'a plus de sens en N+1) ;
++« Interdit de faire deviner » tombé passe par le piège actuel, phrase propre (« Une cartouche est tombée du ciel,
++X : tu ne joues pas ce tour. »). « Ce qui t'attend » : ligne « Tombée du ciel » (jaune) en tête de « On vient de
++t'infliger ». Tutoriel Fiesta : la ligne « Cartouches au hasard » cite les cartouches tombées.
++
++**Pourquoi.** Spec D4. Stocker plutôt que recalculer : les entrées du tirage bougent dans le tour (charges
++dépensées, scores), et la cartouche doit survivre à une app tuée et au retour arrière. Un bonus tombé n'écrit pas
++dans `charges` : la dépense au départ du chrono y ajouterait un `ChargeUse`, qui retire du stock et pose un badge
++de statistiques. Pas de genre de fait « tombé » dans le récap archivé (`GameResult`) : aucun écran ne l'affiche,
++et la cartouche n'est pas gardée après son tour (il faudrait persister une liste de plus).
++
++**Conséquence.** Une cartouche tombée ne laisse aucune trace après son tour, hors analytics (`modifiers` des
++événements) et points ×2 de l'historique : pas de badge dans « Évolution des scores ». Champ additif, lu par
++`readOr` implicite (absent = rien de tombé) : une partie 1.4.0 se relit telle quelle.
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index 32fc7e4..5c80321 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -23,14 +23,14 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `fiesta/symmetric_draw.dart` | fonctions pures | Règles de manche : `alwaysForRound` (toutes les manches où il existe) puis `drawForRound` (`drawsFrom`, `drawCount` ; incompatibles sautés, **pas de plafond** ; frais d'abord, `spent` en complément), réunis par `roundModifiers(rules, gameId:, round:)`. 🔴 Sans remise sur la partie, sans état : `roundModifiers` recalcule les manches 1 à N-1 pour savoir ce qui est sorti ; un mime n'est pas consommé avant M3, un « Toujours » jamais ; quand un complément ressort un déjà sorti, le vivier est rempli et seul ce complément reste sorti. Graine `drawSeed(gameId, round)` (FNV-1a, stable, une par manche). `allowedRounds`, `canBeRoundRule` |
+ | `fiesta/fiesta_state.dart` | `FiestaState`, `ChargeUse`, `EarnedCartridge` | `GameState.fiesta` : `{rules, active, turn, chargesUsed, earned, skips}`. `turn` : `FiestaTurnState` typé (`turn_effects.dart`), vidé à la vraie fin du tour (continuation de fin de manche comprise dans le tour). `chargesUsed` (clé omise si vide) : cartouches dépensées `{catalogId, teamId, round, target?}`, toutes manches. `earned` (clé omise si vide) : cartouches au hasard `{catalogId, teamId, round}`, écrites par `startGame` (M1) et `nextRound` seulement. `skips` (clé omise si vide) : tours sautés par équipe, décalage de sa rotation. `withoutSent` : retire un malus et rend sa cartouche. 🔴 Stock d'une équipe = `cartridgesLeft` : charges de l'ensemble + gagnées − dépensées ; une seule source pour la réserve |
+ | `fiesta/modifier_recap.dart` | fonctions pures | `kFiestaModeId` (`fiesta_custom` ; les archives `fiesta_auto` restent lisibles), `buildModifierRecap` : récap « Modificateurs de la partie » en faits : tirage recalculé par la graine, cartouches au hasard (`earned`) et cartouches utilisées (`chargesUsed`) relues de l'état ; `formatModifierRecap` forme les lignes depuis les faits (`ModifierRecapLine`, jamais persistée) ; aucun écran ne les affiche depuis le retrait de la carte des Résultats, les faits restent archivés |
+-| `fiesta/turn_effects.dart` | `FiestaTurnState` + fonctions pures | État du tour typé et immuable (`freePassesUsed`, `charges` par id ↔ clés JSON `doublePoints`/`freePass`/`plus10s` via `kChargeBonusKeys` (tous les bonus, seulement en cartouche), valeurs `armed`/`spent`, `replaced` : `ReplacedChoices`, ce qu'avait préparé le joueur qui a sauté son tour) : JSON conditionnel, lecture tolérante clé par clé. 🔴 Règle 7 : les anciennes clés `twoWords`, `secondWord`, `secondExpiredWord` sont ignorées à la relecture (la carte B reste dans `remainingWords`), `two_words` est écarté de `ReplacedChoices.bonuses` ; `canBlockGuesser` (équipe de 3+) ; `Cartridge` (une cartouche de la réserve affichée : restantes, raison du grisé ; jamais persistée) |
++| `fiesta/turn_effects.dart` | `FiestaTurnState` + fonctions pures | État du tour typé et immuable (`freePassesUsed`, `charges` par id ↔ clés JSON `doublePoints`/`freePass`/`plus10s` via `kChargeBonusKeys` (tous les bonus, seulement en cartouche), valeurs `armed`/`spent`, `replaced` : `ReplacedChoices`, ce qu'avait préparé le joueur qui a sauté son tour, `drop` : `CartridgeDrop` tombée sur ce tour, clé omise si nulle) : JSON conditionnel, lecture tolérante clé par clé. 🔴 Règle 7 : les anciennes clés `twoWords`, `secondWord`, `secondExpiredWord` sont ignorées à la relecture (la carte B reste dans `remainingWords`), `two_words` est écarté de `ReplacedChoices.bonuses` ; `canBlockGuesser` (équipe de 3+) ; `Cartridge` (une cartouche de la réserve affichée : restantes, raison du grisé ; jamais persistée) |
+ | `fiesta/round_transition.dart` | fonctions pures | `planRoundTransition` → `RoundTransitionPlan` (règles de N+1 + cartouches au hasard), recalculé sur l'état de fin de N, appliqué une fois par `nextRound` ; `apply` remplace les règles de N par celles de N+1, garde les malus infligés en attente, ajoute à `earned` ; 🔴 rien n'est jamais rendu (un malus devenu impossible est perdu au tour de sa cible). `modifiersForTurn` : effets d'un tour = règles de la manche COURANTE (continuation comprise), plus les malus infligés résolus ICI (`resolvesAt`) ; un malus interdit dans la manche, identique ou incompatible avec une règle ou un malus déjà retenu est perdu (ni affiché ni rendu) |
+ | `fiesta/turn_time.dart` | fonctions pures | `composeTurnSeconds` (base + 10 s × `plus10sCount` − 10 s × `minus10sCount`, plancher `kTurnFloorSeconds` = 10 ; continuation = ses secondes + 10 s × `plus10sCount`, sans −10 s ni plancher) |
+ | `fiesta/cartridge_gifts.dart` | fonctions pures | Cartouches au hasard. `balanceGiftCount` : recette d'« Équilibrer la partie », seuils en constantes (`kBalanceSmallGap`, `kBalanceLargeGap`), à recalibrer. `giftCount` : `allCount` à chaque manche + (après M1 et M2) l'équilibrage ou `trailingCount` pour un non-leader ; égalité et co-leaders : rien de ce second terme. `giftPool` : vivier (filtre commun `randomPool`, partagé avec les cartouches qui tombent) = tout le catalogue HORS Toujours, compteurs sans effet ; filtres : possible à la manche suivante, ni identique ni incompatible avec ses règles, `block_guesser` seulement si une autre équipe a 3 joueurs, `double_points` seulement si l'écart `gap` au leader (`leaderGap`, meilleur score réel) dépasse strictement `kDoublePointsMinGap` (10) — jamais pour le leader ni en M1. `drawGift` : tirage uniforme. `roundGifts` : tirage SANS remise dans la manche d'une équipe (vivier remis en entier s'il s'épuise, et à chaque manche), déterministe par `giftSeed(gameId, manche, équipe)` |
+ | `fiesta/surprise_challenge.dart` | enum `SurpriseChallenge`, `TurnPace`, fonctions pures | Les 5 défis (ordre figé). `trailingTeams`, `slowestPlayer` (critère jamais affiché), `drawChallengeSchedule`, `pickGuessedWord` : déterministes par `gameId`, sans état |
+ | `fiesta/challenge_plan.dart` | `ChallengePlan`, `ChallengeSide`, `planChallenge` | Le défi qui suit une manche, cartouches comprises (vivier `giftPool` à l'écart au leader de l'équipe qui reçoit, `drawGift`). Recalculé, jamais persisté ; `null` si réglage coupé, pas au programme, déjà terminé, vivier vide ou téléphone arabe sans mot |
+-| `fiesta/giver_block.dart` | fonctions pures | Le piège d'« Interdit de faire deviner » : les 8 phrases, `giverBlockPhrase`, `giverBlockSeed(gameId, tour)` déterministe |
+-| `fiesta/cartridge_drop.dart` | `CartridgeDrop`, `dropPool`, `dropForTurn`, `dropSeed` | Cartouches qui tombent (D4), fonctions pures, **pas encore appelées en partie** (branchement : lane suivante). Contrat de `dropForTurn` : `null` si `dropFrequency` à Jamais, tour de continuation, tirage manqué ou vivier vide ; sinon `CartridgeDrop(catalogId, blockedPlayerId?)` pour l'équipe qui joue, ce tour seulement. Graine `dropSeed(gameId, turnIndex, giverId, skips)` (FNV-1a de `drawSeed`, chaîne `gameId#drop#giverId#skips#turnIndex` ; `turnIndex` = `GameState.currentTurnIndex`, `skips` = `FiestaState.skips` de l'équipe qui joue) : une seule `Random`, d'abord la chance, puis la cartouche (`drawGift`), puis pour `block_guesser` le devineur bloqué parmi `guesserIds` (ordre de l'équipe). Le remplaçant d'un joueur qui saute son tour a donc son propre tirage ; `skips` évite qu'un joueur qui revient après deux sauts (équipe de 2) retrouve la même graine et resaute sans fin. `roundRules` = TOUTE la sortie de `roundModifiers` (Toujours compris : l'incompatibilité avec un Toujours ne vient que d'elles). 🔴 Mêmes entrées, même sortie : l'appelant l'appelle à un moment fixe (après bonus armés et malus résolus) ou stocke le résultat (`FiestaTurnState`, clé optionnelle). Vivier `dropPool` = `randomPool` (filtre commun avec `giftPool` : hors Toujours, manche, règles de la manche, ×2 au-delà de `kDoublePointsMinGap`) moins identique/incompatible avec un malus `received` qui joue ce tour, identique à un bonus `armed` ; `block_guesser` si au moins 2 devineurs (équipe de 3+, `includeBlockGuesser`) ; `block_giver` permis |
++| `fiesta/giver_block.dart` | fonctions pures | Le piège d'« Interdit de faire deviner » : les 8 phrases, `giverBlockPhrase`, `giverBlockSeed(gameId, tour)` déterministe ; `droppedGiverBlockPhrase` quand il tombe du ciel (pas d'envoyeur) |
++| `fiesta/cartridge_drop.dart` | `CartridgeDrop`, `dropPool`, `dropForTurn`, `dropSeed` | Cartouches qui tombent (D4), fonctions pures, appelées une fois par tour par `GameProvider.startTurn` (`_drawDrop`), résultat gardé dans `FiestaTurnState.drop` (JSON `toJson` / `tryFromJson`). `droppedMalus` : le malus tombé tel qu'il pèse sur le tour, perdu comme un malus reçu s'il n'a plus de sens (continuation en N+1) ; jamais pour un bonus ni `block_giver`. Contrat de `dropForTurn` : `null` si `dropFrequency` à Jamais, tour de continuation, tirage manqué ou vivier vide ; sinon `CartridgeDrop(catalogId, blockedPlayerId?)` pour l'équipe qui joue, ce tour seulement. Graine `dropSeed(gameId, turnIndex, giverId, skips)` (FNV-1a de `drawSeed`, chaîne `gameId#drop#giverId#skips#turnIndex` ; `turnIndex` = `GameState.currentTurnIndex`, `skips` = `FiestaState.skips` de l'équipe qui joue) : une seule `Random`, d'abord la chance, puis la cartouche (`drawGift`), puis pour `block_guesser` le devineur bloqué parmi `guesserIds` (ordre de l'équipe). Le remplaçant d'un joueur qui saute son tour a donc son propre tirage ; `skips` évite qu'un joueur qui revient après deux sauts (équipe de 2) retrouve la même graine et resaute sans fin. `roundRules` = TOUTE la sortie de `roundModifiers` (Toujours compris : l'incompatibilité avec un Toujours ne vient que d'elles). 🔴 Mêmes entrées, même sortie : l'appelant l'appelle à un moment fixe (après bonus armés et malus résolus) ou stocke le résultat (`FiestaTurnState`, clé optionnelle). Vivier `dropPool` = `randomPool` (filtre commun avec `giftPool` : hors Toujours, manche, règles de la manche, ×2 au-delà de `kDoublePointsMinGap`) moins identique/incompatible avec un malus `received` qui joue ce tour, identique à un bonus `armed` ; `block_guesser` si au moins 2 devineurs (équipe de 3+, `includeBlockGuesser`) ; `block_giver` permis |
+ | `fiesta/fiesta_ensemble.dart` | `FiestaEnsemble`, `kProvidedEnsembles`, `settingsKey`, `nameKey` | Ensemble `{id, rules}` (nom = `rules.ensembleName`). **8 ensembles fournis** (ids `provided_*`, `isProvided`, jamais écrits, seulement duplicables) : Fiesta classique (`kClassicEnsembleId`, présélectionné), Les derniers seront les premiers, Pro Player, Droit au but, Pictionnary, Bilingue, Explosif, Mimeur expert. Aucune règle cachée : tout s'écrit avec les réglages ouverts à tous. `settingsKey` : ce qui joue réellement, hors nom (doublons) ; `dropFrequency` seulement hors Jamais (clés des ensembles existants inchangées). `tryFromJson` refuse un id `provided_*` |
+ | `fiesta/ensemble_summary.dart` | `ensembleSummary`, `rulesSummary`, `kProvidedSummaries`, `EnsembleChip`, `randomCartridgeLines`, `rulesDraw`, `rulesHaveCartridges` | Textes et pastilles de la liste. Fournis : à la main (test : chacun a le sien, mêmes règles que le moteur). Perso : générés depuis `FiestaRules`, jamais stockés ; seul ce qui joue compte. Libellés partagés avec la page « Voir » |
+ | `fiesta/ensemble_validation.dart` | `validateEnsemble`, `ensembleNameError`, `roundsWithoutDraw`, `hasActiveSetting` | Validation **pure** (messages FR) : nom vide / pris, au moins un réglage qui joue (les cartouches qui tombent seules comptent), `drawCount` > 0 sans candidat, doublon de réglages (`others`). `roundsWithoutDraw` : avertissement de l'éditeur, pas une erreur. Les combinaisons impossibles ne sont pas jugées : l'éditeur les verrouille, le moteur les écarte |
+@@ -68,7 +68,7 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+   pour un tirage Fiesta.
+ - Forme JSON (Fiesta v4) : `fiesta: {rules: {format: 4, ensembleName?, modifiers: {id: {always, draw,
+   charges}}, drawCount, allCount, trailingCount, balance}, active: [{catalogId, scope, target, teamId?,
+-  playerId?, charges, nature, round, from?, fromPlayer?, sentTurn?}]?, turn?: {}, chargesUsed?:
++  playerId?, charges, nature, round, from?, fromPlayer?, sentTurn?}]?, turn?: {…, drop?: {catalogId, blockedPlayer?}}, chargesUsed?:
+   [{catalogId, teamId, round, target?}], earned?: [{catalogId, teamId, round}], skips?: {teamId: n}}`.
+ - 🔴 **Fiesta v4 (2026-11-05, Fiesta jamais publiée)** : tout autre format des règles est **illisible**,
+   pas traduit. Ensemble d'un autre format → ignoré (gardé tel quel dans le blob) ; partie Fiesta
+diff --git a/lib/models/fiesta/cartridge_drop.dart b/lib/models/fiesta/cartridge_drop.dart
+index 2e96285..d8ee12f 100644
+--- a/lib/models/fiesta/cartridge_drop.dart
++++ b/lib/models/fiesta/cartridge_drop.dart
+@@ -23,6 +23,58 @@ class CartridgeDrop {
+   final String? blockedPlayerId;
+ 
+   const CartridgeDrop(this.catalogId, {this.blockedPlayerId});
++
++  /// Forme persistée dans `FiestaTurnState` (clé `drop`) : `{catalogId,
++  /// blockedPlayer?}`.
++  Map<String, dynamic> toJson() => {
++        'catalogId': catalogId,
++        if (blockedPlayerId != null) 'blockedPlayer': blockedPlayerId,
++      };
++
++  /// `null` si illisible ou d'id inconnu : la cartouche est perdue seule, le
++  /// tour se relit.
++  static CartridgeDrop? tryFromJson(Map<String, dynamic> json) {
++    final id = json['catalogId'];
++    final blocked = json['blockedPlayer'];
++    if (id is! String || modifierById(id) == null || blocked is! String?) {
++      return null;
++    }
++    return CartridgeDrop(id, blockedPlayerId: blocked);
++  }
++}
++
++/// Le malus tombé [drop] tel qu'il pèse sur le tour de [giverId] (équipe
++/// [teamId]) en manche [round], ou `null` : un bonus (il joue comme une charge
++/// dépensée), « Interdit de faire deviner » (le piège, il ne pèse sur aucun
++/// tour) ou un malus perdu comme le serait un malus reçu (`modifiersForTurn`) :
++/// impossible dans la manche, identique ou incompatible avec ce qui pèse déjà
++/// ([weighing]). Ne peut arriver que sur la continuation en N+1 : au tirage, le
++/// vivier ([dropPool]) a déjà tout écarté.
++ModifierInstance? droppedMalus(
++  CartridgeDrop drop, {
++  required String teamId,
++  required String? giverId,
++  required int round,
++  required List<ModifierInstance> weighing,
++}) {
++  final def = modifierById(drop.catalogId)!;
++  if (def.nature != ModifierNature.malus ||
++      def.id == 'block_giver' ||
++      !isEligibleForRound(def, round) ||
++      weighing.any((w) => w.catalogId == def.id) ||
++      !weighing.every((w) => areCompatible(w.catalogId, def.id))) {
++    return null;
++  }
++  return ModifierInstance(
++    catalogId: def.id,
++    scope: ModifierScope.turn,
++    target: ModifierTarget.player,
++    teamId: teamId,
++    playerId: drop.blockedPlayerId ?? giverId,
++    charges: 1,
++    nature: ModifierNature.malus,
++    round: round,
++  );
+ }
+ 
+ /// Graine d'un tour : chaîne `gameId#drop#giverId#skips#turnIndex`, distincte
+diff --git a/lib/models/fiesta/giver_block.dart b/lib/models/fiesta/giver_block.dart
+index b711188..82608ba 100644
+--- a/lib/models/fiesta/giver_block.dart
++++ b/lib/models/fiesta/giver_block.dart
+@@ -41,3 +41,8 @@ String giverBlockPhrase({
+   required String blocker,
+ }) =>
+     _phrases[seed % _phrases.length](blocked, blocker);
++
++/// Le piège quand « Interdit de faire deviner » tombe du ciel (D4) : pas
++/// d'envoyeur à nommer.
++String droppedGiverBlockPhrase(String blocked) =>
++    'Une cartouche est tombée du ciel, $blocked : tu ne joues pas ce tour.';
+diff --git a/lib/models/fiesta/turn_effects.dart b/lib/models/fiesta/turn_effects.dart
+index 6fbe1c9..30193dd 100644
+--- a/lib/models/fiesta/turn_effects.dart
++++ b/lib/models/fiesta/turn_effects.dart
+@@ -1,3 +1,4 @@
++import 'cartridge_drop.dart';
+ import 'modifier_catalog.dart';
+ import 'modifier_instance.dart';
+ 
+@@ -38,10 +39,16 @@ class FiestaTurnState {
+   /// un toucher par son remplaçant.
+   final ReplacedChoices? replaced;
+ 
++  /// Cartouche tombée sur ce tour (D4), tirée une fois à « Commencer le tour »
++  /// et gardée ici : retour arrière et app tuée retrouvent la même. Clé `drop`,
++  /// omise si nulle.
++  final CartridgeDrop? drop;
++
+   FiestaTurnState({
+     this.freePassesUsed = 0,
+     Map<String, ChargeState> charges = const {},
+     this.replaced,
++    this.drop,
+   }) : charges = Map.unmodifiable(charges);
+ 
+   static final empty = FiestaTurnState();
+@@ -53,11 +60,13 @@ class FiestaTurnState {
+     Map<String, ChargeState>? charges,
+     ReplacedChoices? replaced,
+     bool clearReplaced = false,
++    CartridgeDrop? drop,
+   }) =>
+       FiestaTurnState(
+         freePassesUsed: freePassesUsed ?? this.freePassesUsed,
+         charges: charges ?? this.charges,
+         replaced: clearReplaced ? null : replaced ?? this.replaced,
++        drop: drop ?? this.drop,
+       );
+ 
+   /// La charge [catalogId] passée à [state] (nul = éteinte).
+@@ -73,11 +82,13 @@ class FiestaTurnState {
+         for (final MapEntry(key: id, value: key) in kChargeBonusKeys.entries)
+           if (charges[id] != null) key: charges[id]!.name,
+         if (replaced != null) 'replaced': replaced!.toJson(),
++        if (drop != null) 'drop': drop!.toJson(),
+       };
+ 
+   factory FiestaTurnState.fromJson(Map<String, dynamic> json) {
+     final used = json['freePassesUsed'];
+     final replaced = json['replaced'];
++    final drop = json['drop'];
+     return FiestaTurnState(
+       freePassesUsed: used is int ? used : 0,
+       charges: {
+@@ -88,6 +99,9 @@ class FiestaTurnState {
+       replaced: replaced is Map
+           ? ReplacedChoices.tryFromJson(Map<String, dynamic>.from(replaced))
+           : null,
++      drop: drop is Map
++          ? CartridgeDrop.tryFromJson(Map<String, dynamic>.from(drop))
++          : null,
+     );
+   }
+ }
+diff --git a/lib/providers/CLAUDE.md b/lib/providers/CLAUDE.md
+index e45df58..7c528b3 100644
+--- a/lib/providers/CLAUDE.md
++++ b/lib/providers/CLAUDE.md
+@@ -38,7 +38,9 @@ Les ~400 lignes de getters Fiesta (modèle de lecture) restent ici pour l'instan
+ - **Deux mots à la fois** : retiré du jeu (2026-11-07). 🔴 Une partie relue avec ce bonus allumé ou dépensé continue à un mot : la cartouche ne joue plus, la carte B reste dans `remainingWords` et sort quand elle est trouvée ; `chargesUsed` et `earned` gardent leur `two_words` pour le récap (`test/providers/fiesta_two_words_legacy_test.dart`).
+ - **Ce tour / Réserve** : une cartouche = UN tour d'UNE équipe, stock pour toute la partie. `reserve` (`Cartridge` : restantes, raison du grisé) = les modificateurs où l'équipe a du stock, possibles dans la manche (un mime reste caché avant M3), continuation comprise ; `roundRulesThisTurn` / `receivedThisTurn` / `bonusesThisTurn` = la zone « Ce tour ». Bonus : `toggleBonus` → `armed`, dépensé dans `startTurnTimer`. Malus : `inflictMalus(id, joueur)` vise un joueur adverse (feuille « Sur qui ? », `opponents`) et pose une instance `fromTeamId` + `playerId` (portée tour) + un `ChargeUse` avec `target` (son équipe), tout de suite ; il pèse au prochain tour où ce joueur fait deviner (`ModifierInstance.resolvesAt`). `targetRefusal(id, joueur)` grise d'avance, par personne et quel que soit l'envoyeur : même malus en attente, ou un malus qui ne s'y cumule pas (un seul mime) ; `block_guesser` reste un par équipe ; un malus 1.4.0 sans joueur grise toute son équipe. 🔴 `inflictMalus` garde le refus détaillé en garde-fou → **rien consommé**. `sentThisTurn` / `cancelSent` : annulable seulement dans l'avant-tour de l'envoyeuse où il a été envoyé. `_fiestaAfterTurn` retire à la vraie fin d'un tour les malus qui s'y résolvaient (`resolvesAt`, perdus compris, rien n'est rendu) ; ceux d'un autre joueur et les blocages qui attendent restent.
+ 
+-- 🔴 **Malus reçus cachés (2026-11-15)** : `currentTeamModifiers` retire les malus reçus sur l'avant-tour (`screenGame`) d'un tour pas encore lancé (`_receivedHidden`, hors continuation, déjà révélée). Tous les lecteurs de l'avant-tour passent par lui (aperçu `turnTime`, `blockedGuesser`, `receivedThisTurn`, grisés) : l'avant-tour ne lit jamais `fiesta.active` directement pour l'équipe qui joue. `startTurn` va à `screenTurnReveal` (« Ce qui t'attend ») si un malus reçu joue (`_hasTurnReveal` : jamais pour le joueur piégé, jamais sur une continuation), sinon au décompte ; `leaveTurnReveal` (« C'est parti ») → décompte. Le chrono, lancé du décompte, compte tout.
++- 🔴 **Cartouches qui tombent (D4, 2026-11-15)** : `startTurn` tire (`_drawDrop`) AVANT de choisir entre « Ce qui t'attend » et le décompte, une fois par tour, et garde la cartouche dans `fiesta.turn.drop` (rien en continuation, qui garde celle du tour ; rien pour un joueur piégé par un « Interdit de faire deviner » reçu). Malus reçus lus sur `_modifiersThisTurn`, jamais sur la liste cachée. Bonus tombé = charge `spent` dans `_charge` (effets, badges, analytics) mais jamais dans `charges` : aucun `ChargeUse`, stock inchangé. Malus tombé = instance `scope: turn` sans envoyeur ajoutée par `_modifiersThisTurn` (`droppedMalus`) : `_isRoundRule` le sépare des règles de manche, `receivedThisTurn` ne le contient pas, `droppedThisTurn` l'expose (caché sur l'avant-tour). `block_giver` tombé : `_pendingGiverBlock` le synthétise, même piège, `confirmGiverBlock` repart d'un `turn` neuf (le remplaçant tire avec `skips` + 1).
++
++- 🔴 **Malus reçus cachés (2026-11-15)** : `currentTeamModifiers` retire les malus reçus sur l'avant-tour (`screenGame`) d'un tour pas encore lancé (`_receivedHidden`, hors continuation, déjà révélée). Tous les lecteurs de l'avant-tour passent par lui (aperçu `turnTime`, `blockedGuesser`, `receivedThisTurn`, grisés) : l'avant-tour ne lit jamais `fiesta.active` directement pour l'équipe qui joue. `startTurn` va à `screenTurnReveal` (« Ce qui t'attend ») si un malus reçu joue ou si une cartouche est tombée (`_hasTurnReveal` : jamais pour le joueur piégé, jamais sur une continuation), sinon au décompte ; `leaveTurnReveal` (« C'est parti ») → décompte. Le chrono, lancé du décompte, compte tout.
+ 
+ - **Dernier choix (Fiesta v3.1)** : `setPendingFiesta` et `restartWithSamePlayers` écrivent le choix dans `GameSettings` (`fiestaEnabled`, `_rememberFiestaChoice`). `_rememberedFiesta` le relit au démarrage et dans `startNewGame` : Classique = nul, une partie rejouée pas encore lancée (`replayFiesta`, écrit par `restartWithSamePlayers`, effacé par `startGame` et par tout `setPendingFiesta`), ou le dernier ensemble (`lastUsedId` ; supprimé ou illisible → Fiesta classique). Partie reprise : `pendingFiesta` = `fiesta?.rules`, sans toucher au dernier choix. Le tuto Fiesta n'est ouvert que par `_setMode`, donc jamais par une restauration. Passer en Fiesta : `chooseFiestaMode` (Fiesta classique tout de suite, puis le dernier ensemble relu ; un autre choix fait entre-temps l'emporte). Retour de la liste sans valider : `refreshPendingEnsemble` suit l'ensemble modifié ou supprimé, jamais des règles gelées. `clearLocalStorage` oublie aussi `lastUsedId`.
+ 
+diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
+index ba5ba32..9ea659d 100644
+--- a/lib/providers/game_provider.dart
++++ b/lib/providers/game_provider.dart
+@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
+ import 'package:flutter/widgets.dart';
+ import '../models/player.dart';
+ import '../models/team.dart';
++import '../models/fiesta/cartridge_drop.dart';
+ import '../models/fiesta/cartridge_gifts.dart';
+ import '../models/fiesta/fiesta_ensemble.dart';
+ import '../models/fiesta/fiesta_rules.dart';
+@@ -735,6 +736,7 @@ class GameProvider extends ChangeNotifier {
+   }
+ 
+   void startTurn() {
++    _drawDrop();
+     _game = _game.copyWith(
+       currentScreen: _hasTurnReveal
+           ? AppConstants.screenTurnReveal
+@@ -748,6 +750,50 @@ class GameProvider extends ChangeNotifier {
+     _saveGameState();
+   }
+ 
++  /// Cartouche qui tombe sur ce tour (D4), tirée UNE fois à « Commencer le
++  /// tour », avant de choisir entre « Ce qui t'attend » et le décompte, puis
++  /// gardée dans `fiesta.turn` jusqu'à la vraie fin du tour. Rien sur une
++  /// continuation (le tour a déjà été tiré), ni pour un joueur piégé par un
++  /// « Interdit de faire deviner » reçu (il ne joue pas : son remplaçant tirera).
++  void _drawDrop() {
++    final fiesta = _game.fiesta;
++    final team = getCurrentTeam();
++    final giver = getCurrentPlayer();
++    if (fiesta == null ||
++        team == null ||
++        giver == null ||
++        _pendingGiverBlock != null) {
++      return;
++    }
++    final gameId = _game.gameId ?? '';
++    final drop = dropForTurn(
++      rules: fiesta.rules,
++      gameId: gameId,
++      turnIndex: _game.currentTurnIndex,
++      giverId: giver.id,
++      skips: fiesta.skips[team.id] ?? 0,
++      round: _game.currentRound,
++      roundRules: roundModifiers(fiesta.rules,
++          gameId: gameId, round: _game.currentRound),
++      // Pas `receivedThisTurn` : caché sur l'avant-tour, d'où l'on vient.
++      received: _modifiersThisTurn
++          .where((m) => m.fromTeamId != null)
++          .map((m) => m.catalogId),
++      armed: [
++        for (final MapEntry(key: id, value: state)
++            in fiesta.turn.charges.entries)
++          if (state == ChargeState.armed) id,
++      ],
++      guesserIds: team.playerIds.where((id) => id != giver.id).toList(),
++      gap: leaderGap({for (final t in _teams) t.id: t.score}, team.id),
++      continuation: isContinuation,
++    );
++    // Continuation : rien ne tombe, celle du tour (s'il y en a une) reste.
++    if (drop == null) return;
++    _game = _game.copyWith(
++        fiesta: fiesta.copyWith(turn: fiesta.turn.copyWith(drop: drop)));
++  }
++
+   /// « C'est parti » sur « Ce qui t'attend » : le décompte habituel.
+   void leaveTurnReveal() {
+     if (_game.currentScreen != AppConstants.screenTurnReveal) return;
+@@ -1476,19 +1522,42 @@ class GameProvider extends ChangeNotifier {
+   /// chrono, lu sur le décompte, les compte.
+   List<ModifierInstance> get currentTeamModifiers {
+     final all = _modifiersThisTurn;
+-    return _receivedHidden
+-        ? all.where((m) => m.fromTeamId == null).toList()
+-        : all;
++    return _receivedHidden ? all.where(_isRoundRule).toList() : all;
+   }
+ 
+   List<ModifierInstance> get _modifiersThisTurn {
+     final fiesta = _game.fiesta;
+     final teamId = getCurrentTeam()?.id;
+     if (fiesta == null || teamId == null) return const [];
+-    return modifiersForTurn(fiesta.active,
+-        teamId: teamId,
+-        playerId: getCurrentPlayer()?.id,
+-        round: _game.currentRound);
++    final giverId = getCurrentPlayer()?.id;
++    final mods = modifiersForTurn(fiesta.active,
++        teamId: teamId, playerId: giverId, round: _game.currentRound);
++    // Un malus tombé pèse comme un malus reçu, après eux.
++    final dropped = fiesta.turn.drop == null
++        ? null
++        : droppedMalus(fiesta.turn.drop!,
++            teamId: teamId,
++            giverId: giverId,
++            round: _game.currentRound,
++            weighing: mods);
++    return dropped == null ? mods : [...mods, dropped];
++  }
++
++  /// Règle de la manche (ni malus reçu, ni malus tombé).
++  static bool _isRoundRule(ModifierInstance m) =>
++      m.fromTeamId == null && m.scope == ModifierScope.round;
++
++  /// Cartouche tombée qui joue sur ce tour (« Ce qui t'attend », zone « Actif »
++  /// d'une continuation) : un bonus, ou un malus qui pèse encore. Cachée sur
++  /// l'avant-tour comme les malus reçus.
++  CartridgeDrop? get droppedThisTurn {
++    final drop = _turn.drop;
++    if (drop == null || _receivedHidden) return null;
++    return modifierById(drop.catalogId)!.nature == ModifierNature.bonus ||
++            currentTeamModifiers
++                .any((m) => m.fromTeamId == null && !_isRoundRule(m))
++        ? drop
++        : null;
+   }
+ 
+   /// Avant-tour d'un tour pas encore lancé. Une continuation a déjà été
+@@ -1502,7 +1571,8 @@ class GameProvider extends ChangeNotifier {
+   bool get _hasTurnReveal =>
+       _pendingGiverBlock == null &&
+       !isContinuation &&
+-      _modifiersThisTurn.any((m) => m.fromTeamId != null);
++      (_turn.drop != null ||
++          _modifiersThisTurn.any((m) => m.fromTeamId != null));
+ 
+   // ========== EFFETS DE TOUR (2-8) ==========
+ 
+@@ -1567,12 +1637,25 @@ class GameProvider extends ChangeNotifier {
+       return null;
+     }
+     return fiesta.active
+-        .where((m) =>
+-            m.catalogId == 'block_giver' &&
+-            m.fromTeamId != null &&
+-            m.teamId == team.id &&
+-            m.playerId == player.id)
+-        .firstOrNull;
++            .where((m) =>
++                m.catalogId == 'block_giver' &&
++                m.fromTeamId != null &&
++                m.teamId == team.id &&
++                m.playerId == player.id)
++            .firstOrNull ??
++        // Tombé du ciel : même piège, sans envoyeur.
++        (fiesta.turn.drop?.catalogId == 'block_giver'
++            ? ModifierInstance(
++                catalogId: 'block_giver',
++                scope: ModifierScope.turn,
++                target: ModifierTarget.player,
++                teamId: team.id,
++                playerId: player.id,
++                charges: 1,
++                nature: ModifierNature.malus,
++                round: _game.currentRound,
++              )
++            : null);
+   }
+ 
+   /// Index du joueur de l'équipe qui joue, si son tour saute une fois de plus.
+@@ -1592,13 +1675,15 @@ class GameProvider extends ChangeNotifier {
+     if (block == null || team == null || blocked == null) return null;
+     final next = team.playerIds[_indexAfterSkip(team)];
+     return (
+-      phrase: giverBlockPhrase(
+-        seed: giverBlockSeed(_game.gameId ?? '', _game.currentTurnIndex),
+-        blocked: blocked.name,
+-        blocker: getPlayerById(block.fromPlayerId ?? '')?.name ??
+-            getTeamById(block.fromTeamId!)?.name ??
+-            '?',
+-      ),
++      phrase: block.fromTeamId == null
++          ? droppedGiverBlockPhrase(blocked.name)
++          : giverBlockPhrase(
++              seed: giverBlockSeed(_game.gameId ?? '', _game.currentTurnIndex),
++              blocked: blocked.name,
++              blocker: getPlayerById(block.fromPlayerId ?? '')?.name ??
++                  getTeamById(block.fromTeamId!)?.name ??
++                  '?',
++            ),
+       nextPlayer: getPlayerById(next)?.name ?? '',
+     );
+   }
+@@ -1686,7 +1771,11 @@ class GameProvider extends ChangeNotifier {
+           if (_charge(id) == ChargeState.spent) id,
+       ];
+ 
+-  ChargeState? _charge(String id) => _turn.charges[id];
++  /// Un bonus tombé du ciel joue comme une charge dépensée : ses effets, ses
++  /// badges et l'analytics, sans `ChargeUse` (rien n'est pris au stock).
++  ChargeState? _charge(String id) =>
++      _turn.charges[id] ??
++      (_turn.drop?.catalogId == id ? ChargeState.spent : null);
+ 
+   /// Cartouches [id] restantes de l'équipe qui joue pour le reste de la partie
+   /// (un bonus allumé compte encore, il se dépense au départ).
+@@ -1788,7 +1877,7 @@ class GameProvider extends ChangeNotifier {
+ 
+   /// Règles de manche qui pèsent sur ce tour (« Ce tour », cercles neutres).
+   List<ModifierInstance> get roundRulesThisTurn =>
+-      currentTeamModifiers.where((m) => m.fromTeamId == null).toList();
++      currentTeamModifiers.where(_isRoundRule).toList();
+ 
+   /// Malus infligés par une autre équipe pour ce tour.
+   List<ModifierInstance> get receivedThisTurn =>
+diff --git a/lib/screens/CLAUDE.md b/lib/screens/CLAUDE.md
+index b5d60d7..3c02351 100644
+--- a/lib/screens/CLAUDE.md
++++ b/lib/screens/CLAUDE.md
+@@ -28,7 +28,7 @@ HomeScreen → SettingsScreen (Classique / Fiesta)
+ | `turn_screen.dart` | Jeu actif : timer, mot courant (auto-size), boutons Passer/Valider (`TurnWordText`, `TurnActionButtons`), pause, sons, haptic. Fiesta : pastilles du tour (icone + `turnLabel`, « Bob ne répond pas » pour le joueur bloque, pas de pastille sans `turnLabel`, Passe gratuite retiree une fois utilisee). La raison de la bulle de Passer se deduit de `PassState`, comme l'aide. Chrono a zero : `endTurn` directement dans le callback du Timer, jamais dans un `addPostFrameCallback` (il ne demande pas de frame, le tour restait sur « 1s » jusqu'a un toucher). |
+ | `verification_screen.dart` | Validation post-tour : toggle valid/invalide par mot, sauvegarde snapshot |
+ | `transition_screen.dart` | Fin de manche, Classique et Fiesta, aucun score. Apres M1 et M2 : animation ~2,8 s (`_RoundStage`, sons `impact-bass-1` et `whoosh-short`, vibration, un toucher fait passer, animations reduites respectees) puis `nextRound`, directement vers l'avant-tour. Apres M3 : ecran fixe (retour, « Voir les N mots devines », « Voir les resultats ») |
+-| `turn_reveal_screen.dart` | Fiesta, « Ce qui t'attend » : après « Commencer le tour », seulement si un malus reçu joue à ce tour (jamais pour le joueur piégé, jamais sur une continuation). « On vient de t'infliger » (icône, nom, « Prénom · Équipe ») puis « Déjà activé » (règles de la manche, bonus), « C'est parti » → décompte. Ni retour ni accueil : l'avant-tour permettrait de réarmer en connaissant les malus ; persisté, une app tuée y revient |
++| `turn_reveal_screen.dart` | Fiesta, « Ce qui t'attend » : après « Commencer le tour », seulement si un malus reçu joue à ce tour ou si une cartouche est tombée (jamais pour le joueur piégé, jamais sur une continuation). « On vient de t'infliger » (cartouche tombée en tête, même un bonus, provenance « Tombée du ciel » en jaune ; puis icône, nom, « Prénom · Équipe ») puis « Déjà activé » (règles de la manche, bonus), « C'est parti » → décompte. Ni retour ni accueil : l'avant-tour permettrait de réarmer en connaissant les malus ; persisté, une app tuée y revient |
+ | `giver_blocked_screen.dart` | Le piege d'« Interdit de faire deviner » : phrase, « Passe le telephone a X. », « Suivant » (`confirmGiverBlock`). Rien n'est consomme avant : une app tuee la remontre |
+ | `score_reveal_screen.dart` | `EndOfGameScreen`, ce que montre `screenResults` : `ScoreRevealScreen` tant que `GameState.scoreRevealSeen` est faux, sinon `ResultsScreen`. Aucun écran ni chemin de plus : tout ce qui mène aux résultats passe par cet aiguillage, l'historique n'y passe jamais. `ScoreRevealScreen` (maquette `curve(2)`) : graphique fixe tracé en 4,5 s sans chiffres (`ScoreRevealPainter`), légende des noms d'équipes dans l'ordre des équipes pour ne rien dévoiler, prénoms à droite des têtes (noms d'équipes pour toutes si une équipe dépasse 5 joueurs) ; fin : vainqueur (jamais d'égalité, `getTeamsSortedByScore`), scores, « Suivant ». Un toucher ou le retour système va aux résultats. L'animation attend le départ de la musique (0,8 s au plus) pour que son gong tombe à la fin du tracé. Animations réduites : la fin directement, sans aucun son. Le graphique passe avant le titre et la légende quand la place manque, le bouton reste toujours visible. Une app tuée pendant la révélation rouvre sur les résultats |
+ | `surprise_challenge_screen.dart` | Défi surprise, autonome et piloté par ses paramètres : VS coupé, règle, action, « Qui a gagné ? », roulette, « Les Moulins gagnent ! » en couleur d'équipe sans ombre. « Passer ce défi » jusqu'à « Continuer » (rien n'est donné avant), retour système bloqué, sons coupés à la sortie, animations réduites respectées |
+diff --git a/lib/screens/fiesta_tutorial_screen.dart b/lib/screens/fiesta_tutorial_screen.dart
+index 8969458..34b2ad5 100644
+--- a/lib/screens/fiesta_tutorial_screen.dart
++++ b/lib/screens/fiesta_tutorial_screen.dart
+@@ -57,8 +57,9 @@ class FiestaTutorialScreen extends StatelessWidget {
+             TutorialRow(
+                 '4',
+                 'Cartouches au hasard',
+-                'Selon l\'ensemble : à chaque manche, ou pour les équipes '
+-                    'menées après les manches 1 et 2.'),
++                'Selon l\'ensemble : à chaque manche, pour les équipes '
++                    'menées après les manches 1 et 2, ou tombées au début '
++                    'd\'un tour, appliquées tout de suite.'),
+             TutorialRow(
+                 '5',
+                 'Défis surprises',
+diff --git a/lib/screens/turn_reveal_screen.dart b/lib/screens/turn_reveal_screen.dart
+index 18534d6..6cde979 100644
+--- a/lib/screens/turn_reveal_screen.dart
++++ b/lib/screens/turn_reveal_screen.dart
+@@ -17,6 +17,12 @@ class TurnRevealScreen extends StatelessWidget {
+   @override
+   Widget build(BuildContext context) {
+     final provider = context.watch<GameProvider>();
++    final drop = provider.droppedThisTurn;
++    // « Bloquer un devineur » : qui ne répond pas.
++    String? title(String id) => id == 'block_guesser'
++        ? '${provider.blockedGuesser?.name ?? ''} '
++            '${modifierById(id)!.turnLabel}'
++        : null;
+     final known = [
+       for (final m in provider.roundRulesThisTurn)
+         _Line(m.catalogId, 'Règle de la manche', Colors.white, filled: false),
+@@ -46,14 +52,20 @@ class TurnRevealScreen extends StatelessWidget {
+                       children: [
+                         const _Section('ON VIENT DE T\'INFLIGER',
+                             color: AppColors.malus),
++                        // Cartouche tombée du ciel (D4) : en tête, même un
++                        // bonus.
++                        if (drop != null)
++                          _Line(
++                              drop.catalogId,
++                              'Tombée du ciel',
++                              modifierColor(
++                                  modifierById(drop.catalogId)!.nature),
++                              originColor: AppColors.warning,
++                              title: title(drop.catalogId)),
+                         for (final m in provider.receivedThisTurn)
+                           _Line(m.catalogId, provider.malusSender(m),
+                               AppColors.malus,
+-                              // « Bloquer un devineur » : qui ne répond pas.
+-                              title: m.catalogId == 'block_guesser'
+-                                  ? '${provider.blockedGuesser?.name ?? ''} '
+-                                      '${modifierById(m.catalogId)!.turnLabel}'
+-                                  : null),
++                              title: title(m.catalogId)),
+                         if (known.isNotEmpty) ...[
+                           const SizedBox(height: 20),
+                           const _Section('DÉJÀ ACTIVÉ',
+@@ -110,9 +122,10 @@ class _Line extends StatelessWidget {
+   final Color color;
+   final bool filled;
+   final String? title;
++  final Color originColor;
+ 
+   const _Line(this.id, this.origin, this.color,
+-      {this.filled = true, this.title});
++      {this.filled = true, this.title, this.originColor = AppColors.gray400});
+ 
+   @override
+   Widget build(BuildContext context) => Padding(
+@@ -146,10 +159,10 @@ class _Line extends StatelessWidget {
+                   ),
+                   Text(
+                     origin,
+-                    style: const TextStyle(
++                    style: TextStyle(
+                       fontFamily: 'Poppins',
+                       fontSize: 12,
+-                      color: AppColors.gray400,
++                      color: originColor,
+                     ),
+                   ),
+                 ],
+diff --git a/lib/widgets/fiesta/turn_cartridges.dart b/lib/widgets/fiesta/turn_cartridges.dart
+index 020bed5..6cae5e1 100644
+--- a/lib/widgets/fiesta/turn_cartridges.dart
++++ b/lib/widgets/fiesta/turn_cartridges.dart
+@@ -39,7 +39,8 @@ class FiestaTurnZone extends StatefulWidget {
+           sent: provider.sentThisTurn.length,
+           thisTurn: provider.roundRulesThisTurn.length +
+               provider.receivedThisTurn.length +
+-              provider.bonusesThisTurn.length,
++              provider.bonusesThisTurn.length +
++              (provider.droppedThisTurn == null ? 0 : 1),
+           blockedLine: provider.blockedGuesser != null,
+           diameter: _comfortSize,
+         ) <=
+@@ -298,6 +299,12 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+     final rules = _p.roundRulesThisTurn;
+     final received = _p.receivedThisTurn;
+     final armed = _p.bonusesThisTurn;
++    // Continuation seulement : ailleurs, l'avant-tour la cache.
++    final dropped = _p.droppedThisTurn;
++    final droppedKind =
++        modifierById(dropped?.catalogId ?? '')?.nature == ModifierNature.bonus
++            ? _Kind.armed
++            : _Kind.received;
+     final reserve = _p.reserve;
+     final sent = _p.sentThisTurn;
+     final bonus =
+@@ -308,7 +315,10 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+     final firstUnusable = reserve.where((c) => !c.usable).firstOrNull;
+ 
+     return LayoutBuilder(builder: (context, box) {
+-      final thisTurnCount = rules.length + received.length + armed.length;
++      final thisTurnCount = rules.length +
++          received.length +
++          armed.length +
++          (dropped == null ? 0 : 1);
+       final (:size, :reserveSize, :bonusWidth, :showHelp) = _fit(
+         width: box.maxWidth,
+         height: box.maxHeight,
+@@ -361,6 +371,14 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
+                             id: m.catalogId, kind: _Kind.received, size: size),
+                         onLongPress: () => _explain(m.catalogId, _Kind.received,
+                             from: _p.getTeamById(m.fromTeamId!)?.name)),
++                  if (dropped != null)
++                    _slot(
++                        _Circle(
++                            id: dropped.catalogId,
++                            kind: droppedKind,
++                            size: size),
++                        onLongPress: () =>
++                            _explain(dropped.catalogId, droppedKind)),
+                   for (final id in armed)
+                     _slot(
+                       key: id == armed.first ? keys.firstArmed : null,
+diff --git a/test/providers/fiesta_cartridge_drop_test.dart b/test/providers/fiesta_cartridge_drop_test.dart
+new file mode 100644
+index 0000000..2a6d6b6
+--- /dev/null
++++ b/test/providers/fiesta_cartridge_drop_test.dart
+@@ -0,0 +1,177 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/cartridge_drop.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/models/word_event.dart';
++import 'package:guess_it_all_mobile/providers/game_provider.dart';
++import 'package:guess_it_all_mobile/services/analytics_service.dart';
++import 'package:guess_it_all_mobile/utils/constants.dart';
++
++import 'zero_carryover_turn_test.dart' show givenGame, validate;
++
++/// Cartouches qui tombent, branchées en partie (D4 des retours du 2026-11-15).
++void main() {
++  final often = FiestaRules(dropFrequency: DropFrequency.often);
++
++  CartridgeDrop? drawn(String gameId, List<String> team,
++          {int giver = 0,
++          int skips = 0,
++          int gap = 0,
++          List<String> received = const []}) =>
++      dropForTurn(
++        rules: often,
++        gameId: gameId,
++        turnIndex: 0,
++        giverId: team[giver],
++        skips: skips,
++        round: 1,
++        roundRules: const [],
++        received: received,
++        armed: const [],
++        guesserIds: [...team]..removeAt(giver),
++        gap: gap,
++        continuation: false,
++      );
++
++  /// Partie à 2 équipes de 3, dont le 1er tour (J0 de l'équipe 0) voit tomber
++  /// [id] : on cherche une graine qui le donne ([accept] en plus), puis on la
++  /// pose comme `gameId`. [rivalScore] : score de l'équipe 1 (écart du ×2).
++  /// [received] : malus que J0 a reçus de l'équipe 1, qui jouent à ce tour.
++  Future<GameProvider> givenDrop(String id,
++      {int rivalScore = 0,
++      List<String> received = const [],
++      bool Function(String gameId, List<String> team)? accept}) async {
++    final p = await givenGame(2, fiesta: often);
++    final team = p.teams[0].playerIds;
++    var i = 0;
++    while (drawn('g$i', team, gap: rivalScore, received: received)?.catalogId !=
++            id ||
++        !(accept?.call('g$i', team) ?? true)) {
++      i++;
++    }
++    p.goToScreen(AppConstants.screenVerification);
++    p.savePreValidationState(const []);
++    final json = p.game.toJson()
++      ..remove('preValidationSnapshot')
++      ..['gameId'] = 'g$i'
++      ..['currentScreen'] = AppConstants.screenGame;
++    (json['fiesta'] as Map)['active'] = [
++      for (final malus in received)
++        {
++          'catalogId': malus,
++          'scope': 'turn',
++          'target': 'player',
++          'teamId': p.teams[0].id,
++          'playerId': team[0],
++          'charges': 1,
++          'nature': 'malus',
++          'round': 1,
++          'from': p.teams[1].id,
++        },
++    ];
++    p.game.preValidationSnapshot!['game'] = json;
++    (p.game.preValidationSnapshot!['teamScores'] as List)[1]['score'] =
++        rivalScore;
++    p.restorePreValidationState();
++    p.goToScreen(AppConstants.screenGame);
++    return p;
++  }
++
++  int allotted(GameProvider p) =>
++      (p.game.turnEndTimestamp! - p.game.turnStartTimestamp!) ~/ 1000;
++
++  test(
++      'la cartouche tombée est gardée dans le tour : une app tuée la retrouve, '
++      'elle pèse sur le chrono et part à la vraie fin du tour', () async {
++    final p = await givenDrop('minus_10s');
++    p.startTurn();
++    expect(p.game.currentScreen, AppConstants.screenTurnReveal,
++        reason: 'une cartouche tombée suffit à « Ce qui t\'attend »');
++    expect(p.droppedThisTurn?.catalogId, 'minus_10s');
++
++    await pumpEventQueue();
++    final relu = GameProvider();
++    await pumpEventQueue();
++    expect(relu.game.currentScreen, AppConstants.screenTurnReveal);
++    expect(relu.droppedThisTurn?.catalogId, 'minus_10s');
++    expect(relu.receivedThisTurn, isEmpty);
++    expect(relu.roundRulesThisTurn, isEmpty);
++
++    relu.leaveTurnReveal();
++    relu.startTurnTimer();
++    expect(allotted(relu), relu.settings.turnDuration - 10);
++    relu.endTurn();
++    validate(relu, const []);
++    expect(relu.game.fiesta!.turn.drop, isNull);
++  });
++
++  test(
++      'un ×2 tombé double les points du tour, sans rien prendre au stock ; '
++      'l\'analytics le porte une fois', () async {
++    final p = await givenDrop('double_points', rivalScore: 20);
++    final team = p.teams[0];
++    p.startTurn();
++    p.leaveTurnReveal();
++    p.startTurnTimer();
++    p.markWordAsGuessed();
++    p.markWordAsGuessed();
++    final guessed = AnalyticsService()
++        .currentGame!
++        .events
++        .lastWhere((e) => e.eventType == WordEventType.guessed);
++    expect(guessed.modifiers, ['double_points']);
++    p.endTurn();
++    validate(p, List<String>.from(p.game.wordsGuessedThisTurn));
++
++    expect(p.teams[0].score, 4);
++    expect(p.game.fiesta!.chargesUsed, isEmpty);
++    expect(p.game.fiesta!.cartridgesLeft('double_points', team.id), 0);
++  });
++
++  test(
++      '« Interdit de faire deviner » tombé : décompte puis piège, sans « Ce '
++      'qui t\'attend » ; le remplaçant a son propre tirage', () async {
++    // Le remplaçant ne retombe pas sur le piège, et son tirage dépend des
++    // tours sautés de l'équipe.
++    final p = await givenDrop('block_giver', accept: (g, team) {
++      final next = drawn(g, team, giver: 1, skips: 1)?.catalogId;
++      return next != 'block_giver' &&
++          next != drawn(g, team, giver: 1)?.catalogId;
++    });
++    final team = p.teams[0];
++    final expected = drawn(p.game.gameId!, team.playerIds, giver: 1, skips: 1);
++
++    p.startTurn();
++    expect(p.game.currentScreen, AppConstants.screenCountdown);
++    p.startTurnTimer();
++    expect(p.game.currentScreen, AppConstants.screenGiverBlocked);
++    expect(p.giverBlockScreen!.phrase, contains('tombée du ciel'));
++    p.confirmGiverBlock();
++
++    expect(p.game.currentScreen, AppConstants.screenGame);
++    expect(p.getCurrentPlayer()!.id, team.playerIds[1]);
++    expect(p.game.fiesta!.skips[team.id], 1);
++    expect(p.game.fiesta!.turn.drop, isNull);
++    p.startTurn();
++    expect(p.game.fiesta!.turn.drop?.catalogId, expected?.catalogId);
++    expect(
++        p.game.fiesta!.turn.drop?.blockedPlayerId, expected?.blockedPlayerId);
++  });
++
++  test(
++      'le malus tombé entre dans `WordEvent.modifiers`, après les malus reçus '
++      'qu\'il ne double jamais', () async {
++    // Sans le malus reçu, la même graine ferait tomber « Mot à l'envers ».
++    final p = await givenDrop('minus_10s',
++        received: ['reversed'],
++        accept: (g, team) => drawn(g, team)?.catalogId == 'reversed');
++    p.startTurn();
++    expect(p.droppedThisTurn?.catalogId, 'minus_10s');
++    p.leaveTurnReveal();
++    p.startTurnTimer();
++    final shown = AnalyticsService()
++        .currentGame!
++        .events
++        .lastWhere((e) => e.eventType == WordEventType.shown);
++    expect(shown.modifiers, ['reversed', 'minus_10s']);
++  });
++}
