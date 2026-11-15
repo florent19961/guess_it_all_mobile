@@ -181,4 +181,18 @@ void main() {
       expect(pool(guessers: ['p2', 'p3']), contains('block_guesser'));
     });
   });
+
+  test(
+      'malus tombé poursuivi en N+1 (continuation) : perdu comme un malus reçu '
+      's\'il n\'existe plus dans la manche ou double une règle', () {
+    ModifierInstance? weighs(String id, int round,
+            [List<ModifierInstance> weighing = const []]) =>
+        droppedMalus(CartridgeDrop(id),
+            teamId: 't1', giverId: 'p1', round: round, weighing: weighing);
+
+    expect(weighs('other_language', 2)?.playerId, 'p1');
+    expect(weighs('other_language', 3), isNull);
+    expect(weighs('reversed', 2, [rule('reversed', 2)]), isNull);
+    expect(weighs('mime_no_arms', 3, [rule('mime_back_turned', 3)]), isNull);
+  });
 }
