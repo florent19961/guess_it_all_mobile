@@ -39,7 +39,8 @@ class FiestaTurnZone extends StatefulWidget {
           sent: provider.sentThisTurn.length,
           thisTurn: provider.roundRulesThisTurn.length +
               provider.receivedThisTurn.length +
-              provider.bonusesThisTurn.length,
+              provider.bonusesThisTurn.length +
+              (provider.droppedThisTurn == null ? 0 : 1),
           blockedLine: provider.blockedGuesser != null,
           diameter: _comfortSize,
         ) <=
@@ -298,6 +299,12 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
     final rules = _p.roundRulesThisTurn;
     final received = _p.receivedThisTurn;
     final armed = _p.bonusesThisTurn;
+    // Continuation seulement : ailleurs, l'avant-tour la cache.
+    final dropped = _p.droppedThisTurn;
+    final droppedKind =
+        modifierById(dropped?.catalogId ?? '')?.nature == ModifierNature.bonus
+            ? _Kind.armed
+            : _Kind.received;
     final reserve = _p.reserve;
     final sent = _p.sentThisTurn;
     final bonus =
@@ -308,7 +315,10 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
     final firstUnusable = reserve.where((c) => !c.usable).firstOrNull;
 
     return LayoutBuilder(builder: (context, box) {
-      final thisTurnCount = rules.length + received.length + armed.length;
+      final thisTurnCount = rules.length +
+          received.length +
+          armed.length +
+          (dropped == null ? 0 : 1);
       final (:size, :reserveSize, :bonusWidth, :showHelp) = _fit(
         width: box.maxWidth,
         height: box.maxHeight,
@@ -361,6 +371,14 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
                             id: m.catalogId, kind: _Kind.received, size: size),
                         onLongPress: () => _explain(m.catalogId, _Kind.received,
                             from: _p.getTeamById(m.fromTeamId!)?.name)),
+                  if (dropped != null)
+                    _slot(
+                        _Circle(
+                            id: dropped.catalogId,
+                            kind: droppedKind,
+                            size: size),
+                        onLongPress: () =>
+                            _explain(dropped.catalogId, droppedKind)),
                   for (final id in armed)
                     _slot(
                       key: id == armed.first ? keys.firstArmed : null,

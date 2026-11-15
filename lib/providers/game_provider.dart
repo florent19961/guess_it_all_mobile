@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import '../models/player.dart';
 import '../models/team.dart';
+import '../models/fiesta/cartridge_drop.dart';
 import '../models/fiesta/cartridge_gifts.dart';
 import '../models/fiesta/fiesta_ensemble.dart';
 import '../models/fiesta/fiesta_rules.dart';
@@ -735,6 +736,7 @@ class GameProvider extends ChangeNotifier {
   }
 
   void startTurn() {
+    _drawDrop();
     _game = _game.copyWith(
       currentScreen: _hasTurnReveal
           ? AppConstants.screenTurnReveal
@@ -746,6 +748,50 @@ class GameProvider extends ChangeNotifier {
 
     notifyListeners();
     _saveGameState();
+  }
+
+  /// Cartouche qui tombe sur ce tour (D4), tirée UNE fois à « Commencer le
+  /// tour », avant de choisir entre « Ce qui t'attend » et le décompte, puis
+  /// gardée dans `fiesta.turn` jusqu'à la vraie fin du tour. Rien sur une
+  /// continuation (le tour a déjà été tiré), ni pour un joueur piégé par un
+  /// « Interdit de faire deviner » reçu (il ne joue pas : son remplaçant tirera).
+  void _drawDrop() {
+    final fiesta = _game.fiesta;
+    final team = getCurrentTeam();
+    final giver = getCurrentPlayer();
+    if (fiesta == null ||
+        team == null ||
+        giver == null ||
+        _pendingGiverBlock != null) {
+      return;
+    }
+    final gameId = _game.gameId ?? '';
+    final drop = dropForTurn(
+      rules: fiesta.rules,
+      gameId: gameId,
+      turnIndex: _game.currentTurnIndex,
+      giverId: giver.id,
+      skips: fiesta.skips[team.id] ?? 0,
+      round: _game.currentRound,
+      roundRules: roundModifiers(fiesta.rules,
+          gameId: gameId, round: _game.currentRound),
+      // Pas `receivedThisTurn` : caché sur l'avant-tour, d'où l'on vient.
+      received: _modifiersThisTurn
+          .where((m) => m.fromTeamId != null)
+          .map((m) => m.catalogId),
+      armed: [
+        for (final MapEntry(key: id, value: state)
+            in fiesta.turn.charges.entries)
+          if (state == ChargeState.armed) id,
+      ],
+      guesserIds: team.playerIds.where((id) => id != giver.id).toList(),
+      gap: leaderGap({for (final t in _teams) t.id: t.score}, team.id),
+      continuation: isContinuation,
+    );
+    // Continuation : rien ne tombe, celle du tour (s'il y en a une) reste.
+    if (drop == null) return;
+    _game = _game.copyWith(
+        fiesta: fiesta.copyWith(turn: fiesta.turn.copyWith(drop: drop)));
   }
 
   /// « C'est parti » sur « Ce qui t'attend » : le décompte habituel.
@@ -1467,8 +1513,8 @@ class GameProvider extends ChangeNotifier {
   }
 
   /// Modificateurs qui pèsent sur l'équipe qui joue (badges) : les règles de la
-  /// manche COURANTE, continuation comprise, et ses malus reçus
-  /// ([modifiersForTurn]).
+  /// manche COURANTE, continuation comprise, ses malus reçus
+  /// ([modifiersForTurn]) et le malus tombé du ciel ([droppedMalus]).
   ///
   /// 🔴 Malus reçus CACHÉS sur l'avant-tour, jusqu'à « Commencer le tour »
   /// ([_receivedHidden]) : tout ce que l'avant-tour lit passe par ici (aperçu
@@ -1476,19 +1522,42 @@ class GameProvider extends ChangeNotifier {
   /// chrono, lu sur le décompte, les compte.
   List<ModifierInstance> get currentTeamModifiers {
     final all = _modifiersThisTurn;
-    return _receivedHidden
-        ? all.where((m) => m.fromTeamId == null).toList()
-        : all;
+    return _receivedHidden ? all.where(_isRoundRule).toList() : all;
   }
 
   List<ModifierInstance> get _modifiersThisTurn {
     final fiesta = _game.fiesta;
     final teamId = getCurrentTeam()?.id;
     if (fiesta == null || teamId == null) return const [];
-    return modifiersForTurn(fiesta.active,
-        teamId: teamId,
-        playerId: getCurrentPlayer()?.id,
-        round: _game.currentRound);
+    final giverId = getCurrentPlayer()?.id;
+    final mods = modifiersForTurn(fiesta.active,
+        teamId: teamId, playerId: giverId, round: _game.currentRound);
+    // Un malus tombé pèse comme un malus reçu, après eux.
+    final dropped = fiesta.turn.drop == null
+        ? null
+        : droppedMalus(fiesta.turn.drop!,
+            teamId: teamId,
+            giverId: giverId,
+            round: _game.currentRound,
+            weighing: mods);
+    return dropped == null ? mods : [...mods, dropped];
+  }
+
+  /// Règle de la manche (ni malus reçu, ni malus tombé).
+  static bool _isRoundRule(ModifierInstance m) =>
+      m.fromTeamId == null && m.scope == ModifierScope.round;
+
+  /// Cartouche tombée qui joue sur ce tour (« Ce qui t'attend », zone « Actif »
+  /// d'une continuation) : un bonus, ou un malus qui pèse encore. Cachée sur
+  /// l'avant-tour comme les malus reçus.
+  CartridgeDrop? get droppedThisTurn {
+    final drop = _turn.drop;
+    if (drop == null || _receivedHidden) return null;
+    return modifierById(drop.catalogId)!.nature == ModifierNature.bonus ||
+            currentTeamModifiers
+                .any((m) => m.fromTeamId == null && !_isRoundRule(m))
+        ? drop
+        : null;
   }
 
   /// Avant-tour d'un tour pas encore lancé. Une continuation a déjà été
@@ -1497,12 +1566,13 @@ class GameProvider extends ChangeNotifier {
       _game.currentScreen == AppConstants.screenGame && !isContinuation;
 
   /// « Commencer le tour » mène à « Ce qui t'attend » : un malus reçu joue à
-  /// ce tour. Jamais pour le joueur piégé (il ne joue pas : ses malus restent
+  /// ce tour, ou une cartouche est tombée. Jamais pour le joueur piégé (il ne joue pas : ses malus restent
   /// cachés et attendent), ni sur une continuation (déjà révélée).
   bool get _hasTurnReveal =>
       _pendingGiverBlock == null &&
       !isContinuation &&
-      _modifiersThisTurn.any((m) => m.fromTeamId != null);
+      (_turn.drop != null ||
+          _modifiersThisTurn.any((m) => m.fromTeamId != null));
 
   // ========== EFFETS DE TOUR (2-8) ==========
 
@@ -1567,12 +1637,25 @@ class GameProvider extends ChangeNotifier {
       return null;
     }
     return fiesta.active
-        .where((m) =>
-            m.catalogId == 'block_giver' &&
-            m.fromTeamId != null &&
-            m.teamId == team.id &&
-            m.playerId == player.id)
-        .firstOrNull;
+            .where((m) =>
+                m.catalogId == 'block_giver' &&
+                m.fromTeamId != null &&
+                m.teamId == team.id &&
+                m.playerId == player.id)
+            .firstOrNull ??
+        // Tombé du ciel : même piège, sans envoyeur.
+        (fiesta.turn.drop?.catalogId == 'block_giver'
+            ? ModifierInstance(
+                catalogId: 'block_giver',
+                scope: ModifierScope.turn,
+                target: ModifierTarget.player,
+                teamId: team.id,
+                playerId: player.id,
+                charges: 1,
+                nature: ModifierNature.malus,
+                round: _game.currentRound,
+              )
+            : null);
   }
 
   /// Index du joueur de l'équipe qui joue, si son tour saute une fois de plus.
@@ -1592,13 +1675,15 @@ class GameProvider extends ChangeNotifier {
     if (block == null || team == null || blocked == null) return null;
     final next = team.playerIds[_indexAfterSkip(team)];
     return (
-      phrase: giverBlockPhrase(
-        seed: giverBlockSeed(_game.gameId ?? '', _game.currentTurnIndex),
-        blocked: blocked.name,
-        blocker: getPlayerById(block.fromPlayerId ?? '')?.name ??
-            getTeamById(block.fromTeamId!)?.name ??
-            '?',
-      ),
+      phrase: block.fromTeamId == null
+          ? droppedGiverBlockPhrase(blocked.name)
+          : giverBlockPhrase(
+              seed: giverBlockSeed(_game.gameId ?? '', _game.currentTurnIndex),
+              blocked: blocked.name,
+              blocker: getPlayerById(block.fromPlayerId ?? '')?.name ??
+                  getTeamById(block.fromTeamId!)?.name ??
+                  '?',
+            ),
       nextPlayer: getPlayerById(next)?.name ?? '',
     );
   }
@@ -1676,8 +1761,8 @@ class GameProvider extends ChangeNotifier {
   // n'est qu'un id de catalogue.
 
   /// Modificateurs EN JEU pendant le tour (badges du tour, tags analytics) :
-  /// règles de manche et malus reçus. Un bonus activé a son badge à part
-  /// ([spentBonuses]).
+  /// règles de manche, malus reçus et malus tombé. Un bonus activé ou tombé a
+  /// son badge à part ([spentBonuses]).
   List<ModifierInstance> get turnModifiers => currentTeamModifiers;
 
   /// Bonus dépensés pour CE tour (badges du tour), dans l'ordre de la table.
@@ -1686,7 +1771,11 @@ class GameProvider extends ChangeNotifier {
           if (_charge(id) == ChargeState.spent) id,
       ];
 
-  ChargeState? _charge(String id) => _turn.charges[id];
+  /// Un bonus tombé du ciel joue comme une charge dépensée : ses effets, ses
+  /// badges et l'analytics, sans `ChargeUse` (rien n'est pris au stock).
+  ChargeState? _charge(String id) =>
+      _turn.charges[id] ??
+      (_turn.drop?.catalogId == id ? ChargeState.spent : null);
 
   /// Cartouches [id] restantes de l'équipe qui joue pour le reste de la partie
   /// (un bonus allumé compte encore, il se dépense au départ).
@@ -1788,7 +1877,7 @@ class GameProvider extends ChangeNotifier {
 
   /// Règles de manche qui pèsent sur ce tour (« Ce tour », cercles neutres).
   List<ModifierInstance> get roundRulesThisTurn =>
-      currentTeamModifiers.where((m) => m.fromTeamId == null).toList();
+      currentTeamModifiers.where(_isRoundRule).toList();
 
   /// Malus infligés par une autre équipe pour ce tour.
   List<ModifierInstance> get receivedThisTurn =>

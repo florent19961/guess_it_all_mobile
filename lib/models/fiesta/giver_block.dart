@@ -41,3 +41,8 @@ String giverBlockPhrase({
   required String blocker,
 }) =>
     _phrases[seed % _phrases.length](blocked, blocker);
+
+/// Le piège quand « Interdit de faire deviner » tombe du ciel (D4) : pas
+/// d'envoyeur à nommer.
+String droppedGiverBlockPhrase(String blocked) =>
+    'Une cartouche est tombée du ciel, $blocked : tu ne joues pas ce tour.';

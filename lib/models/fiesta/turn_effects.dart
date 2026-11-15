@@ -1,3 +1,4 @@
+import 'cartridge_drop.dart';
 import 'modifier_catalog.dart';
 import 'modifier_instance.dart';
 
@@ -38,10 +39,16 @@ class FiestaTurnState {
   /// un toucher par son remplaçant.
   final ReplacedChoices? replaced;
 
+  /// Cartouche tombée sur ce tour (D4), tirée une fois à « Commencer le tour »
+  /// et gardée ici : retour arrière et app tuée retrouvent la même. Clé `drop`,
+  /// omise si nulle.
+  final CartridgeDrop? drop;
+
   FiestaTurnState({
     this.freePassesUsed = 0,
     Map<String, ChargeState> charges = const {},
     this.replaced,
+    this.drop,
   }) : charges = Map.unmodifiable(charges);
 
   static final empty = FiestaTurnState();
@@ -53,11 +60,13 @@ class FiestaTurnState {
     Map<String, ChargeState>? charges,
     ReplacedChoices? replaced,
     bool clearReplaced = false,
+    CartridgeDrop? drop,
   }) =>
       FiestaTurnState(
         freePassesUsed: freePassesUsed ?? this.freePassesUsed,
         charges: charges ?? this.charges,
         replaced: clearReplaced ? null : replaced ?? this.replaced,
+        drop: drop ?? this.drop,
       );
 
   /// La charge [catalogId] passée à [state] (nul = éteinte).
@@ -73,11 +82,13 @@ class FiestaTurnState {
         for (final MapEntry(key: id, value: key) in kChargeBonusKeys.entries)
           if (charges[id] != null) key: charges[id]!.name,
         if (replaced != null) 'replaced': replaced!.toJson(),
+        if (drop != null) 'drop': drop!.toJson(),
       };
 
   factory FiestaTurnState.fromJson(Map<String, dynamic> json) {
     final used = json['freePassesUsed'];
     final replaced = json['replaced'];
+    final drop = json['drop'];
     return FiestaTurnState(
       freePassesUsed: used is int ? used : 0,
       charges: {
@@ -87,6 +98,9 @@ class FiestaTurnState {
       },
       replaced: replaced is Map
           ? ReplacedChoices.tryFromJson(Map<String, dynamic>.from(replaced))
+          : null,
+      drop: drop is Map
+          ? CartridgeDrop.tryFromJson(Map<String, dynamic>.from(drop))
           : null,
     );
   }
