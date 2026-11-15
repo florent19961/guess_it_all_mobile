@@ -1105,7 +1105,7 @@ index 1d8cefd..f82c077 100644
      playTurn(p);
      expect(p.getCurrentTeam()!.id, b);
 diff --git a/test/providers/fiesta_v4_test.dart b/test/providers/fiesta_v4_test.dart
-index 2627166..c8e1422 100644
+index 2627166..94acd82 100644
 --- a/test/providers/fiesta_v4_test.dart
 +++ b/test/providers/fiesta_v4_test.dart
 @@ -109,10 +109,7 @@ void main() {
@@ -1179,12 +1179,15 @@ index 2627166..c8e1422 100644
        playEmptyTurn(p);
        p.startTurn();
        p.startTurnTimer();
-@@ -283,29 +280,10 @@ void main() {
+@@ -283,29 +280,37 @@ void main() {
        expect(p.game.fiesta!.skips, isEmpty);
      });
  
 -    test('un seul blocage de chaque type en attente par équipe', () async {
--      final p = await blocked(more: {'block_giver': 2});
++    test(
++        'deux joueurs de la même équipe bloqués : deux pièges de suite, puis '
++        'la rotation reprend', () async {
+       final p = await blocked(more: {'block_giver': 2});
 -      final target = p.teams[1];
 -      expect(
 -          p.inflictMalus('block_giver', target.id,
@@ -1199,8 +1202,29 @@ index 2627166..c8e1422 100644
 -              playerId: target.playerIds[1]),
 -          isNull);
 -      expect(left(p, 'block_giver'), 1, reason: 'rien consommé');
--    });
--
++      final [j3, j4, _] = p.teams[1].playerIds;
++      expect(p.inflictMalus('block_giver', j3), isNull);
++      expect(p.inflictMalus('block_giver', j4), isNull);
++      playEmptyTurn(p); // J0
++      for (final skipped in ['J3', 'J4']) {
++        expect(player(p), skipped);
++        p.startTurn();
++        p.startTurnTimer();
++        expect(p.game.currentScreen, AppConstants.screenGiverBlocked);
++        p.confirmGiverBlock();
++      }
++      expect(player(p), 'J5');
++      expect(p.game.fiesta!.skips[p.teams[1].id], 2);
++      expect(p.game.fiesta!.active, isEmpty);
++      final seq = <String>[];
++      for (var i = 0; i < 3; i++) {
++        seq.add(player(p)!);
++        playEmptyTurn(p); // équipe 1
++        playEmptyTurn(p); // équipe 0
++      }
++      expect(seq, ['J5', 'J3', 'J4']);
+     });
+ 
 -    test('un blocage exige un joueur de l\'équipe visée', () async {
 +    test('un malus exige un joueur adverse', () async {
        final p = await blocked();
@@ -1211,7 +1235,7 @@ index 2627166..c8e1422 100644
        expect(left(p, 'block_giver'), 1);
      });
  
-@@ -313,7 +291,7 @@ void main() {
+@@ -313,7 +318,7 @@ void main() {
          () async {
        final p = await blocked();
        final target = p.teams[1];
@@ -1220,7 +1244,7 @@ index 2627166..c8e1422 100644
        expect(p.sentThisTurn, hasLength(1));
        playEmptyTurn(p); // J0
        playEmptyTurn(p); // J3 : J4 n'a pas joué, il attend
-@@ -329,17 +307,21 @@ void main() {
+@@ -329,17 +334,21 @@ void main() {
        return p;
      }
  
@@ -1246,7 +1270,7 @@ index 2627166..c8e1422 100644
        playEmptyTurn(p);
        expect(player(p), 'J3');
        expect(p.blockedGuesser?.name, 'J4');
-@@ -352,7 +334,7 @@ void main() {
+@@ -352,7 +361,7 @@ void main() {
      test('s\'il fait deviner ce tour-là, le blocage attend', () async {
        final p = await given();
        final target = p.teams[1];
@@ -1255,12 +1279,13 @@ index 2627166..c8e1422 100644
        playEmptyTurn(p);
        expect(player(p), 'J3');
        expect(p.blockedGuesser, isNull);
-@@ -461,25 +443,116 @@ void main() {
+@@ -461,25 +470,116 @@ void main() {
        expect(p.reserve.single.usable, isFalse);
        expect(left(p, 'reversed'), 1);
      });
 +  });
-+
+ 
+-    test('Autre langue envoyé en M2 à une cible qui rejoue en M3 : RENDU',
 +  group('Chaque malus se vise sur une personne', () {
 +    List<String> pending(GameProvider p) => [
 +          for (final m in p.game.fiesta!.active)
@@ -1286,8 +1311,7 @@ index 2627166..c8e1422 100644
 +      playEmptyTurn(p);
 +      expect(pending(p), isEmpty, reason: 'consommé à la fin de son tour');
 +    });
- 
--    test('Autre langue envoyé en M2 à une cible qui rejoue en M3 : RENDU',
++
 +    test(
 +        '« Interdit de faire deviner » : ses autres malus attendent son '
 +        'prochain VRAI tour, le remplaçant ne les reçoit ni ne les consomme',

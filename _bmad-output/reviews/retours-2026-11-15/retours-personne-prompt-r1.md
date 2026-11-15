@@ -41,7 +41,10 @@ remboursement. La transition de manche ne rend plus rien.
    qui vide aussi N+1), fin à 0 s (`noCarryOver`), piège `confirmGiverBlock` (le remplaçant ne reçoit ni ne
    consomme les malus du joueur sauté), retour arrière (`restorePreValidationState`), app tuée.
 3. Rotation et `skips` : un malus sur un joueur qui saute son tour attend son prochain VRAI tour ; aucun cas où
-   il serait consommé au tour du remplaçant ni appliqué deux fois.
+   il serait consommé au tour du remplaçant ni appliqué deux fois. « Interdit de faire deviner » par personne rend
+   possibles deux pièges de suite dans la même équipe (test « deux joueurs de la même équipe bloqués » ;
+   vérifié à la main aussi pour une équipe de 2 : J3, J4 sautés, J3 joue) : `skips`, `_indexAfterSkip`,
+   `ReplacedChoices` du second piège.
 4. Règle 7 : relecture d'un malus 1.4.0 sans `playerId` (test `relecture` de `test/providers/fiesta_v4_test.dart`),
    `ReplacedChoices.sent` 1.4.0 sans joueur, aucune forme persistée non additive.
 5. `inflictMalus(catalogId, playerId)` : garde-fous (hors avant-tour, cartouche grisée, joueur inconnu ou de
@@ -53,8 +56,9 @@ remboursement. La transition de manche ne rend plus rien.
 8. Docs mises à jour : `lib/models/CLAUDE.md`, `lib/providers/CLAUDE.md`, `lib/widgets/CLAUDE.md`,
    `lib/screens/CLAUDE.md`, aide `help_content.dart`, `docs/tracking_evolution.md`. Une skill maison décrit-elle
    un comportement que ce diff change ?
-9. **Mutation testing obligatoire** sur les 4 tests ajoutés du groupe « Chaque malus se vise sur une personne »
-   (`test/providers/fiesta_v4_test.dart`) et les tests réécrits (`zero_carryover_turn_test.dart` « perdu à son
+9. **Mutation testing obligatoire** sur les 5 tests ajoutés de `test/providers/fiesta_v4_test.dart` (« deux joueurs
+   de la même équipe bloqués » et les 4 du groupe « Chaque malus se vise sur une personne ») et les tests réécrits
+   (`zero_carryover_turn_test.dart` « perdu à son
    tour », `cartridge_gifts_test.dart` « devenu impossible »). Mutants déjà essayés par l'implémenteur (tous
    tués) : résolution par équipe, legacy ignoré, grisé par équipe, `block_guesser` par personne. Survivant connu :
    le grisé d'équipe d'un malus 1.4.0 (non testé, arbitrage 2). Valeur des tests : redondant, échafaudage ou
