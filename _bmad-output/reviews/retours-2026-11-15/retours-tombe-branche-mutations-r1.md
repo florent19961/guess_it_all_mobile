@@ -9,7 +9,7 @@ texte, contre `test/providers/fiesta_cartridge_drop_test.dart` seul
 |---|---|---|---|
 | M1 | `startTurn` n'appelle plus `_drawDrop` (provider) | tué | les 4 |
 | M2 | `FiestaTurnState.toJson` n'écrit plus `drop` (turn_effects) | tué | (a) app tuée |
-| M3 | `fromJson` ignore `drop` (turn_effects) | tué | compilation / (a) |
+| M3 | `fromJson` ignore `drop` (`drop is Map && false`, compile) (turn_effects) | tué | (a) app tuée |
 | M4 | `_charge` sans repli sur le bonus tombé (provider) | tué | (b) ×2 |
 | M5 | `_modifiersThisTurn` n'ajoute pas le malus tombé (provider) | tué | (a) chrono, (d) analytics |
 | M6 | `_hasTurnReveal` ignore la cartouche tombée (provider) | tué | (a) |
@@ -17,7 +17,7 @@ texte, contre `test/providers/fiesta_cartridge_drop_test.dart` seul
 | M8 | `_fiestaAfterTurn` garde `drop` (provider) | tué | (a) vraie fin du tour |
 | M9 | `_pendingGiverBlock` ignore le `block_giver` tombé (provider) | tué | (c) |
 | M10 | `confirmGiverBlock` reporte `drop` au remplaçant (provider) | tué | (c) |
-| M11 | `continuation: false` passé à `dropForTurn` (provider) | **survit** | — |
+| M11 | `continuation: false` passé à `dropForTurn` (provider) | tué | (b) continuation (devant au score, un nouveau tirage perdrait le ×2) |
 | M12 | bonus tombé vu `armed` au lieu de `spent` (provider) | tué | (b) |
 | M13 | malus reçus lus sur la liste cachée (`currentTeamModifiers`) (provider) | tué | (d) |
 | M14 | `gap: 0` au lieu de `leaderGap` (provider) | tué | (b) |
@@ -31,9 +31,7 @@ le malus tombé n'a pas d'envoyeur, il n'entre pas dans `received`) ; la garde a
 
 ## Survivants assumés
 
-- **M11** (rien ne tombe sur une continuation) : la règle vit dans le contrat de `dropForTurn`
-  (`continuation` → `null`), testé par `test/models/fiesta/cartridge_drop_test.dart` ; seul le passage du drapeau
-  `isContinuation` par le provider n'est pas couvert. Le tuer demande une fin de manche avec report, soit un 5ᵉ
-  test hors des (a)-(d) autorisés par la consigne.
-- **M18** (malus tombé perdu en N+1 s'il n'a plus de sens) : même raison (continuation de fin de manche). Le
-  filtre est celui de `modifiersForTurn` pour un malus reçu, recopié dans `droppedMalus`.
+- **M18** (malus tombé perdu en N+1 s'il n'a plus de sens, ex. « Autre langue » tombé au dernier tour de M2 et
+  poursuivi en M3) : le filtre est celui de `modifiersForTurn` pour un malus reçu, recopié dans `droppedMalus`
+  (pur). Le tuer demande un 5ᵉ test (une fin de manche avec report, ou deux lignes de test pur de
+  `droppedMalus`), hors des (a)-(d) autorisés : question posée à l'orchestrateur.

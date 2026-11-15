@@ -1,9 +1,9 @@
 diff --git a/_bmad-output/reviews/retours-2026-11-15/retours-tombe-branche-mutations-r1.md b/_bmad-output/reviews/retours-2026-11-15/retours-tombe-branche-mutations-r1.md
 new file mode 100644
-index 0000000..289e717
+index 0000000..0b9d649
 --- /dev/null
 +++ b/_bmad-output/reviews/retours-2026-11-15/retours-tombe-branche-mutations-r1.md
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,37 @@
 +# Mutation testing r1 — L-TOMBE-BRANCHEMENT (`feat/retours-tombe-branche`)
 +
 +Fait par l'implémenteur (la revue Codex est statique). Un mutant à la fois, appliqué par remplacement exact de
@@ -15,7 +15,7 @@ index 0000000..289e717
 +|---|---|---|---|
 +| M1 | `startTurn` n'appelle plus `_drawDrop` (provider) | tué | les 4 |
 +| M2 | `FiestaTurnState.toJson` n'écrit plus `drop` (turn_effects) | tué | (a) app tuée |
-+| M3 | `fromJson` ignore `drop` (turn_effects) | tué | compilation / (a) |
++| M3 | `fromJson` ignore `drop` (`drop is Map && false`, compile) (turn_effects) | tué | (a) app tuée |
 +| M4 | `_charge` sans repli sur le bonus tombé (provider) | tué | (b) ×2 |
 +| M5 | `_modifiersThisTurn` n'ajoute pas le malus tombé (provider) | tué | (a) chrono, (d) analytics |
 +| M6 | `_hasTurnReveal` ignore la cartouche tombée (provider) | tué | (a) |
@@ -23,7 +23,7 @@ index 0000000..289e717
 +| M8 | `_fiestaAfterTurn` garde `drop` (provider) | tué | (a) vraie fin du tour |
 +| M9 | `_pendingGiverBlock` ignore le `block_giver` tombé (provider) | tué | (c) |
 +| M10 | `confirmGiverBlock` reporte `drop` au remplaçant (provider) | tué | (c) |
-+| M11 | `continuation: false` passé à `dropForTurn` (provider) | **survit** | — |
++| M11 | `continuation: false` passé à `dropForTurn` (provider) | tué | (b) continuation (devant au score, un nouveau tirage perdrait le ×2) |
 +| M12 | bonus tombé vu `armed` au lieu de `spent` (provider) | tué | (b) |
 +| M13 | malus reçus lus sur la liste cachée (`currentTeamModifiers`) (provider) | tué | (d) |
 +| M14 | `gap: 0` au lieu de `leaderGap` (provider) | tué | (b) |
@@ -37,18 +37,16 @@ index 0000000..289e717
 +
 +## Survivants assumés
 +
-+- **M11** (rien ne tombe sur une continuation) : la règle vit dans le contrat de `dropForTurn`
-+  (`continuation` → `null`), testé par `test/models/fiesta/cartridge_drop_test.dart` ; seul le passage du drapeau
-+  `isContinuation` par le provider n'est pas couvert. Le tuer demande une fin de manche avec report, soit un 5ᵉ
-+  test hors des (a)-(d) autorisés par la consigne.
-+- **M18** (malus tombé perdu en N+1 s'il n'a plus de sens) : même raison (continuation de fin de manche). Le
-+  filtre est celui de `modifiersForTurn` pour un malus reçu, recopié dans `droppedMalus`.
++- **M18** (malus tombé perdu en N+1 s'il n'a plus de sens, ex. « Autre langue » tombé au dernier tour de M2 et
++  poursuivi en M3) : le filtre est celui de `modifiersForTurn` pour un malus reçu, recopié dans `droppedMalus`
++  (pur). Le tuer demande un 5ᵉ test (une fin de manche avec report, ou deux lignes de test pur de
++  `droppedMalus`), hors des (a)-(d) autorisés : question posée à l'orchestrateur.
 diff --git a/_bmad-output/reviews/retours-2026-11-15/retours-tombe-branche-prompt-r1.md b/_bmad-output/reviews/retours-2026-11-15/retours-tombe-branche-prompt-r1.md
 new file mode 100644
-index 0000000..4d0021e
+index 0000000..e515e33
 --- /dev/null
 +++ b/_bmad-output/reviews/retours-2026-11-15/retours-tombe-branche-prompt-r1.md
-@@ -0,0 +1,67 @@
+@@ -0,0 +1,70 @@
 +# Revue r1 — L-TOMBE-BRANCHEMENT (`feat/retours-tombe-branche`) — tier RISQUÉ
 +
 +Tu es reviewer, en LECTURE SEULE. Lis le patch `retours-tombe-branche-patch-r1.diff` (même dossier), puis le code
@@ -110,7 +108,10 @@ index 0000000..4d0021e
 +6. Persistance (règle 7) : clé additive ; une partie 1.4.0 se relit ; une valeur mal typée ne casse que la clé.
 +7. Docs : `lib/models/CLAUDE.md`, `lib/providers/CLAUDE.md`, `lib/screens/CLAUDE.md`, `docs/tracking_evolution.md`,
 +   `docs/ANALYTICS.md`, tutoriel Fiesta.
-+8. Tests (4, `test/providers/fiesta_cartridge_drop_test.dart`) : valeur, redondance, survivants M11 et M18.
++8. Tests (4, `test/providers/fiesta_cartridge_drop_test.dart`) : valeur, redondance, survivant M18.
++9. `_isRoundRule` rend `scope` porteur de sens : vérifié sur la 1.4.0 (`v1.4.0+13`), les seules instances sans
++   envoyeur sont les règles de manche (`scope: round`, `symmetric_draw.dart`) ; `inflictMalus` écrit `scope: turn`
++   avec `from`. À confirmer.
 +
 +## Format attendu
 +
@@ -348,7 +349,7 @@ index e45df58..7c528b3 100644
  - **Dernier choix (Fiesta v3.1)** : `setPendingFiesta` et `restartWithSamePlayers` écrivent le choix dans `GameSettings` (`fiestaEnabled`, `_rememberFiestaChoice`). `_rememberedFiesta` le relit au démarrage et dans `startNewGame` : Classique = nul, une partie rejouée pas encore lancée (`replayFiesta`, écrit par `restartWithSamePlayers`, effacé par `startGame` et par tout `setPendingFiesta`), ou le dernier ensemble (`lastUsedId` ; supprimé ou illisible → Fiesta classique). Partie reprise : `pendingFiesta` = `fiesta?.rules`, sans toucher au dernier choix. Le tuto Fiesta n'est ouvert que par `_setMode`, donc jamais par une restauration. Passer en Fiesta : `chooseFiestaMode` (Fiesta classique tout de suite, puis le dernier ensemble relu ; un autre choix fait entre-temps l'emporte). Retour de la liste sans valider : `refreshPendingEnsemble` suit l'ensemble modifié ou supprimé, jamais des règles gelées. `clearLocalStorage` oublie aussi `lastUsedId`.
  
 diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
-index ba5ba32..9ea659d 100644
+index ba5ba32..a8703b5 100644
 --- a/lib/providers/game_provider.dart
 +++ b/lib/providers/game_provider.dart
 @@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
@@ -418,6 +419,17 @@ index ba5ba32..9ea659d 100644
    /// « C'est parti » sur « Ce qui t'attend » : le décompte habituel.
    void leaveTurnReveal() {
      if (_game.currentScreen != AppConstants.screenTurnReveal) return;
+@@ -1467,8 +1513,8 @@ class GameProvider extends ChangeNotifier {
+   }
+ 
+   /// Modificateurs qui pèsent sur l'équipe qui joue (badges) : les règles de la
+-  /// manche COURANTE, continuation comprise, et ses malus reçus
+-  /// ([modifiersForTurn]).
++  /// manche COURANTE, continuation comprise, ses malus reçus
++  /// ([modifiersForTurn]) et le malus tombé du ciel ([droppedMalus]).
+   ///
+   /// 🔴 Malus reçus CACHÉS sur l'avant-tour, jusqu'à « Commencer le tour »
+   /// ([_receivedHidden]) : tout ce que l'avant-tour lit passe par ici (aperçu
 @@ -1476,19 +1522,42 @@ class GameProvider extends ChangeNotifier {
    /// chrono, lu sur le décompte, les compte.
    List<ModifierInstance> get currentTeamModifiers {
@@ -468,7 +480,13 @@ index ba5ba32..9ea659d 100644
    }
  
    /// Avant-tour d'un tour pas encore lancé. Une continuation a déjà été
-@@ -1502,7 +1571,8 @@ class GameProvider extends ChangeNotifier {
+@@ -1497,12 +1566,13 @@ class GameProvider extends ChangeNotifier {
+       _game.currentScreen == AppConstants.screenGame && !isContinuation;
+ 
+   /// « Commencer le tour » mène à « Ce qui t'attend » : un malus reçu joue à
+-  /// ce tour. Jamais pour le joueur piégé (il ne joue pas : ses malus restent
++  /// ce tour, ou une cartouche est tombée. Jamais pour le joueur piégé (il ne joue pas : ses malus restent
+   /// cachés et attendent), ni sur une continuation (déjà révélée).
    bool get _hasTurnReveal =>
        _pendingGiverBlock == null &&
        !isContinuation &&
@@ -533,6 +551,17 @@ index ba5ba32..9ea659d 100644
        nextPlayer: getPlayerById(next)?.name ?? '',
      );
    }
+@@ -1676,8 +1761,8 @@ class GameProvider extends ChangeNotifier {
+   // n'est qu'un id de catalogue.
+ 
+   /// Modificateurs EN JEU pendant le tour (badges du tour, tags analytics) :
+-  /// règles de manche et malus reçus. Un bonus activé a son badge à part
+-  /// ([spentBonuses]).
++  /// règles de manche, malus reçus et malus tombé. Un bonus activé ou tombé a
++  /// son badge à part ([spentBonuses]).
+   List<ModifierInstance> get turnModifiers => currentTeamModifiers;
+ 
+   /// Bonus dépensés pour CE tour (badges du tour), dans l'ordre de la table.
 @@ -1686,7 +1771,11 @@ class GameProvider extends ChangeNotifier {
            if (_charge(id) == ChargeState.spent) id,
        ];
@@ -585,9 +614,20 @@ index 8969458..34b2ad5 100644
                  '5',
                  'Défis surprises',
 diff --git a/lib/screens/turn_reveal_screen.dart b/lib/screens/turn_reveal_screen.dart
-index 18534d6..6cde979 100644
+index 18534d6..55fa5d7 100644
 --- a/lib/screens/turn_reveal_screen.dart
 +++ b/lib/screens/turn_reveal_screen.dart
+@@ -8,8 +8,8 @@ import '../widgets/common/app_button.dart';
+ import '../widgets/fiesta/modifier_badge.dart';
+ 
+ /// « Ce qui t'attend » : entre « Commencer le tour » et le décompte, ce que le
+-/// joueur découvre (malus reçus qui jouent à ce tour) puis ce qu'il connaissait
+-/// déjà (règles de la manche, ses bonus). Pas de retour : l'avant-tour
++/// joueur découvre (cartouche tombée, malus reçus qui jouent à ce tour) puis
++/// ce qu'il connaissait déjà (règles de la manche, ses bonus). Pas de retour : l'avant-tour
+ /// permettrait de réarmer en connaissant les malus. Une app tuée y revient.
+ class TurnRevealScreen extends StatelessWidget {
+   const TurnRevealScreen({super.key});
 @@ -17,6 +17,12 @@ class TurnRevealScreen extends StatelessWidget {
    @override
    Widget build(BuildContext context) {
@@ -708,10 +748,10 @@ index 020bed5..6cae5e1 100644
                        key: id == armed.first ? keys.firstArmed : null,
 diff --git a/test/providers/fiesta_cartridge_drop_test.dart b/test/providers/fiesta_cartridge_drop_test.dart
 new file mode 100644
-index 0000000..2a6d6b6
+index 0000000..e52a0e9
 --- /dev/null
 +++ b/test/providers/fiesta_cartridge_drop_test.dart
-@@ -0,0 +1,177 @@
+@@ -0,0 +1,194 @@
 +import 'package:flutter_test/flutter_test.dart';
 +import 'package:guess_it_all_mobile/models/fiesta/cartridge_drop.dart';
 +import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
@@ -819,24 +859,41 @@ index 0000000..2a6d6b6
 +  });
 +
 +  test(
-+      'un ×2 tombé double les points du tour, sans rien prendre au stock ; '
-+      'l\'analytics le porte une fois', () async {
++      'un ×2 tombé double les points du tour, continuation comprise, sans '
++      'rien prendre au stock ni retirer sur la continuation ; l\'analytics le '
++      'porte une fois', () async {
 +    final p = await givenDrop('double_points', rivalScore: 20);
 +    final team = p.teams[0];
++    final words = p.game.allWords.length;
 +    p.startTurn();
 +    p.leaveTurnReveal();
 +    p.startTurnTimer();
-+    p.markWordAsGuessed();
 +    p.markWordAsGuessed();
 +    final guessed = AnalyticsService()
 +        .currentGame!
 +        .events
 +        .lastWhere((e) => e.eventType == WordEventType.guessed);
 +    expect(guessed.modifiers, ['double_points']);
++    // Toute la manche avant le chrono : la même équipe poursuit en M2.
++    while (p.game.currentScreen == AppConstants.screenTurn) {
++      p.markWordAsGuessed();
++    }
++    validate(p, List<String>.from(p.game.wordsGuessedThisTurn));
++    expect(p.teams[0].score, 2 * words);
++    p.nextRound();
++    expect(p.isContinuation, isTrue);
++
++    // Devant au score, l'équipe n'aurait plus droit au ×2 : un nouveau tirage
++    // le perdrait. Rien ne tombe sur une continuation, celle du tour reste.
++    p.startTurn();
++    expect(p.game.currentScreen, AppConstants.screenCountdown);
++    expect(p.game.fiesta!.turn.drop?.catalogId, 'double_points');
++    p.startTurnTimer();
++    p.markWordAsGuessed();
 +    p.endTurn();
 +    validate(p, List<String>.from(p.game.wordsGuessedThisTurn));
 +
-+    expect(p.teams[0].score, 4);
++    expect(p.teams[0].score, 2 * words + 2);
 +    expect(p.game.fiesta!.chargesUsed, isEmpty);
 +    expect(p.game.fiesta!.cartridgesLeft('double_points', team.id), 0);
 +  });
