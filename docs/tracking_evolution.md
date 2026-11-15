@@ -1545,7 +1545,7 @@ enum `DropFrequency` Jamais / Rarement / Parfois / Souvent, chances 1/6, 1/4, 1/
 Jamais, absente = Jamais, `format` inchangé (4). Il compte dans `settingsKey` (hors Jamais),
 `hasActiveSetting`, le résumé, les pastilles et la page « Voir ». Nouvelle fonction pure
 `dropForTurn` (`cartridge_drop.dart`) : la cartouche qui tombe sur un tour, déterministe par
-`(gameId, tour, joueur)`, vivier = celui des cartouches au hasard moins ce qui double le tour.
+`(gameId, tour, joueur, sauts de l'équipe)`, vivier = celui des cartouches au hasard moins ce qui double le tour.
 
 **Pourquoi.** Retours de recette de Florent (spec `retours-2026-11-15.md`, D4). Le modèle et
 l'éditeur passent avant le branchement en partie, qui attend l'écran « Ce qui t'attend » (L-CACHE) :

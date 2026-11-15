@@ -36,7 +36,7 @@ int dropSeed(String gameId, int turnIndex, String giverId, int skips) =>
     drawSeed('$gameId#drop#$giverId#$skips', turnIndex);
 
 /// Vivier d'une cartouche qui tombe, dans l'ordre du catalogue : celui des
-/// cartouches au hasard ([giftPool] : hors Toujours, possible en manche
+/// cartouches au hasard ([randomPool] : hors Toujours, possible en manche
 /// [round], ni identique ni incompatible avec [roundRules], ×2 seulement au-delà
 /// de [kDoublePointsMinGap] d'écart [gap]), moins ce qui est identique ou
 /// incompatible avec un malus [received] qui joue ce tour, ou identique à un
@@ -52,19 +52,15 @@ List<ModifierDef> dropPool({
   required int gap,
 }) =>
     [
-      // Pas d'équipe qui envoie : `block_guesser` passe ce filtre-là, la
-      // taille de l'équipe qui joue décide plus bas.
-      for (final def in giftPool(
+      for (final def in randomPool(
         rules: rules,
-        nextRound: round,
+        round: round,
         roundRules: roundRules,
-        teamId: '',
         gap: gap,
-        blockableTeamIds: const {'*'},
+        includeBlockGuesser: guesserIds.length >= 2,
       ))
         if (received.every((id) => id != def.id && areCompatible(id, def.id)) &&
-            !armed.contains(def.id) &&
-            (def.id != 'block_guesser' || guesserIds.length >= 2))
+            !armed.contains(def.id))
           def,
     ];
 

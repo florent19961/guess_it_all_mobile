@@ -45,14 +45,9 @@ int leaderGap(Map<String, int> scores, String teamId) =>
 int giftSeed(String gameId, int round, String teamId) =>
     drawSeed('$gameId#$teamId', round);
 
-/// Vivier du hasard de [teamId], dans l'ordre du catalogue (le tirage doit
-/// partir de la même liste) : tout ce qui peut être cartouche, hors « Toujours »
-/// ; les compteurs n'interviennent pas. Filtres : possible en manche [nextRound],
-/// ni déjà en jeu ni incompatible avec les règles de cette manche ([roundRules]),
-/// « Bloquer un devineur » seulement si une AUTRE équipe peut le recevoir
-/// ([blockableTeamIds] : au moins 3 joueurs), et « Mot compte double » seulement
-/// si [gap], l'écart de l'équipe avec le leader ([leaderGap]), dépasse
-/// [kDoublePointsMinGap].
+/// Vivier du hasard de [teamId] ([randomPool]) : « Bloquer un devineur »
+/// seulement si une AUTRE équipe peut le recevoir ([blockableTeamIds] : au moins
+/// 3 joueurs).
 List<ModifierDef> giftPool({
   required FiestaRules rules,
   required int nextRound,
@@ -61,14 +56,36 @@ List<ModifierDef> giftPool({
   required int gap,
   required Set<String> blockableTeamIds,
 }) =>
+    randomPool(
+      rules: rules,
+      round: nextRound,
+      roundRules: roundRules,
+      gap: gap,
+      includeBlockGuesser: blockableTeamIds.any((id) => id != teamId),
+    );
+
+/// Filtre commun des tirages au hasard (cartouches au hasard, prix des défis,
+/// cartouches qui tombent), dans l'ordre du catalogue (le tirage doit partir de
+/// la même liste) : tout ce qui peut être cartouche, hors « Toujours » ; les
+/// compteurs n'interviennent pas. Filtres : possible en manche [round], ni déjà
+/// en jeu ni incompatible avec les règles de cette manche ([roundRules]),
+/// « Bloquer un devineur » seulement si [includeBlockGuesser] (chaque appelant
+/// dit qui le recevrait), et « Mot compte double » seulement si [gap], l'écart
+/// de l'équipe avec le leader ([leaderGap]), dépasse [kDoublePointsMinGap].
+List<ModifierDef> randomPool({
+  required FiestaRules rules,
+  required int round,
+  required List<ModifierInstance> roundRules,
+  required int gap,
+  required bool includeBlockGuesser,
+}) =>
     [
       for (final def in kModifierCatalog)
         if (!rules.isAlways(def.id) &&
-            isEligibleForRound(def, nextRound) &&
+            isEligibleForRound(def, round) &&
             roundRules.every((r) =>
                 r.catalogId != def.id && areCompatible(r.catalogId, def.id)) &&
-            (def.id != 'block_guesser' ||
-                blockableTeamIds.any((id) => id != teamId)) &&
+            (def.id != 'block_guesser' || includeBlockGuesser) &&
             (def.id != 'double_points' || gap > kDoublePointsMinGap))
           def,
     ];

@@ -80,6 +80,26 @@ void main() {
       expect(settingsKey(FiestaRules(balance: true, trailingCount: 4)),
           settingsKey(FiestaRules(balance: true)));
     });
+
+    test(
+        'cartouches qui tombent, seul réglage : enregistrable, clé à part, '
+        'doublon au même cran', () {
+      FiestaRules drops(String name, DropFrequency f) =>
+          FiestaRules(ensembleName: name, dropFrequency: f);
+      final rarely = drops('Max', DropFrequency.rarely);
+      expect(hasActiveSetting(rarely), isTrue);
+      expect(validateEnsemble(rarely), isEmpty);
+      expect(settingsKey(rarely), isNot(settingsKey(FiestaRules())));
+      expect(settingsKey(rarely),
+          isNot(settingsKey(drops('Max', DropFrequency.often))));
+      expect(
+          validateEnsemble(rarely, others: [
+            FiestaEnsemble(id: 'a', rules: drops('A', DropFrequency.rarely)),
+          ]).single,
+          'L\'ensemble A a déjà ces paramètres.');
+      expect(settingsKey(drops('Max', DropFrequency.never)),
+          isNot(contains('dropFrequency')));
+    });
   });
 
   group('Verrouillage', () {

@@ -37,13 +37,14 @@ List<String> pool({
 CartridgeDrop? drop(
   int turn, {
   FiestaRules? rules,
+  String gameId = 'g',
   String giver = 'p1',
   int skips = 0,
   bool continuation = false,
 }) =>
     dropForTurn(
       rules: rules ?? often,
-      gameId: 'g',
+      gameId: gameId,
       turnIndex: turn,
       giverId: giver,
       skips: skips,
@@ -88,8 +89,8 @@ void main() {
     final turns = [for (var t = 0; t < 60; t++) t];
 
     test(
-        'déterministe par (partie, tour, joueur, sauts) ; le joueur et un saut '
-        'de plus changent le tirage', () {
+        'déterministe par (partie, tour, joueur, sauts) ; la partie, le joueur '
+        'et un saut de plus changent le tirage', () {
       final first = [for (final t in turns) drop(t)?.catalogId];
       expect([for (final t in turns) drop(t)?.catalogId], first);
       expect(first.whereType<String>(), isNotEmpty);
@@ -98,9 +99,13 @@ void main() {
           isNot(first));
       expect(
           [for (final t in turns) drop(t, skips: 1)?.catalogId], isNot(first));
+      expect([for (final t in turns) drop(t, gameId: 'h')?.catalogId],
+          isNot(first));
     });
 
     test('Rarement ⊂ Parfois ⊂ Souvent, tour par tour (même graine)', () {
+      expect([for (final f in DropFrequency.values) f.chance],
+          [0, 1 / 6, 1 / 4, 1 / 2]);
       Set<int> dropped(DropFrequency f) => {
             for (var t = 0; t < 200; t++)
               if (drop(t, rules: FiestaRules(dropFrequency: f)) != null) t,
