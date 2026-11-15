@@ -762,8 +762,6 @@ class GameProvider extends ChangeNotifier {
     if (fiesta == null ||
         team == null ||
         giver == null ||
-        fiesta.turn.drop != null ||
-        isContinuation ||
         _pendingGiverBlock != null) {
       return;
     }
@@ -788,8 +786,9 @@ class GameProvider extends ChangeNotifier {
       ],
       guesserIds: team.playerIds.where((id) => id != giver.id).toList(),
       gap: leaderGap({for (final t in _teams) t.id: t.score}, team.id),
-      continuation: false,
+      continuation: isContinuation,
     );
+    // Continuation : rien ne tombe, celle du tour (s'il y en a une) reste.
     if (drop == null) return;
     _game = _game.copyWith(
         fiesta: fiesta.copyWith(turn: fiesta.turn.copyWith(drop: drop)));

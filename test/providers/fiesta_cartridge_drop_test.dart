@@ -13,7 +13,10 @@ void main() {
   final often = FiestaRules(dropFrequency: DropFrequency.often);
 
   CartridgeDrop? drawn(String gameId, List<String> team,
-          {int giver = 0, int skips = 0, int gap = 0}) =>
+          {int giver = 0,
+          int skips = 0,
+          int gap = 0,
+          List<String> received = const []}) =>
       dropForTurn(
         rules: often,
         gameId: gameId,
@@ -22,7 +25,7 @@ void main() {
         skips: skips,
         round: 1,
         roundRules: const [],
-        received: const [],
+        received: received,
         armed: const [],
         guesserIds: [...team]..removeAt(giver),
         gap: gap,
@@ -32,22 +35,40 @@ void main() {
   /// Partie à 2 équipes de 3, dont le 1er tour (J0 de l'équipe 0) voit tomber
   /// [id] : on cherche une graine qui le donne ([accept] en plus), puis on la
   /// pose comme `gameId`. [rivalScore] : score de l'équipe 1 (écart du ×2).
+  /// [received] : malus que J0 a reçus de l'équipe 1, qui jouent à ce tour.
   Future<GameProvider> givenDrop(String id,
       {int rivalScore = 0,
+      List<String> received = const [],
       bool Function(String gameId, List<String> team)? accept}) async {
     final p = await givenGame(2, fiesta: often);
     final team = p.teams[0].playerIds;
     var i = 0;
-    while (drawn('g$i', team, gap: rivalScore)?.catalogId != id ||
+    while (drawn('g$i', team, gap: rivalScore, received: received)?.catalogId !=
+            id ||
         !(accept?.call('g$i', team) ?? true)) {
       i++;
     }
     p.goToScreen(AppConstants.screenVerification);
     p.savePreValidationState(const []);
-    p.game.preValidationSnapshot!['game'] = p.game.toJson()
+    final json = p.game.toJson()
       ..remove('preValidationSnapshot')
       ..['gameId'] = 'g$i'
       ..['currentScreen'] = AppConstants.screenGame;
+    (json['fiesta'] as Map)['active'] = [
+      for (final malus in received)
+        {
+          'catalogId': malus,
+          'scope': 'turn',
+          'target': 'player',
+          'teamId': p.teams[0].id,
+          'playerId': team[0],
+          'charges': 1,
+          'nature': 'malus',
+          'round': 1,
+          'from': p.teams[1].id,
+        },
+    ];
+    p.game.preValidationSnapshot!['game'] = json;
     (p.game.preValidationSnapshot!['teamScores'] as List)[1]['score'] =
         rivalScore;
     p.restorePreValidationState();
@@ -136,16 +157,21 @@ void main() {
         p.game.fiesta!.turn.drop?.blockedPlayerId, expected?.blockedPlayerId);
   });
 
-  test('le malus tombé entre dans `WordEvent.modifiers`, une fois', () async {
-    final p = await givenDrop('reversed');
+  test(
+      'le malus tombé entre dans `WordEvent.modifiers`, après les malus reçus '
+      'qu\'il ne double jamais', () async {
+    // Sans le malus reçu, la même graine ferait tomber « Mot à l'envers ».
+    final p = await givenDrop('minus_10s',
+        received: ['reversed'],
+        accept: (g, team) => drawn(g, team)?.catalogId == 'reversed');
     p.startTurn();
+    expect(p.droppedThisTurn?.catalogId, 'minus_10s');
     p.leaveTurnReveal();
     p.startTurnTimer();
-    expect(p.isWordReversed, isTrue);
     final shown = AnalyticsService()
         .currentGame!
         .events
         .lastWhere((e) => e.eventType == WordEventType.shown);
-    expect(shown.modifiers, ['reversed']);
+    expect(shown.modifiers, ['reversed', 'minus_10s']);
   });
 }
