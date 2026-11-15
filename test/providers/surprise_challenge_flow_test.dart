@@ -336,8 +336,7 @@ void main() {
       expect(modifierById(p.second.prizeId), isNotNull);
     });
 
-    test('récompense : Mot compte double seulement à plus de 10 du leader',
-        () {
+    test('récompense : Mot compte double seulement à plus de 10 du leader', () {
       // Vivier réduit au ×2 et à +10 s ; b est mené de 11, c de 10.
       final fiesta = FiestaState(
           rules: FiestaRules(challenges: true, modifiers: {
