@@ -33,12 +33,14 @@ List<String> pool(
   int nextRound = 2,
   List<ModifierInstance> roundRules = const [],
   Set<String> blockable = const {'b'},
+  int gap = 0,
 }) =>
     giftPool(
       rules: rules,
       nextRound: nextRound,
       roundRules: roundRules,
       teamId: 'a',
+      gap: gap,
       blockableTeamIds: blockable,
     ).map((d) => d.id).toList();
 
@@ -114,6 +116,37 @@ void main() {
       expect(pool(FiestaRules(), blockable: {'a'}), contains('block_giver'));
       expect(pool(FiestaRules(), blockable: {'b'}), contains('block_guesser'));
     });
+
+    test('Mot compte double seulement à plus de 10 points du leader', () {
+      expect(pool(FiestaRules()), isNot(contains('double_points')));
+      expect(pool(FiestaRules(), gap: 10), isNot(contains('double_points')));
+      expect(pool(FiestaRules(), gap: 11), contains('double_points'));
+    });
+  });
+
+  group('Mot compte double au hasard (D3)', () {
+    // Vivier réduit au ×2 : qui le reçoit dépend seulement de l'écart.
+    final onlyDouble = FiestaRules(allCount: 1, modifiers: {
+      for (final def in kModifierCatalog)
+        if (def.id != 'double_points')
+          def.id: const ModifierSetting(always: true),
+    });
+    Set<String> receivers(Map<String, int> scores, {int finishedRound = 1}) =>
+        gifts(onlyDouble, scores: scores, finishedRound: finishedRound)
+            .map((e) => e.teamId)
+            .toSet();
+
+    test('mené de plus de 10 : oui ; de 10 pile ou leader : non', () {
+      expect(receivers(const {'a': 21, 'b': 10, 'c': 11}), {'b'});
+    });
+
+    test('jamais au lancement (M1)', () {
+      expect(receivers(const {'a': 0, 'b': 0}, finishedRound: 0), isEmpty);
+    });
+
+    test('scores négatifs : l\'écart part du vrai leader, pas de 0', () {
+      expect(receivers(const {'a': -11, 'b': -30}), {'b'});
+    });
   });
 
   group('Distribution', () {
@@ -164,31 +197,6 @@ void main() {
           .toList();
       expect(many.take(size).toSet(), hasLength(size));
       expect(many.skip(size).toSet(), hasLength(2));
-    });
-
-    test('poids : valeurs décidées (D2), à ne changer qu\'en le recalibrant',
-        () {
-      expect(kGiftWeights.byDefault, 3);
-      expect(kGiftWeights.overrides, {'double_points': 1});
-    });
-
-    test('poids : Mot compte double sort 3 fois moins qu\'une autre', () {
-      final counts = <String, int>{};
-      for (var i = 0; i < 3000; i++) {
-        final g = gifts(FiestaRules(allCount: 1),
-            gameId: 'g$i', scores: const {'a': 0});
-        counts.update(g.single.catalogId, (n) => n + 1, ifAbsent: () => 1);
-      }
-      final others = counts.entries.where((e) => e.key != 'double_points');
-      final mean = others.fold<int>(0, (n, e) => n + e.value) / others.length;
-      expect(others, hasLength(pool(FiestaRules()).length - 1),
-          reason: 'tout le vivier sort');
-      // Attendu : 1/3. Graines fixes, donc résultat stable.
-      expect(counts['double_points']! / mean, inInclusiveRange(0.25, 0.45));
-      // Les autres sont à égalité entre elles.
-      for (final e in others) {
-        expect(e.value / mean, inInclusiveRange(0.7, 1.3), reason: e.key);
-      }
     });
 
     test('déterministe par (gameId, manche, équipe)', () {
