@@ -137,7 +137,6 @@ void main() {
     test('ce qui est verrouillé ne joue pas, donc n\'est pas dit', () {
       final locked = FiestaRules(modifiers: {
         'no_pass': const ModifierSetting(always: true),
-        'free_pass': const ModifierSetting(charges: 2),
         // Fixe : ses cartouches et son tirage sont verrouillés.
         'reversed': const ModifierSetting(always: true, draw: true, charges: 2),
       }, drawCount: 1);

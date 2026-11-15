@@ -124,6 +124,33 @@ void main() {
   });
 
   test(
+      'Passe gratuite + Interdit de passer : une passe gratuite, puis Passer '
+      'bloqué pour le reste du tour', () async {
+    final provider = await givenReadyProvider();
+    await provider.startGame(
+        fiesta: FiestaRules(drawCount: 0, modifiers: {
+      'no_pass': const ModifierSetting(always: true),
+      'free_pass': ModifierSetting(charges: 1),
+    }));
+    expect(provider.reserve.single.blockedReason, isNull);
+    provider.toggleBonus('free_pass');
+    provider.startTurn();
+    provider.startTurnTimer();
+
+    expect(provider.passBlocked, isFalse);
+    expect(provider.canPassWith(30), isTrue);
+    provider.passWord();
+    expect(provider.freePassesUsed, 1);
+    expect(allotted(provider), 30);
+
+    expect(provider.passBlocked, isTrue);
+    expect(provider.canPassWith(30), isFalse);
+    final before = provider.game.toJson();
+    provider.passWord();
+    expect(provider.game.toJson(), before);
+  });
+
+  test(
       'Un seul tour : la continuation de fin de manche garde instances de '
       'portée tour et passes gratuites utilisées, puis tout '
       'tombe à la fin de CE tour', () async {

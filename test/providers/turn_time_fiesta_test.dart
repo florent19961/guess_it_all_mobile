@@ -145,12 +145,13 @@ void main() {
     provider.savePreValidationState(const []);
     provider.validateWords(const []);
 
-    // Le −10 s reçu tombe sur le premier tour de l'autre équipe : 30 − 10.
+    // Le −10 s reçu tombe sur le premier tour de l'autre équipe : caché sur
+    // son avant-tour (l'aperçu dit 30), révélé au lancement : 30 − 10.
     expect(provider.getCurrentTeam()!.id, other);
+    expect(provider.turnTime.total, 30);
+    provider.startTurn();
     expect(provider.turnTime.total, 20);
     expect(provider.turnTime.lines.map((l) => l.seconds), [30, -10]);
-    provider.startTurn();
-    expect(provider.game.timeRemaining, 20);
     provider.startTurnTimer();
     expect(allotted(provider), 20);
 

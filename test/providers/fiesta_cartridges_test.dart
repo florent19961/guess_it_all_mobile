@@ -101,8 +101,9 @@ void main() {
         p.sentThisTurn.map((m) => (m.catalogId, m.teamId)), [('reversed', c)]);
     playTurn(p);
 
-    // Tour de c : les deux malus reçus, le −10 s compte.
+    // Tour de c : les deux malus reçus, révélés au lancement, le −10 s compte.
     expect(p.getCurrentTeam()!.id, c);
+    p.startTurn();
     expect(received(p), ['minus_10s<$a', 'reversed<$b']);
     expect(p.isWordReversed, isTrue);
     expect(p.turnTime.total, 20);
@@ -157,6 +158,7 @@ void main() {
 
     // b subit le −10 s ; au tour suivant de a, la Passe gratuite n'a pas
     // été redépensée.
+    p.startTurn();
     expect(p.turnTime.total, 20);
     playTurn(p);
     expect(p.getCurrentTeam()!.id, a);
@@ -263,6 +265,7 @@ void main() {
     expect(playTurn(p), b);
 
     expect(p.getCurrentTeam()!.id, a);
+    p.startTurn();
     expect(received(p), ['other_language<$b']);
     playTurn(p, 99); // a finit M2 sous le malus
     expect(

@@ -161,6 +161,7 @@ void main() {
     expect(p.inflictMalus('minus_10s', one(p, b)), isNull);
     playTurn(p);
     expect(p.getCurrentTeam()!.id, b);
+    p.startTurn();
     expect(p.turnTime.total, 20);
     playTurn(p, 99);
     p.nextRound();
@@ -199,6 +200,7 @@ void main() {
 
     playTurn(p);
     expect(p.getCurrentTeam()!.id, b);
+    p.startTurn();
     expect(p.receivedThisTurn.map((m) => m.catalogId), ['reversed', 'no_pass']);
     playTurn(p);
     expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null), isEmpty);
