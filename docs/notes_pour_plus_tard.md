@@ -259,3 +259,18 @@ sur `durationMs`.
 
 **Esquisse.** Ignorer les événements à `durationMs` nul dans le plus dur / le plus rapide, les
 classements et toute moyenne. Garder les totaux tels quels, ou les marquer « partiels ».
+
+## 2026-11-15 — Reports du lot « retours de recette du 15/11 »
+
+- **État Fiesta non nettoyé après une fin anticipée en M3** (revue d'ensemble, MINOR) : un tour de M3 qui vide le pool
+  avec du temps restant passe aux résultats via `_fiestaAtRoundEnd` sans vider `turn` (dont `drop`) ni retirer les malus
+  résolus (`game_provider.dart` ~l.1304, 1382, 1864). Sans effet joueur, la partie est finie. **Signal** : un écran ou une
+  stat qui relirait l'état Fiesta d'une partie terminée. **Esquisse** : appeler le nettoyage de vraie fin de tour avant
+  `nextRound` → résultats.
+- **Nombre de cartouches de rattrapage avec des scores tous négatifs** (lane ×2) : `giftCount` calcule l'écart depuis 0,
+  donc le leader peut en recevoir si tous les scores sont négatifs (pénalités de passe). `leaderGap` (×2) part du vrai
+  maximum. **Signal** : parties à forte pénalité de passe. **Esquisse** : utiliser `leaderGap` dans `giftCount`.
+- **Flake possible** : `fiesta_v4_screens_test.dart` « Tour : le +10 s allumé… chrono part de 40 s » rouge une fois en
+  suite complète (lane L-TOMBE-MODÈLE), vert seul et aux passages suivants. **Signal** : un second rouge. **Esquisse** :
+  regarder la dépendance au temps réel du chrono dans ce test.
+
