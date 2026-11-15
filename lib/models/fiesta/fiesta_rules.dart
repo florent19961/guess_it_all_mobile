@@ -71,6 +71,30 @@ const int kMaxCount = 5;
 /// donne 10.
 const int kMaxAllCount = 10;
 
+/// Chance qu'une cartouche tombe au début d'un tour ([DropFrequency]).
+const double kDropChanceRarely = 1 / 6;
+const double kDropChanceSometimes = 1 / 4;
+const double kDropChanceOften = 1 / 2;
+
+/// « Qui tombent pendant les tours » (D4 des retours du 2026-11-15) : à chaque
+/// tour joué, une chance qu'une cartouche au hasard tombe sur l'équipe qui joue.
+///
+/// 🔴 Persisté par son INDEX (clé `dropFrequency`, omise à [never]) : l'ordre
+/// est FIGÉ, un cran ajouté va en fin de liste.
+enum DropFrequency {
+  never('Jamais', 0),
+  rarely('Rarement', kDropChanceRarely),
+  sometimes('Parfois', kDropChanceSometimes),
+  often('Souvent', kDropChanceOften);
+
+  final String label;
+
+  /// Probabilité par tour joué.
+  final double chance;
+
+  const DropFrequency(this.label, this.chance);
+}
+
 /// La configuration Fiesta d'une partie, GELÉE dans `GameState` au lancement.
 ///
 /// Immuable : les collections sont copiées en lecture seule à la construction,
@@ -106,6 +130,10 @@ class FiestaRules {
   /// « Défis surprises » : 1 ou 2 défis entre les manches. Clé omise si coupé.
   final bool challenges;
 
+  /// « Qui tombent pendant les tours ». Clé `dropFrequency` (index de
+  /// [DropFrequency]) omise à [DropFrequency.never] ; absente = jamais.
+  final DropFrequency dropFrequency;
+
   FiestaRules({
     this.ensembleName,
     Map<String, ModifierSetting> modifiers = const {},
@@ -114,6 +142,7 @@ class FiestaRules {
     this.trailingCount = 0,
     this.balance = false,
     this.challenges = false,
+    this.dropFrequency = DropFrequency.never,
   }) : modifiers = Map.unmodifiable(modifiers);
 
   FiestaRules copyWith({
@@ -124,6 +153,7 @@ class FiestaRules {
     int? trailingCount,
     bool? balance,
     bool? challenges,
+    DropFrequency? dropFrequency,
   }) =>
       FiestaRules(
         ensembleName: ensembleName ?? this.ensembleName,
@@ -133,6 +163,7 @@ class FiestaRules {
         trailingCount: trailingCount ?? this.trailingCount,
         balance: balance ?? this.balance,
         challenges: challenges ?? this.challenges,
+        dropFrequency: dropFrequency ?? this.dropFrequency,
       );
 
   ModifierSetting settingOf(String id) =>
@@ -181,6 +212,8 @@ class FiestaRules {
         'trailingCount': trailingCount,
         'balance': balance,
         if (challenges) 'challenges': true,
+        if (dropFrequency != DropFrequency.never)
+          'dropFrequency': dropFrequency.index,
       };
 
   /// Variante tolérante : `null` si la structure est illisible (autre format,
@@ -196,13 +229,16 @@ class FiestaRules {
     final trailingCount = _readCount(json, 'trailingCount');
     final balance = readOr(json, 'balance', false);
     final challenges = readOr(json, 'challenges', false);
+    final drop =
+        _readCount(json, 'dropFrequency', max: DropFrequency.values.length - 1);
     if (ensembleName is! String? ||
         rawModifiers == null ||
         drawCount == null ||
         allCount == null ||
         trailingCount == null ||
         balance == null ||
-        challenges == null) {
+        challenges == null ||
+        drop == null) {
       return null;
     }
 
@@ -224,6 +260,7 @@ class FiestaRules {
       trailingCount: trailingCount,
       balance: balance,
       challenges: challenges,
+      dropFrequency: DropFrequency.values[drop],
     );
   }
 

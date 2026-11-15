@@ -35,10 +35,12 @@ List<int> roundsWithoutDraw(FiestaRules rules) => [
           if (drawCandidates(rules, round).isEmpty) round,
     ];
 
-/// Au moins un réglage joue réellement.
+/// Au moins un réglage joue réellement. Les cartouches qui tombent comptent :
+/// seules, elles changent déjà des tours de la partie.
 bool hasActiveSetting(FiestaRules rules) =>
     rules.balance ||
     rules.challenges ||
+    rules.dropFrequency != DropFrequency.never ||
     rules.trailingCount > 0 ||
     rules.allCount > 0 ||
     kModifierCatalog.any((def) =>

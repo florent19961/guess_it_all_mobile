@@ -49,6 +49,8 @@ String settingsKey(FiestaRules rules) {
     'trailingCount': rules.balance ? 0 : rules.trailingCount,
     'balance': rules.balance,
     if (rules.challenges) 'challenges': true,
+    if (rules.dropFrequency != DropFrequency.never)
+      'dropFrequency': rules.dropFrequency.index,
     'modifiers': {
       for (final def in kModifierCatalog)
         if (rules.isAlways(def.id) ||

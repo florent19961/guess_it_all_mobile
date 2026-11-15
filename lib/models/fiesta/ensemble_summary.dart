@@ -43,6 +43,10 @@ final class InfoChip extends EnsembleChip {
 
 const String kBalanceLabel = 'Équilibrer la partie';
 const String kChallengesLabel = 'Défis surprises';
+const String kDropsLabel = 'Cartouches qui tombent';
+
+String _dropsLabel(DropFrequency f) =>
+    '$kDropsLabel : ${f.label.toLowerCase()}';
 
 String _plural(int n, String word) => '$n $word${n > 1 ? 's' : ''}';
 
@@ -63,6 +67,9 @@ List<String> randomCartridgeLines(FiestaRules rules) => [
       else if (rules.trailingCount > 0)
         '${_trailingLabel(rules.trailingCount)} après les manches 1 et 2',
       if (rules.allCount > 0) _allLabel(rules.allCount),
+      if (rules.dropFrequency != DropFrequency.never)
+        '${_dropsLabel(rules.dropFrequency)}, au début d\'un tour, sur '
+            'l\'équipe qui joue',
       if (rules.challenges)
         '$kChallengesLabel : 1 ou 2 fois dans la partie, une cartouche à gagner',
     ];
@@ -81,6 +88,7 @@ bool rulesHaveCartridges(FiestaRules rules) =>
     rules.challenges ||
     rules.trailingCount > 0 ||
     rules.allCount > 0 ||
+    rules.dropFrequency != DropFrequency.never ||
     kModifierCatalog.any((d) => rules.chargesOf(d.id) > 0);
 
 // ---------------------------------------------------------------------------
@@ -119,6 +127,7 @@ EnsembleSummary rulesSummary(FiestaRules rules) {
         '${_plural(rules.trailingCount, 'cartouche')} aux menées',
       if (rules.allCount > 0)
         '${_plural(rules.allCount, 'cartouche')} par manche',
+      if (rules.dropFrequency != DropFrequency.never) kDropsLabel,
       if (rules.challenges) kChallengesLabel,
     ]),
     long: longParts.isEmpty
@@ -134,6 +143,8 @@ EnsembleSummary rulesSummary(FiestaRules rules) {
       else if (rules.trailingCount > 0)
         InfoChip(_trailingLabel(rules.trailingCount)),
       if (rules.allCount > 0) InfoChip(_allLabel(rules.allCount)),
+      if (rules.dropFrequency != DropFrequency.never)
+        InfoChip(_dropsLabel(rules.dropFrequency)),
       if (rules.challenges) const InfoChip(kChallengesLabel),
     ],
   );
