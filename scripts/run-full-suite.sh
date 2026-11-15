@@ -5,7 +5,17 @@
 # Contenu (dans cet ordre — le moins cher d'abord, on s'arrête au premier rouge) :
 #   1. dart format --set-exit-if-changed   (formatage)
 #   2. flutter analyze                     (0 error exigé)
-#   3. flutter test                        (suite unitaire + widgets)
+#   3. flutter test -j 4                   (suite unitaire + widgets)
+#
+# VITESSE (mesuré le 2026-11-15, machine chargée) : `flutter test` lance par
+# défaut nproc/2 = 8 processus de test ; à 8 la machine sature et la suite prend
+# ~198 s, à 4 elle prend ~112 s (et moins de RAM par run). Comme chez WasReal
+# (`maxForks: 4`) : le sémaphore borne le NOMBRE de runs, `-j` borne leur TAILLE.
+# Surcharge ponctuelle : GIA_TEST_CONCURRENCY=6 scripts/run-full-suite.sh.
+# Les dépendances sont résolues UNE fois (hors ligne d'abord), puis analyze et
+# test tournent en `--no-pub`. `--experimental-faster-testing` (une compilation
+# au lieu d'une par fichier) est inutilisable ici : il génère du Dart invalide
+# quand le chemin contient des tirets, ce qui est le cas de tous les worktrees.
 #
 # RÉGULATION MÉMOIRE — deux couches, les deux nécessaires :
 #   - flock exclusif (fd 9) par PROJET  : deux suites complètes de ce dépôt
@@ -20,6 +30,11 @@
 set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
+
+# SDK Linux d'abord : un Flutter Windows traîne dans le PATH sous WSL (CLAUDE.md).
+if [[ -x "$HOME/development/flutter/bin/flutter" ]]; then
+  export PATH="$HOME/development/flutter/bin:$PATH"
+fi
 
 SKIP_FORMAT=0
 [[ "${1:-}" == "--no-format" ]] && SKIP_FORMAT=1
@@ -41,6 +56,9 @@ fi
 
 fail() { echo ""; echo "❌ [full-suite] ÉCHEC à l'étape : $1"; exit 1; }
 
+echo "▶ [0/3] flutter pub get (une fois, hors ligne d'abord)"
+flutter pub get --offline >/dev/null 2>&1 || flutter pub get >/dev/null || fail "flutter pub get"
+
 if [[ "$SKIP_FORMAT" == "0" ]]; then
   echo "▶ [1/3] dart format --set-exit-if-changed"
   dart format --set-exit-if-changed lib test tools || fail "dart format (lance \`dart format lib test tools\`)"
@@ -54,7 +72,7 @@ echo "▶ [2/3] flutter analyze (0 error + 0 warning exigés)"
 # Gater dessus rendrait la suite rouge en permanence sans rien dire de la story ;
 # on gate donc sur error+warning et on AFFICHE le compte d'infos, pour que sa
 # dérive reste visible. Baseline notée dans docs/notes_pour_plus_tard.md.
-ANALYZE_OUT=$(flutter analyze 2>&1) || true
+ANALYZE_OUT=$(flutter analyze --no-pub 2>&1) || true
 BAD=$(grep -cE "^[[:space:]]*(error|warning) •" <<<"$ANALYZE_OUT" || true)
 INFOS=$(grep -cE "^[[:space:]]*info •" <<<"$ANALYZE_OUT" || true)
 if [[ "$BAD" != "0" ]]; then
@@ -63,8 +81,9 @@ if [[ "$BAD" != "0" ]]; then
 fi
 echo "   0 error, 0 warning — $INFOS info (baseline pré-existante)"
 
-echo "▶ [3/3] flutter test"
-flutter test || fail "flutter test"
+CONCURRENCY="${GIA_TEST_CONCURRENCY:-4}"
+echo "▶ [3/3] flutter test -j $CONCURRENCY"
+flutter test --no-pub -j "$CONCURRENCY" || fail "flutter test"
 
 echo ""
 echo "✅ [full-suite] tout est vert."
