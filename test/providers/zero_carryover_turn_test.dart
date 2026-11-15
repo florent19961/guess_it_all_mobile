@@ -245,7 +245,7 @@ void main() {
       final p =
           await givenGame(2, fiesta: stock(['block_giver']), wordsEach: 1);
       final (a, b) = (p.teams[0], p.teams[1]);
-      p.inflictMalus('block_giver', b.id, playerId: b.playerIds[0]);
+      p.inflictMalus('block_giver', b.playerIds[0]);
       start(p);
       finishAtBuzzer(p);
       p.nextRound();
@@ -275,7 +275,7 @@ void main() {
       start(p);
       finishAtBuzzer(p);
       p.nextRound();
-      p.inflictMalus('block_giver', a.id, playerId: a.playerIds[1]);
+      p.inflictMalus('block_giver', a.playerIds[1]);
       playTurn(p, 1);
 
       expectNormalTurnOf(p, 0, 1);
@@ -309,8 +309,8 @@ void main() {
           fiesta: stock(['double_points', 'no_pass']), wordsEach: 1);
       final (a, b) = (p.teams[0], p.teams[1]);
       playTurn(p, 1);
-      // B envoie « Sans passe » à A puis joue.
-      p.inflictMalus('no_pass', a.id);
+      // B envoie « Sans passe » à J1, prochain à faire deviner pour A.
+      p.inflictMalus('no_pass', a.playerIds[1]);
       playTurn(p, 1);
 
       // A : ×2 et malus reçu, la manche finit à 0 s sur le chrono.
@@ -350,26 +350,29 @@ void main() {
     });
 
     test(
-        'un malus en attente sur l\'équipe suivante, impossible en M+1, est rendu',
-        () async {
-      // « Autre langue » ne se joue pas en M3. L'équipe suivante ne poursuit
-      // rien : elle n'est pas `continuingTeamId`, la cartouche revient.
+        'un malus en attente sur l\'équipe suivante, impossible en M+1, est '
+        'perdu à son tour, sans rien rendre', () async {
+      // « Autre langue » ne se joue pas en M3.
       final p =
           await givenGame(2, fiesta: stock(['other_language']), wordsEach: 1);
       final (a, b) = (p.teams[0], p.teams[1]);
       playTurn(p, 99);
       p.nextRound();
-      // M2, continuation de A : envoie le malus à B et finit la manche à 0 s.
+      // M2, continuation de A : envoie le malus à J3 et finit la manche à 0 s.
       expect(p.getCurrentTeam()!.id, a.id);
-      p.inflictMalus('other_language', b.id);
+      p.inflictMalus('other_language', b.playerIds[0]);
       expect(left(p, 'other_language'), 0);
       start(p);
       finishAtBuzzer(p);
       p.nextRound();
 
-      expect(p.getCurrentTeam()!.id, b.id);
-      expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null), isEmpty);
-      expect(p.game.fiesta!.cartridgesLeft('other_language', a.id), 1);
+      expect(p.getCurrentPlayer()!.id, b.playerIds[0]);
+      expect(p.receivedThisTurn, isEmpty, reason: 'perdu, non affiché');
+      expect(p.game.fiesta!.cartridgesLeft('other_language', a.id), 0,
+          reason: 'rien n\'est rendu');
+      playTurn(p, 0);
+      expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null), isEmpty,
+          reason: 'parti à la fin du tour où il aurait joué');
     });
   });
 

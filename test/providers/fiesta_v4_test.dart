@@ -109,10 +109,7 @@ void main() {
     /// tour, et c'est à l'équipe 1.
     void send(GameProvider p, int slot) {
       final target = p.teams[1];
-      expect(
-          p.inflictMalus('block_giver', target.id,
-              playerId: target.playerIds[slot]),
-          isNull);
+      expect(p.inflictMalus('block_giver', target.playerIds[slot]), isNull);
       playEmptyTurn(p);
     }
 
@@ -158,7 +155,7 @@ void main() {
         () async {
       final p = await blocked();
       final target = p.teams[1];
-      p.inflictMalus('block_giver', target.id, playerId: target.playerIds[1]);
+      p.inflictMalus('block_giver', target.playerIds[1]);
       // L'équipe 0 finit la manche : J4 n'a pas encore joué, ni J3.
       finishRound(p);
       p.nextRound();
@@ -178,7 +175,7 @@ void main() {
         'avant « Suivant », app tuée = même phrase', () async {
       final p = await blocked();
       final target = p.teams[1];
-      p.inflictMalus('block_giver', target.id, playerId: target.playerIds[0]);
+      p.inflictMalus('block_giver', target.playerIds[0]);
       playEmptyTurn(p);
       expect(player(p), 'J3');
       expect(p.receivedThisTurn, isEmpty, reason: 'aucune trace');
@@ -211,11 +208,11 @@ void main() {
           {'block_giver': 1, 'plus_10s': 1, 'reversed': 1, 'no_pass': 1}));
       orderFixed(p);
       final target = p.teams[1];
-      p.inflictMalus('block_giver', target.id, playerId: target.playerIds[0]);
+      p.inflictMalus('block_giver', target.playerIds[0]);
       playEmptyTurn(p);
 
       p.toggleBonus('plus_10s');
-      p.inflictMalus('reversed', p.teams[0].id);
+      p.inflictMalus('reversed', p.teams[0].playerIds[0]);
       expect(left(p, 'reversed'), 0);
       p.startTurn();
       p.startTurnTimer();
@@ -241,7 +238,7 @@ void main() {
     test('rien préparé : pas de lien', () async {
       final p = await blocked();
       final target = p.teams[1];
-      p.inflictMalus('block_giver', target.id, playerId: target.playerIds[0]);
+      p.inflictMalus('block_giver', target.playerIds[0]);
       playEmptyTurn(p);
       p.startTurn();
       p.startTurnTimer();
@@ -253,7 +250,7 @@ void main() {
         () async {
       final p = await blocked();
       final target = p.teams[1];
-      p.inflictMalus('block_giver', target.id, playerId: target.playerIds[0]);
+      p.inflictMalus('block_giver', target.playerIds[0]);
       playEmptyTurn(p);
       p.startTurn();
       p.startTurnTimer();
@@ -269,7 +266,7 @@ void main() {
     test('retour arrière : tout revient, sans doublon', () async {
       final p = await blocked();
       final target = p.teams[1];
-      p.inflictMalus('block_giver', target.id, playerId: target.playerIds[0]);
+      p.inflictMalus('block_giver', target.playerIds[0]);
       playEmptyTurn(p);
       p.startTurn();
       p.startTurnTimer();
@@ -283,29 +280,37 @@ void main() {
       expect(p.game.fiesta!.skips, isEmpty);
     });
 
-    test('un seul blocage de chaque type en attente par équipe', () async {
+    test(
+        'deux joueurs de la même équipe bloqués : deux pièges de suite, puis '
+        'la rotation reprend', () async {
       final p = await blocked(more: {'block_giver': 2});
-      final target = p.teams[1];
-      expect(
-          p.inflictMalus('block_giver', target.id,
-              playerId: target.playerIds[0]),
-          isNull);
-      // 2 équipes : la seule cible est déjà visée, la cartouche est grisée
-      // d'avance et un second envoi est ignoré.
-      final grey = p.reserve.firstWhere((c) => c.catalogId == 'block_giver');
-      expect(grey.blockedReason, startsWith('déjà infligé'));
-      expect(
-          p.inflictMalus('block_giver', target.id,
-              playerId: target.playerIds[1]),
-          isNull);
-      expect(left(p, 'block_giver'), 1, reason: 'rien consommé');
+      final [j3, j4, _] = p.teams[1].playerIds;
+      expect(p.inflictMalus('block_giver', j3), isNull);
+      expect(p.inflictMalus('block_giver', j4), isNull);
+      playEmptyTurn(p); // J0
+      for (final skipped in ['J3', 'J4']) {
+        expect(player(p), skipped);
+        p.startTurn();
+        p.startTurnTimer();
+        expect(p.game.currentScreen, AppConstants.screenGiverBlocked);
+        p.confirmGiverBlock();
+      }
+      expect(player(p), 'J5');
+      expect(p.game.fiesta!.skips[p.teams[1].id], 2);
+      expect(p.game.fiesta!.active, isEmpty);
+      final seq = <String>[];
+      for (var i = 0; i < 3; i++) {
+        seq.add(player(p)!);
+        playEmptyTurn(p); // équipe 1
+        playEmptyTurn(p); // équipe 0
+      }
+      expect(seq, ['J5', 'J3', 'J4']);
     });
 
-    test('un blocage exige un joueur de l\'équipe visée', () async {
+    test('un malus exige un joueur adverse', () async {
       final p = await blocked();
       p.inflictMalus('block_giver', p.teams[1].id);
-      p.inflictMalus('block_giver', p.teams[1].id,
-          playerId: p.teams[0].playerIds[0]);
+      p.inflictMalus('block_giver', p.teams[0].playerIds[0]);
       expect(left(p, 'block_giver'), 1);
     });
 
@@ -313,7 +318,7 @@ void main() {
         () async {
       final p = await blocked();
       final target = p.teams[1];
-      p.inflictMalus('block_giver', target.id, playerId: target.playerIds[1]);
+      p.inflictMalus('block_giver', target.playerIds[1]);
       expect(p.sentThisTurn, hasLength(1));
       playEmptyTurn(p); // J0
       playEmptyTurn(p); // J3 : J4 n'a pas joué, il attend
@@ -329,17 +334,21 @@ void main() {
       return p;
     }
 
-    test('équipe de 2 joueurs : grisée, aucune cible', () async {
+    test('équipe de 2 joueurs : tous ses prénoms grisés', () async {
       final p = await given(b: 2);
-      expect(p.targetsFor('block_guesser'), isEmpty);
-      expect(p.reserve.single.blockedReason, isNotNull);
+      for (final id in p.teams[1].playerIds) {
+        expect(p.targetRefusal('block_guesser', id),
+            'Moins de 3 joueurs dans son équipe');
+      }
+      expect(p.reserve.single.blockedReason,
+          'aucune équipe adverse n\'a 3 joueurs');
     });
 
     test('joueur nommé à l\'envoi ; au tour concerné, il ne répond pas',
         () async {
       final p = await given();
       final target = p.teams[1];
-      p.inflictMalus('block_guesser', target.id, playerId: target.playerIds[1]);
+      p.inflictMalus('block_guesser', target.playerIds[1]);
       playEmptyTurn(p);
       expect(player(p), 'J3');
       expect(p.blockedGuesser?.name, 'J4');
@@ -352,7 +361,7 @@ void main() {
     test('s\'il fait deviner ce tour-là, le blocage attend', () async {
       final p = await given();
       final target = p.teams[1];
-      p.inflictMalus('block_guesser', target.id, playerId: target.playerIds[0]);
+      p.inflictMalus('block_guesser', target.playerIds[0]);
       playEmptyTurn(p);
       expect(player(p), 'J3');
       expect(p.blockedGuesser, isNull);
@@ -461,25 +470,121 @@ void main() {
       expect(p.reserve.single.usable, isFalse);
       expect(left(p, 'reversed'), 1);
     });
+  });
 
-    test('Autre langue envoyé en M2 à une cible qui rejoue en M3 : RENDU',
+  group('Chaque malus se vise sur une personne', () {
+    List<String> pending(GameProvider p) => [
+          for (final m in p.game.fiesta!.active)
+            if (m.fromTeamId != null) m.catalogId,
+        ];
+
+    test(
+        'il pèse au prochain tour où SA personne fait deviner, même une '
+        'manche plus loin ; pas aux tours de ses coéquipiers', () async {
+      final p = await givenGame(stock({'reversed': 1}));
+      orderFixed(p);
+      expect(p.inflictMalus('reversed', p.teams[1].playerIds[1]), isNull);
+      playEmptyTurn(p); // J0
+      expect(player(p), 'J3');
+      expect(p.isWordReversed, isFalse, reason: 'J3 n\'est pas visé');
+      playEmptyTurn(p);
+      expect(pending(p), ['reversed'], reason: 'il attend J4');
+      finishRound(p); // J1 finit M1
+      p.nextRound();
+      playEmptyTurn(p); // continuation de J1
+      expect([player(p), p.game.currentRound], ['J4', 2]);
+      expect(p.isWordReversed, isTrue);
+      playEmptyTurn(p);
+      expect(pending(p), isEmpty, reason: 'consommé à la fin de son tour');
+    });
+
+    test(
+        '« Interdit de faire deviner » : ses autres malus attendent son '
+        'prochain VRAI tour, le remplaçant ne les reçoit ni ne les consomme',
         () async {
-      final p = await givenGame(stock({'other_language': 1}));
+      final p = await givenGame(stock({'block_giver': 1, 'reversed': 1}));
+      orderFixed(p);
+      final j4 = p.teams[1].playerIds[1];
+      p.inflictMalus('block_giver', j4);
+      p.inflictMalus('reversed', j4);
+      playEmptyTurn(p); // J0
+      playEmptyTurn(p); // J3
+      playEmptyTurn(p); // J1
+      p.startTurn();
+      p.startTurnTimer();
+      p.confirmGiverBlock();
+      expect(player(p), 'J5');
+      expect(p.isWordReversed, isFalse);
+      playEmptyTurn(p);
+      expect(pending(p), ['reversed']);
+      playEmptyTurn(p); // J2
+      playEmptyTurn(p); // J3
+      playEmptyTurn(p); // J0
+      expect(player(p), 'J4');
+      expect(p.isWordReversed, isTrue);
+      playEmptyTurn(p);
+      expect(pending(p), isEmpty);
+    });
+
+    test(
+        'relecture : un malus en attente écrit par la 1.4.0, sans joueur visé, '
+        'garde l\'ancien comportement (prochain tour de l\'équipe)', () async {
+      final p = await givenGame(stock({'reversed': 1}));
+      orderFixed(p);
+      p.inflictMalus('reversed', p.teams[1].playerIds[1]);
+      playEmptyTurn(p); // J0
+      final json = p.game.toJson();
+      final active = (json['fiesta'] as Map)['active'] as List;
+      expect((active.single as Map).remove('playerId'), isNotNull);
+      restore(p, json);
+      // Il grise tous les prénoms de son équipe, pas seulement J4.
+      for (final id in p.teams[1].playerIds) {
+        expect(p.targetRefusal('reversed', id),
+            'Déjà Mot à l\'envers dans son équipe');
+      }
+      expect(player(p), 'J3');
+      expect(p.isWordReversed, isTrue);
+      playEmptyTurn(p);
+      expect(pending(p), isEmpty);
+    });
+
+    test(
+        'grisé par personne : le même malus ou un malus qui ne s\'y cumule '
+        'pas ; « Interdit de faire deviner » ne grise rien d\'autre ; '
+        '« Bloquer un devineur » : un par équipe', () async {
+      final p = await givenGame(
+          stock({
+            'mime_no_arms': 1,
+            'mime_eyes_closed': 1,
+            'block_giver': 2,
+            'block_guesser': 1,
+            'minus_10s': 1,
+          }),
+          wordsEach: 1);
       orderFixed(p);
       finishRound(p);
       p.nextRound();
-      // Continuation de l'équipe 0 en M2 : elle envoie, puis vide la manche.
-      expect(p.isContinuation, isTrue);
-      final me = team(p);
-      p.inflictMalus('other_language', other(p));
-      expect(left(p, 'other_language'), 0);
       finishRound(p);
       p.nextRound();
       expect(p.game.currentRound, 3);
-      expect(team(p), me);
-      final fiesta = p.game.fiesta!;
-      expect(fiesta.active.where((m) => m.fromTeamId != null), isEmpty);
-      expect(fiesta.cartridgesLeft('other_language', me), 1, reason: 'rendue');
+      final [j3, j4, j5] = p.teams[1].playerIds;
+
+      expect(p.inflictMalus('mime_no_arms', j3), isNull);
+      expect(
+          p.targetRefusal('mime_eyes_closed', j3), 'Déjà Mime sans les bras');
+      expect(p.inflictMalus('mime_eyes_closed', j3), startsWith('Impossible'));
+      expect(p.targetRefusal('mime_eyes_closed', j4), isNull);
+
+      expect(p.targetRefusal('block_giver', j3), isNull);
+      expect(p.inflictMalus('block_giver', j3), isNull);
+      expect(
+          p.targetRefusal('block_giver', j3), 'Déjà Interdit de faire deviner');
+      expect(p.targetRefusal('block_giver', j4), isNull);
+      expect(p.targetRefusal('minus_10s', j3), isNull);
+
+      expect(p.inflictMalus('block_guesser', j4), isNull);
+      expect(p.targetRefusal('block_guesser', j5),
+          'Déjà Bloquer un devineur dans son équipe');
     });
   });
 

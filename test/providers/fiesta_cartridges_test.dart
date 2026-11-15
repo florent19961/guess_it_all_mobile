@@ -57,6 +57,13 @@ List<String> received(GameProvider p) =>
 
 String name(GameProvider p, String teamId) => p.getTeamById(teamId)!.name;
 
+/// Le seul joueur de l'équipe [teamId] : ici personne et équipe se confondent.
+String one(GameProvider p, String teamId) =>
+    p.getTeamById(teamId)!.playerIds.single;
+
+String who(GameProvider p, String teamId) =>
+    p.getPlayerById(one(p, teamId))!.name;
+
 void main() {
   test(
       '3 équipes : le malus vise le PROCHAIN tour de sa cible ; même malus '
@@ -71,19 +78,18 @@ void main() {
     final c = playTurn(p);
     expect(p.getCurrentTeam()!.id, a);
 
-    expect(p.inflictMalus('minus_10s', c), isNull);
+    expect(p.inflictMalus('minus_10s', one(p, c)), isNull);
     expect(left(p, 'minus_10s'), 1);
     expect(received(p), isEmpty, reason: 'rien sur l\'envoyeuse');
     playTurn(p);
 
     // b : même malus sur c → refusé, rien consommé ; un autre se cumule.
     expect(
-        p.inflictMalus('minus_10s', c),
-        'Impossible : Malus de 10 s est déjà infligé à l\'équipe '
-        '${name(p, c)} par l\'équipe ${name(p, a)} pour son prochain tour. '
-        'Choisis un autre malus ou attends.');
+        p.inflictMalus('minus_10s', one(p, c)),
+        'Impossible : Malus de 10 s est déjà infligé à ${who(p, c)} par '
+        'l\'équipe ${name(p, a)}. Choisis un autre malus ou attends.');
     expect(left(p, 'minus_10s'), 2);
-    expect(p.inflictMalus('reversed', c), isNull);
+    expect(p.inflictMalus('reversed', one(p, c)), isNull);
 
     // App tuée avant le tour de b.
     await pumpEventQueue();
@@ -130,12 +136,12 @@ void main() {
     p.toggleBonus('free_pass');
 
     // Malus envoyé puis annulé : tout revient.
-    expect(p.inflictMalus('minus_10s', b), isNull);
+    expect(p.inflictMalus('minus_10s', one(p, b)), isNull);
     p.cancelSent(p.sentThisTurn.single);
     expect(left(p, 'minus_10s'), 2);
     expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null), isEmpty);
     expect(p.game.fiesta!.chargesUsed, isEmpty);
-    expect(p.inflictMalus('minus_10s', b), isNull);
+    expect(p.inflictMalus('minus_10s', one(p, b)), isNull);
 
     p.startTurn();
     p.startTurnTimer();
@@ -172,14 +178,15 @@ void main() {
     }
     final t0 = playTurn(p); // continuation
     final x = p.getCurrentTeam()!.id;
-    expect(p.inflictMalus('mime_no_arms', t0), isNull);
+    expect(p.inflictMalus('mime_no_arms', one(p, t0)), isNull);
     final y = p.teams.firstWhere((t) => t.id != t0 && t.id != x).id;
     playTurn(p);
     expect(p.getCurrentTeam()!.id, y);
 
-    expect(p.inflictMalus('mime_eyes_closed', t0), startsWith('Impossible : '));
+    expect(p.inflictMalus('mime_eyes_closed', one(p, t0)),
+        startsWith('Impossible : '));
     expect(left(p, 'mime_eyes_closed'), 2);
-    expect(p.inflictMalus('mime_eyes_closed', x), isNull);
+    expect(p.inflictMalus('mime_eyes_closed', one(p, x)), isNull);
     expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null).length, 2);
   });
 
@@ -216,7 +223,7 @@ void main() {
     expect(mime.usable, isFalse);
     expect(mime.blockedReason, 'incompatible avec Dessiner cette manche');
     final other = p.teams.singleWhere((t) => t.id != p.getCurrentTeam()!.id);
-    expect(p.inflictMalus('mime_no_arms', other.id), isNull);
+    expect(p.inflictMalus('mime_no_arms', one(p, other.id)), isNull);
     expect(p.game.fiesta!.chargesUsed, isEmpty, reason: 'rien n\'est consommé');
   });
 
@@ -229,7 +236,7 @@ void main() {
     playTurn(p, 99);
     p.nextRound();
     final victim = playTurn(p); // continuation M2
-    expect(p.inflictMalus('other_language', victim), isNull);
+    expect(p.inflictMalus('other_language', one(p, victim)), isNull);
     playTurn(p, 99); // l'envoyeuse finit M2
     p.nextRound();
     while (p.getCurrentTeam()!.id != victim) {
@@ -252,7 +259,7 @@ void main() {
     expect(playTurn(p), a); // continuation de a en M2
     final b = p.getCurrentTeam()!.id;
 
-    expect(p.inflictMalus('other_language', a), isNull);
+    expect(p.inflictMalus('other_language', one(p, a)), isNull);
     expect(playTurn(p), b);
 
     expect(p.getCurrentTeam()!.id, a);
@@ -280,10 +287,10 @@ void main() {
     var p = await givenProvider(['Ana', 'Bob']);
     await p.startGame(fiesta: stock(['minus_10s', 'reversed']));
     final b = p.teams.firstWhere((t) => t.id != p.getCurrentTeam()!.id);
-    expect(p.inflictMalus('minus_10s', b.id), isNull);
+    expect(p.inflictMalus('minus_10s', one(p, b.id)), isNull);
     final grey = p.reserve.firstWhere((c) => c.catalogId == 'minus_10s');
     expect([grey.left, grey.usable], [1, isFalse]);
-    expect(grey.blockedReason, 'déjà infligé à l\'équipe ${b.name}');
+    expect(grey.blockedReason, 'personne en face ne peut le recevoir');
     expect(
         p.reserve.firstWhere((c) => c.catalogId == 'reversed').usable, isTrue);
 
@@ -294,13 +301,13 @@ void main() {
     playTurn(p);
     final c = playTurn(p);
     expect(p.getCurrentTeam()!.id, a);
-    expect(p.inflictMalus('minus_10s', c), isNull);
+    expect(p.inflictMalus('minus_10s', one(p, c)), isNull);
     playTurn(p);
     expect(p.reserve.single.usable, isTrue);
-    expect(p.targetRefusal('minus_10s', p.getTeamById(c)!), 'déjà infligé');
-    expect(p.inflictMalus('minus_10s', c), startsWith('Impossible'),
+    expect(p.targetRefusal('minus_10s', one(p, c)), 'Déjà Malus de 10 s');
+    expect(p.inflictMalus('minus_10s', one(p, c)), startsWith('Impossible'),
         reason: 'grisé = refusé');
     expect(left(p, 'minus_10s'), 2, reason: 'rien consommé');
-    expect(p.targetRefusal('minus_10s', p.getTeamById(a)!), isNull);
+    expect(p.targetRefusal('minus_10s', one(p, a)), isNull);
   });
 }

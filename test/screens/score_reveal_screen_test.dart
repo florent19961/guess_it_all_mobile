@@ -178,14 +178,13 @@ void main() {
     lot1.playEmptyTurn(p); // Tour 1 : J0.
     lot1.playEmptyTurn(p); // Tour 2 : J3.
     final victim = p.teams[1].playerIds[1];
-    expect(
-        p.inflictMalus('block_giver', p.teams[1].id, playerId: victim), isNull);
+    expect(p.inflictMalus('block_giver', victim), isNull);
     lot1.playEmptyTurn(p); // Tour 3 : J1 nomme J4.
     final trapped = p.game.currentTurn;
 
     // J4 prépare un malus, puis tombe dans le piège : il est rendu.
     expect(p.getCurrentPlayer()!.id, victim);
-    expect(p.inflictMalus('reversed', p.teams[0].id), isNull);
+    expect(p.inflictMalus('reversed', p.teams[0].playerIds[0]), isNull);
     p.startTurn();
     p.startTurnTimer();
     p.confirmGiverBlock();

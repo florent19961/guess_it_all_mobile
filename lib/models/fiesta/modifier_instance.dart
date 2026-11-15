@@ -13,11 +13,11 @@ class ModifierInstance {
   /// Manche dans laquelle l'instance a été posée.
   final int round;
 
-  /// Malus INFLIGÉ par l'équipe [fromTeamId] à l'équipe [teamId] avec une
-  /// cartouche de sa réserve (écran avant le tour) : il pèse sur le
-  /// PROCHAIN tour de [teamId], quelle que soit la manche ([round] = manche
-  /// d'envoi, pour mémoire), puis part à la vraie fin de ce tour. Clé JSON
-  /// `from`, omise si nul.
+  /// Malus INFLIGÉ par l'équipe [fromTeamId] au joueur [playerId] de l'équipe
+  /// [teamId] avec une cartouche de sa réserve (écran avant le tour) : il se
+  /// résout au prochain tour où ce joueur fait deviner, quelle que soit la
+  /// manche ([round] = manche d'envoi, pour mémoire), puis part à la vraie fin
+  /// de ce tour ([resolvesAt]). Clé JSON `from`, omise si nul.
   final String? fromTeamId;
 
   /// Joueur qui a envoyé le malus (nommé par la phrase d'« Interdit de faire
@@ -45,6 +45,19 @@ class ModifierInstance {
     this.sentTurnIndex,
   }) : assert(target == ModifierTarget.both || teamId != null,
             'une cible team/player exige un teamId');
+
+  /// Malus infligé qui se résout au tour de [giverId] (équipe [teamId]) : il y
+  /// pèse, ou y est perdu s'il n'a plus de sens (`modifiersForTurn`), et part à
+  /// la fin de ce tour. Visé sur une personne : son prochain tour de faire
+  /// deviner. 🔴 Écrit par la 1.4.0 sans [playerId] (hors blocages) : le
+  /// prochain tour de l'équipe, comme alors. « Bloquer un devineur » : le
+  /// prochain tour de l'équipe où son joueur ne fait pas deviner ; « Interdit de
+  /// faire deviner » : jamais ([waitsFor]).
+  bool resolvesAt({required String teamId, required String? giverId}) =>
+      fromTeamId != null &&
+      this.teamId == teamId &&
+      !waitsFor(giverId) &&
+      (catalogId == 'block_guesser' || playerId == null || playerId == giverId);
 
   /// Blocage nommé en attente, sans effet sur le tour de [giverId] :
   /// « Interdit de faire deviner » ne pèse jamais sur un tour (il l'annule à son

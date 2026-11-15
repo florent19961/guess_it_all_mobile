@@ -671,7 +671,8 @@ List<CoachStep> fiestaPreTurnHelp(FiestaPreTurnKeys keys) => [
         target: keys.reserveMalus,
         title: 'Réserve : tes malus',
         text: 'Tes cartouches pour toute la partie, un tour chacune. Touche un '
-            'malus pour l\'infliger à une autre équipe, pour son prochain tour.',
+            'malus pour l\'infliger à un joueur d\'une autre équipe, pour son '
+            'prochain tour de faire deviner.',
       ),
       CoachStep(
         target: keys.firstUnusable,
