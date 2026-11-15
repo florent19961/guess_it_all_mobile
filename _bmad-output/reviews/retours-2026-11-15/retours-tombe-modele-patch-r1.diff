@@ -1,5 +1,5 @@
 diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
-index c86f6ad..ad0cc17 100644
+index c86f6ad..6f256f1 100644
 --- a/docs/tracking_evolution.md
 +++ b/docs/tracking_evolution.md
 @@ -1536,3 +1536,22 @@ continuation de fin de manche a déjà été lancée : ses malus reçus restent
@@ -15,7 +15,7 @@ index c86f6ad..ad0cc17 100644
 +Jamais, absente = Jamais, `format` inchangé (4). Il compte dans `settingsKey` (hors Jamais),
 +`hasActiveSetting`, le résumé, les pastilles et la page « Voir ». Nouvelle fonction pure
 +`dropForTurn` (`cartridge_drop.dart`) : la cartouche qui tombe sur un tour, déterministe par
-+`(gameId, tour, joueur)`, vivier = celui des cartouches au hasard moins ce qui double le tour.
++`(gameId, tour, joueur, sauts de l'équipe)`, vivier = celui des cartouches au hasard moins ce qui double le tour.
 +
 +**Pourquoi.** Retours de recette de Florent (spec `retours-2026-11-15.md`, D4). Le modèle et
 +l'éditeur passent avant le branchement en partie, qui attend l'écran « Ce qui t'attend » (L-CACHE) :
@@ -26,10 +26,10 @@ index c86f6ad..ad0cc17 100644
 +effet en partie. Les ensembles et parties écrits par la 1.4.0 se relisent à Jamais ; aucun ensemble
 +fourni ne change.
 diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
-index dbea555..ca1416a 100644
+index dbea555..32fc7e4 100644
 --- a/lib/models/CLAUDE.md
 +++ b/lib/models/CLAUDE.md
-@@ -19,7 +19,7 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+@@ -19,20 +19,21 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
  | `category_metadata.dart` | `CategoryMetadata` | Metadonnees categorie multilingue (id, icon, noms, locales) |
  | `fiesta/modifier_catalog.dart` | `ModifierDef`, `kModifierCatalog`, `kCartridgeOnlyIds`, enums `ModifierNature/Scope/Target` | Catalogue Fiesta (17 ids **figés**, du code, jamais persisté ; un ajout se fait **en fin de liste** : `one_answer`, `sounds_only`, `plus_10s`, puis `block_giver`), `modifierById` (répond aussi pour les retirés, liste privée `_kRetiredModifiers`, lecture seule : 🔴 `two_words` reste lisible et nommé dans l'historique, `earned`, `chargesUsed`, les règles gelées et les ensembles enregistrés, mais hors catalogue il n'est ni proposé, ni tiré, ni joué), `turnLabel` (mini-phrase de la pastille du tour ; `block_guesser` : à faire précéder du prénom ; `block_giver` : aucune), `areCompatible` (seule règle : deux membres `mimeFamily` s'excluent, sauf la paire `sounds_only` / `mime_under_sheet`, compatible dans toutes les combinaisons ; « Interdit de passer » + « Passe gratuite » se cumulent depuis le 2026-11-15), `modifierDescription` (texte commun de cette paire quand les deux jouent). `round3Only` = manche 3 seulement (mime) ; `notInRound3` = jamais en manche 3 (« Faire deviner dans une autre langue »), lus par `isEligibleForRound` / `allowedRounds`. `kCartridgeOnlyIds` (tous les bonus, `minus_10s`, `block_guesser`, `block_giver`) : jamais règle de manche ; tout le reste existe dans les 3 menus, `one_answer` compris. 🔴 Tout ajout au catalogue change les tirages et cadeaux des parties suspendues (candidats mélangés par graine) : persister les tirages ou versionner le catalogue avant d'ajouter un modificateur une fois la Fiesta publiée |
  | `fiesta/modifier_instance.dart` | `ModifierInstance` | Modificateur actif dans une partie : une règle de manche (cible `both`) ou un malus infligé. `tryFromJson` tolérant (id inconnu → `null`, jamais de défaut inventé). `canAdd(active, candidate)` : compatibilité seulement (plus de plafond). `fromTeamId` (clé `from`, omise si nul) : malus **infligé** par `fromTeamId` au joueur `playerId` de `teamId`, portée tour. `resolvesAt(teamId, giver)` : il se résout au prochain tour où ce joueur fait deviner, quelle que soit la manche (il y pèse, ou y est perdu s'il n'a plus de sens), puis part à la vraie fin de ce tour ; 🔴 écrit par la 1.4.0 sans `playerId` (hors blocages) : prochain tour de l'équipe, comme alors. `playerId` : joueur visé (tous les malus envoyés depuis le 2026-11-15 ; `block_guesser` : le devineur, qui se résout au tour de son équipe). `fromPlayerId` (`fromPlayer`) : joueur qui l'a envoyé (phrase du piège). `sentTurnIndex` (`sentTurn`) : tour d'envoi, seul cet avant-tour peut l'annuler. `waitsFor(giver)` : blocage sans effet sur ce tour (`block_giver` toujours, `block_guesser` si son joueur fait deviner). Les cartouches détenues ne sont PAS des instances : voir `FiestaState.cartridgesLeft` |
@@ -38,12 +38,16 @@ index dbea555..ca1416a 100644
  | `fiesta/symmetric_draw.dart` | fonctions pures | Règles de manche : `alwaysForRound` (toutes les manches où il existe) puis `drawForRound` (`drawsFrom`, `drawCount` ; incompatibles sautés, **pas de plafond** ; frais d'abord, `spent` en complément), réunis par `roundModifiers(rules, gameId:, round:)`. 🔴 Sans remise sur la partie, sans état : `roundModifiers` recalcule les manches 1 à N-1 pour savoir ce qui est sorti ; un mime n'est pas consommé avant M3, un « Toujours » jamais ; quand un complément ressort un déjà sorti, le vivier est rempli et seul ce complément reste sorti. Graine `drawSeed(gameId, round)` (FNV-1a, stable, une par manche). `allowedRounds`, `canBeRoundRule` |
  | `fiesta/fiesta_state.dart` | `FiestaState`, `ChargeUse`, `EarnedCartridge` | `GameState.fiesta` : `{rules, active, turn, chargesUsed, earned, skips}`. `turn` : `FiestaTurnState` typé (`turn_effects.dart`), vidé à la vraie fin du tour (continuation de fin de manche comprise dans le tour). `chargesUsed` (clé omise si vide) : cartouches dépensées `{catalogId, teamId, round, target?}`, toutes manches. `earned` (clé omise si vide) : cartouches au hasard `{catalogId, teamId, round}`, écrites par `startGame` (M1) et `nextRound` seulement. `skips` (clé omise si vide) : tours sautés par équipe, décalage de sa rotation. `withoutSent` : retire un malus et rend sa cartouche. 🔴 Stock d'une équipe = `cartridgesLeft` : charges de l'ensemble + gagnées − dépensées ; une seule source pour la réserve |
  | `fiesta/modifier_recap.dart` | fonctions pures | `kFiestaModeId` (`fiesta_custom` ; les archives `fiesta_auto` restent lisibles), `buildModifierRecap` : récap « Modificateurs de la partie » en faits : tirage recalculé par la graine, cartouches au hasard (`earned`) et cartouches utilisées (`chargesUsed`) relues de l'état ; `formatModifierRecap` forme les lignes depuis les faits (`ModifierRecapLine`, jamais persistée) ; aucun écran ne les affiche depuis le retrait de la carte des Résultats, les faits restent archivés |
-@@ -30,9 +30,10 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `fiesta/turn_effects.dart` | `FiestaTurnState` + fonctions pures | État du tour typé et immuable (`freePassesUsed`, `charges` par id ↔ clés JSON `doublePoints`/`freePass`/`plus10s` via `kChargeBonusKeys` (tous les bonus, seulement en cartouche), valeurs `armed`/`spent`, `replaced` : `ReplacedChoices`, ce qu'avait préparé le joueur qui a sauté son tour) : JSON conditionnel, lecture tolérante clé par clé. 🔴 Règle 7 : les anciennes clés `twoWords`, `secondWord`, `secondExpiredWord` sont ignorées à la relecture (la carte B reste dans `remainingWords`), `two_words` est écarté de `ReplacedChoices.bonuses` ; `canBlockGuesser` (équipe de 3+) ; `Cartridge` (une cartouche de la réserve affichée : restantes, raison du grisé ; jamais persistée) |
+ | `fiesta/round_transition.dart` | fonctions pures | `planRoundTransition` → `RoundTransitionPlan` (règles de N+1 + cartouches au hasard), recalculé sur l'état de fin de N, appliqué une fois par `nextRound` ; `apply` remplace les règles de N par celles de N+1, garde les malus infligés en attente, ajoute à `earned` ; 🔴 rien n'est jamais rendu (un malus devenu impossible est perdu au tour de sa cible). `modifiersForTurn` : effets d'un tour = règles de la manche COURANTE (continuation comprise), plus les malus infligés résolus ICI (`resolvesAt`) ; un malus interdit dans la manche, identique ou incompatible avec une règle ou un malus déjà retenu est perdu (ni affiché ni rendu) |
+ | `fiesta/turn_time.dart` | fonctions pures | `composeTurnSeconds` (base + 10 s × `plus10sCount` − 10 s × `minus10sCount`, plancher `kTurnFloorSeconds` = 10 ; continuation = ses secondes + 10 s × `plus10sCount`, sans −10 s ni plancher) |
+-| `fiesta/cartridge_gifts.dart` | fonctions pures | Cartouches au hasard. `balanceGiftCount` : recette d'« Équilibrer la partie », seuils en constantes (`kBalanceSmallGap`, `kBalanceLargeGap`), à recalibrer. `giftCount` : `allCount` à chaque manche + (après M1 et M2) l'équilibrage ou `trailingCount` pour un non-leader ; égalité et co-leaders : rien de ce second terme. `giftPool` : vivier = tout le catalogue HORS Toujours, compteurs sans effet ; filtres : possible à la manche suivante, ni identique ni incompatible avec ses règles, `block_guesser` seulement si une autre équipe a 3 joueurs, `double_points` seulement si l'écart `gap` au leader (`leaderGap`, meilleur score réel) dépasse strictement `kDoublePointsMinGap` (10) — jamais pour le leader ni en M1. `drawGift` : tirage uniforme. `roundGifts` : tirage SANS remise dans la manche d'une équipe (vivier remis en entier s'il s'épuise, et à chaque manche), déterministe par `giftSeed(gameId, manche, équipe)` |
++| `fiesta/cartridge_gifts.dart` | fonctions pures | Cartouches au hasard. `balanceGiftCount` : recette d'« Équilibrer la partie », seuils en constantes (`kBalanceSmallGap`, `kBalanceLargeGap`), à recalibrer. `giftCount` : `allCount` à chaque manche + (après M1 et M2) l'équilibrage ou `trailingCount` pour un non-leader ; égalité et co-leaders : rien de ce second terme. `giftPool` : vivier (filtre commun `randomPool`, partagé avec les cartouches qui tombent) = tout le catalogue HORS Toujours, compteurs sans effet ; filtres : possible à la manche suivante, ni identique ni incompatible avec ses règles, `block_guesser` seulement si une autre équipe a 3 joueurs, `double_points` seulement si l'écart `gap` au leader (`leaderGap`, meilleur score réel) dépasse strictement `kDoublePointsMinGap` (10) — jamais pour le leader ni en M1. `drawGift` : tirage uniforme. `roundGifts` : tirage SANS remise dans la manche d'une équipe (vivier remis en entier s'il s'épuise, et à chaque manche), déterministe par `giftSeed(gameId, manche, équipe)` |
  | `fiesta/surprise_challenge.dart` | enum `SurpriseChallenge`, `TurnPace`, fonctions pures | Les 5 défis (ordre figé). `trailingTeams`, `slowestPlayer` (critère jamais affiché), `drawChallengeSchedule`, `pickGuessedWord` : déterministes par `gameId`, sans état |
  | `fiesta/challenge_plan.dart` | `ChallengePlan`, `ChallengeSide`, `planChallenge` | Le défi qui suit une manche, cartouches comprises (vivier `giftPool` à l'écart au leader de l'équipe qui reçoit, `drawGift`). Recalculé, jamais persisté ; `null` si réglage coupé, pas au programme, déjà terminé, vivier vide ou téléphone arabe sans mot |
  | `fiesta/giver_block.dart` | fonctions pures | Le piège d'« Interdit de faire deviner » : les 8 phrases, `giverBlockPhrase`, `giverBlockSeed(gameId, tour)` déterministe |
 -| `fiesta/fiesta_ensemble.dart` | `FiestaEnsemble`, `kProvidedEnsembles`, `settingsKey`, `nameKey` | Ensemble `{id, rules}` (nom = `rules.ensembleName`). **8 ensembles fournis** (ids `provided_*`, `isProvided`, jamais écrits, seulement duplicables) : Fiesta classique (`kClassicEnsembleId`, présélectionné), Les derniers seront les premiers, Pro Player, Droit au but, Pictionnary, Bilingue, Explosif, Mimeur expert. Aucune règle cachée : tout s'écrit avec les réglages ouverts à tous. `settingsKey` : ce qui joue réellement, hors nom (doublons). `tryFromJson` refuse un id `provided_*` |
-+| `fiesta/cartridge_drop.dart` | `CartridgeDrop`, `dropPool`, `dropForTurn`, `dropSeed` | Cartouches qui tombent (D4), fonctions pures, **pas encore appelées en partie** (branchement : lane suivante). Contrat de `dropForTurn` : `null` si `dropFrequency` à Jamais, tour de continuation, tirage manqué ou vivier vide ; sinon `CartridgeDrop(catalogId, blockedPlayerId?)` pour l'équipe qui joue, ce tour seulement. Graine `dropSeed(gameId, turnIndex, giverId, skips)` (FNV-1a de `drawSeed`, chaîne `gameId#drop#giverId#skips#turnIndex` ; `turnIndex` = `GameState.currentTurnIndex`, `skips` = `FiestaState.skips` de l'équipe qui joue) : une seule `Random`, d'abord la chance, puis la cartouche (`drawGift`), puis pour `block_guesser` le devineur bloqué parmi `guesserIds` (ordre de l'équipe). Le remplaçant d'un joueur qui saute son tour a donc son propre tirage ; `skips` évite qu'un joueur qui revient après deux sauts (équipe de 2) retrouve la même graine et resaute sans fin. `roundRules` = TOUTE la sortie de `roundModifiers` (Toujours compris : l'incompatibilité avec un Toujours ne vient que d'elles). 🔴 Mêmes entrées, même sortie : l'appelant l'appelle à un moment fixe (après bonus armés et malus résolus) ou stocke le résultat (`FiestaTurnState`, clé optionnelle). Vivier `dropPool` = `giftPool` (hors Toujours, manche, règles de la manche, ×2 au-delà de `kDoublePointsMinGap`) moins identique/incompatible avec un malus `received` qui joue ce tour, identique à un bonus `armed` ; `block_guesser` si au moins 2 devineurs (équipe de 3+) ; `block_giver` permis |
++| `fiesta/cartridge_drop.dart` | `CartridgeDrop`, `dropPool`, `dropForTurn`, `dropSeed` | Cartouches qui tombent (D4), fonctions pures, **pas encore appelées en partie** (branchement : lane suivante). Contrat de `dropForTurn` : `null` si `dropFrequency` à Jamais, tour de continuation, tirage manqué ou vivier vide ; sinon `CartridgeDrop(catalogId, blockedPlayerId?)` pour l'équipe qui joue, ce tour seulement. Graine `dropSeed(gameId, turnIndex, giverId, skips)` (FNV-1a de `drawSeed`, chaîne `gameId#drop#giverId#skips#turnIndex` ; `turnIndex` = `GameState.currentTurnIndex`, `skips` = `FiestaState.skips` de l'équipe qui joue) : une seule `Random`, d'abord la chance, puis la cartouche (`drawGift`), puis pour `block_guesser` le devineur bloqué parmi `guesserIds` (ordre de l'équipe). Le remplaçant d'un joueur qui saute son tour a donc son propre tirage ; `skips` évite qu'un joueur qui revient après deux sauts (équipe de 2) retrouve la même graine et resaute sans fin. `roundRules` = TOUTE la sortie de `roundModifiers` (Toujours compris : l'incompatibilité avec un Toujours ne vient que d'elles). 🔴 Mêmes entrées, même sortie : l'appelant l'appelle à un moment fixe (après bonus armés et malus résolus) ou stocke le résultat (`FiestaTurnState`, clé optionnelle). Vivier `dropPool` = `randomPool` (filtre commun avec `giftPool` : hors Toujours, manche, règles de la manche, ×2 au-delà de `kDoublePointsMinGap`) moins identique/incompatible avec un malus `received` qui joue ce tour, identique à un bonus `armed` ; `block_guesser` si au moins 2 devineurs (équipe de 3+, `includeBlockGuesser`) ; `block_giver` permis |
 +| `fiesta/fiesta_ensemble.dart` | `FiestaEnsemble`, `kProvidedEnsembles`, `settingsKey`, `nameKey` | Ensemble `{id, rules}` (nom = `rules.ensembleName`). **8 ensembles fournis** (ids `provided_*`, `isProvided`, jamais écrits, seulement duplicables) : Fiesta classique (`kClassicEnsembleId`, présélectionné), Les derniers seront les premiers, Pro Player, Droit au but, Pictionnary, Bilingue, Explosif, Mimeur expert. Aucune règle cachée : tout s'écrit avec les réglages ouverts à tous. `settingsKey` : ce qui joue réellement, hors nom (doublons) ; `dropFrequency` seulement hors Jamais (clés des ensembles existants inchangées). `tryFromJson` refuse un id `provided_*` |
  | `fiesta/ensemble_summary.dart` | `ensembleSummary`, `rulesSummary`, `kProvidedSummaries`, `EnsembleChip`, `randomCartridgeLines`, `rulesDraw`, `rulesHaveCartridges` | Textes et pastilles de la liste. Fournis : à la main (test : chacun a le sien, mêmes règles que le moteur). Perso : générés depuis `FiestaRules`, jamais stockés ; seul ce qui joue compte. Libellés partagés avec la page « Voir » |
 -| `fiesta/ensemble_validation.dart` | `validateEnsemble`, `ensembleNameError`, `roundsWithoutDraw`, `hasActiveSetting` | Validation **pure** (messages FR) : nom vide / pris, au moins un réglage qui joue, `drawCount` > 0 sans candidat, doublon de réglages (`others`). `roundsWithoutDraw` : avertissement de l'éditeur, pas une erreur. Les combinaisons impossibles ne sont pas jugées : l'éditeur les verrouille, le moteur les écarte |
@@ -53,10 +57,10 @@ index dbea555..ca1416a 100644
  
 diff --git a/lib/models/fiesta/cartridge_drop.dart b/lib/models/fiesta/cartridge_drop.dart
 new file mode 100644
-index 0000000..9479819
+index 0000000..2e96285
 --- /dev/null
 +++ b/lib/models/fiesta/cartridge_drop.dart
-@@ -0,0 +1,118 @@
+@@ -0,0 +1,114 @@
 +import 'dart:math';
 +
 +import 'cartridge_gifts.dart';
@@ -95,7 +99,7 @@ index 0000000..9479819
 +    drawSeed('$gameId#drop#$giverId#$skips', turnIndex);
 +
 +/// Vivier d'une cartouche qui tombe, dans l'ordre du catalogue : celui des
-+/// cartouches au hasard ([giftPool] : hors Toujours, possible en manche
++/// cartouches au hasard ([randomPool] : hors Toujours, possible en manche
 +/// [round], ni identique ni incompatible avec [roundRules], ×2 seulement au-delà
 +/// de [kDoublePointsMinGap] d'écart [gap]), moins ce qui est identique ou
 +/// incompatible avec un malus [received] qui joue ce tour, ou identique à un
@@ -111,19 +115,15 @@ index 0000000..9479819
 +  required int gap,
 +}) =>
 +    [
-+      // Pas d'équipe qui envoie : `block_guesser` passe ce filtre-là, la
-+      // taille de l'équipe qui joue décide plus bas.
-+      for (final def in giftPool(
++      for (final def in randomPool(
 +        rules: rules,
-+        nextRound: round,
++        round: round,
 +        roundRules: roundRules,
-+        teamId: '',
 +        gap: gap,
-+        blockableTeamIds: const {'*'},
++        includeBlockGuesser: guesserIds.length >= 2,
 +      ))
 +        if (received.every((id) => id != def.id && areCompatible(id, def.id)) &&
-+            !armed.contains(def.id) &&
-+            (def.id != 'block_guesser' || guesserIds.length >= 2))
++            !armed.contains(def.id))
 +          def,
 +    ];
 +
@@ -175,6 +175,69 @@ index 0000000..9479819
 +        : null,
 +  );
 +}
+diff --git a/lib/models/fiesta/cartridge_gifts.dart b/lib/models/fiesta/cartridge_gifts.dart
+index 0728287..09644d0 100644
+--- a/lib/models/fiesta/cartridge_gifts.dart
++++ b/lib/models/fiesta/cartridge_gifts.dart
+@@ -45,14 +45,9 @@ int leaderGap(Map<String, int> scores, String teamId) =>
+ int giftSeed(String gameId, int round, String teamId) =>
+     drawSeed('$gameId#$teamId', round);
+ 
+-/// Vivier du hasard de [teamId], dans l'ordre du catalogue (le tirage doit
+-/// partir de la même liste) : tout ce qui peut être cartouche, hors « Toujours »
+-/// ; les compteurs n'interviennent pas. Filtres : possible en manche [nextRound],
+-/// ni déjà en jeu ni incompatible avec les règles de cette manche ([roundRules]),
+-/// « Bloquer un devineur » seulement si une AUTRE équipe peut le recevoir
+-/// ([blockableTeamIds] : au moins 3 joueurs), et « Mot compte double » seulement
+-/// si [gap], l'écart de l'équipe avec le leader ([leaderGap]), dépasse
+-/// [kDoublePointsMinGap].
++/// Vivier du hasard de [teamId] ([randomPool]) : « Bloquer un devineur »
++/// seulement si une AUTRE équipe peut le recevoir ([blockableTeamIds] : au moins
++/// 3 joueurs).
+ List<ModifierDef> giftPool({
+   required FiestaRules rules,
+   required int nextRound,
+@@ -60,15 +55,37 @@ List<ModifierDef> giftPool({
+   required String teamId,
+   required int gap,
+   required Set<String> blockableTeamIds,
++}) =>
++    randomPool(
++      rules: rules,
++      round: nextRound,
++      roundRules: roundRules,
++      gap: gap,
++      includeBlockGuesser: blockableTeamIds.any((id) => id != teamId),
++    );
++
++/// Filtre commun des tirages au hasard (cartouches au hasard, prix des défis,
++/// cartouches qui tombent), dans l'ordre du catalogue (le tirage doit partir de
++/// la même liste) : tout ce qui peut être cartouche, hors « Toujours » ; les
++/// compteurs n'interviennent pas. Filtres : possible en manche [round], ni déjà
++/// en jeu ni incompatible avec les règles de cette manche ([roundRules]),
++/// « Bloquer un devineur » seulement si [includeBlockGuesser] (chaque appelant
++/// dit qui le recevrait), et « Mot compte double » seulement si [gap], l'écart
++/// de l'équipe avec le leader ([leaderGap]), dépasse [kDoublePointsMinGap].
++List<ModifierDef> randomPool({
++  required FiestaRules rules,
++  required int round,
++  required List<ModifierInstance> roundRules,
++  required int gap,
++  required bool includeBlockGuesser,
+ }) =>
+     [
+       for (final def in kModifierCatalog)
+         if (!rules.isAlways(def.id) &&
+-            isEligibleForRound(def, nextRound) &&
++            isEligibleForRound(def, round) &&
+             roundRules.every((r) =>
+                 r.catalogId != def.id && areCompatible(r.catalogId, def.id)) &&
+-            (def.id != 'block_guesser' ||
+-                blockableTeamIds.any((id) => id != teamId)) &&
++            (def.id != 'block_guesser' || includeBlockGuesser) &&
+             (def.id != 'double_points' || gap > kDoublePointsMinGap))
+           def,
+     ];
 diff --git a/lib/models/fiesta/ensemble_summary.dart b/lib/models/fiesta/ensemble_summary.dart
 index b9fe686..481941a 100644
 --- a/lib/models/fiesta/ensemble_summary.dart
@@ -498,10 +561,10 @@ index e6473e4..75fd95a 100644
            ),
 diff --git a/test/models/fiesta/cartridge_drop_test.dart b/test/models/fiesta/cartridge_drop_test.dart
 new file mode 100644
-index 0000000..ae88539
+index 0000000..c3b059b
 --- /dev/null
 +++ b/test/models/fiesta/cartridge_drop_test.dart
-@@ -0,0 +1,179 @@
+@@ -0,0 +1,184 @@
 +import 'package:flutter_test/flutter_test.dart';
 +import 'package:guess_it_all_mobile/models/fiesta/cartridge_drop.dart';
 +import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
@@ -541,13 +604,14 @@ index 0000000..ae88539
 +CartridgeDrop? drop(
 +  int turn, {
 +  FiestaRules? rules,
++  String gameId = 'g',
 +  String giver = 'p1',
 +  int skips = 0,
 +  bool continuation = false,
 +}) =>
 +    dropForTurn(
 +      rules: rules ?? often,
-+      gameId: 'g',
++      gameId: gameId,
 +      turnIndex: turn,
 +      giverId: giver,
 +      skips: skips,
@@ -592,8 +656,8 @@ index 0000000..ae88539
 +    final turns = [for (var t = 0; t < 60; t++) t];
 +
 +    test(
-+        'déterministe par (partie, tour, joueur, sauts) ; le joueur et un saut '
-+        'de plus changent le tirage', () {
++        'déterministe par (partie, tour, joueur, sauts) ; la partie, le joueur '
++        'et un saut de plus changent le tirage', () {
 +      final first = [for (final t in turns) drop(t)?.catalogId];
 +      expect([for (final t in turns) drop(t)?.catalogId], first);
 +      expect(first.whereType<String>(), isNotEmpty);
@@ -602,9 +666,13 @@ index 0000000..ae88539
 +          isNot(first));
 +      expect(
 +          [for (final t in turns) drop(t, skips: 1)?.catalogId], isNot(first));
++      expect([for (final t in turns) drop(t, gameId: 'h')?.catalogId],
++          isNot(first));
 +    });
 +
 +    test('Rarement ⊂ Parfois ⊂ Souvent, tour par tour (même graine)', () {
++      expect([for (final f in DropFrequency.values) f.chance],
++          [0, 1 / 6, 1 / 4, 1 / 2]);
 +      Set<int> dropped(DropFrequency f) => {
 +            for (var t = 0; t < 200; t++)
 +              if (drop(t, rules: FiestaRules(dropFrequency: f)) != null) t,
@@ -681,6 +749,37 @@ index 0000000..ae88539
 +    });
 +  });
 +}
+diff --git a/test/models/fiesta/ensemble_validation_test.dart b/test/models/fiesta/ensemble_validation_test.dart
+index 0127c72..efc44da 100644
+--- a/test/models/fiesta/ensemble_validation_test.dart
++++ b/test/models/fiesta/ensemble_validation_test.dart
+@@ -80,6 +80,26 @@ void main() {
+       expect(settingsKey(FiestaRules(balance: true, trailingCount: 4)),
+           settingsKey(FiestaRules(balance: true)));
+     });
++
++    test(
++        'cartouches qui tombent, seul réglage : enregistrable, clé à part, '
++        'doublon au même cran', () {
++      FiestaRules drops(String name, DropFrequency f) =>
++          FiestaRules(ensembleName: name, dropFrequency: f);
++      final rarely = drops('Max', DropFrequency.rarely);
++      expect(hasActiveSetting(rarely), isTrue);
++      expect(validateEnsemble(rarely), isEmpty);
++      expect(settingsKey(rarely), isNot(settingsKey(FiestaRules())));
++      expect(settingsKey(rarely),
++          isNot(settingsKey(drops('Max', DropFrequency.often))));
++      expect(
++          validateEnsemble(rarely, others: [
++            FiestaEnsemble(id: 'a', rules: drops('A', DropFrequency.rarely)),
++          ]).single,
++          'L\'ensemble A a déjà ces paramètres.');
++      expect(settingsKey(drops('Max', DropFrequency.never)),
++          isNot(contains('dropFrequency')));
++    });
+   });
+ 
+   group('Verrouillage', () {
 diff --git a/test/services/fiesta_ensemble_service_test.dart b/test/services/fiesta_ensemble_service_test.dart
 index b760352..8d76fd9 100644
 --- a/test/services/fiesta_ensemble_service_test.dart
