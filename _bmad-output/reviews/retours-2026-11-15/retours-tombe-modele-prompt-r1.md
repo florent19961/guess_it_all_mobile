@@ -28,7 +28,10 @@ hors périmètre : une autre lane tient ces fichiers. `dropForTurn` n'a aucun ap
    Pour ne pas changer la signature de `giftPool` (3 appels dans `game_provider.dart`, interdit). Lisible / fragile ?
 3. Bonus armés : exclusion des **identiques** seulement (la spec ne dit pas « incompatible » pour eux).
 4. Une seule `Random(dropSeed)` : chance, puis cartouche, puis devineur bloqué. Graine
-   `drawSeed('$gameId#drop#$giverId', turnIndex)`.
+   `drawSeed('$gameId#drop#$giverId#$skips', turnIndex)`. `skips` (`FiestaState.skips` de l'équipe) ajouté car un
+   saut (« Interdit de faire deviner ») ne fait pas avancer `currentTurnIndex` (`game_provider.dart`
+   `_getNextPlayerWithRotation`, `_indexAfterSkip`) : sans lui, équipe de 2, A saute, B saute, A revient avec la même
+   graine et resaute sans fin. Est-ce suffisant ?
 5. `hasActiveSetting` : le réglage seul suffit à enregistrer un ensemble (il change des tours). `_firstTab` de
    l'éditeur ouvre Cartouches si le réglage est actif.
 6. Texte d'aide de l'onglet Cartouches complété (`help_content.dart`).
@@ -47,7 +50,9 @@ hors périmètre : une autre lane tient ces fichiers. `dropForTurn` n'a aucun ap
 - **Mutation testing obligatoire** sur `test/models/fiesta/cartridge_drop_test.dart` et l'assertion ajoutée au test
   `frozenBlob`. Mutations suggérées : clé émise à Jamais ; `max` de `_readCount` 3 → 4 ; `received` sans
   `areCompatible` ; `armed` retiré ; `guesserIds.length >= 2` → `>= 1` ; continuation ignorée ; graine sans
-  `giverId` ; `blockedPlayerId` tiré hors des devineurs ; `chance <= 0` retiré ; seuil du ×2.
+  `giverId` ou sans `skips` ; `blockedPlayerId` tiré hors des devineurs ; `>=` du jet inversé ; deux constantes de
+  chance échangées ; seuil du ×2. (`chance <= 0` retiré est un mutant équivalent : `nextDouble() >= 0` est toujours
+  vrai.)
 - Valeur des tests : redondance avec `cartridge_gifts_test.dart` (filtres de `giftPool` déjà couverts) ?
 
 ## Format attendu du rapport
