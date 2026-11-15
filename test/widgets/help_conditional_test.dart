@@ -137,8 +137,8 @@ void main() {
     });
 
     testWidgets(
-        'Joueur bloqué : étape avant le tour ; pendant, sa pastille le nomme',
-        (tester) async {
+        'Joueur bloqué : caché avant le tour, aide comprise ; pendant, sa '
+        'pastille le nomme', (tester) async {
       final provider = await pumpApp(tester, AppConstants.screenHome,
           names: ['Ana', 'Bob', 'Cid', 'Dan', 'Eve', 'Fay']);
       await tester.runAsync(
@@ -148,13 +148,14 @@ void main() {
       // de celui qui joue, jamais lui, que le blocage attendrait au tour suivant.
       final team = provider.getCurrentTeam()!;
       final giver = provider.getCurrentPlayer()!.id;
+      final blockedId = team.playerIds.firstWhere((id) => id != giver);
       final saved = (await tester.runAsync(StorageService().loadGameState))!;
       ((saved['game']['fiesta'] as Map)['active'] ??= []).add(ModifierInstance(
         catalogId: 'block_guesser',
         scope: ModifierScope.turn,
         target: ModifierTarget.player,
         teamId: team.id,
-        playerId: team.playerIds.firstWhere((id) => id != giver),
+        playerId: blockedId,
         charges: 1,
         nature: ModifierNature.malus,
         round: provider.game.currentRound,
@@ -172,8 +173,9 @@ void main() {
       for (var i = 0; i < 30; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
-      final blocked = reloaded.blockedGuesser!;
-      expect(await walkHelp(tester), contains('Joueur bloqué'));
+      expect(reloaded.blockedGuesser, isNull);
+      expect(await walkHelp(tester), isNot(contains('Joueur bloqué')));
+      final blocked = reloaded.getPlayerById(blockedId)!;
 
       reloaded.startTurn();
       reloaded.startTurnTimer();

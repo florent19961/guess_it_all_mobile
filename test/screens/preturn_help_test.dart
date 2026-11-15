@@ -119,7 +119,8 @@ void main() {
         [_thisTurn, _armed, _bonus, _malus, _dimmed, _sent]);
   });
 
-  testWidgets('malus reçu : son étape', (tester) async {
+  testWidgets('malus reçu : caché sur l\'avant-tour, aide comprise',
+      (tester) async {
     final provider = await pumpGame(tester, FiestaRules(drawCount: 0));
     final saved = (await tester.runAsync(StorageService().loadGameState))!;
     ((saved['game']['fiesta'] as Map)['active'] ??= []).add(ModifierInstance(
@@ -135,8 +136,8 @@ void main() {
     ).toJson());
     await tester.runAsync(() => StorageService().saveGameState(saved));
     final reloaded = await pumpGameFrom(tester);
-    expect(reloaded.receivedThisTurn, isNotEmpty);
-    expect(await fiestaSteps(tester), [_thisTurn, _received]);
+    expect(reloaded.receivedThisTurn, isEmpty);
+    expect(await fiestaSteps(tester), isNot(contains(_received)));
   });
 
   testWidgets('temps reporté : son étape, en Classique aussi', (tester) async {

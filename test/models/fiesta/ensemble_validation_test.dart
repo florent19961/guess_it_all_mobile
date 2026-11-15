@@ -111,16 +111,14 @@ void main() {
       }
     });
 
-    test(
-        'Interdit de passer en Toujours : Passe gratuite en Cartouches '
-        'seulement', () {
+    test('Interdit de passer en Toujours ne verrouille plus Passe gratuite',
+        () {
       final rules = FiestaRules(modifiers: const {
         'no_pass': ModifierSetting(always: true),
         'free_pass': ModifierSetting(charges: 3),
-        'plus_10s': ModifierSetting(charges: 1),
       });
-      expect(rules.chargesOf('free_pass'), 0);
-      expect(rules.chargesOf('plus_10s'), 1);
+      expect(rules.lockReason('free_pass', EnsembleMenu.cartridge), isNull);
+      expect(rules.chargesOf('free_pass'), 3);
     });
   });
 

@@ -713,7 +713,8 @@ class GameProvider extends ChangeNotifier {
   ///
   /// 🔴 SEULE source de la durée : `startTurn` (aperçu) et `startTurnTimer`
   /// (chrono) la lisent tous deux, sinon l'avant-tour annonce 30 s et le chrono
-  /// part à 48. Continuation (`turnBonusTime` posé) = ses secondes, + 10 s si
+  /// part à 48. Seul écart voulu : sur l'avant-tour, un −10 s reçu est caché
+  /// ([currentTeamModifiers]) ; le chrono, lancé du décompte, le compte. Continuation (`turnBonusTime` posé) = ses secondes, + 10 s si
   /// le bonus y est allumé. En Classique : `turnBonusTime ?? turnDuration`,
   /// comme avant.
   TurnTime get turnTime {
@@ -735,7 +736,9 @@ class GameProvider extends ChangeNotifier {
 
   void startTurn() {
     _game = _game.copyWith(
-      currentScreen: AppConstants.screenCountdown,
+      currentScreen: _hasTurnReveal
+          ? AppConstants.screenTurnReveal
+          : AppConstants.screenCountdown,
       wordsGuessedThisTurn: [],
       passedWordsThisTurn: [],
       timeRemaining: turnTime.total,
@@ -743,6 +746,22 @@ class GameProvider extends ChangeNotifier {
 
     notifyListeners();
     _saveGameState();
+  }
+
+  /// « C'est parti » sur « Ce qui t'attend » : le décompte habituel.
+  void leaveTurnReveal() {
+    if (_game.currentScreen != AppConstants.screenTurnReveal) return;
+    _game = _game.copyWith(currentScreen: AppConstants.screenCountdown);
+    notifyListeners();
+    _saveGameState();
+  }
+
+  /// Envoyeur d'un malus reçu (« Ce qui t'attend ») : « Prénom · Équipe »,
+  /// l'équipe seule pour un envoi sans prénom.
+  String malusSender(ModifierInstance m) {
+    final team = getTeamById(m.fromTeamId ?? '')?.name ?? '?';
+    final player = getPlayerById(m.fromPlayerId ?? '')?.name;
+    return player == null ? team : '$player · $team';
   }
 
   void startTurnTimer() {
@@ -927,7 +946,8 @@ class GameProvider extends ChangeNotifier {
     // C'est délibéré — passer avec « 5 » à l'écran et une pénalité de 5 reste
     // autorisé et met le chrono à zéro, comme avant. Comparer les ms refuserait
     // ce cas et changerait la règle du jeu en douce.
-    // 🔴 Sortie AVANT `onWordPassed` : sous `no_pass`, aucune passe n'a lieu.
+    // 🔴 Sortie AVANT `onWordPassed` : sous `no_pass` sans passe gratuite
+    // restante, aucune passe n'a lieu.
     if (!canPassWith(clock.displayedSecondsAt(now))) return;
 
     // Pénalité EFFECTIVE : 0 tant qu'il reste une passe gratuite (2-8).
@@ -1449,7 +1469,19 @@ class GameProvider extends ChangeNotifier {
   /// Modificateurs qui pèsent sur l'équipe qui joue (badges) : les règles de la
   /// manche COURANTE, continuation comprise, et ses malus reçus
   /// ([modifiersForTurn]).
+  ///
+  /// 🔴 Malus reçus CACHÉS sur l'avant-tour, jusqu'à « Commencer le tour »
+  /// ([_receivedHidden]) : tout ce que l'avant-tour lit passe par ici (aperçu
+  /// de la durée, joueur bloqué, grisés, zone « Actif »), rien n'y fuit. Le
+  /// chrono, lu sur le décompte, les compte.
   List<ModifierInstance> get currentTeamModifiers {
+    final all = _modifiersThisTurn;
+    return _receivedHidden
+        ? all.where((m) => m.fromTeamId == null).toList()
+        : all;
+  }
+
+  List<ModifierInstance> get _modifiersThisTurn {
     final fiesta = _game.fiesta;
     final teamId = getCurrentTeam()?.id;
     if (fiesta == null || teamId == null) return const [];
@@ -1459,6 +1491,19 @@ class GameProvider extends ChangeNotifier {
         round: _game.currentRound);
   }
 
+  /// Avant-tour d'un tour pas encore lancé. Une continuation a déjà été
+  /// lancée (et révélée) en fin de manche : ses malus reçus restent visibles.
+  bool get _receivedHidden =>
+      _game.currentScreen == AppConstants.screenGame && !isContinuation;
+
+  /// « Commencer le tour » mène à « Ce qui t'attend » : un malus reçu joue à
+  /// ce tour. Jamais pour le joueur piégé (il ne joue pas : ses malus restent
+  /// cachés et attendent), ni sur une continuation (déjà révélée).
+  bool get _hasTurnReveal =>
+      _pendingGiverBlock == null &&
+      !isContinuation &&
+      _modifiersThisTurn.any((m) => m.fromTeamId != null);
+
   // ========== EFFETS DE TOUR (2-8) ==========
 
   FiestaTurnState get _turn => _game.fiesta?.turn ?? FiestaTurnState.empty;
@@ -1466,8 +1511,9 @@ class GameProvider extends ChangeNotifier {
   bool _has(String catalogId) =>
       currentTeamModifiers.any((m) => m.catalogId == catalogId);
 
-  /// `no_pass` pèse sur l'équipe qui joue.
-  bool get passBlocked => _has('no_pass');
+  /// `no_pass` pèse sur l'équipe qui joue, et il ne reste pas de passe
+  /// gratuite : un bonus armé s'applique toujours, on passe une fois.
+  bool get passBlocked => _has('no_pass') && !hasFreePass;
 
   /// Passes gratuites du tour, et celles déjà utilisées : celles de la
   /// cartouche dépensée au départ du tour. Une partie relue après le passage de

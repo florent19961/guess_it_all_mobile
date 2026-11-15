@@ -161,6 +161,7 @@ void main() {
     expect(p.inflictMalus('minus_10s', one(p, b)), isNull);
     playTurn(p);
     expect(p.getCurrentTeam()!.id, b);
+    p.startTurn();
     expect(p.turnTime.total, 20);
     playTurn(p, 99);
     p.nextRound();
@@ -171,6 +172,9 @@ void main() {
     expect(p.turnTime.total, carried);
     p.toggleBonus('plus_10s');
     expect(p.turnTime.total, carried + 10);
+    p.startTurn();
+    expect(p.game.currentScreen, AppConstants.screenCountdown,
+        reason: 'tour déjà révélé : pas de « Ce qui t\'attend »');
   });
 
   test(
@@ -199,6 +203,7 @@ void main() {
 
     playTurn(p);
     expect(p.getCurrentTeam()!.id, b);
+    p.startTurn();
     expect(p.receivedThisTurn.map((m) => m.catalogId), ['reversed', 'no_pass']);
     playTurn(p);
     expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null), isEmpty);

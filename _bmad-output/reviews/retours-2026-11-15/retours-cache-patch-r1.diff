@@ -1,0 +1,1111 @@
+diff --git a/_bmad-output/reviews/retours-2026-11-15/journal-arbitrages.md b/_bmad-output/reviews/retours-2026-11-15/journal-arbitrages.md
+index 9bb1b83..5a5a7bf 100644
+--- a/_bmad-output/reviews/retours-2026-11-15/journal-arbitrages.md
++++ b/_bmad-output/reviews/retours-2026-11-15/journal-arbitrages.md
+@@ -15,3 +15,7 @@ date · sujet · question · choix · raison · état
+ | 2026-11-15 | orchestration | Attendre le merge de L-PERSONNE pour lancer L-CACHE ? | Non : L-CACHE empilée sur feat/retours-personne, recalée sur main après le squash | Gain de temps demandé par Florent ; corrections de L-PERSONNE ajoutées sans réécrire l'historique | appliqué |
+ | 2026-11-15 | orchestration | L-TOMBE en une seule lane après L-CACHE ? | Coupée en deux : modèle + éditeur + tirage pur en parallèle depuis main, branchement en partie après L-CACHE | La partie modèle ne touche pas game_provider.dart | appliqué |
+ | 2026-11-15 | L-PERSONNE | Revue r1 : mutation testing impossible chez Codex (sandbox), MINOR refus null silencieux d'inflictMalus | Mutations de la lane font foi ; MINOR = résidu assumé (contrat existant, l'UI grise d'avance) ; fix r1 vérifié par l'orchestrateur sans r2 | Delta d'un test, mutant prouvé | appliqué |
++| 2026-11-15 | L-CACHE | Continuation de fin de manche : malus reçus et « Ce qui t'attend » ? | Malus reçus visibles dans l'avant-tour de la continuation, pas d'écran de révélation ; un malus devenu jouable en N+1 (mime reçu en M2) s'y montre aussi | Le tour a déjà été lancé et révélé ; recalculer ce qui jouait en N (règles de N retirées de `active`) coûterait un second calcul pour un cas rare | à valider |
++| 2026-11-15 | L-CACHE | Ligne « Bloquer un devineur » dans « Ce qui t'attend » | « Bob ne répond pas » (prénom + mini-phrase de la pastille), plutôt que le nom du malus | Le nom seul ne dit pas qui est bloqué, et la ligne « X ne répond pas » de l'avant-tour est cachée | à valider |
++| 2026-11-15 | L-CACHE | Couleur des règles de manche dans « Ce qui t'attend » | Cercle blanc, comme la zone « Actif » de l'avant-tour (la maquette dit jaune) | Cohérence avec l'avant-tour existant | à valider |
++| 2026-11-15 | L-CACHE | `kModifierIncompatibilities` vide après retrait de la paire | Liste et boucle retirées ; `areCompatible` = règle de famille des mimes seule | Mécanisme mort, pas de flexibilité spéculative | appliqué |
+diff --git a/_bmad-output/reviews/retours-2026-11-15/retours-cache-mutations-r1.md b/_bmad-output/reviews/retours-2026-11-15/retours-cache-mutations-r1.md
+new file mode 100644
+index 0000000..7b14b6c
+--- /dev/null
++++ b/_bmad-output/reviews/retours-2026-11-15/retours-cache-mutations-r1.md
+@@ -0,0 +1,23 @@
++# Mutation testing r1 — L-CACHE
++
++Run by the implementer (Codex sandbox can't run `flutter test`). Each mutant was applied, these files were run
++(`fiesta_turn_effects`, `fiesta_turn_reveal`, `fiesta_continuation_cartridges`, `turn_time_fiesta`,
++`fiesta_cartridges`, `fiesta_catalog`), then restored with `git checkout -- <file>`; `git status` is clean
++after each run.
++
++| # | Mutation | Test qui le tue | Résultat |
++|---|---|---|---|
++| M1 | `passBlocked` ignore `hasFreePass` | `fiesta_turn_effects_test` « Passe gratuite + Interdit de passer » | tué |
++| M2 | paire `no_pass` / `free_pass` remise dans `areCompatible` | même test + `fiesta_catalog_test` « symétrique » | tué |
++| M3 | `_receivedHidden` toujours faux (rien de caché) | `fiesta_turn_reveal_test` « aucun malus reçu… » + `turn_time_fiesta_test` (aperçu 30) | tué |
++| M4 | `_receivedHidden` sans `!isContinuation` | `fiesta_continuation_cartridges_test` « un −10 s déjà appliqué… » | tué |
++| M5 | `_hasTurnReveal` ignore le piège | `fiesta_turn_reveal_test` « …jamais pour le joueur piégé… » | tué |
++| M6 | `_hasTurnReveal` ignore la continuation | `fiesta_continuation_cartridges_test` « un −10 s déjà appliqué… » | **survivant au 1er passage** → assertion ajoutée (continuation : `startTurn` → décompte), puis tué |
++| M7 | `startTurn` va toujours au décompte | `fiesta_turn_reveal_test` « aucun malus reçu… » + « app tuée… » | tué |
++| M8 | écran révélé non persisté (`startTurn` sans `_saveGameState`) | `fiesta_turn_reveal_test` « app tuée sur « Ce qui t'attend » » | tué |
++| M9 | `leaveTurnReveal` sans garde d'écran | — | **survivant assumé** : garde défensive, seul l'écran l'appelle ; pas de test (règle des tests minimaux) |
++
++Écran « Ce qui t'attend » vérifié dans le code (`lib/screens/turn_reveal_screen.dart`) : « Déjà activé » est une
++liste, une ligne par règle de manche (« Règle de la manche ») puis par bonus (« Ton bonus »). Pas de doublon
++possible avec « On vient de t'infliger » : règles = `fromTeamId == null`, reçus = `fromTeamId != null`, bonus =
++ids de cartouche seulement (jamais règle ni malus). Aucune correction nécessaire.
+diff --git a/_bmad-output/reviews/retours-2026-11-15/retours-cache-prompt-r1.md b/_bmad-output/reviews/retours-2026-11-15/retours-cache-prompt-r1.md
+new file mode 100644
+index 0000000..abcd3d6
+--- /dev/null
++++ b/_bmad-output/reviews/retours-2026-11-15/retours-cache-prompt-r1.md
+@@ -0,0 +1,75 @@
++# Revue r1 — L-CACHE (`feat/retours-cache`) — tier RISQUÉ
++
++Tu es reviewer, en LECTURE SEULE. Lis le patch `retours-cache-patch-r1.diff` (même dossier), puis le code
++qu'il touche dans le worktree `/home/florent19961/guess-it-all-retours-cache`. Ne lance pas `git diff` toi-même.
++La branche est empilée sur `feat/retours-personne` (L-PERSONNE) : le patch est calculé par rapport à elle.
++
++## Objectif
++
++Spec `_bmad-output/specs/fiesta/retours-2026-11-15.md` §D2 (lis aussi l'en-tête : règle 7, la 1.4.0 est en store).
++L'avant-tour ne montre plus les malus reçus par le joueur qui va jouer ; après « Commencer le tour », l'écran
++« Ce qui t'attend » les révèle (seulement s'il y en a), puis le décompte. Passe gratuite + Interdit de passer :
++une passe gratuite, puis Passer bloqué, partout (moteur, éditeur, vivier du hasard).
++
++## Décisions de la spec (ne pas re-trancher)
++
++- Aucune fuite d'un malus reçu avant « Commencer le tour » : aperçu de durée (le −10 s), ligne « X ne répond pas »,
++  grisés, aide, pastilles. Le chrono réel compte le −10 s.
++- « Ce qui t'attend » : « On vient de t'infliger » (icône, nom, « Prénom · Équipe ») ; « Déjà activé » (règles de la
++  manche, bonus) ; « C'est parti ». Rien en double, aucune autre phrase. Pas d'écran s'il n'y a rien de reçu.
++- « Interdit de faire deviner » : cycle inchangé, le joueur piégé ne voit jamais « Ce qui t'attend ».
++- Écran persisté : une app tuée y revient (nouvelle valeur d'écran, ajout additif).
++
++## Mécanisme choisi
++
++- Une seule racine : `GameProvider.currentTeamModifiers` retire les malus reçus (`fromTeamId != null`) quand
++  `_receivedHidden` (écran `screenGame` et pas une continuation). Tous les lecteurs de l'avant-tour passent par lui.
++  `_modifiersThisTurn` = l'ancien calcul, non filtré.
++- `startTurn` → `screenTurnReveal` si `_hasTurnReveal` (pas de piège en attente, pas une continuation, un malus reçu
++  joue), sinon `screenCountdown`. `leaveTurnReveal` (gardé par l'écran) → décompte.
++- `passBlocked` = `no_pass && !hasFreePass` ; `canPassWith` et la bulle de `turn_screen` en découlent.
++- `kModifierIncompatibilities` (dont la seule paire était `no_pass`/`free_pass`) retirée ; clause `no_pass` de
++  `FiestaRules.lockReason` retirée.
++
++## Arbitrages de l'implémenteur (à challenger)
++
++1. Continuation de fin de manche : malus reçus visibles dans son avant-tour, pas d'écran de révélation. Un malus
++   devenu jouable en N+1 (mime reçu en M2, perdu en M2 et jouable en M3) apparaît dans cet avant-tour sans écran.
++2. Ligne « Bloquer un devineur » : « Bob ne répond pas » plutôt que le nom du malus.
++3. Règles de manche en cercle blanc (comme la zone « Actif »), la maquette dit jaune.
++4. Clause retirée dans `fiesta_rules.dart`, fichier aussi touché par L-TOMBE (conflit possible au merge).
++
++## Points précis à vérifier
++
++1. Fuites : tout lecteur de l'avant-tour qui contournerait `currentTeamModifiers` (`fiesta.active` lu directement,
++   `_clashOn`, `targetRefusal`, `_malusBlock`, `reserve`, `_conflict`, `fitsIn`/`_fit` de `turn_cartridges.dart`,
++   aide `fiestaPreTurnHelp`, `game_screen.dart`). Le `timeRemaining` écrit par `startTurn` (aperçu sans −10 s)
++   est-il lu quelque part avant que `startTurnTimer` le réécrive ?
++2. Le gate dépend de l'écran : `startTurnTimer` lit `turnTime` sur `screenCountdown` (−10 s compté) ; analytics
++   (`_eventContext`, `_trackWordShown`) lisent après le passage à `screenTurn`. Un chemin où l'écran est
++   `screenGame` alors que le tour tourne (suspension / reprise, `resumeGame`, retour arrière
++   `restorePreValidationState`, `confirmGiverBlock`) ?
++3. Piège : `startTurn` du joueur bloqué → décompte → piège → `confirmGiverBlock` → remplaçant. Ses autres malus
++   restent en attente et cachés ; le remplaçant n'a l'écran que pour SES malus.
++4. Persistance (règle 7) : `turnReveal` relu après kill ; aucune autre forme persistée changée. Une partie 1.4.0
++   suspendue sous `no_pass` en Toujours avec `free_pass` en cartouche : `chargesOf` change (cartouches rendues
++   jouables) ; tirages du hasard / défis recalculés différents. Acceptable ? Rien de persisté re-dérivé ?
++5. Pas de retour depuis « Ce qui t'attend » (`PopScope(canPop: false)`, pas de `HomeButton`), Android et iOS.
++6. `turn_screen.dart` : sous `no_pass` + passe gratuite, bouton « Passer (gratuit) », puis grisé avec la bulle
++   « Interdit de passer ce tour ».
++7. Docs : `lib/models/CLAUDE.md`, `lib/providers/CLAUDE.md`, `lib/screens/CLAUDE.md`, `help/WIRING.md`, aide,
++   `docs/tracking_evolution.md`. Une skill maison décrit-elle un comportement que ce diff change ?
++8. **Mutation testing obligatoire** sur les tests ajoutés : `test/providers/fiesta_turn_reveal_test.dart` (3) et
++   « Passe gratuite + Interdit de passer » de `test/providers/fiesta_turn_effects_test.dart`, et les assertions
++   réécrites (`turn_time_fiesta_test.dart` aperçu 30 puis 20, `preturn_help_test.dart`,
++   `help_conditional_test.dart`). Mutants suggérés : gate retiré, gate sans `!isContinuation`, garde
++   `_pendingGiverBlock` retirée de `_hasTurnReveal`, `passBlocked` sans `!hasFreePass`, paire remise. Valeur des
++   tests : redondant, échafaudage ou obsolète = finding (beaucoup de tests existants ont reçu un `p.startTurn()`
++   avant leurs assertions de malus reçus).
++
++## Format attendu du rapport
++
++- Verdict : **READY** ou **NOT READY**.
++- Findings classés **BLOCKER / MAJOR / MINOR**, chacun avec `fichier:ligne`, le problème, le scénario qui le
++  déclenche, et la correction proposée.
++- Résultat du mutation testing (mutant, test censé le tuer, tué ou survivant).
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index 1c3118f..c86f6ad 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -1515,3 +1515,24 @@ additif. 🔴 Un malus en attente écrit par la 1.4.0 sans `playerId` (hors bloc
+ prochain tour de l'équipe (test de relecture dans `test/providers/fiesta_v4_test.dart`) ; il grise tous les prénoms
+ de son équipe. Arbitrage : « Bloquer un devineur » reste un par équipe en attente, sinon le second tomberait le même
+ tour et serait perdu en silence.
++
++## 2026-11-15 — Fiesta : malus reçus cachés jusqu'au lancement, « Ce qui t'attend » (L-CACHE)
++
++**Quoi.** L'avant-tour n'affiche plus les malus reçus par le joueur qui va jouer : `GameProvider.currentTeamModifiers`
++les retire tant que l'écran est l'avant-tour (`screenGame`) d'un tour pas encore lancé. Tout ce que l'avant-tour lit
++passe par là : zone « Actif », aperçu de la durée (le −10 s n'y figure plus), ligne « X ne répond pas », grisés, aide.
++« Commencer le tour » mène, quand un malus reçu joue à ce tour, au nouvel écran « Ce qui t'attend »
++(`turn_reveal_screen.dart`, persisté sous `turnReveal`) : « On vient de t'infliger » (icône, nom, « Prénom · Équipe »),
++« Déjà activé » (règles de la manche, bonus), « C'est parti » → décompte. Sinon, décompte direct. Le joueur piégé par
++« Interdit de faire deviner » va au décompte puis au piège, jamais sur cet écran. « Interdit de passer » et
++« Passe gratuite » ne s'excluent plus (`kModifierIncompatibilities` retirée, verrou de l'éditeur retiré) : une passe
++gratuite, puis Passer bloqué (`passBlocked` = `no_pass` sans passe gratuite restante).
++
++**Pourquoi.** Retours de recette de Florent du 2026-11-15 (spec §D2) : armer ses bonus sans savoir ce qu'on va subir.
++Cacher à la source (un getter) plutôt qu'écran par écran : rien ne peut fuir par un lecteur oublié.
++
++**Conséquence.** Le chrono, lancé du décompte, compte le −10 s ; seul l'aperçu de l'avant-tour l'ignore. Une
++continuation de fin de manche a déjà été lancée : ses malus reçus restent visibles et elle n'a pas d'écran de
++révélation. Une app tuée sur « Ce qui t'attend » y revient (valeur d'écran ajoutée, additive). Le vivier des
++cartouches au hasard et les défis n'excluent plus Passe gratuite sous « Interdit de passer » : tirages recalculés des
++parties suspendues sous cette règle différents (rien de persisté n'est re-dérivé).
+diff --git a/lib/app.dart b/lib/app.dart
+index 2c23c47..f02c6dc 100644
+--- a/lib/app.dart
++++ b/lib/app.dart
+@@ -16,6 +16,7 @@ import 'screens/countdown_screen.dart';
+ import 'screens/turn_screen.dart';
+ import 'screens/verification_screen.dart';
+ import 'screens/giver_blocked_screen.dart';
++import 'screens/turn_reveal_screen.dart';
+ import 'screens/transition_screen.dart';
+ import 'screens/score_reveal_screen.dart';
+ import 'screens/challenge_route_screen.dart';
+@@ -82,6 +83,8 @@ class GuessItAllApp extends StatelessWidget {
+         return const TransitionScreen();
+       case AppConstants.screenGiverBlocked:
+         return const GiverBlockedScreen();
++      case AppConstants.screenTurnReveal:
++        return const TurnRevealScreen();
+       case AppConstants.screenChallenge:
+         return const ChallengeRouteScreen();
+       case AppConstants.screenResults:
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index e2c4ddf..dbea555 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -17,9 +17,9 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `game_setup_snapshot.dart` | `GameSetupSnapshot` | Réglages (`GameSettings`) + `FiestaRules?` d'une partie archivée, sans les mots. Lecture tolérante : illisible → `null` (Fiesta illisible invalide tout le snapshot) |
+ | `word_stats.dart` | `WordMetadata`, `WordRoundStats`, `WordStats` | Metadonnees mot (category, difficulty, language), stats par manche et agregees |
+ | `category_metadata.dart` | `CategoryMetadata` | Metadonnees categorie multilingue (id, icon, noms, locales) |
+-| `fiesta/modifier_catalog.dart` | `ModifierDef`, `kModifierCatalog`, `kModifierIncompatibilities`, `kCartridgeOnlyIds`, enums `ModifierNature/Scope/Target` | Catalogue Fiesta (17 ids **figés**, du code, jamais persisté ; un ajout se fait **en fin de liste** : `one_answer`, `sounds_only`, `plus_10s`, puis `block_giver`), `modifierById` (répond aussi pour les retirés, liste privée `_kRetiredModifiers`, lecture seule : 🔴 `two_words` reste lisible et nommé dans l'historique, `earned`, `chargesUsed`, les règles gelées et les ensembles enregistrés, mais hors catalogue il n'est ni proposé, ni tiré, ni joué), `turnLabel` (mini-phrase de la pastille du tour ; `block_guesser` : à faire précéder du prénom ; `block_giver` : aucune), `areCompatible` (paires + règle de famille : deux membres `mimeFamily` s'excluent, sauf la paire `sounds_only` / `mime_under_sheet`, compatible dans toutes les combinaisons), `modifierDescription` (texte commun de cette paire quand les deux jouent). `round3Only` = manche 3 seulement (mime) ; `notInRound3` = jamais en manche 3 (« Faire deviner dans une autre langue »), lus par `isEligibleForRound` / `allowedRounds`. `kCartridgeOnlyIds` (tous les bonus, `minus_10s`, `block_guesser`, `block_giver`) : jamais règle de manche ; tout le reste existe dans les 3 menus, `one_answer` compris. 🔴 Tout ajout au catalogue change les tirages et cadeaux des parties suspendues (candidats mélangés par graine) : persister les tirages ou versionner le catalogue avant d'ajouter un modificateur une fois la Fiesta publiée |
++| `fiesta/modifier_catalog.dart` | `ModifierDef`, `kModifierCatalog`, `kCartridgeOnlyIds`, enums `ModifierNature/Scope/Target` | Catalogue Fiesta (17 ids **figés**, du code, jamais persisté ; un ajout se fait **en fin de liste** : `one_answer`, `sounds_only`, `plus_10s`, puis `block_giver`), `modifierById` (répond aussi pour les retirés, liste privée `_kRetiredModifiers`, lecture seule : 🔴 `two_words` reste lisible et nommé dans l'historique, `earned`, `chargesUsed`, les règles gelées et les ensembles enregistrés, mais hors catalogue il n'est ni proposé, ni tiré, ni joué), `turnLabel` (mini-phrase de la pastille du tour ; `block_guesser` : à faire précéder du prénom ; `block_giver` : aucune), `areCompatible` (seule règle : deux membres `mimeFamily` s'excluent, sauf la paire `sounds_only` / `mime_under_sheet`, compatible dans toutes les combinaisons ; « Interdit de passer » + « Passe gratuite » se cumulent depuis le 2026-11-15), `modifierDescription` (texte commun de cette paire quand les deux jouent). `round3Only` = manche 3 seulement (mime) ; `notInRound3` = jamais en manche 3 (« Faire deviner dans une autre langue »), lus par `isEligibleForRound` / `allowedRounds`. `kCartridgeOnlyIds` (tous les bonus, `minus_10s`, `block_guesser`, `block_giver`) : jamais règle de manche ; tout le reste existe dans les 3 menus, `one_answer` compris. 🔴 Tout ajout au catalogue change les tirages et cadeaux des parties suspendues (candidats mélangés par graine) : persister les tirages ou versionner le catalogue avant d'ajouter un modificateur une fois la Fiesta publiée |
+ | `fiesta/modifier_instance.dart` | `ModifierInstance` | Modificateur actif dans une partie : une règle de manche (cible `both`) ou un malus infligé. `tryFromJson` tolérant (id inconnu → `null`, jamais de défaut inventé). `canAdd(active, candidate)` : compatibilité seulement (plus de plafond). `fromTeamId` (clé `from`, omise si nul) : malus **infligé** par `fromTeamId` au joueur `playerId` de `teamId`, portée tour. `resolvesAt(teamId, giver)` : il se résout au prochain tour où ce joueur fait deviner, quelle que soit la manche (il y pèse, ou y est perdu s'il n'a plus de sens), puis part à la vraie fin de ce tour ; 🔴 écrit par la 1.4.0 sans `playerId` (hors blocages) : prochain tour de l'équipe, comme alors. `playerId` : joueur visé (tous les malus envoyés depuis le 2026-11-15 ; `block_guesser` : le devineur, qui se résout au tour de son équipe). `fromPlayerId` (`fromPlayer`) : joueur qui l'a envoyé (phrase du piège). `sentTurnIndex` (`sentTurn`) : tour d'envoi, seul cet avant-tour peut l'annuler. `waitsFor(giver)` : blocage sans effet sur ce tour (`block_giver` toujours, `block_guesser` si son joueur fait deviner). Les cartouches détenues ne sont PAS des instances : voir `FiestaState.cartridgesLeft` |
+-| `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, enum `EnsembleMenu` | Configuration Fiesta **immuable**, forme **v4** (`format: 4`). `ModifierSetting` = trois réglages INDÉPENDANTS `{always, draw, charges 0-5}`. `FiestaRules` = `{ensembleName?, modifiers, drawCount, trailingCount (0-5, `kMaxCount`), allCount (0-10, `kMaxAllCount`), balance}`. 🔴 `lockReason(id, menu)` : verrouillé = réglages gardés mais sans effet (Toujours sur les 2 autres menus ; mime en Toujours sur les autres mimes partout, sauf la paire ; `no_pass` en Toujours sur `free_pass` en cartouche). Le moteur lit `isAlways`, `drawsFrom`, `chargesOf`, qui l'appliquent ; jamais `settingOf` directement. `tryFromJson` : autre `format` ou compteur hors bornes → `null` ; réglage illisible, hors bornes ou d'id inconnu ignoré seul |
++| `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, enum `EnsembleMenu` | Configuration Fiesta **immuable**, forme **v4** (`format: 4`). `ModifierSetting` = trois réglages INDÉPENDANTS `{always, draw, charges 0-5}`. `FiestaRules` = `{ensembleName?, modifiers, drawCount, trailingCount (0-5, `kMaxCount`), allCount (0-10, `kMaxAllCount`), balance}`. 🔴 `lockReason(id, menu)` : verrouillé = réglages gardés mais sans effet (Toujours sur les 2 autres menus ; mime en Toujours sur les autres mimes partout, sauf la paire). Le moteur lit `isAlways`, `drawsFrom`, `chargesOf`, qui l'appliquent ; jamais `settingOf` directement. `tryFromJson` : autre `format` ou compteur hors bornes → `null` ; réglage illisible, hors bornes ou d'id inconnu ignoré seul |
+ | `fiesta/symmetric_draw.dart` | fonctions pures | Règles de manche : `alwaysForRound` (toutes les manches où il existe) puis `drawForRound` (`drawsFrom`, `drawCount` ; incompatibles sautés, **pas de plafond** ; frais d'abord, `spent` en complément), réunis par `roundModifiers(rules, gameId:, round:)`. 🔴 Sans remise sur la partie, sans état : `roundModifiers` recalcule les manches 1 à N-1 pour savoir ce qui est sorti ; un mime n'est pas consommé avant M3, un « Toujours » jamais ; quand un complément ressort un déjà sorti, le vivier est rempli et seul ce complément reste sorti. Graine `drawSeed(gameId, round)` (FNV-1a, stable, une par manche). `allowedRounds`, `canBeRoundRule` |
+ | `fiesta/fiesta_state.dart` | `FiestaState`, `ChargeUse`, `EarnedCartridge` | `GameState.fiesta` : `{rules, active, turn, chargesUsed, earned, skips}`. `turn` : `FiestaTurnState` typé (`turn_effects.dart`), vidé à la vraie fin du tour (continuation de fin de manche comprise dans le tour). `chargesUsed` (clé omise si vide) : cartouches dépensées `{catalogId, teamId, round, target?}`, toutes manches. `earned` (clé omise si vide) : cartouches au hasard `{catalogId, teamId, round}`, écrites par `startGame` (M1) et `nextRound` seulement. `skips` (clé omise si vide) : tours sautés par équipe, décalage de sa rotation. `withoutSent` : retire un malus et rend sa cartouche. 🔴 Stock d'une équipe = `cartridgesLeft` : charges de l'ensemble + gagnées − dépensées ; une seule source pour la réserve |
+ | `fiesta/modifier_recap.dart` | fonctions pures | `kFiestaModeId` (`fiesta_custom` ; les archives `fiesta_auto` restent lisibles), `buildModifierRecap` : récap « Modificateurs de la partie » en faits : tirage recalculé par la graine, cartouches au hasard (`earned`) et cartouches utilisées (`chargesUsed`) relues de l'état ; `formatModifierRecap` forme les lignes depuis les faits (`ModifierRecapLine`, jamais persistée) ; aucun écran ne les affiche depuis le retrait de la carte des Résultats, les faits restent archivés |
+@@ -77,7 +77,8 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+   ignorés seuls, l'archive se relit.
+ - **Temps du tour** (2-6) : `GameProvider.turnTime` est la **seule** source de la durée de
+   départ ; `startTurn` (aperçu) et `startTurnTimer` (chrono, qui écrit `turnAllottedSeconds`) la lisent
+-  tous deux. `TurnClock` reste la seule autorité sur le temps
++  tous deux (seul écart voulu : sur l'avant-tour, un −10 s reçu est caché de l'aperçu, le chrono le compte).
++  `TurnClock` reste la seule autorité sur le temps
+   qui court. Sur une continuation (`turnBonusTime` posé), seul un `plus_10s` allumé
+   s'ajoute au temps reporté ; un `minus_10s` ne s'y réapplique pas. En Classique la durée est `turnBonusTime ?? turnDuration`, inchangée.
+ 
+diff --git a/lib/models/fiesta/fiesta_rules.dart b/lib/models/fiesta/fiesta_rules.dart
+index 7ff89fb..efe04bb 100644
+--- a/lib/models/fiesta/fiesta_rules.dart
++++ b/lib/models/fiesta/fiesta_rules.dart
+@@ -144,9 +144,7 @@ class FiestaRules {
+   /// Verrouillé = réglages gardés, mais sans effet en partie :
+   /// - en « Toujours », un modificateur l'est dans les 2 autres menus ;
+   /// - un mime en « Toujours » y verrouille les autres mimes, partout, sauf la
+-  ///   paire Bruitages / drap ;
+-  /// - « Interdit de passer » en « Toujours » verrouille Passe gratuite en
+-  ///   cartouche, qui ne servirait jamais.
++  ///   paire Bruitages / drap.
+   String? lockReason(String id, EnsembleMenu menu) {
+     if (menu != EnsembleMenu.always && isAlways(id)) return 'Actif en Toujours';
+     final def = modifierById(id);
+@@ -160,11 +158,6 @@ class FiestaRules {
+         }
+       }
+     }
+-    if (menu == EnsembleMenu.cartridge &&
+-        isAlways('no_pass') &&
+-        !areCompatible('no_pass', id)) {
+-      return '${modifierById('no_pass')!.name} est en Toujours';
+-    }
+     return null;
+   }
+ 
+diff --git a/lib/models/fiesta/modifier_catalog.dart b/lib/models/fiesta/modifier_catalog.dart
+index c3b1ffe..1c86a32 100644
+--- a/lib/models/fiesta/modifier_catalog.dart
++++ b/lib/models/fiesta/modifier_catalog.dart
+@@ -237,13 +237,6 @@ const Set<String> kCartridgeOnlyIds = {
+   'minus_10s',
+ };
+ 
+-/// Paires incompatibles (Q14 de l'epic). Chaque paire est écrite une fois :
+-/// [areCompatible] est symétrique par construction. La famille « Mime » n'y
+-/// figure pas : c'est une règle de groupe (`mimeFamily`).
+-const List<(String, String)> kModifierIncompatibilities = [
+-  ('no_pass', 'free_pass'),
+-];
+-
+ /// Seule paire de mimes compatible, dans toutes les combinaisons.
+ bool _isSoundsSheetPair(String a, String b) =>
+     (a == 'sounds_only' && b == 'mime_under_sheet') ||
+@@ -269,14 +262,12 @@ ModifierDef? modifierById(String id) {
+ 
+ /// Deux membres de la famille « Mime » (`mimeFamily`, « Dessiner » compris)
+ /// s'excluent (retours device 2026-11-04), sauf la paire Bruitages / drap : un
+-/// membre ajouté au catalogue l'est d'office.
++/// membre ajouté au catalogue l'est d'office. Hors famille, tout se cumule :
++/// « Interdit de passer » + « Passe gratuite » = une passe gratuite, puis
++/// Passer bloqué (2026-11-15).
+ bool areCompatible(String a, String b) {
+   bool family(String id) => modifierById(id)?.mimeFamily ?? false;
+-  if (family(a) && family(b)) return _isSoundsSheetPair(a, b);
+-  for (final (x, y) in kModifierIncompatibilities) {
+-    if ((x == a && y == b) || (x == b && y == a)) return false;
+-  }
+-  return true;
++  return !(family(a) && family(b)) || _isSoundsSheetPair(a, b);
+ }
+ 
+ /// Retrouve une valeur d'enum par son `name` sérialisé, `null` si inconnue.
+diff --git a/lib/providers/CLAUDE.md b/lib/providers/CLAUDE.md
+index 797fc68..e45df58 100644
+--- a/lib/providers/CLAUDE.md
++++ b/lib/providers/CLAUDE.md
+@@ -29,7 +29,7 @@ Les ~400 lignes de getters Fiesta (modèle de lecture) restent ici pour l'instan
+ - La navigation arriere est complexe : depend de l'ecran courant, du tour, et de l'existence de snapshots de validation.
+ - `_ensureWordsForPlayer()` conserve les mots existants d'un joueur si le compte est suffisant (meme apres changement de categories).
+ - **Durée du tour** : `turnTime` (composée par `composeTurnSeconds`) est lue par `startTurn` ET `startTurnTimer`. Ne jamais recalculer la durée ailleurs : l'avant-tour et le chrono divergeraient. `timeSpent` se mesure sur `turnAllottedSeconds`, pas sur le réglage.
+-- **Effets de tour Fiesta (2-8)** : `canPassWith(secondesAffichées)` est la **seule** garde de la passe (`passWord` ET le bouton de `turn_screen`), sur la pénalité **effective** (`currentPassPenalty`, 0 si `hasFreePass`) ; sous `no_pass`, `passWord` sort avant `onWordPassed`. **Un seul tour** : fin de manche + continuation en N+1. 🔴 **Règle de la continuation** (Fiesta v3) : `isContinuation` (dérivé de l'historique, pas de `turnBonusTime`) ; les règles de manche de N+1 s'y appliquent DIRECTEMENT (`currentTeamModifiers` = `modifiersForTurn` sur la manche courante), le temps reporté reste exact (+ 10 s seulement si `plus_10s` y est allumé ; un `minus_10s` déjà appliqué ne se réapplique pas), les effets one shot déjà dépensés (×2, passe gratuite, malus reçu) vivent jusqu'à la vraie fin du tour. 🔴 Fiesta v3.1 : la réserve y est complète, cartouches gagnées à l'instant comprises (`nextRound` écrit `earned` avant cet avant-tour) : bonus allumables et malus à infliger, annulables avant le départ, comme un tour normal. Une charge dépensée sur la partie précédente reste comptée une fois et ne se rallume pas (`déjà en cours ce tour`) ; un malus envoyé avant cette partie n'est plus annulable (`sentThisTurn` : manche d'envoi = manche courante). `validateWords` vide `fiesta.turn` et consomme les malus infligés à l'équipe, à la vraie fin seulement (pas dans la branche fin de manche). Continuation qui vide à elle seule le pool : `_fiestaAtRoundEnd` clôt son tour, la continuation suivante repart à vide. 🔴 **Report nul** (`timeRemaining <= 0` à la fin de M1 ou M2) : pas de continuation, `validateWords` traite une vraie fin de tour (`_fiestaAfterTurn`, rotation, pas de `turnBonusTime` ni de `pendingBonusTurnId`) et la manche suivante s'ouvre sur l'équipe suivante. `isContinuation` exige donc qu'aucune entrée n'existe dans la manche ; `continuingTeamId` est nul sans `pendingBonusTurnId`. M3 inchangée : la partie se termine.
++- **Effets de tour Fiesta (2-8)** : `canPassWith(secondesAffichées)` est la **seule** garde de la passe (`passWord` ET le bouton de `turn_screen`), sur la pénalité **effective** (`currentPassPenalty`, 0 si `hasFreePass`) ; `passBlocked` = `no_pass` sans passe gratuite restante (Passe gratuite + Interdit de passer : une passe gratuite, puis bloqué), et alors `passWord` sort avant `onWordPassed`. **Un seul tour** : fin de manche + continuation en N+1. 🔴 **Règle de la continuation** (Fiesta v3) : `isContinuation` (dérivé de l'historique, pas de `turnBonusTime`) ; les règles de manche de N+1 s'y appliquent DIRECTEMENT (`currentTeamModifiers` = `modifiersForTurn` sur la manche courante), le temps reporté reste exact (+ 10 s seulement si `plus_10s` y est allumé ; un `minus_10s` déjà appliqué ne se réapplique pas), les effets one shot déjà dépensés (×2, passe gratuite, malus reçu) vivent jusqu'à la vraie fin du tour. 🔴 Fiesta v3.1 : la réserve y est complète, cartouches gagnées à l'instant comprises (`nextRound` écrit `earned` avant cet avant-tour) : bonus allumables et malus à infliger, annulables avant le départ, comme un tour normal. Une charge dépensée sur la partie précédente reste comptée une fois et ne se rallume pas (`déjà en cours ce tour`) ; un malus envoyé avant cette partie n'est plus annulable (`sentThisTurn` : manche d'envoi = manche courante). `validateWords` vide `fiesta.turn` et consomme les malus infligés à l'équipe, à la vraie fin seulement (pas dans la branche fin de manche). Continuation qui vide à elle seule le pool : `_fiestaAtRoundEnd` clôt son tour, la continuation suivante repart à vide. 🔴 **Report nul** (`timeRemaining <= 0` à la fin de M1 ou M2) : pas de continuation, `validateWords` traite une vraie fin de tour (`_fiestaAfterTurn`, rotation, pas de `turnBonusTime` ni de `pendingBonusTurnId`) et la manche suivante s'ouvre sur l'équipe suivante. `isContinuation` exige donc qu'aucune entrée n'existe dans la manche ; `continuingTeamId` est nul sans `pendingBonusTurnId`. M3 inchangée : la partie se termine.
+ - **Bonus à charge (2-9, Fiesta v3)** : ×2, passe gratuite, +10 s : une table `kChargeBonusKeys`, une implémentation (`_charge`, `_chargesLeft`, `_conflict`, `_setCharge`). Plus de plafond, allumer est refusé seulement si le bonus est incompatible avec un modificateur en jeu ou l'autre bonus allumé. Le stock vient de `FiestaState.cartridgesLeft` (ensemble + gagnées − dépensées, toutes manches), jamais d'une instance. `setDoublePoints` n'écrit que `armed` dans `fiesta.turn.charges` ; la charge se dépense dans `startTurnTimer` (`spent` + `chargesUsed`). `validateWords` passe `pointsMultiplier` à `resolveTurn` (pur). La continuation de fin de manche garde `spent` (même tour). `spentBonuses` = badges du tour ; `turnTime` compte le +10 s allumé ou dépensé (aperçu et chrono d'accord) ; sur un temps reporté, allumé seulement. `isBonusArmed` : encore annulable.
+ - **Cartouches au hasard (Fiesta v4)** : `startGame` écrit celles de M1 ; `_transitionPlan` (`planRoundTransition`) est recalculé sur l'état de fin de manche ; 🔴 seul `nextRound` écrit ensuite (`plan.apply` : règles de N+1, `fiesta.earned` ; un malus devenu impossible n'est pas rendu, il est perdu au tour de sa cible). Rien de persisté sur la transition : app tuée, retour arrière et correction de vérification ne peuvent ni doubler ni perdre une cartouche.
+ - **Fin de manche** : `validateWords` va toujours à `screenTransition`, M3 compris ; `nextRound` après M3 archive et va aux résultats.
+@@ -38,6 +38,8 @@ Les ~400 lignes de getters Fiesta (modèle de lecture) restent ici pour l'instan
+ - **Deux mots à la fois** : retiré du jeu (2026-11-07). 🔴 Une partie relue avec ce bonus allumé ou dépensé continue à un mot : la cartouche ne joue plus, la carte B reste dans `remainingWords` et sort quand elle est trouvée ; `chargesUsed` et `earned` gardent leur `two_words` pour le récap (`test/providers/fiesta_two_words_legacy_test.dart`).
+ - **Ce tour / Réserve** : une cartouche = UN tour d'UNE équipe, stock pour toute la partie. `reserve` (`Cartridge` : restantes, raison du grisé) = les modificateurs où l'équipe a du stock, possibles dans la manche (un mime reste caché avant M3), continuation comprise ; `roundRulesThisTurn` / `receivedThisTurn` / `bonusesThisTurn` = la zone « Ce tour ». Bonus : `toggleBonus` → `armed`, dépensé dans `startTurnTimer`. Malus : `inflictMalus(id, joueur)` vise un joueur adverse (feuille « Sur qui ? », `opponents`) et pose une instance `fromTeamId` + `playerId` (portée tour) + un `ChargeUse` avec `target` (son équipe), tout de suite ; il pèse au prochain tour où ce joueur fait deviner (`ModifierInstance.resolvesAt`). `targetRefusal(id, joueur)` grise d'avance, par personne et quel que soit l'envoyeur : même malus en attente, ou un malus qui ne s'y cumule pas (un seul mime) ; `block_guesser` reste un par équipe ; un malus 1.4.0 sans joueur grise toute son équipe. 🔴 `inflictMalus` garde le refus détaillé en garde-fou → **rien consommé**. `sentThisTurn` / `cancelSent` : annulable seulement dans l'avant-tour de l'envoyeuse où il a été envoyé. `_fiestaAfterTurn` retire à la vraie fin d'un tour les malus qui s'y résolvaient (`resolvesAt`, perdus compris, rien n'est rendu) ; ceux d'un autre joueur et les blocages qui attendent restent.
+ 
++- 🔴 **Malus reçus cachés (2026-11-15)** : `currentTeamModifiers` retire les malus reçus sur l'avant-tour (`screenGame`) d'un tour pas encore lancé (`_receivedHidden`, hors continuation, déjà révélée). Tous les lecteurs de l'avant-tour passent par lui (aperçu `turnTime`, `blockedGuesser`, `receivedThisTurn`, grisés) : l'avant-tour ne lit jamais `fiesta.active` directement pour l'équipe qui joue. `startTurn` va à `screenTurnReveal` (« Ce qui t'attend ») si un malus reçu joue (`_hasTurnReveal` : jamais pour le joueur piégé, jamais sur une continuation), sinon au décompte ; `leaveTurnReveal` (« C'est parti ») → décompte. Le chrono, lancé du décompte, compte tout.
++
+ - **Dernier choix (Fiesta v3.1)** : `setPendingFiesta` et `restartWithSamePlayers` écrivent le choix dans `GameSettings` (`fiestaEnabled`, `_rememberFiestaChoice`). `_rememberedFiesta` le relit au démarrage et dans `startNewGame` : Classique = nul, une partie rejouée pas encore lancée (`replayFiesta`, écrit par `restartWithSamePlayers`, effacé par `startGame` et par tout `setPendingFiesta`), ou le dernier ensemble (`lastUsedId` ; supprimé ou illisible → Fiesta classique). Partie reprise : `pendingFiesta` = `fiesta?.rules`, sans toucher au dernier choix. Le tuto Fiesta n'est ouvert que par `_setMode`, donc jamais par une restauration. Passer en Fiesta : `chooseFiestaMode` (Fiesta classique tout de suite, puis le dernier ensemble relu ; un autre choix fait entre-temps l'emporte). Retour de la liste sans valider : `refreshPendingEnsemble` suit l'ensemble modifié ou supprimé, jamais des règles gelées. `clearLocalStorage` oublie aussi `lastUsedId`.
+ 
+ ### Dependances
+diff --git a/lib/providers/game_provider.dart b/lib/providers/game_provider.dart
+index f01f966..ba5ba32 100644
+--- a/lib/providers/game_provider.dart
++++ b/lib/providers/game_provider.dart
+@@ -713,7 +713,8 @@ class GameProvider extends ChangeNotifier {
+   ///
+   /// 🔴 SEULE source de la durée : `startTurn` (aperçu) et `startTurnTimer`
+   /// (chrono) la lisent tous deux, sinon l'avant-tour annonce 30 s et le chrono
+-  /// part à 48. Continuation (`turnBonusTime` posé) = ses secondes, + 10 s si
++  /// part à 48. Seul écart voulu : sur l'avant-tour, un −10 s reçu est caché
++  /// ([currentTeamModifiers]) ; le chrono, lancé du décompte, le compte. Continuation (`turnBonusTime` posé) = ses secondes, + 10 s si
+   /// le bonus y est allumé. En Classique : `turnBonusTime ?? turnDuration`,
+   /// comme avant.
+   TurnTime get turnTime {
+@@ -735,7 +736,9 @@ class GameProvider extends ChangeNotifier {
+ 
+   void startTurn() {
+     _game = _game.copyWith(
+-      currentScreen: AppConstants.screenCountdown,
++      currentScreen: _hasTurnReveal
++          ? AppConstants.screenTurnReveal
++          : AppConstants.screenCountdown,
+       wordsGuessedThisTurn: [],
+       passedWordsThisTurn: [],
+       timeRemaining: turnTime.total,
+@@ -745,6 +748,22 @@ class GameProvider extends ChangeNotifier {
+     _saveGameState();
+   }
+ 
++  /// « C'est parti » sur « Ce qui t'attend » : le décompte habituel.
++  void leaveTurnReveal() {
++    if (_game.currentScreen != AppConstants.screenTurnReveal) return;
++    _game = _game.copyWith(currentScreen: AppConstants.screenCountdown);
++    notifyListeners();
++    _saveGameState();
++  }
++
++  /// Envoyeur d'un malus reçu (« Ce qui t'attend ») : « Prénom · Équipe »,
++  /// l'équipe seule pour un envoi sans prénom.
++  String malusSender(ModifierInstance m) {
++    final team = getTeamById(m.fromTeamId ?? '')?.name ?? '?';
++    final player = getPlayerById(m.fromPlayerId ?? '')?.name;
++    return player == null ? team : '$player · $team';
++  }
++
+   void startTurnTimer() {
+     // 🔴 Le piège d'« Interdit de faire deviner » : le décompte s'est déroulé
+     // normalement, mais le chrono ne part pas et rien n'est dépensé. Rien n'est
+@@ -927,7 +946,8 @@ class GameProvider extends ChangeNotifier {
+     // C'est délibéré — passer avec « 5 » à l'écran et une pénalité de 5 reste
+     // autorisé et met le chrono à zéro, comme avant. Comparer les ms refuserait
+     // ce cas et changerait la règle du jeu en douce.
+-    // 🔴 Sortie AVANT `onWordPassed` : sous `no_pass`, aucune passe n'a lieu.
++    // 🔴 Sortie AVANT `onWordPassed` : sous `no_pass` sans passe gratuite
++    // restante, aucune passe n'a lieu.
+     if (!canPassWith(clock.displayedSecondsAt(now))) return;
+ 
+     // Pénalité EFFECTIVE : 0 tant qu'il reste une passe gratuite (2-8).
+@@ -1449,7 +1469,19 @@ class GameProvider extends ChangeNotifier {
+   /// Modificateurs qui pèsent sur l'équipe qui joue (badges) : les règles de la
+   /// manche COURANTE, continuation comprise, et ses malus reçus
+   /// ([modifiersForTurn]).
++  ///
++  /// 🔴 Malus reçus CACHÉS sur l'avant-tour, jusqu'à « Commencer le tour »
++  /// ([_receivedHidden]) : tout ce que l'avant-tour lit passe par ici (aperçu
++  /// de la durée, joueur bloqué, grisés, zone « Actif »), rien n'y fuit. Le
++  /// chrono, lu sur le décompte, les compte.
+   List<ModifierInstance> get currentTeamModifiers {
++    final all = _modifiersThisTurn;
++    return _receivedHidden
++        ? all.where((m) => m.fromTeamId == null).toList()
++        : all;
++  }
++
++  List<ModifierInstance> get _modifiersThisTurn {
+     final fiesta = _game.fiesta;
+     final teamId = getCurrentTeam()?.id;
+     if (fiesta == null || teamId == null) return const [];
+@@ -1459,6 +1491,19 @@ class GameProvider extends ChangeNotifier {
+         round: _game.currentRound);
+   }
+ 
++  /// Avant-tour d'un tour pas encore lancé. Une continuation a déjà été
++  /// lancée (et révélée) en fin de manche : ses malus reçus restent visibles.
++  bool get _receivedHidden =>
++      _game.currentScreen == AppConstants.screenGame && !isContinuation;
++
++  /// « Commencer le tour » mène à « Ce qui t'attend » : un malus reçu joue à
++  /// ce tour. Jamais pour le joueur piégé (il ne joue pas : ses malus restent
++  /// cachés et attendent), ni sur une continuation (déjà révélée).
++  bool get _hasTurnReveal =>
++      _pendingGiverBlock == null &&
++      !isContinuation &&
++      _modifiersThisTurn.any((m) => m.fromTeamId != null);
++
+   // ========== EFFETS DE TOUR (2-8) ==========
+ 
+   FiestaTurnState get _turn => _game.fiesta?.turn ?? FiestaTurnState.empty;
+@@ -1466,8 +1511,9 @@ class GameProvider extends ChangeNotifier {
+   bool _has(String catalogId) =>
+       currentTeamModifiers.any((m) => m.catalogId == catalogId);
+ 
+-  /// `no_pass` pèse sur l'équipe qui joue.
+-  bool get passBlocked => _has('no_pass');
++  /// `no_pass` pèse sur l'équipe qui joue, et il ne reste pas de passe
++  /// gratuite : un bonus armé s'applique toujours, on passe une fois.
++  bool get passBlocked => _has('no_pass') && !hasFreePass;
+ 
+   /// Passes gratuites du tour, et celles déjà utilisées : celles de la
+   /// cartouche dépensée au départ du tour. Une partie relue après le passage de
+diff --git a/lib/screens/CLAUDE.md b/lib/screens/CLAUDE.md
+index 94e215a..6ada203 100644
+--- a/lib/screens/CLAUDE.md
++++ b/lib/screens/CLAUDE.md
+@@ -9,7 +9,7 @@ HomeScreen → SettingsScreen (Classique / Fiesta)
+   → (CategoriesScreen)
+   → [Fiesta seulement, depuis Avancés : FiestaEnsemblesScreen, « Valider » → Parametres]
+   → PlayersScreen → (WordsScreen) → TeamsScreen (« Commencer » lance la partie)
+-  → GameScreen → CountdownScreen → [GiverBlockedScreen, le piège] → TurnScreen → VerificationScreen
++  → GameScreen → [TurnRevealScreen, « Ce qui t'attend »] → CountdownScreen → [GiverBlockedScreen, le piège] → TurnScreen → VerificationScreen
+   → TransitionScreen (animation après M1 et M2, écran fixe après M3) [Défi surprise : ChallengeRouteScreen, 1 ou 2 fois, après l'animation de M1 ou M2] → [ScoreRevealScreen, une fois] → ResultsScreen → StatsScreen
+ ```
+ 
+@@ -28,6 +28,7 @@ HomeScreen → SettingsScreen (Classique / Fiesta)
+ | `turn_screen.dart` | Jeu actif : timer, mot courant (auto-size), boutons Passer/Valider (`TurnWordText`, `TurnActionButtons`), pause, sons, haptic. Fiesta : pastilles du tour (icone + `turnLabel`, « Bob ne répond pas » pour le joueur bloque, pas de pastille sans `turnLabel`, Passe gratuite retiree une fois utilisee). La raison de la bulle de Passer se deduit de `PassState`, comme l'aide. Chrono a zero : `endTurn` directement dans le callback du Timer, jamais dans un `addPostFrameCallback` (il ne demande pas de frame, le tour restait sur « 1s » jusqu'a un toucher). |
+ | `verification_screen.dart` | Validation post-tour : toggle valid/invalide par mot, sauvegarde snapshot |
+ | `transition_screen.dart` | Fin de manche, Classique et Fiesta, aucun score. Apres M1 et M2 : animation ~2,8 s (`_RoundStage`, sons `impact-bass-1` et `whoosh-short`, vibration, un toucher fait passer, animations reduites respectees) puis `nextRound`, directement vers l'avant-tour. Apres M3 : ecran fixe (retour, « Voir les N mots devines », « Voir les resultats ») |
++| `turn_reveal_screen.dart` | Fiesta, « Ce qui t'attend » : après « Commencer le tour », seulement si un malus reçu joue à ce tour (jamais pour le joueur piégé, jamais sur une continuation). « On vient de t'infliger » (icône, nom, « Prénom · Équipe ») puis « Déjà activé » (règles de la manche, bonus), « C'est parti » → décompte. Ni retour ni accueil : l'avant-tour permettrait de réarmer en connaissant les malus ; persisté, une app tuée y revient |
+ | `giver_blocked_screen.dart` | Le piege d'« Interdit de faire deviner » : phrase, « Passe le telephone a X. », « Suivant » (`confirmGiverBlock`). Rien n'est consomme avant : une app tuee la remontre |
+ | `score_reveal_screen.dart` | `EndOfGameScreen`, ce que montre `screenResults` : `ScoreRevealScreen` tant que `GameState.scoreRevealSeen` est faux, sinon `ResultsScreen`. Aucun écran ni chemin de plus : tout ce qui mène aux résultats passe par cet aiguillage, l'historique n'y passe jamais. `ScoreRevealScreen` (maquette `curve(2)`) : graphique fixe tracé en 4,5 s sans chiffres (`ScoreRevealPainter`), légende des noms d'équipes dans l'ordre des équipes pour ne rien dévoiler, prénoms à droite des têtes (noms d'équipes pour toutes si une équipe dépasse 5 joueurs) ; fin : vainqueur (jamais d'égalité, `getTeamsSortedByScore`), scores, « Suivant ». Un toucher ou le retour système va aux résultats. L'animation attend le départ de la musique (0,8 s au plus) pour que son gong tombe à la fin du tracé. Animations réduites : la fin directement, sans aucun son. Le graphique passe avant le titre et la légende quand la place manque, le bouton reste toujours visible. Une app tuée pendant la révélation rouvre sur les résultats |
+ | `surprise_challenge_screen.dart` | Défi surprise, autonome et piloté par ses paramètres : VS coupé, règle, action, « Qui a gagné ? », roulette, « Les Moulins gagnent ! » en couleur d'équipe sans ombre. « Passer ce défi » jusqu'à « Continuer » (rien n'est donné avant), retour système bloqué, sons coupés à la sortie, animations réduites respectées |
+diff --git a/lib/screens/turn_reveal_screen.dart b/lib/screens/turn_reveal_screen.dart
+new file mode 100644
+index 0000000..18534d6
+--- /dev/null
++++ b/lib/screens/turn_reveal_screen.dart
+@@ -0,0 +1,161 @@
++import 'package:flutter/material.dart';
++import 'package:provider/provider.dart';
++
++import '../models/fiesta/modifier_catalog.dart';
++import '../providers/game_provider.dart';
++import '../theme/app_theme.dart';
++import '../widgets/common/app_button.dart';
++import '../widgets/fiesta/modifier_badge.dart';
++
++/// « Ce qui t'attend » : entre « Commencer le tour » et le décompte, ce que le
++/// joueur découvre (malus reçus qui jouent à ce tour) puis ce qu'il connaissait
++/// déjà (règles de la manche, ses bonus). Pas de retour : l'avant-tour
++/// permettrait de réarmer en connaissant les malus. Une app tuée y revient.
++class TurnRevealScreen extends StatelessWidget {
++  const TurnRevealScreen({super.key});
++
++  @override
++  Widget build(BuildContext context) {
++    final provider = context.watch<GameProvider>();
++    final known = [
++      for (final m in provider.roundRulesThisTurn)
++        _Line(m.catalogId, 'Règle de la manche', Colors.white, filled: false),
++      for (final id in provider.bonusesThisTurn)
++        _Line(id, 'Ton bonus', AppColors.success),
++    ];
++    return PopScope(
++      canPop: false,
++      child: Material(
++        color: AppColors.backgroundMain,
++        child: SafeArea(
++          child: Padding(
++            padding: const EdgeInsets.all(24),
++            child: Column(
++              crossAxisAlignment: CrossAxisAlignment.stretch,
++              children: [
++                Text(
++                  'CE QUI T\'ATTEND',
++                  textAlign: TextAlign.center,
++                  style: AppTextStyles.subtitle(fontSize: 34),
++                ),
++                const SizedBox(height: 16),
++                Expanded(
++                  child: SingleChildScrollView(
++                    child: Column(
++                      crossAxisAlignment: CrossAxisAlignment.stretch,
++                      children: [
++                        const _Section('ON VIENT DE T\'INFLIGER',
++                            color: AppColors.malus),
++                        for (final m in provider.receivedThisTurn)
++                          _Line(m.catalogId, provider.malusSender(m),
++                              AppColors.malus,
++                              // « Bloquer un devineur » : qui ne répond pas.
++                              title: m.catalogId == 'block_guesser'
++                                  ? '${provider.blockedGuesser?.name ?? ''} '
++                                      '${modifierById(m.catalogId)!.turnLabel}'
++                                  : null),
++                        if (known.isNotEmpty) ...[
++                          const SizedBox(height: 20),
++                          const _Section('DÉJÀ ACTIVÉ',
++                              color: AppColors.gray400),
++                          ...known,
++                        ],
++                      ],
++                    ),
++                  ),
++                ),
++                const SizedBox(height: 16),
++                AppButton(
++                  text: 'C\'est parti',
++                  variant: AppButtonVariant.secondary,
++                  size: AppButtonSize.large,
++                  fullWidth: true,
++                  onPressed: provider.leaveTurnReveal,
++                ),
++              ],
++            ),
++          ),
++        ),
++      ),
++    );
++  }
++}
++
++class _Section extends StatelessWidget {
++  final String text;
++  final Color color;
++
++  const _Section(this.text, {required this.color});
++
++  @override
++  Widget build(BuildContext context) => Padding(
++        padding: const EdgeInsets.only(bottom: 4),
++        child: Text(
++          text,
++          style: TextStyle(
++            fontFamily: 'Poppins',
++            fontSize: 11,
++            fontWeight: FontWeight.w600,
++            letterSpacing: 1,
++            color: color,
++          ),
++        ),
++      );
++}
++
++/// Une ligne : cercle d'icône, nom du modificateur, provenance.
++class _Line extends StatelessWidget {
++  final String id;
++  final String origin;
++  final Color color;
++  final bool filled;
++  final String? title;
++
++  const _Line(this.id, this.origin, this.color,
++      {this.filled = true, this.title});
++
++  @override
++  Widget build(BuildContext context) => Padding(
++        padding: const EdgeInsets.symmetric(vertical: 8),
++        child: Row(
++          children: [
++            Container(
++              width: 44,
++              height: 44,
++              alignment: Alignment.center,
++              decoration: BoxDecoration(
++                shape: BoxShape.circle,
++                color: filled ? color.withValues(alpha: 0.18) : null,
++                border: Border.all(color: color, width: 2),
++              ),
++              child: ModifierIcon(id, size: 24),
++            ),
++            const SizedBox(width: 12),
++            Expanded(
++              child: Column(
++                crossAxisAlignment: CrossAxisAlignment.start,
++                children: [
++                  Text(
++                    title ?? modifierById(id)?.name ?? id,
++                    style: const TextStyle(
++                      fontFamily: 'Poppins',
++                      fontSize: 15,
++                      fontWeight: FontWeight.w600,
++                      color: Colors.white,
++                    ),
++                  ),
++                  Text(
++                    origin,
++                    style: const TextStyle(
++                      fontFamily: 'Poppins',
++                      fontSize: 12,
++                      color: AppColors.gray400,
++                    ),
++                  ),
++                ],
++              ),
++            ),
++          ],
++        ),
++      );
++}
+diff --git a/lib/utils/constants.dart b/lib/utils/constants.dart
+index b53c2f9..b16fc23 100644
+--- a/lib/utils/constants.dart
++++ b/lib/utils/constants.dart
+@@ -53,6 +53,9 @@ class AppConstants {
+   static const String screenTransition = 'transition';
+   // Fiesta : le piège d'« Interdit de faire deviner », après le décompte.
+   static const String screenGiverBlocked = 'giverBlocked';
++  // Fiesta : « Ce qui t'attend », entre « Commencer le tour » et le décompte,
++  // quand un malus reçu joue. Persisté : une app tuée y revient.
++  static const String screenTurnReveal = 'turnReveal';
+   static const String screenChallenge = 'challenge';
+   static const String screenResults = 'results';
+   static const String screenStats = 'stats';
+diff --git a/lib/widgets/fiesta/turn_cartridges.dart b/lib/widgets/fiesta/turn_cartridges.dart
+index 4c84db8..020bed5 100644
+--- a/lib/widgets/fiesta/turn_cartridges.dart
++++ b/lib/widgets/fiesta/turn_cartridges.dart
+@@ -13,8 +13,8 @@ import '../help/help_content.dart';
+ import 'modifier_badge.dart';
+ 
+ /// Écran avant le tour, Fiesta v2 (maquette `cartouches` B, variante a) :
+-/// zone « ACTIF PENDANT VOTRE PROCHAIN TOUR » (règles de manche, malus reçus,
+-/// bonus allumés) puis « VOTRE RÉSERVE » (mes cartouches, bonus / malus). Toucher = activer ou
++/// zone « ACTIF PENDANT VOTRE PROCHAIN TOUR » (règles de manche, malus reçus
++/// sur une continuation seulement, cachés sinon, bonus allumés) puis « VOTRE RÉSERVE » (mes cartouches, bonus / malus). Toucher = activer ou
+ /// infliger ; appui long = explication. La taille des cercles s'adapte à la
+ /// place ([_fit]) ; un cas extrême qui ne tient toujours pas défile.
+ class FiestaTurnZone extends StatefulWidget {
+diff --git a/lib/widgets/help/WIRING.md b/lib/widgets/help/WIRING.md
+index f89f712..a1c654d 100644
+--- a/lib/widgets/help/WIRING.md
++++ b/lib/widgets/help/WIRING.md
+@@ -36,7 +36,7 @@ résultats finaux en montrent.
+ | `fiesta_ensemble_editor_screen` | `fiestaEditorHelp(tab, hasCounts)` : seul le menu ouvert est expliqué | `tabs`, `menu` (le menu ouvert), `noDraw` (« Rien à tirer »), `locked` (1re ligne verrouillée du menu ouvert), `challenges` (cadre Défis surprises, ouvert), `save` (« Enregistrer ») | `right: 16` |
+ | `teams_screen` | `teamsHelp` | `firstTeam` (carte de la 1re équipe), `shuffle`, `incomplete` (message, si une équipe a moins de 2 joueurs), `start` (« Commencer ») | `right: 16` |
+ | `game_screen` (avant-tour) | `preTurnHelp(playerName: …, firstTurnOfGame: …)` | `team` (nom d'équipe + joueur), `roundRules` (icône info de la manche), `previousTurn` (« N mots », dès le 2e tour), `bonusTime` (« Temps bonus », seulement s'il y a du temps reporté), `back` (retour, s'il est affiché ; le titre dit où il mène), `start` | `right: besideCornerButton` |
+-| `game_screen` Fiesta | `fiestaPreTurnHelp(FiestaPreTurnKeys)` | Une clé par type d'élément, posée seulement s'il est à l'écran (`FiestaTurnZone`, sauf `reuseChoices`) : pas d'élément, pas d'étape. `reuseChoices`, `thisTurn` (cadre « Actif », sans clé sur « Rien pour l'instant »), `firstRule`, `firstReceived`, `firstArmed`, `blockedGuesser`, `reserveBonus`, `reserveMalus`, `firstUnusable` (1re cartouche grisée), `sent` | même bouton : `preTurnHelp(fiesta: fiestaPreTurnHelp(...))`, étapes insérées avant « Commencer le tour » |
++| `game_screen` Fiesta | `fiestaPreTurnHelp(FiestaPreTurnKeys)` | Une clé par type d'élément, posée seulement s'il est à l'écran (`FiestaTurnZone`, sauf `reuseChoices`) : pas d'élément, pas d'étape. `reuseChoices`, `thisTurn` (cadre « Actif », sans clé sur « Rien pour l'instant »), `firstRule`, `firstReceived` et `blockedGuesser` (malus reçus : sur une continuation seulement, cachés sinon jusqu'au lancement du tour), `firstArmed`, `reserveBonus`, `reserveMalus`, `firstUnusable` (1re cartouche grisée), `sent` | même bouton : `preTurnHelp(fiesta: fiestaPreTurnHelp(...))`, étapes insérées avant « Commencer le tour » |
+ | `turn_screen` | `turnHelp(passPenalty: provider.currentPassPenalty, passState, reversed)` — pas `settings.passPenalty` : la Passe gratuite Fiesta la met à 0. `passState` donne le titre et le texte de « Passer » (disponible, bloqué, dernier mot, pas assez de temps) | `timer`, `modifiers` (badges du tour), `word`, `guessed`, `pass`, `pause`, `endTurn` | `right: besideCornerButton` (pause à droite). 🔴 `provider.pauseTurn()` **avant** `CoachMarks.show`, reprise **après** : le chrono ne doit jamais tourner sous l'aide |
+ | `verification_screen` | `verificationHelp` | `doubled` (ligne « Mot compte double »), `wordList` (la liste défilante entière), `expired` (section « Mot en cours »), `passed` (section « Mots passés »), `validate` | `right: 16` (HomeButton à gauche) |
+ | `transition_screen` (écran fixe après M3 seulement) | `transitionHelp` | `previousTurn` (« Voir les N mots devinés »), `back` (`GameBackButton`), `next` (« Voir les résultats ») — dans cet ordre, l'action finale en dernier | coin haut droit |
+diff --git a/lib/widgets/help/help_content.dart b/lib/widgets/help/help_content.dart
+index f186b50..e6473e4 100644
+--- a/lib/widgets/help/help_content.dart
++++ b/lib/widgets/help/help_content.dart
+@@ -634,8 +634,9 @@ List<CoachStep> fiestaPreTurnHelp(FiestaPreTurnKeys keys) => [
+       CoachStep(
+         target: keys.thisTurn,
+         title: 'Actif pendant votre prochain tour',
+-        text: 'Tout ce qui s\'applique à ton tour. Appui long sur un cercle '
+-            'pour l\'explication.',
++        text: 'Les règles de la manche et tes bonus activés. Un malus reçu '
++            'se découvre au lancement du tour. Appui long sur un cercle pour '
++            'l\'explication.',
+       ),
+       CoachStep(
+         target: keys.firstRule,
+diff --git a/test/models/fiesta/cartridge_gifts_test.dart b/test/models/fiesta/cartridge_gifts_test.dart
+index 37048d5..696dc51 100644
+--- a/test/models/fiesta/cartridge_gifts_test.dart
++++ b/test/models/fiesta/cartridge_gifts_test.dart
+@@ -103,7 +103,8 @@ void main() {
+       expect(m3, isNot(contains('other_language')));
+       final underNoPass = pool(FiestaRules(), roundRules: [rule('no_pass')]);
+       expect(underNoPass, isNot(contains('no_pass')));
+-      expect(underNoPass, isNot(contains('free_pass')));
++      expect(underNoPass, contains('free_pass'),
++          reason: 'une passe gratuite, puis Passer bloqué');
+       final underSheet = pool(FiestaRules(),
+           nextRound: 3, roundRules: [rule('mime_under_sheet', round: 3)]);
+       expect(underSheet, contains('sounds_only'));
+diff --git a/test/models/fiesta/ensemble_summary_test.dart b/test/models/fiesta/ensemble_summary_test.dart
+index 7a6bd8e..fefa839 100644
+--- a/test/models/fiesta/ensemble_summary_test.dart
++++ b/test/models/fiesta/ensemble_summary_test.dart
+@@ -137,7 +137,6 @@ void main() {
+     test('ce qui est verrouillé ne joue pas, donc n\'est pas dit', () {
+       final locked = FiestaRules(modifiers: {
+         'no_pass': const ModifierSetting(always: true),
+-        'free_pass': const ModifierSetting(charges: 2),
+         // Fixe : ses cartouches et son tirage sont verrouillés.
+         'reversed': const ModifierSetting(always: true, draw: true, charges: 2),
+       }, drawCount: 1);
+diff --git a/test/models/fiesta/ensemble_validation_test.dart b/test/models/fiesta/ensemble_validation_test.dart
+index f880ef6..0127c72 100644
+--- a/test/models/fiesta/ensemble_validation_test.dart
++++ b/test/models/fiesta/ensemble_validation_test.dart
+@@ -111,16 +111,14 @@ void main() {
+       }
+     });
+ 
+-    test(
+-        'Interdit de passer en Toujours : Passe gratuite en Cartouches '
+-        'seulement', () {
++    test('Interdit de passer en Toujours ne verrouille plus Passe gratuite',
++        () {
+       final rules = FiestaRules(modifiers: const {
+         'no_pass': ModifierSetting(always: true),
+         'free_pass': ModifierSetting(charges: 3),
+-        'plus_10s': ModifierSetting(charges: 1),
+       });
+-      expect(rules.chargesOf('free_pass'), 0);
+-      expect(rules.chargesOf('plus_10s'), 1);
++      expect(rules.lockReason('free_pass', EnsembleMenu.cartridge), isNull);
++      expect(rules.chargesOf('free_pass'), 3);
+     });
+   });
+ 
+diff --git a/test/models/fiesta/fiesta_catalog_test.dart b/test/models/fiesta/fiesta_catalog_test.dart
+index 09a386c..c05fc84 100644
+--- a/test/models/fiesta/fiesta_catalog_test.dart
++++ b/test/models/fiesta/fiesta_catalog_test.dart
+@@ -41,12 +41,6 @@ void main() {
+         'plus_10s',
+         'block_giver',
+       ]);
+-
+-      for (final (a, b) in kModifierIncompatibilities) {
+-        expect(modifierById(a), isNotNull, reason: '$a hors catalogue');
+-        expect(modifierById(b), isNotNull, reason: '$b hors catalogue');
+-        expect(a, isNot(b));
+-      }
+     });
+ 
+     test('areCompatible est symétrique sur toutes les paires', () {
+@@ -56,8 +50,8 @@ void main() {
+           expect(areCompatible(a, b), areCompatible(b, a), reason: '$a / $b');
+         }
+       }
+-      expect(areCompatible('no_pass', 'free_pass'), isFalse);
+-      expect(areCompatible('free_pass', 'no_pass'), isFalse);
++      // Interdit de passer + Passe gratuite : une passe, puis bloqué.
++      expect(areCompatible('no_pass', 'free_pass'), isTrue);
+       // Famille « Mime » (« Dessiner » compris) : deux membres s'excluent
+       // toujours ; hors famille, les mimes ne gênent personne.
+       final family = kModifierCatalog.where((d) => d.mimeFamily).toList();
+@@ -106,10 +100,12 @@ void main() {
+     test(
+         'une instance pour tous compte pour chaque équipe, compatibilité '
+         'comprise', () {
+-      final active = [_instance('no_pass')];
++      final active = [_instance('draw')];
+       expect(
+-          canAdd(active,
+-              _instance('free_pass', target: ModifierTarget.team, teamId: 'B')),
++          canAdd(
++              active,
++              _instance('mime_no_arms',
++                  target: ModifierTarget.team, teamId: 'B')),
+           isFalse);
+       expect(
+           canAdd(active,
+@@ -118,9 +114,9 @@ void main() {
+     });
+ 
+     test('refuse une instance incompatible avec une instance active', () {
+-      expect(canAdd([_instance('no_pass')], _instance('free_pass')), isFalse);
+-      expect(canAdd([_instance('free_pass')], _instance('no_pass')), isFalse);
+-      expect(canAdd([_instance('no_pass')], _instance('reversed')), isTrue);
++      expect(canAdd([_instance('draw')], _instance('mime_no_arms')), isFalse);
++      expect(canAdd([_instance('mime_no_arms')], _instance('draw')), isFalse);
++      expect(canAdd([_instance('draw')], _instance('reversed')), isTrue);
+     });
+   });
+ }
+diff --git a/test/providers/fiesta_cartridges_test.dart b/test/providers/fiesta_cartridges_test.dart
+index a604bf1..fe0d5ad 100644
+--- a/test/providers/fiesta_cartridges_test.dart
++++ b/test/providers/fiesta_cartridges_test.dart
+@@ -101,8 +101,9 @@ void main() {
+         p.sentThisTurn.map((m) => (m.catalogId, m.teamId)), [('reversed', c)]);
+     playTurn(p);
+ 
+-    // Tour de c : les deux malus reçus, le −10 s compte.
++    // Tour de c : les deux malus reçus, révélés au lancement, le −10 s compte.
+     expect(p.getCurrentTeam()!.id, c);
++    p.startTurn();
+     expect(received(p), ['minus_10s<$a', 'reversed<$b']);
+     expect(p.isWordReversed, isTrue);
+     expect(p.turnTime.total, 20);
+@@ -157,6 +158,7 @@ void main() {
+ 
+     // b subit le −10 s ; au tour suivant de a, la Passe gratuite n'a pas
+     // été redépensée.
++    p.startTurn();
+     expect(p.turnTime.total, 20);
+     playTurn(p);
+     expect(p.getCurrentTeam()!.id, a);
+@@ -263,6 +265,7 @@ void main() {
+     expect(playTurn(p), b);
+ 
+     expect(p.getCurrentTeam()!.id, a);
++    p.startTurn();
+     expect(received(p), ['other_language<$b']);
+     playTurn(p, 99); // a finit M2 sous le malus
+     expect(
+diff --git a/test/providers/fiesta_continuation_cartridges_test.dart b/test/providers/fiesta_continuation_cartridges_test.dart
+index f82c077..8d2e280 100644
+--- a/test/providers/fiesta_continuation_cartridges_test.dart
++++ b/test/providers/fiesta_continuation_cartridges_test.dart
+@@ -161,6 +161,7 @@ void main() {
+     expect(p.inflictMalus('minus_10s', one(p, b)), isNull);
+     playTurn(p);
+     expect(p.getCurrentTeam()!.id, b);
++    p.startTurn();
+     expect(p.turnTime.total, 20);
+     playTurn(p, 99);
+     p.nextRound();
+@@ -171,6 +172,9 @@ void main() {
+     expect(p.turnTime.total, carried);
+     p.toggleBonus('plus_10s');
+     expect(p.turnTime.total, carried + 10);
++    p.startTurn();
++    expect(p.game.currentScreen, AppConstants.screenCountdown,
++        reason: 'tour déjà révélé : pas de « Ce qui t\'attend »');
+   });
+ 
+   test(
+@@ -199,6 +203,7 @@ void main() {
+ 
+     playTurn(p);
+     expect(p.getCurrentTeam()!.id, b);
++    p.startTurn();
+     expect(p.receivedThisTurn.map((m) => m.catalogId), ['reversed', 'no_pass']);
+     playTurn(p);
+     expect(p.game.fiesta!.active.where((m) => m.fromTeamId != null), isEmpty);
+diff --git a/test/providers/fiesta_turn_effects_test.dart b/test/providers/fiesta_turn_effects_test.dart
+index 2aec876..c2b5306 100644
+--- a/test/providers/fiesta_turn_effects_test.dart
++++ b/test/providers/fiesta_turn_effects_test.dart
+@@ -123,6 +123,33 @@ void main() {
+     expect(provider.isWordReversed, isTrue);
+   });
+ 
++  test(
++      'Passe gratuite + Interdit de passer : une passe gratuite, puis Passer '
++      'bloqué pour le reste du tour', () async {
++    final provider = await givenReadyProvider();
++    await provider.startGame(
++        fiesta: FiestaRules(drawCount: 0, modifiers: {
++      'no_pass': const ModifierSetting(always: true),
++      'free_pass': ModifierSetting(charges: 1),
++    }));
++    expect(provider.reserve.single.blockedReason, isNull);
++    provider.toggleBonus('free_pass');
++    provider.startTurn();
++    provider.startTurnTimer();
++
++    expect(provider.passBlocked, isFalse);
++    expect(provider.canPassWith(30), isTrue);
++    provider.passWord();
++    expect(provider.freePassesUsed, 1);
++    expect(allotted(provider), 30);
++
++    expect(provider.passBlocked, isTrue);
++    expect(provider.canPassWith(30), isFalse);
++    final before = provider.game.toJson();
++    provider.passWord();
++    expect(provider.game.toJson(), before);
++  });
++
+   test(
+       'Un seul tour : la continuation de fin de manche garde instances de '
+       'portée tour et passes gratuites utilisées, puis tout '
+diff --git a/test/providers/fiesta_turn_reveal_test.dart b/test/providers/fiesta_turn_reveal_test.dart
+new file mode 100644
+index 0000000..80ba4fa
+--- /dev/null
++++ b/test/providers/fiesta_turn_reveal_test.dart
+@@ -0,0 +1,87 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/providers/game_provider.dart';
++import 'package:guess_it_all_mobile/utils/constants.dart';
++
++import 'zero_carryover_turn_test.dart' show givenGame, playTurn, stock;
++
++/// Malus reçus cachés jusqu'à « Commencer le tour », puis « Ce qui t'attend »
++/// (retours de recette du 2026-11-15, L-CACHE).
++void main() {
++  int allotted(GameProvider p) =>
++      (p.game.turnEndTimestamp! - p.game.turnStartTimestamp!) ~/ 1000;
++
++  test(
++      'aucun malus reçu dans ce que lit l\'avant-tour ; révélés après '
++      '« Commencer le tour », et le chrono compte le −10 s', () async {
++    final p = await givenGame(2,
++        fiesta: stock(['minus_10s', 'block_guesser', 'free_pass']));
++    final b = p.teams[1];
++    p.inflictMalus('minus_10s', b.playerIds[0]);
++    p.inflictMalus('block_guesser', b.playerIds[1]);
++    playTurn(p, 0);
++
++    // Avant-tour de B (J3 fait deviner).
++    expect(p.getCurrentPlayer()!.id, b.playerIds[0]);
++    expect(p.receivedThisTurn, isEmpty);
++    expect(p.currentTeamModifiers, isEmpty);
++    expect(p.blockedGuesser, isNull);
++    expect(p.turnTime.total, p.settings.turnDuration);
++    expect(p.reserve.every((c) => c.blockedReason == null), isTrue);
++
++    p.startTurn();
++    expect(p.game.currentScreen, AppConstants.screenTurnReveal);
++    expect(p.receivedThisTurn.map((m) => m.catalogId),
++        ['minus_10s', 'block_guesser']);
++    expect(p.blockedGuesser!.id, b.playerIds[1]);
++
++    p.leaveTurnReveal();
++    expect(p.game.currentScreen, AppConstants.screenCountdown);
++    p.startTurnTimer();
++    expect(allotted(p), p.settings.turnDuration - 10);
++  });
++
++  test(
++      '« Ce qui t\'attend » seulement s\'il y a du nouveau, jamais pour le '
++      'joueur piégé, dont les autres malus attendent', () async {
++    final p = await givenGame(2, fiesta: stock(['block_giver', 'reversed']));
++    final b = p.teams[1];
++    // Rien de reçu : décompte direct.
++    p.startTurn();
++    expect(p.game.currentScreen, AppConstants.screenCountdown);
++    p.goToScreen(AppConstants.screenGame);
++
++    p.inflictMalus('block_giver', b.playerIds[0]);
++    p.inflictMalus('reversed', b.playerIds[0]);
++    playTurn(p, 0);
++
++    p.startTurn();
++    expect(p.game.currentScreen, AppConstants.screenCountdown,
++        reason: 'le joueur piégé ne voit pas « Ce qui t\'attend »');
++    p.startTurnTimer();
++    expect(p.game.currentScreen, AppConstants.screenGiverBlocked);
++    p.confirmGiverBlock();
++
++    // Le remplaçant n'a rien reçu ; « Mot à l'envers » attend J3.
++    expect(p.getCurrentPlayer()!.id, b.playerIds[1]);
++    p.startTurn();
++    expect(p.game.currentScreen, AppConstants.screenCountdown);
++    expect(
++        p.game.fiesta!.active.where(
++            (m) => m.catalogId == 'reversed' && m.playerId == b.playerIds[0]),
++        hasLength(1));
++  });
++
++  test('app tuée sur « Ce qui t\'attend » : elle y revient', () async {
++    final p = await givenGame(2, fiesta: stock(['reversed']));
++    p.inflictMalus('reversed', p.teams[1].playerIds[0]);
++    playTurn(p, 0);
++    p.startTurn();
++    expect(p.game.currentScreen, AppConstants.screenTurnReveal);
++
++    await pumpEventQueue();
++    final relu = GameProvider();
++    await pumpEventQueue();
++    expect(relu.game.currentScreen, AppConstants.screenTurnReveal);
++    expect(relu.receivedThisTurn.map((m) => m.catalogId), ['reversed']);
++  });
++}
+diff --git a/test/providers/fiesta_v4_test.dart b/test/providers/fiesta_v4_test.dart
+index 72c5ca1..b7877ed 100644
+--- a/test/providers/fiesta_v4_test.dart
++++ b/test/providers/fiesta_v4_test.dart
+@@ -351,6 +351,7 @@ void main() {
+       p.inflictMalus('block_guesser', target.playerIds[1]);
+       playEmptyTurn(p);
+       expect(player(p), 'J3');
++      p.startTurn();
+       expect(p.blockedGuesser?.name, 'J4');
+       playEmptyTurn(p);
+       playEmptyTurn(p);
+@@ -364,6 +365,7 @@ void main() {
+       p.inflictMalus('block_guesser', target.playerIds[0]);
+       playEmptyTurn(p);
+       expect(player(p), 'J3');
++      p.startTurn();
+       expect(p.blockedGuesser, isNull);
+       expect(p.currentTeamModifiers, isEmpty);
+       playEmptyTurn(p);
+@@ -371,6 +373,7 @@ void main() {
+           hasLength(1));
+       playEmptyTurn(p); // J1
+       expect(player(p), 'J4');
++      p.startTurn();
+       expect(p.blockedGuesser?.name, 'J3');
+     });
+   });
+@@ -486,6 +489,7 @@ void main() {
+       expect(p.inflictMalus('reversed', p.teams[1].playerIds[1]), isNull);
+       playEmptyTurn(p); // J0
+       expect(player(p), 'J3');
++      p.startTurn();
+       expect(p.isWordReversed, isFalse, reason: 'J3 n\'est pas visé');
+       playEmptyTurn(p);
+       expect(pending(p), ['reversed'], reason: 'il attend J4');
+@@ -493,6 +497,7 @@ void main() {
+       p.nextRound();
+       playEmptyTurn(p); // continuation de J1
+       expect([player(p), p.game.currentRound], ['J4', 2]);
++      p.startTurn();
+       expect(p.isWordReversed, isTrue);
+       playEmptyTurn(p);
+       expect(pending(p), isEmpty, reason: 'consommé à la fin de son tour');
+@@ -514,6 +519,7 @@ void main() {
+       p.startTurnTimer();
+       p.confirmGiverBlock();
+       expect(player(p), 'J5');
++      p.startTurn();
+       expect(p.isWordReversed, isFalse);
+       playEmptyTurn(p);
+       expect(pending(p), ['reversed']);
+@@ -521,6 +527,7 @@ void main() {
+       playEmptyTurn(p); // J3
+       playEmptyTurn(p); // J0
+       expect(player(p), 'J4');
++      p.startTurn();
+       expect(p.isWordReversed, isTrue);
+       playEmptyTurn(p);
+       expect(pending(p), isEmpty);
+@@ -543,6 +550,7 @@ void main() {
+             'Déjà Mot à l\'envers dans son équipe');
+       }
+       expect(player(p), 'J3');
++      p.startTurn();
+       expect(p.isWordReversed, isTrue);
+       playEmptyTurn(p);
+       expect(pending(p), isEmpty);
+diff --git a/test/providers/turn_time_fiesta_test.dart b/test/providers/turn_time_fiesta_test.dart
+index 4dc2c64..5c95fd8 100644
+--- a/test/providers/turn_time_fiesta_test.dart
++++ b/test/providers/turn_time_fiesta_test.dart
+@@ -145,12 +145,13 @@ void main() {
+     provider.savePreValidationState(const []);
+     provider.validateWords(const []);
+ 
+-    // Le −10 s reçu tombe sur le premier tour de l'autre équipe : 30 − 10.
++    // Le −10 s reçu tombe sur le premier tour de l'autre équipe : caché sur
++    // son avant-tour (l'aperçu dit 30), révélé au lancement : 30 − 10.
+     expect(provider.getCurrentTeam()!.id, other);
++    expect(provider.turnTime.total, 30);
++    provider.startTurn();
+     expect(provider.turnTime.total, 20);
+     expect(provider.turnTime.lines.map((l) => l.seconds), [30, -10]);
+-    provider.startTurn();
+-    expect(provider.game.timeRemaining, 20);
+     provider.startTurnTimer();
+     expect(allotted(provider), 20);
+ 
+diff --git a/test/providers/zero_carryover_turn_test.dart b/test/providers/zero_carryover_turn_test.dart
+index 793959a..3fee37c 100644
+--- a/test/providers/zero_carryover_turn_test.dart
++++ b/test/providers/zero_carryover_turn_test.dart
+@@ -315,8 +315,8 @@ void main() {
+ 
+       // A : ×2 et malus reçu, la manche finit à 0 s sur le chrono.
+       p.toggleBonus('double_points');
+-      expect(p.passBlocked, isTrue);
+       start(p);
++      expect(p.passBlocked, isTrue);
+       final before = p.teams[0].score;
+       final mots = p.game.remainingWords.length;
+       finishAtBuzzer(p);
+diff --git a/test/screens/preturn_help_test.dart b/test/screens/preturn_help_test.dart
+index e8ebb29..b5c8feb 100644
+--- a/test/screens/preturn_help_test.dart
++++ b/test/screens/preturn_help_test.dart
+@@ -119,7 +119,8 @@ void main() {
+         [_thisTurn, _armed, _bonus, _malus, _dimmed, _sent]);
+   });
+ 
+-  testWidgets('malus reçu : son étape', (tester) async {
++  testWidgets('malus reçu : caché sur l\'avant-tour, aide comprise',
++      (tester) async {
+     final provider = await pumpGame(tester, FiestaRules(drawCount: 0));
+     final saved = (await tester.runAsync(StorageService().loadGameState))!;
+     ((saved['game']['fiesta'] as Map)['active'] ??= []).add(ModifierInstance(
+@@ -135,8 +136,8 @@ void main() {
+     ).toJson());
+     await tester.runAsync(() => StorageService().saveGameState(saved));
+     final reloaded = await pumpGameFrom(tester);
+-    expect(reloaded.receivedThisTurn, isNotEmpty);
+-    expect(await fiestaSteps(tester), [_thisTurn, _received]);
++    expect(reloaded.receivedThisTurn, isEmpty);
++    expect(await fiestaSteps(tester), isNot(contains(_received)));
+   });
+ 
+   testWidgets('temps reporté : son étape, en Classique aussi', (tester) async {
+diff --git a/test/widgets/help_conditional_test.dart b/test/widgets/help_conditional_test.dart
+index fea4c65..5255ed6 100644
+--- a/test/widgets/help_conditional_test.dart
++++ b/test/widgets/help_conditional_test.dart
+@@ -137,8 +137,8 @@ void main() {
+     });
+ 
+     testWidgets(
+-        'Joueur bloqué : étape avant le tour ; pendant, sa pastille le nomme',
+-        (tester) async {
++        'Joueur bloqué : caché avant le tour, aide comprise ; pendant, sa '
++        'pastille le nomme', (tester) async {
+       final provider = await pumpApp(tester, AppConstants.screenHome,
+           names: ['Ana', 'Bob', 'Cid', 'Dan', 'Eve', 'Fay']);
+       await tester.runAsync(
+@@ -148,13 +148,14 @@ void main() {
+       // de celui qui joue, jamais lui, que le blocage attendrait au tour suivant.
+       final team = provider.getCurrentTeam()!;
+       final giver = provider.getCurrentPlayer()!.id;
++      final blockedId = team.playerIds.firstWhere((id) => id != giver);
+       final saved = (await tester.runAsync(StorageService().loadGameState))!;
+       ((saved['game']['fiesta'] as Map)['active'] ??= []).add(ModifierInstance(
+         catalogId: 'block_guesser',
+         scope: ModifierScope.turn,
+         target: ModifierTarget.player,
+         teamId: team.id,
+-        playerId: team.playerIds.firstWhere((id) => id != giver),
++        playerId: blockedId,
+         charges: 1,
+         nature: ModifierNature.malus,
+         round: provider.game.currentRound,
+@@ -172,8 +173,9 @@ void main() {
+       for (var i = 0; i < 30; i++) {
+         await tester.pump(const Duration(milliseconds: 100));
+       }
+-      final blocked = reloaded.blockedGuesser!;
+-      expect(await walkHelp(tester), contains('Joueur bloqué'));
++      expect(reloaded.blockedGuesser, isNull);
++      expect(await walkHelp(tester), isNot(contains('Joueur bloqué')));
++      final blocked = reloaded.getPlayerById(blockedId)!;
+ 
+       reloaded.startTurn();
+       reloaded.startTurnTimer();

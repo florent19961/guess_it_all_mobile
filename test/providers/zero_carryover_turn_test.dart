@@ -315,8 +315,8 @@ void main() {
 
       // A : ×2 et malus reçu, la manche finit à 0 s sur le chrono.
       p.toggleBonus('double_points');
-      expect(p.passBlocked, isTrue);
       start(p);
+      expect(p.passBlocked, isTrue);
       final before = p.teams[0].score;
       final mots = p.game.remainingWords.length;
       finishAtBuzzer(p);

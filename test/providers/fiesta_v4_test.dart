@@ -351,6 +351,7 @@ void main() {
       p.inflictMalus('block_guesser', target.playerIds[1]);
       playEmptyTurn(p);
       expect(player(p), 'J3');
+      p.startTurn();
       expect(p.blockedGuesser?.name, 'J4');
       playEmptyTurn(p);
       playEmptyTurn(p);
@@ -364,6 +365,7 @@ void main() {
       p.inflictMalus('block_guesser', target.playerIds[0]);
       playEmptyTurn(p);
       expect(player(p), 'J3');
+      p.startTurn();
       expect(p.blockedGuesser, isNull);
       expect(p.currentTeamModifiers, isEmpty);
       playEmptyTurn(p);
@@ -371,6 +373,7 @@ void main() {
           hasLength(1));
       playEmptyTurn(p); // J1
       expect(player(p), 'J4');
+      p.startTurn();
       expect(p.blockedGuesser?.name, 'J3');
     });
   });
@@ -486,6 +489,7 @@ void main() {
       expect(p.inflictMalus('reversed', p.teams[1].playerIds[1]), isNull);
       playEmptyTurn(p); // J0
       expect(player(p), 'J3');
+      p.startTurn();
       expect(p.isWordReversed, isFalse, reason: 'J3 n\'est pas visé');
       playEmptyTurn(p);
       expect(pending(p), ['reversed'], reason: 'il attend J4');
@@ -493,6 +497,7 @@ void main() {
       p.nextRound();
       playEmptyTurn(p); // continuation de J1
       expect([player(p), p.game.currentRound], ['J4', 2]);
+      p.startTurn();
       expect(p.isWordReversed, isTrue);
       playEmptyTurn(p);
       expect(pending(p), isEmpty, reason: 'consommé à la fin de son tour');
@@ -514,6 +519,7 @@ void main() {
       p.startTurnTimer();
       p.confirmGiverBlock();
       expect(player(p), 'J5');
+      p.startTurn();
       expect(p.isWordReversed, isFalse);
       playEmptyTurn(p);
       expect(pending(p), ['reversed']);
@@ -521,6 +527,7 @@ void main() {
       playEmptyTurn(p); // J3
       playEmptyTurn(p); // J0
       expect(player(p), 'J4');
+      p.startTurn();
       expect(p.isWordReversed, isTrue);
       playEmptyTurn(p);
       expect(pending(p), isEmpty);
@@ -543,6 +550,7 @@ void main() {
             'Déjà Mot à l\'envers dans son équipe');
       }
       expect(player(p), 'J3');
+      p.startTurn();
       expect(p.isWordReversed, isTrue);
       playEmptyTurn(p);
       expect(pending(p), isEmpty);

@@ -103,7 +103,8 @@ void main() {
       expect(m3, isNot(contains('other_language')));
       final underNoPass = pool(FiestaRules(), roundRules: [rule('no_pass')]);
       expect(underNoPass, isNot(contains('no_pass')));
-      expect(underNoPass, isNot(contains('free_pass')));
+      expect(underNoPass, contains('free_pass'),
+          reason: 'une passe gratuite, puis Passer bloqué');
       final underSheet = pool(FiestaRules(),
           nextRound: 3, roundRules: [rule('mime_under_sheet', round: 3)]);
       expect(underSheet, contains('sounds_only'));

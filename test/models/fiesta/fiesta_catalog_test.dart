@@ -41,12 +41,6 @@ void main() {
         'plus_10s',
         'block_giver',
       ]);
-
-      for (final (a, b) in kModifierIncompatibilities) {
-        expect(modifierById(a), isNotNull, reason: '$a hors catalogue');
-        expect(modifierById(b), isNotNull, reason: '$b hors catalogue');
-        expect(a, isNot(b));
-      }
     });
 
     test('areCompatible est symétrique sur toutes les paires', () {
@@ -56,8 +50,8 @@ void main() {
           expect(areCompatible(a, b), areCompatible(b, a), reason: '$a / $b');
         }
       }
-      expect(areCompatible('no_pass', 'free_pass'), isFalse);
-      expect(areCompatible('free_pass', 'no_pass'), isFalse);
+      // Interdit de passer + Passe gratuite : une passe, puis bloqué.
+      expect(areCompatible('no_pass', 'free_pass'), isTrue);
       // Famille « Mime » (« Dessiner » compris) : deux membres s'excluent
       // toujours ; hors famille, les mimes ne gênent personne.
       final family = kModifierCatalog.where((d) => d.mimeFamily).toList();
@@ -106,10 +100,12 @@ void main() {
     test(
         'une instance pour tous compte pour chaque équipe, compatibilité '
         'comprise', () {
-      final active = [_instance('no_pass')];
+      final active = [_instance('draw')];
       expect(
-          canAdd(active,
-              _instance('free_pass', target: ModifierTarget.team, teamId: 'B')),
+          canAdd(
+              active,
+              _instance('mime_no_arms',
+                  target: ModifierTarget.team, teamId: 'B')),
           isFalse);
       expect(
           canAdd(active,
@@ -118,9 +114,9 @@ void main() {
     });
 
     test('refuse une instance incompatible avec une instance active', () {
-      expect(canAdd([_instance('no_pass')], _instance('free_pass')), isFalse);
-      expect(canAdd([_instance('free_pass')], _instance('no_pass')), isFalse);
-      expect(canAdd([_instance('no_pass')], _instance('reversed')), isTrue);
+      expect(canAdd([_instance('draw')], _instance('mime_no_arms')), isFalse);
+      expect(canAdd([_instance('mime_no_arms')], _instance('draw')), isFalse);
+      expect(canAdd([_instance('draw')], _instance('reversed')), isTrue);
     });
   });
 }
