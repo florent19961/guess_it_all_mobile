@@ -111,8 +111,7 @@ void main() {
       }
     });
 
-    test(
-        'Interdit de passer en Toujours ne verrouille plus Passe gratuite',
+    test('Interdit de passer en Toujours ne verrouille plus Passe gratuite',
         () {
       final rules = FiestaRules(modifiers: const {
         'no_pass': ModifierSetting(always: true),

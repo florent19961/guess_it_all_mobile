@@ -66,8 +66,8 @@ void main() {
     p.startTurn();
     expect(p.game.currentScreen, AppConstants.screenCountdown);
     expect(
-        p.game.fiesta!.active.where((m) =>
-            m.catalogId == 'reversed' && m.playerId == b.playerIds[0]),
+        p.game.fiesta!.active.where(
+            (m) => m.catalogId == 'reversed' && m.playerId == b.playerIds[0]),
         hasLength(1));
   });
 

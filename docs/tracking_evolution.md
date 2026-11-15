@@ -1515,3 +1515,24 @@ additif. 🔴 Un malus en attente écrit par la 1.4.0 sans `playerId` (hors bloc
 prochain tour de l'équipe (test de relecture dans `test/providers/fiesta_v4_test.dart`) ; il grise tous les prénoms
 de son équipe. Arbitrage : « Bloquer un devineur » reste un par équipe en attente, sinon le second tomberait le même
 tour et serait perdu en silence.
+
+## 2026-11-15 — Fiesta : malus reçus cachés jusqu'au lancement, « Ce qui t'attend » (L-CACHE)
+
+**Quoi.** L'avant-tour n'affiche plus les malus reçus par le joueur qui va jouer : `GameProvider.currentTeamModifiers`
+les retire tant que l'écran est l'avant-tour (`screenGame`) d'un tour pas encore lancé. Tout ce que l'avant-tour lit
+passe par là : zone « Actif », aperçu de la durée (le −10 s n'y figure plus), ligne « X ne répond pas », grisés, aide.
+« Commencer le tour » mène, quand un malus reçu joue à ce tour, au nouvel écran « Ce qui t'attend »
+(`turn_reveal_screen.dart`, persisté sous `turnReveal`) : « On vient de t'infliger » (icône, nom, « Prénom · Équipe »),
+« Déjà activé » (règles de la manche, bonus), « C'est parti » → décompte. Sinon, décompte direct. Le joueur piégé par
+« Interdit de faire deviner » va au décompte puis au piège, jamais sur cet écran. « Interdit de passer » et
+« Passe gratuite » ne s'excluent plus (`kModifierIncompatibilities` retirée, verrou de l'éditeur retiré) : une passe
+gratuite, puis Passer bloqué (`passBlocked` = `no_pass` sans passe gratuite restante).
+
+**Pourquoi.** Retours de recette de Florent du 2026-11-15 (spec §D2) : armer ses bonus sans savoir ce qu'on va subir.
+Cacher à la source (un getter) plutôt qu'écran par écran : rien ne peut fuir par un lecteur oublié.
+
+**Conséquence.** Le chrono, lancé du décompte, compte le −10 s ; seul l'aperçu de l'avant-tour l'ignore. Une
+continuation de fin de manche a déjà été lancée : ses malus reçus restent visibles et elle n'a pas d'écran de
+révélation. Une app tuée sur « Ce qui t'attend » y revient (valeur d'écran ajoutée, additive). Le vivier des
+cartouches au hasard et les défis n'excluent plus Passe gratuite sous « Interdit de passer » : tirages recalculés des
+parties suspendues sous cette règle différents (rien de persisté n'est re-dérivé).

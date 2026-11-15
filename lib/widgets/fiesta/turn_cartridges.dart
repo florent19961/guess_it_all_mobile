@@ -13,8 +13,8 @@ import '../help/help_content.dart';
 import 'modifier_badge.dart';
 
 /// Écran avant le tour, Fiesta v2 (maquette `cartouches` B, variante a) :
-/// zone « ACTIF PENDANT VOTRE PROCHAIN TOUR » (règles de manche, malus reçus,
-/// bonus allumés) puis « VOTRE RÉSERVE » (mes cartouches, bonus / malus). Toucher = activer ou
+/// zone « ACTIF PENDANT VOTRE PROCHAIN TOUR » (règles de manche, malus reçus
+/// sur une continuation seulement, cachés sinon, bonus allumés) puis « VOTRE RÉSERVE » (mes cartouches, bonus / malus). Toucher = activer ou
 /// infliger ; appui long = explication. La taille des cercles s'adapte à la
 /// place ([_fit]) ; un cas extrême qui ne tient toujours pas défile.
 class FiestaTurnZone extends StatefulWidget {

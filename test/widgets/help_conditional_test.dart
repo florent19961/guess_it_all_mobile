@@ -138,8 +138,7 @@ void main() {
 
     testWidgets(
         'Joueur bloqué : caché avant le tour, aide comprise ; pendant, sa '
-        'pastille le nomme',
-        (tester) async {
+        'pastille le nomme', (tester) async {
       final provider = await pumpApp(tester, AppConstants.screenHome,
           names: ['Ana', 'Bob', 'Cid', 'Dan', 'Eve', 'Fay']);
       await tester.runAsync(

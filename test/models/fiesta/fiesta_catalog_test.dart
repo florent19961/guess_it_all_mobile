@@ -41,7 +41,6 @@ void main() {
         'plus_10s',
         'block_giver',
       ]);
-
     });
 
     test('areCompatible est symétrique sur toutes les paires', () {
@@ -103,8 +102,10 @@ void main() {
         'comprise', () {
       final active = [_instance('draw')];
       expect(
-          canAdd(active,
-              _instance('mime_no_arms', target: ModifierTarget.team, teamId: 'B')),
+          canAdd(
+              active,
+              _instance('mime_no_arms',
+                  target: ModifierTarget.team, teamId: 'B')),
           isFalse);
       expect(
           canAdd(active,
