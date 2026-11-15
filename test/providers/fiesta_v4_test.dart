@@ -537,6 +537,11 @@ void main() {
       final active = (json['fiesta'] as Map)['active'] as List;
       expect((active.single as Map).remove('playerId'), isNotNull);
       restore(p, json);
+      // Il grise tous les prénoms de son équipe, pas seulement J4.
+      for (final id in p.teams[1].playerIds) {
+        expect(p.targetRefusal('reversed', id),
+            'Déjà Mot à l\'envers dans son équipe');
+      }
       expect(player(p), 'J3');
       expect(p.isWordReversed, isTrue);
       playEmptyTurn(p);
