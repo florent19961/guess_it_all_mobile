@@ -173,9 +173,11 @@ workflow tourne encore, n'a pas été lancé ou a échoué : seul Florent le voi
 explicite de Florent. JWT identique à la lecture, requêtes JSON:API sur `https://api.appstoreconnect.apple.com` :
 
 1. **Build prêt** : `asc.py builds` → `X.Y.Z+N` en `VALID`.
-2. **Chiffrement** : un build arrive avec `usesNonExemptEncryption: null` (la clé `ITSAppUsesNonExemptEncryption`
-   manque dans `ios/Runner/Info.plist`). Tous les builds ont été déclarés `false` (HTTPS standard seulement) :
-   `PATCH /v1/builds/{id}` `{"usesNonExemptEncryption": false}`.
+2. **Chiffrement** : depuis la version qui suit la 1.5.0, `ios/Runner/Info.plist` déclare
+   `ITSAppUsesNonExemptEncryption = false` (HTTPS standard seulement) et le build arrive déjà renseigné. Builds
+   ≤ 1.5.0+14 : ils arrivaient en `null` et ont été déclarés `false` à la main par
+   `PATCH /v1/builds/{id}` `{"usesNonExemptEncryption": false}` (sans cette réponse, la soumission en revue bêta
+   TestFlight échoue en 422 « missing export compliance »).
 3. **Rattacher** : `PATCH /v1/appStoreVersions/{version}/relationships/build` `{"data": {"type": "builds", "id": …}}` (204).
 4. **Textes** : `PATCH /v1/appStoreVersionLocalizations/{loc}` `{"whatsNew": …, "promotionalText": …}` (fiche
    `fr-FR` seulement). Localisations : `GET /v1/appStoreVersions/{version}/appStoreVersionLocalizations`.
