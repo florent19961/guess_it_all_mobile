@@ -144,9 +144,7 @@ class FiestaRules {
   /// Verrouillé = réglages gardés, mais sans effet en partie :
   /// - en « Toujours », un modificateur l'est dans les 2 autres menus ;
   /// - un mime en « Toujours » y verrouille les autres mimes, partout, sauf la
-  ///   paire Bruitages / drap ;
-  /// - « Interdit de passer » en « Toujours » verrouille Passe gratuite en
-  ///   cartouche, qui ne servirait jamais.
+  ///   paire Bruitages / drap.
   String? lockReason(String id, EnsembleMenu menu) {
     if (menu != EnsembleMenu.always && isAlways(id)) return 'Actif en Toujours';
     final def = modifierById(id);
@@ -159,11 +157,6 @@ class FiestaRules {
           return '${other.name} est en Toujours';
         }
       }
-    }
-    if (menu == EnsembleMenu.cartridge &&
-        isAlways('no_pass') &&
-        !areCompatible('no_pass', id)) {
-      return '${modifierById('no_pass')!.name} est en Toujours';
     }
     return null;
   }

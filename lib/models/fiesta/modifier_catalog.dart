@@ -237,13 +237,6 @@ const Set<String> kCartridgeOnlyIds = {
   'minus_10s',
 };
 
-/// Paires incompatibles (Q14 de l'epic). Chaque paire est écrite une fois :
-/// [areCompatible] est symétrique par construction. La famille « Mime » n'y
-/// figure pas : c'est une règle de groupe (`mimeFamily`).
-const List<(String, String)> kModifierIncompatibilities = [
-  ('no_pass', 'free_pass'),
-];
-
 /// Seule paire de mimes compatible, dans toutes les combinaisons.
 bool _isSoundsSheetPair(String a, String b) =>
     (a == 'sounds_only' && b == 'mime_under_sheet') ||
@@ -269,14 +262,12 @@ ModifierDef? modifierById(String id) {
 
 /// Deux membres de la famille « Mime » (`mimeFamily`, « Dessiner » compris)
 /// s'excluent (retours device 2026-11-04), sauf la paire Bruitages / drap : un
-/// membre ajouté au catalogue l'est d'office.
+/// membre ajouté au catalogue l'est d'office. Hors famille, tout se cumule :
+/// « Interdit de passer » + « Passe gratuite » = une passe gratuite, puis
+/// Passer bloqué (2026-11-15).
 bool areCompatible(String a, String b) {
   bool family(String id) => modifierById(id)?.mimeFamily ?? false;
-  if (family(a) && family(b)) return _isSoundsSheetPair(a, b);
-  for (final (x, y) in kModifierIncompatibilities) {
-    if ((x == a && y == b) || (x == b && y == a)) return false;
-  }
-  return true;
+  return !(family(a) && family(b)) || _isSoundsSheetPair(a, b);
 }
 
 /// Retrouve une valeur d'enum par son `name` sérialisé, `null` si inconnue.

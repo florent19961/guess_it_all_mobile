@@ -634,8 +634,9 @@ List<CoachStep> fiestaPreTurnHelp(FiestaPreTurnKeys keys) => [
       CoachStep(
         target: keys.thisTurn,
         title: 'Actif pendant votre prochain tour',
-        text: 'Tout ce qui s\'applique à ton tour. Appui long sur un cercle '
-            'pour l\'explication.',
+        text: 'Les règles de la manche et tes bonus activés. Un malus reçu '
+            'se découvre au lancement du tour. Appui long sur un cercle pour '
+            'l\'explication.',
       ),
       CoachStep(
         target: keys.firstRule,
