@@ -1475,3 +1475,22 @@ l'icône ; l'outil l'ignore à chaque régénération.
 **Conséquence.** Après chaque `dart run flutter_native_splash:create`, revenir sur `values-v31/styles.xml` et
 `values-night-v31/styles.xml` (retirer `windowSplashScreenBackground` et `windowSplashScreenAnimatedIcon`). L'icône
 512 de la fiche Play est hors dépôt (Florent).
+
+## 2026-11-15 — Le ×2 au hasard seulement pour une équipe menée de plus de 10 points
+
+**Quoi.** « Mot compte double » n'entre dans le vivier du hasard (`giftPool`) que d'une équipe menée
+par le leader de plus de 10 points (`kDoublePointsMinGap`, écart strict, fixe quelle que soit la
+taille de la partie) ; jamais pour le leader, donc jamais au lancement. Vaut pour les cartouches au
+hasard de début de manche et le prix des défis surprises (écart de l'équipe qui reçoit). Le poids
+réduit du ×2 disparaît : toutes les cartouches ont la même chance (`drawGift`, ex-`drawWeightedGift`,
+`kGiftWeights` retiré). L'écart se calcule par `leaderGap`, depuis le meilleur score réel (négatif
+compris). Les cartouches fixées d'un ensemble ne changent pas.
+
+**Pourquoi.** Retour de recette de Florent (spec `retours-2026-11-15.md`, D3) : le ×2 pèse lourd au
+score, il doit servir à revenir, pas à creuser l'écart. `leaderGap` et le paramètre `gap` de
+`giftPool` sont exposés pour les cartouches qui tombent (L-TOMBE).
+
+**Conséquence.** Rien de persisté ne change. Les tirages recalculés (prix d'un défi, passage de
+manche replanifié) d'une partie en cours au moment de la mise à jour peuvent donner d'autres
+cartouches, sans crash. Le nombre de cartouches d'« Aux équipes menées » / « Équilibrer » garde son
+calcul d'écart (base 0) : inchangé.
