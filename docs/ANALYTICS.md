@@ -44,7 +44,8 @@ class WordEvent {
 **`modifiers` (Fiesta, story 2-7)** : ids du catalogue (`minus_10s`, `no_pass`...) actifs pour
 l'equipe qui joue quand l'evenement a lieu. Cle **absente** (pas `null`) en Classique et sur les
 evenements ecrits avant 2-7 ; `[]` = Fiesta sans modificateur ce tour. Un id peut apparaitre deux
-fois (deux instances cumulees). Rien n'est exclu des stats : `computeStats` et la difficulte
+fois (deux instances cumulees). Une cartouche tombee du ciel (D4, 2026-11-15) y figure comme
+un bonus depense ou un malus du tour, une seule fois. Rien n'est exclu des stats : `computeStats` et la difficulte
 initiale du mot sont inchanges.
 
 **Contexte de l'evenement** (`round`, `turn`, `teamId`, `playerId`, `modifiers`) : le provider le

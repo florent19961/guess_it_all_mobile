@@ -57,8 +57,9 @@ class FiestaTutorialScreen extends StatelessWidget {
             TutorialRow(
                 '4',
                 'Cartouches au hasard',
-                'Selon l\'ensemble : à chaque manche, ou pour les équipes '
-                    'menées après les manches 1 et 2.'),
+                'Selon l\'ensemble : à chaque manche, pour les équipes '
+                    'menées après les manches 1 et 2, ou tombées au début '
+                    'd\'un tour, appliquées tout de suite.'),
             TutorialRow(
                 '5',
                 'Défis surprises',

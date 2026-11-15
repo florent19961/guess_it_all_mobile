@@ -1573,3 +1573,25 @@ contient des tirets, ce qui est le cas de tous les worktrees `guess-it-all-*`. �
 **Conséquence.** Suite complète : 606 tests en 151 s (format, analyze et tests compris), machine chargée par une autre
 lane. Aucun test touché.
 
+## 2026-11-15 — Cartouches qui tombent : branchement en partie (L-TOMBE)
+
+**Quoi.** `startTurn` tire la cartouche du tour (`_drawDrop` → `dropForTurn`, entrées réelles : malus reçus qui
+jouent lus avant le masquage de l'avant-tour, bonus armés, écart au leader, `skips` de l'équipe) AVANT de choisir
+entre « Ce qui t'attend » et le décompte, et la garde dans `FiestaTurnState.drop` (clé `drop: {catalogId,
+blockedPlayer?}`, omise si nulle, illisible = perdue seule). Elle part à la vraie fin du tour avec le reste de
+`turn` ; une continuation la garde et n'en tire pas. Effets : un bonus tombé joue comme une charge dépensée
+(`_charge`, donc ×2, passe gratuite, +10 s, badges, `WordEvent.modifiers`) SANS `ChargeUse` ; un malus tombé
+s'ajoute aux effets du tour après les malus reçus (`droppedMalus`, perdu comme eux s'il n'a plus de sens en N+1) ;
+« Interdit de faire deviner » tombé passe par le piège actuel, phrase propre (« Une cartouche est tombée du ciel,
+X : tu ne joues pas ce tour. »). « Ce qui t'attend » : ligne « Tombée du ciel » (jaune) en tête de « On vient de
+t'infliger ». Tutoriel Fiesta : la ligne « Cartouches au hasard » cite les cartouches tombées.
+
+**Pourquoi.** Spec D4. Stocker plutôt que recalculer : les entrées du tirage bougent dans le tour (charges
+dépensées, scores), et la cartouche doit survivre à une app tuée et au retour arrière. Un bonus tombé n'écrit pas
+dans `charges` : la dépense au départ du chrono y ajouterait un `ChargeUse`, qui retire du stock et pose un badge
+de statistiques. Pas de genre de fait « tombé » dans le récap archivé (`GameResult`) : aucun écran ne l'affiche,
+et la cartouche n'est pas gardée après son tour (il faudrait persister une liste de plus).
+
+**Conséquence.** Une cartouche tombée ne laisse aucune trace après son tour, hors analytics (`modifiers` des
+événements) et points ×2 de l'historique : pas de badge dans « Évolution des scores ». Champ additif, lu par
+`readOr` implicite (absent = rien de tombé) : une partie 1.4.0 se relit telle quelle.
