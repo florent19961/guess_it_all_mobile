@@ -1,0 +1,672 @@
+diff --git a/docs/tracking_evolution.md b/docs/tracking_evolution.md
+index 341256b..a223dc1 100644
+--- a/docs/tracking_evolution.md
++++ b/docs/tracking_evolution.md
+@@ -1494,3 +1494,22 @@ score, il doit servir à revenir, pas à creuser l'écart. `leaderGap` et le par
+ manche replanifié) d'une partie en cours au moment de la mise à jour peuvent donner d'autres
+ cartouches, sans crash. Le nombre de cartouches d'« Aux équipes menées » / « Équilibrer » garde son
+ calcul d'écart (base 0) : inchangé.
++
++## 2026-11-15 — Cartouches qui tombent pendant les tours : réglage et tirage pur
++
++**Quoi.** Nouveau réglage d'ensemble « Qui tombent pendant les tours » (`FiestaRules.dropFrequency`,
++enum `DropFrequency` Jamais / Rarement / Parfois / Souvent, chances 1/6, 1/4, 1/2), dans le cadre
++« Au hasard » de l'onglet Cartouches de l'éditeur. Clé JSON `dropFrequency` = index du cran, omise à
++Jamais, absente = Jamais, `format` inchangé (4). Il compte dans `settingsKey` (hors Jamais),
++`hasActiveSetting`, le résumé, les pastilles et la page « Voir ». Nouvelle fonction pure
++`dropForTurn` (`cartridge_drop.dart`) : la cartouche qui tombe sur un tour, déterministe par
++`(gameId, tour, joueur)`, vivier = celui des cartouches au hasard moins ce qui double le tour.
++
++**Pourquoi.** Retours de recette de Florent (spec `retours-2026-11-15.md`, D4). Le modèle et
++l'éditeur passent avant le branchement en partie, qui attend l'écran « Ce qui t'attend » (L-CACHE) :
++`game_provider.dart` est tenu par une autre lane. Index plutôt que nom : même régime que les
++compteurs (hors bornes = illisible), et l'ordre des crans est figé.
++
++**Conséquence.** Tant que le branchement n'est pas mergé, un ensemble réglé hors Jamais n'a aucun
++effet en partie. Les ensembles et parties écrits par la 1.4.0 se relisent à Jamais ; aucun ensemble
++fourni ne change.
+diff --git a/lib/models/CLAUDE.md b/lib/models/CLAUDE.md
+index 603686b..2d32b85 100644
+--- a/lib/models/CLAUDE.md
++++ b/lib/models/CLAUDE.md
+@@ -19,7 +19,7 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `category_metadata.dart` | `CategoryMetadata` | Metadonnees categorie multilingue (id, icon, noms, locales) |
+ | `fiesta/modifier_catalog.dart` | `ModifierDef`, `kModifierCatalog`, `kModifierIncompatibilities`, `kCartridgeOnlyIds`, enums `ModifierNature/Scope/Target` | Catalogue Fiesta (17 ids **figés**, du code, jamais persisté ; un ajout se fait **en fin de liste** : `one_answer`, `sounds_only`, `plus_10s`, puis `block_giver`), `modifierById` (répond aussi pour les retirés, liste privée `_kRetiredModifiers`, lecture seule : 🔴 `two_words` reste lisible et nommé dans l'historique, `earned`, `chargesUsed`, les règles gelées et les ensembles enregistrés, mais hors catalogue il n'est ni proposé, ni tiré, ni joué), `turnLabel` (mini-phrase de la pastille du tour ; `block_guesser` : à faire précéder du prénom ; `block_giver` : aucune), `areCompatible` (paires + règle de famille : deux membres `mimeFamily` s'excluent, sauf la paire `sounds_only` / `mime_under_sheet`, compatible dans toutes les combinaisons), `modifierDescription` (texte commun de cette paire quand les deux jouent). `round3Only` = manche 3 seulement (mime) ; `notInRound3` = jamais en manche 3 (« Faire deviner dans une autre langue »), lus par `isEligibleForRound` / `allowedRounds`. `kCartridgeOnlyIds` (tous les bonus, `minus_10s`, `block_guesser`, `block_giver`) : jamais règle de manche ; tout le reste existe dans les 3 menus, `one_answer` compris. 🔴 Tout ajout au catalogue change les tirages et cadeaux des parties suspendues (candidats mélangés par graine) : persister les tirages ou versionner le catalogue avant d'ajouter un modificateur une fois la Fiesta publiée |
+ | `fiesta/modifier_instance.dart` | `ModifierInstance` | Modificateur actif dans une partie : une règle de manche (cible `both`) ou un malus infligé. `tryFromJson` tolérant (id inconnu → `null`, jamais de défaut inventé). `canAdd(active, candidate)` : compatibilité seulement (plus de plafond). `fromTeamId` (clé `from`, omise si nul) : malus **infligé** par `fromTeamId` à `teamId`, portée tour : il pèse sur le PROCHAIN tour de la cible quelle que soit la manche, puis part à la vraie fin de ce tour. `playerId` : joueur nommé d'un blocage. `fromPlayerId` (`fromPlayer`) : joueur qui l'a envoyé (phrase du piège). `sentTurnIndex` (`sentTurn`) : tour d'envoi, seul cet avant-tour peut l'annuler. `waitsFor(giver)` : blocage sans effet sur ce tour (`block_giver` toujours, `block_guesser` si son joueur fait deviner). Les cartouches détenues ne sont PAS des instances : voir `FiestaState.cartridgesLeft` |
+-| `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, enum `EnsembleMenu` | Configuration Fiesta **immuable**, forme **v4** (`format: 4`). `ModifierSetting` = trois réglages INDÉPENDANTS `{always, draw, charges 0-5}`. `FiestaRules` = `{ensembleName?, modifiers, drawCount, trailingCount (0-5, `kMaxCount`), allCount (0-10, `kMaxAllCount`), balance}`. 🔴 `lockReason(id, menu)` : verrouillé = réglages gardés mais sans effet (Toujours sur les 2 autres menus ; mime en Toujours sur les autres mimes partout, sauf la paire ; `no_pass` en Toujours sur `free_pass` en cartouche). Le moteur lit `isAlways`, `drawsFrom`, `chargesOf`, qui l'appliquent ; jamais `settingOf` directement. `tryFromJson` : autre `format` ou compteur hors bornes → `null` ; réglage illisible, hors bornes ou d'id inconnu ignoré seul |
++| `fiesta/fiesta_rules.dart` | `FiestaRules`, `ModifierSetting`, enums `EnsembleMenu`, `DropFrequency` | Configuration Fiesta **immuable**, forme **v4** (`format: 4`). `ModifierSetting` = trois réglages INDÉPENDANTS `{always, draw, charges 0-5}`. `FiestaRules` = `{ensembleName?, modifiers, drawCount, trailingCount (0-5, `kMaxCount`), allCount (0-10, `kMaxAllCount`), balance, challenges?, dropFrequency?}`. `dropFrequency` (« Qui tombent pendant les tours », D4 du 2026-11-15) : enum `DropFrequency` Jamais / Rarement / Parfois / Souvent (chances `kDropChanceRarely` 1/6, `kDropChanceSometimes` 1/4, `kDropChanceOften` 1/2), persisté par son **index** (ordre FIGÉ) sous la clé `dropFrequency`, **omise à Jamais**, absente = Jamais (`readOr`) ; hors 0-3 ou mal typé → règles illisibles. `format` reste 4. 🔴 `lockReason(id, menu)` : verrouillé = réglages gardés mais sans effet (Toujours sur les 2 autres menus ; mime en Toujours sur les autres mimes partout, sauf la paire ; `no_pass` en Toujours sur `free_pass` en cartouche). Le moteur lit `isAlways`, `drawsFrom`, `chargesOf`, qui l'appliquent ; jamais `settingOf` directement. `tryFromJson` : autre `format` ou compteur hors bornes → `null` ; réglage illisible, hors bornes ou d'id inconnu ignoré seul |
+ | `fiesta/symmetric_draw.dart` | fonctions pures | Règles de manche : `alwaysForRound` (toutes les manches où il existe) puis `drawForRound` (`drawsFrom`, `drawCount` ; incompatibles sautés, **pas de plafond** ; frais d'abord, `spent` en complément), réunis par `roundModifiers(rules, gameId:, round:)`. 🔴 Sans remise sur la partie, sans état : `roundModifiers` recalcule les manches 1 à N-1 pour savoir ce qui est sorti ; un mime n'est pas consommé avant M3, un « Toujours » jamais ; quand un complément ressort un déjà sorti, le vivier est rempli et seul ce complément reste sorti. Graine `drawSeed(gameId, round)` (FNV-1a, stable, une par manche). `allowedRounds`, `canBeRoundRule` |
+ | `fiesta/fiesta_state.dart` | `FiestaState`, `ChargeUse`, `EarnedCartridge` | `GameState.fiesta` : `{rules, active, turn, chargesUsed, earned, skips}`. `turn` : `FiestaTurnState` typé (`turn_effects.dart`), vidé à la vraie fin du tour (continuation de fin de manche comprise dans le tour). `chargesUsed` (clé omise si vide) : cartouches dépensées `{catalogId, teamId, round, target?}`, toutes manches. `earned` (clé omise si vide) : cartouches au hasard `{catalogId, teamId, round}`, écrites par `startGame` (M1) et `nextRound` seulement. `skips` (clé omise si vide) : tours sautés par équipe, décalage de sa rotation. `withoutSent` : retire un malus et rend sa cartouche. 🔴 Stock d'une équipe = `cartridgesLeft` : charges de l'ensemble + gagnées − dépensées ; une seule source pour la réserve |
+ | `fiesta/modifier_recap.dart` | fonctions pures | `kFiestaModeId` (`fiesta_custom` ; les archives `fiesta_auto` restent lisibles), `buildModifierRecap` : récap « Modificateurs de la partie » en faits : tirage recalculé par la graine, cartouches au hasard (`earned`) et cartouches utilisées (`chargesUsed`) relues de l'état ; `formatModifierRecap` forme les lignes depuis les faits (`ModifierRecapLine`, jamais persistée) ; aucun écran ne les affiche depuis le retrait de la carte des Résultats, les faits restent archivés |
+@@ -30,9 +30,10 @@ Modeles de donnees immuables avec pattern `copyWith()` et serialisation JSON.
+ | `fiesta/surprise_challenge.dart` | enum `SurpriseChallenge`, `TurnPace`, fonctions pures | Les 5 défis (ordre figé). `trailingTeams`, `slowestPlayer` (critère jamais affiché), `drawChallengeSchedule`, `pickGuessedWord` : déterministes par `gameId`, sans état |
+ | `fiesta/challenge_plan.dart` | `ChallengePlan`, `ChallengeSide`, `planChallenge` | Le défi qui suit une manche, cartouches comprises (vivier `giftPool` à l'écart au leader de l'équipe qui reçoit, `drawGift`). Recalculé, jamais persisté ; `null` si réglage coupé, pas au programme, déjà terminé, vivier vide ou téléphone arabe sans mot |
+ | `fiesta/giver_block.dart` | fonctions pures | Le piège d'« Interdit de faire deviner » : les 8 phrases, `giverBlockPhrase`, `giverBlockSeed(gameId, tour)` déterministe |
+-| `fiesta/fiesta_ensemble.dart` | `FiestaEnsemble`, `kProvidedEnsembles`, `settingsKey`, `nameKey` | Ensemble `{id, rules}` (nom = `rules.ensembleName`). **8 ensembles fournis** (ids `provided_*`, `isProvided`, jamais écrits, seulement duplicables) : Fiesta classique (`kClassicEnsembleId`, présélectionné), Les derniers seront les premiers, Pro Player, Droit au but, Pictionnary, Bilingue, Explosif, Mimeur expert. Aucune règle cachée : tout s'écrit avec les réglages ouverts à tous. `settingsKey` : ce qui joue réellement, hors nom (doublons). `tryFromJson` refuse un id `provided_*` |
++| `fiesta/cartridge_drop.dart` | `CartridgeDrop`, `dropPool`, `dropForTurn`, `dropSeed` | Cartouches qui tombent (D4), fonctions pures, **pas encore appelées en partie** (branchement : lane suivante). Contrat de `dropForTurn` : `null` si `dropFrequency` à Jamais, tour de continuation, tirage manqué ou vivier vide ; sinon `CartridgeDrop(catalogId, blockedPlayerId?)` pour l'équipe qui joue, ce tour seulement. Graine `dropSeed(gameId, turnIndex, giverId)` (FNV-1a de `drawSeed`, chaîne `gameId#drop#giverId#turnIndex`) : une seule `Random`, d'abord la chance, puis la cartouche (`drawGift`), puis pour `block_guesser` le devineur bloqué parmi `guesserIds` (ordre de l'équipe). Le remplaçant d'un joueur qui saute son tour a donc son propre tirage. 🔴 Mêmes entrées, même sortie : l'appelant l'appelle à un moment fixe (après bonus armés et malus résolus) ou stocke le résultat (`FiestaTurnState`, clé optionnelle). Vivier `dropPool` = `giftPool` (hors Toujours, manche, règles de la manche, ×2 au-delà de `kDoublePointsMinGap`) moins identique/incompatible avec un malus `received` qui joue ce tour, identique à un bonus `armed` ; `block_guesser` si au moins 2 devineurs (équipe de 3+) ; `block_giver` permis |
++| `fiesta/fiesta_ensemble.dart` | `FiestaEnsemble`, `kProvidedEnsembles`, `settingsKey`, `nameKey` | Ensemble `{id, rules}` (nom = `rules.ensembleName`). **8 ensembles fournis** (ids `provided_*`, `isProvided`, jamais écrits, seulement duplicables) : Fiesta classique (`kClassicEnsembleId`, présélectionné), Les derniers seront les premiers, Pro Player, Droit au but, Pictionnary, Bilingue, Explosif, Mimeur expert. Aucune règle cachée : tout s'écrit avec les réglages ouverts à tous. `settingsKey` : ce qui joue réellement, hors nom (doublons) ; `dropFrequency` seulement hors Jamais (clés des ensembles existants inchangées). `tryFromJson` refuse un id `provided_*` |
+ | `fiesta/ensemble_summary.dart` | `ensembleSummary`, `rulesSummary`, `kProvidedSummaries`, `EnsembleChip`, `randomCartridgeLines`, `rulesDraw`, `rulesHaveCartridges` | Textes et pastilles de la liste. Fournis : à la main (test : chacun a le sien, mêmes règles que le moteur). Perso : générés depuis `FiestaRules`, jamais stockés ; seul ce qui joue compte. Libellés partagés avec la page « Voir » |
+-| `fiesta/ensemble_validation.dart` | `validateEnsemble`, `ensembleNameError`, `roundsWithoutDraw`, `hasActiveSetting` | Validation **pure** (messages FR) : nom vide / pris, au moins un réglage qui joue, `drawCount` > 0 sans candidat, doublon de réglages (`others`). `roundsWithoutDraw` : avertissement de l'éditeur, pas une erreur. Les combinaisons impossibles ne sont pas jugées : l'éditeur les verrouille, le moteur les écarte |
++| `fiesta/ensemble_validation.dart` | `validateEnsemble`, `ensembleNameError`, `roundsWithoutDraw`, `hasActiveSetting` | Validation **pure** (messages FR) : nom vide / pris, au moins un réglage qui joue (les cartouches qui tombent seules comptent), `drawCount` > 0 sans candidat, doublon de réglages (`others`). `roundsWithoutDraw` : avertissement de l'éditeur, pas une erreur. Les combinaisons impossibles ne sont pas jugées : l'éditeur les verrouille, le moteur les écarte |
+ 
+ ## Fiesta — invariants (epic-2)
+ 
+diff --git a/lib/models/fiesta/cartridge_drop.dart b/lib/models/fiesta/cartridge_drop.dart
+new file mode 100644
+index 0000000..bdb24b6
+--- /dev/null
++++ b/lib/models/fiesta/cartridge_drop.dart
+@@ -0,0 +1,108 @@
++import 'dart:math';
++
++import 'cartridge_gifts.dart';
++import 'fiesta_rules.dart';
++import 'modifier_catalog.dart';
++import 'modifier_instance.dart';
++import 'symmetric_draw.dart';
++
++/// Cartouches qui tombent pendant les tours (D4 des retours du 2026-11-15) :
++/// au début d'un tour joué, selon `FiestaRules.dropFrequency`, une cartouche au
++/// hasard tombe sur l'équipe qui joue, pour ce tour seulement, sans choix.
++///
++/// Tout est pur et DÉTERMINISTE par `(gameId, tour, joueur qui fait deviner)` :
++/// un retour arrière ou une app tuée retrouvent la même cartouche, et le
++/// remplaçant d'un joueur qui saute son tour a son propre tirage.
++
++/// La cartouche tombée sur un tour.
++class CartridgeDrop {
++  final String catalogId;
++
++  /// Devineur bloqué, seulement pour `block_guesser`.
++  final String? blockedPlayerId;
++
++  const CartridgeDrop(this.catalogId, {this.blockedPlayerId});
++}
++
++/// Graine d'un tour : chaîne `gameId#drop#giverId#turnIndex`, distincte de
++/// celles du tirage de manche et des cartouches au hasard ([drawSeed]).
++int dropSeed(String gameId, int turnIndex, String giverId) =>
++    drawSeed('$gameId#drop#$giverId', turnIndex);
++
++/// Vivier d'une cartouche qui tombe, dans l'ordre du catalogue : celui des
++/// cartouches au hasard ([giftPool] : hors Toujours, possible en manche
++/// [round], ni identique ni incompatible avec [roundRules], ×2 seulement au-delà
++/// de [kDoublePointsMinGap] d'écart [gap]), moins ce qui est identique ou
++/// incompatible avec un malus [received] qui joue ce tour, ou identique à un
++/// bonus [armed]. « Bloquer un devineur » seulement si l'équipe qui joue a au
++/// moins 3 joueurs (au moins 2 [guesserIds]).
++List<ModifierDef> dropPool({
++  required FiestaRules rules,
++  required int round,
++  required List<ModifierInstance> roundRules,
++  required Iterable<String> received,
++  required Iterable<String> armed,
++  required List<String> guesserIds,
++  required int gap,
++}) =>
++    [
++      // Pas d'équipe qui envoie : `block_guesser` passe ce filtre-là, la
++      // taille de l'équipe qui joue décide plus bas.
++      for (final def in giftPool(
++        rules: rules,
++        nextRound: round,
++        roundRules: roundRules,
++        teamId: '',
++        gap: gap,
++        blockableTeamIds: const {'*'},
++      ))
++        if (received.every((id) => id != def.id && areCompatible(id, def.id)) &&
++            !armed.contains(def.id) &&
++            (def.id != 'block_guesser' || guesserIds.length >= 2))
++          def,
++    ];
++
++/// La cartouche qui tombe sur le tour [turnIndex] de [giverId], ou `null` :
++/// réglage à Jamais, tour de continuation ([continuation] : temps reporté de fin
++/// de manche), tirage manqué ou vivier vide ([dropPool]). Une seule graine
++/// ([dropSeed]) : d'abord la chance du réglage, puis la cartouche (toutes avec
++/// la même chance, [drawGift]), puis pour `block_guesser` le devineur bloqué
++/// parmi [guesserIds] (dans l'ordre de l'équipe : le tirage en dépend).
++///
++/// 🔴 Mêmes entrées, même sortie : l'appelant l'appelle à un moment fixe du
++/// tour (après les bonus armés et les malus résolus), ou stocke le résultat.
++CartridgeDrop? dropForTurn({
++  required FiestaRules rules,
++  required String gameId,
++  required int turnIndex,
++  required String giverId,
++  required int round,
++  required List<ModifierInstance> roundRules,
++  required Iterable<String> received,
++  required Iterable<String> armed,
++  required List<String> guesserIds,
++  required int gap,
++  required bool continuation,
++}) {
++  final chance = rules.dropFrequency.chance;
++  if (chance <= 0 || continuation) return null;
++  final random = Random(dropSeed(gameId, turnIndex, giverId));
++  if (random.nextDouble() >= chance) return null;
++  final pool = dropPool(
++    rules: rules,
++    round: round,
++    roundRules: roundRules,
++    received: received,
++    armed: armed,
++    guesserIds: guesserIds,
++    gap: gap,
++  );
++  if (pool.isEmpty) return null;
++  final drawn = drawGift(pool, random);
++  return CartridgeDrop(
++    drawn.id,
++    blockedPlayerId: drawn.id == 'block_guesser'
++        ? guesserIds[random.nextInt(guesserIds.length)]
++        : null,
++  );
++}
+diff --git a/lib/models/fiesta/ensemble_summary.dart b/lib/models/fiesta/ensemble_summary.dart
+index b9fe686..481941a 100644
+--- a/lib/models/fiesta/ensemble_summary.dart
++++ b/lib/models/fiesta/ensemble_summary.dart
+@@ -43,6 +43,10 @@ final class InfoChip extends EnsembleChip {
+ 
+ const String kBalanceLabel = 'Équilibrer la partie';
+ const String kChallengesLabel = 'Défis surprises';
++const String kDropsLabel = 'Cartouches qui tombent';
++
++String _dropsLabel(DropFrequency f) =>
++    '$kDropsLabel : ${f.label.toLowerCase()}';
+ 
+ String _plural(int n, String word) => '$n $word${n > 1 ? 's' : ''}';
+ 
+@@ -63,6 +67,9 @@ List<String> randomCartridgeLines(FiestaRules rules) => [
+       else if (rules.trailingCount > 0)
+         '${_trailingLabel(rules.trailingCount)} après les manches 1 et 2',
+       if (rules.allCount > 0) _allLabel(rules.allCount),
++      if (rules.dropFrequency != DropFrequency.never)
++        '${_dropsLabel(rules.dropFrequency)}, au début d\'un tour, sur '
++            'l\'équipe qui joue',
+       if (rules.challenges)
+         '$kChallengesLabel : 1 ou 2 fois dans la partie, une cartouche à gagner',
+     ];
+@@ -81,6 +88,7 @@ bool rulesHaveCartridges(FiestaRules rules) =>
+     rules.challenges ||
+     rules.trailingCount > 0 ||
+     rules.allCount > 0 ||
++    rules.dropFrequency != DropFrequency.never ||
+     kModifierCatalog.any((d) => rules.chargesOf(d.id) > 0);
+ 
+ // ---------------------------------------------------------------------------
+@@ -119,6 +127,7 @@ EnsembleSummary rulesSummary(FiestaRules rules) {
+         '${_plural(rules.trailingCount, 'cartouche')} aux menées',
+       if (rules.allCount > 0)
+         '${_plural(rules.allCount, 'cartouche')} par manche',
++      if (rules.dropFrequency != DropFrequency.never) kDropsLabel,
+       if (rules.challenges) kChallengesLabel,
+     ]),
+     long: longParts.isEmpty
+@@ -134,6 +143,8 @@ EnsembleSummary rulesSummary(FiestaRules rules) {
+       else if (rules.trailingCount > 0)
+         InfoChip(_trailingLabel(rules.trailingCount)),
+       if (rules.allCount > 0) InfoChip(_allLabel(rules.allCount)),
++      if (rules.dropFrequency != DropFrequency.never)
++        InfoChip(_dropsLabel(rules.dropFrequency)),
+       if (rules.challenges) const InfoChip(kChallengesLabel),
+     ],
+   );
+diff --git a/lib/models/fiesta/ensemble_validation.dart b/lib/models/fiesta/ensemble_validation.dart
+index 25d2d5b..f11f649 100644
+--- a/lib/models/fiesta/ensemble_validation.dart
++++ b/lib/models/fiesta/ensemble_validation.dart
+@@ -35,10 +35,12 @@ List<int> roundsWithoutDraw(FiestaRules rules) => [
+           if (drawCandidates(rules, round).isEmpty) round,
+     ];
+ 
+-/// Au moins un réglage joue réellement.
++/// Au moins un réglage joue réellement. Les cartouches qui tombent comptent :
++/// seules, elles changent déjà des tours de la partie.
+ bool hasActiveSetting(FiestaRules rules) =>
+     rules.balance ||
+     rules.challenges ||
++    rules.dropFrequency != DropFrequency.never ||
+     rules.trailingCount > 0 ||
+     rules.allCount > 0 ||
+     kModifierCatalog.any((def) =>
+diff --git a/lib/models/fiesta/fiesta_ensemble.dart b/lib/models/fiesta/fiesta_ensemble.dart
+index b868e06..a94b3ca 100644
+--- a/lib/models/fiesta/fiesta_ensemble.dart
++++ b/lib/models/fiesta/fiesta_ensemble.dart
+@@ -49,6 +49,8 @@ String settingsKey(FiestaRules rules) {
+     'trailingCount': rules.balance ? 0 : rules.trailingCount,
+     'balance': rules.balance,
+     if (rules.challenges) 'challenges': true,
++    if (rules.dropFrequency != DropFrequency.never)
++      'dropFrequency': rules.dropFrequency.index,
+     'modifiers': {
+       for (final def in kModifierCatalog)
+         if (rules.isAlways(def.id) ||
+diff --git a/lib/models/fiesta/fiesta_rules.dart b/lib/models/fiesta/fiesta_rules.dart
+index 7ff89fb..70b5d69 100644
+--- a/lib/models/fiesta/fiesta_rules.dart
++++ b/lib/models/fiesta/fiesta_rules.dart
+@@ -71,6 +71,30 @@ const int kMaxCount = 5;
+ /// donne 10.
+ const int kMaxAllCount = 10;
+ 
++/// Chance qu'une cartouche tombe au début d'un tour ([DropFrequency]).
++const double kDropChanceRarely = 1 / 6;
++const double kDropChanceSometimes = 1 / 4;
++const double kDropChanceOften = 1 / 2;
++
++/// « Qui tombent pendant les tours » (D4 des retours du 2026-11-15) : à chaque
++/// tour joué, une chance qu'une cartouche au hasard tombe sur l'équipe qui joue.
++///
++/// 🔴 Persisté par son INDEX (clé `dropFrequency`, omise à [never]) : l'ordre
++/// est FIGÉ, un cran ajouté va en fin de liste.
++enum DropFrequency {
++  never('Jamais', 0),
++  rarely('Rarement', kDropChanceRarely),
++  sometimes('Parfois', kDropChanceSometimes),
++  often('Souvent', kDropChanceOften);
++
++  final String label;
++
++  /// Probabilité par tour joué.
++  final double chance;
++
++  const DropFrequency(this.label, this.chance);
++}
++
+ /// La configuration Fiesta d'une partie, GELÉE dans `GameState` au lancement.
+ ///
+ /// Immuable : les collections sont copiées en lecture seule à la construction,
+@@ -106,6 +130,10 @@ class FiestaRules {
+   /// « Défis surprises » : 1 ou 2 défis entre les manches. Clé omise si coupé.
+   final bool challenges;
+ 
++  /// « Qui tombent pendant les tours ». Clé `dropFrequency` (index de
++  /// [DropFrequency]) omise à [DropFrequency.never] ; absente = jamais.
++  final DropFrequency dropFrequency;
++
+   FiestaRules({
+     this.ensembleName,
+     Map<String, ModifierSetting> modifiers = const {},
+@@ -114,6 +142,7 @@ class FiestaRules {
+     this.trailingCount = 0,
+     this.balance = false,
+     this.challenges = false,
++    this.dropFrequency = DropFrequency.never,
+   }) : modifiers = Map.unmodifiable(modifiers);
+ 
+   FiestaRules copyWith({
+@@ -124,6 +153,7 @@ class FiestaRules {
+     int? trailingCount,
+     bool? balance,
+     bool? challenges,
++    DropFrequency? dropFrequency,
+   }) =>
+       FiestaRules(
+         ensembleName: ensembleName ?? this.ensembleName,
+@@ -133,6 +163,7 @@ class FiestaRules {
+         trailingCount: trailingCount ?? this.trailingCount,
+         balance: balance ?? this.balance,
+         challenges: challenges ?? this.challenges,
++        dropFrequency: dropFrequency ?? this.dropFrequency,
+       );
+ 
+   ModifierSetting settingOf(String id) =>
+@@ -188,6 +219,8 @@ class FiestaRules {
+         'trailingCount': trailingCount,
+         'balance': balance,
+         if (challenges) 'challenges': true,
++        if (dropFrequency != DropFrequency.never)
++          'dropFrequency': dropFrequency.index,
+       };
+ 
+   /// Variante tolérante : `null` si la structure est illisible (autre format,
+@@ -203,13 +236,16 @@ class FiestaRules {
+     final trailingCount = _readCount(json, 'trailingCount');
+     final balance = readOr(json, 'balance', false);
+     final challenges = readOr(json, 'challenges', false);
++    final drop =
++        _readCount(json, 'dropFrequency', max: DropFrequency.values.length - 1);
+     if (ensembleName is! String? ||
+         rawModifiers == null ||
+         drawCount == null ||
+         allCount == null ||
+         trailingCount == null ||
+         balance == null ||
+-        challenges == null) {
++        challenges == null ||
++        drop == null) {
+       return null;
+     }
+ 
+@@ -231,6 +267,7 @@ class FiestaRules {
+       trailingCount: trailingCount,
+       balance: balance,
+       challenges: challenges,
++      dropFrequency: DropFrequency.values[drop],
+     );
+   }
+ 
+diff --git a/lib/screens/CLAUDE.md b/lib/screens/CLAUDE.md
+index ba2c7d5..eb639e9 100644
+--- a/lib/screens/CLAUDE.md
++++ b/lib/screens/CLAUDE.md
+@@ -39,7 +39,7 @@ HomeScreen → SettingsScreen (Classique / Fiesta)
+ | `fiesta_tutorial_screen.dart` | Tuto Fiesta, 3 cartes (`Navigator.push` via `show`) |
+ | `fiesta_ensembles_screen.dart` | La liste des ensembles (Fiesta, ouverte par « Changer » dans Avances ; retour bouton et systeme → Parametres sans rien changer, sauf si l'ensemble en attente y a ete modifie ou supprime). Une ligne par ensemble (tuile et icone `ensembleIcon`, nom sur 2 lignes, ligne courte, rond de selection) : les 8 **fournis** (`kProvidedEnsembles`) puis les miens, badge « Perso ». Un tap selectionne et deplie : explication et pastilles (`ensembleSummary`), actions en icones (`tooltip`, 44 px, Voir / Dupliquer ; miens : Voir / Modifier / Dupliquer / Supprimer avec confirmation), absentes des autres lignes ; la ligne depliee reste visible (`_revealSelected`). Compteur n / 10 dans le bouton de creation ou l'alerte de limite ; « Fiesta classique » preselectionne a defaut d'attente ou de dernier utilise. « Creer un ensemble » (« Reprendre le brouillon » s'il y en a un) et « Modifier » POUSSENT `FiestaEnsembleEditorScreen` ; enregistre → selectionne. Brouillon = `FiestaEnsemblesScreen.draft` (statique, en memoire tant que l'app est ouverte, jamais persiste). « Valider » → Parametres |
+ | `fiesta_ensemble_view_screen.dart` | Page « Voir » d'un ensemble (fourni ou mien), en lecture seule : 3 blocs « Toujours », « Aleatoire par manche », « Cartouches » (au hasard, puis pour tout le monde), bouton « Dupliquer » Défis surprises : une ligne dans le bloc Cartouches |
+-| `fiesta_ensemble_editor_screen.dart` | « Nouvel ensemble » / « Modifier l'ensemble » : nom, puis 3 onglets avec compteur (Toujours / Aleatoire par manche / Cartouches), cadres verts. Chaque menu n'affiche que ce qui y est possible ; le verrouille (`FiestaRules.lockReason`) dit pourquoi, garde ses reglages, et « Tout » / « Tous » ne le touchent jamais. Le premier interrupteur aleatoire fait passer « Combien par manche » de 0 a 1. Brouillon, popup et validation (`validateEnsemble`) : erreurs seulement apres un premier appui En bas de Cartouches, derrière « Si tu veux vraiment pousser plus loin » : interrupteur « Défis surprises » (déplié s'il est actif) La page défile sous la bande des boutons retour et « ? » : les onglets épinglés ne passent jamais dessous |
++| `fiesta_ensemble_editor_screen.dart` | « Nouvel ensemble » / « Modifier l'ensemble » : nom, puis 3 onglets avec compteur (Toujours / Aleatoire par manche / Cartouches), cadres verts. Chaque menu n'affiche que ce qui y est possible ; le verrouille (`FiestaRules.lockReason`) dit pourquoi, garde ses reglages, et « Tout » / « Tous » ne le touchent jamais. Le premier interrupteur aleatoire fait passer « Combien par manche » de 0 a 1. Brouillon, popup et validation (`validateEnsemble`) : erreurs seulement apres un premier appui Cadre « Au hasard », sous un séparateur : « Qui tombent pendant les tours » (ⓘ, sous-titre) et un sélecteur 4 crans Jamais / Rarement / Parfois / Souvent (`DropFrequency`), qui compte 1 dans l'onglet hors Jamais. En bas de Cartouches, derrière « Si tu veux vraiment pousser plus loin » : interrupteur « Défis surprises » (déplié s'il est actif) La page défile sous la bande des boutons retour et « ? » : les onglets épinglés ne passent jamais dessous |
+ 
+ Invariant Fiesta : le choix du mode vit dans `GameProvider.pendingFiesta` (regles en memoire,
+ dernier choix relu de `GameSettings` et du `lastUsedId` au demarrage et a « Nouvelle partie ») :
+diff --git a/lib/screens/fiesta_ensemble_editor_screen.dart b/lib/screens/fiesta_ensemble_editor_screen.dart
+index 56f46b3..1bb737b 100644
+--- a/lib/screens/fiesta_ensemble_editor_screen.dart
++++ b/lib/screens/fiesta_ensemble_editor_screen.dart
+@@ -118,7 +118,10 @@ class _FiestaEnsembleEditorScreenState
+     final draws = kModifierCatalog.any((d) => r.settingOf(d.id).draw);
+     if (draws) return EnsembleMenu.draw;
+     final always = kModifierCatalog.any((d) => r.isAlways(d.id));
+-    return always && r.trailingCount == 0 && r.allCount == 0
++    return always &&
++            r.trailingCount == 0 &&
++            r.allCount == 0 &&
++            r.dropFrequency == DropFrequency.never
+         ? EnsembleMenu.always
+         : EnsembleMenu.cartridge;
+   }
+@@ -403,6 +406,7 @@ class _FiestaEnsembleEditorScreenState
+                 0, (sum, d) => sum + _rules.chargesOf(d.id)) +
+             (_rules.balance ? 1 : _rules.trailingCount) +
+             _rules.allCount +
++            (_rules.dropFrequency != DropFrequency.never ? 1 : 0) +
+             (_rules.challenges ? 1 : 0),
+       };
+ 
+@@ -763,6 +767,19 @@ class _FiestaEnsembleEditorScreenState
+                       setState(() => _rules = _rules.copyWith(allCount: v)),
+                 ),
+               ),
++              const Divider(color: AppColors.gray600, height: 16),
++              _line(
++                'Qui tombent pendant les tours',
++                const SizedBox.shrink(),
++                sub: 'Appliquées tout de suite, sans choix',
++                info: () => _info('Au début de certains tours, une cartouche '
++                    'tombe sur l\'équipe qui joue.'),
++              ),
++              _FrequencyPicker(
++                value: _rules.dropFrequency,
++                onChanged: (f) =>
++                    setState(() => _rules = _rules.copyWith(dropFrequency: f)),
++              ),
+             ],
+           ),
+           _Frame(
+@@ -1077,6 +1094,63 @@ class _Hint extends StatelessWidget {
+       );
+ }
+ 
++/// Sélecteur à crans de [DropFrequency] (maquette `.seg`), toute la largeur.
++class _FrequencyPicker extends StatelessWidget {
++  final DropFrequency value;
++  final ValueChanged<DropFrequency> onChanged;
++
++  const _FrequencyPicker({required this.value, required this.onChanged});
++
++  @override
++  Widget build(BuildContext context) => Container(
++        margin: const EdgeInsets.only(top: 4, bottom: 2),
++        clipBehavior: Clip.antiAlias,
++        decoration: BoxDecoration(
++          borderRadius: BorderRadius.circular(10),
++          border: Border.all(color: AppColors.gray600),
++        ),
++        child: Row(
++          children: [
++            for (final f in DropFrequency.values)
++              Expanded(
++                child: Semantics(
++                  button: true,
++                  selected: f == value,
++                  child: GestureDetector(
++                    behavior: HitTestBehavior.opaque,
++                    onTap: () => onChanged(f),
++                    child: Container(
++                      padding: const EdgeInsets.symmetric(vertical: 9),
++                      alignment: Alignment.center,
++                      decoration: BoxDecoration(
++                        color: f == value ? AppColors.secondaryCyan : null,
++                        border: f.index == 0
++                            ? null
++                            : const Border(
++                                left: BorderSide(color: AppColors.gray600)),
++                      ),
++                      child: Text(
++                        f.label,
++                        maxLines: 1,
++                        overflow: TextOverflow.ellipsis,
++                        style: AppTextStyles.label.copyWith(
++                          fontSize: 12.5,
++                          color: f == value
++                              ? AppColors.backgroundMain
++                              : AppColors.gray400,
++                          fontWeight:
++                              f == value ? FontWeight.w700 : FontWeight.w500,
++                        ),
++                      ),
++                    ),
++                  ),
++                ),
++              ),
++          ],
++        ),
++      );
++}
++
+ /// Compteur compact −/+ de 0 à [max].
+ class _Stepper extends StatelessWidget {
+   final int value;
+diff --git a/lib/widgets/help/help_content.dart b/lib/widgets/help/help_content.dart
+index c718a81..496bfe5 100644
+--- a/lib/widgets/help/help_content.dart
++++ b/lib/widgets/help/help_content.dart
+@@ -290,7 +290,8 @@ List<CoachStep> fiestaEditorHelp({
+             target: menu,
+             title: 'Cartouches',
+             text:
+-                'Au hasard : l\'app choisit. Pour tout le monde : chaque équipe '
++                'Au hasard : l\'app choisit, au début des manches ou pendant les '
++                'tours. Pour tout le monde : chaque équipe '
+                 'reçoit exactement ça. « Si tu veux vraiment pousser plus loin » '
+                 'ouvre les défis surprises.',
+           ),
+diff --git a/test/models/fiesta/cartridge_drop_test.dart b/test/models/fiesta/cartridge_drop_test.dart
+new file mode 100644
+index 0000000..5acc364
+--- /dev/null
++++ b/test/models/fiesta/cartridge_drop_test.dart
+@@ -0,0 +1,166 @@
++import 'package:flutter_test/flutter_test.dart';
++import 'package:guess_it_all_mobile/models/fiesta/cartridge_drop.dart';
++import 'package:guess_it_all_mobile/models/fiesta/fiesta_rules.dart';
++import 'package:guess_it_all_mobile/models/fiesta/modifier_catalog.dart';
++import 'package:guess_it_all_mobile/models/fiesta/modifier_instance.dart';
++
++ModifierInstance rule(String id, int round) => ModifierInstance(
++      catalogId: id,
++      scope: ModifierScope.round,
++      target: ModifierTarget.both,
++      charges: 0,
++      nature: ModifierNature.malus,
++      round: round,
++    );
++
++final often = FiestaRules(dropFrequency: DropFrequency.often);
++
++List<String> pool({
++  FiestaRules? rules,
++  int round = 1,
++  List<ModifierInstance> roundRules = const [],
++  List<String> received = const [],
++  List<String> armed = const [],
++  List<String> guessers = const ['p2', 'p3'],
++  int gap = 0,
++}) =>
++    dropPool(
++      rules: rules ?? often,
++      round: round,
++      roundRules: roundRules,
++      received: received,
++      armed: armed,
++      guesserIds: guessers,
++      gap: gap,
++    ).map((d) => d.id).toList();
++
++CartridgeDrop? drop(
++  int turn, {
++  FiestaRules? rules,
++  String giver = 'p1',
++  bool continuation = false,
++}) =>
++    dropForTurn(
++      rules: rules ?? often,
++      gameId: 'g',
++      turnIndex: turn,
++      giverId: giver,
++      round: 1,
++      roundRules: const [],
++      received: const [],
++      armed: const [],
++      guesserIds: const ['p2', 'p3'],
++      gap: 0,
++      continuation: continuation,
++    );
++
++const mimes = [
++  'mime_no_arms',
++  'mime_no_fists',
++  'mime_eyes_closed',
++  'draw',
++  'mime_under_sheet',
++  'mime_back_turned',
++  'sounds_only',
++];
++
++void main() {
++  test(
++      'réglage persisté : clé `dropFrequency` omise à Jamais, index sinon, '
++      'hors bornes ou mal typé = illisible', () {
++    expect(FiestaRules().toJson(), isNot(contains('dropFrequency')));
++    final json = FiestaRules(dropFrequency: DropFrequency.sometimes).toJson();
++    expect(json['dropFrequency'], 2);
++    expect(
++        FiestaRules.tryFromJson(json)!.dropFrequency, DropFrequency.sometimes);
++    expect(FiestaRules.tryFromJson({'format': 4})!.dropFrequency,
++        DropFrequency.never);
++    for (final bad in [-1, 4, '2']) {
++      expect(
++          FiestaRules.tryFromJson({'format': 4, 'dropFrequency': bad}), isNull,
++          reason: '$bad');
++    }
++  });
++
++  group('tirage d\'un tour', () {
++    final turns = [for (var t = 0; t < 60; t++) t];
++
++    test('déterministe par (partie, tour, joueur) ; le joueur change le tirage',
++        () {
++      final first = [for (final t in turns) drop(t)?.catalogId];
++      expect([for (final t in turns) drop(t)?.catalogId], first);
++      expect(first.whereType<String>(), isNotEmpty);
++      expect(first, contains(isNull));
++      expect([for (final t in turns) drop(t, giver: 'p4')?.catalogId],
++          isNot(first));
++    });
++
++    test('rien à Jamais ni sur un tour de continuation', () {
++      expect(turns.map(drop).whereType<CartridgeDrop>(), isNotEmpty);
++      expect(turns.map((t) => drop(t, continuation: true)).whereType<Object>(),
++          isEmpty);
++      expect(
++          turns.map((t) => drop(t, rules: FiestaRules())).whereType<Object>(),
++          isEmpty);
++    });
++
++    test('Bloquer un devineur tombé : le bloqué est un des devineurs', () {
++      final blocks = [
++        for (var t = 0; t < 400; t++)
++          if (drop(t) case CartridgeDrop(catalogId: 'block_guesser') && final d)
++            d.blockedPlayerId,
++      ];
++      expect(blocks, isNotEmpty);
++      expect(blocks.toSet(), {'p2', 'p3'});
++      expect([
++        for (var t = 0; t < 400; t++)
++          if (drop(t) case final d? when d.catalogId != 'block_guesser')
++            d.blockedPlayerId,
++      ], everyElement(isNull));
++    });
++  });
++
++  group('vivier', () {
++    test('Toujours « Dessiner » en M3 : aucun mime ne tombe', () {
++      expect(pool(round: 3), containsAll(mimes));
++      final rules = often
++          .copyWith(modifiers: {'draw': const ModifierSetting(always: true)});
++      final p = pool(rules: rules, round: 3, roundRules: [rule('draw', 3)]);
++      expect(p.toSet().intersection(mimes.toSet()), isEmpty);
++      expect(p, contains('reversed'));
++    });
++
++    test('malus reçu : ni identique ni incompatible ; bonus armé : identique',
++        () {
++      expect(pool(round: 3), containsAll(['reversed', 'draw', 'plus_10s']));
++      final p = pool(
++          round: 3,
++          received: ['reversed', 'mime_no_arms'],
++          armed: ['plus_10s']);
++      expect(p, isNot(contains('reversed')));
++      expect(p, isNot(contains('draw')));
++      expect(p, isNot(contains('plus_10s')));
++      expect(p, contains('one_answer'));
++    });
++
++    test('n\'existe pas dans la manche : mime avant M3, Autre langue en M3',
++        () {
++      expect(pool(round: 1), isNot(contains('draw')));
++      expect(pool(round: 1), contains('other_language'));
++      expect(pool(round: 3), isNot(contains('other_language')));
++    });
++
++    test('×2 seulement à plus de 10 points du leader', () {
++      expect(pool(gap: 10), isNot(contains('double_points')));
++      expect(pool(gap: 11), contains('double_points'));
++    });
++
++    test(
++        'Bloquer un devineur : 3 joueurs au moins ; Interdit de faire deviner '
++        'toujours', () {
++      expect(pool(guessers: ['p2']), isNot(contains('block_guesser')));
++      expect(pool(guessers: ['p2']), contains('block_giver'));
++      expect(pool(guessers: ['p2', 'p3']), contains('block_guesser'));
++    });
++  });
++}
+diff --git a/test/services/fiesta_ensemble_service_test.dart b/test/services/fiesta_ensemble_service_test.dart
+index b760352..8d76fd9 100644
+--- a/test/services/fiesta_ensemble_service_test.dart
++++ b/test/services/fiesta_ensemble_service_test.dart
+@@ -80,6 +80,7 @@ void main() {
+     expect(rules.modifiers['free_pass']!.always, isFalse);
+     expect([rules.drawCount, rules.allCount, rules.trailingCount], [2, 3, 1]);
+     expect(rules.balance, isTrue);
++    expect(rules.dropFrequency, DropFrequency.never);
+   });
+ 
+   test(
