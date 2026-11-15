@@ -1355,9 +1355,6 @@ class GameProvider extends ChangeNotifier {
       scores: {for (final t in _teams) t.id: t.score},
       totalWords: _game.allWords.length,
       blockableTeamIds: _blockableTeamIds,
-      // Sans report, l'équipe courante est déjà la suivante : elle ne poursuit rien.
-      continuingTeamId:
-          _game.pendingBonusTurnId != null ? getCurrentTeam()?.id : null,
     );
   }
 
@@ -1621,7 +1618,8 @@ class GameProvider extends ChangeNotifier {
       _setCharge(id, true);
     }
     for (final m in choices.sent) {
-      inflictMalus(m.catalogId, m.teamId!, playerId: m.playerId);
+      // Écrit par la 1.4.0 sans joueur visé : il ne se renvoie pas.
+      if (m.playerId != null) inflictMalus(m.catalogId, m.playerId!);
     }
     notifyListeners();
     _saveGameState();
@@ -1704,9 +1702,10 @@ class GameProvider extends ChangeNotifier {
   bool get doublePointsBlocked => _blocked('double_points');
   void setDoublePoints(bool on) => _setCharge('double_points', on);
 
-  /// Fiesta à la VRAIE fin d'un tour : état du tour vidé, malus infligés à
-  /// l'équipe consommés, sauf les blocages qui attendent. 🔴 Une fin de manche n'en est pas une : la continuation
-  /// en N+1 est le même tour. Nul en Classique.
+  /// Fiesta à la VRAIE fin d'un tour : état du tour vidé, malus résolus à ce
+  /// tour consommés ([ModifierInstance.resolvesAt]) ; ceux qui visent un autre
+  /// joueur, et les blocages qui attendent, restent. 🔴 Une fin de manche n'en
+  /// est pas une : la continuation en N+1 est le même tour. Nul en Classique.
   FiestaState? _fiestaAfterTurn() {
     final fiesta = _game.fiesta;
     if (fiesta == null || _teams.isEmpty) return null;
@@ -1715,12 +1714,9 @@ class GameProvider extends ChangeNotifier {
     return fiesta.copyWith(
       turn: FiestaTurnState.empty,
       active: fiesta.active
-          // Malus infligés à l'équipe : ils visaient CE tour (sans effet s'ils
-          // étaient interdits dans sa manche).
-          .where((m) =>
-              m.fromTeamId == null ||
-              m.teamId != teamId ||
-              m.waitsFor(playerId))
+          // Malus résolus à CE tour : ils y ont pesé, ou y étaient perdus
+          // (impossibles dans la manche), sans rien rendre.
+          .where((m) => !m.resolvesAt(teamId: teamId, giverId: playerId))
           .toList(),
     );
   }
@@ -1739,10 +1735,10 @@ class GameProvider extends ChangeNotifier {
 
   // ========== ACTIF CE TOUR / RÉSERVE ==========
   // Une cartouche = UN tour d'UNE équipe. Bonus : allumé avant le tour,
-  // dépensé au départ du chrono (`startTurnTimer`). Malus : infligé à une
-  // autre équipe pour SON prochain tour, dépensé tout de suite (`ChargeUse`
-  // avec cible), annulable tant que le tour de l'équipe qui l'envoie n'a pas
-  // commencé. Tout vit dans `GameState.fiesta` (kill, retour arrière).
+  // dépensé au départ du chrono (`startTurnTimer`). Malus : infligé à un
+  // joueur adverse pour son prochain tour de faire deviner, dépensé tout de
+  // suite (`ChargeUse` avec cible), annulable tant que le tour de l'équipe
+  // qui l'envoie n'a pas commencé. Tout vit dans `GameState.fiesta` (kill, retour arrière).
 
   /// Règles de manche qui pèsent sur ce tour (« Ce tour », cercles neutres).
   List<ModifierInstance> get roundRulesThisTurn =>
@@ -1785,7 +1781,7 @@ class GameProvider extends ChangeNotifier {
 
   /// Pourquoi le malus [def] ne peut pas être infligé ce tour : la règle de
   /// manche le rend inutile (même modificateur, ou incompatible : un seul
-  /// mime à la fois), ou personne ne peut le recevoir.
+  /// mime à la fois), ou personne en face ne peut le recevoir.
   String? _malusBlock(ModifierDef def) {
     for (final rule in roundRulesThisTurn) {
       if (rule.catalogId == def.id) return 'déjà en jeu pour tous cette manche';
@@ -1794,59 +1790,69 @@ class GameProvider extends ChangeNotifier {
             'cette manche';
       }
     }
-    final targets = targetsFor(def.id);
-    if (targets.isEmpty) {
+    if (def.id == 'block_guesser' &&
+        !opponents.any((t) => canBlockGuesser(t.playerIds.length))) {
       return 'aucune équipe adverse n\'a 3 joueurs';
     }
-    if (targets.every((t) => targetRefusal(def.id, t) != null)) {
-      return targets.length == 1
-          ? '${targetRefusal(def.id, targets.single)} à l\'équipe '
-              '${targets.single.name}'
-          : 'aucune équipe adverse ne peut le recevoir';
+    if (opponents.every(
+        (t) => t.playerIds.every((id) => targetRefusal(def.id, id) != null))) {
+      return 'personne en face ne peut le recevoir';
     }
     return null;
   }
 
-  /// Malus déjà infligé à [targetTeamId] pour son prochain tour qui empêche de
-  /// lui infliger [catalogId] : le même, ou un malus qui ne s'y cumule pas.
-  ModifierInstance? _clashOn(String catalogId, String targetTeamId) => _game
-      .fiesta?.active
-      .where((m) =>
-          m.fromTeamId != null &&
-          m.teamId == targetTeamId &&
-          (m.catalogId == catalogId || !areCompatible(m.catalogId, catalogId)))
-      .firstOrNull;
+  Team? _teamOf(String playerId) =>
+      _teams.where((t) => t.playerIds.contains(playerId)).firstOrNull;
 
-  /// Pourquoi [team] ne peut pas recevoir le malus [catalogId] de l'équipe qui
-  /// joue (`null` = elle peut) : trop petite pour « Bloquer un devineur », ou
-  /// déjà visée par ce malus ou par un malus qui ne s'y cumule pas. Sert à
-  /// griser avant le choix, plutôt que refuser après.
-  String? targetRefusal(String catalogId, Team team) {
+  /// Malus déjà en attente sur le joueur [playerId] de l'équipe [teamId],
+  /// envoyé par n'importe quelle équipe, qui empêche de lui infliger
+  /// [catalogId] : le même, ou un malus qui ne s'y cumule pas. Un malus de la
+  /// 1.4.0 sans joueur vise toute son équipe ; « Bloquer un devineur », qui se
+  /// résout au tour de l'équipe, reste un seul par équipe.
+  ModifierInstance? _clashOn(
+          String catalogId, String playerId, String teamId) =>
+      _game.fiesta?.active
+          .where(
+              (m) =>
+                  m.fromTeamId != null &&
+                  m.teamId == teamId &&
+                  (m.playerId == null ||
+                      m.playerId == playerId ||
+                      (catalogId == 'block_guesser' &&
+                          m.catalogId == 'block_guesser')) &&
+                  (m.catalogId == catalogId ||
+                      !areCompatible(m.catalogId, catalogId)))
+          .firstOrNull;
+
+  /// Pourquoi le joueur [playerId] ne peut pas recevoir le malus [catalogId]
+  /// de l'équipe qui joue (`null` = il peut), en quelques mots (bulle de la
+  /// feuille « Sur qui ? ») : son équipe est trop petite pour « Bloquer un
+  /// devineur », ou il a déjà ce malus en attente, ou un malus qui ne s'y
+  /// cumule pas. Sert à griser avant le choix, plutôt que refuser après.
+  String? targetRefusal(String catalogId, String playerId) {
+    final team = _teamOf(playerId);
+    if (team == null) return 'joueur inconnu';
     if (catalogId == 'block_guesser' &&
         !canBlockGuesser(team.playerIds.length)) {
-      return '2 joueurs, impossible';
+      return 'Moins de 3 joueurs dans son équipe';
     }
-    final clash = _clashOn(catalogId, team.id);
+    final clash = _clashOn(catalogId, playerId, team.id);
     if (clash == null) return null;
-    return clash.catalogId == catalogId
-        ? 'déjà infligé'
-        : 'ne se cumule pas avec ${modifierById(clash.catalogId)!.name}, '
-            'déjà infligé';
+    final name = modifierById(clash.catalogId)!.name;
+    return clash.playerId == playerId
+        ? 'Déjà $name'
+        : 'Déjà $name dans son équipe';
   }
 
   /// Allume / éteint le bonus [id] de la réserve pour ce tour.
   void toggleBonus(String id) => _setCharge(id, _charge(id) == null);
 
-  /// Équipes que l'équipe qui joue peut viser avec le malus [catalogId] :
-  /// toutes les autres (« Bloquer un devineur » : 3 joueurs ou plus).
-  List<Team> targetsFor(String catalogId) {
+  /// Équipes adverses : celles de la feuille « Sur qui ? ».
+  List<Team> get opponents {
     final me = getCurrentTeam()?.id;
     return [
       for (final t in _teams)
-        if (t.id != me &&
-            (catalogId != 'block_guesser' ||
-                canBlockGuesser(t.playerIds.length)))
-          t,
+        if (t.id != me) t,
     ];
   }
 
@@ -1854,17 +1860,18 @@ class GameProvider extends ChangeNotifier {
   bool get _inPreTurn =>
       _game.fiesta != null && _game.currentScreen == AppConstants.screenGame;
 
-  /// Inflige le malus [catalogId] de la réserve de l'équipe qui joue à
-  /// [targetTeamId], pour le PROCHAIN tour de celle-ci ; un blocage nomme le
-  /// joueur [playerId]. Rend le message de refus si ce malus (ou un malus qui ne
-  /// s'y cumule pas) lui est déjà infligé pour ce tour-là : rien n'est alors
-  /// consommé. Hors avant-tour, cartouche épuisée ou grisée, cible invalide :
-  /// ignoré (`null`).
-  String? inflictMalus(String catalogId, String targetTeamId,
-      {String? playerId}) {
+  /// Inflige le malus [catalogId] de la réserve de l'équipe qui joue au
+  /// joueur adverse [playerId], pour le prochain tour où il fait deviner
+  /// (« Bloquer un devineur » : le prochain tour de son équipe où il devine).
+  /// Rend le message de refus si ce malus (ou un malus qui ne s'y cumule pas)
+  /// l'attend déjà ([targetRefusal], garde-fou de la feuille qui grise
+  /// d'avance) : rien n'est alors consommé. Hors avant-tour, cartouche épuisée
+  /// ou grisée, cible invalide : ignoré (`null`).
+  String? inflictMalus(String catalogId, String playerId) {
     final fiesta = _game.fiesta;
     final me = getCurrentTeam();
     final def = modifierById(catalogId);
+    final target = _teamOf(playerId);
     final cartridge =
         reserve.where((c) => c.catalogId == catalogId).firstOrNull;
     if (!_inPreTurn ||
@@ -1873,24 +1880,24 @@ class GameProvider extends ChangeNotifier {
         def.nature != ModifierNature.malus ||
         cartridge == null ||
         !cartridge.usable ||
-        !targetsFor(catalogId).any((t) => t.id == targetTeamId) ||
-        (def.defaultTarget == ModifierTarget.player &&
-            !getTeamById(targetTeamId)!.playerIds.contains(playerId))) {
+        target == null ||
+        target.id == me.id ||
+        (catalogId == 'block_guesser' &&
+            !canBlockGuesser(target.playerIds.length))) {
       return null;
     }
-    final target = getTeamById(targetTeamId)!.name;
-    final clash = _clashOn(catalogId, targetTeamId);
+    final clash = _clashOn(catalogId, playerId, target.id);
     if (clash != null) {
       final by = getTeamById(clash.fromTeamId!)?.name ?? '?';
-      if (clash.catalogId == catalogId) {
-        return 'Impossible : ${def.name} est déjà infligé à l\'équipe $target '
-            'par l\'équipe $by pour son prochain tour. Choisis un autre malus '
-            'ou attends.';
-      }
-      return 'Impossible : ${def.name} ne se cumule pas avec '
-          '${modifierById(clash.catalogId)!.name}, déjà infligé à l\'équipe '
-          '$target par l\'équipe $by pour son prochain tour. Choisis un '
-          'autre malus ou attends.';
+      final on = clash.playerId == null
+          ? 'l\'équipe ${target.name}'
+          : getPlayerById(clash.playerId!)?.name ?? '?';
+      final what = clash.catalogId == catalogId
+          ? '${def.name} est déjà infligé à $on'
+          : '${def.name} ne se cumule pas avec '
+              '${modifierById(clash.catalogId)!.name}, déjà infligé à $on';
+      return 'Impossible : $what par l\'équipe $by. Choisis un autre malus '
+          'ou attends.';
     }
     final round = _game.currentRound;
     _game = _game.copyWith(
@@ -1903,7 +1910,7 @@ class GameProvider extends ChangeNotifier {
             target: def.defaultTarget == ModifierTarget.player
                 ? ModifierTarget.player
                 : ModifierTarget.team,
-            teamId: targetTeamId,
+            teamId: target.id,
             playerId: playerId,
             charges: def.defaultCharges,
             nature: ModifierNature.malus,
@@ -1919,7 +1926,7 @@ class GameProvider extends ChangeNotifier {
               catalogId: catalogId,
               teamId: me.id,
               round: round,
-              targetTeamId: targetTeamId,
+              targetTeamId: target.id,
               turn: _game.currentTurn),
         ],
       ),

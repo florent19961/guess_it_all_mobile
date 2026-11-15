@@ -156,29 +156,18 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
     if (c.nature == ModifierNature.bonus) {
       return _moveBonus(c.catalogId, circle, to: 'on');
     }
-    if (modifierById(c.catalogId)!.defaultTarget == ModifierTarget.player) {
-      final picked = await _pickPlayer(c.catalogId);
-      if (picked == null || !mounted) return;
-      final refused =
-          _p.inflictMalus(c.catalogId, picked.team, playerId: picked.player);
-      if (refused != null) _showSnack(refused);
-      return;
-    }
-    final targets = _p.targetsFor(c.catalogId);
-    final target = _p.teams.length == 2
-        ? targets.firstOrNull
-        : await _pickTarget(c.catalogId, targets);
-    if (target == null || !mounted) return;
-    final refused = _p.inflictMalus(c.catalogId, target.id);
+    final picked = await _pickPerson(c.catalogId);
+    if (picked == null || !mounted) return;
+    final refused = _p.inflictMalus(c.catalogId, picked);
     if (refused != null) _showSnack(refused);
   }
 
-  /// La fenêtre des deux blocages : joueurs listés par équipe, le joueur se
-  /// choisit À L'ENVOI. Équipe qui ne peut pas le recevoir grisée, avec la
-  /// raison ([GameProvider.targetRefusal]).
-  Future<({String team, String player})?> _pickPlayer(String id) {
-    final me = _p.getCurrentTeam()?.id;
-    return showModalBottomSheet<({String team, String player})>(
+  /// La feuille « Sur qui ? » : pour chaque équipe adverse, son nom puis ses
+  /// joueurs. Rien d'autre. Un joueur qui ne peut pas recevoir le malus est
+  /// grisé ; le toucher montre la raison dans une bulle qui part seule
+  /// ([GameProvider.targetRefusal]), sans rien envoyer.
+  Future<String?> _pickPerson(String id) {
+    return showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.backgroundMain,
@@ -190,31 +179,17 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                id == 'block_giver'
-                    ? 'Qui ne fera pas deviner ?'
-                    : 'Qui ne devinera pas ?',
-                textAlign: TextAlign.center,
-                style: AppTextStyles.subtitle(fontSize: 26),
-              ),
-              for (final team in _p.teams)
-                if (team.id != me)
-                  _TeamPlayers(
-                    team: team,
-                    color: AppColors.getTeamColor(_p.teams.indexOf(team)),
-                    refusal: _p.targetRefusal(id, team),
-                    nameOf: (playerId) =>
-                        _p.getPlayerById(playerId)?.name ?? '',
-                    onPick: (playerId) => Navigator.of(sheet)
-                        .pop((team: team.id, player: playerId)),
-                  ),
-              if (id == 'block_giver') ...[
-                const SizedBox(height: 14),
-                Text('Il saute son prochain tour.',
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.bodySmall
-                        .copyWith(fontSize: 12, color: AppColors.gray400)),
-              ],
+              Text('Sur qui ?',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.subtitle(fontSize: 26)),
+              for (final team in _p.opponents)
+                _TeamPeople(
+                  team: team,
+                  color: AppColors.getTeamColor(_p.teams.indexOf(team)),
+                  refusalOf: (playerId) => _p.targetRefusal(id, playerId),
+                  nameOf: (playerId) => _p.getPlayerById(playerId)?.name ?? '',
+                  onPick: (playerId) => Navigator.of(sheet).pop(playerId),
+                ),
             ],
           ),
         ),
@@ -263,53 +238,6 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
       );
       Overlay.of(context).insert(entry);
     });
-  }
-
-  Future<Team?> _pickTarget(String id, List<Team> targets) {
-    final def = modifierById(id)!;
-    return showModalBottomSheet<Team>(
-      context: context,
-      backgroundColor: AppColors.backgroundMain,
-      shape: const SheetTopBorder(AppColors.malus),
-      builder: (sheet) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('Contre quelle équipe ?',
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.subtitle(fontSize: 26)
-                      .copyWith(shadows: const [])),
-              const SizedBox(height: 4),
-              ModifierHeading(
-                  id: id,
-                  text: def.name,
-                  style: AppTextStyles.bodySmall
-                      .copyWith(color: AppColors.gray400),
-                  iconSize: 20),
-              const SizedBox(height: 14),
-              for (final team in targets) ...[
-                _TeamButton(
-                  team: team,
-                  color: AppColors.getTeamColor(_p.teams.indexOf(team)),
-                  refusal: _p.targetRefusal(id, team),
-                  onTap: () => Navigator.of(sheet).pop(team),
-                ),
-                const SizedBox(height: 10),
-              ],
-              TextButton(
-                onPressed: () => Navigator.of(sheet).pop(),
-                child: Text('Annuler',
-                    style: AppTextStyles.bodySmall
-                        .copyWith(color: AppColors.gray400)),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   /// Appui long : la feuille « nom + explication », sans action.
@@ -561,8 +489,8 @@ class _FiestaTurnZoneState extends State<FiestaTurnZone> {
     });
   }
 
-  /// Puce d'un malus envoyé : le joueur nommé pour un blocage ; sinon l'équipe
-  /// visée, ou « Envoyé » à 2 équipes. Un appui l'annule.
+  /// Puce d'un malus envoyé : le prénom visé (envoi de la 1.4.0, sans joueur :
+  /// l'équipe visée, ou « Envoyé » à 2 équipes). Un appui l'annule.
   Widget _sentChip(ModifierInstance m) {
     final index = _p.teams.indexWhere((t) => t.id == m.teamId);
     final team = _p.getTeamById(m.teamId!)?.name ?? '';
@@ -877,129 +805,71 @@ class _Circle extends StatelessWidget {
   }
 }
 
-/// Une équipe et ses joueurs dans la fenêtre des blocages. [refusal] : pourquoi
-/// elle ne peut pas le recevoir, grisée.
-class _TeamPlayers extends StatelessWidget {
+/// Une équipe adverse et ses joueurs dans la feuille « Sur qui ? ».
+/// [refusalOf] : pourquoi un joueur ne peut pas recevoir le malus (grisé ; un
+/// toucher montre la raison dans une bulle qui disparaît seule).
+class _TeamPeople extends StatelessWidget {
   final Team team;
   final Color color;
-  final String? refusal;
+  final String? Function(String playerId) refusalOf;
   final String Function(String playerId) nameOf;
   final ValueChanged<String> onPick;
 
-  const _TeamPlayers({
+  const _TeamPeople({
     required this.team,
     required this.color,
-    required this.refusal,
+    required this.refusalOf,
     required this.nameOf,
     required this.onPick,
   });
 
-  bool get enabled => refusal == null;
+  Widget _pill(String playerId) {
+    final refusal = refusalOf(playerId);
+    final pill = Opacity(
+      opacity: refusal == null ? 1 : 0.35,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(color: color, width: 2),
+        ),
+        child: Text(
+          nameOf(playerId),
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
+      ),
+    );
+    if (refusal == null) {
+      return GestureDetector(onTap: () => onPick(playerId), child: pill);
+    }
+    return Tooltip(
+      message: refusal,
+      triggerMode: TooltipTriggerMode.tap,
+      showDuration: const Duration(seconds: 2),
+      preferBelow: false,
+      child: pill,
+    );
+  }
 
   @override
   Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 10),
-          Text.rich(
-            TextSpan(text: team.name, children: [
-              if (!enabled)
-                TextSpan(
-                  text: '  $refusal',
-                  style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 11,
-                      color: AppColors.gray400),
-                ),
-            ]),
-            // Grisée comme ses joueurs ; la raison reste lisible.
-            style: TextStyle(
-                fontFamily: 'Bangers',
-                fontSize: 18,
-                color: enabled ? color : color.withValues(alpha: 0.35)),
-          ),
+          Text(team.name,
+              style:
+                  TextStyle(fontFamily: 'Bangers', fontSize: 18, color: color)),
           const SizedBox(height: 6),
           Wrap(
             spacing: 6,
             runSpacing: 6,
-            children: [
-              for (final playerId in team.playerIds)
-                Opacity(
-                  opacity: enabled ? 1 : 0.35,
-                  child: GestureDetector(
-                    onTap: enabled ? () => onPick(playerId) : null,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 9),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(13),
-                        border: Border.all(color: color, width: 2),
-                      ),
-                      child: Text(
-                        nameOf(playerId),
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: color,
-                          decoration:
-                              enabled ? null : TextDecoration.lineThrough,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+            children: [for (final id in team.playerIds) _pill(id)],
           ),
         ],
-      );
-}
-
-/// Carte d'équipe de la feuille « Contre quelle équipe ? » (style habituel
-/// des cartes d'équipe : fond teinté, bordure, nom lisible sans ombre).
-/// [refusal] : pourquoi elle ne peut pas le recevoir, grisée et inactive.
-class _TeamButton extends StatelessWidget {
-  final Team team;
-  final Color color;
-  final String? refusal;
-  final VoidCallback onTap;
-
-  const _TeamButton(
-      {required this.team,
-      required this.color,
-      required this.refusal,
-      required this.onTap});
-
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-        onTap: refusal == null ? onTap : null,
-        child: Opacity(
-          opacity: refusal == null ? 1 : 0.35,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: color, width: 2),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  team.name,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontFamily: 'Bangers', fontSize: 24, color: color),
-                ),
-                if (refusal != null)
-                  Text(
-                    refusal!,
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.bodySmall
-                        .copyWith(fontSize: 12, color: Colors.white),
-                  ),
-              ],
-            ),
-          ),
-        ),
       );
 }
