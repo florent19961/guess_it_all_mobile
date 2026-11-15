@@ -172,6 +172,9 @@ void main() {
     expect(p.turnTime.total, carried);
     p.toggleBonus('plus_10s');
     expect(p.turnTime.total, carried + 10);
+    p.startTurn();
+    expect(p.game.currentScreen, AppConstants.screenCountdown,
+        reason: 'tour déjà révélé : pas de « Ce qui t\'attend »');
   });
 
   test(
