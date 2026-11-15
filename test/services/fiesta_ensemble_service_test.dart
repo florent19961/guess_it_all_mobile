@@ -80,6 +80,7 @@ void main() {
     expect(rules.modifiers['free_pass']!.always, isFalse);
     expect([rules.drawCount, rules.allCount, rules.trailingCount], [2, 3, 1]);
     expect(rules.balance, isTrue);
+    expect(rules.dropFrequency, DropFrequency.never);
   });
 
   test(

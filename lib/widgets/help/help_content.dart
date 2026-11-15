@@ -290,7 +290,8 @@ List<CoachStep> fiestaEditorHelp({
             target: menu,
             title: 'Cartouches',
             text:
-                'Au hasard : l\'app choisit. Pour tout le monde : chaque équipe '
+                'Au hasard : l\'app choisit, au début des manches ou pendant les '
+                'tours. Pour tout le monde : chaque équipe '
                 'reçoit exactement ça. « Si tu veux vraiment pousser plus loin » '
                 'ouvre les défis surprises.',
           ),

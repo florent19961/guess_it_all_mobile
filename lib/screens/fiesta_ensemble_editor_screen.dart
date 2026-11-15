@@ -118,7 +118,10 @@ class _FiestaEnsembleEditorScreenState
     final draws = kModifierCatalog.any((d) => r.settingOf(d.id).draw);
     if (draws) return EnsembleMenu.draw;
     final always = kModifierCatalog.any((d) => r.isAlways(d.id));
-    return always && r.trailingCount == 0 && r.allCount == 0
+    return always &&
+            r.trailingCount == 0 &&
+            r.allCount == 0 &&
+            r.dropFrequency == DropFrequency.never
         ? EnsembleMenu.always
         : EnsembleMenu.cartridge;
   }
@@ -403,6 +406,7 @@ class _FiestaEnsembleEditorScreenState
                 0, (sum, d) => sum + _rules.chargesOf(d.id)) +
             (_rules.balance ? 1 : _rules.trailingCount) +
             _rules.allCount +
+            (_rules.dropFrequency != DropFrequency.never ? 1 : 0) +
             (_rules.challenges ? 1 : 0),
       };
 
@@ -763,6 +767,19 @@ class _FiestaEnsembleEditorScreenState
                       setState(() => _rules = _rules.copyWith(allCount: v)),
                 ),
               ),
+              const Divider(color: AppColors.gray600, height: 16),
+              _line(
+                'Qui tombent pendant les tours',
+                const SizedBox.shrink(),
+                sub: 'Appliquées tout de suite, sans choix',
+                info: () => _info('Au début de certains tours, une cartouche '
+                    'tombe sur l\'équipe qui joue.'),
+              ),
+              _FrequencyPicker(
+                value: _rules.dropFrequency,
+                onChanged: (f) =>
+                    setState(() => _rules = _rules.copyWith(dropFrequency: f)),
+              ),
             ],
           ),
           _Frame(
@@ -1074,6 +1091,63 @@ class _Hint extends StatelessWidget {
         text,
         style: AppTextStyles.bodySmall
             .copyWith(color: AppColors.gray400, fontSize: 12),
+      );
+}
+
+/// Sélecteur à crans de [DropFrequency] (maquette `.seg`), toute la largeur.
+class _FrequencyPicker extends StatelessWidget {
+  final DropFrequency value;
+  final ValueChanged<DropFrequency> onChanged;
+
+  const _FrequencyPicker({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        margin: const EdgeInsets.only(top: 4, bottom: 2),
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.gray600),
+        ),
+        child: Row(
+          children: [
+            for (final f in DropFrequency.values)
+              Expanded(
+                child: Semantics(
+                  button: true,
+                  selected: f == value,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => onChanged(f),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 9),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: f == value ? AppColors.secondaryCyan : null,
+                        border: f.index == 0
+                            ? null
+                            : const Border(
+                                left: BorderSide(color: AppColors.gray600)),
+                      ),
+                      child: Text(
+                        f.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.label.copyWith(
+                          fontSize: 12.5,
+                          color: f == value
+                              ? AppColors.backgroundMain
+                              : AppColors.gray400,
+                          fontWeight:
+                              f == value ? FontWeight.w700 : FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       );
 }
 
